@@ -13,7 +13,11 @@ from pathlib import Path
 
 import pytest
 
-from ...providers.application.contracts import ProviderSettingsRefusalCode
+from ...providers.application.contracts import (
+    HOST_REFUSAL_NAMES,
+    ProviderSettingsRefusalCode,
+    ServiceRefusalCode,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -56,3 +60,18 @@ def test_every_served_refusal_code_is_admitted_by_the_host() -> None:
     assert {"busy", "signed_out", "invalid_request", "service_failed"} <= served
     missing = sorted(code for code in served if renames.get(code, code) not in admitted)
     assert not missing, missing
+
+
+def test_the_service_codes_are_declared_and_their_host_names_are_the_hosts_own() -> None:
+    renames = _host_renames()
+    declared = {code.value for code in ServiceRefusalCode}
+    served = _served_codes() - {code.value for code in ProviderSettingsRefusalCode}
+    assert served <= declared, sorted(served - declared)
+    assert {code.value: name for code, name in HOST_REFUSAL_NAMES.items()} == renames
+
+
+def test_every_code_the_host_admits_is_a_declared_settings_or_service_code() -> None:
+    relayed = {code.value for code in ProviderSettingsRefusalCode} | {
+        HOST_REFUSAL_NAMES.get(code, code.value) for code in ServiceRefusalCode
+    }
+    assert relayed == _host_refusals()

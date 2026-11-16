@@ -81,3 +81,23 @@ export const PROVIDER_SETTINGS_REFUSAL_CODES = [
 ] as const;
 export type ProviderSettingsRefusalCode =
   (typeof PROVIDER_SETTINGS_REFUSAL_CODES)[number];
+
+/** Every refusal code the desktop host relays for a provider-settings or sign-in command. */
+export const HOST_REFUSAL_CODES = [
+  "not_signed_in",
+  "profile_locked",
+  "invalid_key_format",
+  "base_url_rejected",
+  "revision_conflict",
+  "committed_readback_failed",
+  "catalog_unavailable",
+  "runtime_unavailable",
+  "person_act_required",
+  "model_list_full",
+  "unknown",
+  "busy",
+  "invalid_request",
+  "service_failed",
+  "unsupported_flow",
+] as const;
+export type HostRefusalCode = (typeof HOST_REFUSAL_CODES)[number];

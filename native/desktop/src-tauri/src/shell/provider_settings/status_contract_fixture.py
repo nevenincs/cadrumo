@@ -33,6 +33,7 @@ def document() -> dict[str, object]:
             id=f"{provider}_{transport.value}",
             provider=provider,
             display_name=provider.title(),
+            reads_off_host=not keyless,
             transport=transport,
             auth_kind=(
                 ProviderAuthKind.NONE
@@ -63,6 +64,7 @@ def document() -> dict[str, object]:
             base_url=None,
             default_base_url="http://127.0.0.1:41000" if keyless else None,
             cli_state=CliState.INSTALLED_SIGNED_OUT if cli else None,
+            sign_out_available=False,
             revision="0" * 64,
         )
 

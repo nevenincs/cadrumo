@@ -225,6 +225,7 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         provider_settings_remove,
         provider_settings_turn_on,
         provider_settings_reset,
+        provider_sign_out,
         provider_sign_in_start,
         provider_sign_in_status,
         provider_sign_in_cancel,
@@ -321,6 +322,19 @@ pub async fn provider_settings_reset(
 ) -> Result<Entry, CommandFailure> {
     let result = change(&state, "reset", &provider, &revision).await;
     logged(state.inner(), "provider_settings_reset", result)
+}
+
+/// Sign a signed-in app lane's provider out through the logout the agent
+/// declares for it, answering with the lane's refreshed entry. The service
+/// refuses a lane whose agent declares no logout.
+#[tauri::command]
+pub async fn provider_sign_out(
+    state: State<'_, Arc<AgentHost>>,
+    provider: String,
+    revision: String,
+) -> Result<Entry, CommandFailure> {
+    let result = change(&state, "sign_out", &provider, &revision).await;
+    logged(state.inner(), "provider_sign_out", result)
 }
 
 #[tauri::command]
@@ -421,14 +435,78 @@ async fn change(
     provider: &str,
     revision: &str,
 ) -> Result<Entry, CommandFailure> {
+    let request = change_request(action, provider, revision)?;
+    wire::changed(execute(state, request, None).await?, provider)
+}
+
+/// The administration document of a guarded change to one lane.
+fn change_request(action: &str, provider: &str, revision: &str) -> Result<Value, CommandFailure> {
     let mut request = target(provider, revision)?;
     request["action"] = json!(action);
-    wire::changed(execute(state, request, None).await?, provider)
+    Ok(request)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn sign_out_answer(served: Value) -> Result<Entry, CommandFailure> {
+        wire::changed(outcome(served), "beta_cli")
+    }
+
+    fn signed_out_lane() -> Value {
+        json!({
+            "id": "beta_cli", "provider": "beta", "display_name": "Beta CLI", "transport": "cli",
+            "reads_off_host": true, "auth_kind": "provider_sign_in_only", "consumers": ["assistant"],
+            "mode": "provider_sign_in", "credential_saved": false, "available": false,
+            "source": "none", "readiness": "sign_in_required",
+            "reason": "sign_in_with_provider_tool", "cli_state": "installed_signed_out",
+            "sign_out_available": false, "revision": "0".repeat(64)
+        })
+    }
+
+    #[test]
+    fn a_sign_out_maps_through_as_a_turn_on_does() {
+        let revision = "0".repeat(64);
+        for action in ["turn_on", "sign_out"] {
+            assert_eq!(
+                change_request(action, "beta_cli", &revision).unwrap(),
+                json!({"action": action, "provider": "beta_cli", "expected_revision": revision})
+            );
+            assert!(change_request(action, "beta_cli", "stale").is_err());
+            assert!(change_request(action, "../beta", &revision).is_err());
+        }
+        let entry = sign_out_answer(json!({"entry": signed_out_lane()})).unwrap();
+        assert_eq!(entry.id, "beta_cli");
+        assert!(!entry.sign_out_available);
+        for (served, refused) in [
+            ("signed_out", "not_signed_in"),
+            ("sign_in_unavailable", "unsupported_flow"),
+            ("busy", "busy"),
+            ("revision_conflict", "revision_conflict"),
+            ("service_failed", "service_failed"),
+        ] {
+            let failure = refusal_of_entry(sign_out_answer(json!({
+                "kind": "refused", "code": served, "cause": "lane_not_signable",
+                "log_ref": "123e4567-e89b-42d3-a456-426614174000"
+            })));
+            assert_eq!(
+                serde_json::to_value(failure).unwrap(),
+                json!({
+                    "code": refused, "cause": "lane_not_signable",
+                    "log_ref": "123e4567-e89b-42d3-a456-426614174000"
+                }),
+                "{served}"
+            );
+        }
+    }
+
+    fn refusal_of_entry(result: Result<Entry, CommandFailure>) -> CommandFailure {
+        match result {
+            Err(failure) => failure,
+            Ok(_) => panic!("expected a failure"),
+        }
+    }
 
     #[test]
     fn code_submission_requires_a_bounded_printable_code_and_attempt() {

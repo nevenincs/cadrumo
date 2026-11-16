@@ -194,6 +194,9 @@ pub struct Entry {
     pub provider: String,
     pub display_name: String,
     pub transport: Transport,
+    /// Whether the lane's conversation data leaves this computer, as the
+    /// agent declares it; required, never defaulted.
+    pub reads_off_host: bool,
     pub auth_kind: AuthKind,
     pub consumers: Vec<Consumer>,
     pub mode: Mode,
@@ -216,6 +219,9 @@ pub struct Entry {
     /// What to do about `cli_state_cause`; never without one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub next_step: Option<NextStep>,
+    /// Whether the window may offer a sign-out: a signed-in app lane whose
+    /// agent declares a logout for it; required, never defaulted.
+    pub sign_out_available: bool,
     pub revision: String,
 }
 
@@ -670,34 +676,34 @@ mod tests {
 
     fn api() -> Value {
         json!({
-            "id": "alpha_api", "provider": "alpha", "display_name": "Alpha API", "transport": "api",
+            "id": "alpha_api", "provider": "alpha", "display_name": "Alpha API", "transport": "api", "reads_off_host": true,
             "auth_kind": "api_key", "consumers": ["assistant"], "mode": "key",
             "credential_saved": true,
             "available": true, "source": "profile", "readiness": "not_verified",
             "reason": null, "base_url": null, "default_base_url": null,
-            "revision": "00ff"
+            "sign_out_available": false, "revision": "00ff"
         })
     }
 
     fn cli() -> Value {
         json!({
-            "id": "beta_cli", "provider": "beta", "display_name": "Beta CLI", "transport": "cli",
+            "id": "beta_cli", "provider": "beta", "display_name": "Beta CLI", "transport": "cli", "reads_off_host": true,
             "auth_kind": "provider_sign_in_only", "consumers": ["assistant"],
             "mode": "provider_sign_in", "credential_saved": false,
             "available": false, "source": "none",
             "readiness": "sign_in_required", "reason": "sign_in_with_provider_tool",
-            "cli_state": "installed_signed_out", "revision": "absent"
+            "cli_state": "installed_signed_out", "sign_out_available": false, "revision": "absent"
         })
     }
 
     fn keyless() -> Value {
         json!({
-            "id": "local_api", "provider": "local", "display_name": "Local", "transport": "api",
+            "id": "local_api", "provider": "local", "display_name": "Local", "transport": "api", "reads_off_host": false,
             "auth_kind": "none", "consumers": ["assistant"], "mode": "unset",
             "credential_saved": false,
             "available": true, "source": "none", "readiness": "not_verified",
             "reason": null, "base_url": null, "default_base_url": "http://127.0.0.1:41000",
-            "revision": "absent"
+            "sign_out_available": false, "revision": "absent"
         })
     }
 
@@ -956,6 +962,7 @@ mod tests {
             "provider",
             "display_name",
             "transport",
+            "reads_off_host",
             "auth_kind",
             "consumers",
             "mode",
@@ -963,6 +970,7 @@ mod tests {
             "available",
             "source",
             "readiness",
+            "sign_out_available",
             "revision",
         ] {
             let mut entry = api();
@@ -979,6 +987,57 @@ mod tests {
             assert!(status(success(malformed)).is_err());
         }
         assert!(status(success(envelope(&[json!("alpha_api")]))).is_err());
+    }
+
+    #[test]
+    fn reads_off_host_is_required_and_passes_through_true_and_false() {
+        let sent = serde_json::to_value(status_of(&[api(), keyless()])).unwrap();
+        assert_eq!(sent["providers"][0]["reads_off_host"], true);
+        assert_eq!(sent["providers"][1]["reads_off_host"], false);
+        let mut missing = api();
+        missing.as_object_mut().unwrap().remove("reads_off_host");
+        assert_eq!(
+            failed(status(success(envelope(&[missing.clone()]))))["code"],
+            "read_failed"
+        );
+        assert_eq!(
+            failed(changed(success(missing), "alpha_api"))["code"],
+            "read_failed"
+        );
+        let mut wrong = api();
+        wrong["reads_off_host"] = json!("yes");
+        assert!(status(success(envelope(&[wrong]))).is_err());
+    }
+
+    #[test]
+    fn sign_out_available_is_required_and_passes_through_true_and_false() {
+        let mut signed_in = cli();
+        signed_in["cli_state"] = json!("installed_signed_in");
+        signed_in["sign_out_available"] = json!(true);
+        let sent = serde_json::to_value(status_of(&[signed_in.clone(), api()])).unwrap();
+        assert_eq!(sent["providers"][0]["sign_out_available"], true);
+        assert_eq!(sent["providers"][1]["sign_out_available"], false);
+        assert!(
+            changed(success(signed_in), "beta_cli")
+                .unwrap()
+                .sign_out_available
+        );
+        let mut missing = cli();
+        missing
+            .as_object_mut()
+            .unwrap()
+            .remove("sign_out_available");
+        assert_eq!(
+            failed(status(success(envelope(&[missing.clone()]))))["code"],
+            "read_failed"
+        );
+        assert_eq!(
+            failed(changed(success(missing), "beta_cli"))["code"],
+            "read_failed"
+        );
+        let mut wrong = cli();
+        wrong["sign_out_available"] = json!("yes");
+        assert!(status(success(envelope(&[wrong]))).is_err());
     }
 
     #[test]
