@@ -37,9 +37,11 @@ from ..declarations_list import (
     DECLARATION_GROUP_LOCALE_KEYS,
     DeclarationListGroup,
     DeclarationListNextStep,
+    DeclarationListRow,
     calendar_sources,
     deadline_note_words,
     declaration_list_rows,
+    declaration_list_state_order_key,
     group_words,
     source_notices,
     zone_states,
@@ -541,3 +543,27 @@ def test_a_return_the_aeat_holds_opens_its_notes_in_the_rows_language_and_no_oth
             assert row.aeat_filing is None, row.key
     assert any(row.opens_aeat_filing for row in projection.rows)
     assert not any(hasattr(row.aeat_filing, "reference_id") for row in projection.rows)
+
+
+def test_rows_by_state_follow_the_group_work_order_then_the_nearest_deadline() -> None:
+    early = _entry(external=False, close=date(_YEAR, 4, 21))
+    late = _entry(external=False, close=date(_YEAR, 7, 20), period=Period.from_year_and_code(_YEAR, "2T"))
+    recorded = DeclarationListRow("w:1", "111", _PERIOD, "recorded", DeclarationListGroup.RECORDED, calendar=early)
+    attention_late = DeclarationListRow(
+        "d:2", "303", late.period, "not_started", DeclarationListGroup.ATTENTION, calendar=late
+    )
+    attention_early = DeclarationListRow(
+        "d:1", "303", _PERIOD, "not_started", DeclarationListGroup.ATTENTION, calendar=early
+    )
+    attention_undated = DeclarationListRow("w:2", "130", _PERIOD, "draft", DeclarationListGroup.ATTENTION)
+    ready = DeclarationListRow("w:3", "390", _PERIOD, "checked", DeclarationListGroup.READY)
+
+    rows = [recorded, ready, attention_undated, attention_late, attention_early]
+
+    assert sorted(rows, key=declaration_list_state_order_key) == [
+        attention_early,
+        attention_late,
+        attention_undated,
+        ready,
+        recorded,
+    ]
