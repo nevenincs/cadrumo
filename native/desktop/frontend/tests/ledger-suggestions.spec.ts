@@ -23,7 +23,7 @@ import {
 } from "../src/components/ledger/assets/assetFields";
 import { shownSuggestions } from "../src/components/ui/suggestions";
 import type { CatalogueInvoiceSnapshot } from "../src/shell/ledgerInvoiceContract";
-import type { CapitalGood } from "../src/shell/ledgerRegisterOperations";
+import type { BienInversionRecordProjection } from "../src/shell/ledgerCapitalGoodsContract";
 import type {
   KnownCounterparty,
   KnownText,
@@ -145,7 +145,11 @@ test("an element's stated references offer the history's, and only those", () =>
 
 test("a capital good is offered by its identifier, this year's first", () => {
   const good = (identifier: string, acquisition_year: number) =>
-    ({ identifier, acquisition_year, description: "Nave" }) as CapitalGood;
+    ({
+      identifier,
+      acquisition_year,
+      description: "Nave",
+    }) as BienInversionRecordProjection;
   const options = capitalGoodOptions([good("A", 2024), good("B", 2026)], 2026);
   expect(options.map((option) => option.value)).toEqual(["B", "A"]);
   expect(options[0]!.note).toBe("Nave");

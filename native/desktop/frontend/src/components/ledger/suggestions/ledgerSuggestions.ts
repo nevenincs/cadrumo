@@ -9,7 +9,7 @@ import type { Suggestion } from "@/components/ui/suggestions";
 import { countryName, currencyName } from "../../../shared/codeNames";
 import { formatDay } from "../../../shared/dateFormats";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
-import type { CapitalGood } from "../../../shell/ledgerRegisterOperations";
+import type { BienInversionRecordProjection } from "../../../shell/ledgerCapitalGoodsContract";
 import type {
   KnownCounterparty,
   KnownText,
@@ -369,7 +369,7 @@ export function heldThenKnownOptions(
 /** Capital goods by the identifier a movement names them with, those of the
  * movement's year first. */
 export function capitalGoodOptions(
-  goods: readonly CapitalGood[],
+  goods: readonly BienInversionRecordProjection[],
   year?: number,
 ): Suggestion[] {
   return firstThose(goods, (good) => good.acquisition_year === year).map(

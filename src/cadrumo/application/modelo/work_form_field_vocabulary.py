@@ -160,6 +160,33 @@ def field_standing(
     return ORIGIN_STANDINGS[origin]
 
 
+_ORIGIN_ATTENTION_RANKS: Final[Mapping[ModeloFormOrigin, int]] = MappingProxyType(
+    {
+        ModeloFormOrigin.NEEDS_INPUT: 1,
+        ModeloFormOrigin.CALCULATION_FAILED: 1,
+        ModeloFormOrigin.DEFAULT_TO_CONFIRM: 2,
+        ModeloFormOrigin.NOT_IMPORTED_YET: 3,
+    }
+)
+"""The rank of each origin that asks something of the filer or waits on an import; any other is settled."""
+BLOCKED_ATTENTION_RANK: Final[int] = 0
+SETTLED_ATTENTION_RANK: Final[int] = 4
+
+
+def field_attention_rank(
+    origin: ModeloFormOrigin, blockers: tuple[ModeloFormBlocker, ...] | list[ModeloFormBlocker] = ()
+) -> int:
+    """Where a box sorts when the filer orders a page by attention, most urgent first.
+
+    A blocked box comes first; then a box that needs a value or the calculation
+    could not work out; then a value to confirm; then a box waiting on an import;
+    every other box is settled and comes last.
+    """
+    if blockers:
+        return BLOCKED_ATTENTION_RANK
+    return _ORIGIN_ATTENTION_RANKS.get(origin, SETTLED_ATTENTION_RANK)
+
+
 def fitting_standings(
     origin: ModeloFormOrigin, blockers: tuple[ModeloFormBlocker, ...] | list[ModeloFormBlocker] = ()
 ) -> frozenset[ModeloFormStanding]:
@@ -322,10 +349,12 @@ TYPED_EDITABILITIES: Final[frozenset[ModeloFormEditability]] = frozenset(
 __all__ = [
     "ABSENT_FROM_ADMISSION",
     "ASKS_FOR_A_VALUE",
+    "BLOCKED_ATTENTION_RANK",
     "FED_BY_A_SOURCE",
     "NEEDS_ATTENTION",
     "ORIGINS_WITHOUT_A_VALUE",
     "ORIGIN_STANDINGS",
+    "SETTLED_ATTENTION_RANK",
     "TYPED_EDITABILITIES",
     "ModeloFormAddressV1",
     "ModeloFormBinding",
@@ -344,6 +373,7 @@ __all__ = [
     "ModeloFormTextDisclosure",
     "ModeloFormValueSource",
     "address_key",
+    "field_attention_rank",
     "field_standing",
     "fitting_standings",
 ]

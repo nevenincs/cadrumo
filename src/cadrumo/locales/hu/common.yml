@@ -5919,6 +5919,8 @@ ledger:
       low_value_unit_value_not_cents: Az elem egységnyi beszerzési értékének egész
         centnek kell lennie.
       m130_period_invalid: Ez nem a Modelo 130 időszaka az adóévben.
+      m130_period_not_declared: 'A Modelo 130-nak nincs ilyen időszaka. Válassz ezek
+        közül: {tokens}.'
       method_admission_invalid: Az adótáblák nem mondják ki egyértelműen, hogy ez
         a módszer engedélyezett-e ilyen típusú eszközre, ezért még nem fogadható el.
       method_excluded_by_law: Ez a módszer jogszabály szerint ki van zárva ilyen típusú

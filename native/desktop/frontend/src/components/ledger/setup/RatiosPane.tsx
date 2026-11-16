@@ -13,7 +13,7 @@ import {
   compareDecimal,
   parseFractionPercent,
 } from "../../../shell/ledgerGrammar";
-import type { OutputLanguage } from "../../../shell/ledger";
+import type { OutputLanguage } from "../../../shell/ledgerClassificationContract";
 import type {
   LedgerRatiosEligibleResult,
   LedgerRatiosListResult,

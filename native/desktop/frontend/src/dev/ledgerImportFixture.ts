@@ -2,12 +2,8 @@
 // documents it reads from the made-up computer's files, and what each
 // import adds. Everything it answers is synthetic.
 
-import type {
-  FilePurpose,
-  JsonObject,
-  JsonValue,
-  PublicPeriod,
-} from "../shell/ledger";
+import type { FilePurpose, JsonObject, JsonValue } from "../shell/ledger";
+import type { PublicPeriod } from "../shell/ledgerInvoiceContract";
 import {
   type FixtureLedger,
   type FixtureMovement,

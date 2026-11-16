@@ -3,7 +3,7 @@
 // words the window is drawn in. Held only while the page is open; with none
 // held a read leaves the language out and the backend answers in its own.
 
-import type { OutputLanguage } from "./ledger";
+import type { OutputLanguage } from "./ledgerClassificationContract";
 
 let held: OutputLanguage | null = null;
 

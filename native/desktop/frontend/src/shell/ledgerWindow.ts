@@ -12,8 +12,8 @@ import {
   type LedgerPort,
   type LedgerRequest,
   type LedgerResult,
-  type OutputLanguage,
 } from "./ledger";
+import type { OutputLanguage } from "./ledgerClassificationContract";
 import {
   periodFilters,
   publicPeriod,

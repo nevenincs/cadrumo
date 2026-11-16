@@ -6,7 +6,7 @@
 // is judged here; every limit on what it may say is served by the backend, and
 // with none served a typed value is refused as not yet checkable.
 
-import type { PublicPeriod } from "./ledger";
+import type { PublicPeriod } from "./ledgerInvoiceContract";
 import { ledgerLimits } from "./ledgerLimits";
 import type { LedgerEntryLimits } from "./ledgerSetup";
 

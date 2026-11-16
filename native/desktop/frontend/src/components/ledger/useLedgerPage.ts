@@ -12,7 +12,7 @@ import type { IconName } from "@/components/ui/icon";
 import { localDay } from "../../shared/dates";
 import type { Action } from "../../shell/actions";
 import { LEDGER_SECTIONS, type LedgerSection } from "../../shell/layout";
-import type { OutputLanguage } from "../../shell/ledger";
+import type { OutputLanguage } from "../../shell/ledgerClassificationContract";
 import type { OpenRuleFromSelection } from "../../shell/ledgerCommands";
 import type { LedgerPeriod } from "../../shell/ledgerGrammar";
 import {
