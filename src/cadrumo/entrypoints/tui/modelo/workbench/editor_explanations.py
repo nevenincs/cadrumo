@@ -133,20 +133,20 @@ def _label(form: ModeloWorkForm | None, step: ModeloHelpBoxV1) -> str | None:
     return None
 
 
+def _settles_calculated(form: ModeloWorkForm | None, step: ModeloHelpBoxV1) -> bool:
+    """Whether a saved calculation settles the declaration in the box ``step`` passes through."""
+    if form is None or form.calculation_revision_id is None:
+        return False
+    settling = form.result
+    return settling is not None and settling.casilla_id == step.casilla_id and settling.value is not None
+
+
 def _calculated_result_text(
     form: ModeloWorkForm | None,
     step: ModeloHelpBoxV1,
     result: HeaderResult | None,
 ) -> str | None:
-    settling = None if form is None else form.result
-    calculated = (
-        form is not None
-        and settling is not None
-        and settling.casilla_id == step.casilla_id
-        and settling.value is not None
-        and form.calculation_revision_id is not None
-    )
-    if not calculated or result is None or result.served.state is ModeloFormResultState.FAILED:
+    if not _settles_calculated(form, step) or result is None or result.served.state is ModeloFormResultState.FAILED:
         return None
     words, amount = result.served.words, result.served.amount_text
     if words is not None and amount is not None:
