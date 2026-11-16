@@ -125,6 +125,13 @@ class LedgerEntryTextLimitPayload(OutputSchema):
     max: int
 
 
+class LedgerEntryYearWindowPayload(OutputSchema):
+    """The years a typed ledger year takes, both inclusive."""
+
+    earliest: int
+    latest: int
+
+
 class LedgerEntryLimitsPayload(OutputSchema):
     """Every limit a ledger entry form holds typed text to."""
 
@@ -139,6 +146,7 @@ class LedgerEntryLimitsPayload(OutputSchema):
     rule_pattern_max: int
     payment_id_pattern: str
     text_limits: list[LedgerEntryTextLimitPayload]
+    entry_years: LedgerEntryYearWindowPayload
 
 
 class LedgerEntryOptionsResult(OutputSchema):
@@ -198,6 +206,7 @@ class LedgerStagedRowPayload(OutputSchema):
     lifecycle_actions: list[str]
     tax_set_skip: str | None
     transfer_locked_fields: list[str]
+    tax_set_skipped_fields: list[str]
     classifying_fields: list[str]
     identity_fields: list[str]
     routes: list[LedgerStagedRoutePayload]
@@ -1157,6 +1166,7 @@ __all__ = [
     "LedgerEntryOptionsResult",
     "LedgerEntryPercentFieldPayload",
     "LedgerEntryTextLimitPayload",
+    "LedgerEntryYearWindowPayload",
     "LedgerExcludeResult",
     "LedgerHistoryEventPayload",
     "LedgerHistoryResult",

@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "counts": {
-    "wire-type": 1171,
+    "wire-type": 1163,
     "tui-date-decision": 1,
-    "tui-precedence": 8,
+    "tui-precedence": 7,
     "duplicated-helper": 97
   },
   "occurrences": {
@@ -447,13 +447,6 @@
       "wire-type:native/desktop/frontend/src/ipc/componentSetup.ts:SetupStartOptions",
       "wire-type:native/desktop/frontend/src/ipc/componentSetup.ts:SetupState",
       "wire-type:native/desktop/frontend/src/ipc/componentSetup.ts:SetupStep",
-      "wire-type:native/desktop/frontend/src/ipc/contract.ts:AgentListedModel",
-      "wire-type:native/desktop/frontend/src/ipc/contract.ts:AgentLocalChoices",
-      "wire-type:native/desktop/frontend/src/ipc/contract.ts:AgentLocalEngine",
-      "wire-type:native/desktop/frontend/src/ipc/contract.ts:AgentLocalEngineToken",
-      "wire-type:native/desktop/frontend/src/ipc/contract.ts:AgentLocalModels",
-      "wire-type:native/desktop/frontend/src/ipc/contract.ts:AgentLocalPlacement",
-      "wire-type:native/desktop/frontend/src/ipc/contract.ts:AgentReadingSource",
       "wire-type:native/desktop/frontend/src/ipc/contract.ts:Authorized",
       "wire-type:native/desktop/frontend/src/ipc/contract.ts:ClipboardText",
       "wire-type:native/desktop/frontend/src/ipc/contract.ts:HostArguments",
@@ -630,7 +623,6 @@
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentApprovalOption",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentAttachmentCard",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentAttachmentGrants",
-      "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentAttachmentPolicy",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentAttachmentRefusal",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentAttachmentRelease",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentAttachmentScope",
@@ -1190,8 +1182,7 @@
       "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/issue_scale.py:TO_DO_LEVELS",
       "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/issue_scale.py:_ATTENTION_LEVELS",
       "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py:_RECORD_FINDING_LEVELS",
-      "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/screen_constants.py:FILTER_ORDER",
-      "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/sorting.py:_ATTENTION_RANKS"
+      "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/screen_constants.py:FILTER_ORDER"
     ],
     "duplicated-helper": [
       "duplicated-helper:src/cadrumo/entrypoints/cli/app_ledger_m232_related_party_command_specs.py:result_schema",

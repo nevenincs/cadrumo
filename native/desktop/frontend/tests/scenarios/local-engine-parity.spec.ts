@@ -497,7 +497,7 @@ for (const engine of ENGINES) {
         .toBe(true);
       const stored = await target.evaluate(async () => {
         const record = await window.__fixtureAgentSession?.localEngine?.();
-        return record?.state === "readable"
+        return record?.unreadable === false
           ? { engine: record.engine, placement: record.placement }
           : null;
       });
@@ -533,7 +533,7 @@ for (const engine of ENGINES) {
       const stored = () =>
         target.evaluate(async () => {
           const list = await window.__fixtureAgentSession?.localModels?.();
-          return list?.state === "readable" ? list.models : null;
+          return list?.unreadable === false ? list.models : null;
         });
       await expect.poll(stored).toEqual([{ lane: laneId, model: added }]);
       await remove(row).click();

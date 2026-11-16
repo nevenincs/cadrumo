@@ -791,7 +791,7 @@ fn catalog_request(facts: Option<Value>) -> Value {
 #[tauri::command]
 async fn agent_local_models(
     host: State<'_, Arc<AgentHost>>,
-) -> std::result::Result<local_models::LocalModels, Refused> {
+) -> std::result::Result<Value, Refused> {
     blocking(&host, |host| {
         let answer = host
             .administer(serde_json::json!({"action":"local_models"}), None)
@@ -799,9 +799,14 @@ async fn agent_local_models(
         if let Some(code) = local_models::refusal(&answer) {
             return refused(code);
         }
-        local_models::parse(&answer).ok_or_else(|| local_models_contract(host))
+        served_local_models(host, answer)
     })
     .await
+}
+
+/// The service's list answer as it serves it, once it reads as its contract states.
+fn served_local_models(host: &AgentHost, answer: Value) -> std::result::Result<Value, Refused> {
+    local_models::served(answer).ok_or_else(|| local_models_contract(host))
 }
 
 /// A list answer outside the service's contract.
@@ -818,17 +823,14 @@ fn local_models_contract(host: &AgentHost) -> Refused {
 
 /// One guarded change to the person's lists, answered with every added model
 /// after it or the reason it was not made.
-fn change_local_models(
-    host: &AgentHost,
-    request: Value,
-) -> std::result::Result<local_models::LocalModels, Refused> {
+fn change_local_models(host: &AgentHost, request: Value) -> std::result::Result<Value, Refused> {
     let answer = host
         .administer(request, None)
         .map_err(|error| host.refuse(admin_refusal(&error), error))?;
     if let Some(code) = local_models::change_refusal(&answer) {
         return refused(code);
     }
-    local_models::parse(&answer).ok_or_else(|| local_models_contract(host))
+    served_local_models(host, answer)
 }
 
 /// Adds `model` to `lane`'s list, at the revision the person read.
@@ -838,7 +840,7 @@ async fn agent_local_model_add(
     lane: String,
     model: String,
     expected_revision: String,
-) -> std::result::Result<local_models::LocalModels, Refused> {
+) -> std::result::Result<Value, Refused> {
     if !local_models::is_lane(&lane)
         || !local_models::is_model(&model)
         || !local_models::is_revision(&expected_revision)
@@ -866,7 +868,7 @@ async fn agent_local_model_remove(
     lane: String,
     model: String,
     expected_revision: String,
-) -> std::result::Result<local_models::LocalModels, Refused> {
+) -> std::result::Result<Value, Refused> {
     if !local_models::is_lane(&lane)
         || !local_models::is_model(&model)
         || !local_models::is_revision(&expected_revision)
@@ -895,7 +897,7 @@ async fn agent_reading_model_choose(
     lane: String,
     model: String,
     expected_revision: String,
-) -> std::result::Result<local_models::LocalModels, Refused> {
+) -> std::result::Result<Value, Refused> {
     if !local_models::is_lane(&lane)
         || !local_models::is_model(&model)
         || !local_models::is_revision(&expected_revision)
@@ -921,7 +923,7 @@ async fn agent_reading_model_choose(
 async fn agent_local_models_reset(
     host: State<'_, Arc<AgentHost>>,
     expected_revision: String,
-) -> std::result::Result<local_models::LocalModels, Refused> {
+) -> std::result::Result<Value, Refused> {
     if !local_models::is_revision(&expected_revision) {
         return refused("agent_invalid_request");
     }
@@ -942,7 +944,7 @@ async fn agent_local_models_reset(
 #[tauri::command]
 async fn agent_local_engine(
     host: State<'_, Arc<AgentHost>>,
-) -> std::result::Result<local_models::LocalEngineSetting, Refused> {
+) -> std::result::Result<Value, Refused> {
     blocking(&host, |host| {
         let _record = host.engine_record();
         let answer = host
@@ -951,10 +953,10 @@ async fn agent_local_engine(
         if let Some(code) = local_models::refusal(&answer) {
             return refused(code);
         }
-        let setting =
-            local_models::parse_engine(&answer).ok_or_else(|| local_engine_contract(host))?;
+        let (setting, answer) =
+            local_models::served_engine(answer).ok_or_else(|| local_engine_contract(host))?;
         host.record_local_engine(&setting);
-        Ok(setting)
+        Ok(answer)
     })
     .await
 }
@@ -980,7 +982,7 @@ async fn agent_local_engine_choose(
     engine: String,
     placement: String,
     expected_revision: String,
-) -> std::result::Result<local_models::LocalEngineSetting, Refused> {
+) -> std::result::Result<Value, Refused> {
     let Some(chosen) = local_models::engine_token(&engine) else {
         return refused("agent_invalid_request");
     };
@@ -1009,10 +1011,10 @@ async fn agent_local_engine_choose(
         if let Some(code) = local_models::change_refusal(&answer) {
             return refused(code);
         }
-        let setting =
-            local_models::parse_engine(&answer).ok_or_else(|| local_engine_contract(host))?;
+        let (setting, answer) =
+            local_models::served_engine(answer).ok_or_else(|| local_engine_contract(host))?;
         host.record_local_engine(&setting);
-        Ok(setting)
+        Ok(answer)
     })
     .await
 }
@@ -1495,10 +1497,10 @@ fn agent_drop_unobserve(host: State<'_, Arc<AgentHost>>, subscription: u32) {
 #[tauri::command]
 async fn agent_attachment_policy(
     host: State<'_, Arc<AgentHost>>,
-) -> std::result::Result<upload::Policy, Refused> {
+) -> std::result::Result<Value, Refused> {
     blocking(&host, |host| {
         let gateway = Session::gateway(&host.supervisor)?;
-        upload::policy_of(&gateway::Client::new(&gateway).attachment_policy()?)
+        upload::served_policy(gateway::Client::new(&gateway).attachment_policy()?)
     })
     .await
 }

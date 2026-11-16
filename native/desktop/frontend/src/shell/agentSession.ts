@@ -8,17 +8,18 @@ import type {
   ServedProviderLane,
 } from "./agentCatalogContract";
 import type {
+  AttachmentPolicyResponse,
   ModelLicenceResponse,
   Provider,
   SkillListResponse,
 } from "./agentGatewayContract";
 import type { CallPlan } from "./hostCall";
 import type {
-  AgentLocalEngine,
-  AgentLocalEngineToken,
-  AgentLocalModels,
-  AgentLocalPlacement,
-} from "../ipc/contract";
+  LocalEngineChoices,
+  LocalEngineStatus,
+  LocalModelListStatus,
+  LocalPlacement,
+} from "./localModelsContract";
 import type { AgentSkillDetail, AgentSkillVerification } from "./agentSkills";
 import type {
   AgentConversationRecord,
@@ -163,11 +164,6 @@ export type AgentUploadPick = {
   state: "queued" | "refused";
   /** Why the file was refused before anything was sent. */
   code: string | null;
-};
-
-export type AgentAttachmentPolicy = {
-  max_file_bytes: number;
-  extensions: string[];
 };
 
 /** Where one upload is: how far it has been sent, stored, or refused. */
@@ -443,7 +439,7 @@ export interface AgentSession {
   providerCatalog(retry?: CallPlan): Promise<ServedCatalogAnswer>;
   /** The models the person added to the local lanes' lists and the model
    * documents are read with. Absent where the host offers none. */
-  localModels?(): Promise<AgentLocalModels>;
+  localModels?(): Promise<LocalModelListStatus>;
   /** Adds `model` to `lane`'s list at the revision read; answers every added
    * model after it. A refusal carries the service's reason as
    * `agent_local_models_<reason>`. */
@@ -451,33 +447,33 @@ export interface AgentSession {
     lane: string,
     model: string,
     expectedRevision: string,
-  ): Promise<AgentLocalModels>;
+  ): Promise<LocalModelListStatus>;
   /** Takes the added `model` off `lane`'s list at the revision read. */
   removeLocalModel?(
     lane: string,
     model: string,
     expectedRevision: string,
-  ): Promise<AgentLocalModels>;
+  ): Promise<LocalModelListStatus>;
   /** Removes the list record, readable or not, at the revision read. */
-  resetLocalModels?(expectedRevision: string): Promise<AgentLocalModels>;
+  resetLocalModels?(expectedRevision: string): Promise<LocalModelListStatus>;
   /** The local engine and placement, stored in the record that holds the
    * lists, so a change to either moves the other's revision. */
-  localEngine?(): Promise<AgentLocalEngine>;
+  localEngine?(): Promise<LocalEngineStatus>;
   /** Stores the local engine and placement at the revision read; the
    * service restarts the assistant when either changes. A refusal carries
    * the service's reason as `agent_local_models_<reason>`. */
   chooseLocalEngine?(
-    engine: AgentLocalEngineToken,
-    placement: AgentLocalPlacement,
+    engine: LocalEngineChoices["engine"][number],
+    placement: LocalPlacement,
     expectedRevision: string,
-  ): Promise<AgentLocalEngine>;
+  ): Promise<LocalEngineStatus>;
   /** Stores `model` on `lane` as the model documents are read with, at the
    * revision read: the one the person selected in the model picker. */
   chooseReadingModel?(
     lane: string,
     model: string,
     expectedRevision: string,
-  ): Promise<AgentLocalModels>;
+  ): Promise<LocalModelListStatus>;
   /** The licence text of one model a lane lists; only a ready agent has it. */
   modelLicence?(
     provider: Provider,
@@ -523,8 +519,9 @@ export interface AgentSession {
   /** Deletes one stored file, or all of this conversation's stored files.
    * Removing a staged reference alone does not call this. */
   removeDocuments?(conversationId: string, name?: string): Promise<void>;
-  /** The storage's admitted formats and per-file bound. */
-  attachmentPolicy?(): Promise<AgentAttachmentPolicy>;
+  /** The storage's admitted formats and its per-file and per-conversation
+   * bounds, as the agent serves them. */
+  attachmentPolicy?(): Promise<AttachmentPolicyResponse>;
   /** Stops a reply that is still working. The run is `cancelling` until it
    * is `cancelled`. */
   cancel(replyId: string): Promise<void>;

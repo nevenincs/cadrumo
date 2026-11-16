@@ -1,3 +1,4 @@
+import type { AttachmentPolicyResponse } from "../../shell/agentGatewayContract";
 import type {
   AgentConversationRecord,
   AgentDocumentRecord,
@@ -450,5 +451,26 @@ export const FIXTURE_RUNS: Record<string, FixtureRun[]> = {
       ],
       tools: [],
     },
+  ],
+};
+
+/** The attachment policy the scenario host serves, shaped as the agent's own
+ * answer; the bounds are the fixture's. */
+export const FIXTURE_ATTACHMENT_POLICY: AttachmentPolicyResponse = {
+  max_file_bytes: 100_000_000,
+  max_files_per_conversation: 64,
+  max_total_bytes_per_conversation: 1_000_000_000,
+  formats: [
+    { media_type: "application/pdf", extensions: [".pdf"] },
+    { media_type: "image/png", extensions: [".png"] },
+    { media_type: "image/jpeg", extensions: [".jpg", ".jpeg"] },
+    {
+      media_type:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      extensions: [".xlsx"],
+    },
+    { media_type: "text/csv", extensions: [".csv"] },
+    { media_type: "application/xml", extensions: [".xml"] },
+    { media_type: "text/plain", extensions: [".txt"] },
   ],
 };

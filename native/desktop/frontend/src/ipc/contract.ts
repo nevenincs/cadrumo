@@ -10,6 +10,13 @@ import type { Channel } from "@tauri-apps/api/core";
 import type { AgentAccessAnswer } from "../shell/agentAccess";
 import type { ServedCatalogAnswer } from "../shell/agentCatalogContract";
 import type {
+  LocalEngine,
+  LocalEngineStatus,
+  LocalModelListStatus,
+  LocalPlacement,
+} from "../shell/localModelsContract";
+import type {
+  AttachmentPolicyResponse,
   ModelLicenceResponse,
   SkillListResponse,
 } from "../shell/agentGatewayContract";
@@ -18,7 +25,6 @@ import type {
   AgentApproval,
   AgentAttachmentCard,
   AgentAttachmentGrants,
-  AgentAttachmentPolicy,
   AgentAttachmentRefusal,
   AgentAttachmentRelease,
   AgentAttachmentScope,
@@ -306,66 +312,6 @@ export type StartupProgress = {
   phase: StartupPhase;
   locale: string | null;
   failure: HostFailure | null;
-};
-
-/** One model the person added by name to a local lane's model list. */
-export type AgentListedModel = { lane: string; model: string };
-/** Where the model documents are read with comes from, as the service serves it. */
-export type AgentReadingSource = "chosen" | "default" | "none";
-
-/**
- * The models the person added to the local lanes' lists, in the order added,
- * and the model documents are read with, the one the person selected in the
- * agent's model picker on any lane, with the revision a change sends back; or
- * a stored record nobody can read, which lists and selects no model and
- * carries its reset guard. A lane's recommended models are its catalogue's
- * and are not listed here. `local_lanes` are the catalogue's lanes on this
- * computer, whose models the picker offers from their lists.
- */
-export type AgentLocalModels =
-  | {
-      state: "readable";
-      models: AgentListedModel[];
-      /** The model documents are read with now, as the service decides it. */
-      reading: AgentListedModel | null;
-      /** Where `reading` comes from: the person's stored choice, the
-       * installed default that stands in for none, or none at all. */
-      reading_source: AgentReadingSource;
-      local_lanes: string[];
-      revision: string;
-    }
-  | { state: "unreadable"; local_lanes: string[]; revision: string };
-
-/** The engine that serves the local models, as the service names it. */
-export type AgentLocalEngineToken = "llamacpp" | "ollama";
-/** Where the local models run: the device the engine finds, or the
- * processor alone. */
-export type AgentLocalPlacement = "auto" | "cpu_only";
-/**
- * The local engine and placement stored beside the model lists, with the
- * revision a change sends back: the lists' own revision, as one record holds
- * both; or the same record unreadable. Either carries the engines and the
- * placements the service offers, in its order: the window offers exactly
- * those and lists none of its own.
- */
-export type AgentLocalEngine =
-  | {
-      state: "readable";
-      engine: AgentLocalEngineToken;
-      placement: AgentLocalPlacement;
-      choices: AgentLocalChoices;
-      revision: string;
-    }
-  | {
-      state: "unreadable";
-      choices: AgentLocalChoices;
-      revision: string;
-    };
-
-/** The engines and the placements the service offers, each in its order. */
-export type AgentLocalChoices = {
-  engine: AgentLocalEngineToken[];
-  placement: AgentLocalPlacement[];
 };
 
 // ---------------------------------------------------------------------------
@@ -1077,43 +1023,43 @@ export interface HostCommands {
   agent_provider_catalog: { args: Authorized; result: ServedCatalogAnswer };
   /** The models the person added to the local lanes' lists, as the agent
    * service stores them. */
-  agent_local_models: { args: Authorized; result: AgentLocalModels };
+  agent_local_models: { args: Authorized; result: LocalModelListStatus };
   /** Adds a model by name to a local lane's list at the revision read. A
    * refusal is `agent_local_models_<reason>` for the service's reasons, such
    * as `agent_local_models_full`, or a column code. */
   agent_local_model_add: {
     args: Authorized<{ lane: string; model: string; expectedRevision: string }>;
-    result: AgentLocalModels;
+    result: LocalModelListStatus;
   };
   /** Takes an added model off a local lane's list at the revision read. */
   agent_local_model_remove: {
     args: Authorized<{ lane: string; model: string; expectedRevision: string }>;
-    result: AgentLocalModels;
+    result: LocalModelListStatus;
   };
   /** Removes the list record, readable or not, at the revision read. */
   agent_local_models_reset: {
     args: Authorized<{ expectedRevision: string }>;
-    result: AgentLocalModels;
+    result: LocalModelListStatus;
   };
   /** The local engine and placement, as the agent service stores them. */
-  agent_local_engine: { args: Authorized; result: AgentLocalEngine };
+  agent_local_engine: { args: Authorized; result: LocalEngineStatus };
   /** Stores the local engine and placement at the revision read; the service
    * retires and restarts the assistant when either changes. A refusal is
    * `agent_local_models_<reason>` (the same service reasons as the model
    * list) or a column code. */
   agent_local_engine_choose: {
     args: Authorized<{
-      engine: AgentLocalEngineToken;
-      placement: AgentLocalPlacement;
+      engine: LocalEngine;
+      placement: LocalPlacement;
       expectedRevision: string;
     }>;
-    result: AgentLocalEngine;
+    result: LocalEngineStatus;
   };
   /** Stores the model documents are read with, on any lane the catalogue
    * reports, at the revision read. */
   agent_reading_model_choose: {
     args: Authorized<{ lane: string; model: string; expectedRevision: string }>;
-    result: AgentLocalModels;
+    result: LocalModelListStatus;
   };
   /** One model's licence text, from the ready agent's licence route. */
   agent_model_licence: {
@@ -1173,7 +1119,10 @@ export interface HostCommands {
     args: Authorized<{ conversationId: string; name?: string }>;
     result: null;
   };
-  agent_attachment_policy: { args: Authorized; result: AgentAttachmentPolicy };
+  agent_attachment_policy: {
+    args: Authorized;
+    result: AttachmentPolicyResponse;
+  };
   agent_send: {
     args: Authorized<{ request: AgentSendRequest }>;
     result: AgentSendResult;

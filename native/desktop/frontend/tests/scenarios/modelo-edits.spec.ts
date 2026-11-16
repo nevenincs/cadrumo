@@ -275,6 +275,83 @@ test("a refused apply names the earlier filing it waits on", async ({
   );
 });
 
+test("an apply a later stage refused says that stage's served words and routes its served door", async ({
+  page: target,
+}) => {
+  // The values were admitted and the recalculation refused: the apply
+  // settles under that stage's registered refusal, its sentence and its
+  // door served on the operation's error detail. Every word is the host's.
+  const words = "Fixture: the recalculation could not read a source.";
+  const door = "Fixture: open the form";
+  await openDeclaration(target, "130", { shape: "edit" });
+  await target.evaluate(
+    ({ words, door }) => {
+      const port = window.__fixtureModelo!;
+      const edit = port.edit.bind(port);
+      port.edit = (async (
+        definition: Parameters<typeof port.edit>[0],
+        body: Parameters<typeof port.edit>[1],
+      ) =>
+        definition === "modelo.edit.apply"
+          ? {
+              kind: "refused",
+              operation_id: "fixture-downstream-apply",
+              revision: 2,
+              reason: "REFUSED_FIXTURE_DOWNSTREAM",
+              detail: {
+                detail_version: 1,
+                kind: "registered",
+                error_code: "REFUSED_FIXTURE_DOWNSTREAM",
+                message_key: null,
+                context: [],
+                context_entries_omitted: 0,
+                refusal_words: words,
+                refusal_words_language: "en",
+                precondition_verdict_json: JSON.stringify({
+                  failed_condition_id: "fixture.downstream.condition",
+                  evidence: [
+                    {
+                      condition_id: "fixture.downstream.condition",
+                      evidence_id: "modelo.work.edit.downstream_refusal",
+                      provenance: "application_state",
+                      values: { edit_values_admitted: true },
+                    },
+                  ],
+                  action: { action_id: "fixture.downstream.action" },
+                  argument_bindings: [],
+                  missing_argument_names: [],
+                  conditionality: "immediate",
+                  target_operation_ids: ["modelo.work.form"],
+                  action_words: door,
+                  action_words_language: "en",
+                  alternative_actions: [],
+                  no_recovery_outcome: null,
+                  no_recovery_words: null,
+                }),
+              },
+            }
+          : edit(definition, body)) as typeof port.edit;
+    },
+    { words, door },
+  );
+  await stage(target, "06", TYPED_06);
+  const dialog = await review(target);
+  await applyButton(dialog).click();
+  await expect(
+    dialog.getByRole("alert").filter({ hasText: words }),
+  ).toBeVisible();
+  const way = dialog.getByRole("button", { name: door });
+  await expect(way).toBeEnabled();
+  await expect(way).not.toHaveAttribute("aria-disabled", "true");
+  // Nothing was applied: the edit stays staged when the door is followed.
+  await way.click();
+  await expect(dialog).toBeHidden();
+  await expect(boxRow(target, "06")).toContainText(
+    label("workspace.modelo.attention.staged"),
+  );
+  expect(await calls(target, "modelo edit modelo.edit.apply")).toHaveLength(0);
+});
+
 test("the real Modelo 303 takes a typed value and checks it as staged", async ({
   page: target,
 }) => {

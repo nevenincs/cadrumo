@@ -12,6 +12,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _EXPECTED_WIRING: Final[dict[str, str]] = {
     "dev.acceptance.aeat_request_capture": "aeat-request-capture",
+    "dev.acceptance.persona_table": "persona-table",
+    "dev.acceptance.persona_table.cli_column": "persona-table-cli-column",
+    "dev.acceptance.personas": "persona-catalogue-run",
     "dev.desktop_agent_live": "desktop-agent-live",
     "dev.docs.sequences": "docs-generate-sequences",
     "dev.docs.terminology.coverage": "report-terminology-coverage",

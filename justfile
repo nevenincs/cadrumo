@@ -1507,6 +1507,21 @@ desktop-agent-live *ARGS:
 aeat-request-capture *ARGS:
     uv run --no-sync python -m dev.acceptance.aeat_request_capture {{ARGS}}
 
+[doc('Run, render, diff and ratchet the persona table (run, render, check, diff, baseline); needs a private CADRUMO_AUTHORITY_ROOT.')]
+[group('test')]
+persona-table *ARGS:
+    uv run --no-sync python -m dev.acceptance.persona_table {{ARGS}}
+
+[doc('Run one persona at one horizon through the installed CLI of a snapshot and write the CLI column lines.')]
+[group('test')]
+persona-table-cli-column *ARGS:
+    uv run --no-sync python -m dev.acceptance.persona_table.cli_column {{ARGS}}
+
+[doc('Run catalogue personas end to end through an installed aeat and write one receipt per persona.')]
+[group('test')]
+persona-catalogue-run *ARGS:
+    uv run --no-sync python -m dev.acceptance.personas {{ARGS}}
+
 [doc('Reindex the running resident search service, then run its retrieval contracts.')]
 [group('test')]
 test-resident-service:

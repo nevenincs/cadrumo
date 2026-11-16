@@ -240,9 +240,11 @@ mod tests {
 
     #[test]
     fn the_filter_clears_its_names_after_the_merge() {
+        // Any product-namespace name the console does not pin, as the platform declares it.
+        let unpinned = format!("{}CONSOLE_PROBE", cadrumo_platform::NAMESPACE_PREFIX);
         let added = text(&[
             ("CADRUMO_STORAGE_ROOT", r"C:\elsewhere"),
-            ("CADRUMO_AGENT_PORT", "1"),
+            (unpinned.as_str(), "1"),
             ("PYTHONPATH", r"C:\elsewhere"),
             ("AEAT_CERTIFICATE", "x"),
             ("FINANCIAL_SOURCE", "x"),
@@ -257,7 +259,7 @@ mod tests {
             Some(OsStr::new(r"C:\root"))
         );
         for cleared in [
-            "CADRUMO_AGENT_PORT",
+            unpinned.as_str(),
             "PYTHONPATH",
             "AEAT_CERTIFICATE",
             "FINANCIAL_SOURCE",

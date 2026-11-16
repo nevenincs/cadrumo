@@ -2124,7 +2124,31 @@ async function reachExport() {
     if (now.found && !now.disabled) return { reached: true };
     await chooseTab(VIEWS, label("desktop.modelo.view.form"));
     await readAgainIfHeld();
-    const head = await exec(pageHeaderStep, nextActionLabels(), busyText);
+    let head = await exec(pageHeaderStep, nextActionLabels(), busyText);
+    // A button the window holds while its own read runs is not yet the
+    // declaration's answer: wait for the read to settle, then judge it.
+    if (head.disabled && head.busy) {
+      const waited = Date.now();
+      const settled = await waitFor(
+        async () => {
+          const now = await exec(pageHeaderStep, nextActionLabels(), busyText);
+          return now.busy ? null : now;
+        },
+        {
+          timeout: STEP_TIMEOUT_MS,
+          what: "the header's read to settle",
+          soft: true,
+          interval: 600,
+        },
+      );
+      if (!settled)
+        return stop(
+          head,
+          `the window was still reading after ${STEP_TIMEOUT_MS} ms`,
+        );
+      notes.push(`header read settled after ${Date.now() - waited} ms`);
+      head = settled;
+    }
     if (!head.action) return stop(head, "the header offers no next action");
     if (!PRESSABLE_ACTIONS.includes(head.action))
       return stop(

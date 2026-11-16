@@ -57,6 +57,8 @@ test("dragging shows the design's overlay; Shift arms it and leaving clears it",
   await signal(page, "over", false);
   await expect(overlay(page)).toBeVisible();
   await expect(overlay(page)).toContainText("PDF");
+  await expect(overlay(page)).toContainText("JPEG");
+  await expect(overlay(page)).not.toContainText(".PDF");
   await expect(overlay(page)).not.toContainText("ZIP");
   await expect(agentColumn(page).locator("[data-armed=true]")).toHaveCount(0);
   await page.keyboard.down("Shift");

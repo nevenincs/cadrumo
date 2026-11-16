@@ -13,7 +13,11 @@ import {
   categoryFamily,
   type ServedVocabulary,
 } from "../../../shell/ledgerServedVocabulary";
-import { awaitsInvoice, type ImportIssue } from "../../../shell/ledgerContract";
+import {
+  awaitsInvoice,
+  type ImportIssue,
+  type LedgerPreflightReason,
+} from "../../../shell/ledgerContract";
 import type {
   LedgerWindowScope,
   ReadinessSnapshot,
@@ -325,11 +329,16 @@ export function columnsOfFields(fields: readonly string[]): ColumnId[] {
   return COLUMN_IDS.filter((column) => wanted.has(column));
 }
 
-/** The column a reason marks and the preset that shows it. */
-export const REASON_FIX: Record<
-  string,
-  { preset: PresetId; column: ColumnId | null }
-> = {
+type ReasonFix = { preset: PresetId; column: ColumnId | null };
+
+/** The column each served reason marks and the preset that shows it. Keyed
+ * by the served reason set, so a reason the product adds without an entry
+ * here, or an entry for a reason it retired, fails the type check. */
+const REASON_FIXES: Record<LedgerPreflightReason, ReasonFix> = {
+  missing_business_classification: {
+    preset: "review",
+    column: "classification",
+  },
   missing_category: { preset: "review", column: "category" },
   missing_taxable_base: { preset: "iva", column: "taxable_base" },
   missing_iva_amount: { preset: "iva", column: "iva_amount" },
@@ -382,6 +391,11 @@ export const REASON_FIX: Record<
   invoice_recargo_split_unresolved: { preset: "review", column: "invoice" },
   invoice_recargo_not_declarable: { preset: "review", column: "invoice" },
 };
+
+/** A reason's fix by the reason a check names: a reason the window was not
+ * built against has none. */
+export const REASON_FIX: Readonly<Partial<Record<string, ReasonFix>>> =
+  REASON_FIXES;
 
 /** Movements to classify whose staged change classifies them or approves a
  * suggestion: the staged progress the to-classify pill draws (M8). */

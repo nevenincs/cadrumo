@@ -214,6 +214,24 @@ async def test_a_balance_without_lots_is_drawn_with_its_served_zeros_and_says_no
 
 
 @pytest.mark.asyncio
+async def test_each_balance_amount_is_drawn_in_the_words_it_was_served_in() -> None:
+    served = _balance(total="1300.00", active="1200.00", expired="100.00", language=OutputLanguage.ES)
+    door = FakeDoor(balances=[served])
+    screen = _screen(door)
+    async with ScreenHostApp(screen).run_test(size=(120, 50)) as pilot:
+        await settle(pilot)
+        shown = _text(screen, "#wallet-balance").splitlines()
+
+    for name, words in (
+        ("total_balance", served.total_balance_words),
+        ("active_balance", served.active_balance_words),
+        ("expired_balance", served.expired_balance_words),
+        ("unallocated_applied_amount", served.unallocated_applied_amount_words),
+    ):
+        assert f"{tr(f'workspace.modelo.iva_wallet.{name}')}: {words}" in shown, (name, shown)
+
+
+@pytest.mark.asyncio
 async def test_a_read_that_failed_is_not_drawn_as_a_balance_and_reading_again_works() -> None:
     door = FakeDoor(balances=[RuntimeError("transport"), _balance()])
     screen = _screen(door)
