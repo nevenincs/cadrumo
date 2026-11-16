@@ -123,7 +123,7 @@ class RowAction(StrEnum):
     EXTERNAL_DETAILS = "external_details"
 
 
-_ROW_ACTION_WORDS = {
+_ROW_ACTION_LOCALE_KEYS = {
     RowAction.OPEN: "workspace.declarations.calendar.action.open",
     RowAction.OPEN_LOCAL_DRAFT: "workspace.declarations.list.next.open_local_draft",
     RowAction.START: "workspace.declarations.list.next.start",
@@ -147,7 +147,7 @@ def row_action(row: DeclarationListRow, controller: DeclarationsWorkspaceControl
 def row_enter_action(row: DeclarationListRow, controller: DeclarationsWorkspaceController) -> str:
     """Say the row's Enter step, and nothing where Enter has none."""
     action = row_action(row, controller)
-    return "" if action is None else "Enter " + tr(_ROW_ACTION_WORDS[action])
+    return "" if action is None else "Enter " + tr(_ROW_ACTION_LOCALE_KEYS[action])
 
 
 def add_portfolio_row(
