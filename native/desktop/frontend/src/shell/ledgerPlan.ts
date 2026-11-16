@@ -12,12 +12,7 @@ import {
   type LedgerUpdateRequest,
 } from "./ledgerMovementOperations";
 import { type LedgerStagedBlocker } from "./ledgerMovementCheckContract";
-import type {
-  JsonObject,
-  LedgerDefinitionId,
-  LedgerRow,
-  OutputLanguage,
-} from "./ledger";
+import type { JsonObject, LedgerDefinitionId, OutputLanguage } from "./ledger";
 import {
   LEDGER_BULK_CLASSIFY_COLUMNS,
   LEDGER_UPDATE_FIELDS,
@@ -39,6 +34,7 @@ import {
   type StagedActionKind,
   type StagedContent,
 } from "./ledgerStage";
+import type { LedgerTransactionReviewProjection } from "./ledgerReadContract";
 
 export type LedgerWriteRoute = "bulk" | "classify" | "update";
 const DECIMAL_FIELDS: ReadonlySet<StageField> = new Set([
@@ -204,7 +200,7 @@ export type LedgerPlan = {
 
 export type PlanContext = {
   /** The stored rows, as read at the apply. */
-  rows: ReadonlyMap<string, LedgerRow>;
+  rows: ReadonlyMap<string, LedgerTransactionReviewProjection>;
   /** The backend's answer for exactly this content. */
   check: StagedCheck;
   /** Rows a finalized declaration cites: their facts are sealed. */
@@ -489,7 +485,7 @@ function heldBy(blocker: LedgerStagedBlocker) {
 /** The checks one movement's staged work must pass. */
 function checkRow(
   id: string,
-  row: LedgerRow | undefined,
+  row: LedgerTransactionReviewProjection | undefined,
   content: StagedContent,
   actions: StagedAction[],
   context: PlanContext,

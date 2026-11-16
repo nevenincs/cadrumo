@@ -27,9 +27,8 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.modelos.calculation_revision_operator_layer import ValueAttestation
 from .edit_models import ModeloEditBindingIntentKind, ModeloEditWritableBindingOverrideSurfaceEntryV1
 from .work_form_context import WorkFormContext
-from .work_form_field_vocabulary import ModeloFormEarlierFiling
+from .work_form_field_vocabulary import ModeloFormBindingAddressV1, ModeloFormEarlierFiling
 from .work_form_models import (
-    ModeloFormBindingAddressV1,
     ModeloFormBindingStatement,
     ModeloFormField,
     ModeloFormStatedPriorValue,

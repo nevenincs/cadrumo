@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { facts } from "@/shell/compose";
 import type { InvoiceListResult } from "../../../shell/ledgerInvoiceOperations";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import type { LedgerStagedRowAnswer } from "../../../shell/ledgerMovementCheckContract";
 import { useInvoiceMatches } from "../../../shell/ledgerInvoiceMatch";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
@@ -28,6 +28,7 @@ import { chipText, invoiceLine, settlesText } from "../matching/matchingWords";
 import type { InspectorRead } from "./useInspectorReads";
 import { formatAmount } from "../../../shared/numbers";
 import { formatDay } from "../../../shared/dateFormats";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /**
  * The inspector's Invoice section: the invoice the movement is linked to,
@@ -51,11 +52,11 @@ export function InvoiceSection({
   say,
 }: {
   port: LedgerPort;
-  row: LedgerRow;
+  row: LedgerTransactionReviewProjection;
   /** The ledger's answer about the movement; absent until it has answered. */
   answer: LedgerStagedRowAnswer | undefined;
   /** The window's movements, for suggestions one to one. */
-  rows: readonly LedgerRow[];
+  rows: readonly LedgerTransactionReviewProjection[];
   invoices: InspectorRead<InvoiceListResult> | null;
   /** What is staged on this movement. */
   actions: readonly StagedAction[];

@@ -11,7 +11,6 @@ import {
   useLedgerRead,
   useStoryStage,
 } from "@/dev/LedgerStage";
-import type { LedgerRow } from "../../../shell/ledger";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import { MatchQueue } from "../matching/MatchQueue";
 import { useSealedMovements } from "../useSealedMovements";
@@ -22,6 +21,7 @@ import type { InspectorFocus } from "./MovementInspector";
 import type { RightPanelMode } from "./RightPanel";
 import { LedgerSuggestions } from "../suggestions/SuggestionsProvider";
 import { SplitDialog } from "./SplitDialog";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 // The panel beside the movements grid, over the movements the scenario's
 // ledger holds: one movement, several, none, and the queue of movements to
@@ -404,7 +404,7 @@ type SplitArgs = { id?: string; locale: string };
 function Split({ id, locale }: SplitArgs) {
   const port = useLedgerPort();
   const read = useLedgerRead(port);
-  const row: LedgerRow | undefined =
+  const row: LedgerTransactionReviewProjection | undefined =
     read.rows?.find((found) => found.transaction.transaction_id === id) ??
     read.rows?.find(
       (found) => found.transaction.business_classification === "BUSINESS",

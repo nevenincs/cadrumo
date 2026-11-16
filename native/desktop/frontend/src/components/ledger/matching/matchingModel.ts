@@ -13,8 +13,8 @@ import type {
   CatalogueInvoiceSnapshot,
   LedgerInvoiceMatchPair,
 } from "../../../shell/ledgerInvoiceContract";
-import type { LedgerRow } from "../../../shell/ledger";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** The evidence a pair stands on, shown as chips. */
 export type MatchChip =
@@ -25,7 +25,7 @@ export type MatchChip =
 
 /** One movement and one invoice that settle each other. */
 export type MatchPair = {
-  row: LedgerRow;
+  row: LedgerTransactionReviewProjection;
   invoice: CatalogueInvoiceSnapshot;
   /** What the invoice settles, as the ledger states it. */
   settles: string;
@@ -74,7 +74,7 @@ export function stagedLinks(actions: readonly StagedAction[]): {
  * left out. */
 export function remapMatches(
   result: Pick<LedgerInvoiceMatchResult, "suggestions">,
-  rows: readonly LedgerRow[],
+  rows: readonly LedgerTransactionReviewProjection[],
   invoices: readonly CatalogueInvoiceSnapshot[],
 ): Reconciliation {
   const rowById = new Map(
@@ -205,7 +205,7 @@ export function remapInvoiceChoices(
 
 /** One movement the picker offers an invoice. */
 export type MovementOption = {
-  row: LedgerRow;
+  row: LedgerTransactionReviewProjection;
   /** The movement settles the invoice by flow, currency and amount. */
   settles: boolean;
 };
@@ -213,7 +213,7 @@ export type MovementOption = {
  * window holds them. */
 export function remapMovementChoices(
   choices: NonNullable<LedgerInvoiceMatchResult["movement_choices"]>,
-  rows: readonly LedgerRow[],
+  rows: readonly LedgerTransactionReviewProjection[],
 ): MovementOption[] {
   const rowById = new Map(
     rows.map((row) => [row.transaction.transaction_id, row]),
@@ -232,7 +232,7 @@ export type LinkInconsistency = {
   transactionId: string;
   direction: "invoice-only" | "transaction-only";
   invoice: CatalogueInvoiceSnapshot | null;
-  row: LedgerRow | null;
+  row: LedgerTransactionReviewProjection | null;
   /** The link that makes both sides cite each other, or why there is
    * none here. */
   repair:
@@ -254,7 +254,7 @@ export type LinkInconsistency = {
  */
 export function inconsistencies(
   found: LedgerCheckResult["link_inconsistencies"],
-  rows: readonly LedgerRow[] | null,
+  rows: readonly LedgerTransactionReviewProjection[] | null,
   invoices: readonly CatalogueInvoiceSnapshot[],
 ): LinkInconsistency[] {
   const byRow = new Map(

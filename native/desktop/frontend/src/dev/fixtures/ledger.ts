@@ -3,15 +3,15 @@
 // invented: the studio, its clients, its suppliers and its accounts. The
 // ledger is generated from a fixed seed, so every run sees the same rows.
 
-import type { CatalogueInvoiceSnapshot } from "../../shell/ledgerInvoiceContract";
 import type {
-  LedgerMovementWithholding,
-  LedgerTransaction,
-  PublicDecimal,
-} from "../../shell/ledger";
+  CatalogueInvoiceSnapshot,
+  LedgerTransactionProjection,
+} from "../../shell/ledgerInvoiceContract";
+import type { PublicDecimal } from "../../shell/ledger";
 import { exampleInvoices } from "./ledgerInvoices";
 import { settlementOf } from "../ledgerSettlement";
 import { fixtureDay, fixtureInstant, fixtureYear } from "@/dev/fixtureDates";
+import type { LedgerMovementWithholdingProjection } from "../../shell/ledgerReadContract";
 
 /** The profile the fixture ledger belongs to: the profile fixture's own. */
 export const LEDGER_FIXTURE_PROFILE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
@@ -27,7 +27,7 @@ export const SEALED_PERIOD = {
 
 /** One movement, with the facts the product keeps beside its projection. */
 export type FixtureMovement = {
-  transaction: LedgerTransaction;
+  transaction: LedgerTransactionProjection;
   group_label: string | null;
   own_account_id: string | null;
   import_batch_id: string | null;
@@ -39,7 +39,7 @@ export type FixtureMovement = {
   /** The idempotency key a manual add carried, if any. */
   idempotency_key: string | null;
   /** What the invoices it pays leave on it, as the list serves it. */
-  withholding: LedgerMovementWithholding[];
+  withholding: LedgerMovementWithholdingProjection[];
 };
 export type FixtureEvidence = {
   evidence_id: string;
@@ -535,7 +535,7 @@ export function fixtureLedger(
     const description = kind.description;
     const account = kind.account;
     const created = stamp(date, random.between(0, 600));
-    const transaction: LedgerTransaction = {
+    const transaction: LedgerTransactionProjection = {
       transaction_id: movementId({
         date,
         amount,
@@ -589,6 +589,10 @@ export function fixtureLedger(
       m210_income_classification: null,
       usage_ratio_id: null,
       prorrata_reference: null,
+      arrendamiento_ref: null,
+      inmueble_ref: null,
+      gasto_capital_inmobiliario: null,
+      link_fields: [],
       purchase_invoice_evidence_id: extra.evidence_id ?? null,
       invoice_id: extra.invoice_id ?? null,
       attachment_ids: extra.attachment_id ? [extra.attachment_id] : [],

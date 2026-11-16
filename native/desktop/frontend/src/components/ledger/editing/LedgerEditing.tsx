@@ -6,7 +6,7 @@ import {
   useState,
   type Dispatch,
 } from "react";
-import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerPort } from "../../../shell/ledger";
 import { releaseReview, type ApplyReport } from "../../../shell/ledgerApply";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import {
@@ -24,6 +24,7 @@ import { stageTally } from "./editingModel";
 import { LeaveDialog } from "./LeaveDialog";
 import { ReviewDialog } from "./ReviewDialog";
 import { useLedgerApply } from "./useLedgerApply";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** Asks before staged work is dropped: true when it asked, and runs
  * `proceed` once the person chose to leave, or `stay` once they did not.
@@ -55,7 +56,7 @@ export function useLedgerEditing({
   port: LedgerPort;
   period: LedgerPeriod | null;
   /** The stored rows the page shows now. */
-  rows: readonly LedgerRow[] | null;
+  rows: readonly LedgerTransactionReviewProjection[] | null;
   stage: StageState;
   dispatch: Dispatch<StageEvent>;
   /** Reads the window again, and the readiness checks after it. */
@@ -81,8 +82,10 @@ export function useLedgerEditing({
 
   // The row each staged movement was staged against, kept from the first
   // change: the apply compares it with the ledger as it is then.
-  const base = useRef(new Map<string, LedgerRow>());
-  const shown = useRef<ReadonlyMap<string, LedgerRow>>(new Map());
+  const base = useRef(new Map<string, LedgerTransactionReviewProjection>());
+  const shown = useRef<ReadonlyMap<string, LedgerTransactionReviewProjection>>(
+    new Map(),
+  );
   useEffect(() => {
     shown.current = new Map(
       (rows ?? []).map((row) => [row.transaction.transaction_id, row]),
@@ -105,7 +108,7 @@ export function useLedgerEditing({
     [dispatch, remember, onRekey],
   );
   const read = useCallback(() => {
-    const out = new Map<string, LedgerRow>();
+    const out = new Map<string, LedgerTransactionReviewProjection>();
     for (const id of stagedMovements(content)) {
       const row = base.current.get(id) ?? shown.current.get(id);
       if (row) out.set(id, row);
@@ -144,12 +147,18 @@ export function useLedgerEditing({
   );
 
   // What stays staged is now compared with the ledger as just read.
-  const rebase = useCallback((fresh: ReadonlyMap<string, LedgerRow>) => {
-    for (const [id, row] of fresh)
-      if (base.current.has(id)) base.current.set(id, row);
-  }, []);
+  const rebase = useCallback(
+    (fresh: ReadonlyMap<string, LedgerTransactionReviewProjection>) => {
+      for (const [id, row] of fresh)
+        if (base.current.has(id)) base.current.set(id, row);
+    },
+    [],
+  );
   const afterApply = useCallback(
-    (report: ApplyReport, fresh: ReadonlyMap<string, LedgerRow>) => {
+    (
+      report: ApplyReport,
+      fresh: ReadonlyMap<string, LedgerTransactionReviewProjection>,
+    ) => {
       for (const { from } of report.rekeys) {
         base.current.delete(from);
       }

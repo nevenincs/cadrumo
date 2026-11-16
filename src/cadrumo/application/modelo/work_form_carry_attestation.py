@@ -137,8 +137,9 @@ def _open_carries_by_family(
         if not _attestable_open(entry, held, entered):
             continue
         binding = context.bindings.get(entry.binding_id)
-        if binding is not None and binding.absence_attestation in _FORM_FAMILIES:
-            open_by_family.setdefault(binding.absence_attestation, []).append(entry.binding_id)
+        family = None if binding is None else binding.absence_attestation
+        if family is not None and family in _FORM_FAMILIES:
+            open_by_family.setdefault(family, []).append(entry.binding_id)
     if revision is None or not trabajo_recorded(revision):
         # No payer record of work income, so the employer's contributions are not in question.
         open_by_family.pop(AbsenceAttestationFamily.RENTA_TRABAJO_INCOME_NOT_STATED, None)

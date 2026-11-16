@@ -99,7 +99,7 @@ def filer_with_nothing_else(
     return inputs
 
 
-def _general_ingreso_producer_snapshot(modelo: str) -> FilingProducerSnapshot:
+def general_ingreso_producer_snapshot(modelo: str) -> FilingProducerSnapshot:
     """Producer facts for a general-profile ingreso filing by the standard test taxpayer."""
     return build_filing_producer_snapshot(
         modelo=Modelo(modelo),
@@ -126,7 +126,7 @@ def _general_ingreso_producer_snapshot(modelo: str) -> FilingProducerSnapshot:
 
 
 def typed_modelo_131_producer_snapshot() -> FilingProducerSnapshot:
-    return _general_ingreso_producer_snapshot("131")
+    return general_ingreso_producer_snapshot("131")
 
 
 _M111_RETENCIONES_TOTAL_CASILLA, _M111_RESULTADO_CASILLA = (
@@ -630,7 +630,7 @@ def _field_slice_in_record(record: ExportRecordDefinition, field_id: str, cursor
     return slice(start, start + field.length)
 
 
-def _field_slice(layout: ExportLayoutDefinition, record_id: str, field_id: str) -> slice:
+def field_slice(layout: ExportLayoutDefinition, record_id: str, field_id: str) -> slice:
     cursor = 0
     for record in sorted(layout.records, key=lambda item: item.order):
         record_length = _record_wire_length(record)
@@ -642,7 +642,7 @@ def _field_slice(layout: ExportLayoutDefinition, record_id: str, field_id: str) 
 
 def m151_producer_snapshot() -> FilingProducerSnapshot:
     """Producer facts for the Modelo 151 export coordinate."""
-    return _general_ingreso_producer_snapshot("151")
+    return general_ingreso_producer_snapshot("151")
 
 
 @cache

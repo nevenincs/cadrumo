@@ -1,6 +1,5 @@
 import "./support/servedLimits";
 import { expect, test } from "@playwright/test";
-import type { LedgerRow } from "../src/shell/ledger";
 import { RELAY_PAYLOAD_LIMIT } from "../src/shell/relayBounds";
 import { classifyCells, ratioCoverage } from "../src/shell/ledgerCommands";
 import {
@@ -31,6 +30,7 @@ import {
   recordedCheck,
   servedBlocker,
 } from "./support/stagedCheck";
+import type { LedgerTransactionReviewProjection } from "../src/shell/ledgerReadContract";
 
 // How staged changes become operations. No page is opened.
 
@@ -48,7 +48,7 @@ const mixed = (id: string) =>
     business_pct: "0.60",
     category_id: "telefono",
   });
-const contextOf = (...rows: LedgerRow[]) => ({
+const contextOf = (...rows: LedgerTransactionReviewProjection[]) => ({
   rows: new Map(rows.map((row) => [row.transaction.transaction_id, row])),
 });
 const staged = (
@@ -1108,7 +1108,8 @@ test("a movement whose sealed state was not read is held, neither sealed nor sav
   const read = business(hexId("r211"));
   const unread = business(hexId("r212"));
   const sealed = business(hexId("r213"));
-  const id = (row: LedgerRow) => row.transaction.transaction_id;
+  const id = (row: LedgerTransactionReviewProjection) =>
+    row.transaction.transaction_id;
   const content = staged({
     [id(read)]: { notes: set("Read") },
     [id(unread)]: { notes: set("Unread") },

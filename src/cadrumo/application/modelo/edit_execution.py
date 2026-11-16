@@ -61,6 +61,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
 from ...core.identity.documents import SpanishTaxIdFormat
 from ...core.secure_object_write import SecureObjectWrite
+from ...core.type_guards import is_object_tuple
 from ...domain.calculations.registry.binding_prior_value_rules import set_aside_binding_ids
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -774,7 +775,7 @@ def _missing_required_binding_ids(
 ) -> tuple[str, ...]:
     """The required bindings the gate named, kept only where the edited revision declares them."""
     raw = (error.context or {}).get("missing_bindings")
-    if not isinstance(raw, tuple):
+    if not is_object_tuple(raw):
         return ()
     declared = None if revision is None else {binding.id for binding in revision.bindings}
     named = tuple(

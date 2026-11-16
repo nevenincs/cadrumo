@@ -16,7 +16,6 @@ import {
   servedRefusalWords,
   type LedgerNextStep,
   type LedgerPort,
-  type LedgerRow,
 } from "../../../shell/ledger";
 import {
   EVIDENCE_UPDATE_FIELDS,
@@ -54,6 +53,7 @@ import {
   recordValue,
   seeded,
 } from "./documentsModel";
+import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 type Notice =
   | { kind: "saved" }
@@ -83,7 +83,7 @@ function RecordDetail({
   port: LedgerPort;
   locale: string;
   record: LedgerEvidenceRecordProjection;
-  attachedTo: LedgerRow | null;
+  attachedTo: LedgerTransactionReviewProjection | null;
   inReview: boolean;
   /** When this record's reading waiting for review was drafted, if one
    * waits. */
@@ -452,7 +452,7 @@ export function EvidenceRecords({
   /** The readings waiting for review, for a record's overview; null where
    * the queue could not be read. */
   readings?: readonly EvidenceReviewQueueRowProjection[] | null;
-  rows: LedgerRow[] | null;
+  rows: LedgerTransactionReviewProjection[] | null;
   inReview: ReadonlySet<string>;
   /** When each reading waiting for review was drafted, by reference. */
   pending: ReadonlyMap<string, string>;
