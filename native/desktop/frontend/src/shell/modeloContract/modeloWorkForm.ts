@@ -941,6 +941,7 @@ export type PublicModeloFormField = {
   legal_refs: string[];
   also_appears_on: string[];
   standing: ModeloFormStanding;
+  attention_rank: number;
   edit_address: ModeloFormAddressV1;
   confirmable: boolean;
   held_zero: boolean;
