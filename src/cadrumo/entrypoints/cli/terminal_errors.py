@@ -396,7 +396,7 @@ def _emit_click_exception(exc: BaseException) -> NoReturn:
         )
     else:
         if authentication_notices:
-            from .common import notice_lines
+            from ...application.operator_output.text_transport import notice_lines
             from .errors import write_stderr
 
             write_stderr("\n".join(notice_lines(authentication_notices)) + "\n")

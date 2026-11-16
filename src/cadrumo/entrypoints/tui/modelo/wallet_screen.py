@@ -35,6 +35,7 @@ from ....application.modelo.value_presentation import format_casilla_value
 from ....application.modelo.work_form_models import ModeloWorkForm
 from ....application.modelo.work_form_wording import period_words
 from ....core.external_constants import OutputLanguage
+from ....core.filing_year import four_digit_year_in
 from ....core.i18n.render import output_language, tr
 from ....core.logging import get_logger
 from ..components.language import localized, refresh_localized_widgets
@@ -326,8 +327,7 @@ class ModeloIvaWalletScreen(ModalScreen[str | None]):
     # -- reading ---------------------------------------------------------------
 
     def _as_of_year(self) -> int | None:
-        text = self.query_one("#wallet-as-of", Input).value.strip()
-        return int(text) if text.lstrip("-").isdigit() else None
+        return four_digit_year_in(self.query_one("#wallet-as-of", Input).value)
 
     def _read_balance(self) -> None:
         """Read the balance again; an answer is the latest question's only."""

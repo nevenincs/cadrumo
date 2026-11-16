@@ -392,7 +392,7 @@ check-registry-gate:
 [doc('Fail on a new year-dependent registry declaration or a baseline entry that no longer occurs.')]
 [group('check')]
 check-registry-year-independence:
-    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label check-registry-year-independence --signal registry-health -- uv run --no-sync python -m dev.registry.analysis.year_independence_gate --check
+    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label check-registry-year-independence -- uv run --no-sync python -m dev.registry.analysis.year_independence_gate --check
 
 # Verify every Sphinx cross-reference in a docstring names a symbol that
 # still exists, across every package under src/; a dangling target fails the build.

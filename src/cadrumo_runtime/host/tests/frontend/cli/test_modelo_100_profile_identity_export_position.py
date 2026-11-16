@@ -69,6 +69,11 @@ _CALCULATE_FLAGS: tuple[str, ...] = (
     "--binding", "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio=0",
     "--binding", "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
     "--binding", "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0",
+    # The four work-income boxes no payer certificate states: the filer states each as none.
+    "--binding", "renta-trabajo-contribucion-empresarial-prevision=0",
+    "--binding", "renta-trabajo-contribucion-empresarial-seguro-dependencia=0",
+    "--binding", "renta-trabajo-aportacion-patrimonio-protegido=0",
+    "--binding", "renta-trabajo-aportacion-empresa-decision-trabajador=0",
 )  # fmt: skip
 
 

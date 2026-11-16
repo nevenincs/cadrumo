@@ -184,7 +184,6 @@ __all__ = [
     "emit_progress_line",
     "format_of",
     "no_active_profile_refusal",
-    "notice_lines",
     "profile_grounding_index_for_operation",
     "resolve_lifecycle_continuation_notice",
     "resolve_notice_action",
@@ -679,24 +678,6 @@ def action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
     return tuple(lines)
 
 
-def notice_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
-    """Render envelope notices as the matching machine-parsable text lines.
-
-    Text mode receives no ``notices`` channel of its own, so a command that
-    passes notices to :func:`emit_envelope` and does not fold the same values
-    into its ``lines`` emits a diagnostic in JSON that is simply absent from the
-    terminal. Rebuilding the line from the notice itself is what stops the two
-    surfaces drifting: the code and the message are the notice's, never a second
-    sentence written beside it.
-
-    This is the tab-separated transport form every ``app`` surface uses. The
-    config storage surface renders its own wrapped, severity-labelled block
-    instead; that is a presentation choice for a human-read report and is not
-    substitutable here, where the line is parsed.
-    """
-    return tuple(f"notice\t{notice.code}\t{notice.message}" for notice in notices)
-
-
 def emit_envelope(
     ctx: typer.Context,
     *,
@@ -789,12 +770,11 @@ def emit_envelope(
     if metadata_invocation:
         rendered_lines = tuple(lines)
     else:
-        rendered_lines = (*lines, *notice_lines(resolved_notices), *action_text_lines(resolved_notices))
-        from ...application.operator_output.sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
+        from ...application.operator_output.text_transport import notice_lines, with_sandbox_banner
 
-        sandbox_notice = sandbox_notice_for_active_bucket()
-        if sandbox_notice is not None:
-            rendered_lines = (sandbox_banner_line(sandbox_notice), *rendered_lines)
+        rendered_lines = with_sandbox_banner(
+            (*lines, *notice_lines(resolved_notices), *action_text_lines(resolved_notices))
+        )
     _render_and_echo(format_name=output_format.value, payload=result, lines=rendered_lines)
 
 

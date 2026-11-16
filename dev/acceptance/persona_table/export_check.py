@@ -14,6 +14,7 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefi
 from cadrumo.domain.filing.errors import ModeloBuilderError
 from cadrumo.tests.personas import ExpectedValue
 
+from .export_carriers import cross_page_reuse_mismatches, foreign_carrier_mismatches
 from .export_readback import read_fields, readback_mismatches, readback_reason, unreadable_reason
 from .export_text import check_export_text, violation_reason
 from .roles import edition_identities
@@ -28,6 +29,8 @@ def export_layout(operation: PinnedAuthorityOperation, plan: PlannedRow) -> Expo
 
 def export_readback_reason(plan: PlannedRow, values: list[ExpectedValue], output: Path) -> str:
     """The stated casilla values the written fichero carries with another value, or empty when it agrees.
+
+    A listed field that carries another page's casilla is reported too (see ``export_carriers``).
 
     A file the registry parser cannot read is itself an export defect, reported as the reason.
     """
@@ -45,7 +48,9 @@ def export_readback_reason(plan: PlannedRow, values: list[ExpectedValue], output
             )
         except (RegistryError, ModeloBuilderError) as error:
             return unreadable_reason(error)
-    return readback_reason(readback_mismatches(values, casillas, plan.unchecked, parsed))
+    mismatches = readback_mismatches(values, casillas, plan.unchecked, parsed)
+    found = [*cross_page_reuse_mismatches(plan.modelo, parsed), *foreign_carrier_mismatches(plan.modelo, parsed)]
+    return readback_reason([*mismatches, *found])
 
 
 def export_text_reason(plan: PlannedRow, output: Path) -> str:

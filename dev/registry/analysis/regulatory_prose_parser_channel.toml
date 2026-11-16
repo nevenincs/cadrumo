@@ -70,6 +70,11 @@ corpus = "Official AEAT XML export dictionaries"
 reason = "Reads the published dictionary row grammar to resolve field identifiers, XML paths, data types and casilla identifiers for payload parsing and rendering. Values come from the published source payload; path overrides remain declared by the export layout."
 
 [[parser]]
+module = "dev/registry/compiler/design_sum.py"
+corpus = "Official AEAT XML export dictionaries"
+reason = "Reads the printed sum grammar of a declaration dictionary row (for example a summary box printed as the sum of other boxes) and decodes the one formula shape that restates it, so the authoring tool and the compiler read rows and formulas the same way. It derives no value: each added box and sign is checked against the row the dictionary prints, and the value lands in the registry authoring tree with its citation."
+
+[[parser]]
 module = "dev/registry/compiler/validate_layout_authority_content.py"
 corpus = "AEAT diseños de registro"
 reason = "Checks a layout authority's cited content against the design text it claims to mirror."
