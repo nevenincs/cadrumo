@@ -25,18 +25,18 @@ from ...domain.calculations.registry.schema_form_layouts import FormLayoutDefini
 from .edit_admission import permitted_binding_entry
 from .edit_models import ModeloEditWritableBindingOverrideSurfaceEntryV1
 from .row_filled_bindings import row_filled_binding_ids
-from .work_form_field_projection import project_binding_field
+from .work_form_facts import ModeloFormFieldFacts
+from .work_form_field_projection import binding_facts
 from .work_form_field_vocabulary import ModeloFormBindingAddressV1
-from .work_form_models import ModeloFormField
 
 if TYPE_CHECKING:
     from .work_form_context import WorkFormContext
 
 
-def answer_fields(
-    layout: FormLayoutDefinition, context: WorkFormContext, shown: Iterable[ModeloFormField]
-) -> tuple[ModeloFormField, ...]:
-    """The admitted binding overrides no ``shown`` field takes, in declaration order.
+def answer_facts(
+    layout: FormLayoutDefinition, context: WorkFormContext, shown: Iterable[ModeloFormFieldFacts]
+) -> tuple[ModeloFormFieldFacts, ...]:
+    """The admitted binding overrides no ``shown`` box takes, classified, in declaration order.
 
     The admission already leaves out what the form cannot answer: a binding a
     repeating group fills row by row and one the calculation does not read for
@@ -47,7 +47,7 @@ def answer_fields(
     period = context.review.period.registry_token
     row_filled = row_filled_binding_ids(revision, layout)
     return tuple(
-        project_binding_field(binding.id, context)
+        binding_facts(binding.id, context)
         for binding in revision.bindings
         if binding.id not in taken
         and isinstance(
@@ -57,15 +57,19 @@ def answer_fields(
     )
 
 
-def _taken_by_fields(shown: Iterable[ModeloFormField]) -> set[str]:
+def _taken_by_fields(shown: Iterable[ModeloFormFieldFacts]) -> set[str]:
+    """The bindings a shown box is addressed to or replaces when overridden.
+
+    A box edits either itself or the first binding feeding it, so the binding
+    an override replaces is always that first one.
+    """
     taken: set[str] = set()
     for field in shown:
-        for address in (field.address, field.edit_address):
-            if isinstance(address, ModeloFormBindingAddressV1):
-                taken.add(address.binding_id)
-        if field.bindings:
-            taken.add(field.bindings[0].binding_id)
+        if isinstance(field.address, ModeloFormBindingAddressV1):
+            taken.add(field.address.binding_id)
+        if field.first_binding_id is not None:
+            taken.add(field.first_binding_id)
     return taken
 
 
-__all__ = ["answer_fields"]
+__all__ = ["answer_facts"]

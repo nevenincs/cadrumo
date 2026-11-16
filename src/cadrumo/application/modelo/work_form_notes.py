@@ -28,9 +28,9 @@ from .calculation_notes import (
     note_record_verdict,
 )
 from .work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormResolutionAnswer
+from .work_form_facts import ModeloFormFieldFactsLike
 from .work_form_field_vocabulary import ModeloFormCasillaAddressV1
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
-from .work_form_models import ModeloFormField
 from .work_review import ModeloWorkReview
 
 _FINDINGS_OF_THE_SAME_CAUSE: Final[Mapping[str, frozenset[str]]] = {
@@ -167,7 +167,7 @@ def _said_by_a_finding(reason: str, casilla_id: str | None, findings: Iterable[M
     return any(finding.message_locale_key in causes and finding.casilla_id == casilla_id for finding in findings)
 
 
-def _boxes_by_casilla(fields: Iterable[ModeloFormField]) -> dict[CasillaId, str | None]:
+def _boxes_by_casilla(fields: Iterable[ModeloFormFieldFactsLike]) -> dict[CasillaId, str | None]:
     """The printed box of each casilla-addressed field."""
     return {
         field.address.casilla_id: field.box for field in fields if isinstance(field.address, ModeloFormCasillaAddressV1)
@@ -222,7 +222,7 @@ def _projected_note(
 
 
 def project_calculation_notes(
-    context: WorkFormContext, sources: tuple[NoteSource, ...], fields: Iterable[ModeloFormField]
+    context: WorkFormContext, sources: tuple[NoteSource, ...], fields: Iterable[ModeloFormFieldFactsLike]
 ) -> tuple[ModeloFormCalculationNote, ...]:
     """The latest calculation's notes on the filer's scale, once each, leaving out what a finding already says.
 
@@ -257,7 +257,7 @@ def project_calculation_notes(
 
 
 def project_verification_issues(
-    review: ModeloWorkReview, fields: Iterable[ModeloFormField]
+    review: ModeloWorkReview, fields: Iterable[ModeloFormFieldFactsLike]
 ) -> tuple[ModeloFormIssue, ...]:
     """The review's verification findings, blocking first, each with the box it names."""
     boxes = _boxes_by_casilla(fields)
