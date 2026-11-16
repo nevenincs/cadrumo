@@ -47,6 +47,7 @@ desktop:
     can_write: escriure fitxers
     cancel: Cancel·la
     capabilities: 'Pot: {list}'
+    catalog_unavailable: No s'ha pogut llegir la llista de proveïdors de l'agent.
     choose_model: Tria un model
     choose_provider: Tria un proveïdor
     close_documents: Tanca els documents

@@ -46,6 +46,7 @@ desktop:
     can_write: fájlokat írni
     cancel: Mégse
     capabilities: 'Képes: {list}'
+    catalog_unavailable: Nem sikerült beolvasni az ügynök szolgáltatólistáját.
     choose_model: Válassz modellt
     choose_provider: Válassz szolgáltatót
     close_documents: Dokumentumok bezárása
