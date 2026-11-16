@@ -25,6 +25,7 @@ from textual.widgets import Input, OptionList
 
 from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
+from cadrumo.application.ledger.rental_link_admission import rental_ledger_references
 from cadrumo.application.user_profile.fact_write import apply_manager_profile_field_mutation
 from cadrumo.application.user_profile.overview import ProfileOverview, build_profile_overview
 from cadrumo.application.user_profile.plantilla_media_rows import (
@@ -46,6 +47,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 from cadrumo.domain.user_profile.values import UserProfileRecord
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+from cadrumo.entrypoints.ledger_action_composition import load_ledger_rows_for_rental_references
 from cadrumo.entrypoints.tests.persona_materialisation import materialised_persona, year_envelope
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.components.widgets import ContentScroll, DisclosureGroup
@@ -53,6 +55,7 @@ from cadrumo.entrypoints.tui.profile.edit_screens import FieldEditScreen
 from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
 from cadrumo.entrypoints.tui.tests.fixture import ensure_session, harness_storage
 from cadrumo.tests.personas import read_persona
+from dev.temporary_output import prepare_temp_root
 
 
 class ProfileFixtureState(StrEnum):
@@ -100,7 +103,7 @@ def profile_fixture_storage(state: ProfileFixtureState) -> Generator[str]:
             profile_adapter_composition(),
             bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),
             bundled_indexed_authority().operation(),
-            TemporaryDirectory(prefix="tui-harness-persona-") as scratch,
+            TemporaryDirectory(prefix="tui-harness-persona-", dir=prepare_temp_root()) as scratch,
             materialised_persona(PROFILE_PERSONA_ID, Path(scratch), complete_setup=False) as persona,
         ):
             yield str(persona.world.profile_id)
@@ -208,6 +211,7 @@ class ProfileReviewDoors:
             profile_decode_context=context,
             expected_revision=expected_revision,
             expected_content_digest=expected_content_digest,
+            rental_ledger_references=rental_ledger_references(load_ledger_rows_for_rental_references),
         )
         return self._project(applied.record)
 
