@@ -3,7 +3,11 @@
 // key is ever part of it; the section can say whether a key is there, never
 // what it is.
 
-import type { CliStateCause, NextStep } from "../../shell/providerSignInWords";
+import type {
+  CliStateCause,
+  NextStep,
+  SignInCause,
+} from "../../shell/providerSignInWords";
 
 /** How a provider is reached: by a key, a key and a gateway's address,
  * only the provider's own sign-in, or nothing at all, for a server on this
@@ -65,12 +69,25 @@ export type ProviderStatus = {
   baseUrl?: string;
   /** The gateway address used when none is stored, if there is one. */
   defaultBaseUrl?: string;
+  /** Whether a conversation on it leaves this computer, as the service
+   * serves the agent's declaration; absent where it serves none. */
+  readsOffHost?: boolean;
+  /** The service can sign the lane out: served, never worked out here. */
+  signOutAvailable?: boolean;
 };
 
 /** How the last change to a provider ended, as the section says it. */
 export type ProviderOutcome =
   /** Saved, but its status could not be read back: refresh to see it. */
-  { kind: "saved_unread" } | { kind: "refused"; code: string };
+  | { kind: "saved_unread" }
+  | {
+      kind: "refused";
+      code: string;
+      /** Why, as the service's closed word, where it served one. */
+      cause?: SignInCause;
+      /** The reference of the log line that records it, where served. */
+      logRef?: string;
+    };
 
 /** A key or token on its way to be saved, read once from its field. */
 export type ProviderSecret = {

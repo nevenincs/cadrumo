@@ -377,6 +377,8 @@ desktop:
         then try again.
       retry: Try again in a moment.
       update_app: Update this app to the latest version, then try again.
+    reads_off_host: Your conversation leaves this computer for the provider.
+    reads_on_host: Your conversation stays on this computer.
     reason_check_settings: Check these settings and try again.
     reason_record_unreadable: The saved API key can't be read. Add it again.
     refresh: Try again
@@ -482,6 +484,8 @@ desktop:
     sign_in_waiting: Finish signing in on the provider's page, then return here.
     sign_in_waiting_device: Enter this code on the provider's page to finish signing
       in.
+    sign_out_action: Sign out
+    sign_out_label: Sign out of {provider}
     status_not_checked: Not checked
     status_off: 'Off'
     status_ready: Ready
