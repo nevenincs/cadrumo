@@ -24,7 +24,7 @@ import type {
   AgentLocalPlacement,
 } from "../../ipc/contract";
 import { formatSize } from "../../shared/numbers";
-import type { AgentModelLicenceFacts } from "../../shell/agentSession";
+import type { DeclaredLicence } from "../../shell/agentCatalogContract";
 import {
   planIsFor,
   ReviewClaimContext,
@@ -47,7 +47,7 @@ import { refusalWords } from "../setup/setupWords";
 
 /** A licence's name, with its SPDX identifier where that adds to it. The
  * pairing is one catalogue sentence, so no punctuation is composed here. */
-const licenceWords = (t: Translate, licence: AgentModelLicenceFacts) =>
+const licenceWords = (t: Translate, licence: DeclaredLicence) =>
   licence.spdx && licence.spdx !== licence.name
     ? t("desktop.providers.local_model_licence_named", {
         name: licence.name,

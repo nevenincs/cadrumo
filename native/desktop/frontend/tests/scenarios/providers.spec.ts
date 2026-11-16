@@ -4,7 +4,7 @@ import {
   settingsLanesUnderEngine,
 } from "../../src/dev/providerSettingsFixture";
 import { SERVED_ENGINE } from "../support/servedLocalLanes";
-import { connectionLabel } from "../support/connection";
+import { bundledMark, connectionLabel } from "../support/connection";
 import { label } from "../support/strings";
 
 /** The settings lanes the service serves under the engine the scenarios run. */
@@ -215,8 +215,7 @@ test("providers start collapsed and keep each connection separately accessible",
     );
     await expect(mark).toHaveCount(1);
     await expect(mark).toHaveAttribute("data-provider", declared.provider);
-    const bundled =
-      declared.provider === "codex" || declared.provider === "claude";
+    const bundled = bundledMark(declared.provider);
     await expect(mark).toHaveAttribute(
       "data-mark",
       bundled ? "mono" : "generic",
@@ -288,9 +287,9 @@ test("a connection is drawn only when ready or waiting on the person, and is qui
   const secondary = await colourOf(intro);
   const name = (card: Locator) => card.getByRole("heading", { level: 5 });
 
-  const ready = lane(target, "local_api");
-  const unset = lane(target, "alpha_api");
-  const signIn = lane(target, "beta_cli");
+  const ready = lane(target, "zai_api");
+  const unset = lane(target, "kimi_api");
+  const signIn = lane(target, "qwen_cli");
   await expectStatus(ready, "ready");
   await expectStatus(unset, "setup_needed");
   await expectStatus(signIn, "sign_in_needed");
@@ -324,17 +323,17 @@ test("a connection is drawn only when ready or waiting on the person, and is qui
       GLYPH[status as Status] ? 1 : 0,
     );
   }
-  const quietChip = providerGroup(target, "alpha").locator(
-    'summary [data-lane-summary="alpha_api"]',
+  const quietChip = providerGroup(target, "kimi").locator(
+    'summary [data-lane-summary="kimi_api"]',
   );
-  const readyChip = providerGroup(target, "local").locator(
-    'summary [data-lane-summary="local_api"]',
+  const readyChip = providerGroup(target, "zai").locator(
+    'summary [data-lane-summary="zai_api"]',
   );
   expect(await colourOf(quietChip)).toBe(secondary);
   expect(await colourOf(readyChip)).not.toBe(secondary);
 
   // A saved key is not ready, so it stays quiet text with no glyph.
-  await saveKey(target, "alpha_api", FAKE_KEY);
+  await saveKey(target, "kimi_api", FAKE_KEY);
   await expectStatus(unset, "saved");
   await expect(statusMark(quietChip)).toHaveAttribute("data-status", "saved");
   await expect(quietChip.locator("[data-icon]")).toHaveCount(0);
@@ -361,7 +360,7 @@ test("settings search finds providers and agent keys", async ({
 
   await search.fill("Codex");
   await expect(providerGroup(target, "codex")).toBeVisible();
-  await expect(providerGroup(target, "alpha")).toBeHidden();
+  await expect(providerGroup(target, "kimi")).toBeHidden();
 
   await search.fill(label("desktop.providers.connection_api"));
   for (const declared of SERVED_LANES) {
@@ -599,7 +598,7 @@ test("a key is saved from the agent's settings and never kept anywhere", async (
 }) => {
   await open(target);
   await openSettings(target);
-  const alpha = lane(target, "alpha_api");
+  const alpha = lane(target, "kimi_api");
   await expectStatus(alpha, "setup_needed");
   // Save waits for a key, and the field offers none of its own.
   await alpha
@@ -623,7 +622,7 @@ test("a key is saved from the agent's settings and never kept anywhere", async (
     }),
   ).toBeVisible();
   // The other lane of the same provider is not changed by it.
-  await expectStatus(lane(target, "alpha_cli"), "setup_needed");
+  await expectStatus(lane(target, "kimi_cli"), "setup_needed");
   // Nowhere a key could be left behind holds it.
   expect(await traces(target, FAKE_KEY)).toEqual(NO_TRACE);
 });
@@ -634,19 +633,19 @@ test("a key that is refused or replaced is not kept either", async ({
   await open(target);
   await openSettings(target);
   const refused = "not a key";
-  await saveKey(target, "beta_api", refused);
-  await expect(lane(target, "beta_api").getByRole("alert")).toHaveText(
+  await saveKey(target, "qwen_api", refused);
+  await expect(lane(target, "qwen_api").getByRole("alert")).toHaveText(
     label("desktop.providers.refused_invalid_key_format"),
   );
-  await expectStatus(lane(target, "beta_api"), "setup_needed");
+  await expectStatus(lane(target, "qwen_api"), "setup_needed");
   expect(await traces(target, refused)).toEqual(NO_TRACE);
 
-  await saveKey(target, "beta_api", FAKE_KEY);
-  await expectStatus(lane(target, "beta_api"), "saved");
+  await saveKey(target, "qwen_api", FAKE_KEY);
+  await expectStatus(lane(target, "qwen_api"), "saved");
   const replacement = "FAKE-KEY-replacement-0001";
-  await saveKey(target, "beta_api", replacement);
+  await saveKey(target, "qwen_api", replacement);
   await expect(
-    lane(target, "beta_api").getByRole("button", {
+    lane(target, "qwen_api").getByRole("button", {
       name: label("desktop.providers.replace_key"),
     }),
   ).toBeVisible();
@@ -661,15 +660,15 @@ test("a gateway takes its address, and one with no default needs it", async ({
   await openSettings(target);
   // With a default, the address may be left empty.
   const gateway = SERVED_LANES.find(
-    (declared) => declared.provider === "gateway",
+    (declared) => declared.provider === "zhipu",
   );
   expect(gateway?.default_base_url).toBeTruthy();
-  await expect(lane(target, "gateway_cli")).toContainText(
+  await expect(lane(target, "zhipu_cli")).toContainText(
     gateway?.default_base_url ?? "",
   );
   // Without one, Save waits for it too.
-  const relayName = nameOf("relay_cli");
-  const relay = lane(target, "relay_cli");
+  const relayName = nameOf("minimax_cli");
+  const relay = lane(target, "minimax_cli");
   await relay
     .getByRole("button", { name: label("desktop.providers.add_key") })
     .click();
@@ -686,7 +685,12 @@ test("a gateway takes its address, and one with no default needs it", async ({
     label("desktop.providers.refused_base_url_rejected"),
   );
   expect(relayName).toBeTruthy();
-  await saveKey(target, "relay_cli", FAKE_KEY, "https://relay.gateway.example");
+  await saveKey(
+    target,
+    "minimax_cli",
+    FAKE_KEY,
+    "https://relay.gateway.example",
+  );
   await expect(relay).toContainText(
     label("desktop.providers.address", {
       url: "https://relay.gateway.example",
@@ -732,11 +736,11 @@ test("every connection has one switch, apart from its setup, and one turned off 
       declared.id,
     ).toHaveCount(1);
 
-  await saveKey(target, "alpha_api", FAKE_KEY);
-  const alpha = lane(target, "alpha_api");
+  await saveKey(target, "kimi_api", FAKE_KEY);
+  const alpha = lane(target, "kimi_api");
   const toggle = alpha.getByRole("switch", {
     name: label("desktop.providers.use_in_agent", {
-      provider: nameOf("alpha_api"),
+      provider: nameOf("kimi_api"),
       connection: label("desktop.providers.connection_api"),
     }),
   });
@@ -749,7 +753,7 @@ test("every connection has one switch, apart from its setup, and one turned off 
   await expect(alpha.getByRole("button")).toHaveCount(0);
 
   await settingsButton(target).click();
-  expect(await pickerWays(target)).not.toContain("alpha/api");
+  expect(await pickerWays(target)).not.toContain("kimi/api");
 
   await openSettings(target);
   await toggle.click();
@@ -759,7 +763,7 @@ test("every connection has one switch, apart from its setup, and one turned off 
     alpha.getByRole("button", { name: label("desktop.providers.replace_key") }),
   ).toBeVisible();
   await settingsButton(target).click();
-  expect(await pickerWays(target)).toContain("alpha/api");
+  expect(await pickerWays(target)).toContain("kimi/api");
   expect(await traces(target, FAKE_KEY)).toEqual(NO_TRACE);
 });
 
@@ -768,7 +772,7 @@ test("a connection that signs in through its app turns off and on like any other
 }) => {
   await open(target);
   await openSettings(target);
-  const beta = lane(target, "beta_cli");
+  const beta = lane(target, "qwen_cli");
   await beta.getByRole("switch").click();
   await expectStatus(beta, "off");
   await expect(beta).toContainText(label("desktop.providers.detail_off"));

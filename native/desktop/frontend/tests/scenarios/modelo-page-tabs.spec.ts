@@ -3,11 +3,10 @@ import { label } from "../support/strings";
 import { openList, views, type Language } from "../support/scenarioModelo";
 
 // The form's page tabs read what the application served for each page, in
-// the window's language. The 2025 Renta serves words for every page; the
-// 2024 one serves only each page's registry path, with the disclosure
-// `technical`, and its tab draws that path as the key it is (`data-key`)
-// glossed by the served words for a technical name; the window words
-// nothing of its own.
+// the window's language, and the window words nothing of its own. No
+// scenario world serves a page heading that is only a registry path, so how
+// a tab draws such a heading as a key is proven on the tab itself, in
+// tests/modelo-page-tab-key.spec.ts.
 
 const LANGUAGES_UNDER_TEST: readonly Language[] = ["en", "es"];
 
@@ -88,27 +87,6 @@ for (const language of LANGUAGES_UNDER_TEST) {
         ((await tab.textContent()) ?? "").replace(/\d+$/, "").toLowerCase(),
       ).toBe(heading.text.toLowerCase());
       await expect(tab.locator("[data-key]")).toHaveCount(0);
-    }
-  });
-
-  test(`form page tabs that were served only a registry path draw it as a key (${language})`, async ({
-    page: target,
-  }) => {
-    await openRenta(target, "renta-y2024", language);
-    const served = await servedHeadings(target, language);
-    expect(served.length).toBeGreaterThan(1);
-    const tabs = pageTabs(target, language);
-    await expect(tabs.first()).toBeVisible();
-    for (const [index, heading] of served.entries()) {
-      expect(heading.disclosure).toBe("technical");
-      const tab = tabs.nth(index);
-      const key = tab.locator("[data-key]");
-      await expect(key).toHaveAttribute("data-key", heading.text);
-      await expect(key).toHaveText(heading.text);
-      await expect(key).toHaveAttribute(
-        "title",
-        label("workspace.modelo.disclosure.technical", {}, language),
-      );
     }
   });
 }

@@ -69,7 +69,7 @@ _LOCAL_OUT_FILE_PRIMARY_TRANSPORT: Final[tuple[str, ...]] = ("local_out", "file"
 
 _CSV_DEFAULT: Final[tuple[object, ...]] = ("LITERAL", "csv", None)
 _ASC_DEFAULT: Final[tuple[object, ...]] = ("LITERAL", "asc", None)
-_HALF_DEFAULT: Final[tuple[object, ...]] = ("LITERAL", 0.5, None)
+_HALF_DEFAULT: Final[tuple[object, ...]] = ("LITERAL", "0.5", None)
 
 _PARTICIPATION_INVOCATION_CONTRACT: Final[tuple[object, ...]] = (
     True,
@@ -419,7 +419,7 @@ _EXPECTED_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
                 "low_confidence_below",
                 "--low-confidence-below",
                 "cli.ledger.llm_diagnostics.threshold_help",
-                annotation="builtins:float",
+                annotation="builtins:str",
                 default=_HALF_DEFAULT,
             ),
         ),

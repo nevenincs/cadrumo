@@ -12,11 +12,11 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.identity.digest import ContentDigest
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
-from ...core.period import Period, PeriodError
+from ...core.period import Period
 from ...domain.calculations.registry.ids import RevisionId
 from .action_rendering import resolved_precondition_action_json_cell
 from .common import active_bucket_id_or_refuse, emit_envelope, resolve_cli_precondition_action
-from .modelo_cli_support import unsupported_local_work_period_refusal
+from .modelo_behavior_support import resolve_year_period
 from .modelo_query_results import (
     LedgerIssuePayload,
     ModeloReadinessMissingBindingPayload,
@@ -95,12 +95,7 @@ def modelo_readiness(
 def _resolve_readiness_period(*, modelo: str, filing_year: int, period: str | None) -> Period | None:
     if period is None:
         return None
-    try:
-        return Period.from_year_and_code(filing_year, period)
-    except PeriodError as exc:
-        if refusal := unsupported_local_work_period_refusal(modelo=modelo, token=period):
-            raise refusal from exc
-        raise
+    return resolve_year_period(filing_year, period, modelo=modelo)
 
 
 def modelo_readiness_commands_readiness_result(

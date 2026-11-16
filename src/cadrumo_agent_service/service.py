@@ -13,7 +13,6 @@ import httpx
 from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 
 from .adapters.agent_background_runs import BackgroundRunEndpoint
-from .adapters.provider_catalog_metadata import DECLARED_CATALOG_KIND
 from .contracts import HostedCertificationStatus
 from .host.controller import (
     AgentHostController,
@@ -24,6 +23,7 @@ from .host.controller import (
 from .host.credential_frame import wipe
 from .providers.application.model_runs import ModelRunService
 from .providers.application.ports import ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
+from .providers.application.served_catalog import DECLARED_CATALOG_KIND
 from .providers.domain.catalog import MAX_CATALOG_LANES
 from .providers.domain.record import LocalEngine
 from .service_scheduling import AgentServiceScheduling

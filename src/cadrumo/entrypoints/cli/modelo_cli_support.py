@@ -20,11 +20,8 @@ from typing import TYPE_CHECKING, cast, get_args
 import typer
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
-from cadrumo_client.commands.errors import CliRefusedBoundaryError
-
 from ...application.modelo.calculation_request_fields import ModeloCalculationOverride
 from ...application.modelo.edit_apply_row_contracts import ModeloDetailRowWireV1
-from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.selectors import (
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
@@ -34,12 +31,10 @@ from ...application.modelo.work_address_errors import (
     ModeloWorkRevisionConflictError,
     ModeloWorkVisibleTargetAmbiguousError,
 )
-from ...application.modelo.work_create_policy import modelo_work_create_refusal_locale_key
 from ...application.modelo.work_selection import ModeloWorkUnitCandidate
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.error_codes import resolve_error_message
-from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import canonical_json_bytes
 from ...core.hex import HEX_PATTERN_64
 from ...core.i18n.render import tr
@@ -160,50 +155,6 @@ def parse_binding_override(spec: str) -> tuple[BindingId, str]:
         key_validator=validate_binding_key,
     )
     return _BINDING_ID_ADAPTER.validate_python(key), value
-
-
-def unsupported_local_work_period_refusal(
-    *,
-    modelo: str | None,
-    token: str | None,
-) -> CliRefusedBoundaryError | None:
-    """Return the central :class:`CliRefusedBoundaryError` for declared non-Period tokens.
-
-    Some registry-visible modelos declare non-core event tokens such as census
-    event names that are valid registry metadata but cannot become a local typed
-    :class:`Period`. Commands that require a local filing period must
-    not report those tokens as both valid and invalid. If the modelo is
-    centrally marked unsupported for local work, reuse that refusal.
-    """
-    if modelo is None or token is None:
-        return None
-    modelo_code = modelo.strip()
-    period_token = token.strip()
-    if not modelo_code or not period_token:
-        return None
-
-    locale_key = modelo_work_create_refusal_locale_key(modelo_code)
-    if locale_key is None:
-        return None
-
-    try:
-        from ...domain.calculations.registry.authority import bundled_indexed_authority
-
-        with bundled_indexed_authority().operation() as operation:
-            declared = declared_modelo_period_tokens(modelo_code, operation=operation)
-    except CadrumoError:
-        return None
-    except Exception:
-        _log.debug(
-            "unsupported_local_work_period_refusal: unexpected period lookup failure for modelo=%r",
-            modelo_code,
-            exc_info=True,
-        )
-        return None
-
-    if not any(period_token.casefold() == declared_token.casefold() for declared_token in declared):
-        return None
-    return CliRefusedBoundaryError(translated_message=locale_key, context={"modelo": modelo_code})
 
 
 def validate_relation_key(key: str, spec: str) -> None:

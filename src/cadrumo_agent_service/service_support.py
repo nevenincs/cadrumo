@@ -13,6 +13,7 @@ from .adapters.agent_programs import AgentProgramRefusalError
 from .host.controller import AgentHostController, AgentHostError, AgentHostState
 from .host.launcher_protocol import launcher_refusal_for, runtime_launcher_refusal_for
 from .providers.application.local_model_list import serves_engine_lane
+from .providers.application.served_catalog import ModelDownload
 from .providers.domain.record import LocalEngine
 
 _LOGGER = get_logger("cadrumo_agent_service.service")
@@ -110,10 +111,6 @@ def picker_lanes(
     }
 
 
-MODEL_DOWNLOAD_REQUIRED = "required"
-"""A local engine's lane: the person downloads models to this computer for it."""
-MODEL_DOWNLOAD_NONE = "none"
-"""A hosted lane: no model is downloaded, so the window offers no installation for it."""
 _ENGINE_LANES = frozenset(engine.value for engine in LocalEngine)
 
 
@@ -123,7 +120,7 @@ def _with_model_download(lane: object, provider_field: str) -> object:
         return lane
     fields = dict(cast(dict[str, object], lane))
     local = fields.get(provider_field) in _ENGINE_LANES
-    fields["model_download"] = MODEL_DOWNLOAD_REQUIRED if local else MODEL_DOWNLOAD_NONE
+    fields["model_download"] = (ModelDownload.REQUIRED if local else ModelDownload.NONE).value
     if not local and "catalog" in fields:
         fields["catalog"] = _without_installed(fields.get("catalog"))
     return fields

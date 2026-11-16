@@ -5,10 +5,11 @@ import {
   type FixtureEngineHealth,
 } from "../src/dev/fixtures/agentCatalog";
 import { catalogChoices, laneEngines } from "../src/shell/agentCatalog";
-import {
-  parseEngineHealth,
-  type AgentProviderLane,
-} from "../src/shell/agentSession";
+import type {
+  EngineHealthResponse,
+  ServedProviderLane,
+} from "../src/shell/agentCatalogContract";
+import { parseEngineHealth } from "../src/shell/agentSession";
 import {
   engineDoorWords,
   engineNotRunningWords,
@@ -17,8 +18,8 @@ import { catalogLanes } from "../src/shell/localModelLanes";
 
 // What the catalog states of a local engine: only the API lane of an engine
 // states one, a running engine names neither a reason nor a door, one that
-// does not run names both, and anything else is a malformed answer whose lane
-// is not offered. An engine that does not run is said before the transport
+// does not run names both, and any other pairing, which the schema admits,
+// is a malformed answer whose lane is not offered. An engine that does not run is said before the transport
 // that follows from it. Words are left as their keys, with the pieces a
 // composed line is made of.
 
@@ -30,16 +31,22 @@ const DOWN = {
   state: "not_running",
   reason: "not_reachable",
   door: "local_ai_setup",
-};
-const UP = { engine: "llamacpp", state: "running", reason: null, door: null };
+} as const satisfies EngineHealthResponse;
+const UP = {
+  engine: "llamacpp",
+  state: "running",
+  reason: null,
+  door: null,
+} as const satisfies EngineHealthResponse;
 
 const served = (health: FixtureEngineHealth) =>
   withEngineHealth(FIXTURE_CATALOG, health);
 const laneOf = (provider: string, health: FixtureEngineHealth) =>
   served(health).providers?.find(
     (lane) => lane.provider_id === provider && lane.transport === "api",
-  ) as AgentProviderLane;
-const llamacpp = (stated: unknown) => laneOf("llamacpp", { llamacpp: stated });
+  ) as ServedProviderLane;
+const llamacpp = (stated: EngineHealthResponse | null) =>
+  laneOf("llamacpp", { llamacpp: stated });
 
 test("a lane states its engine running, not running, or not at all", () => {
   expect(parseEngineHealth(llamacpp(UP))).toEqual(UP);
@@ -47,48 +54,47 @@ test("a lane states its engine running, not running, or not at all", () => {
   expect(parseEngineHealth(llamacpp(null))).toBeNull();
   // A lane that is no engine's states none.
   const alpha = FIXTURE_CATALOG.providers?.find(
-    (lane) => lane.provider_id === "alpha" && lane.transport === "api",
-  ) as AgentProviderLane;
+    (lane) => lane.provider_id === "kimi" && lane.transport === "api",
+  ) as ServedProviderLane;
   expect(parseEngineHealth(alpha)).toBeNull();
   const unstated = { ...alpha, health: { ...alpha.health } };
   delete unstated.health.engine;
   expect(parseEngineHealth(unstated)).toBeNull();
 });
 
-test("each reason a not running engine can name is accepted, and a door the window does not know is kept", () => {
+test("each reason a not running engine can name is accepted", () => {
   for (const reason of [
     "no_answer_in_time",
     "not_reachable",
     "answer_unreadable",
-  ]) {
+  ] as const) {
     expect(parseEngineHealth(llamacpp({ ...DOWN, reason }))).toEqual({
       ...DOWN,
       reason,
     });
   }
-  const unknownDoor = parseEngineHealth(llamacpp({ ...DOWN, door: "other" }));
-  expect(unknownDoor).toEqual({ ...DOWN, door: "other" });
+});
+
+test("a reason or door left out is the schema's null", () => {
+  expect(
+    parseEngineHealth(llamacpp({ engine: "llamacpp", state: "running" })),
+  ).toEqual(UP);
+  expect(
+    parseEngineHealth(
+      llamacpp({ engine: "llamacpp", state: "not_running", door: DOWN.door }),
+    ),
+  ).toBe("malformed");
 });
 
 test("an answer outside the contract is malformed", () => {
   for (const stated of [
     { ...UP, reason: "not_reachable" },
     { ...UP, door: "local_ai_setup" },
-    { ...UP, reason: undefined },
     { ...DOWN, reason: null },
     { ...DOWN, door: null },
-    { ...DOWN, door: "" },
-    { ...DOWN, reason: "unplugged" },
-    { ...DOWN, state: "stopped" },
-    { ...UP, state: "Running" },
-    { ...UP, engine: "vllm" },
     { ...UP, engine: "ollama" },
-    { ...DOWN, engine: 1 },
-    "running",
-    1,
-    true,
-    [DOWN],
-  ]) {
+    { ...DOWN, engine: "ollama" },
+  ] satisfies EngineHealthResponse[]) {
     expect(parseEngineHealth(llamacpp(stated)), JSON.stringify(stated)).toBe(
       "malformed",
     );
@@ -163,7 +169,7 @@ test("the words name the reason by a whole key, and only a known door has any", 
 });
 
 test("a lane with a malformed engine answer is not offered, here or in the model lists", () => {
-  const catalog = served({ llamacpp: { ...DOWN, reason: "unplugged" } });
+  const catalog = served({ llamacpp: { ...DOWN, door: null } });
   const offered = catalogChoices(words, catalog);
   expect(offered.providers.some((held) => held.id === "llamacpp")).toBe(false);
   expect(offered.providers.some((held) => held.id === "ollama")).toBe(true);

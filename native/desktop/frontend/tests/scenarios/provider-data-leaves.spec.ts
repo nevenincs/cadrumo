@@ -41,7 +41,7 @@ for (const language of ["en", "es", "ca", "hu"] as const) {
     await openSettings(target, language);
     const lanes = settings(target, language);
     // The hosted lanes the made-up agent declares off this computer.
-    for (const id of ["gateway_cli", "alpha_api", "gamma_cli"]) {
+    for (const id of ["zhipu_cli", "kimi_api", "antigravity_cli"]) {
       const lane = lanes.locator(`li[data-lane="${id}"]`);
       await expect(lane).toHaveAttribute("data-reads-off-host", "true");
       await expect(lane).toContainText(

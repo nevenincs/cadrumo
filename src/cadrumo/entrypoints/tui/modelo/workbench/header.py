@@ -12,9 +12,10 @@ third, the stepper and the next action, is :mod:`.progress`'s.
 Everything shown is what the read model states, through
 :mod:`~cadrumo.application.modelo.work_form_header`: the counts, the result and
 its words, the deadline and how urgently it reads, and the latest file are
-decided there once, for every frontend. This module adds only what a terminal
-owns: the marks, the keys that act, the out-of-date mark of changes held here
-unapplied, and fitting it all to the screen's width.
+decided there once, for every frontend, and drawn here from the served views
+themselves. This module adds only what a terminal owns: the marks, the keys
+that act, the out-of-date mark of changes held here unapplied, and choosing
+among the served words the ones that fit the screen's width.
 
 The header never drops the result to fit, and never runs past the screen's
 edge. A narrow terminal loses the modelo's name before the deadline, and the
@@ -37,12 +38,12 @@ from textual.content import Content
 from .....application.modelo.work_form_findings import ModeloFormAttention
 from .....application.modelo.work_form_header import (
     ModeloFormAttentionCount,
-    ModeloFormDeadlineTone,
+    ModeloFormDeadlineView,
+    ModeloFormFileView,
     ModeloFormResultState,
     ModeloFormResultView,
     attention_counts,
 )
-from .....application.modelo.work_form_header import deadline_view as form_deadline_view
 from .....application.modelo.work_form_header import file_view as form_file_view
 from .....application.modelo.work_form_header import result_view as form_result_view
 from .....application.modelo.work_form_models import ModeloWorkForm
@@ -89,31 +90,36 @@ URGENT_CHIPS: Final[frozenset[ModeloFormAttention]] = frozenset(
 
 
 @dataclass(frozen=True, slots=True)
-class DeadlineView:
-    """The deadline's words and how urgently they read."""
+class HeaderResult:
+    """The result the read model serves, as the header draws it, with this terminal's out-of-date mark.
 
-    text: str
-    tone: ModeloFormDeadlineTone
+    ``served`` is the read model's view itself. A result with no figure is
+    drawn with the key that calculates it, or that opens the issues saying
+    why it could not be; ``stale`` is the out-of-date mark, which names the
+    changes held here unapplied before the read model's own.
+    """
 
-
-@dataclass(frozen=True, slots=True)
-class ResultView:
-    """The result's words, with and without its box, and whether a stale mark dims it."""
-
-    text: str
-    short_text: str
+    served: ModeloFormResultView
     stale: str | None
-    failed: bool
-    help: tuple[str, ...]
-    #: The direction in words and the amount it carries, once both are known.
-    settled: tuple[str, str] | None = None
-    #: The fewest words that still state the result, for a line too narrow for ``short_text``.
-    brief_text: str | None = None
+
+    def _keyed(self, words: str) -> str:
+        key = _RESULT_KEYS.get(self.served.state)
+        return words if key is None else f"{words} [{key}]"
+
+    @property
+    def text(self) -> str:
+        """The served words that name the box."""
+        return self._keyed(self.served.text)
+
+    @property
+    def short_text(self) -> str:
+        """The served words without the box."""
+        return self._keyed(self.served.short_text)
 
     @property
     def briefest(self) -> str:
-        """The result in the fewest words it has."""
-        return self.brief_text if self.brief_text is not None else self.short_text
+        """The fewest served words that still state the result."""
+        return self._keyed(self.served.brief_text)
 
     @property
     def marks(self) -> tuple[WorkbenchMark, ...]:
@@ -121,22 +127,9 @@ class ResultView:
         return (STALE_MARK,) if self.stale is not None else ()
 
 
-@dataclass(frozen=True, slots=True)
-class FileView:
-    """The latest file for the AEAT in words, and whether it no longer matches the declaration."""
-
-    text: str
-    out_of_date: bool
-
-
-def file_view(form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool) -> FileView | None:
-    """Say the read model's latest file for the AEAT; one that is out of date names the key that creates it again."""
-    view = form_file_view(form, language, recorded=recorded)
-    if view is None:
-        return None
-    if view.current:
-        return FileView(view.words, out_of_date=False)
-    return FileView(f"{view.words} [{_EXPORT_KEY}]", out_of_date=True)
+def file_text(view: ModeloFormFileView) -> str:
+    """The served words for the latest file; one that is out of date names the key that creates it again."""
+    return view.words if view.current else f"{view.words} [{_EXPORT_KEY}]"
 
 
 @dataclass(frozen=True, slots=True)
@@ -190,26 +183,11 @@ def identity_text(form: ModeloWorkForm, language: OutputLanguage, *, short: bool
     return f"{name}{_IDENTITY_SEPARATOR}{period_words(form.period)}"
 
 
-def deadline_view(
-    form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool, width: int | None = None
-) -> DeadlineView | None:
-    """Say the read model's deadline, in fewer words where it would not fit beside the declaration's number."""
-    view = form_deadline_view(form, language, recorded=recorded)
-    if view is None:
-        return None
-    text = view.text
-    if (
-        width is not None
-        and cell_len(identity_text(form, language, short=True)) + cell_len(text) + len(_PART_GAP) > width
-    ):
-        text = view.short_text
-    return DeadlineView(text, view.tone)
-
-
-def deadline_help(form: ModeloWorkForm, language: OutputLanguage, *, recorded: bool) -> str | None:
-    """Explain a deadline a weekend or holiday moved, naming the usual date; ``None`` otherwise."""
-    view = form_deadline_view(form, language, recorded=recorded)
-    return None if view is None else view.help
+def deadline_text(form: ModeloWorkForm, language: OutputLanguage, view: ModeloFormDeadlineView, width: int) -> str:
+    """The served deadline, in its fewer served words where it would not fit beside the declaration's number."""
+    if cell_len(identity_text(form, language, short=True)) + cell_len(view.text) + len(_PART_GAP) > width:
+        return view.short_text
+    return view.text
 
 
 def _result_stale_notice(view: ModeloFormResultView, *, staged: int, recorded: bool) -> str | None:
@@ -220,31 +198,18 @@ def _result_stale_notice(view: ModeloFormResultView, *, staged: int, recorded: b
     return None
 
 
-def result_view(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, recorded: bool) -> ResultView | None:
+def header_result(
+    form: ModeloWorkForm, language: OutputLanguage, *, staged: int, recorded: bool
+) -> HeaderResult | None:
     """The read model's result, marked out of date while ``staged`` changes wait; ``None`` with no result box.
 
     Changes held here unapplied are known only to this frontend, so their mark
-    is added here. A result with no figure is said with the key that
-    calculates it, or that opens the issues saying why it could not be.
+    is added here.
     """
     view = form_result_view(form, language, recorded=recorded)
     if view is None:
         return None
-    stale = _result_stale_notice(view, staged=staged, recorded=recorded)
-    key = _RESULT_KEYS.get(view.state)
-    if key is not None:
-        text = f"{view.text} [{key}]"
-        failed = view.state is ModeloFormResultState.FAILED
-        return ResultView(text=text, short_text=text, stale=stale, failed=failed, help=view.help)
-    return ResultView(
-        text=view.text,
-        short_text=view.short_text,
-        stale=stale,
-        failed=False,
-        help=view.help,
-        settled=None if view.words is None or view.amount_text is None else (view.words, view.amount_text),
-        brief_text=view.brief_text,
-    )
+    return HeaderResult(view, _result_stale_notice(view, staged=staged, recorded=recorded))
 
 
 def attention_chips(
@@ -284,7 +249,7 @@ class ResultLine:
 
 
 def fit_result_line(
-    view: ResultView, chips: tuple[AttentionChip, ...], width: int, *, file: str | None = None
+    view: HeaderResult, chips: tuple[AttentionChip, ...], width: int, *, file: str | None = None
 ) -> ResultLine:
     """Keep what fits in ``width``, never running past it; the result, the stale mark and the file always stay.
 
@@ -325,12 +290,10 @@ class IdentityLine:
     stacked: bool = False
 
 
-def fit_identity(
-    form: ModeloWorkForm, language: OutputLanguage, deadline: DeadlineView | None, width: int
-) -> IdentityLine:
+def fit_identity(form: ModeloWorkForm, language: OutputLanguage, deadline: str | None, width: int) -> IdentityLine:
     """Keep the Modelo, worded period and year; the descriptive title gives way before a second line."""
     full = identity_text(form, language, short=False)
-    beside = cell_len(deadline.text) + len(_PART_GAP) if deadline is not None else 0
+    beside = cell_len(deadline) + len(_PART_GAP) if deadline is not None else 0
     if cell_len(full) + beside <= width:
         return IdentityLine(full)
     short = identity_text(form, language, short=True)
@@ -346,7 +309,7 @@ class StatusLine:
     keeps its level's colour.
     """
 
-    view: ResultView | None
+    view: HeaderResult | None
     chips: tuple[AttentionChip, ...]
     file: str | None = None
 
@@ -391,27 +354,24 @@ class StatusLine:
 
 def status_line(form: ModeloWorkForm, language: OutputLanguage, *, staged: int, recorded: bool) -> StatusLine | None:
     """The header's result line for a dialog to repeat, or ``None`` when it would say nothing."""
-    view = result_view(form, language, staged=staged, recorded=recorded)
+    view = header_result(form, language, staged=staged, recorded=recorded)
     chips = attention_chips(form, recorded=recorded, language=language)
-    file = file_view(form, language, recorded=recorded)
-    line = StatusLine(view, chips, None if file is None else file.text)
+    file = form_file_view(form, language, recorded=recorded)
+    line = StatusLine(view, chips, None if file is None else file_text(file))
     return line if line.text() else None
 
 
 __all__ = [
     "AttentionChip",
-    "DeadlineView",
-    "FileView",
+    "HeaderResult",
     "ResultLine",
-    "ResultView",
     "StatusLine",
     "attention_chips",
-    "deadline_help",
-    "deadline_view",
-    "file_view",
+    "deadline_text",
+    "file_text",
     "fit_identity",
     "fit_result_line",
+    "header_result",
     "identity_text",
-    "result_view",
     "status_line",
 ]

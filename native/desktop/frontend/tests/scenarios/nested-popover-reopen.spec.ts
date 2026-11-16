@@ -30,7 +30,7 @@ test("reopening the provider list before its focus returns keeps the agent setti
     name: label("desktop.agent.provider"),
   });
   await providerBox.click();
-  const entry = target.locator('[role=option][data-way="beta/api"]');
+  const entry = target.locator('[role=option][data-way="qwen/api"]');
   await expect(entry).toBeVisible();
   // Choose an entry, and open the list again the moment the chosen one's list
   // has gone, before the task that hands focus back has run.
@@ -49,9 +49,9 @@ test("reopening the provider list before its focus returns keeps the agent setti
     '[data-slot="provider-select"]',
   );
   await expect(
-    target.locator('[role=option][data-way="beta/cli"]'),
+    target.locator('[role=option][data-way="qwen/cli"]'),
   ).toBeVisible();
-  await target.locator('[role=option][data-way="beta/cli"]').click();
+  await target.locator('[role=option][data-way="qwen/cli"]').click();
   await expect(settings).toBeVisible();
   await expect(
     settings.getByRole("combobox", { name: label("desktop.agent.model") }),

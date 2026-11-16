@@ -54,7 +54,7 @@ test("the agent settings show the local AI after the agent became ready while th
     .getByRole("button", { name: label("desktop.agent.settings") })
     .click();
   await expect(settings(target)).toBeVisible();
-  const provider = settings(target).locator('li[data-provider="local"]');
+  const provider = settings(target).locator('li[data-provider="zai"]');
   await provider
     .locator("> details")
     .evaluate((node) => ((node as HTMLDetailsElement).open = true));

@@ -457,3 +457,109 @@ def test_every_supported_year_round_trips_each_saved_rendering_through_its_refer
     assert loaded == catalogue
     assert all(value["form"] == _REFERENCE_FORM for value in stored)
     assert len(snapshot_keys) == len(_digests(catalogue))
+
+
+@contextmanager
+def _decoded_bodies(monkeypatch: pytest.MonkeyPatch) -> Generator[list[bytes]]:
+    """Record every stored rendering body the repository decodes, decoding it as before."""
+    decoded: list[bytes] = []
+    decode = CalculationRevisionCatalogueRepository._decoded_rendering_body
+
+    def recording(payload: bytes) -> Any:
+        decoded.append(payload)
+        return decode(payload)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(CalculationRevisionCatalogueRepository, "_decoded_rendering_body", staticmethod(recording))
+        yield decoded
+
+
+def test_a_changed_catalogue_reuses_the_bodies_its_reader_verified(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with _converted_fixture(tmp_path) as (profile, operation, digests):
+        with _decoded_bodies(monkeypatch) as cold:
+            reader = CalculationRevisionCatalogueRepository(objects=profile.repository)
+            warm, _revision_id = reader.load_revisioned(operation=operation)
+        _rewrite_stored_catalogue(profile, lambda _stored: None)
+        with _decoded_bodies(monkeypatch) as reread:
+            changed, _changed_revision_id = reader.load_revisioned(operation=operation)
+
+    assert len(cold) == len(digests)
+    assert reread == []
+    assert changed == warm
+
+
+def test_a_changed_catalogue_still_refuses_a_verified_row_that_is_gone(tmp_path: Path) -> None:
+    with _converted_fixture(tmp_path) as (profile, operation, digests):
+        reader = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        reader.load_revisioned(operation=operation)
+        _rewrite_stored_catalogue(profile, lambda _stored: None)
+        assert profile.repository.delete(_SNAPSHOTS.namespace, digests[1])
+        with pytest.raises(CalculationRevisionPersistenceError) as refused:
+            reader.load_revisioned(operation=operation)
+
+    assert refused.value.context == {"reason": "rendering_snapshot_missing"}
+
+
+@contextmanager
+def _validated_payloads(monkeypatch: pytest.MonkeyPatch) -> Generator[list[Any]]:
+    """Record the stored JSON the repository validates as a catalogue, validating it as before."""
+    payloads: list[Any] = []
+    validate = CalculationRevisionCatalogueRepository._validated_catalogue
+
+    def recording(self: CalculationRevisionCatalogueRepository, payload: bytes, **arguments: Any) -> Any:
+        payloads.append(json.loads(payload))
+        return validate(self, payload, **arguments)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(CalculationRevisionCatalogueRepository, "_validated_catalogue", recording)
+        yield payloads
+
+
+def test_a_changed_catalogue_validates_only_the_revisions_whose_json_changed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with _converted_fixture(tmp_path) as (profile, operation, _digests_stored):
+        reader = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        warm, _revision_id = reader.load_revisioned(operation=operation)
+        _rewrite_stored_catalogue(profile, lambda _stored: None)
+        with _validated_payloads(monkeypatch) as validated:
+            unchanged, _unchanged_revision_id = reader.load_revisioned(operation=operation)
+
+    assert len(warm) > 1
+    assert [payload["payload"]["revisions"] for payload in validated] == [{}]
+    assert unchanged == warm
+
+
+def test_a_changed_revision_is_validated_again_and_refused_when_invalid(tmp_path: Path) -> None:
+    with _converted_fixture(tmp_path) as (profile, operation, _digests_stored):
+        reader = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        reader.load_revisioned(operation=operation)
+
+        def break_one_revision(stored: Any) -> None:
+            revision = next(iter(stored["payload"]["revisions"].values()))
+            revision["state"] = "not_a_calculation_state"
+
+        _rewrite_stored_catalogue(profile, break_one_revision)
+        with pytest.raises(CalculationRevisionPersistenceError) as refused:
+            reader.load_revisioned(operation=operation)
+
+    assert refused.value.context == {"reason": "invalid_payload"}
+
+
+def test_unchanged_revisions_under_swapped_keys_still_break_the_catalogue_key_invariant(tmp_path: Path) -> None:
+    with _converted_fixture(tmp_path) as (profile, operation, _digests_stored):
+        reader = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        reader.load_revisioned(operation=operation)
+
+        def swap_two_keys(stored: Any) -> None:
+            revisions = stored["payload"]["revisions"]
+            first, second = list(revisions)[:2]
+            revisions[first], revisions[second] = revisions[second], revisions[first]
+
+        _rewrite_stored_catalogue(profile, swap_two_keys)
+        with pytest.raises(CalculationRevisionPersistenceError) as refused:
+            reader.load_revisioned(operation=operation)
+
+    assert refused.value.context == {"reason": "invalid_payload"}
