@@ -513,6 +513,8 @@ desktop:
       aquí.
     sign_in_waiting_device: Escribe este código en la página del proveedor para terminar
       de iniciar sesión.
+    sign_out_action: Cerrar sesión
+    sign_out_label: Cerrar sesión en {provider}
     status_not_checked: Sin comprobar
     status_off: Desactivado
     status_ready: Listo

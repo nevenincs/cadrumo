@@ -505,6 +505,8 @@ desktop:
       ide.
     sign_in_waiting_device: A bejelentkezés befejezéséhez írd be ezt a kódot a szolgáltató
       oldalán.
+    sign_out_action: Kijelentkezés
+    sign_out_label: 'Kijelentkezés innen: {provider}'
     status_not_checked: Nincs ellenőrizve
     status_off: Kikapcsolva
     status_ready: Kész

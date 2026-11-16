@@ -484,6 +484,8 @@ desktop:
     sign_in_waiting: Finish signing in on the provider's page, then return here.
     sign_in_waiting_device: Enter this code on the provider's page to finish signing
       in.
+    sign_out_action: Sign out
+    sign_out_label: Sign out of {provider}
     status_not_checked: Not checked
     status_off: 'Off'
     status_ready: Ready
