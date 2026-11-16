@@ -37,7 +37,7 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 from ..compiler.authority import compiled_bundled_authority
 from ..conformance.modelo_200_echoes import MODELO_200_ECHO_CELLS
 from ..pipeline.export_fragment_provenance import load_export_fragment_provenance_manifest
-from ..pipeline.historical_static_repair import REVIEWED_RENAME_SETS
+from ..pipeline.rename_set_static_repair import REVIEWED_RENAME_SETS
 from ..pipeline.render_check import revision_render_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

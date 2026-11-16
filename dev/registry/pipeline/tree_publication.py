@@ -510,15 +510,20 @@ def _require_publishable_set(members: Sequence[GeneratedExportSetMember]) -> Non
     if len(set(identities)) != len(identities) or len({modelo for modelo, _revision in identities}) != 1:
         raise RegistryValidationError("generated export set publication requires distinct revisions of one modelo")
     for member in members:
-        context = member.context
-        if context.target_root.resolve() != first.target_root.resolve():
-            raise RegistryValidationError("generated export set members must share one publication root")
-        if context.supersession is not None or context.final_live_validator is not None:
-            raise RegistryValidationError(
-                "generated export set publication refuses supersession and member-level live validators",
-            )
-        if context.validation.inheritance is not None:
-            raise RegistryValidationError("generated export set publication refuses inherited export targets")
+        _require_publishable_set_member(member.context, first)
+
+
+def _require_publishable_set_member(
+    context: GeneratedExportTreePublicationContext, first: GeneratedExportTreePublicationContext
+) -> None:
+    if context.target_root.resolve() != first.target_root.resolve():
+        raise RegistryValidationError("generated export set members must share one publication root")
+    if context.supersession is not None or context.final_live_validator is not None:
+        raise RegistryValidationError(
+            "generated export set publication refuses supersession and member-level live validators",
+        )
+    if context.validation.inheritance is not None:
+        raise RegistryValidationError("generated export set publication refuses inherited export targets")
 
 
 def _admit_and_stage_set_member(member: GeneratedExportSetMember) -> _SetMemberCutover:

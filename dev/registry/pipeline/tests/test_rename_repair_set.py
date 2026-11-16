@@ -21,7 +21,7 @@ from ...form_layout.serialization import form_layout_fragment_path, render_form_
 from .. import cli
 from ..candidate_source_chain import stage_source_chain
 from ..export_fragment_provenance import load_export_fragment_provenance_manifest
-from ..historical_static_repair import (
+from ..rename_set_static_repair import (
     REVIEWED_RENAME_SETS,
     reviewed_rename_set,
     validate_rename_refusal,

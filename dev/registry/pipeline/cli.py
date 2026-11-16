@@ -13,7 +13,6 @@ import re
 import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass, replace
-from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -53,8 +52,9 @@ from .generated_form_bridge import (
     prepare_generated_form_bridge,
 )
 from .generated_tree_dispositions import GeneratedTreeRecordDriftDisposition, record_drift_dispositions
-from .historical_static_repair import validated_historical_repair_source, validated_rename_repair_source
+from .historical_static_repair import validated_historical_repair_source
 from .published_edition_staging import stage_published_modelo, supporting_modelos
+from .rename_set_static_repair import validated_rename_repair_source
 from .render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,
@@ -64,6 +64,11 @@ from .render_check import (
     select_revision_record_design_source,
 )
 from .source_defects import source_defects_for
+from .target_currentness_fact import (
+    TargetCurrentnessFact,
+    TargetCurrentnessState,
+    target_currentness_comparison_fact,
+)
 from .tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
 from .tree_publication import (
     GeneratedExportSetMember,
@@ -936,30 +941,6 @@ def run(
         raise typer.Exit(code=1) from error
 
 
-class TargetCurrentnessState(StrEnum):
-    """Read-only state of one named generated export target."""
-
-    CURRENT = "current"
-    STALE = "stale"
-    DRIFTED = "drifted"
-    NEVER_COMMITTED = "never-committed"
-
-
-@dataclass(frozen=True, slots=True)
-class TargetCurrentnessFact:
-    """Canonical generated-tree currentness fact and its comparison evidence."""
-
-    modelo: str
-    revision: str
-    state: TargetCurrentnessState
-    differing: tuple[str, ...] = ()
-    only_committed: tuple[str, ...] = ()
-    only_rendered: tuple[str, ...] = ()
-    serialization_only: tuple[str, ...] = ()
-    provenance_fields: tuple[str, ...] = ()
-    detail: str = ""
-
-
 def at_edition_grade(
     prepared: PreparedGeneratedTreeInvocation,
     grade: RegistryAuthorityGrade,
@@ -1073,32 +1054,7 @@ def _classify_target_currentness_failure(
             state=TargetCurrentnessState.DRIFTED,
             detail=str(error),
         )
-    return _target_currentness_comparison_fact(modelo, revision, comparison, error)
-
-
-def _target_currentness_comparison_fact(
-    modelo: str,
-    revision: str,
-    comparison: RenderComparison,
-    error: OSError | RegistryError | ValueError,
-) -> TargetCurrentnessFact:
-    state = TargetCurrentnessState.STALE if comparison.provenance_only else TargetCurrentnessState.DRIFTED
-    # A stale manifest's refusal names the digest that failed; the members that
-    # differ from a fresh render say which input moved.
-    detail = str(error)
-    if comparison.provenance_fields:
-        detail = f"{detail}; manifest members differing from a fresh render: " + ", ".join(comparison.provenance_fields)
-    return TargetCurrentnessFact(
-        modelo=modelo,
-        revision=revision,
-        state=state,
-        differing=comparison.differing,
-        only_committed=comparison.only_committed,
-        only_rendered=comparison.only_rendered,
-        serialization_only=comparison.serialization_only,
-        provenance_fields=comparison.provenance_fields,
-        detail=detail,
-    )
+    return target_currentness_comparison_fact(modelo, revision, comparison, error)
 
 
 _MODELO = Annotated[str, typer.Argument(help="Three-digit AEAT modelo identifier.")]
@@ -1263,8 +1219,6 @@ def republish_command(
 
 
 __all__ = [
-    "TargetCurrentnessFact",
-    "TargetCurrentnessState",
     "app",
     "at_edition_grade",
     "target_currentness",

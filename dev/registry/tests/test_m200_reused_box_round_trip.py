@@ -46,7 +46,7 @@ from ..compiler.authority import compiled_bundled_authority
 from ..edition_export_scenarios import m200_export_scenario
 from ..edition_round_trip import SYNTHETIC_TAX_ID
 from ..pipeline.export_fragment_provenance import load_export_fragment_provenance_manifest
-from ..pipeline.historical_static_repair import REVIEWED_RENAME_SETS
+from ..pipeline.rename_set_static_repair import REVIEWED_RENAME_SETS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
