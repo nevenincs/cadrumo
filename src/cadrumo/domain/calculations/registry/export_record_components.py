@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from ..export_field_kind import CasillaFieldKind
 from .errors import RegistryValidationError
 from .export_value_policy import ExportValuePolicy
+from .fixed_width_codec import fixed_width_field_order
 from .form_codes import form_codes_in_scope
 
 if TYPE_CHECKING:
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
 
 def validate_export_record_components(record: ExportRecordDefinition) -> None:
     """Require complete adjacent components bound to one semantic value."""
-    fields = tuple(sorted(record.fields, key=lambda field: field.offset or 0))
+    fields = fixed_width_field_order(record.fields)
     component_policies = frozenset(
         {
             ExportValuePolicy.SIGNED_COMPONENT_SIGN,

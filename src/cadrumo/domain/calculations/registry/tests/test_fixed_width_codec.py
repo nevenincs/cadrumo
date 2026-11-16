@@ -21,6 +21,7 @@ from ..fixed_width_codec import (
     ExportJustification,
     ExportPadding,
     FixedWidthRecordRenderError,
+    fixed_width_field_order,
     render_fixed_width_export_field,
     render_fixed_width_export_record_body,
 )
@@ -54,6 +55,16 @@ def _field(**overrides: object) -> ExportFieldDefinition:
     }
     payload.update(overrides)
     return ExportFieldDefinition.model_validate(payload)
+
+
+def test_fixed_width_field_order_is_offset_then_id_with_unpositioned_fields_first() -> None:
+    """Equal offsets order by id and a field without an offset leads every positioned one."""
+    zeta = _field(id="zeta", offset=3, length=2)
+    alpha = _field(id="alpha", offset=3, length=2)
+    first = _field(id="first", offset=1, length=2)
+    logical = _field(id="logical", offset=None, length=None)
+    ordered = fixed_width_field_order((zeta, first, alpha, logical))
+    assert [field.id for field in ordered] == ["logical", "first", "alpha", "zeta"]
 
 
 def test_m369_required_complementaria_marker_keeps_the_official_negative_answer() -> None:
