@@ -5216,6 +5216,7 @@
         "dev.packaging.native.action_cache",
         "dev.packaging.native.action_selection",
         "dev.packaging.native.agent",
+        "dev.packaging.native.agent_api_pin",
         "dev.packaging.native.agent_resolution",
         "dev.packaging.native.agent_runtime",
         "dev.packaging.native.agent_runtime_archive",
