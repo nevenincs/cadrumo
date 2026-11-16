@@ -1,5 +1,4 @@
 import type {
-  DeclaredLicence,
   Effort,
   EngineDoor,
   EngineDownReason,
@@ -8,6 +7,11 @@ import type {
   ServedCatalogAnswer,
   ServedProviderLane,
 } from "./agentCatalogContract";
+import type {
+  ModelLicenceResponse,
+  Provider,
+  SkillListResponse,
+} from "./agentGatewayContract";
 import type { CallPlan } from "./hostCall";
 import type {
   AgentLocalEngine,
@@ -15,11 +19,7 @@ import type {
   AgentLocalModels,
   AgentLocalPlacement,
 } from "../ipc/contract";
-import type {
-  AgentSkillDetail,
-  AgentSkillInventory,
-  AgentSkillVerification,
-} from "./agentSkills";
+import type { AgentSkillDetail, AgentSkillVerification } from "./agentSkills";
 import type {
   AgentConversationRecord,
   AgentDocumentRecord,
@@ -122,16 +122,6 @@ export function parseEngineHealth(
     ? { engine, state, reason, door }
     : "malformed";
 }
-
-/** A model's licence in full, as the agent's licence route serves it: the
- * catalog entry's licence with the text. */
-export type AgentModelLicence = DeclaredLicence & {
-  provider: string;
-  transport: ProviderTransport;
-  model: string;
-  installed: boolean;
-  text: string;
-};
 
 /** What a turn runs with, field for field what cadrumo-agent's run start
  * takes of an agent (`AgentSpec`): the provider and the way into it, the model
@@ -490,13 +480,13 @@ export interface AgentSession {
   ): Promise<AgentLocalModels>;
   /** The licence text of one model a lane lists; only a ready agent has it. */
   modelLicence?(
-    provider: string,
+    provider: Provider,
     transport: ProviderTransport,
     model: string,
-  ): Promise<AgentModelLicence>;
+  ): Promise<ModelLicenceResponse>;
   /** cadrumo-agent's own skills, every one, by name. Absent where the host
    * serves none. */
-  skills?(): Promise<AgentSkillInventory>;
+  skills?(): Promise<SkillListResponse>;
   /** One skill in full, for the person to review. An unknown name is
    * refused with `agent_gateway_skill_not_found`. */
   skill?(name: string): Promise<AgentSkillDetail>;
