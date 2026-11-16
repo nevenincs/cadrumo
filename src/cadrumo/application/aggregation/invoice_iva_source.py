@@ -23,7 +23,6 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date
-from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, Protocol
 
@@ -40,6 +39,7 @@ from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from .errors import AggregationValidationError
 from .invoice_devengo import invoice_devengo_in_period
+from .renta_income_evidence import iva_amount_comparison, taxable_base_comparison
 from .source_mesh import CalculationSourceDiagnostic
 
 if TYPE_CHECKING:
@@ -160,20 +160,24 @@ def _fully_figured_payments(invoice: Invoice, linked_movements: Mapping[str, Tra
 
 
 def _paying_movements_contradict(invoice: Invoice, linked_movements: Mapping[str, Transaction]) -> bool:
-    """Whether every paying movement states figures that sum to a different base or cuota."""
+    """Whether every paying movement states figures that sum to a different base or cuota.
+
+    The figures meet in one currency by the settlement rule: as stated in the invoice's
+    own currency, otherwise in EUR. A side with no EUR value leaves nothing to compare.
+    """
     movements = _fully_figured_payments(invoice, linked_movements)
     if not movements:
         return False
-    stated_base = sum((movement.taxable_base or Decimal("0") for movement in movements), Decimal("0"))
-    stated_cuota = sum((movement.iva_amount or Decimal("0") for movement in movements), Decimal("0"))
-    return (stated_base, stated_cuota) != (invoice.base_total_eur, invoice.iva_total_eur)
+    base = taxable_base_comparison(invoice, movements)
+    cuota = iva_amount_comparison(invoice, movements)
+    return any(comparison is not None and comparison.cash != comparison.owed for comparison in (base, cuota))
 
 
 def contradicting_linked_invoices(partition: InvoicePaymentPartition) -> tuple[Invoice, ...]:
     """Return the invoices whose paying movements state a different base or cuota.
 
     A movement may carry its own figures; when every movement paying an invoice
-    does, their sum must equal the invoice's EUR totals. A partial set of
+    does, their sum must equal the invoice's totals in one currency. A partial set of
     figures is payment evidence only and is not compared.
     """
     return tuple(

@@ -22,12 +22,15 @@ from ....domain.calculations.registry.tests.authored_editions import filing_year
 from ....domain.invoices.models import Invoice
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import InvoiceKind
+from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ...ledger.preflight import HeldTransactionCatalogue
 from ..errors import AggregationValidationError
 from ..invoice_iva_source import (
     InvoiceIvaFinding,
     InvoiceIvaFindingReason,
+    InvoicePaymentPartition,
+    contradicting_linked_invoices,
     invoices_missing_source_document,
     period_invoice_iva_findings,
     period_invoice_iva_side,
@@ -183,6 +186,125 @@ def test_a_contradicting_paying_movement_refuses_the_calculation() -> None:
     with pytest.raises(AggregationValidationError) as refusal:
         refuse_contradicting_linked_movements(side.contradicted)
     assert refusal.value.context == {"invoice_id": disagreeing.invoice_id, "invoice_count": "1"}
+
+
+def _contradicted(invoice: Invoice, *movements: Transaction) -> bool:
+    """Whether the paying ``movements`` contradict ``invoice``, through the real partition rule."""
+    partition = InvoicePaymentPartition(
+        paid_transaction_ids=frozenset(movement.transaction_id for movement in movements),
+        source_invoices=(invoice,),
+        linked_movements={movement.transaction_id: movement for movement in movements},
+    )
+    return contradicting_linked_invoices(partition) == (invoice,)
+
+
+def _foreign_invoice(
+    *, base: str = "1000.00", cuota: str = "210.00", fx_rate: Decimal | None = None, paid_by: tuple[Transaction, ...]
+) -> Invoice:
+    """A USD received invoice, converted only when ``fx_rate`` is given."""
+    stamp: dict[str, object] = (
+        {}
+        if fx_rate is None
+        else {"fx_rate": fx_rate, "fx_rate_date": date(_YEAR, 4, 5), "fx_rate_source": "ecb_reference"}
+    )
+    return _received("F-1", base=Decimal(base), paid_by=paid_by).model_copy(
+        update={"currency": "USD", "iva_total": Decimal(cuota), **stamp}
+    )
+
+
+def _usd_movement(provider_id: str, *, base: str = "1000.00", cuota: str = "210.00") -> Transaction:
+    movement = _movement(provider_id, figures=True)
+    return movement.model_copy(
+        update={
+            "raw": movement.raw.model_copy(update={"currency": "USD"}),
+            "taxable_base": Decimal(base),
+            "iva_amount": Decimal(cuota),
+        }
+    )
+
+
+def _eur_movement(provider_id: str, *, base: str, cuota: str) -> Transaction:
+    return _movement(provider_id, figures=True).model_copy(
+        update={"taxable_base": Decimal(base), "iva_amount": Decimal(cuota)}
+    )
+
+
+def test_a_eur_invoice_paid_by_matching_eur_figures_is_not_contradicted() -> None:
+    own = _movement("eur-match", figures=True)
+
+    assert not _contradicted(_received("E-1", base=Decimal("1000.00"), paid_by=(own,)), own)
+
+
+def test_a_eur_invoice_whose_cuota_alone_disagrees_is_contradicted() -> None:
+    own = _eur_movement("eur-cuota", base="1000.00", cuota="200.00")
+
+    assert _contradicted(_received("E-2", base=Decimal("1000.00"), paid_by=(own,)), own)
+
+
+def test_the_period_side_keeps_a_foreign_invoice_paid_in_its_own_currency() -> None:
+    paid = _usd_movement("usd-side")
+    invoice = _foreign_invoice(fx_rate=Decimal("0.5"), paid_by=(paid,))
+    wrong = _usd_movement("usd-side-wrong")
+    differing = _foreign_invoice(base="1100.00", fx_rate=Decimal("0.5"), paid_by=(wrong,)).model_copy(
+        update={"invoice_number": "F-2"}
+    )
+
+    side = _side((invoice, differing), (paid, wrong))
+
+    assert side.contradicted == (differing,)
+
+
+def test_a_refund_movement_takes_off_what_the_payment_stated() -> None:
+    overpaid = _eur_movement("eur-overpaid", base="1200.00", cuota="252.00")
+    refund = _eur_movement("eur-refund", base="200.00", cuota="42.00").model_copy(
+        update={"direction": TransactionDirection.INCOMING}
+    )
+    invoice = _received("E-3", base=Decimal("1000.00"), paid_by=(overpaid, refund))
+
+    assert not _contradicted(invoice, overpaid, refund)
+    assert _contradicted(_received("E-4", base=Decimal("1400.00"), paid_by=(overpaid, refund)), overpaid, refund)
+
+
+def test_a_foreign_invoice_paid_in_its_own_currency_compares_as_stated() -> None:
+    paid = _usd_movement("usd-match")
+
+    assert not _contradicted(_foreign_invoice(paid_by=(paid,)), paid)
+
+
+def test_a_foreign_invoice_paid_in_its_own_currency_is_contradicted_by_its_own_figures() -> None:
+    wrong_base = _usd_movement("usd-base", base="900.00")
+    wrong_cuota = _usd_movement("usd-cuota", cuota="200.00")
+
+    assert _contradicted(_foreign_invoice(paid_by=(wrong_base,)), wrong_base)
+    assert _contradicted(_foreign_invoice(paid_by=(wrong_cuota,)), wrong_cuota)
+
+
+def test_a_foreign_invoice_paid_in_euro_compares_in_euro() -> None:
+    rate = Decimal("0.5")
+    matching = _eur_movement("eur-half", base="500.00", cuota="105.00")
+    differing = _eur_movement("eur-differs", base="400.00", cuota="105.00")
+
+    assert not _contradicted(_foreign_invoice(fx_rate=rate, paid_by=(matching,)), matching)
+    assert _contradicted(_foreign_invoice(fx_rate=rate, paid_by=(differing,)), differing)
+
+
+def test_a_eur_invoice_paid_by_a_converted_foreign_movement_compares_in_euro() -> None:
+    converted = _usd_movement("usd-converted").model_copy(
+        update={"fx_rate": Decimal("0.9"), "value_in_eur": Decimal("1089.00")}
+    )
+    invoice = _received("E-3", base=Decimal("900.00"), paid_by=(converted,))
+
+    assert not _contradicted(invoice, converted)
+    assert _contradicted(_received("E-4", base=Decimal("800.00"), paid_by=(converted,)), converted)
+
+
+def test_a_side_with_no_euro_value_is_not_compared() -> None:
+    unconverted_invoice = _foreign_invoice(paid_by=())
+    paid_in_euro = _eur_movement("eur-vs-unconverted", base="1.00", cuota="2.00")
+    unconverted_movement = _usd_movement("usd-unconverted")
+
+    assert not _contradicted(unconverted_invoice, paid_in_euro)
+    assert not _contradicted(_received("E-5", base=Decimal("5.00"), paid_by=()), unconverted_movement)
 
 
 def test_no_contradiction_means_no_refusal() -> None:

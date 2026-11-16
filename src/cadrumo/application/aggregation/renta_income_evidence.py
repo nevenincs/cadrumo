@@ -9,7 +9,7 @@ bounded retención can be inferred from the transaction itself.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from decimal import Decimal
 from enum import StrEnum
 from typing import NamedTuple
@@ -138,30 +138,62 @@ def settlement_comparison(invoice: Invoice, receipts: Sequence[Transaction]) -> 
     )
 
 
+def _figure_comparison(
+    invoice: Invoice,
+    rows: Sequence[Transaction],
+    *,
+    native_stated: Callable[[Transaction], Decimal | None],
+    native_owed: Decimal,
+    eur_stated: Callable[[Transaction], Decimal | None],
+    eur_owed: Decimal | None,
+) -> SettlementComparison | None:
+    """Compare one figure ``rows`` state with the invoice's, by the settlement-currency rule."""
+    if all(row.raw.currency == invoice.currency for row in rows):
+        return SettlementComparison(
+            cash=sum(
+                (_in_settling_direction(invoice, row, native_stated(row) or Decimal("0")) for row in rows), Decimal("0")
+            ),
+            owed=native_owed,
+        )
+    if eur_owed is None or any(is_non_eur_without_conversion(row) for row in rows):
+        return None
+    return SettlementComparison(
+        cash=round_to_cents(
+            sum((_in_settling_direction(invoice, row, eur_stated(row) or Decimal("0")) for row in rows), Decimal("0"))
+        ),
+        owed=eur_owed,
+    )
+
+
 def taxable_base_comparison(invoice: Invoice, rows: Sequence[Transaction]) -> SettlementComparison | None:
     """Put the bases ``rows`` state and the base of ``invoice`` in one currency, by the settlement rule.
 
     Bases stated in the invoice's own currency compare as stated. Any other row compares
     in EUR, and a side with no EUR value leaves nothing to compare.
     """
-    if all(row.raw.currency == invoice.currency for row in rows):
-        return SettlementComparison(
-            cash=sum(
-                (_in_settling_direction(invoice, row, row.taxable_base or Decimal("0")) for row in rows), Decimal("0")
-            ),
-            owed=invoice.base_total,
-        )
-    base_eur = invoice.base_total_eur
-    if base_eur is None or any(is_non_eur_without_conversion(row) for row in rows):
-        return None
-    return SettlementComparison(
-        cash=round_to_cents(
-            sum(
-                (_in_settling_direction(invoice, row, effective_eur_taxable_base(row) or Decimal("0")) for row in rows),
-                Decimal("0"),
-            )
-        ),
-        owed=base_eur,
+    return _figure_comparison(
+        invoice,
+        rows,
+        native_stated=lambda row: row.taxable_base,
+        native_owed=invoice.base_total,
+        eur_stated=effective_eur_taxable_base,
+        eur_owed=invoice.base_total_eur,
+    )
+
+
+def iva_amount_comparison(invoice: Invoice, rows: Sequence[Transaction]) -> SettlementComparison | None:
+    """Put the cuotas ``rows`` state and the cuota of ``invoice`` in one currency, by the settlement rule.
+
+    The same rule as :func:`taxable_base_comparison`, applied to ``iva_amount`` and
+    the invoice's ``iva_total``.
+    """
+    return _figure_comparison(
+        invoice,
+        rows,
+        native_stated=lambda row: row.iva_amount,
+        native_owed=invoice.iva_total,
+        eur_stated=effective_eur_iva_amount,
+        eur_owed=invoice.iva_total_eur,
     )
 
 
