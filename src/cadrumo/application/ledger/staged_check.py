@@ -60,9 +60,9 @@ from .staged_check_contracts import (
     RouteRefusal,
     StagedBlockerKind,
     StageFieldName,
-    TaxSetSkip,
     WriteRoute,
 )
+from .staged_check_tax_set import TRANSFER_LOCKED_FIELDS, TRANSFER_TAX_FIELDS, tax_set_skip, tax_set_skipped_fields
 from .staged_check_words import blocker_words, share_refusal_words
 from .staged_identity import staged_identity_fields
 from .update_contracts import LEDGER_UPDATE_FIELD_NAMES, LEDGER_UPDATE_REQUIRED_FIELD_NAMES
@@ -86,22 +86,6 @@ def _worded(blocked: _Blocked, language: OutputLanguage) -> LedgerStagedBlocker:
     )
 
 
-TRANSFER_TAX_FIELDS: Final[tuple[StageFieldName, ...]] = (
-    "business_pct",
-    "category_id",
-    "usage_ratio_id",
-    "taxable_base",
-    "iva_rate",
-    "iva_amount",
-    "iva_category",
-    "irpf_category",
-    "deduction_fact_kind",
-    "investment_asset_id",
-    "operation_date",
-    "accrual_date",
-)
-"""What ``ManualLedgerTransactionCommand`` refuses on a transfer, of what a cell can stage."""
-
 _TRANSFER_STORED_TAX_FIELDS: Final[tuple[str, ...]] = (
     "recargo_amount",
     "m210_income_classification",
@@ -116,8 +100,6 @@ _TRANSFER_STORED_TAX_FIELDS: Final[tuple[str, ...]] = (
 
 _DRAFT_TRANSFER_TAX_FIELDS: Final[tuple[str, ...]] = (*TRANSFER_TAX_FIELDS, *_TRANSFER_STORED_TAX_FIELDS)
 
-TRANSFER_LOCKED_FIELDS: Final[tuple[StageFieldName, ...]] = TRANSFER_TAX_FIELDS
-"""What cannot be edited on a transfer: the writer refuses every one of them there."""
 
 _CLASSIFYING_FIELDS: Final[frozenset[str]] = frozenset(
     {*TRANSFER_TAX_FIELDS, "business_classification", "counterparty_country"} - {"operation_date", "accrual_date"}
@@ -294,16 +276,6 @@ def _direction(value: str | None) -> TransactionDirection | None:
         return TransactionDirection(value)
     except ValueError:
         return None
-
-
-def _tax_set_skip(
-    direction: TransactionDirection | None, classification: BusinessClassification | None
-) -> TaxSetSkip | None:
-    if direction is TransactionDirection.INTERNAL_TRANSFER:
-        return "transfer"
-    if classification is BusinessClassification.PERSONAL:
-        return "personal"
-    return None
 
 
 def _classification_carrier(row: LedgerStagedRow, classified: bool) -> tuple[WriteRoute | None, frozenset[str]]:
@@ -583,7 +555,8 @@ def check_stored_row(
         ),
         lifecycle_actions=lifecycle_actions_taken(transaction.lifecycle_state, transaction.business_classification),
         category_on_income=_category_on_income(classification, state.after, takes_category),
-        tax_set_skip=_tax_set_skip(state.direction, classification),
+        tax_set_skip=tax_set_skip(state.direction, classification),
+        tax_set_skipped_fields=tax_set_skipped_fields(state.direction, classification),
         transfer_locked_fields=TRANSFER_LOCKED_FIELDS
         if state.direction is TransactionDirection.INTERNAL_TRANSFER
         else (),
@@ -699,8 +672,6 @@ def check_staged_work(
 
 __all__ = [
     "DRAFT_REQUIRED_FIELDS",
-    "TRANSFER_LOCKED_FIELDS",
-    "TRANSFER_TAX_FIELDS",
     "check_draft",
     "check_staged_work",
     "check_stored_row",

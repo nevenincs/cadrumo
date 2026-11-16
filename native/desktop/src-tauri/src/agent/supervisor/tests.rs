@@ -680,14 +680,48 @@ fn provider_settings_status_asked_while_starting_answers_busy_at_once_then_reads
     server.join().unwrap();
 }
 
+#[tokio::test(flavor = "multi_thread")]
+async fn provider_settings_status_before_the_first_observation_answers_busy_never_refused() {
+    // The window opens the settings as the agent is asked to start: the
+    // supervisor has not yet observed the sign-in, so its state is still the
+    // initial Stopped, and the read answers busy rather than refusing.
+    let entered = Arc::new(Notify::new());
+    let notify = entered.clone();
+    let observe: Observe = Arc::new(move || {
+        let notify = notify.clone();
+        Box::pin(async move {
+            notify.notify_one();
+            std::future::pending().await
+        })
+    });
+    let launch: Launch = Arc::new(|_, _| panic!("an unobserved sign-in cannot authorize launch"));
+    let supervisor = Supervisor::new(
+        observe,
+        every(Duration::from_millis(1)),
+        Some(launch),
+        Arc::new(Diagnostics::default()),
+    );
+    let asked = std::time::Instant::now();
+    assert!(matches!(
+        provider_settings_status(&supervisor),
+        Err(crate::shell::provider_settings::wire::CommandFailure::Refused(refused))
+            if refused.code == crate::shell::provider_settings::wire::Refusal::Busy
+    ));
+    assert!(asked.elapsed() < Duration::from_secs(1));
+    entered.notified().await;
+    assert_eq!(supervisor.status().state, State::Stopped);
+    tokio::time::timeout(Duration::from_secs(1), supervisor.close())
+        .await
+        .unwrap()
+        .unwrap();
+    assert!(admin_unavailable(provider_settings_status(&supervisor)));
+}
+
 #[test]
 fn provider_settings_status_without_a_starting_service_is_refused_at_once() {
-    for state in [
-        State::Stopped,
-        State::Refused {
-            code: Refusal::SignedOut,
-        },
-    ] {
+    for state in [State::Refused {
+        code: Refusal::SignedOut,
+    }] {
         let supervisor = starting_supervisor(Duration::from_secs(60));
         super::publish(&supervisor.shared, state.clone());
         let asked = std::time::Instant::now();
