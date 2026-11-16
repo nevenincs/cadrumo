@@ -14,7 +14,7 @@ import { Icon } from "@/components/ui/icon";
 import { failureCode } from "../errors";
 import { useAgentAccess, type AgentAccess } from "../shell/agentAccess";
 import { providerModelsToDownload } from "../shell/agentCatalog";
-import { DocumentLister } from "../shell/agentDocuments";
+import { acceptedExtensions, DocumentLister } from "../shell/agentDocuments";
 import { useDocumentInventory } from "../shell/agentDocumentInventory";
 import { useStagedDocuments } from "../shell/agentStaging";
 import { useAgentDrops } from "../shell/agentDrops";
@@ -1043,7 +1043,7 @@ export function AgentColumn({
         fileCount={dropping.drag?.count}
         acceptedTypes={
           attachmentPolicy.kind === "ready"
-            ? attachmentPolicy.value.extensions.map((extension) =>
+            ? acceptedExtensions(attachmentPolicy.value).map((extension) =>
                 extension.toUpperCase(),
               )
             : undefined

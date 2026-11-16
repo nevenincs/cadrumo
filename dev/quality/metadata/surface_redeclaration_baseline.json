@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "counts": {
-    "wire-type": 1164,
+    "wire-type": 1163,
     "tui-date-decision": 1,
     "tui-precedence": 8,
     "duplicated-helper": 97
@@ -623,7 +623,6 @@
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentApprovalOption",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentAttachmentCard",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentAttachmentGrants",
-      "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentAttachmentPolicy",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentAttachmentRefusal",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentAttachmentRelease",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentAttachmentScope",
