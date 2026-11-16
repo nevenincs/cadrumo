@@ -95,6 +95,7 @@ from .work_form_field_vocabulary import (
     ModeloFormText,
     ModeloFormValueSource,
     address_key,
+    field_attention_rank,
     field_standing,
     fitting_standings,
 )
@@ -120,6 +121,10 @@ class ModeloFormInspectionReason(StrEnum):
 
     LAYOUT_ABSENT = "layout_absent"
     LAYOUT_FOR_ANOTHER_REVISION = "layout_for_another_revision"
+
+
+def _attention_rank_of(data: dict[str, object]) -> int:
+    return field_attention_rank(_factory_origin(data), _factory_blockers(data))
 
 
 def _default_standing(data: dict[str, object]) -> ModeloFormStanding:
@@ -349,6 +354,9 @@ class ModeloFormField(ModeloFormBase):
     #: Where the box stands for the filer, on the declaration and page it is shown on; derived from
     #: its own origin and blockers when the builder has no declaration or page to say otherwise.
     standing: ModeloFormStanding = Field(default_factory=_default_standing)
+    #: Where the box sorts when the filer orders a page by attention, most urgent first; see
+    #: :func:`~cadrumo.application.modelo.work_form_field_vocabulary.field_attention_rank`.
+    attention_rank: int = Field(default_factory=_attention_rank_of, ge=0)
     #: The address a change to the box is submitted to: the binding that feeds it when the filer
     #: replaces a source's value, otherwise the box itself.
     edit_address: ModeloFormAddressV1 = Field(default_factory=_default_edit_address)
@@ -447,6 +455,8 @@ class ModeloFormField(ModeloFormBase):
         # The builder knows the declaration and the page; the field alone bounds what either can make of it.
         if self.standing not in fitting_standings(self.origin, self.blockers):
             raise ValueError("a field's standing is one its origin and blockers allow on some declaration and page")
+        if self.attention_rank != field_attention_rank(self.origin, self.blockers):
+            raise ValueError("a field's attention rank is the one its origin and blockers give")
         return self
 
 
@@ -464,6 +474,7 @@ _SELF_DERIVED: Final[frozenset[str]] = frozenset(
         "own_value",
         "confirm_comparable",
         "state_digest",
+        "attention_rank",
     }
 )
 
@@ -656,6 +667,13 @@ type ModeloFormBlock = Annotated[
 ]
 
 
+class ModeloFormRecordAttention(ModeloFormBase):
+    """How many of the last check's findings about a section's tables of records sit at one attention level."""
+
+    level: ModeloFormAttention
+    count: int = Field(gt=0)
+
+
 class ModeloFormSection(ModeloFormBase):
     """One apartado with its heading, ordered blocks, counts and whether it applies."""
 
@@ -666,6 +684,9 @@ class ModeloFormSection(ModeloFormBase):
     counts: ModeloFormCounts
     #: ``False`` when its page does not apply or every box on it is proven not to apply; otherwise its page's answer.
     applies: bool | None
+    #: What the last check found about the values of the section's tables of records, most urgent level first;
+    #: see :func:`~cadrumo.application.modelo.work_form_record_attention.record_attention`.
+    record_attention: tuple[ModeloFormRecordAttention, ...] = ()
 
 
 class ModeloFormPage(ModeloFormBase):
@@ -1142,6 +1163,7 @@ __all__ = [
     "ModeloFormLayoutProvenance",
     "ModeloFormOutlineGroup",
     "ModeloFormPage",
+    "ModeloFormRecordAttention",
     "ModeloFormRepeatingBlock",
     "ModeloFormRepeatingRow",
     "ModeloFormSection",
