@@ -95,6 +95,12 @@ def _local_refs(node: object) -> object:
     return node
 
 
+@cache
+def agent_definitions() -> dict[str, Any]:
+    """The agent's published component schemas as sibling definitions, keyed by name, references between them."""
+    return cast(dict[str, Any], _local_refs(pinned_agent_components()))
+
+
 def _ref(name: str) -> dict[str, str]:
     return {"$ref": f"#/$defs/{name}"}
 
@@ -131,7 +137,7 @@ def served_schema() -> dict[str, Any]:
     changes are written as served definitions beside them, and the agent's names keep meaning what the
     agent serves.
     """
-    agent = cast(dict[str, Any], _local_refs(pinned_agent_components()))
+    agent = agent_definitions()
     defs: dict[str, Any] = dict(agent)
     model = copy.deepcopy(agent[_AGENT_MODEL])
     model["description"] = (

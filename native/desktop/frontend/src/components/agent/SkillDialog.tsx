@@ -10,8 +10,8 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { failureCode } from "../../errors";
 import { formatSize } from "../../shared/numbers";
+import type { SkillRecord } from "../../shell/agentGatewayContract";
 import type {
-  AgentSkillAppliesWhen,
   AgentSkillDetail,
   AgentSkillVerification,
   SkillCommand,
@@ -30,44 +30,58 @@ const valueWords = (values: readonly unknown[]) =>
     typeof value === "string" ? value : JSON.stringify(value),
   );
 
+type ProfileFact = { fact: unknown; match: unknown; values: unknown[] };
+
+/** The profile facts a predicate names, each read as far as it is a record. */
+const profileFacts = (value: unknown): ProfileFact[] =>
+  Array.isArray(value)
+    ? value.flatMap((fact: unknown) => {
+        if (typeof fact !== "object" || fact === null) return [];
+        const held = fact as Record<string, unknown>;
+        return [
+          {
+            fact: held.fact,
+            match: held.match,
+            values: Array.isArray(held.values)
+              ? (held.values as unknown[])
+              : [],
+          },
+        ];
+      })
+    : [];
+
 /** When the agent applies the skill on its own, line by line, from what its
- * frontmatter says. Keys it does not know yet are not shown. */
-function AppliesWhen({ rule }: { rule: AgentSkillAppliesWhen }) {
+ * frontmatter says. Keys it does not know yet are not shown; a skill that
+ * declares no predicate is applied only when asked. */
+function AppliesWhen({ rule }: { rule: SkillRecord["applies_when"] }) {
   const t = useStrings();
   const lines: ReactNode[] = [];
-  if (rule.always === true) lines.push(t("desktop.agent.skill_applies_always"));
-  const facts = Array.isArray(rule.profile_facts) ? rule.profile_facts : [];
+  const held = rule ?? {};
+  if (held.always === true) lines.push(t("desktop.agent.skill_applies_always"));
+  const facts = profileFacts(held.profile_facts);
   if (facts.length > 0) {
     lines.push(
       <>
-        {rule.profile_match === "any"
+        {held.profile_match === "any"
           ? t("desktop.agent.skill_applies_profile_any")
           : t("desktop.agent.skill_applies_profile_all")}
         <ul className="mt-1 list-disc pl-5 font-mono text-sm">
           {facts.map((fact, index) => (
             <li key={index}>
-              {fact.fact} {fact.match}{" "}
-              {listed(
-                t,
-                valueWords(Array.isArray(fact.values) ? fact.values : []),
-                "plain",
-              )}
+              {valueWords([fact.fact, fact.match]).join(" ")}{" "}
+              {listed(t, valueWords(fact.values), "plain")}
             </li>
           ))}
         </ul>
       </>,
     );
   }
-  if (typeof rule.workflow_phase === "string" && rule.workflow_phase)
-    lines.push(
-      t("desktop.agent.skill_applies_phase", { phase: rule.workflow_phase }),
-    );
-  if (typeof rule.temporal_trigger === "string" && rule.temporal_trigger)
-    lines.push(
-      t("desktop.agent.skill_applies_time", {
-        trigger: rule.temporal_trigger,
-      }),
-    );
+  const phase = held.workflow_phase;
+  if (typeof phase === "string" && phase)
+    lines.push(t("desktop.agent.skill_applies_phase", { phase }));
+  const trigger = held.temporal_trigger;
+  if (typeof trigger === "string" && trigger)
+    lines.push(t("desktop.agent.skill_applies_time", { trigger }));
   if (lines.length === 0) lines.push(t("desktop.agent.skill_applies_asked"));
   return (
     <ul className="grid gap-1 text-base">
