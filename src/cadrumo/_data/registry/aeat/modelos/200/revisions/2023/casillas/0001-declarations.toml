@@ -41,11 +41,12 @@
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:63 DP200001 33|172|1|Num
 [[revisions."2023".casillas]]
-id = "00013"
+id = "DP200001:00013"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:63 (DP200001 field 33): Agrupación de interés económico española [00013]. aeat-dr-200-2022 prints box [00013] on the same sheet at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:62 (DP200001 field 32) as 'Agrupación de interés económico española o U.T.E. [00013]', a reworded caption of the same field; the 2022 edition leaves the rewording unadjudicated and does not declare the row."
 continuidad_id = "is-agrupacion-de-interes-economico-espanola"
 number = "00013"
+segmento = "DP200001"
 section = ["agrupacion_de_interes_economico_espanola"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -100,11 +101,12 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:62 DP200001 32|171|1|Num
 [[revisions."2023".casillas]]
-id = "00085"
+id = "DP200001:00085"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:62 (DP200001 field 32): Unión temporal de empresas [00085]. aeat-dr-200-2022 prints no field with this caption. It prints no box [00085]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "is-union-temporal-de-empresas"
 number = "00085"
+segmento = "DP200001"
 section = ["union_temporal_de_empresas"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -112,11 +114,12 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:91 DP200001 61|200|1|Num
 [[revisions."2023".casillas]]
-id = "00086"
+id = "DP200001:00086"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:91 (DP200001 field 61): Régimen especial Illes Balears [00086]. aeat-dr-200-2022 prints no field with this caption. It prints no box [00086]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "is-regimen-especial-illes-balears"
 number = "00086"
+segmento = "DP200001"
 section = ["regimen_especial_illes_balears"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -124,11 +127,12 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:112 DP200001 82|221|1|Num
 [[revisions."2023".casillas]]
-id = "00087"
+id = "DP200001:00087"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:112 (DP200001 field 82): Inversiones anticipadas-reserva inversiones en Illes Balears (DA 70ª.Cuatro.10 Ley 31/2022) [00087]. aeat-dr-200-2022 prints no field with this caption. It prints no box [00087]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "is-inversiones-anticipadas-reserva-inversiones-en-illes-balears-da-70a-cuatro-10-ley-31-2022"
 number = "00087"
+segmento = "DP200001"
 section = ["inversiones_anticipadas_reserva_inversiones_en_ill"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -195,22 +199,24 @@ legal_refs = ["ley-31-2022:da-70"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1304 DP200013 6|13|17|Num
 [[revisions."2023".casillas]]
-id = "00370"
+id = "DP200013:00370"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1304 (DP200013 field 6): Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participaciones en beneficios de entidades .... aeat-dr-200-2022 prints no field with this caption. Its box [00370] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1270 (DP200012 field 95): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participacione...; 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5378 (DP200032 field 41): Contabilidad Banco de España - Estado cambios patrimonio neto (II) - Estado total cambios - Emisión de acciones ordin.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "is-liquidacion-ii-detalle-correcciones"
 number = "00370"
+segmento = "DP200013"
 section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
 semantic_role = "is_liquidacion_ii_detalle_correcciones"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1108 DP200011 67|1050|17|N
 [[revisions."2023".casillas]]
-id = "00527"
+id = "DP200011:00527"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1108 (DP200011 field 67): Estado de cambios patrimonio neto (III) - Operaciones con socios o propietarios - Aumentos de capital - Resultado del ejercicio [00527]. aeat-dr-200-2022 prints the identical field at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1093 (DP200011 field 67), but the 2022 edition does not declare the row (its unsheeted box number is also printed as a reserve cohort box, which one unsheeted row cannot stand for)."
 continuidad_id = "00527"
 number = "00527"
+segmento = "DP200011"
 section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
 semantic_role = "is_ecpn_operaciones_socios_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -241,11 +247,12 @@ legal_refs = ["ley-27-2014:dt-24"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:5270 DP200026F 55|846|17|Num
 [[revisions."2023".casillas]]
-id = "00751"
+id = "DP200026F:00751"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:5270 (DP200026F field 55): Reserva para inversiones en Illes Balears (DA 70ª Ley 31/2022) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio.... aeat-dr-200-2022 prints no field with this caption. Its box [00751] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5052 (DP200027 field 30): Contabilidad Banco de España - Balance (I) - Activo - Pro memoria: prestados o entregados como garantía con derecho d.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "00751"
 number = "00751"
+segmento = "DP200026F"
 section = ["reserva_para_inversiones_en_illes_balears_da_70a_l", "disminucion"]
 semantic_role = "is_reserva_inversiones_illes_balears_importe"
 legal_refs = ["ley-31-2022:da-70"]
@@ -365,11 +372,12 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1703 DP200015 122|1985|17|Num
 # aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1769 (DP200015 field 125), naming the same generation year; only the (*) marker differs.
 [[revisions."2023".casillas]]
-id = "00987"
+id = "DP200015:00987"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1703 (DP200015 field 122): Régimen especial de buques y empresas navieras en Canarias: desglose de la compensación de bases imponibles negativas - Compensación de base imponible.... aeat-dr-200-2022 prints no field with this caption. Its box [00987] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3551 (DP200021 field 6): Comunicación importe neto cifra negocios - Grupos de sociedades. Importe neto cifra negocios [00987]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "00987"
 number = "00987"
+segmento = "DP200015"
 section = ["regimen_especial_de_buques_y_empresas_navieras_en", "compensacion_de_base_imponible_especial_ano_2023"]
 semantic_role = "is_naviera_base_imponible_negativa"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -377,11 +385,12 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1704 DP200015 123|2002|17|Num
 # aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1770 (DP200015 field 126), naming the same generation year; only the (*) marker differs.
 [[revisions."2023".casillas]]
-id = "00988"
+id = "DP200015:00988"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1704 (DP200015 field 123): Régimen especial de buques y empresas navieras en Canarias: desglose de la compensación de bases imponibles negativas - Compensación de base imponible.... aeat-dr-200-2022 prints no field with this caption. Its box [00988] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3578 (DP200021 field 33): Comunicación importe neto cifra negocios - No residentes más de un establecimiento permanente. Importe neto [00988]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "00988"
 number = "00988"
+segmento = "DP200015"
 section = ["regimen_especial_de_buques_y_empresas_navieras_en", "compensacion_de_base_imponible_especial_ano_2023"]
 semantic_role = "is_naviera_base_imponible_negativa"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -389,11 +398,12 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1705 DP200015 124|2019|17|Num
 # aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1771 (DP200015 field 127), naming the same generation year; only the (*) marker differs.
 [[revisions."2023".casillas]]
-id = "00989"
+id = "DP200015:00989"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1705 (DP200015 field 124): Régimen especial de buques y empresas navieras en Canarias: desglose de la compensación de bases imponibles negativas - Compensación de base imponible.... aeat-dr-200-2022 prints no field with this caption. Its box [00989] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3585 (DP200021 field 40): Comunicación importe neto cifra negocios - Entidades de crédito, aseguradoras e instituciones de inversión colectiva - Importe neto de la cifra de neg.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "00989"
 number = "00989"
+segmento = "DP200015"
 section = ["regimen_especial_de_buques_y_empresas_navieras_en", "compensacion_de_base_imponible_especial_ano_2023"]
 semantic_role = "is_naviera_base_imponible_negativa"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -482,11 +492,12 @@ legal_refs = [
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1817 DP200015B 86|1168|17|Num
 # aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1889 (DP200015B field 86), naming the same generation year; only the (*) marker differs.
 [[revisions."2023".casillas]]
-id = "01270"
+id = "DP200015B:01270"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1817 (DP200015B field 86): Deducciones doble imposición interna (DT 23.1 LIS) - DI interna 2023(*) - Deducción pendiente [01270]. aeat-dr-200-2022 prints no field with this caption. Its box [01270] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3460 (DP200020D field 11): Aplicación de resultados - Aplicación - A reservas - Reservas de capitalización [01270]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "is-deduccion-di-interna-dt231-detalle"
 number = "01270"
+segmento = "DP200015B"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2023"]
 semantic_role = "is_deduccion_di_interna_dt231_detalle"
 legal_refs = ["ley-27-2014:dt-23"]
@@ -494,11 +505,12 @@ legal_refs = ["ley-27-2014:dt-23"]
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1818 DP200015B 87|1185|4|Num
 # aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1890 (DP200015B field 87), naming the same generation year; only the (*) marker differs.
 [[revisions."2023".casillas]]
-id = "01271"
+id = "DP200015B:01271"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1818 (DP200015B field 87): Deducciones doble imposición interna (DT 23.1 LIS) - DI interna 2023(*) - Tipo gravamen período generación [01271]. aeat-dr-200-2022 prints no field with this caption. Its box [01271] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3461 (DP200020D field 12): Aplicación de resultados - Aplicación - A reservas - Reserva de nivelación [01271]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "is-deduccion-di-interna-tipo-gravamen"
 number = "01271"
+segmento = "DP200015B"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2023"]
 data_type = "decimal"
 semantic_role = "is_deduccion_di_interna_tipo_gravamen"
@@ -1419,11 +1431,12 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2622 DP200018B 13|132|17|Num
 # aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2619 (DP200018 field 127), with the year it names read for its own ejercicio.
 [[revisions."2023".casillas]]
-id = "01901"
+id = "DP200018B:01901"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2622 (DP200018B field 13): Deducc. para incentivar determ.actividades - 2023: Inauguración de la Galería de las Colecciones Reales (GC) - Aplicado en esta liquidación [01901]. aeat-dr-200-2022 prints no field with this caption. Its box [01901] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3577 (DP200021 field 32): Comunicación importe neto cifra negocios - Actividades agrícolas y/o ganaderas. Otros ingresos de explotación de actividades agrícolas y/o ganaderas [.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "01901"
 number = "01901"
+segmento = "DP200018B"
 section = ["deducc_para_incentivar_determ_actividades", "2025_inauguracion_de_la_galeria_de_las_coleccione"]
 semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -1879,11 +1892,12 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2725 DP200018B 116|1883|17|Num
 # aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2734 (DP200018B field 59), naming the same generation year; only the (*) marker differs.
 [[revisions."2023".casillas]]
-id = "02140"
+id = "DP200018B:02140"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2725 (DP200018B field 116): Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023(*) - Deducción pendiente/generada [02140]. aeat-dr-200-2022 prints no field with this caption. Its box [02140] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2659 (DP200018B field 101): Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2022 - Deducción pendiente/generada [02140]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "02140"
 number = "02140"
+segmento = "DP200018B"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2023"]
 semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -1891,11 +1905,12 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2726 DP200018B 117|1900|17|Num
 # aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2735 (DP200018B field 60), naming the same generation year; only the (*) marker differs.
 [[revisions."2023".casillas]]
-id = "02141"
+id = "DP200018B:02141"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2726 (DP200018B field 117): Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023(*) - Aplicado en esta liquidación [02141]. aeat-dr-200-2022 prints no field with this caption. Its box [02141] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2660 (DP200018B field 102): Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2022 - Aplicado en esta liquidación [02141]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "02141"
 number = "02141"
+segmento = "DP200018B"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2023"]
 semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -1903,11 +1918,12 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2727 DP200018B 118|1917|17|Num
 # aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2736 (DP200018B field 61), naming the same generation year; only the (*) marker differs.
 [[revisions."2023".casillas]]
-id = "02142"
+id = "DP200018B:02142"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2727 (DP200018B field 118): Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023(*) - Importe abonado por insuficiencia de cuota [02142]. aeat-dr-200-2022 prints no field with this caption. Its box [02142] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2661 (DP200018B field 103): Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2022 - Importe abonado por insuficiencia de cuota [02142]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "02142"
 number = "02142"
+segmento = "DP200018B"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2023"]
 semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -1915,11 +1931,12 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2728 DP200018B 119|1934|17|Num
 # aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2737 (DP200018B field 62), naming the same generation year; only the (*) marker differs.
 [[revisions."2023".casillas]]
-id = "02143"
+id = "DP200018B:02143"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2728 (DP200018B field 119): Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023(*) - Pendiente de aplicación en períodos futuros [02143]. aeat-dr-200-2022 prints no field with this caption. Its box [02143] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2662 (DP200018B field 104): Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2022 - Pendiente de aplicación en períodos futuros [02143]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "02143"
 number = "02143"
+segmento = "DP200018B"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2023"]
 semantic_role = "is_deduccion_cinematografica_extranjera_pendiente_futuros"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -2679,22 +2696,24 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1422 DP200014 13|132|17|N
 [[revisions."2023".casillas]]
-id = "01887"
+id = "DP200014:01887"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1422 (DP200014 field 13): Liquidación III - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Compensación de bases imponibles negativas períodos.... aeat-dr-200-2022 prints no field with this caption. Its box [01887] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1386 (DP200013 field 99): Liquidación II - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Compensación de bases ...; 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1683 (DP200015 field 102): Régimen especial de buques y empresas navieras en Canarias: desglose de la compensación de bases imponibles negativas.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "01887"
 number = "01887"
+segmento = "DP200014"
 section = ["liquidacion_iii", "base_imponible"]
 semantic_role = "is_liquidacion_iii_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1423 DP200014 14|149|17|N
 [[revisions."2023".casillas]]
-id = "01890"
+id = "DP200014:01890"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1423 (DP200014 field 14): Liquidación III - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Compensación de bases imponibles negativas períodos.... aeat-dr-200-2022 prints no field with this caption. Its box [01890] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1387 (DP200013 field 100): Liquidación II - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Compensación de bases ...; 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1686 (DP200015 field 105): Régimen especial de buques y empresas navieras en Canarias: desglose de la compensación de bases imponibles negativas.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "01890"
 number = "01890"
+segmento = "DP200014"
 section = ["liquidacion_iii", "base_imponible"]
 semantic_role = "is_liquidacion_iii_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -2734,11 +2753,12 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2357 DP200017 140|2291|17|Num
 [[revisions."2023".casillas]]
-id = "01897"
+id = "DP200017:01897"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2357 (DP200017 field 140): Deducc. para incentivar determ.actividades - 2022 Inversiones en territ. África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/.... aeat-dr-200-2022 prints no field with this caption. Its box [01897] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3576 (DP200021 field 31): Comunicación importe neto cifra negocios - Actividades agrícolas y/o ganaderas. Importe neto de la cifra de negocios .... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
 continuidad_id = "01897"
 number = "01897"
+segmento = "DP200017"
 section = ["deducc_para_incentivar_determ_actividades", "2022_inversiones_en_territ_africa_occidental_y_gas"]
 semantic_role = "is_deduccion_inversiones_africa_canarias"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -4363,44 +4383,48 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4391 DP200026 30|361|17|Num
 [[revisions."2023".casillas]]
-id = "00447"
+id = "DP200026:00447"
 continuidad_id = "is-pagos-fraccionados"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4391 (DP200026 field 30): Tributación conjunta Estado y Adm.Forales - Pagos fraccionados 2 - Vizcaya [00447]. aeat-dr-200-2022 prints the identical field at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4041 (DP200026 field 30); the 2022 edition does not declare the row."
 number = "00447"
+segmento = "DP200026"
 section = ["tributacion_conjunta_estado_y_adm_forales", "pagos_fraccionados_2"]
 semantic_role = "is_pagos_fraccionados"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4399 DP200026 38|497|17|N
 [[revisions."2023".casillas]]
-id = "00474"
+id = "DP200026:00474"
 continuidad_id = "is-tributacion-conjunta-cuota-diferencial"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4399 (DP200026 field 38): Tributación conjunta Estado y Adm.Forales - Cuota diferencial - Álava [00474]. aeat-dr-200-2022 prints the identical field at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4049 (DP200026 field 38); the 2022 edition does not declare the row."
 number = "00474"
+segmento = "DP200026"
 section = ["tributacion_conjunta_estado_y_adm_forales", "cuota_diferencial"]
 semantic_role = "is_tributacion_conjunta_cuota_diferencial"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4415 DP200026 54|769|17|Num
 [[revisions."2023".casillas]]
-id = "00487"
+id = "DP200026:00487"
 continuidad_id = "is-tributacion-conjunta-intereses"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4415 (DP200026 field 54): Tributación conjunta Estado y Adm.Forales - Intereses demora - Guipúzcoa [00487]. aeat-dr-200-2022 prints the identical field at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4065 (DP200026 field 54); the 2022 edition does not declare the row."
 number = "00487"
+segmento = "DP200026"
 section = ["tributacion_conjunta_estado_y_adm_forales", "intereses_demora"]
 semantic_role = "is_tributacion_conjunta_intereses"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4416 DP200026 55|786|17|Num
 [[revisions."2023".casillas]]
-id = "00488"
+id = "DP200026:00488"
 continuidad_id = "00488"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4416 (DP200026 field 55): Tributación conjunta Estado y Adm.Forales - Intereses demora - Vizcaya [00488]. aeat-dr-200-2022 prints the identical field at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4066 (DP200026 field 55); the 2022 edition does not declare the row."
 number = "00488"
+segmento = "DP200026"
 section = ["tributacion_conjunta_estado_y_adm_forales", "intereses_demora"]
 semantic_role = "is_tributacion_conjunta_intereses"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -4866,3 +4890,372 @@ number = "01879"
 section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_producciones_extranjeras_en_cana"]
 semantic_role = "is_tributacion_conjunta_abono_cinematografica"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+[[revisions."2023".casillas]]
+id = "DP200019:00130"
+segmento = "DP200019"
+continuidad_id = "is-deducciones-i-d-i-ex-informacion-adiciona-grupo-mercantil-solo-importe-anual-de-la-deduccion-por-gastos-en-activi"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3173 (DP200019 field 210): Deducciones I+D+i excluidas de límite - Información adicional para el cálculo de límites de deducciones - Grupo mercantil (sólo para entidades que hayan marcado la clave 00039 de caracteres de la declaración) - Importe anual de la deducción por gastos en actividades de innovación tecnológica aplicada o abonada por el resto del grupo [00130]. aeat-dr-200-2022 prints no box [00130] on DP200019 and no [00130] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00130"
+section = ["deducciones_i_d_i_excluidas_de_limite", "informacion_adicional_para_el_calculo_de_limites_d"]
+semantic_role = "is_deducciones_i_d_i_ex_informacion_adiciona_grupo_mercantil_solo_importe_anual_de_la_deduccion_por_gastos_en_activi"
+
+[[revisions."2023".casillas]]
+id = "DP200020D:00091"
+segmento = "DP200020D"
+continuidad_id = "is-aplicacion-de-resultados-aplicacion-a-fondo-de-reserva-obligatoria-cooperativas"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3582 (DP200020D field 17): Aplicación de resultados - Aplicación - A Fondo de Reserva Obligatoria (Cooperativas) [00091]. aeat-dr-200-2022 prints no box [00091] on DP200020D and no [00091] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00091"
+section = ["aplicacion_de_resultados", "aplicacion"]
+semantic_role = "is_aplicacion_de_resultados_aplicacion_a_fondo_de_reserva_obligatoria_cooperativas"
+
+[[revisions."2023".casillas]]
+id = "DP200020D:00092"
+segmento = "DP200020D"
+continuidad_id = "is-aplicacion-de-resultados-aplicacion-a-dotaciones-voluntarias-fondo-de-educacion-y-pro"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3583 (DP200020D field 18): Aplicación de resultados - Aplicación -A dotaciones voluntarias Fondo de Educación y Promoción (Cooperativas) [00092]. aeat-dr-200-2022 prints no box [00092] on DP200020D and no [00092] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00092"
+section = ["aplicacion_de_resultados", "aplicacion_a_dotaciones_voluntarias_fondo_de_educa"]
+semantic_role = "is_aplicacion_de_resultados_aplicacion_a_dotaciones_voluntarias_fondo_de_educacion_y_pro"
+
+[[revisions."2023".casillas]]
+id = "DP200021:00989"
+segmento = "DP200021"
+continuidad_id = "is-comunicacion-importe-neto-cifra-entidades-de-credito-aseguradora-importe-neto-de-la-cifra-de-negocios-ejercicio-y"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3708 (DP200021 field 40): Comunicación importe neto cifra negocios - Entidades de crédito, aseguradoras e instituciones de inversión colectiva - Importe neto de la cifra de negocios ejercicio 2023 [00989]. aeat-dr-200-2022 prints no box [00989] on DP200021 and no [00989] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00989"
+section = ["comunicacion_importe_neto_cifra_negocios", "entidades_de_credito_aseguradoras_e_instituciones"]
+semantic_role = "is_comunicacion_importe_neto_cifra_entidades_de_credito_aseguradora_importe_neto_de_la_cifra_de_negocios_ejercicio_y"
+rotating_year_offset = 0
+
+[[revisions."2023".casillas]]
+id = "DP200022:00012"
+segmento = "DP200022"
+continuidad_id = "dp200022-00012"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3805 (DP200022 field 69): Rég. cooperativas - Determ. base imponible - 11. Reserva inversiones Illes Balears - Resultados cooperativos [00012]. aeat-dr-200-2022 prints no box [00012] on DP200022 and no [00012] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00012"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00021"
+segmento = "DP200024"
+continuidad_id = "dp200024-00021"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4001 (DP200024 field 12): Agrup. interés económico y UTES - B) Datos económicos - 6.- Deduc. evitar doble imposición: Base de la deducción [00021]. aeat-dr-200-2022 prints no box [00021] on DP200024 and no [00021] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00021"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00034"
+segmento = "DP200024"
+continuidad_id = "dp200024-00034"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4002 (DP200024 field 13): Agrup. interés económico y UTES - B) Datos económicos - 6.- Deduc. evitar doble imposición: Importe de la deducción [00034]. aeat-dr-200-2022 prints no box [00034] on DP200024 and no [00034] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00034"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_importe_de_la_de"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00035"
+segmento = "DP200024"
+continuidad_id = "dp200024-00035"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4004 (DP200024 field 15): Agrup. interés económico y UTES - B) Datos económicos - 6.- Deduc. evitar doble imposición: Base de la deducción [00035]. aeat-dr-200-2022 prints no box [00035] on DP200024 and no [00035] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00035"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00036"
+segmento = "DP200024"
+continuidad_id = "dp200024-00036"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4005 (DP200024 field 16): Agrup. interés económico y UTES - B) Datos económicos - 6.- Deduc. evitar doble imposición: Importe de la deducción [00036]. aeat-dr-200-2022 prints no box [00036] on DP200024 and no [00036] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00036"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_importe_de_la_de"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00043"
+segmento = "DP200024"
+continuidad_id = "dp200024-00043"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4007 (DP200024 field 18): Agrup. interés económico y UTES - B) Datos económicos - 6.- Deduc. evitar doble imposición: Base de la deducción [00043]. aeat-dr-200-2022 prints no box [00043] on DP200024 and no [00043] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00043"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00048"
+segmento = "DP200024"
+continuidad_id = "dp200024-00048"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4008 (DP200024 field 19): Agrup. interés económico y UTES - B) Datos económicos - 6.- Deduc. evitar doble imposición: Importe de la deducción [00048]. aeat-dr-200-2022 prints no box [00048] on DP200024 and no [00048] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00048"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_importe_de_la_de"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00049"
+segmento = "DP200024"
+continuidad_id = "dp200024-00049"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4010 (DP200024 field 21): Agrup. interés económico y UTES - B) Datos económicos - 6.- Deduc. evitar doble imposición: Base de la deducción [00049]. aeat-dr-200-2022 prints no box [00049] on DP200024 and no [00049] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00049"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00057"
+segmento = "DP200024"
+continuidad_id = "dp200024-00057"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4011 (DP200024 field 22): Agrup. interés económico y UTES - B) Datos económicos - 6.- Deduc. evitar doble imposición: Importe de la deducción [00057]. aeat-dr-200-2022 prints no box [00057] on DP200024 and no [00057] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00057"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_importe_de_la_de"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00058"
+segmento = "DP200024"
+continuidad_id = "dp200024-00058"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4047 (DP200024 field 58): Agrup. Interés económico y UTES - B) Datos económicos - 8.- Deducciones generadas en el periodo impositivo - Activos fijos (Ley 20/1991) - Base de la deducción [00058]. aeat-dr-200-2022 prints no box [00058] on DP200024 and no [00058] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00058"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrupacion_interes_econo_base_de_la_deduccion"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00063"
+segmento = "DP200024"
+continuidad_id = "dp200024-00063"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4048 (DP200024 field 59): Agrup. Interés económico y UTES - B) Datos económicos - 8.- Deducciones generadas en el periodo impositivo - Activos fijos (Ley 20/1991) - Importe de la deducción [00063]. aeat-dr-200-2022 prints no box [00063] on DP200024 and no [00063] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00063"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00064"
+segmento = "DP200024"
+continuidad_id = "dp200024-00064"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4049 (DP200024 field 60): Agrup. Interés económico y UTES - B) Datos económicos - 8.- Deducciones generadas en el periodo impositivo - Activos fijos en La Palma, La Gomera y El Hierro - Base de la deducción [00064]. aeat-dr-200-2022 prints no box [00064] on DP200024 and no [00064] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00064"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrupacion_interes_econo_base_de_la_deduccion"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00065"
+segmento = "DP200024"
+continuidad_id = "dp200024-00065"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4050 (DP200024 field 61): Agrup. Interés económico y UTES - B) Datos económicos - 8.- Deducciones generadas en el periodo impositivo - Activos fijos en La Palma, La Gomera y El Hierro - Importe de la deducción [00065]. aeat-dr-200-2022 prints no box [00065] on DP200024 and no [00065] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00065"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00066"
+segmento = "DP200024"
+continuidad_id = "dp200024-00066"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4051 (DP200024 field 62): Agrup. Interés económico y UTES - B) Datos económicos - 8.- Deducciones generadas en el periodo impositivo - Inversiones en Canarias (Ley 20/1991) - Base de la deducción [00066]. aeat-dr-200-2022 prints no box [00066] on DP200024 and no [00066] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00066"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrupacion_interes_econo_base_de_la_deduccion"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00068"
+segmento = "DP200024"
+continuidad_id = "dp200024-00068"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4053 (DP200024 field 64): Agrup. Interés económico y UTES - B) Datos económicos - 8.- Deducciones generadas en el periodo impositivo - Inversiones en La Palma, La Gomera y El Hierro - Base de la deducción [00068]. aeat-dr-200-2022 prints no box [00068] on DP200024 and no [00068] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00068"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrupacion_interes_econo_base_de_la_deduccion"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00069"
+segmento = "DP200024"
+continuidad_id = "dp200024-00069"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4054 (DP200024 field 65): Agrup. Interés económico y UTES - B) Datos económicos - 8.- Deducciones generadas en el periodo impositivo - Inversiones en La Palma, La Gomera y El Hierro - Importe de la deducción [00069]. aeat-dr-200-2022 prints no box [00069] on DP200024 and no [00069] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00069"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00070"
+segmento = "DP200024"
+continuidad_id = "is-agrup-interes-economico-y-utes-b-datos-economicos-10-dividendos-y-participaciones-a-ejercicios-que-no-haya-tri"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4076 (DP200024 field 87): Agrup. interés económico y UTES - B) Datos económicos - 10.- Dividendos y participaciones. a) Ejercicios que no haya tributado en régimen especial [00070]. aeat-dr-200-2022 prints no box [00070] on DP200024 and no [00070] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00070"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrup_interes_economico_y_utes_b_datos_economicos_10_dividendos_y_participaciones_a_ejercicios_que_no_haya_tri"
+
+[[revisions."2023".casillas]]
+id = "DP200024:00072"
+segmento = "DP200024"
+continuidad_id = "is-agrup-interes-economico-y-utes-b-datos-economicos-10-dividendos-y-participaciones-b-ejercicios-que-haya-tribut"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4077 (DP200024 field 88): Agrup. interés económico y UTES - B) Datos económicos - 10.- Dividendos y participaciones. b) Ejercicios que haya tributado en régimen especial [00072]. aeat-dr-200-2022 prints no box [00072] on DP200024 and no [00072] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00072"
+section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
+semantic_role = "is_agrup_interes_economico_y_utes_b_datos_economicos_10_dividendos_y_participaciones_b_ejercicios_que_haya_tribut"
+
+[[revisions."2023".casillas]]
+id = "DP200026B:00073"
+segmento = "DP200026B"
+continuidad_id = "is-correccion-por-gravamen-temporal-energetico-art-1-ley-38-y-aumento-permanentes"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4529 (DP200026B field 6): Corrección por Gravamen temporal energético (Art. 1 Ley 38/2022) - Aumento - Permanentes [00073]. aeat-dr-200-2022 prints no box [00073] on DP200026B and no [00073] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00073"
+section = ["correccion_por_gravamen_temporal_energetico_art_1", "aumento"]
+semantic_role = "is_correccion_por_gravamen_temporal_energetico_art_1_ley_38_y_aumento_permanentes"
+
+[[revisions."2023".casillas]]
+id = "DP200026B:00074"
+segmento = "DP200026B"
+continuidad_id = "is-amortizacion-acelerada-de-determinados-vehiculos-y-de-nuevas-aumento-permanentes"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4530 (DP200026B field 7): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumento - Permanentes [00074]. aeat-dr-200-2022 prints no box [00074] on DP200026B and no [00074] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00074"
+section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
+semantic_role = "is_amortizacion_acelerada_de_determinados_vehiculos_y_de_nuevas_aumento_permanentes"
+legal_refs = ["ley-27-2014:da-18"]
+
+[[revisions."2023".casillas]]
+id = "DP200026B:00078"
+segmento = "DP200026B"
+continuidad_id = "is-amortizacion-acelerada-de-determ-aumento-correcciones-del-ejercicio-temporarias-con-origen-en-ejercicios-anteriores"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4657 (DP200026B field 134): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [00078]. aeat-dr-200-2022 prints no box [00078] on DP200026B and no [00078] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00078"
+section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
+semantic_role = "is_amortizacion_acelerada_de_determ_aumento_correcciones_del_ejercicio_temporarias_con_origen_en_ejercicios_anteriores"
+legal_refs = ["ley-27-2014:da-18"]
+
+[[revisions."2023".casillas]]
+id = "DP200026B:00079"
+segmento = "DP200026B"
+continuidad_id = "is-amortizacion-acelerada-de-determinados-vehiculos-y-de-nuevas-aumento-saldo-pendiente-a-fin-de-ejercicio"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4658 (DP200026B field 135): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Aumento - Saldo pendiente a fin de ejercicio [00079]. aeat-dr-200-2022 prints no box [00079] on DP200026B and no [00079] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00079"
+section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
+semantic_role = "is_amortizacion_acelerada_de_determinados_vehiculos_y_de_nuevas_aumento_saldo_pendiente_a_fin_de_ejercicio"
+legal_refs = ["ley-27-2014:da-18"]
+
+[[revisions."2023".casillas]]
+id = "DP200026B:00080"
+segmento = "DP200026B"
+continuidad_id = "dp200026b-00080"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4659 (DP200026B field 136): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Disminución - Saldo pendiente a principio de ejercicio [00080]. aeat-dr-200-2022 prints no box [00080] on DP200026B and no [00080] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00080"
+section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "disminucion"]
+semantic_role = "is_correccion_amortizacion_acelerada_vehiculos_saldo_inicial"
+legal_refs = ["ley-27-2014:da-18"]
+
+[[revisions."2023".casillas]]
+id = "DP200026B:00084"
+segmento = "DP200026B"
+continuidad_id = "dp200026b-00084"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4660 (DP200026B field 137): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Disminución - Correcciones del ejercicio - Permanentes [00084]. aeat-dr-200-2022 prints no box [00084] on DP200026B and no [00084] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00084"
+section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "disminucion"]
+semantic_role = "is_correccion_amortizacion_acelerada_vehiculos_permanente_aumento"
+legal_refs = ["ley-27-2014:da-18"]
+
+[[revisions."2023".casillas]]
+id = "DP200026B:00085"
+segmento = "DP200026B"
+continuidad_id = "dp200026b-00085"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4661 (DP200026B field 138): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [00085]. aeat-dr-200-2022 prints no box [00085] on DP200026B and no [00085] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00085"
+section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "disminucion"]
+semantic_role = "is_correccion_amortizacion_acelerada_vehiculos_importe"
+legal_refs = ["ley-27-2014:da-18"]
+
+[[revisions."2023".casillas]]
+id = "DP200026B:00086"
+segmento = "DP200026B"
+continuidad_id = "is-amortizacion-acelerada-de-de-disminucion-correcciones-del-ejercicio-temporarias-con-origen-en-ejercicios-anteriores"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4662 (DP200026B field 139): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [00086]. aeat-dr-200-2022 prints no box [00086] on DP200026B and no [00086] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00086"
+section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "disminucion"]
+semantic_role = "is_amortizacion_acelerada_de_de_disminucion_correcciones_del_ejercicio_temporarias_con_origen_en_ejercicios_anteriores"
+legal_refs = ["ley-27-2014:da-18"]
+
+[[revisions."2023".casillas]]
+id = "DP200026B:00087"
+segmento = "DP200026B"
+continuidad_id = "is-amortizacion-acelerada-de-determinados-vehiculos-y-de-nuevas-disminucion-saldo-pendiente-a-fin-de-ejercicio"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4663 (DP200026B field 140): Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS) - Disminución - Saldo pendiente a fin de ejercicio [00087]. aeat-dr-200-2022 prints no box [00087] on DP200026B and no [00087] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00087"
+section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "disminucion"]
+semantic_role = "is_amortizacion_acelerada_de_determinados_vehiculos_y_de_nuevas_disminucion_saldo_pendiente_a_fin_de_ejercicio"
+legal_refs = ["ley-27-2014:da-18"]
+
+[[revisions."2023".casillas]]
+id = "DP200026F:00201"
+segmento = "DP200026F"
+continuidad_id = "dp200026f-00201"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:5265 (DP200026F field 50): Reserva para inversiones en Illes Balears (DA 70ª Ley 31/2022) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [00201]. aeat-dr-200-2022 prints no box [00201] on DP200026F and no [00201] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00201"
+section = ["reserva_para_inversiones_en_illes_balears_da_70a_l", "aumento"]
+semantic_role = "is_reserva_inversiones_illes_balears_importe"
+
+[[revisions."2023".casillas]]
+id = "DP200026F:00223"
+segmento = "DP200026F"
+continuidad_id = "dp200026f-00223"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:5266 (DP200026F field 51): Reserva para inversiones en Illes Balears (DA 70ª Ley 31/2022) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [00223]. aeat-dr-200-2022 prints no box [00223] on DP200026F and no [00223] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00223"
+section = ["reserva_para_inversiones_en_illes_balears_da_70a_l", "aumento"]
+semantic_role = "is_reserva_inversiones_illes_balears_importe"
+
+[[revisions."2023".casillas]]
+id = "DP200026F:00224"
+segmento = "DP200026F"
+continuidad_id = "dp200026f-00224"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:5267 (DP200026F field 52): Reserva para inversiones en Illes Balears (DA 70ª Ley 31/2022) - Aumento - Saldo pendiente a fin de ejercicio [00224]. aeat-dr-200-2022 prints no box [00224] on DP200026F and no [00224] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00224"
+section = ["reserva_para_inversiones_en_illes_balears_da_70a_l", "aumento"]
+semantic_role = "is_reserva_inversiones_illes_balears_importe"
+
+[[revisions."2023".casillas]]
+id = "DP200026F:00227"
+segmento = "DP200026F"
+continuidad_id = "dp200026f-00227"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:5268 (DP200026F field 53): Reserva para inversiones en Illes Balears (DA 70ª Ley 31/2022) - Disminución - Saldo pendiente a principio de ejercicio [00227]. aeat-dr-200-2022 prints no box [00227] on DP200026F and no [00227] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00227"
+section = ["reserva_para_inversiones_en_illes_balears_da_70a_l", "disminucion"]
+semantic_role = "is_reserva_inversiones_illes_balears_importe"
+
+[[revisions."2023".casillas]]
+id = "DP200026F:00596"
+segmento = "DP200026F"
+continuidad_id = "dp200026f-00596"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:5269 (DP200026F field 54): Reserva para inversiones en Illes Balears (DA 70ª Ley 31/2022) - Disminución - Correcciones del ejercicio - Permanentes [00596]. aeat-dr-200-2022 prints no box [00596] on DP200026F and no [00596] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00596"
+section = ["reserva_para_inversiones_en_illes_balears_da_70a_l", "disminucion"]
+semantic_role = "is_reserva_inversiones_illes_balears_importe"
