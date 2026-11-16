@@ -22,6 +22,7 @@ from ......application.modelo.iva_wallet_seed_operation import ModeloIvaWalletSe
 from ......application.modelo.work_form_models import ModeloWorkForm
 from ......application.operations.public_period import PublicPeriod
 from ......core.config import override_settings
+from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ......core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....components.host import ScreenHostApp
@@ -54,7 +55,7 @@ class FakeDoor:
 
     def read_balance(self, as_of_year: int) -> ModeloIvaWalletBalanceProjection:
         self.read.append(as_of_year)
-        return ModeloIvaWalletBalanceProjection(
+        return ModeloIvaWalletBalanceProjection.worded(
             profile_id=_PROFILE,
             as_of_year=as_of_year,
             total_balance="10.00",
@@ -63,6 +64,7 @@ class FakeDoor:
             lot_count=1,
             next_expiry_year=as_of_year + 1,
             unallocated_applied_amount="0",
+            language=OutputLanguage.EN,
         )
 
     def record(self, entry: IvaWalletEntryV1) -> IvaWalletReceiptV1:
