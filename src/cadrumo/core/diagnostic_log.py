@@ -37,6 +37,7 @@ _LIFECYCLE_FIELDS = tuple(
             "guard_wait_ms",
             "heap_frozen",
             "projection_ms",
+            "projection_pair_reused",
             "queued_ms",
             "recheck_ms",
             "total_ms",
