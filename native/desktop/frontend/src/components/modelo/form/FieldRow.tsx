@@ -181,13 +181,15 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
       onFocus={(event) => {
         if (event.target === event.currentTarget) session.select(key);
       }}
-      // On a narrow form, beside the rail and the details, the value and
-      // what is said of its origin go under the label, so the label keeps
-      // the row's width rather than the fixed columns taking it: below
-      // 36rem the box, the value and the origin column would leave the
-      // label under 120px.
+      // The label's column never narrows past 120px of words beside the
+      // box's details button: a value wider than the room left wraps in its
+      // own column rather than taking the label's. On a narrow form, beside
+      // the rail and the details, the value and what is said of its origin
+      // go under the label, so the label keeps the row's width rather than
+      // the fixed columns taking it: below 36rem the box, the narrowest
+      // value and the origin column would leave the label under 120px.
       className={cn(
-        "group grid min-h-11 cursor-default grid-cols-[--spacing(10)_minmax(0,1fr)_auto_--spacing(44)] items-center gap-3 rounded-md px-2 py-1 outline-none",
+        "group grid min-h-11 cursor-default grid-cols-[--spacing(10)_minmax(calc(--spacing(31)+var(--spacing-control-xs)),1fr)_auto_--spacing(44)] items-center gap-3 rounded-md px-2 py-1 outline-none",
         "@max-xl:grid-cols-[--spacing(10)_minmax(0,1fr)] @max-xl:gap-x-2 @max-xl:gap-y-1",
         "hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring aria-selected:bg-selected",
         field.origin === "not_applicable" && "text-muted-foreground",
