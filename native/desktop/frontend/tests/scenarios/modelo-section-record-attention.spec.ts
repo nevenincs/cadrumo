@@ -9,8 +9,8 @@ import { list, openList, rowsOf, views } from "../support/scenarioModelo";
 // its served count, and a section the read counts nothing for shows no mark.
 
 const SERVED: ModeloFormRecordAttention[] = [
-  { level: "check", count: 3 },
-  { level: "limitation", count: 1 },
+  { level: "check", count: 3, counts_as: "check", asks_filer: false },
+  { level: "limitation", count: 1, counts_as: "check", asks_filer: false },
 ];
 
 declare global {

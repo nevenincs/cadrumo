@@ -552,10 +552,17 @@ export type ModeloFormRateUnit = "fraction";
 /**
  * How many of the last check's findings about a section's tables of records
  * sit at one attention level.
+ *
+ * `counts_as` is the level the section's attention scale counts them at, and
+ * `asks_filer` says whether they leave the filer something to do; a surface
+ * adds them to its tally as served and decides neither. See
+ * `record_attention_count`.
  */
 export type ModeloFormRecordAttention = {
   level: ModeloFormAttention;
   count: number;
+  counts_as: ModeloFormAttention;
+  asks_filer: boolean;
 };
 
 /**
@@ -1305,14 +1312,3 @@ export type SourceFamily =
   | "aeat_draft"
   | "your_entries"
   | "fixed_by_design";
-
-/**
- * What a filer may do about a value this source supplies.
- */
-export type SourceOverridePolicy =
-  | "fix_at_source"
-  | "override_with_reason"
-  | "edit_at_home"
-  | "enter"
-  | "fixed"
-  | "undecided";

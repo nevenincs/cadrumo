@@ -674,10 +674,18 @@ type ModeloFormBlock = Annotated[
 
 
 class ModeloFormRecordAttention(ModeloFormBase):
-    """How many of the last check's findings about a section's tables of records sit at one attention level."""
+    """How many of the last check's findings about a section's tables of records sit at one attention level.
+
+    ``counts_as`` is the level the section's attention scale counts them at,
+    and ``asks_filer`` says whether they leave the filer something to do; a
+    surface adds them to its tally as served and decides neither. See
+    :func:`~cadrumo.application.modelo.work_form_record_attention.record_attention_count`.
+    """
 
     level: ModeloFormAttention
     count: int = Field(gt=0)
+    counts_as: ModeloFormAttention
+    asks_filer: bool
 
 
 class ModeloFormSection(ModeloFormBase):
