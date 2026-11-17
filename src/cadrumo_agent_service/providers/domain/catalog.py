@@ -508,7 +508,7 @@ class ProviderCatalog(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[6]
+    schema_version: Literal[6, 7]
     providers: tuple[ProviderCatalogEntry, ...] = Field(min_length=1, max_length=MAX_CATALOG_LANES)
     icon_attribution: dict[str, JsonValue]
 
