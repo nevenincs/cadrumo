@@ -44,6 +44,10 @@ env:
 # variable. A pull request from a fork therefore runs here like any other, once
 # a maintainer approves its run, and never reaches a self-hosted machine. The
 # native lane (`native.yml`) holds everything that needs one.
+#
+# A job whose tests start the runtime asks the setup action for worker
+# containment: the runtime launches each profile worker as a transient systemd
+# user unit, and a hosted job's user has no user manager until one is started.
 jobs:
   plan:
     name: "Check: Change scope (Linux)"
@@ -297,6 +301,7 @@ jobs:
         with:
           authority-artifact: cadrumo-registry-authority-headless
           cache: ${{ env.CADRUMO_CI_CACHE }}
+          worker-containment: "true"
 
       - name: Committed sequence goldens
         if: needs.plan.outputs.sequence-goldens == 'true'
@@ -341,6 +346,7 @@ jobs:
         with:
           authority-artifact: cadrumo-registry-authority-headless
           cache: ${{ env.CADRUMO_CI_CACHE }}
+          worker-containment: "true"
 
       # Some tests bundle frontend sources, so the packages are installed as
       # they were in the single gate job these shards replace.
@@ -406,6 +412,7 @@ jobs:
         with:
           authority-artifact: cadrumo-registry-authority-headless
           cache: ${{ env.CADRUMO_CI_CACHE }}
+          worker-containment: "true"
 
       - name: Verification harness
         shell: bash
