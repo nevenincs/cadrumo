@@ -22,7 +22,7 @@ import time
 from pathlib import Path
 from threading import Lock
 from types import SimpleNamespace
-from typing import Any, Final, cast, override
+from typing import Any, cast, override
 from uuid import uuid4
 
 import pytest
@@ -62,9 +62,6 @@ pytestmark = [
     pytest.mark.hex_application,
 ]
 
-ANSWER_BOUND_SECONDS: Final = 0.5
-"""Well inside the desktop's shortest administration bound."""
-
 
 class _SignedInStore(MemoryProviderSettingsStore):
     """The in-memory settings of a profile whose sign-in and settings are current."""
@@ -82,16 +79,6 @@ class _Events:
     def __call__(self, event: dict[str, Any]) -> None:
         with self._lock:
             self.seen.append(event)
-
-    def wait_for(self, name: str, *, timeout: float) -> dict[str, Any]:
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            with self._lock:
-                for event in self.seen:
-                    if event.get("event") == name:
-                        return event
-            time.sleep(0.02)
-        raise AssertionError(f"no {name} event within {timeout} s; saw {self.seen}")
 
 
 def _running_tree(checkout: Path, root: Path) -> AgentHostController:
@@ -148,16 +135,23 @@ def test_a_stop_is_answered_at_once_and_its_end_follows_as_the_stopped_event(
     controller = _running_tree(checkout, outside_git_path / "tree")
     service._controller = controller
     try:
-        started = time.monotonic()
-        answer = service.admin("stop")
-        answered = time.monotonic() - started
-        # A second retirement while the first is under way is told the service is busy.
-        second = service.admin("stop")
+        # The retirement cannot begin while the lifecycle lock is held here, so
+        # an answer that waited for it would never come: "at once" is the order
+        # of answer and retirement, not a duration this host's load decides.
+        with service._guard:
+            answer = service.admin("stop")
+            # A second retirement while the first is under way is told the service is busy.
+            second = service.admin("stop")
+            stop_thread = service._stop_thread
+            assert answer == {"kind": "accepted"}
+            assert second == {"kind": "refused", "code": "busy"}
+            assert stop_thread is not None and stop_thread.is_alive()
+            assert controller.state is AgentHostState.READY
+            assert events.seen == []
+        # The retirement is bounded by the controller's own stop deadline.
+        stop_thread.join()
 
-        assert answer == {"kind": "accepted"}
-        assert answered < ANSWER_BOUND_SECONDS, f"the stop took {answered:.3f} s to answer"
-        assert second == {"kind": "refused", "code": "busy"}
-        assert events.wait_for("stopped", timeout=30) == {"event": "stopped", "code": "agent_retired"}
+        assert events.seen == [{"event": "stopped", "code": "agent_retired"}]
         assert controller.state is AgentHostState.DETACHED
         assert service._controller is None
         assert service.admin("stop") == {"kind": "stopped"}
@@ -186,19 +180,21 @@ def test_unsupported_sign_in_is_refused_before_retirement_or_auth_work(
         bytearray(b"h" * 43),
         service._closing,
     )
-    # The running service read both at its start; this test reads them before it times anything.
+    # The running service read both at its start; this test reads them first.
     assert service._catalog.catalog().entry("claude_cli") is not None
     methods = service._catalog.gui_sign_in_methods()
     assert "claude" in methods
     assert "device" not in methods["claude"]
     controller = _running_tree(checkout, outside_git_path / "tree")
     service._controller = controller
+    # With the agent withdrawn, a refusal that ran it again, or started a
+    # helper, would be refused for another cause: "at once" is served from
+    # what was already read, not a duration this host's load decides.
+    monkeypatch.delenv(PACKAGE_AGENT_VARIABLE)
     try:
-        started = time.monotonic()
         answer = service.admin(
             "connect", provider="claude_cli", expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID, method="device"
         )
-        answered = time.monotonic() - started
 
         assert (answer["kind"], answer["code"], answer["cause"]) == (
             "refused",
@@ -206,7 +202,6 @@ def test_unsupported_sign_in_is_refused_before_retirement_or_auth_work(
             "lane_not_signable",
         )
         assert re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", answer["log_ref"])
-        assert answered < ANSWER_BOUND_SECONDS, f"the sign-in took {answered:.3f} s to answer"
         assert service._auth_attempt is None
         assert service._auth_resume_valid is None
         assert service._stop_thread is None
