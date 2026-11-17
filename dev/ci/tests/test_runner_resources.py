@@ -1,4 +1,4 @@
-"""A test shard's log says what its runner had left.
+"""A test shard's log says what its runner had left, and the shard has the browser its tests drive.
 
 A hosted runner that runs out of memory or disk is stopped without failing a
 test, so a shard's log ended with no reason. The sampler is proven here over
@@ -9,7 +9,8 @@ planted defects:
 - it starts before the tests, in the background of the same step, so its lines
   reach the log while the tests run;
 - the tests stay the step's last command, so their exit status is the step's;
-- a failed shard prints the kernel's kill records, and only a failed one.
+- a failed shard prints the kernel's kill records, and only a failed one;
+- a job that runs the shard population provisions Chromium.
 """
 
 from __future__ import annotations
@@ -37,6 +38,7 @@ from ..workflow_run_text import executed_lines
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _MERGE_GATE: Final = REPO_ROOT / ".github" / "workflows" / "merge-gate.yml"
+_SETUP_ACTION: Final = "./.github/actions/setup"
 _SHARD_RECIPE: Final = "test-gate-shard"
 _SAMPLER: Final = "uv run --no-sync python -m dev.ci.runner_resources --every "
 _KILL_RECORDS: Final = "dmesg"
@@ -186,7 +188,7 @@ def _kill_record_violations(job_name: str, job: Mapping[str, Any], shard_step: i
 
 
 def _shard_violations(document: Mapping[str, Any]) -> list[str]:
-    """Report every way a shard could lose its resource lines or its exit status."""
+    """Report every way a shard could lose its resource lines, its exit status or its browser."""
     violations: list[str] = []
     for job_name, job in (document.get("jobs") or {}).items():
         shard_steps = _shard_steps(job)
@@ -196,6 +198,9 @@ def _shard_violations(document: Mapping[str, Any]) -> list[str]:
         for index in shard_steps:
             violations.extend(_step_violations(job_name, steps[index]))
         violations.extend(_kill_record_violations(job_name, job, shard_steps[-1]))
+        setups = [step for step in steps if step.get("uses") == _SETUP_ACTION]
+        if not any((step.get("with") or {}).get("browser") in (True, "true") for step in setups):
+            violations.append(f"{job_name} runs the shard population without provisioning Chromium")
     return violations
 
 
@@ -215,7 +220,7 @@ def _with_run(*lines: str) -> dict[str, Any]:
     return document
 
 
-def test_the_shard_job_samples_its_runner_and_keeps_its_exit_status() -> None:
+def test_the_shard_job_samples_its_runner_keeps_its_exit_status_and_has_chromium() -> None:
     document = _live()
     assert _shard_violations(document) == []
     # Anchor: the rule judges the one job that runs the shard population.
@@ -275,3 +280,10 @@ def test_the_shard_rule_reports_a_missing_an_unconditional_and_an_early_kill_rec
     steps = early["jobs"]["tests"]["steps"]
     steps.insert(0, steps.pop(steps.index(report(early))))
     assert _shard_violations(early) == ["tests reports the kernel's kill records before its tests have run"]
+
+
+def test_the_shard_rule_reports_a_shard_job_without_chromium() -> None:
+    document = _live()
+    setup = next(step for step in document["jobs"]["tests"]["steps"] if step.get("uses") == _SETUP_ACTION)
+    del setup["with"]["browser"]
+    assert _shard_violations(document) == ["tests runs the shard population without provisioning Chromium"]
