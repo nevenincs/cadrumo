@@ -285,6 +285,9 @@ def summarize_modelo_work_form(
     same arguments, which mean what they mean there. Nothing it holds depends
     on what may be edited, so no edit surface is taken.
 
+    Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`),
+    ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+
     Raises:
         ModeloWorkFormLayoutError: the layout places a casilla the revision does
             not define, places one twice, or leaves one without a placement.

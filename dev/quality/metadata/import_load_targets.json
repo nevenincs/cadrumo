@@ -2187,6 +2187,7 @@
         "cadrumo.application.workflow.run_read_ports",
         "cadrumo.application.workflow.state_models",
         "cadrumo.core",
+        "cadrumo.core.absence_attestation_family",
         "cadrumo.core.access_gate",
         "cadrumo.core.access_gate.errors",
         "cadrumo.core.access_gate.gate",

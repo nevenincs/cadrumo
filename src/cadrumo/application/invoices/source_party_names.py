@@ -6,6 +6,8 @@ slot's design rule. An invoice's printed name is display only. A party with no
 declared name, with one the design does not compose, or with one wider than its
 slot leaves the slot without content; each such party is named here once, with
 an invoice to recognise it by, and the export refuses until the name is stated.
+
+The slots are those of the :class:`ModeloRevision` layout being exported.
 """
 
 from __future__ import annotations

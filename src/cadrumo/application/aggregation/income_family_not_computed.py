@@ -202,7 +202,10 @@ def income_family_not_computed_diagnostics(
 def income_family_casilla_ids(
     revision: ModeloRevision, sections_by_family: Mapping[str, frozenset[str]]
 ) -> dict[str, frozenset[CasillaId]]:
-    """Return, per family, the casillas of ``revision`` whose section path names one of the family's sections."""
+    """Return, per family, the casillas of ``revision`` whose section path names one of the family's sections.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+    """
     return {
         family: frozenset(casilla.id for casilla in revision.casillas if not sections.isdisjoint(casilla.section))
         for family, sections in sorted(sections_by_family.items())

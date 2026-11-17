@@ -1,4 +1,7 @@
-"""Advisory registry predicate evaluators: each says whether its warning fires."""
+"""Advisory registry predicate evaluators: each says whether its warning fires.
+
+The evaluators read facts of the :class:`TaxpayerProfile`.
+"""
 
 from __future__ import annotations
 

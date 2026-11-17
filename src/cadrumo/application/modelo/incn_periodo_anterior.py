@@ -32,6 +32,8 @@ It never defaults to zero: a zero lowers the rate. Where a held return and the
 stated twelve-month turnover of a twelve-month preceding período disagree,
 neither overrides the other: the figure stays unresolved, carrying both, and the
 consumer raises the disagreement as a finding.
+
+The binding is declared by the pinned :class:`RegistrySnapshot`.
 """
 
 from __future__ import annotations

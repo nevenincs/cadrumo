@@ -46,7 +46,7 @@ def _values(field: ExportFieldDefinition) -> tuple[object, ...]:
     if policy in {ExportValuePolicy.TWO_DIGIT_MONTH, ExportValuePolicy.TWO_DIGIT_DAY}:
         return (3,)
     if field.allowed_values is not None and field.allowed_values:
-        if field.data_type == "decimal" and field.decimals:
+        if field.data_type == "decimal" and field.decimals is not None and field.decimals != 0:
             # Allowed values are the slot's digits at its implied scale: '50' in a two-decimal slot is 0,50.
             return tuple(Decimal(value).scaleb(-field.decimals) for value in field.allowed_values)
         return field.allowed_values

@@ -16,9 +16,9 @@ from collections.abc import Iterable, Mapping
 from types import MappingProxyType
 from typing import Final, TypeIs
 
+from ...core.absence_attestation_family import ROW_GRAIN_FAMILIES, AbsenceAttestationFamily
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
-from ...domain.calculations.registry.binding_absence_attestation import ROW_GRAIN_FAMILIES, AbsenceAttestationFamily
 from ...domain.calculations.registry.ids import BindingId
 from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .edit_models import (

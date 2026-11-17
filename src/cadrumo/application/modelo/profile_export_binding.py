@@ -17,6 +17,8 @@ The same export shaping also answers the calculation for a bound TEXT casilla:
 a declarant-identity casilla reads its profile fact through
 :func:`resolve_profile_text_casilla_inputs`, so the value the calculation holds
 for it is the value the filed record addresses.
+
+The profile facts are read from the :class:`UserProfileRecord`.
 """
 
 from __future__ import annotations

@@ -11,6 +11,7 @@ With neither return held, the taxpayer may state the figure: it is carried
 under its own registry-declared provenance and disclosed as operator-stated.
 A prior 390 declaring more than one activity row leaves the percentage not
 computed, because the activity rows' own percentages are not one figure.
+The registry binding is read from the :class:`ModeloRevision` of the source period.
 
 See Also:
     :class:`~domain.prorrata_register.register.ProrrataRegisterEntry`

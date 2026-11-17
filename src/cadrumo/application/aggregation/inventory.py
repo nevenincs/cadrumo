@@ -73,6 +73,8 @@ def revision_carries_inventory_purchases(revision: ModeloRevision) -> bool:
     Only then may a ledger row a purchase claims leave the ledger expenses: the
     book's acquisition-cost row reaches the casilla bound to it. An edition that
     binds no such casilla declares the purchase through the ledger row.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     acquisition = {
         binding.id

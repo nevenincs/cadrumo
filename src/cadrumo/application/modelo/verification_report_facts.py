@@ -84,6 +84,8 @@ def granting_verification_report(
     :class:`VerificationReport` that witnesses it; ``None`` flags an
     inconsistent state (a non-draft revision whose lock no grant matches) that
     the caller refuses rather than papering over.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     grants = revision_granting_reports(catalogue, revision)
     return grants[-1] if grants else None
@@ -95,6 +97,9 @@ def verification_sources_digest(revision: CalculationRevision, catalogue: Transa
     It covers each source movement whole, its evidence included, naming one that
     is gone as absent, and the ledger anchor the calculation last took, so a
     change to a movement or a new calculation over them both move it.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``catalogue`` (:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`).
     """
     movements: dict[str, object] = {}
     for transaction_id in sorted(revision.source_transaction_ids):

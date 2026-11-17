@@ -20,6 +20,8 @@ A year is compared only when every quarter's return is observed. With a quarter
 missing, the sum would understate the periodic side, and the perceptor-count
 note already names the quarters it could not read. Which summaries this reaches,
 and through which boxes, is declared by the ``withholding-modelo-routing`` fact.
+
+The route is read from the pinned :class:`ModeloRevision`.
 """
 
 from __future__ import annotations
@@ -76,6 +78,8 @@ def withholding_total_reconciliation_finding(
 
     ``None`` too when no route is declared for the modelo, the calculation holds
     no total, or any quarter's return or total box is not observed.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     modelo = str(work_unit.modelo)
     route = withholding_total_route(modelo)

@@ -44,6 +44,7 @@ from ....application.modelo.work_missing_input import ModeloPriorCarryAbsenceUns
 from ....application.operations.models import OperationRequest
 from ....application.operations.next_step import OperationOpenWorkStepV1, error_next_step
 from ....application.operator_actions.models import PreconditionVerdict
+from ....core.absence_attestation_family import AbsenceAttestationFamily
 from ....core.aggregation import BindingSourceKind
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -55,7 +56,6 @@ from ....core.errors.error_codes import (
 )
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import OutputLanguage
-from ....domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format

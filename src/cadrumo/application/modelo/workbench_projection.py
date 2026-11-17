@@ -33,6 +33,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.absence_attestation_family import AbsenceAttestationFamily
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -41,7 +42,6 @@ from ...core.external_constants import OutputLanguage
 from ...core.identity.documents import SpanishTaxIdFormat
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.result_disposition import ResultDisposition
-from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.schema_form_layouts import (
     FormCellKind,
     FormLayoutSeedSource,
