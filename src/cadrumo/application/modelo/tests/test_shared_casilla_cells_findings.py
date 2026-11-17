@@ -14,6 +14,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.calculations.registry.tests.planted_shared_owner import PlantedSharedOwner, plant_shared_owner
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -36,7 +37,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _T0 = datetime(filing_year_envelope().horizon, 1, 15, 12, 0, 0, tzinfo=UTC)
 _MODELO = "200"
 _MESSAGE = "application.modelo.findings.shared_casilla_cells_unadjudicated"
-_TRIBUTOS_SHEETS = {"DP200007", "DP200022", "DP200031", "DP200038", "DP200047", "DP200053"}
 
 
 def _casilla(value: str) -> CasillaId:
@@ -101,26 +101,33 @@ def _revision(work_unit: WorkUnit, casilla_values: dict[CasillaId, Decimal]) -> 
     )
 
 
-def _shared_cell_findings(
-    filing_year: int, casilla_values: dict[CasillaId, Decimal]
-) -> tuple[list[ModeloVerificationFinding], set[str]]:
-    """Run the shared-cell check verification applies to a revision resolved at filing grade, for one Modelo 200 year.
-
-    Verification adds this check only for a revision that resolves at filing grade, and the
-    2025 edition of Modelo 200 is held at calculation grade, so the check is applied to the
-    edition's layout directly, as verification applies it.
-    """
+def _planted_owner(filing_year: int) -> PlantedSharedOwner:
+    """Plant one amount box into a second record of an isolated copy of the edition's snapshot."""
     with bundled_indexed_authority().operation() as operation:
         snapshot = operation.reading_snapshot(_MODELO, filing_year=filing_year, period="0A")
-        work_unit = _work_unit(filing_year, str(snapshot.revision.id))
-        findings: list[ModeloVerificationFinding] = []
-        failures: dict[int, ModeloPreconditionFailure] = {}
-        append_shared_casilla_cells_findings(
-            target=_revision(work_unit, casilla_values),
-            snapshot=snapshot,
-            findings=findings,
-            failures_by_finding_id=failures,
-        )
+    return plant_shared_owner(snapshot, owner_cell_kind="money")
+
+
+def _shared_cell_findings(
+    planted: PlantedSharedOwner, casilla_values: dict[CasillaId, Decimal]
+) -> tuple[list[ModeloVerificationFinding], set[str]]:
+    """Run the shared-cell check verification applies to a revision, over the planted snapshot copy.
+
+    Verification adds this check only for a revision that resolves at filing grade, and the
+    newest edition of Modelo 200 may be held at calculation grade, so the check is applied to the
+    edition's layout directly, as verification applies it.
+    """
+    snapshot = planted.snapshot
+    filing_year = _filing_year()
+    work_unit = _work_unit(filing_year, str(snapshot.revision.id))
+    findings: list[ModeloVerificationFinding] = []
+    failures: dict[int, ModeloPreconditionFailure] = {}
+    append_shared_casilla_cells_findings(
+        target=_revision(work_unit, casilla_values),
+        snapshot=snapshot,
+        findings=findings,
+        failures_by_finding_id=failures,
+    )
     matching = [finding for finding in findings if finding.message_locale_key == _MESSAGE]
     return matching, {failures[id(finding)].scenario_id for finding in matching}
 
@@ -130,19 +137,21 @@ def _filing_year() -> int:
 
 
 def test_a_written_shared_box_blocks_verification_naming_its_cells() -> None:
-    findings, scenarios = _shared_cell_findings(_filing_year(), {_casilla("00281"): Decimal("123.45")})
+    planted = _planted_owner(_filing_year())
+    findings, scenarios = _shared_cell_findings(planted, {planted.casilla_id: Decimal("123.45")})
 
     (finding,) = findings
     assert finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
     assert finding.severity is ModeloVerificationFindingSeverity.BLOCKING
-    assert finding.casilla_id == "00281"
-    sheets = {cell.split(".")[1].upper() for cell in str(finding.message_facts["target_cells"]).split(",")}
-    assert sheets == _TRIBUTOS_SHEETS
+    assert finding.casilla_id == planted.casilla_id
+    cells = set(str(finding.message_facts["target_cells"]).split(","))
+    assert {cell.strip() for cell in cells} == set(planted.target_cell_ids)
     assert scenarios == {"modelo.work.verify.shared_casilla_cells.unadjudicated"}
 
 
 def test_the_filer_is_not_told_to_empty_the_box() -> None:
-    findings, _scenarios = _shared_cell_findings(_filing_year(), {_casilla("00281"): Decimal("123.45")})
+    planted = _planted_owner(_filing_year())
+    findings, _scenarios = _shared_cell_findings(planted, {planted.casilla_id: Decimal("123.45")})
 
     (finding,) = findings
     assert finding_action_locale_key(finding) == "application.modelo.work_form.finding_action.shared_box_awaits_review"
@@ -151,15 +160,17 @@ def test_the_filer_is_not_told_to_empty_the_box() -> None:
 @pytest.mark.parametrize(
     "values",
     [
-        pytest.param({"00281": Decimal("0")}, id="zero"),
+        pytest.param({"planted": Decimal("0")}, id="zero"),
         pytest.param({}, id="absent"),
         pytest.param({"DP200014:00547": Decimal("123.45")}, id="declared-echo"),
         pytest.param({"DP200012:00004": Decimal("123.45")}, id="one-cell"),
     ],
 )
 def test_what_the_export_writes_correctly_raises_no_finding(values: dict[str, Decimal]) -> None:
+    planted = _planted_owner(_filing_year())
     findings, _scenarios = _shared_cell_findings(
-        _filing_year(), {_casilla(casilla): value for casilla, value in values.items()}
+        planted,
+        {planted.casilla_id if casilla == "planted" else _casilla(casilla): value for casilla, value in values.items()},
     )
 
     assert findings == []
