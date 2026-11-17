@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { LedgerPort } from "../../../shell/ledger";
-import type { LedgerCounterpartyResult } from "../../../shell/ledgerClassificationSetup";
+import type { LedgerCounterpartyResult } from "../../../shell/ledgerClassificationContract";
 import { CounterpartyProvincia } from "../setup/CounterpartyProvincia";
 import { setupCall } from "../setup/setupModel";
 import { useStrings } from "../../../shell/strings";

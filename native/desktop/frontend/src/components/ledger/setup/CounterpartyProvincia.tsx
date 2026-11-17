@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { LedgerCounterpartyResult } from "../../../shell/ledgerClassificationSetup";
+import type { LedgerCounterpartyResult } from "../../../shell/ledgerClassificationContract";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold, type Landing } from "../WritePause";
 import { CallLine, ChoiceField, useSetupWrite } from "./SetupParts";

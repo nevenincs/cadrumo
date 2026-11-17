@@ -6,7 +6,7 @@ import {
   parseFractionPercent,
   parseIsoDate,
 } from "../../../shell/ledgerGrammar";
-import type { LedgerLlmDiagnosticsResult } from "../../../shell/ledgerClassificationSetup";
+import type { LedgerLlmDiagnosticsProjection } from "../../../shell/ledgerClassificationContract";
 import { useStrings } from "../../../shell/strings";
 import {
   formatAmount,
@@ -26,8 +26,9 @@ import { setupCall, type SetupCall } from "./setupModel";
 import { grammarText } from "./setupWords";
 
 type Provider =
-  LedgerLlmDiagnosticsResult["report"]["confidence_providers"][number];
-type Usage = LedgerLlmDiagnosticsResult["report"]["usage_providers"][number];
+  LedgerLlmDiagnosticsProjection["report"]["confidence_providers"][number];
+type Usage =
+  LedgerLlmDiagnosticsProjection["report"]["usage_providers"][number];
 
 /**
  * How the model has done over a span: how often it was asked, what it
@@ -40,7 +41,7 @@ export function DiagnosticsPane({ port, locale }: SetupProps) {
   const [until, setUntil] = useState("");
   const [threshold, setThreshold] = useState("");
   const [report, setReport] =
-    useState<SetupCall<LedgerLlmDiagnosticsResult> | null>(null);
+    useState<SetupCall<LedgerLlmDiagnosticsProjection> | null>(null);
   const [reading, setReading] = useState(false);
   const from = parseIsoDate(since);
   const to = parseIsoDate(until);

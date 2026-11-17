@@ -2916,3 +2916,15 @@ selector = { revision = "2022", id = "DP200022:02444" }
 selector = { revision = "2022", id = "DP200022:02447" }
 [[revisions."2023".casilla_removals]]
 selector = { revision = "2022", id = "DP200022:01523" }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200018B:01217" }
+fields = { id = "DP200018:01217", segmento = "DP200018" }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200018B:01218" }
+fields = { id = "DP200018:01218", segmento = "DP200018" }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200018B:01219" }
+fields = { id = "DP200018:01219", segmento = "DP200018" }
