@@ -5,7 +5,7 @@
 // check a staged change against the others before anything is sent.
 
 import type { FileToken, LedgerDecision } from "./ledger";
-import type { LedgerClassifyRequest } from "./ledgerMovementOperations";
+import type { LedgerClassifyWindowRequest } from "./ledgerMovementContract";
 import type { LedgerStagedDraftField } from "./ledgerMovementCheckContract";
 import { fieldsDroppedBy } from "./ledgerClassifications";
 import { isTransactionPrefix, sameDecimal } from "./ledgerGrammar";
@@ -64,7 +64,7 @@ export type Draft = {
   fields: Partial<Record<DraftField, string>>;
 };
 
-export type M210Options = NonNullable<LedgerClassifyRequest["m210"]>;
+export type M210Options = NonNullable<LedgerClassifyWindowRequest["m210"]>;
 /** A split part's classification, set when the split is staged. */
 export type SplitPartClassification = {
   classification: string;

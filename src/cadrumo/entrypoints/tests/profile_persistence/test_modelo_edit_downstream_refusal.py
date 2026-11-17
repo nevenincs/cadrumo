@@ -24,12 +24,17 @@ import pytest
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
 from ....application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from ....application.modelo.action_errors import ModeloEditRefusedError
+from ....application.modelo.edit_downstream_refusal import downstream_refusal
 from ....application.modelo.edit_models import (
+    ModeloEditDomainRefusalV1,
+    ModeloEditRefusalCode,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
     ModeloScalarEditIntentV1,
 )
+from ....application.modelo.edit_review_wording import edit_refusal_door
 from ....application.operations.error_detail import UNWORDED_REGISTERED_ERROR_LOCALE_KEY
+from ....application.operator_actions.projection import PreconditionVerdictSnapshot
 from ....core.casilla_id import validated_casilla_id
 from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from ....core.errors.hierarchy import CadrumoError, RecordedRegisteredError
@@ -112,6 +117,31 @@ def test_the_settled_refusal_opens_the_recalculations_door(refused: _Refused) ->
     assert door is not None
     assert door.failed_condition_id == "modelo.refusal.modelo_not_applicable.holds"
     assert door.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+def test_a_check_refused_downstream_serves_the_door_its_apply_settles_under(
+    refused: _Refused, language: OutputLanguage
+) -> None:
+    """The check's refusal carries the same door as the refused Apply, so a frontend draws it before applying."""
+    error = _error(refused)
+    domain = ModeloEditDomainRefusalV1(
+        code=ModeloEditRefusalCode.VALIDATION_FAILED,
+        facts=(_READINESS_CODE,),
+        responsible_owner="modelo.edit",
+        reconsideration_condition="resolve the calculation precondition the edit could not satisfy, then resubmit",
+        downstream=downstream_refusal(error),
+    )
+    applied_door = nested_terminal_precondition_verdict(error)
+    assert applied_door is not None
+
+    door = edit_refusal_door(domain, language)
+
+    assert door == PreconditionVerdictSnapshot.from_verdict(applied_door, language)
+    assert door.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert door.no_recovery_words is not None
+    assert door.no_recovery_words_language is language
+    assert _TYPED not in door.model_dump_json()
 
 
 def test_no_value_reaches_the_settled_refusal(refused: _Refused) -> None:

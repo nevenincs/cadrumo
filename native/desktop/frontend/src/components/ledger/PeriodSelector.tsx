@@ -16,7 +16,7 @@ import {
   useEntryYears,
   usePeriods,
 } from "../../shell/ledgerPeriods";
-import type { LedgerServedPeriod } from "../../shell/ledgerSetup";
+import type { LedgerPeriodProjection } from "../../shell/ledgerEntryContract";
 import { useStrings } from "../../shell/strings";
 import { periodText } from "./ledgerWords";
 
@@ -138,7 +138,7 @@ export function PeriodSelector(
         : periodText(t, locale, props.value);
   const table = servedYear(shownYear);
   const entryYears = useEntryYears();
-  const rowsOf = (kind: LedgerServedPeriod["kind"]) =>
+  const rowsOf = (kind: LedgerPeriodProjection["kind"]) =>
     table?.filter((row) => row.kind === kind) ?? [];
   // The step either way: a year, or the neighbour the period serves.
   const steppedYear = (by: -1 | 1): number | null =>
@@ -164,11 +164,11 @@ export function PeriodSelector(
     if (props.mode === "year") props.onYear(year);
     setOpen(false);
   };
-  const choose = (row: LedgerServedPeriod) => {
+  const choose = (row: LedgerPeriodProjection) => {
     const next = ledgerPeriod(row.period);
     if (next) apply(next);
   };
-  const chosen = (row: LedgerServedPeriod) =>
+  const chosen = (row: LedgerPeriodProjection) =>
     !pending &&
     value?.code === row.period.code &&
     value.year === row.period.filing_year;

@@ -13,10 +13,11 @@ coercer so field-level coercion logic stays in one place.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from collections.abc import Set as AbstractSet
 from datetime import date
 from types import MappingProxyType
-from typing import Final, TypeGuard, cast
+from typing import Final, TypeGuard
 
 from pydantic import BaseModel
 
@@ -158,16 +159,6 @@ def record_to_values(
         facts_to_values(record.facts, schema=resolved_schema, as_of=as_of),
         key_paths=_selector_paths(resolved_schema),
     )
-
-
-def snapshot_to_values(
-    snapshot: UserProfileSnapshot,
-    *,
-    schema: ProfileSchemaDefinition | None = None,
-    as_of: date | None = None,
-) -> dict[str, str]:
-    """Project an immutable filing snapshot into the selector-keyed flat values mapping."""
-    return facts_to_values(snapshot.facts, schema=_schema_for_record(snapshot, schema), as_of=as_of)
 
 
 def _in_window_order(facts: Sequence[UserProfileFact]) -> tuple[UserProfileFact, ...]:
@@ -410,16 +401,30 @@ def taxpayer_projection_read_selector(
     )
 
 
+def _is_set(value: object) -> TypeGuard[AbstractSet[object]]:
+    return isinstance(value, set | frozenset)
+
+
+def _is_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
+    return isinstance(value, Mapping)
+
+
+def _is_sequence(value: object) -> TypeGuard[list[object] | tuple[object, ...]]:
+    return isinstance(value, list | tuple)
+
+
+def _is_json_object(value: object) -> TypeGuard[dict[str, object]]:
+    # A JSON object's keys are always strings.
+    return isinstance(value, dict)
+
+
 def _stable(value: object) -> object:
-    if isinstance(value, set | frozenset):
-        members = cast("Iterable[object]", value)
-        return sorted((_stable(member) for member in members), key=lambda member: json.dumps(member, sort_keys=True))
-    if isinstance(value, Mapping):
-        pairs = cast("Mapping[object, object]", value)
-        return {str(key): _stable(member) for key, member in pairs.items()}
-    if isinstance(value, list | tuple):
-        ordered = cast("Iterable[object]", value)
-        return [_stable(member) for member in ordered]
+    if _is_set(value):
+        return sorted((_stable(member) for member in value), key=lambda member: json.dumps(member, sort_keys=True))
+    if _is_mapping(value):
+        return {str(key): _stable(member) for key, member in value.items()}
+    if _is_sequence(value):
+        return [_stable(member) for member in value]
     if value is None or isinstance(value, bool | int | str):
         return value
     return str(getattr(value, "value", value))
@@ -441,9 +446,9 @@ def taxpayer_projection_read_fingerprint(
     Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
     """
     loaded: object = json.loads(selector)
-    if not isinstance(loaded, dict):
+    if not _is_json_object(loaded):
         return None
-    named = cast("dict[str, object]", loaded)
+    named = loaded
     if named.get("projection") != _TAXPAYER_PROJECTION:
         return None
     as_of = named.get("as_of")
@@ -548,7 +553,6 @@ __all__ = [
     "projection_for_taxpayer",
     "record_to_path_values",
     "record_to_values",
-    "snapshot_to_values",
     "taxpayer_projection_fingerprint",
     "taxpayer_projection_read_fingerprint",
     "taxpayer_projection_read_selector",

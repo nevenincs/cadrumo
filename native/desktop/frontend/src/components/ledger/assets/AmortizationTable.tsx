@@ -4,7 +4,7 @@ import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
 import { useTableView } from "@/components/ui/table-view";
 import { formatPercent } from "../../../shared/numbers";
-import type { PlanRow } from "../../../shell/ledgerSetup";
+import type { ActivityAssetPlanRow } from "../../../shell/ledgerActivityAssetReadContract";
 import { useStrings } from "../../../shell/strings";
 import { Claims, Status, Days } from "./AmortizationClaims";
 import { Estimated, Figure } from "./AmortizationFigures";
@@ -20,7 +20,7 @@ export function AmortizationTable({
   onCorrectElement,
 }: {
   locale: string;
-  rows: readonly PlanRow[];
+  rows: readonly ActivityAssetPlanRow[];
   year: number | null;
   onCorrectClaim?: (claimId: string, year: number) => void;
   onCorrectElement?: () => void;

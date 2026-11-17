@@ -30,6 +30,7 @@ from ....application.operations.models import OperationId
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.iva.schema import InvoiceKind
 from .. import operation_ledger_invoice_evidence as bridge
+from .. import profile_bound_clients
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -56,13 +57,13 @@ def _bind(
     requests: list[BaseModel],
 ) -> None:
     client = cast(FrontendClient, SimpleNamespace(profile_id=_PROFILE))
-    monkeypatch.setattr(bridge, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_bound_clients, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
 
     def bound_client(_ctx: typer.Context, *, expected_profile_id: UUID) -> FrontendClient:
         assert expected_profile_id == _PROFILE
         return client
 
-    monkeypatch.setattr(bridge, "require_profile_client", bound_client)
+    monkeypatch.setattr(profile_bound_clients, "require_profile_client", bound_client)
 
     def submit(
         actual_client: FrontendClient,
@@ -169,7 +170,7 @@ def test_confirm_bridge_requires_the_explicit_hashes_and_preserves_receipt_on_mi
 
 
 def test_exact_profile_mismatch_refuses_before_submission(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(bridge, "active_bucket_id_or_refuse", lambda: str(_OTHER_PROFILE))
+    monkeypatch.setattr(profile_bound_clients, "active_bucket_id_or_refuse", lambda: str(_OTHER_PROFILE))
 
     def unexpected_submission(*_args: object, **_kwargs: object) -> None:
         pytest.fail("profile mismatch must refuse before operation submission")

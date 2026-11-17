@@ -4,17 +4,19 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { LedgerPort } from "./ledger";
-import type { LedgerSplitCheckResult } from "./ledgerMovementOperations";
+import type {
+  LedgerSplitCheckPart,
+  LedgerSplitCheckResult,
+} from "./ledgerMovementCheckContract";
 import { LatestAnswerSession, type LatestAnswer } from "./ledgerLatestAnswer";
 import { readAnswer } from "./ledgerWindow";
 
 /** How long typing rests before the parts are asked about. */
 const REST_MS = 150;
 
-export type SplitCheckPart = { amount: string | null; description: string };
 export type SplitCheckQuestion = {
   transactionId: string;
-  parts: readonly SplitCheckPart[];
+  parts: readonly LedgerSplitCheckPart[];
 };
 export type SplitCheckView = LatestAnswer<LedgerSplitCheckResult> & {
   retry(): void;
@@ -48,7 +50,7 @@ async function askSplitCheck(
 export function useSplitCheck(
   port: LedgerPort,
   transactionId: string,
-  parts: readonly SplitCheckPart[],
+  parts: readonly LedgerSplitCheckPart[],
 ): SplitCheckView {
   const [session] = useState(
     () =>

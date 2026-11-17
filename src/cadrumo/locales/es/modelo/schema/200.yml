@@ -14515,6 +14515,36 @@ modelo:
             label: 'Transmisiones lucrativas y societarias: aplicación del valor de
               mercado (art. 17.4 LIS) - Disminución - Correcciones del ejercicio -
               Temporarias (con origen en el ejercicio) [02927]'
+          is-correccion-uefa-europa-league-2022-aumento-permanente:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Aumento - Correcciones del
+              ejercicio - Permanentes [01861]
+          is-correccion-uefa-europa-league-2022-aumento-saldo-final:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Aumento - Saldo pendiente
+              a fin de ejercicio [01864]
+          is-correccion-uefa-europa-league-2022-aumento-saldo-inicial:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Aumento - Saldo pendiente
+              a principio de ejercicio [01860]
+          is-correccion-uefa-europa-league-2022-aumento-temporaria-anteriores:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Aumento - Correcciones del
+              ejercicio - Temporarias (con origen en ejercicios anteriores) [01863]
+          is-correccion-uefa-europa-league-2022-aumento-temporaria-ejercicio:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Aumento - Correcciones del
+              ejercicio - Temporarias (con origen en el ejercicio) [01862]
+          is-correccion-uefa-europa-league-2022-disminucion-permanente:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Disminución - Correcciones
+              del ejercicio - Permanentes [01866]
+          is-correccion-uefa-europa-league-2022-disminucion-saldo-final:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Disminución - Saldo pendiente
+              a fin de ejercicio [01869]
+          is-correccion-uefa-europa-league-2022-disminucion-saldo-inicial:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Disminución - Saldo pendiente
+              a principio de ejercicio [01865]
+          is-correccion-uefa-europa-league-2022-disminucion-temporaria-anteriores:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Disminución - Correcciones
+              del ejercicio - Temporarias (con origen en ejercicios anteriores) [01868]
+          is-correccion-uefa-europa-league-2022-disminucion-temporaria-ejercicio:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Disminución - Correcciones
+              del ejercicio - Temporarias (con origen en el ejercicio) [01867]
           is-correccion-valoracion-bienes-derechos-regimen-especial-permanente-aumento:
             label: Valoración de bienes y derechos. Régimen especial operaciones reestructuración
               (capítulo VII del título VII LIS) - Aumento - Correcciones del ejercicio
@@ -14716,6 +14746,10 @@ modelo:
               trabaj. con discapacidad (CE)
             label: Deducción por creación de empleo trabaj. con discapacidad (CE).
               Deducción pendiente/generada
+          is-deduccion-creacion-empleo-discapacidad-aplicado:
+            label: Deducc. para incentivar determ.actividades - {year} Deducción por
+              creación de empleo trabaj. con discapacidad (CE) - Aplicado en esta
+              liquidación [00796]
           is-deduccion-creacion-empleo-discapacidad-pendiente-futuros:
             help: Pendiente de aplicación en periodos futuros - Deducción por creación
               de empleo trabaj. con discapacidad (CE)
@@ -14967,6 +15001,19 @@ modelo:
           is-deduccion-porta-ferrada-pendiente-generada:
             label: Deducc. para incentivar determ.actividades - 60 aniversario del
               Festival Porta Ferrada (PF) - Deducción pendiente/generada [00088]
+          is-deduccion-prevision-social-empresarial-aplicado:
+            label: Deducc. para incentivar determ.actividades - {year} Contribuciones
+              empresariales a sistemas de previsión social empresarial imputadas a
+              favor de los trabajadores (CPS) - Aplicado en esta liquidación [00793]
+          is-deduccion-prevision-social-empresarial-generada:
+            label: Deducc. para incentivar determ.actividades - {year} Contribuciones
+              empresariales a sistemas de previsión social empresarial imputadas a
+              favor de los trabajadores (CPS) - Deducción pendiente/generada [00792]
+          is-deduccion-prevision-social-empresarial-pendiente-futuros:
+            label: Deducc. para incentivar determ.actividades - {year} Contribuciones
+              empresariales a sistemas de previsión social empresarial imputadas a
+              favor de los trabajadores (CPS) - Pendiente de aplicación en periodos
+              futuros [00794]
           is-deduccion-produccion-cinematografica-espanola-financiador:
             help: 'Deducción pendiente/generada - Financiador: producciones cinematográficas
               españolas (FPC)'
@@ -16370,6 +16417,495 @@ modelo:
             label: Liquidación IV - Resultado - Estado [00621]
           is-liquidacion-iv-resultado-misc:
             label: Liquidación IV - Rectificación - Estado [00866]
+          is-m200-dp200012-01015:
+            label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
+              ganancias - Efectos de la valoración contable diferente a la fiscal
+              (art. 20 LIS) - Aumentos [01015]
+          is-m200-dp200012-01016:
+            label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
+              ganancias - Efectos de la valoración contable diferente a la fiscal
+              (art. 20 LIS) - Disminuciones [01016]
+          is-m200-dp200012-01574:
+            label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
+              ganancias - Operaciones del art. 19 LIS distintas del cambio de residencia
+              a Estados miembros de la Unión Europea o EEE - Aumentos [01574]
+          is-m200-dp200012-01575:
+            label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
+              ganancias - Operaciones del art. 19 LIS distintas del cambio de residencia
+              a Estados miembros de la Unión Europea o EEE - Disminuciones [01575]
+          is-m200-dp200013-01009:
+            label: Liquidación II - Detalle correcciones resultado cta. pérdidas y
+              ganancias - UEFA Europa League 2022 (RDL 3/2022) - Aumentos [01009]
+          is-m200-dp200013-01013:
+            label: Liquidación II - Detalle correcciones resultado cta. pérdidas y
+              ganancias - UEFA Europa League 2022 (RDL 3/2022) - Disminuciones [01013]
+          is-m200-dp200016-00024:
+            label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. Art. 42 RDLeg. 4/2004
+              2009 - Pendiente aplicación en periodos futuros [00024]
+          is-m200-dp200016-00031:
+            label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. Art. 42 RDLeg. 4/2004
+              2008 - Deducción pendiente/generada [00031]
+          is-m200-dp200016-00032:
+            label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. Art. 42 RDLeg. 4/2004
+              2008 - Aplicado en esta liquidación [00032]
+          is-m200-dp200016b-00866:
+            label: Deducciones inversión Canarias - Inversiones Canarias 2005 - Deducción
+              pendiente/generada [00866]
+          is-m200-dp200016b-00867:
+            label: Deducciones inversión Canarias - Inversiones Canarias 2005 - Aplicado
+              en esta liquidación [00867]
+          is-m200-dp200016b-00941:
+            label: Deducciones inversión Canarias - Inversiones Canarias 2006 - Pendiente
+              de aplicación en periodos futuros [00941]
+          is-m200-dp200017-00466:
+            label: Deducc. para incentivar determ.actividades - 2005 Suma deducciones
+              - Deducción pendiente/generada [00466]
+          is-m200-dp200017-00467:
+            label: Deducc. para incentivar determ.actividades - 2005 Suma deducciones
+              - Aplicado en esta liquidación [00467]
+          is-m200-dp200017-00586:
+            label: Deducc. para incentivar determ.actividades - 2006 Suma deducciones
+              - Pendiente de aplicación en periodos futuros [00586]
+          is-m200-dp200018-00259:
+            label: Deducc. para incentivar determ.actividades - {year} Bicentenario
+              de la independencia de las Repúblicas Iberoamericanas (BIR). - Deducción
+              pendiente/generada [00259]
+          is-m200-dp200018-00260:
+            label: Deducc. para incentivar determ.actividades - {year} Bicentenario
+              de la independencia de las Repúblicas Iberoamericanas (BIR). - Aplicado
+              en esta liquidación [00260]
+          is-m200-dp200018-00261:
+            label: Deducc. para incentivar determ.actividades - {year} Bicentenario
+              de la independencia de las Repúblicas Iberoamericanas (BIR). - Pendiente
+              de aplicación en periodos futuros [00261]
+          is-m200-dp200018-00262:
+            label: Deducc. para incentivar determ.actividades - {year} 150 aniversario
+              de creación de la Academia de España en Roma (AER) - Deducción pendiente/generada
+              [00262]
+          is-m200-dp200018-00263:
+            label: Deducc. para incentivar determ.actividades - {year} 150 aniversario
+              de creación de la Academia de España en Roma (AER)- Aplicado en esta
+              liquidación [00263]
+          is-m200-dp200018-00264:
+            label: Deducc. para incentivar determ.actividades - {year} 150 aniversario
+              de creación de la Academia de España en Roma (AER) - Pendiente de aplicación
+              en periodos futuros [00264]
+          is-m200-dp200018-00268:
+            label: Deducc. para incentivar determ.actividades - {year} Celebración
+              del Summit MADBLUE (SM) - Deducción pendiente/generada [00268]
+          is-m200-dp200018-00269:
+            label: Deducc. para incentivar determ.actividades - {year} Celebración
+              del Summit MADBLUE (SM) - Aplicado en esta liquidación [00269]
+          is-m200-dp200018-00270:
+            label: Deducc. para incentivar determ.actividades - {year} Celebración
+              del Summit MADBLUE (SM) - Pendiente de aplicación en periodos futuros
+              [00270]
+          is-m200-dp200018-00271:
+            label: Deducc. para incentivar determ.actividades - {year} 30 aniversario
+              de la Escuela Superior de Música Reina Sofía (RS) - Deducción pendiente/generada
+              [00271]
+          is-m200-dp200018-00273:
+            label: Deducc. para incentivar determ.actividades - {year} 30 aniversario
+              de la Escuela Superior de Música Reina Sofía (RS) - Aplicado en esta
+              liquidación [00273]
+          is-m200-dp200018-00274:
+            label: Deducc. para incentivar determ.actividades - {year} 30 aniversario
+              de la Escuela Superior de Música Reina Sofía (RS) - Pendiente de aplicación
+              en periodos futuros [00274]
+          is-m200-dp200018-00294:
+            label: Deducc. para incentivar determ.actividades - {year} Torneo Davis
+              Cup Madrid (DCM) - Deducción pendiente/generada [00294]
+          is-m200-dp200018-00295:
+            label: Deducc. para incentivar determ.actividades - {year} Torneo Davis
+              Cup Madrid (DCM) - Aplicado en esta liquidación [00295]
+          is-m200-dp200018-00296:
+            label: Deducc. para incentivar determ.actividades - {year} Torneo Davis
+              Cup Madrid (DCM) - Pendiente de aplicación en periodos futuros [00296]
+          is-m200-dp200018-00297:
+            label: Deducc. para incentivar determ.actividades - {year} Madrid Horse
+              Week 21/23 (HW21) - Deducción pendiente/generada [00297]
+          is-m200-dp200018-00298:
+            label: Deducc. para incentivar determ.actividades - {year} Madrid Horse
+              Week 21/23 (HW21) - Aplicado en esta liquidación [00298]
+          is-m200-dp200018-00299:
+            label: Deducc. para incentivar determ.actividades - {year} Madrid Horse
+              Week 21/23 (HW21) - Pendiente de aplicación en periodos futuros [00299]
+          is-m200-dp200018-00319:
+            label: Deducc. para incentivar determ.actividades - {year} Centenario
+              del Rugby en España y de la Unió Esportiva Santboiana (CRE) - Pendiente
+              de aplicación en periodos futuros [00319]
+          is-m200-dp200018-00320:
+            label: Deducc. para incentivar determ.actividades - {year} Solheim Cup
+              2023 (SC23) - Deducción pendiente/generada [00320]
+          is-m200-dp200018-00349:
+            label: Deducc. para incentivar determ.actividades - {year} Solheim Cup
+              2023 (SC23) - Aplicado en esta liquidación [00349]
+          is-m200-dp200018-00350:
+            label: Deducc. para incentivar determ.actividades - {year} Solheim Cup
+              2023 (SC23) - Pendiente de aplicación en periodos futuros [00350]
+          is-m200-dp200018-00366:
+            label: Deducc. para incentivar determ.actividades - {year} Barcelona Mobile
+              World Capital (BMWC) - Deducción pendiente/generada [00366]
+          is-m200-dp200018-00367:
+            label: Deducc. para incentivar determ.actividades - {year} Barcelona Mobile
+              World Capital (BMWC) - Aplicado en esta liquidación [00367]
+          is-m200-dp200018-00369:
+            label: Deducc. para incentivar determ.actividades - {year} Barcelona Mobile
+              World Capital (BMWC) - Pendiente de aplicación en periodos futuros [00369]
+          is-m200-dp200018-00395:
+            label: Deducc. para incentivar determ.actividades - {year} Valencia, Capital
+              Mundial del Diseño 2022/Valencia World Design Capital 2022 (VD22) -
+              Deducción pendiente/generada [00395]
+          is-m200-dp200018-00401:
+            label: Deducc. para incentivar determ.actividades - {year} Valencia, Capital
+              Mundial del Diseño 2022/Valencia World Design Capital 2022 (VD22) -
+              Aplicado en esta liquidación [00401]
+          is-m200-dp200018-00405:
+            label: Deducc. para incentivar determ.actividades - {year} Valencia, Capital
+              Mundial del Diseño 2022/Valencia World Design Capital 2022 (VD22) -
+              Pendiente de aplicación en periodos futuros [00405]
+          is-m200-dp200018-00422:
+            label: Deducc. para incentivar determ.actividades - {year} Centenario
+              de Revista de Occidente (RO) - Deducción pendiente/generada [00422]
+          is-m200-dp200018-00423:
+            label: Deducc. para incentivar determ.actividades - {year} Centenario
+              de Revista de Occidente (RO) - Aplicado en esta liquidación [00423]
+          is-m200-dp200018-00424:
+            label: Deducc. para incentivar determ.actividades - {year} Centenario
+              de Revista de Occidente (RO) - Pendiente de aplicación en periodos futuros
+              [00424]
+          is-m200-dp200018-00430:
+            label: Deducc. para incentivar determ.actividades - {year} V Centenario
+              del fallecimiento de Elio Antonio de Nebrija (FN) - Deducción pendiente/generada
+              [00430]
+          is-m200-dp200018-00431:
+            label: Deducc. para incentivar determ.actividades - {year} V Centenario
+              del fallecimiento de Elio Antonio de Nebrija (FN) - Aplicado en esta
+              liquidación [00431]
+          is-m200-dp200018-00432:
+            label: Deducc. para incentivar determ.actividades - {year} V Centenario
+              del fallecimiento de Elio Antonio de Nebrija (FN) - Pendiente de aplicación
+              en periodos futuros [00432]
+          is-m200-dp200018-00439:
+            label: Deducc. para incentivar determ.actividades - {year} Andalucía Región
+              Europea del Deporte 2021 (AD21) - Deducción pendiente/generada [00439]
+          is-m200-dp200018-00440:
+            label: Deducc. para incentivar determ.actividades - {year} Andalucía Región
+              Europea del Deporte 2021 (AD21) - Aplicado en esta liquidación [00440]
+          is-m200-dp200018-00441:
+            label: Deducc. para incentivar determ.actividades - {year} Andalucía Región
+              Europea del Deporte 2021 (AD21) - Pendiente de aplicación en periodos
+              futuros [00441]
+          is-m200-dp200018-00452:
+            label: Deducc. para incentivar determ.actividades - {year} 75 aniversario
+              de la Ópera en Oviedo (OD) - Deducción pendiente/generada [00452]
+          is-m200-dp200018-00453:
+            label: Deducc. para incentivar determ.actividades - {year} 75 aniversario
+              de la Ópera en Oviedo (OD)- Aplicado en esta liquidación [00453]
+          is-m200-dp200018-00454:
+            label: Deducc. para incentivar determ.actividades - {year} 75 aniversario
+              de la Ópera en Oviedo (OD) - Pendiente de aplicación en periodos futuros
+              [00454]
+          is-m200-dp200018-00455:
+            label: Deducc. para incentivar determ.actividades - {year} Hábitos saludables
+              para el control del riesgo Cardiovascular «Aprender a cuidarnos» (HSRC)
+              - Deducción pendiente/generada [00455]
+          is-m200-dp200018-00456:
+            label: Deducc. para incentivar determ.actividades - {year} Hábitos saludables
+              para el control del riesgo Cardiovascular «Aprender a cuidarnos» (HSRC)
+              - Aplicado en esta liquidación [00456]
+          is-m200-dp200018-00463:
+            label: Deducc. para incentivar determ.actividades - {year} Hábitos saludables
+              para el control del riesgo Cardiovascular «Aprender a cuidarnos» (HSRC)
+              - Pendiente de aplicación en periodos futuros [00463]
+          is-m200-dp200018-00464:
+            label: Deducc. para incentivar determ.actividades - {year} Mundiales Bádminton
+              España (MBE) - Deducción pendiente/generada [00464]
+          is-m200-dp200018-00469:
+            label: Deducc. para incentivar determ.actividades - {year} Mundiales Bádminton
+              España (MBE) - Aplicado en esta liquidación [00469]
+          is-m200-dp200018-00470:
+            label: Deducc. para incentivar determ.actividades - {year} Mundiales Bádminton
+              España (MBE) - Pendiente de aplicación en periodos futuros [00470]
+          is-m200-dp200018-00471:
+            label: Deducc. para incentivar determ.actividades - {year} Centenario
+              de la Batalla de Covadonga-Cuadonga (CBC) - Deducción pendiente/generada
+              [00471]
+          is-m200-dp200018-00479:
+            label: Deducc. para incentivar determ.actividades - {year} Centenario
+              de la Batalla de Covadonga-Cuadonga (CBC) - Aplicado en esta liquidación
+              [00479]
+          is-m200-dp200018-00481:
+            label: Deducc. para incentivar determ.actividades - {year} Centenario
+              de la Batalla de Covadonga-Cuadonga (CBC) - Pendiente de aplicación
+              en periodos futuros [00481]
+          is-m200-dp200018-00499:
+            label: Deducc. para incentivar determ.actividades - {year} VII Centenario
+              de la Catedral de Palencia 2021-2022 (CCP) - Deducción pendiente/generada
+              [00499]
+          is-m200-dp200018-00502:
+            label: Deducc. para incentivar determ.actividades - {year} VII Centenario
+              de la Catedral de Palencia 2021-2022 (CCP) - Aplicado en esta liquidación
+              [00502]
+          is-m200-dp200018-00503:
+            label: Deducc. para incentivar determ.actividades - {year} VII Centenario
+              de la Catedral de Palencia 2021-2022 (CCP) - Pendiente de aplicación
+              en periodos futuros [00503]
+          is-m200-dp200018-00504:
+            label: 'Deducc. para incentivar determ.actividades - {year} FITUR especial:
+              recuperación turismo (FE) - Deducción pendiente/generada [00504]'
+          is-m200-dp200018-00511:
+            label: 'Deducc. para incentivar determ.actividades - {year} FITUR especial:
+              recuperación turismo (FE) - Aplicado en esta liquidación [00511]'
+          is-m200-dp200018-00513:
+            label: 'Deducc. para incentivar determ.actividades - {year} FITUR especial:
+              recuperación turismo (FE) - Pendiente de aplicación en periodos futuros
+              [00513]'
+          is-m200-dp200018-00812:
+            label: Deducc. para incentivar determ.actividades - {year} 50 aniversario
+              del Hospital Sant Joan de Deu (HSJD) - Deducción pendiente/generada
+              [00812]
+          is-m200-dp200018-00816:
+            label: Deducc. para incentivar determ.actividades - {year} 50 aniversario
+              del Hospital Sant Joan de Deu (HSJD) - Aplicado en esta liquidación
+              [00816]
+          is-m200-dp200018-00817:
+            label: Deducc. para incentivar determ.actividades - {year} 50 aniversario
+              del Hospital Sant Joan de Deu (HSJD) - Pendiente de aplicación en periodos
+              futuros [00817]
+          is-m200-dp200018-00878:
+            label: Deducc. para incentivar determ.actividades - {year} Centenario
+              Federación Aragonesa de Fútbol (FAF) - Deducción pendiente/generada
+              [00878]
+          is-m200-dp200018-00879:
+            label: Deducc. para incentivar determ.actividades - {year} Centenario
+              Federación Aragonesa de Fútbol (FAF) - Aplicado en esta liquidación
+              [00879]
+          is-m200-dp200018-00882:
+            label: Deducc. para incentivar determ.actividades - {year} Centenario
+              Federación Aragonesa de Fútbol (FAF) - Pendiente de aplicación en periodos
+              futuros [00882]
+          is-m200-dp200018-01626:
+            label: Deducc. para incentivar determ.actividades - {year} 4ª Edición
+              de la Barcelona World Race (4BWR) - Deducción pendiente/generada [01626]
+          is-m200-dp200018-01627:
+            label: Deducc. para incentivar determ.actividades - {year} 4ª Edición
+              de la Barcelona World Race (4BWR) - Aplicado en esta liquidación [01627]
+          is-m200-dp200018-01628:
+            label: Deducc. para incentivar determ.actividades - {year} 4ª Edición
+              de la Barcelona World Race (4BWR) - Pendiente de aplicación en periodos
+              futuros [01628]
+          is-m200-dp200018-01707:
+            label: Deducc. para incentivar determ.actividades - {year} Plan Decenio
+              Milliarium Montserrat 1025-2025 (PDMM) - Deducción pendiente/generada
+              [01707]
+          is-m200-dp200018-01708:
+            label: Deducc. para incentivar determ.actividades - {year} Plan Decenio
+              Milliarium Montserrat 1025-2025 (PDMM) - Aplicado en esta liquidación
+              [01708]
+          is-m200-dp200018-01709:
+            label: Deducc. para incentivar determ.actividades - {year} Plan Decenio
+              Milliarium Montserrat 1025-2025 (PDMM) - Pendiente de aplicación en
+              periodos futuros [01709]
+          is-m200-dp200018-02362:
+            label: Deducc. para incentivar determ.actividades - {year} Plan Berlanga
+              (PB) - Deducción pendiente/generada [02362]
+          is-m200-dp200018-02363:
+            label: Deducc. para incentivar determ.actividades - {year} Plan Berlanga
+              (PB) - Aplicado en esta liquidación [02363]
+          is-m200-dp200018-02364:
+            label: Deducc. para incentivar determ.actividades - {year} Plan Berlanga
+              (PB) - Pendiente de aplicación en periodos futuros [02364]
+          is-m200-dp200018-02374:
+            label: Deducc. para incentivar determ.actividades - {year} 175 Aniversario
+              de la construcción del Gran Teatre del Liceu (TL) - Deducción pendiente/generada
+              [02374]
+          is-m200-dp200018-02375:
+            label: Deducc. para incentivar determ.actividades - {year} 175 Aniversario
+              de la construcción del Gran Teatre del Liceu (TL) - Aplicado en esta
+              liquidación [02375]
+          is-m200-dp200018-02376:
+            label: Deducc. para incentivar determ.actividades - {year} 175 Aniversario
+              de la construcción del Gran Teatre del Liceu (TL) - Pendiente de aplicación
+              en periodos futuros [02376]
+          is-m200-dp200018-02377:
+            label: Deducc. para incentivar determ.actividades - {year} Gran Premio
+              de España de Fórmula 1 (F1) - Deducción pendiente/generada [02377]
+          is-m200-dp200018-02378:
+            label: Deducc. para incentivar determ.actividades - {year} Gran Premio
+              de España de Fórmula 1 (F1) - Aplicado en esta liquidación [02378]
+          is-m200-dp200018-02379:
+            label: Deducc. para incentivar determ.actividades - {year} Gran Premio
+              de España de Fórmula 1 (F1) - Pendiente de aplicación en periodos futuros
+              [02379]
+          is-m200-dp200018b-01883:
+            label: Deducc. para incentivar determ.actividades - {year} Año Santo Jubilar
+              San Isidro Labrador (JI) - Deducción pendiente/generada [01883]
+          is-m200-dp200018b-01884:
+            label: Deducc. para incentivar determ.actividades - {year} Año Santo Jubilar
+              San Isidro Labrador (JI) - Aplicado en esta liquidación [01884]
+          is-m200-dp200018b-01885:
+            label: Deducc. para incentivar determ.actividades - {year} Año Santo Jubilar
+              San Isidro Labrador (JI) - Pendiente de aplicación en periodos futuros
+              [01885]
+          is-m200-dp200018c-00903:
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - 2013 - Deducción pendiente/generada [00903]
+          is-m200-dp200018c-00917:
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - 2013 - Aplicado en esta liquidación [00917]
+          is-m200-dp200018c-00932:
+            label: Deducción donativos entidades sin fines lucro - Donaciones para
+              actividades prioritarias de mecenazgo y otras con derecho a deducción
+              incrementada - 2014 - Pendiente de aplicación en periodos futuros [00932]
+          is-m200-dp200018c-00990:
+            label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
+              general - 2013 - Deducción pendiente/generada [00990]
+          is-m200-dp200018c-00991:
+            label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
+              general - 2013 - Aplicado en esta liquidación [00991]
+          is-m200-dp200018c-00999:
+            label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
+              general - 2014 - Pendiente de aplicación en periodos futuros [00999]
+          is-m200-dp200020-01741:
+            label: Pendiente adición por límite beneficio operativo no aplicado -
+              Ejercicio generación 2018 - Pendiente aplicación a principio del período
+              [01741]
+          is-m200-dp200020-01742:
+            label: Pendiente adición por límite beneficio operativo no aplicado -
+              Ejercicio generación 2018 - Aplicado en esta liquidación [01742]
+          is-m200-dp200020-01984:
+            label: Pendiente adición por límite beneficio operativo no aplicado -
+              Ejercicio generación 2019 - Pendiente aplicación períodos futuros [01984]
+          is-m200-dp200020b-01108:
+            label: Reserva Capitalización - 2022(*) - Reducción B.I. pdte. De aplicar
+              en períodos futuros [01108]
+          is-m200-dp200020b-01602:
+            label: Reserva de nivelación - Reducción base imponible - Ejercicio generación
+              2018 - Importe integrado en la declaración por incumplimiento de requisitos
+              [01602]
+          is-m200-dp200020b-01732:
+            label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
+              2018 - Importe reserva a dotar [01732]
+          is-m200-dp200020b-01733:
+            label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
+              2018 - Importe reserva dotada [01733]
+          is-m200-dp200020b-01734:
+            label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
+              2018 - Importe reserva pendiente dotación [01734]
+          is-m200-dp200020b-01735:
+            label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
+              2018 - Reserva dispuesta [01735]
+          is-m200-dp200020b-01961:
+            label: Reserva de nivelación - Reducción base imponible - Ejercicio generación
+              2018 - Importe minoración B.I. periodo/pendiente adicionar inicio periodo
+              [01961]
+          is-m200-dp200020b-01962:
+            label: Reserva de nivelación - Reducción base imponible - Ejercicio generación
+              2018 - Importe adicionado base imponible en periodo [01962]
+          is-m200-dp200020b-02240:
+            label: Reserva de nivelación - Reducción base imponible - Ejercicio generación
+              2019 - Importe pendiente adicionar en periodos futuros [02240]
+          is-m200-dp200020b-02407:
+            label: Reserva Capitalización - 2021 - Derecho reducir B.I. generado periodo/pendiente
+              aplicar inicio periodo [02407]
+          is-m200-dp200020b-02408:
+            label: Reserva Capitalización - 2021 - Reducción B.I. aplicada [02408]
+          is-m200-dp200020c-01138:
+            label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Exceso cuota líquida positiva - Ejercicio generación - 2022(*) - Exceso
+              cuota líquida positiva pendiente aplicación periodos futuros [01138]
+          is-m200-dp200020c-02427:
+            label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Exceso cuota líquida positiva - Ejercicio generación - 2021 - Exceso
+              cuota líquida positiva pendiente a principio periodo [02427]
+          is-m200-dp200020c-02428:
+            label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Exceso cuota líquida positiva - Ejercicio generación - 2021 - Exceso
+              cuota líquida positiva aplicado periodos impositivos 2008 a 2015 [02428]
+          is-m200-dp200020c-02429:
+            label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Exceso cuota líquida positiva - Ejercicio generación - 2021 - Exceso
+              cuota líquida positiva aplicado periodos impositivos iniciados a partir
+              2016 [02429]
+          is-m200-dp200022-00524:
+            label: Rég. especial reserva inversiones Canarias - RIC 2018 - Pendiente
+              de materializar RIC a principio de período [00524]
+          is-m200-dp200022-00525:
+            label: Rég. especial reserva inversiones Canarias - RIC 2018 - Aplicado/materializado
+              en esta liquidación - Inversiones previstas letras A y B, art. 27.4
+              Ley 19/1994 [00525]
+          is-m200-dp200022-00526:
+            label: Rég. especial reserva inversiones Canarias - RIC 2018 - Aplicado/materializado
+              en esta liquidación - Inversiones previstas letras B bis, C y D art.
+              27.4 Ley 19/1994 [00526]
+          is-m200-dp200022-00925:
+            label: Rég. especial reserva inversiones Canarias - RIC 2019 - Pendiente
+              de materializar RIC al final de período [00925]
+          is-m200-dp200022-01174:
+            label: Rég. especial reserva inversiones Canarias - RIC 2021 - Aplicado/materializado
+              en esta liquidación - Inversiones anticipadas consideradas materialización
+              de la RIC en esta liquidación [01174]
+          is-m200-dp200022-01184:
+            label: Rég. especial reserva inversiones Canarias - Inversiones anticipadas
+              2021 - Pendiente de dotar RIC al final del período [01184]
+          is-m200-dp200022-01600:
+            label: Rég. especial reserva inversiones Canarias - Inversiones anticipadas
+              2022 - Pendiente de dotar RIC al final del período [01600]
+          is-m200-dp200022-01820:
+            label: Rég. especial reserva inversiones Canarias - RIC 2022 - Aplicado/materializado
+              en esta liquidación - Inversiones anticipadas consideradas materialización
+              de la RIC en esta liquidación [01820]
+          is-m200-dp200022-01823:
+            label: Rég. especial reserva inversiones Canarias - Inversiones anticipadas
+              2021 - Pendiente de dotar RIC a principio del período [01823]
+          is-m200-dp200022-02439:
+            label: Rég. especial reserva inversiones Canarias - RIC 2018 - Aplicado/materializado
+              en esta liquidación - Inversiones anticipadas consideradas materialización
+              de la RIC en esta liquidación [02439]
+          is-m200-dp200022-02440:
+            label: Rég. especial reserva inversiones Canarias - RIC 2019 - Aplicado/materializado
+              en esta liquidación - Inversiones anticipadas consideradas materialización
+              de la RIC en esta liquidación [02440]
+          is-m200-dp200022-02441:
+            label: Rég. especial reserva inversiones Canarias - RIC 2020 - Aplicado/materializado
+              en esta liquidación - Inversiones anticipadas consideradas materialización
+              de la RIC en esta liquidación [02441]
+          is-m200-dp200022-02446:
+            label: Rég. especial reserva inversiones Canarias - Inversiones anticipadas
+              2019 - Pendiente de dotar RIC a principio del período [02446]
+          is-m200-dp200022-02451:
+            label: Rég. especial reserva inversiones Canarias - Inversiones anticipadas
+              2020 - Pendiente de dotar RIC al final del período [02451]
+          is-m200-dp200022-02810:
+            label: Rég. especial reserva inversiones Canarias - RIC 2023 - Aplicado/materializado
+              en esta liquidación - Inversiones anticipadas consideradas materialización
+              de la RIC en esta liquidación [02810]
+          is-m200-dp200022-02823:
+            label: Rég. especial reserva inversiones Canarias - Inversiones anticipadas
+              2022 - Pendiente de dotar RIC a principio del período [02823]
+          is-m200-dp200022-02824:
+            label: Rég. especial reserva inversiones Canarias - Inversiones anticipadas
+              2023 - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [02824]
+          is-m200-dp200022-02825:
+            label: Rég. especial reserva inversiones Canarias - Inversiones anticipadas
+              2023 - Inversiones previstas letras B bis, C y D art. 27.4 Ley 19/1994
+              [02825]
+          is-m200-dp200022-02826:
+            label: Rég. especial reserva inversiones Canarias - Inversiones anticipadas
+              2023 - Pendiente de dotar RIC al final del período [02826]
+          is-m200-dp200022b-02916:
+            label: Rég. especial reserva inversiones Illes Balears - RIIB 2023 - Aplicado/materializado
+              en esta liquidación - Inversiones anticipadas consideradas materialización
+              de la RIIB en esta liquidación [02916]
+          is-m200-dp200022b-02919:
+            label: Rég. especial reserva inversiones Illes Balears - Inversiones anticipadas
+              2023 - Inversiones previstas letras A y B, DA 70.4 Ley 31/2022 [02919]
+          is-m200-dp200022b-02920:
+            label: Rég. especial reserva inversiones Illes Balears - Inversiones anticipadas
+              2023 - Inversiones previstas letra C DA 70.4 Ley 31/2022 [02920]
           is-mineria-hidrocarburos-factor-agotamiento-aumento:
             label: 'Minería e hidrocarburos: factor agotamiento (arts. 91 y 95 LIS)
               - Aumento - Correcciones del ejercicio - Temporarias (con origen en

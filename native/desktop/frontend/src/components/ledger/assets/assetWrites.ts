@@ -4,20 +4,22 @@ import type { LedgerPort } from "../../../shell/ledger";
 import type { OutputLanguage } from "../../../shell/ledgerClassificationContract";
 import { sameDecimal } from "../../../shell/ledgerGrammar";
 import type {
-  AcquisitionCandidate,
-  ActivityAssetDescribeRequest,
-  ActivityAssetFilingRequest,
-  ActivityAssetForecastRequest,
-  ActivityAssetListResult,
-  ActivityAssetRevision,
-  DescriptorFacts,
-  DisposalFacts,
-  PlanClaim,
-  PlanRow,
-  ReasonFact,
-  ReasonFactKind,
-  TimelineEvent,
-} from "../../../shell/ledgerSetup";
+  ActivityAssetDescribeWindowRequest,
+  ActivityAssetForecastWindowRequest,
+  ActivityAssetRevisionSnapshot,
+  ActivityAssetDescriptorFacts,
+  ActivityAssetDisposalSnapshot,
+  ActivityAssetReasonFact,
+  ActivityAssetReasonFactKind,
+} from "../../../shell/ledgerActivityAssetContract";
+import type {
+  ActivityAssetAcquisitionCandidate,
+  ActivityAssetFilingHandoffWindowRequest,
+  ActivityAssetListProjection,
+  ActivityAssetPlanClaim,
+  ActivityAssetPlanRow,
+  ActivityAssetTimelineEvent,
+} from "../../../shell/ledgerActivityAssetReadContract";
 import type { Translate } from "../../../shell/strings";
 import type { Landing, LandingCheck } from "../WritePause";
 import { setupCall, type SetupCall } from "../setup/setupModel";
@@ -46,12 +48,12 @@ const amountOf = (found: FormValue | undefined) =>
 export const describeRequest = (
   assetId: string,
   values: FormValues,
-): ActivityAssetDescribeRequest => {
-  const descriptor: DescriptorFacts = {
+): ActivityAssetDescribeWindowRequest => {
+  const descriptor: ActivityAssetDescriptorFacts = {
     name: textOf(values.name) ?? "",
     serial_number: textOf(values.serial_number),
     description: textOf(values.description),
-    document_kind: tokenOf<NonNullable<DescriptorFacts["document_kind"]>>(
+    document_kind: tokenOf<NonNullable<ActivityAssetDescriptorFacts["document_kind"]>>(
       values.document_kind,
     ),
     document_number: textOf(values.document_number),
@@ -64,7 +66,7 @@ export const describeRequest = (
 /** What a purchase states for the figures of the add form, by field key; null
  * where the ledger does not know it, which is never read as zero. */
 export function purchaseValues(
-  purchase: AcquisitionCandidate | undefined,
+  purchase: ActivityAssetAcquisitionCandidate | undefined,
 ): Record<string, string | null> {
   return {
     basis_amount: purchase?.taxable_base?.decimal ?? null,
@@ -76,7 +78,7 @@ export function purchaseValues(
 }
 
 /** The movement a revision names as its acquisition, if it names one. */
-export function purchaseOf(revision: ActivityAssetRevision): string | null {
+export function purchaseOf(revision: ActivityAssetRevisionSnapshot): string | null {
   const acquisition = revision.acquisition;
   if (
     typeof acquisition !== "object" ||
@@ -115,9 +117,9 @@ export function purchaseInvoiceFacts(
 /** What a baja states, from the form: the last day of service, the reason, the
  * amounts and the optional facts. Null while a fact every baja states is
  * missing: none is read as zero. The backend judges the rest by the reason. */
-export function disposalOf(values: FormValues): DisposalFacts | null {
+export function disposalOf(values: FormValues): ActivityAssetDisposalSnapshot | null {
   const date = textOf(values.date);
-  const reason = tokenOf<DisposalFacts["reason"]>(values.reason);
+  const reason = tokenOf<ActivityAssetDisposalSnapshot["reason"]>(values.reason);
   const proceeds = amountOf(values.proceeds);
   const costs = amountOf(values.transmission_costs);
   if (date === null || reason === null || proceeds === null || costs === null)
@@ -129,7 +131,7 @@ export function disposalOf(values: FormValues): DisposalFacts | null {
     transmission_costs: costs,
     market_value: amountOf(values.market_value),
     prior_free_depreciation_regime: tokenOf<
-      NonNullable<DisposalFacts["prior_free_depreciation_regime"]>
+      NonNullable<ActivityAssetDisposalSnapshot["prior_free_depreciation_regime"]>
     >(values.prior_free_depreciation_regime),
     later_affectation_on: textOf(values.later_affectation_on),
   };
@@ -142,7 +144,7 @@ export function forecastRequest(
   assetId: string,
   values: FormValues,
   supersedes: string | null,
-): ActivityAssetForecastRequest | null {
+): ActivityAssetForecastWindowRequest | null {
   const from = textOf(values.covered_from);
   const through = textOf(values.covered_through);
   if (from === null || through === null) return null;
@@ -162,7 +164,7 @@ export const handoffRequest = (
   year: number,
   period: string,
   language: OutputLanguage,
-): ActivityAssetFilingRequest => ({
+): ActivityAssetFilingHandoffWindowRequest => ({
   tax_year: year,
   output_language: language,
   ...(period === "" ? {} : { m130_period: period }),
@@ -176,7 +178,7 @@ export const CONFLICTING_CLAIMS = "conflicting_claim_ids";
 /** The one recorded dotación a refusal says is in the way; null where it
  * names none or several. */
 export function claimInTheWay(
-  reasonFacts: readonly ReasonFact[],
+  reasonFacts: readonly ActivityAssetReasonFact[],
 ): string | null {
   const named = reasonFacts.find((fact) => fact.key === CONFLICTING_CLAIMS);
   if (named === undefined) return null;
@@ -189,7 +191,7 @@ export function claimInTheWay(
 const listLanding =
   (
     port: LedgerPort,
-    judge: (list: ActivityAssetListResult) => Landing,
+    judge: (list: ActivityAssetListProjection) => Landing,
   ): LandingCheck =>
   async () => {
     const read = await setupCall(
@@ -248,7 +250,7 @@ export const claimLanding =
 
 /** An add landed if the register lists the id the window minted. */
 export function elementLanded(
-  list: ActivityAssetListResult,
+  list: ActivityAssetListProjection,
   assetId: string,
 ): Landing {
   return (list.rows ?? []).some((row) => row.asset_id === assetId)
@@ -259,7 +261,7 @@ export function elementLanded(
 /** A correction landed if the element stands past the revision it
  * superseded; an element the register no longer lists cannot be told. */
 export function correctionLanded(
-  list: ActivityAssetListResult,
+  list: ActivityAssetListProjection,
   assetId: string,
   superseded: number,
 ): Landing {
@@ -270,7 +272,7 @@ export function correctionLanded(
 
 /** A description landed if the element's history holds at least `count`. */
 export function descriptorLanded(
-  events: readonly TimelineEvent[],
+  events: readonly ActivityAssetTimelineEvent[],
   count: number,
 ): Landing {
   const described = events.filter((event) => event.kind === "descriptor");
@@ -280,7 +282,7 @@ export function descriptorLanded(
 /** A claim landed if its year holds an effective claim of that span and
  * amount; a year the plan no longer holds cannot be told. */
 export function claimLanded(
-  rows: readonly PlanRow[],
+  rows: readonly ActivityAssetPlanRow[],
   sent: SentClaim,
 ): Landing {
   const year = rows.find((row) => row.tax_year === sent.tax_year);
@@ -300,8 +302,8 @@ export function claimLanded(
  * the ones a correction can record again in the same write. The plan states
  * on each claim whether it is in effect and whether it still matches. */
 export function staleClaims(
-  rows: readonly PlanRow[],
-): { year: number; claim: PlanClaim }[] {
+  rows: readonly ActivityAssetPlanRow[],
+): { year: number; claim: ActivityAssetPlanClaim }[] {
   return rows.flatMap((row) =>
     row.claims
       .filter((claim) => claim.effective && !claim.matches_current_schedule)
@@ -312,8 +314,8 @@ export function staleClaims(
 /** The element's descriptor as it stands: for each fact, the latest value the
  * history states for it. A fact the history has cleared is null. */
 export function currentDescriptor(
-  events: readonly TimelineEvent[],
-): DescriptorFacts {
+  events: readonly ActivityAssetTimelineEvent[],
+): ActivityAssetDescriptorFacts {
   const facts: Record<string, string | null> = {};
   for (const event of events) {
     if (event.kind !== "descriptor") continue;
@@ -325,7 +327,7 @@ export function currentDescriptor(
     description: facts.description ?? null,
     // The timeline words the token the descriptor held.
     document_kind: (facts.document_kind ??
-      null) as DescriptorFacts["document_kind"],
+      null) as ActivityAssetDescriptorFacts["document_kind"],
     document_number: facts.document_number ?? null,
     supplier_name: facts.supplier_name ?? null,
     supplier_tax_id: facts.supplier_tax_id ?? null,
@@ -343,7 +345,7 @@ export const CLAIMS_OVERLAP = "ledger.actividad_asset.errors.claims_overlap";
 export type Refusal = {
   code: string | null;
   reasonKey: string | null;
-  reasonFacts: ReasonFact[];
+  reasonFacts: ActivityAssetReasonFact[];
   /** The sentence the backend served for the refusal, in the language it
    * names; null where it served none. */
   words: string | null;
@@ -371,7 +373,7 @@ const FACT_KINDS: readonly string[] = [
   "percent",
   "count",
 ];
-const isFactKind = (found: unknown): found is ReasonFactKind =>
+const isFactKind = (found: unknown): found is ActivityAssetReasonFactKind =>
   typeof found === "string" && FACT_KINDS.includes(found);
 
 /** The refusal in a result or in the detail of a refused outcome. */
@@ -385,7 +387,7 @@ export function refusalOf(body: unknown): Refusal {
       )
     : [];
   const facts = Array.isArray(refusal?.reason_facts)
-    ? refusal.reason_facts.flatMap((fact): ReasonFact[] => {
+    ? refusal.reason_facts.flatMap((fact): ActivityAssetReasonFact[] => {
         const found = asRecord(fact);
         return typeof found?.key === "string" &&
           typeof found.value === "string" &&

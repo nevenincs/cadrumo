@@ -21,7 +21,7 @@ from .work_form_models import (
     ModeloFormSection,
 )
 
-__all__ = ["record_attention", "with_record_attention"]
+__all__ = ["record_attention", "record_attention_count", "with_record_attention"]
 
 _COUNTED_LEVELS: Final[tuple[ModeloFormAttention, ...]] = (
     ModeloFormAttention.BLOCKS,
@@ -35,6 +35,22 @@ _UNASKED_LEVELS: Final[frozenset[ModeloFormAttention]] = frozenset(
     {ModeloFormAttention.CHECK, ModeloFormAttention.LIMITATION}
 )
 """The levels still worth counting where nothing is asked of the filer."""
+_SCALE_LEVELS: Final[dict[ModeloFormAttention, ModeloFormAttention]] = {
+    ModeloFormAttention.BLOCKS: ModeloFormAttention.BLOCKS,
+    ModeloFormAttention.MISSING: ModeloFormAttention.MISSING,
+    ModeloFormAttention.CONFIRM: ModeloFormAttention.CONFIRM,
+    ModeloFormAttention.CHECK: ModeloFormAttention.CHECK,
+    ModeloFormAttention.LIMITATION: ModeloFormAttention.CHECK,
+}
+"""Where each counted level sits on a section's attention scale: a limitation is worth checking."""
+
+
+def record_attention_count(level: ModeloFormAttention, count: int) -> ModeloFormRecordAttention:
+    """``count`` findings at ``level``, placed on the section's attention scale."""
+    counts_as = _SCALE_LEVELS[level]
+    return ModeloFormRecordAttention(
+        level=level, count=count, counts_as=counts_as, asks_filer=counts_as not in _UNASKED_LEVELS
+    )
 
 
 def _record_columns(section: ModeloFormSection) -> frozenset[str]:
@@ -61,9 +77,7 @@ def record_attention(
         and str(issue.finding.casilla_id) in columns
         and (applies or issue.attention in _UNASKED_LEVELS)
     )
-    return tuple(
-        ModeloFormRecordAttention(level=level, count=counted[level]) for level in _COUNTED_LEVELS if counted[level]
-    )
+    return tuple(record_attention_count(level, counted[level]) for level in _COUNTED_LEVELS if counted[level])
 
 
 def with_record_attention(

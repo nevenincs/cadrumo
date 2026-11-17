@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import type {
-  InvoiceAddRequest,
+  InvoiceAddWindowRequest,
   InvoiceAddResult,
-  InvoiceUpdateRequest,
-} from "../../../shell/ledgerInvoiceOperations";
+  InvoiceUpdateWindowRequest,
+} from "../../../shell/ledgerInvoiceContract";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import { type LedgerPort, servedRefusalWords } from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
@@ -19,8 +19,8 @@ import {
 
 /** A write the editor sent and did not see settle. */
 export type Pending =
-  | { what: "add"; request: InvoiceAddRequest; invoiceId: string | null }
-  | { what: "update"; request: InvoiceUpdateRequest }
+  | { what: "add"; request: InvoiceAddWindowRequest; invoiceId: string | null }
+  | { what: "update"; request: InvoiceUpdateWindowRequest }
   | { what: "remove"; invoiceId: string };
 
 export type Outcome =
@@ -135,7 +135,10 @@ export function useInvoiceEditorWrites({
   const refusedText = (detail: unknown = null) =>
     servedRefusalWords(detail) ?? t("desktop.ledger.invoices.refused");
 
-  const add = async (request: InvoiceAddRequest, invoiceId: string | null) => {
+  const add = async (
+    request: InvoiceAddWindowRequest,
+    invoiceId: string | null,
+  ) => {
     setSending(true);
     const answer = await write(port, "ledger.invoice.add", request);
     setSending(false);
@@ -188,7 +191,7 @@ export function useInvoiceEditorWrites({
       });
   };
 
-  const update = async (request: InvoiceUpdateRequest) => {
+  const update = async (request: InvoiceUpdateWindowRequest) => {
     setSending(true);
     const answer = await write(port, "ledger.invoice.update", request);
     setSending(false);

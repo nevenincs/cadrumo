@@ -34,7 +34,6 @@ from .controller import LedgerWorkspaceController
 from .evidence_files_common import (
     EvidenceFilesPager,
     EvidenceFilesToolScreen,
-    blank_to_none,
     paging_controls,
     paint_paging,
     short_identity,
@@ -47,6 +46,7 @@ from .evidence_files_write import (
     EvidenceFilesWordingV1,
     LedgerEvidenceFilesWriteScreen,
 )
+from .text_values import blank_to_none
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
 from .workspace_screen import LedgerWorkspaceScreen
 

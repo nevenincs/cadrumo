@@ -19,9 +19,9 @@ import {
 } from "../../../shell/ledger";
 import type {
   LedgerLlmReviewMode,
-  LedgerLlmReviewRequest,
-  LedgerLlmSuggestion,
-} from "../../../shell/ledgerMovementOperations";
+  LedgerLlmReviewWindowRequest,
+  LedgerLlmReviewProjection,
+} from "../../../shell/ledgerMovementCheckContract";
 import { askReview, releaseReview } from "../../../shell/ledgerApply";
 import { parseFractionPercent } from "../../../shell/ledgerGrammar";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
@@ -38,7 +38,7 @@ type Ask = "suggest" | "share" | "reject";
 type Shown = {
   definition: "ledger.classify.review" | "ledger.split.review";
   mode: LedgerLlmReviewMode;
-  review: LedgerReview<LedgerLlmSuggestion>;
+  review: LedgerReview<LedgerLlmReviewProjection>;
   /** Asked again to record a rejection with this reason. */
   rejecting?: string;
 };
@@ -49,7 +49,10 @@ type State =
   /** The runtime's code, or `no_review` or `refused` where it gave none. */
   | { kind: "failed"; code: string };
 
-const ORIGINS: Record<LedgerLlmReviewMode, LedgerLlmReviewRequest["origin"]> = {
+const ORIGINS: Record<
+  LedgerLlmReviewMode,
+  LedgerLlmReviewWindowRequest["origin"]
+> = {
   classification: "classify_llm_apply",
   saturated: "classify_llm_saturate_apply",
   auto_split: "classify_auto_split",
@@ -139,7 +142,7 @@ export function ModelSuggestion({
     setState({ kind: "asking", ask: purpose });
     const definition =
       mode === "split" ? "ledger.split.review" : "ledger.classify.review";
-    const request: LedgerLlmReviewRequest = {
+    const request: LedgerLlmReviewWindowRequest = {
       transaction_id: id,
       mode,
       origin: purpose === "reject" ? "classify_llm_reject" : ORIGINS[mode],
@@ -165,7 +168,7 @@ export function ModelSuggestion({
         setState({ kind: "failed", code: "no_review" });
         return;
       }
-      const review = await port.review<LedgerLlmSuggestion>(
+      const review = await port.review<LedgerLlmReviewProjection>(
         outcome.operation_id,
       );
       if (superseded()) {

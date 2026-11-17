@@ -7,7 +7,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { useScrolls } from "@/components/ui/useScrolls";
 import type { LedgerPort } from "../../../shell/ledger";
 import { inLanguage } from "../../../shell/ledgerLanguage";
-import type { ActivityAssetListResult } from "../../../shell/ledgerSetup";
+import type { ActivityAssetListProjection } from "../../../shell/ledgerActivityAssetReadContract";
 import { useStrings } from "../../../shell/strings";
 import { RightPanel } from "../inspector/RightPanel";
 import { setupCall, type SetupCall } from "../setup/setupModel";
@@ -34,7 +34,7 @@ type AssetFormRequest = {
   year?: number;
 };
 
-type ListResult = ActivityAssetListResult;
+type ListResult = ActivityAssetListProjection;
 
 /** Reads the register's elements while the pane shows, again after a
  * `reload` or the page's re-read, and drops what it read with the profile.

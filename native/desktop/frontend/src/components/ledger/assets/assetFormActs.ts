@@ -1,9 +1,9 @@
 import type { LedgerPort } from "../../../shell/ledger";
 import type {
-  ActivityAssetCorrectRequest,
-  ActivityAssetCreateRequest,
-  AssetListRow,
-} from "../../../shell/ledgerSetup";
+  ActivityAssetCorrectWindowRequest,
+  ActivityAssetCreateWindowRequest,
+} from "../../../shell/ledgerActivityAssetContract";
+import type { ActivityAssetListRow } from "../../../shell/ledgerActivityAssetReadContract";
 import type { LandingCheck } from "../WritePause";
 import { setupCall, type SetupCall } from "../setup/setupModel";
 import type { FormValues } from "./assetFormValues";
@@ -25,11 +25,11 @@ export type ActKind =
 export type AssetActContext = {
   port: LedgerPort;
   assetId: string;
-  asset: AssetListRow | null;
+  asset: ActivityAssetListRow | null;
   values: FormValues;
   /** The request the form's values make, where the act builds one. */
-  create: ActivityAssetCreateRequest | null;
-  correct: ActivityAssetCorrectRequest | null;
+  create: ActivityAssetCreateWindowRequest | null;
+  correct: ActivityAssetCorrectWindowRequest | null;
   /** The revision a change of the baja supersedes. */
   base: RevisionBase | null;
   /** Whether the baja is to be taken out. */
@@ -53,7 +53,7 @@ type Act = {
 
 /** The revision a correction supersedes: the one the element stands at when
  * the form sends it. */
-const supersededRevision = (asset: AssetListRow | null) =>
+const supersededRevision = (asset: ActivityAssetListRow | null) =>
   asset?.revision_number ?? 0;
 
 const never = async (): Promise<SetupCall<unknown>> => ({

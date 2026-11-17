@@ -53,6 +53,10 @@ import type {
   PublicModeloFormExportOffer,
   SourceSurface,
 } from "./modeloWork";
+import type {
+  SourcePolicyV1,
+  TemporalProjectionDirection,
+} from "./modeloWorkFormPart2";
 
 /**
  * The closed families of earlier-filing carries a filer may state hold
@@ -403,6 +407,17 @@ export type ModeloFormInspectionReason =
   "layout_absent" | "layout_for_another_revision";
 
 /**
+ * The served operator action that resolves one listed finding, with the words
+ * and operations to offer it by.
+ */
+export type ModeloFormIssueDoorV1 = {
+  action_words?: string | null;
+  action_words_language?: OutputLanguage | null;
+  target_operation_ids?: string[];
+  action_id: string;
+};
+
+/**
  * One finding or calculation note as the check view lists it, in the form's
  * language.
  *
@@ -433,6 +448,7 @@ export type ModeloFormIssueLine = {
   answer_lead_words: string | null;
   answer_lead_words_language: OutputLanguage | null;
   invoice_id: InvoiceId | null;
+  door: ModeloFormIssueDoorV1 | null;
 };
 
 /**
@@ -536,10 +552,17 @@ export type ModeloFormRateUnit = "fraction";
 /**
  * How many of the last check's findings about a section's tables of records
  * sit at one attention level.
+ *
+ * `counts_as` is the level the section's attention scale counts them at, and
+ * `asks_filer` says whether they leave the filer something to do; a surface
+ * adds them to its tally as served and decides neither. See
+ * `record_attention_count`.
  */
 export type ModeloFormRecordAttention = {
   level: ModeloFormAttention;
   count: number;
+  counts_as: ModeloFormAttention;
+  asks_filer: boolean;
 };
 
 /**
@@ -1289,29 +1312,3 @@ export type SourceFamily =
   | "aeat_draft"
   | "your_entries"
   | "fixed_by_design";
-
-/**
- * What a filer may do about a value this source supplies.
- */
-export type SourceOverridePolicy =
-  | "fix_at_source"
-  | "override_with_reason"
-  | "edit_at_home"
-  | "enter"
-  | "fixed"
-  | "undecided";
-
-/**
- * The family, policy and owning surface of one binding source kind.
- */
-export type SourcePolicyV1 = {
-  source_kind: BindingSourceKind;
-  family: SourceFamily;
-  override_policy: SourceOverridePolicy;
-  surface: SourceSurface;
-};
-
-/**
- * How a resolved coordinate relates to the declaration supplying it.
- */
-export type TemporalProjectionDirection = "authored" | "backward" | "forward";

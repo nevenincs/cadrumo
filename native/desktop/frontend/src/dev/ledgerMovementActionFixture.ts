@@ -8,10 +8,8 @@
 // projections the host passes on. Everything it answers is synthetic.
 
 import type { JsonObject, JsonValue } from "../shell/ledger";
-import type {
-  LedgerParticipation,
-  LedgerRevisionReference,
-} from "../shell/ledgerMovementOperations";
+import type { LedgerParticipationProjection } from "../shell/ledgerMovementCheckContract";
+import type { LedgerRemovalBlockerProjection } from "../shell/ledgerMovementContract";
 import {
   SEALED_PERIOD,
   cents,
@@ -135,7 +133,7 @@ export function movementActionOperations(ledger: FixtureLedger, tools: Tools) {
     groups.find((group) => group.parent === id || group.children.includes(id));
   const sealingReference = (
     movement: FixtureMovement,
-  ): LedgerRevisionReference => ({
+  ): LedgerRemovalBlockerProjection => ({
     work_unit_id: hex64(`work-unit:303:${movement.transaction.transaction_id}`),
     calculation_revision_id: hex64("revision:303:2026:1T"),
     revision_state: "presentado",
@@ -143,7 +141,7 @@ export function movementActionOperations(ledger: FixtureLedger, tools: Tools) {
   });
   const participation = (
     movement: FixtureMovement,
-  ): LedgerParticipation[] | null =>
+  ): LedgerParticipationProjection[] | null =>
     movement.sealed
       ? [
           {

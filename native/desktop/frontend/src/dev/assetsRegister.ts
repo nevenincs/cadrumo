@@ -8,28 +8,28 @@
 // the registry admits.
 
 import type { JsonObject } from "@/shell/ledger";
+import type { ActivityAssetFormOptionsView } from "@/shell/ledgerActivityAssetReadContract";
 import type {
-  AcquisitionCandidate,
-  AssetListRow,
-  BasisStageOption,
-  ConditionOption,
-  DisposalCalculation,
-  DisposalFinding,
-  DisposalReasonOption,
-  FormOptions as ServedFormOptions,
-  ElectionLimits,
-  OpeningStatusOption,
-  PlanRow,
-  TableGroup,
-  TimelineEvent,
-} from "@/shell/ledgerSetup";
+  ActivityAssetAcquisitionCandidate,
+  ActivityAssetListRow,
+  ActivityAssetBasisStageOption,
+  ActivityAssetConditionOption,
+  ActivityAssetDisposalCalculationView,
+  ActivityAssetDisposalFindingView,
+  ActivityAssetDisposalReasonOption,
+  ActivityAssetElectionLimits,
+  ActivityAssetOpeningStatusOption,
+  ActivityAssetPlanRow,
+  ActivityAssetTableGroup,
+  ActivityAssetTimelineEvent,
+} from "@/shell/ledgerActivityAssetReadContract";
 import recorded from "@fixtures/assets-register/assetsRegister.json" with { type: "json" };
 
 /** A baja's figures with no amount stated: what the register works out for a
  * sale on the scenario's date, or for the baja an element records. A stated
  * amount moves only the result. */
 export type ScenarioDisposal = Omit<
-  DisposalCalculation,
+  ActivityAssetDisposalCalculationView,
   | "disposal_date"
   | "reason"
   | "transmission_value"
@@ -37,14 +37,14 @@ export type ScenarioDisposal = Omit<
   | "result"
   | "route_changed_by_later_affectation"
   | "findings"
-> & { findings: Omit<DisposalFinding, "label_key">[] };
+> & { findings: Omit<ActivityAssetDisposalFindingView, "label_key">[] };
 
 export type ScenarioElement = {
   id: string;
-  list: AssetListRow;
-  rows: PlanRow[];
-  limits: ElectionLimits;
-  events: TimelineEvent[];
+  list: ActivityAssetListRow;
+  rows: ActivityAssetPlanRow[];
+  limits: ActivityAssetElectionLimits;
+  events: ActivityAssetTimelineEvent[];
   /** The revisions the register holds of the element, as the backend serves them. */
   revisions: { revision: JsonObject; revision_id: string }[];
   /** The charge for a whole year of service, as the register plans it; the
@@ -66,7 +66,7 @@ export type ScenarioElement = {
 /** What the registry admits for one asset kind and tax year, as the
  * recording keeps it. */
 type FormOptions = Pick<
-  ServedFormOptions,
+  ActivityAssetFormOptionsView,
   | "regime"
   | "methods"
   | "method_facts"
@@ -90,10 +90,10 @@ type RecordedElement = Omit<
 type Recording = {
   register: {
     today: string;
-    list: AssetListRow[];
+    list: ActivityAssetListRow[];
     years: number[];
     default_year: number | null;
-    candidates: AcquisitionCandidate[];
+    candidates: ActivityAssetAcquisitionCandidate[];
     form_options: {
       asset_kind: string;
       tax_year: number;
@@ -109,7 +109,7 @@ type Recording = {
       id: string;
       draft: Record<string, string>;
       request: { revision: JsonObject; descriptor: JsonObject };
-      list: AssetListRow;
+      list: ActivityAssetListRow;
     })[];
     vocabulary: {
       table_bound_methods: string[];
@@ -132,7 +132,7 @@ export const REGISTER_YEARS: readonly number[] = register.years;
 export const REGISTER_DEFAULT_YEAR: number | null = register.default_year;
 
 /** The ledger payments no element owns, as the register offers them. */
-export const SCENARIO_PAYMENTS: readonly AcquisitionCandidate[] =
+export const SCENARIO_PAYMENTS: readonly ActivityAssetAcquisitionCandidate[] =
   register.candidates;
 
 /** Every ledger payment the scenario gave the register, owned or not, under
@@ -158,7 +158,7 @@ export const scenarioPaymentId = (providerId: string): string => {
 
 /** The planned charge of a year the element serves whole, or nothing where no
  * such year has a figure. */
-const annualOf = (rows: readonly PlanRow[]): string =>
+const annualOf = (rows: readonly ActivityAssetPlanRow[]): string =>
   rows.find(
     (row) => row.planned !== null && row.service_days === row.calendar_days,
   )?.planned?.decimal ?? "0.00";
@@ -245,7 +245,7 @@ if (firstKind === undefined)
 const anyKind = opening(firstKind);
 
 /** What the registry admits per asset kind in the register's opening year. */
-export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = byKind(
+export const TABLE_GROUPS: Record<string, readonly ActivityAssetTableGroup[]> = byKind(
   (options) => options.table_groups,
 );
 export const ADMITTED_METHODS: Record<string, FormOptions["methods"]> = byKind(
@@ -261,12 +261,12 @@ export const ACQUISITION_SHAPES: FormOptions["acquisition_shapes"] =
   anyKind.acquisition_shapes;
 export const DECLARED_ACTIVITIES: FormOptions["declared_activities"] =
   anyKind.declared_activities;
-export const DISPOSAL_REASONS: readonly DisposalReasonOption[] =
+export const DISPOSAL_REASONS: readonly ActivityAssetDisposalReasonOption[] =
   anyKind.disposal_reasons;
-export const BASIS_STAGES: readonly BasisStageOption[] = anyKind.basis_stages;
-export const OPENING_STATUSES: readonly OpeningStatusOption[] =
+export const BASIS_STAGES: readonly ActivityAssetBasisStageOption[] = anyKind.basis_stages;
+export const OPENING_STATUSES: readonly ActivityAssetOpeningStatusOption[] =
   anyKind.opening_statuses;
-export const ACQUIRED_CONDITIONS: readonly ConditionOption[] =
+export const ACQUIRED_CONDITIONS: readonly ActivityAssetConditionOption[] =
   anyKind.acquired_conditions;
 export const FURTHER_ACQUISITION_SHAPES: FormOptions["further_acquisition_shapes"] =
   anyKind.further_acquisition_shapes;

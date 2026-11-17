@@ -6,11 +6,11 @@ import { formatDay } from "../../../shared/dateFormats";
 import { formatPercent } from "../../../shared/numbers";
 import { facts, listed } from "../../../shell/compose";
 import type { LedgerPort } from "../../../shell/ledger";
+import type { AssetKind } from "../../../shell/ledgerActivityAssetContract";
 import type {
-  AcquisitionCandidate,
-  AssetKind,
-  FormOptions,
-} from "../../../shell/ledgerSetup";
+  ActivityAssetAcquisitionCandidate,
+  ActivityAssetFormOptionsView,
+} from "../../../shell/ledgerActivityAssetReadContract";
 import { tokensOf, useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
 import { Panel, useSetupDraft, useSetupWrite } from "../setup/SetupParts";
@@ -73,7 +73,7 @@ export type ActProps = {
   onAdded?: (assetId: string) => void;
 };
 
-const NO_CANDIDATES: readonly AcquisitionCandidate[] = [];
+const NO_CANDIDATES: readonly ActivityAssetAcquisitionCandidate[] = [];
 const NO_CLAIMS: readonly string[] = [];
 
 /** The tokens of a family, from the generated words that the backend's enum
@@ -184,7 +184,7 @@ export function AssetForm({
     wantsOptions ? { asset_kind: optionsKind, tax_year: optionsYear } : null,
     `${kind}:${optionsKind}:${optionsYear}`,
   );
-  const loaded: FormOptions | null =
+  const loaded: ActivityAssetFormOptionsView | null =
     options.read?.kind === "done" ? options.read.result.options : null;
 
   const context = {

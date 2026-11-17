@@ -16,7 +16,7 @@ import {
   provisionActionOf,
   setupActionOf,
 } from "../../../shell/provisioningRecovery";
-import type { EvidenceConsentListResult } from "../../../shell/ledgerDocumentOperations";
+import type { LedgerEvidenceConsentListProjection } from "../../../shell/ledgerDocumentContract";
 import type {
   AttachmentReviewItem,
   LedgerEvidenceRecordProjection,
@@ -620,7 +620,7 @@ export function ConsentHistory({
   onRetry,
 }: {
   locale: string;
-  read: Read<EvidenceConsentListResult>;
+  read: Read<LedgerEvidenceConsentListProjection>;
   records: LedgerEvidenceRecordProjection[];
   onRetry(): void;
 }) {
