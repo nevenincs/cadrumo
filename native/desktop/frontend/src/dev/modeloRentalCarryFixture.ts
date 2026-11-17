@@ -100,6 +100,7 @@ export function answeredRentalCarry(
     findings: [],
     operator_entries_unknown: false,
     refusal_words: null,
+    refusal_door: null,
     rebase: [],
   };
 }
