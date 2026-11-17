@@ -26,7 +26,7 @@ from cadrumo.core.errors.failure_report import log_boundary_failure
 from cadrumo.core.errors.hierarchy import ActiveProfilePointerError
 from cadrumo.core.locks_errors import LockAcquisitionError
 from cadrumo.core.logging import get_logger
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability
 from cadrumo_client.contracts.attendance import (
@@ -100,7 +100,7 @@ def _log_person_activity(outcome: AccessSession | AccessDenied) -> None:
         "person_activity_noted",
         fields={
             "session_ref": outcome.session_id.hex[:8],
-            "idle_seconds_left": round((outcome.expires_at - now()).total_seconds()),
+            "idle_seconds_left": round((outcome.expires_at - wall_now()).total_seconds()),
         },
         level=logging.INFO,
     )
@@ -117,7 +117,7 @@ def _log_human_issuance(request: ProfileLogin, admitted: AccessSession | AccessD
             "cause": "password" if request.method == "password" else "stored_sign_in",
             "frontend": request.frontend.value,
             "session_ref": admitted.session_id.hex[:8],
-            "idle_seconds_left": round((admitted.expires_at - now()).total_seconds()),
+            "idle_seconds_left": round((admitted.expires_at - wall_now()).total_seconds()),
         },
         level=logging.INFO,
     )
@@ -450,7 +450,7 @@ class ProfileConnectionSessionMixin:
             automation_enabled = None
         deletion, retired = host.revoke_human_sign_in()
         try:
-            automation_access_remains: bool | None = issued_key_can_admit(host.store.snapshot(), now())
+            automation_access_remains: bool | None = issued_key_can_admit(host.store.snapshot(), self._wall_clock())
         except AutomationCustodyError as error:
             # A profile that never published automation control has issued no key; any other failure is unknown.
             automation_access_remains = False if error.reason is AutomationCustodyCode.MISSING else None

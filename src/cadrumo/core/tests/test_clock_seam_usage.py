@@ -227,8 +227,14 @@ _CLOCK_MODULES: frozenset[str] = frozenset({"cadrumo.core.time", "cadrumo.core.t
 #: Clock-module names a runtime module may bind, mapped to the kind of read they are.
 _CLOCK_NAME_KIND: dict[str, str] = {"now": _SEAM, "today_madrid": _SEAM, "wall_now": _WALL}
 _TIME_CLOCK_ATTRS: frozenset[str] = frozenset({"time", "time_ns"})
+#: Relative spellings of the clock module inside ``src/cadrumo``.
+_RELATIVE_CLOCK_MODULES: frozenset[str] = frozenset({"core.time", "core.time.clock"})
 
 _HOST_INERT = "Runtime host or frontend process: it never enters frozen_clock, so the seam read equals real time here."
+_AUTHORITY_MINT = (
+    "Lease, permit, sign-in or enrollment-offer expiry minted or judged here; it follows real time, so a"
+    " frozen document clock in a host connection thread or a worker never dates or extends authority."
+)
 
 #: Every clock read in ``src/cadrumo_runtime``, keyed ``<path under src/cadrumo_runtime>::<scope>``
 #: where scope is the dotted enclosing class/function chain. Value is ``(classification, reason)``.
@@ -273,10 +279,28 @@ _RUNTIME_CLASSIFICATION.update(
             "application/enrollment_recipient.py::VolatileEnrollmentRecipient._exchange",
             "application/enrollment_recipient.py::VolatileEnrollmentRecipient._wait_for_exchange",
             "application/enrollment_recipient.py::VolatileEnrollmentRecipient._require_completion_deadline",
-            "commands/runtime_access_management.py::profile_sessions",
             "host/enrollment_connections.py::RuntimeEnrollmentConnections._prepare_offer",
             "host/enrollment_offer.py::RuntimeEnrollmentOffer.lapses_at",
             "host/enrollment_offer.py::RuntimeEnrollmentOffer._require_offer_window",
+            "host/profile_connection_sessions.py::_log_person_activity",
+            "host/profile_connection_sessions.py::_log_human_issuance",
+            "host/profile_connections.py::RuntimeProfileConnections.__init__",
+            "host/profile_host.py::RuntimeProfileHost.__init__",
+            "host/profile_login.py::ProfileWorkerHumanLogin.authenticate",
+            "host/profile_login.py::ProfileWorkerHumanLogin.resume",
+            "host/profile_login.py::ProfileWorkerHumanLogin.seconds_until_expiry",
+            "host/profile_login.py::_abandoned",
+            "host/profile_receipt.py::resume_profile_candidate",
+            "host/session_owner.py::ProfileWorkerSessionOwner.__init__",
+            "host/session_watch.py::_seconds_until_deadline",
+        ),
+        (_WALL, _AUTHORITY_MINT),
+    ),
+)
+_RUNTIME_CLASSIFICATION.update(
+    dict.fromkeys(
+        (
+            "commands/runtime_access_management.py::profile_sessions",
             "host/frontend/tui/aeat_sync/runtime_handoff.py::_select_handoff_action",
             "host/frontend/tui/bound_session.py::_status_confirms_session",
             "host/frontend/tui/bound_session.py::BoundSession._arm_expiry",
@@ -289,18 +313,6 @@ _RUNTIME_CLASSIFICATION.update(
             "host/frontend/tui/secret/automation_requester.py::RuntimeAutomationRequesterScreen.on_mount",
             "host/frontend/tui/secret/runtime_login_attempt.py::RuntimeLoginAttemptMixin._accepted_handoff",
             "host/operation_host.py::ProfileWorkerOperationHost.operation_secret",
-            "host/profile_connection_sessions.py::_log_person_activity",
-            "host/profile_connection_sessions.py::_log_human_issuance",
-            "host/profile_connection_sessions.py::ProfileConnectionSessionMixin._human_sign_out",
-            "host/profile_connections.py::RuntimeProfileConnections.__init__",
-            "host/profile_host.py::RuntimeProfileHost.__init__",
-            "host/profile_login.py::ProfileWorkerHumanLogin.authenticate",
-            "host/profile_login.py::ProfileWorkerHumanLogin.resume",
-            "host/profile_login.py::ProfileWorkerHumanLogin.seconds_until_expiry",
-            "host/profile_login.py::_abandoned",
-            "host/profile_receipt.py::resume_profile_candidate",
-            "host/session_owner.py::ProfileWorkerSessionOwner.__init__",
-            "host/session_watch.py::_seconds_until_deadline",
             "host/terminated_operations.py::settle_terminated_worker_operations",
             "host/terminated_operations.py::settle_drained_worker_operations",
             "host/worker_extension_records.py::write_extension_record",
@@ -323,6 +335,13 @@ def _is_time_module_clock_read(node: ast.Call, time_modules: set[str], time_func
     )
 
 
+def _imports_clock_module(node: ast.ImportFrom) -> bool:
+    """Return whether ``node`` imports from the clock module, absolutely or relatively from inside ``cadrumo``."""
+    if node.level == 0:
+        return node.module in _CLOCK_MODULES
+    return node.module in _RELATIVE_CLOCK_MODULES
+
+
 def _runtime_clock_reads(tree: ast.Module) -> list[tuple[str, int, str]]:
     """Return ``(scope, line, kind)`` for each clock read in a runtime module.
 
@@ -336,7 +355,7 @@ def _runtime_clock_reads(tree: ast.Module) -> list[tuple[str, int, str]]:
     time_modules: set[str] = set()
     time_functions: set[str] = set()
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module in _CLOCK_MODULES:
+        if isinstance(node, ast.ImportFrom) and _imports_clock_module(node):
             for alias in node.names:
                 if alias.name in _CLOCK_NAME_KIND:
                     clock_names[alias.asname or alias.name] = _CLOCK_NAME_KIND[alias.name]
@@ -439,3 +458,106 @@ def test_runtime_clock_gate_refuses_defects_in_a_synthetic_source() -> None:
     assert any("stale entry" in item for item in _runtime_clock_problems(sources, stale))
     time_read = {"host/t.py": "import time\ndef f():\n    return time.time()\n"}
     assert any("unclassified wall" in item for item in _runtime_clock_problems(time_read, {}))
+
+
+SRC_CLIENT: Path = SRC_CADRUMO.parent / "cadrumo_client"
+"""Root of the ``src/cadrumo_client`` package tree."""
+
+_SESSION_MINT = (
+    "Sign-in session, receipt or throttle instant: deadlines a runtime lease is judged against, so they"
+    " follow real time and a frozen document clock never dates them."
+)
+
+#: Every wall read in ``src/cadrumo`` and ``src/cadrumo_client``, keyed
+#: ``<package>/<path>::<scope>``. Tax work there reads the seam by default, so only
+#: wall reads are listed; a listed scope must read no seam clock, except a
+#: composition that selects one of the two clocks for its caller.
+_WALL_SELECTS = "selects"
+_PRODUCT_WALL_CLASSIFICATION: dict[str, tuple[str, str]] = {
+    "cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py::ProfileWorkerCustody.__init__": (
+        _WALL,
+        "Default custody clock: a runtime-minted lease is admitted and expires on real time in the worker.",
+    ),
+    "cadrumo/application/user_profile/login_session.py::publish_created_profile_session": (_WALL, _SESSION_MINT),
+    "cadrumo/application/user_profile/login_session.py::authenticate_profile_candidate": (_WALL, _SESSION_MINT),
+    "cadrumo/application/user_profile/login_session.py::_require_live_receipt_candidate": (_WALL, _SESSION_MINT),
+    "cadrumo/application/user_profile/login_session.py::authenticate_profile_for_invocation": (
+        _WALL,
+        _SESSION_MINT,
+    ),
+    "cadrumo/application/user_profile/recovery_custody.py::reset_profile_passphrase_with_recovery": (
+        _WALL,
+        "Login throttle instant shared with sign-in; it follows real time like the sign-in that records it.",
+    ),
+    "cadrumo/entrypoints/operation_composition.py::compose_operation_dependencies": (
+        _WALL_SELECTS,
+        "Journal clock: the seam for an ordinary worker, real time under an admitted fixed clock.",
+    ),
+    "cadrumo_client/transport/enrollment_client.py::NativeEnrollmentClient._live": (
+        _WALL,
+        "Enrollment offer expiry minted by the runtime on real time.",
+    ),
+}
+
+
+def _product_wall_problems(
+    sources: Mapping[str, str],
+    classification: Mapping[str, tuple[str, str]],
+) -> list[str]:
+    """Return every unclassified wall read, seam read inside a wall scope, or stale entry."""
+    problems: list[str] = []
+    seen: set[str] = set()
+    for rel, text in sorted(sources.items()):
+        for scope, line, kind in _runtime_clock_reads(ast.parse(text)):
+            key = f"{rel}::{scope}"
+            declared = classification.get(key)
+            if kind == _WALL:
+                seen.add(key)
+                if declared is None:
+                    problems.append(f"{key} (line {line}): unclassified wall clock read; classify it or read now()")
+            elif declared is not None and declared[0] == _WALL:
+                problems.append(f"{key} (line {line}): seam read in a scope classified wall")
+    problems.extend(f"{key}: stale entry, no wall read remains" for key in sorted(set(classification) - seen))
+    return problems
+
+
+def _product_sources() -> dict[str, str]:
+    """Return the production text of ``src/cadrumo`` and ``src/cadrumo_client`` keyed ``<package>/<path>``."""
+    sources: dict[str, str] = {}
+    for root in (SRC_CADRUMO, SRC_CLIENT):
+        for path in python_files_under(root):
+            rel = path.relative_to(root)
+            if "tests" in rel.parts or rel.name.startswith(("test_", "_test_")) or rel.as_posix() in _SKIP_FILES:
+                continue
+            text = path.read_bytes().decode("utf-8")
+            if "wall_now" in text:
+                sources[f"{root.name}/{rel.as_posix()}"] = text
+    return sources
+
+
+def test_product_wall_clock_reads_are_all_classified() -> None:
+    """Each ``wall_now`` read outside the runtime is a classified authority mint or check, with no stale entry."""
+    sources = _product_sources()
+    assert sources, "no wall reads found; the scan root is wrong"
+    problems = _product_wall_problems(sources, _PRODUCT_WALL_CLASSIFICATION)
+    assert not problems, "Wall clock reads outside the runtime need a classification:\n" + "\n".join(problems)
+
+
+def test_product_wall_gate_refuses_defects_in_a_synthetic_source() -> None:
+    """Positive control: a seam read at a classified mint, an unclassified wall read and a stale entry fail."""
+    source = (
+        "from ...core.time.clock import now, wall_now\n"
+        "def mint_session():\n"
+        "    return now()\n"
+        "def stray():\n"
+        "    return wall_now()\n"
+    )
+    sources = {"cadrumo/application/fixture.py": source}
+    declared = {"cadrumo/application/fixture.py::mint_session": (_WALL, "x")}
+    problems = _product_wall_problems(sources, declared)
+    assert any("seam read in a scope classified wall" in item for item in problems)
+    assert any("::stray (line 5): unclassified wall" in item for item in problems)
+    assert any("mint_session: stale entry" in item for item in problems)
+    fixed = {"cadrumo/application/fixture.py": source.replace("return now()", "return wall_now()")}
+    full = {**declared, "cadrumo/application/fixture.py::stray": (_WALL, "x")}
+    assert _product_wall_problems(fixed, full) == []

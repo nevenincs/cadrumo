@@ -28,7 +28,7 @@ from threading import Event, Lock, Thread
 from uuid import UUID
 
 from cadrumo.core.operations import OperationFrontendProjection
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.sign_in import SignInPresence, SignInStatus
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -166,7 +166,7 @@ def _seconds_until_deadline(status: SignInStatus) -> float | None:
     if not deadlines:
         return None
     earliest: datetime = min(deadlines)
-    return max(0.0, (earliest - now()).total_seconds()) + _DEADLINE_MARGIN_SECONDS
+    return max(0.0, (earliest - wall_now()).total_seconds()) + _DEADLINE_MARGIN_SECONDS
 
 
 def _watch_directory(directory: Path, changes: int, changed: Callable[[], None], stopping: Event) -> None:

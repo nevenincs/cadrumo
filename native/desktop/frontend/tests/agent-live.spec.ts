@@ -366,6 +366,8 @@ test.describe("a run, in words", () => {
       credits_exhausted: "Out of credits",
       budget_exhausted: "Budget used up",
       invalid_request: "The provider rejected the request",
+      model_does_not_fit:
+        "The model doesn't fit in what this computer can give it. Choose a smaller model or another provider.",
       no_answer:
         "The model gave no usable answer for this document. Try a different (instruct) model, or try again.",
       unknown: "Unknown cause",

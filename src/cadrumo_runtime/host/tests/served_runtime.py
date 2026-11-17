@@ -8,10 +8,11 @@ from collections.abc import Callable, Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass
+from datetime import datetime
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
-from typing import Literal
+from typing import Literal, override
 from uuid import UUID, uuid4
 
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
@@ -23,6 +24,7 @@ from cadrumo.application.operations.models import OperationId
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.core.operations import OperationFrontendProjection
+from cadrumo.core.time.clock import frozen_clock
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ByteChannel, ClientHello
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
@@ -38,6 +40,7 @@ from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.startup import LaunchDoor
 from cadrumo_client.transport.windows import WindowsEndpoint
 
+from ...adapters.server import RuntimeListener
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
@@ -58,6 +61,28 @@ class SyntheticLogin:
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
+
+
+class _FrozenDocumentClockServer(RetainedRuntimeTransportServer):
+    """Serve every connection thread under a fixed document instant, as the docs sequences do."""
+
+    def __init__(
+        self,
+        listener: RuntimeListener,
+        *,
+        product_version: str,
+        stop: Event,
+        profiles: RuntimeProfileConnections,
+        boot_id: UUID,
+        document_instant: datetime,
+    ) -> None:
+        super().__init__(listener, product_version=product_version, stop=stop, profiles=profiles, boot_id=boot_id)
+        self._document_instant = document_instant
+
+    @override
+    def _connection(self, channel: ByteChannel) -> None:
+        with frozen_clock(self._document_instant):
+            super()._connection(channel)
 
 
 @dataclass(frozen=True)
@@ -83,10 +108,12 @@ def serving_runtime(
     ready_seconds: float = 3,
     drain_seconds: float = 20,
     product_version: str = "test",
+    document_instant: datetime | None = None,
 ) -> Generator[ServedRuntime]:
     """Serve ``endpoint`` until the scope ends, drain the host, then close the endpoint.
 
     A drain failure is raised only when the scope itself succeeded, so it never hides the failure under test.
+    ``document_instant`` freezes the document clock in every connection thread, as the docs sequences do.
     """
     stop, boot = Event(), uuid4()
     profiles = RuntimeProfileConnections(
@@ -98,8 +125,19 @@ def serving_runtime(
         secret_store=secret_store,
     )
     profiles.prepare_registry()
-    server = RetainedRuntimeTransportServer(
-        endpoint, product_version=product_version, stop=stop, profiles=profiles, boot_id=boot
+    server = (
+        RetainedRuntimeTransportServer(
+            endpoint, product_version=product_version, stop=stop, profiles=profiles, boot_id=boot
+        )
+        if document_instant is None
+        else _FrozenDocumentClockServer(
+            endpoint,
+            product_version=product_version,
+            stop=stop,
+            profiles=profiles,
+            boot_id=boot,
+            document_instant=document_instant,
+        )
     )
     launch = LaunchDoor(
         endpoint, expected=ClientHello(product_version=product_version, storage_identity=endpoint.storage_identity)

@@ -361,6 +361,28 @@ test("an unauthenticated reply opens provider settings without showing internal 
   ).toBeVisible();
 });
 
+test("a run whose model does not fit says so in its own words", async ({
+  page: target,
+}) => {
+  scenarioOnly("the scenario host settles a run as model_does_not_fit");
+  await open(target);
+  await send(target, "Esta respuesta se queda sin memoria.");
+  await settled(target);
+
+  const failed = agentTurns(target);
+  await expect(failed).toContainText(
+    label("desktop.agent.condition_model_does_not_fit"),
+  );
+  await expect(failed).not.toContainText(label("desktop.agent.reply_failed"));
+  await expect(failed).not.toContainText("context exceeds memory");
+  await expect(
+    failed.getByRole("button", { name: label("desktop.agent.settings") }),
+  ).toHaveCount(0);
+  await expect(conversation(target)).not.toContainText(
+    label("desktop.agent.working"),
+  );
+});
+
 test("an unexpected provider condition uses the generic localized failure", async ({
   page: target,
 }) => {
