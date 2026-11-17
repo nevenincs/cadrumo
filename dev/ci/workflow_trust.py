@@ -16,6 +16,10 @@ A workflow that declares ``workflow_call`` is read as reachable by a pull
 request, because a called workflow runs under its caller's event. Each
 function returns the violations it finds as plain sentences, so a caller
 asserts an empty list and a failure names the job.
+
+Concurrency is read here too, in both directions: a pull request's newer event
+cancels the run it supersedes, and a push to a development branch never ends
+the run of an earlier landed head.
 """
 
 from __future__ import annotations
@@ -31,6 +35,7 @@ __all__ = [
     "admission_violations",
     "checkout_credential_violations",
     "is_hosted",
+    "landed_head_violations",
     "pull_request_reachable",
     "pull_request_target_violations",
     "superseded_run_violations",
@@ -63,6 +68,12 @@ _ALLOWED_SECRETS: Final = frozenset({"GITHUB_TOKEN"})
 _READ_LEVELS: Final = frozenset({"read", "none"})
 #: A workflow that is also dispatched or called cancels only its pull request runs.
 _CANCEL_PULL_REQUESTS_ONLY: Final = "${{ github.event_name == 'pull_request' }}"
+#: A push run's group ends in its own commit and no other event's does. A
+#: group holds one running and one pending run, so two landed heads sharing
+#: one lose the pending run to a third landing even when nothing is cancelled
+#: in progress; a pull request's runs must still share theirs to be cancelled.
+_PUSH_GROUP_SUFFIX: Final = "${{ github.event_name == 'push' && format('-{0}', github.sha) || '' }}"
+_RELEASE_BRANCH: Final = "main"
 
 type Documents = Sequence[tuple[str, Mapping[str, Any]]]
 
@@ -237,4 +248,39 @@ def superseded_run_violations(documents: Documents) -> list[str]:
             violations.append(f"{name} does not group runs by pull request")
         if concurrency.get("cancel-in-progress") not in (True, _CANCEL_PULL_REQUESTS_ONLY):
             violations.append(f"{name} does not cancel a superseded run")
+    return violations
+
+
+def _pushed_branches(document: Mapping[str, Any]) -> list[str]:
+    """Return the branches a workflow's push trigger names; empty when it names none."""
+    push = triggers(document).get("push")
+    branches = push.get("branches") if isinstance(push, Mapping) else None
+    return [str(branch) for branch in branches or []]
+
+
+def landed_head_violations(documents: Documents) -> list[str]:
+    """Report every development-branch push workflow in which one landed head's run can end another's.
+
+    A push trigger that names no branch, or names the release branch, isolates
+    that branch's runs by its own expression and is judged by the check-set
+    contract; this rule covers every push trigger that names other branches
+    only.
+    """
+    violations: list[str] = []
+    for name, document in documents:
+        branches = _pushed_branches(document)
+        if not branches or _RELEASE_BRANCH in branches:
+            continue
+        concurrency = document.get("concurrency")
+        # No group at all lets every run complete, which is the property.
+        if isinstance(concurrency, Mapping):
+            if not str(concurrency.get("group", "")).endswith(_PUSH_GROUP_SUFFIX):
+                violations.append(f"{name} lets the runs of two landed heads share a concurrency group")
+            if concurrency.get("cancel-in-progress", False) not in (False, _CANCEL_PULL_REQUESTS_ONLY):
+                violations.append(f"{name} lets a push cancel the run of an earlier landed head")
+        violations.extend(
+            f"{name}: {job_name} holds a concurrency group a later landed head's run would contend for"
+            for job_name, job in _jobs(document).items()
+            if "concurrency" in job
+        )
     return violations
