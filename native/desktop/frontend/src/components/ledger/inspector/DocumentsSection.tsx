@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Icon } from "@/components/ui/icon";
 import { facts, listed } from "@/shell/compose";
-import type { EvidenceListResult } from "../../../shell/ledgerDocumentOperations";
+import type { LedgerEvidenceListProjection } from "../../../shell/ledgerDocumentContract";
 import type { LedgerPort } from "../../../shell/ledger";
 import type { LedgerStagedRowAnswer } from "../../../shell/ledgerMovementCheckContract";
 import {
@@ -48,7 +48,7 @@ export function DocumentsSection({
   row: LedgerTransactionReviewProjection;
   /** The ledger's answer about the movement; absent until it has answered. */
   answer: LedgerStagedRowAnswer | undefined;
-  evidence: InspectorRead<EvidenceListResult> | null;
+  evidence: InspectorRead<LedgerEvidenceListProjection> | null;
   actions: readonly StagedAction[];
   onStage: (event: StageEvent) => void;
   locale: string;

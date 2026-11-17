@@ -10,30 +10,34 @@
 import type { LedgerProrrataContracts } from "./ledgerProrrataContract";
 import type { LedgerReadContracts } from "./ledgerReadContract";
 import type {
-  AttachmentQueueResult,
-  AttachmentViewRequest,
-  AttachmentViewResult,
-  EvidenceAddRequest,
-  EvidenceBatchRequest,
-  EvidenceBatchResult,
-  EvidenceConfirmRequest,
-  EvidenceConfirmResult,
-  EvidenceConsentListResult,
-  EvidenceExtractRequest,
-  EvidenceExtractResult,
-  EvidenceListResult,
-  EvidencePageRequest,
-  EvidencePageResult,
-  EvidenceRecordResult,
-  EvidenceRemoveRequest,
-  EvidenceReviewListRequest,
-  EvidenceReviewListResult,
-  EvidenceReviewViewRequest,
-  EvidenceReviewViewResult,
-  EvidenceUpdateRequest,
-  EvidenceViewRequest,
-  EvidenceViewResult,
-} from "./ledgerDocumentOperations";
+  LedgerEvidenceAttachmentQueueProjection,
+  LedgerEvidenceAttachmentViewWindowRequest,
+  LedgerEvidenceAttachmentViewProjection,
+  LedgerEvidenceAddWindowRequest,
+  LedgerEvidenceBatchWindowRequest,
+  LedgerEvidenceBatchProjection,
+  LedgerEvidenceConsentListProjection,
+  LedgerEvidenceListProjection,
+  LedgerEvidencePageWindowRequest,
+  LedgerEvidencePageProjection,
+  LedgerEvidenceAddProjection,
+  LedgerEvidenceRemoveWindowRequest,
+  LedgerEvidenceUpdateWindowRequest,
+  LedgerEvidenceViewWindowRequest,
+  LedgerEvidenceViewProjection,
+  LedgerEvidenceUpdateProjection,
+  LedgerEvidenceRemoveProjection,
+} from "./ledgerDocumentContract";
+import type {
+  LedgerEvidenceConfirmWindowRequest,
+  LedgerEvidenceConfirmProjection,
+  LedgerEvidenceExtractWindowRequest,
+  LedgerEvidenceExtractProjection,
+  LedgerEvidenceReviewListWindowRequest,
+  LedgerEvidenceReviewListProjection,
+  LedgerEvidenceReviewViewWindowRequest,
+  LedgerEvidenceReviewViewProjection,
+} from "./ledgerDocumentReviewContract";
 import type {
   InvoiceAddWindowRequest,
   InvoiceAddResult,
@@ -720,19 +724,19 @@ export interface LedgerRequests {
     "profile_id"
   >;
   "ledger.invoice.import": InvoiceImportWindowRequest;
-  "ledger.evidence.batch": EvidenceBatchRequest;
-  "ledger.evidence.add": EvidenceAddRequest;
+  "ledger.evidence.batch": LedgerEvidenceBatchWindowRequest;
+  "ledger.evidence.add": LedgerEvidenceAddWindowRequest;
   "ledger.evidence.list": Record<string, never>;
-  "ledger.evidence.view": EvidenceViewRequest;
-  "ledger.evidence.update": EvidenceUpdateRequest;
-  "ledger.evidence.remove": EvidenceRemoveRequest;
-  "ledger.evidence.review.list": EvidenceReviewListRequest;
-  "ledger.evidence.review.view": EvidenceReviewViewRequest;
-  "ledger.evidence.extract": EvidenceExtractRequest;
-  "ledger.evidence.confirm": EvidenceConfirmRequest;
+  "ledger.evidence.view": LedgerEvidenceViewWindowRequest;
+  "ledger.evidence.update": LedgerEvidenceUpdateWindowRequest;
+  "ledger.evidence.remove": LedgerEvidenceRemoveWindowRequest;
+  "ledger.evidence.review.list": LedgerEvidenceReviewListWindowRequest;
+  "ledger.evidence.review.view": LedgerEvidenceReviewViewWindowRequest;
+  "ledger.evidence.extract": LedgerEvidenceExtractWindowRequest;
+  "ledger.evidence.confirm": LedgerEvidenceConfirmWindowRequest;
   "ledger.evidence.attachment_queue": Record<string, never>;
-  "ledger.evidence.attachment_view": AttachmentViewRequest;
-  "ledger.evidence.page": EvidencePageRequest;
+  "ledger.evidence.attachment_view": LedgerEvidenceAttachmentViewWindowRequest;
+  "ledger.evidence.page": LedgerEvidencePageWindowRequest;
   "ledger.evidence.consent.list": Record<string, never>;
   "ledger.link": LedgerLinkWindowRequest;
   "ledger.attach": LedgerAttachWindowRequest;
@@ -893,20 +897,20 @@ export interface LedgerResults {
   "ledger.import": LedgerTransferContracts["ledger.import"]["result"];
   "ledger.export": LedgerTransferContracts["ledger.export"]["result"];
   "ledger.invoice.import": InvoiceImportProjection;
-  "ledger.evidence.batch": EvidenceBatchResult;
-  "ledger.evidence.add": EvidenceRecordResult;
-  "ledger.evidence.list": EvidenceListResult;
-  "ledger.evidence.view": EvidenceViewResult;
-  "ledger.evidence.update": EvidenceRecordResult;
-  "ledger.evidence.remove": EvidenceRecordResult;
-  "ledger.evidence.review.list": EvidenceReviewListResult;
-  "ledger.evidence.review.view": EvidenceReviewViewResult;
-  "ledger.evidence.extract": EvidenceExtractResult;
-  "ledger.evidence.confirm": EvidenceConfirmResult;
-  "ledger.evidence.attachment_queue": AttachmentQueueResult;
-  "ledger.evidence.attachment_view": AttachmentViewResult;
-  "ledger.evidence.page": EvidencePageResult;
-  "ledger.evidence.consent.list": EvidenceConsentListResult;
+  "ledger.evidence.batch": LedgerEvidenceBatchProjection;
+  "ledger.evidence.add": LedgerEvidenceAddProjection;
+  "ledger.evidence.list": LedgerEvidenceListProjection;
+  "ledger.evidence.view": LedgerEvidenceViewProjection;
+  "ledger.evidence.update": LedgerEvidenceUpdateProjection;
+  "ledger.evidence.remove": LedgerEvidenceRemoveProjection;
+  "ledger.evidence.review.list": LedgerEvidenceReviewListProjection;
+  "ledger.evidence.review.view": LedgerEvidenceReviewViewProjection;
+  "ledger.evidence.extract": LedgerEvidenceExtractProjection;
+  "ledger.evidence.confirm": LedgerEvidenceConfirmProjection;
+  "ledger.evidence.attachment_queue": LedgerEvidenceAttachmentQueueProjection;
+  "ledger.evidence.attachment_view": LedgerEvidenceAttachmentViewProjection;
+  "ledger.evidence.page": LedgerEvidencePageProjection;
+  "ledger.evidence.consent.list": LedgerEvidenceConsentListProjection;
   "ledger.link": LedgerLinkOperationResult;
   "ledger.attach": LedgerAttachmentOperationResult;
   "ledger.detach": LedgerAttachmentOperationResult;

@@ -253,11 +253,6 @@ def formula_lines(result: FormulasResult, *, explain: bool) -> list[str]:
     ]
 
 
-def mark(value: bool) -> str:
-    """Return ``Y`` for a true flag and ``-`` otherwise."""
-    return "Y" if value else "-"
-
-
 def casillas_lines(result: ModeloCasillasResult, *, explain: bool) -> list[str]:
     """Render the casillas of a result, with their help and references when explaining."""
     if explain:
