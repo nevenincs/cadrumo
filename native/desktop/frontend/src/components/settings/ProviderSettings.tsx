@@ -276,6 +276,7 @@ function WayRow({
   onReset,
   onRefresh,
   signInSupported,
+  readsPending,
   onSignIn,
   onSignOut,
   consoleSignInCommand,
@@ -293,6 +294,8 @@ function WayRow({
   onReset: () => void;
   onRefresh: () => void;
   signInSupported: boolean;
+  /** The service is still reading the sign-in methods behind its answer. */
+  readsPending: boolean;
   onSignIn: () => void;
   /** Signs the lane out, where the host offers it. */
   onSignOut?: () => void;
@@ -312,6 +315,15 @@ function WayRow({
   const keyless = provider.authKind === "none";
   const hasKey = provider.mode === "key" || provider.mode === "oauth_token";
   const off = provider.mode === "disabled";
+  // Where a sign-in-only lane's sign-in stands: offered, still being read, or
+  // unavailable by a complete answer.
+  const signInState = !signInOnly
+    ? undefined
+    : signInSupported
+      ? "offered"
+      : readsPending
+        ? "pending"
+        : "unavailable";
   const state = connectionStatus(provider, engine, setup);
   const detail = detailWords(t, provider, engine, setup);
   const connection = connectionWords(t, provider);
@@ -327,6 +339,7 @@ function WayRow({
       data-lane={provider.id}
       data-transport={provider.transport}
       data-auth-kind={provider.authKind}
+      data-sign-in={signInState}
       data-reads-off-host={
         provider.readsOffHost === undefined
           ? undefined
@@ -440,12 +453,16 @@ function WayRow({
       {!off && !keyless && (
         <div className="grid gap-2 pt-1">
           {signInOnly ? (
-            signInSupported ? (
+            signInState === "offered" ? (
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={onSignIn}>
                   {t("desktop.providers.sign_in_action")}
                 </Button>
               </div>
+            ) : signInState === "pending" ? (
+              <p role="status" className="text-sm text-muted-foreground">
+                {t("desktop.providers.sign_in_checking")}
+              </p>
             ) : (
               <p role="note" className="text-sm text-muted-foreground">
                 {t("desktop.providers.sign_in_unavailable", {
@@ -621,6 +638,7 @@ export function ProviderSettings({
   signInProviders = [],
   signInMethods = {},
   revisions = {},
+  readsPending = false,
   consoleSignInCommand,
   identity = null,
   localModels,
@@ -656,6 +674,9 @@ export function ProviderSettings({
   >;
   /** Current lane revisions from the same provider status read. */
   revisions?: Readonly<Record<string, string>>;
+  /** The same read's `reads_pending`: the service still reads the sign-in
+   * methods behind it. */
+  readsPending?: boolean;
   /** The console command that signs a provider in by hand, with a
    * `{provider}` slot, as the service serves it. */
   consoleSignInCommand?: string;
@@ -755,6 +776,7 @@ export function ProviderSettings({
                   signInProviders.includes(lane.provider) &&
                   (signInMethods[lane.provider]?.length ?? 0) > 0,
                 )}
+                readsPending={readsPending}
                 onSignIn={() => setSelection({ laneId: lane.id, identity })}
                 consoleSignInCommand={consoleSignInCommand}
                 onSave={(secret) => onSave(lane.id, secret)}

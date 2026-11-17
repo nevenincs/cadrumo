@@ -457,6 +457,7 @@ desktop:
       status_unreadable: The answer about whether you're signed in couldn't be read.
       timed_out: The sign-in took too long.
       unsupported_method: The provider's app doesn't support this way of signing in.
+    sign_in_checking: Checking sign-in…
     sign_in_cleanup_failed: Restart Cadrumo before signing in again.
     sign_in_close: Close sign-in
     sign_in_code_checking: Checking the authorization code…
