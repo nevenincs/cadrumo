@@ -35,11 +35,11 @@ from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
 
 from pydantic import AfterValidator, BaseModel, BeforeValidator, Field, model_validator
 
+from ....core.absence_attestation_family import AbsenceAttestationFamily
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
-from .binding_absence_attestation import AbsenceAttestationFamily
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import provider_member
 from .binding_temporal import RelativeToFilingYear
@@ -160,6 +160,8 @@ def renta_inmueble_origin_columns(
     """Return the anexo C.1 origin columns ``revision`` declares, by part and by origin back.
 
     A pair declared twice keeps the first; :func:`renta_inmueble_origin_failures` refuses it.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     columns: dict[RentaInmuebleOriginPart, dict[int, BindingDefinition]] = {}
     for binding, provider in renta_inmueble_columns(revision):
@@ -228,6 +230,8 @@ def renta_inmueble_origin_failures(revision: ModeloRevision) -> tuple[str, ...]:
     carries nothing further; and the opening columns, which are carries of
     earlier returns, take the per-row statement of the pending-expense family
     while the computed ones take none.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
 
     Returns:
         The failures found, empty when the revision declares no origin column or declares them well.

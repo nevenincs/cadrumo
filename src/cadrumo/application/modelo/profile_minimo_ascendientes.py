@@ -406,6 +406,8 @@ def ascendant_entitlement_count(
     Reads the rows exactly as the mínimo does, so a row that owes a fact for one owes
     it for the other and the notes coincide. A row a stated fact rules out counts
     zero; a row that owes a deciding fact withholds the count with its notes.
+
+    Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
     """
     amounts = _amounts(snapshot)
     if amounts is None:
@@ -444,6 +446,8 @@ def inject_derived_minimo_ascendientes_facts(
 
     Also writes each row's derived disability key where the edition reads it, and
     notes the rows whose art. 60.2 disability minimum is not computed.
+
+    Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
     """
     stored = _read_stored_ascendants(fact_index)
     _inject_disability_keys(fact_index, snapshot, stored, context=context)

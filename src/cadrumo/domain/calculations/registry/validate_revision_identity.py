@@ -119,6 +119,8 @@ def declared_repeated_casilla_numbers(revision: ModeloRevision) -> frozenset[str
     on several rows and every casilla holding it is the declared target of a
     dictionary row in an XML layout of ``revision``. The target itself is held
     to its dictionary row, line and XSD element where the dictionary is read.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     targeted = {
         target.casilla_id

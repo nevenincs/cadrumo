@@ -68,6 +68,7 @@ from ....application.operations.models import OperationRequest
 from ....application.operations.owner import OperationExecutorContext
 from ....application.operator_actions.models import PreconditionVerdict
 from ....application.overview.pipeline_health import ModeloReadinessState, build_pipeline_health_report
+from ....core.absence_attestation_family import AbsenceAttestationFamily
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from ....core.errors.hierarchy import CadrumoError, RecordedRegisteredError
@@ -75,7 +76,6 @@ from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format

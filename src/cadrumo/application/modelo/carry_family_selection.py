@@ -13,9 +13,9 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Final
 
+from ...core.absence_attestation_family import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
-from ...domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.modelos.errors import ModeloError
 from ..operations.next_step import OperationNextStepErrorMixin, OperationNextStepWording, OperationOpenWorkStepV1

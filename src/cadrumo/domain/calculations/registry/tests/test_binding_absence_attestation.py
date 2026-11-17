@@ -15,9 +15,9 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from .....core.absence_attestation_family import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from .....core.aggregation import BindingSourceKind
 from .....core.authority_grade import RegistryAuthorityGrade
-from ..binding_absence_attestation import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ..binding_value_contract import BindingValueChannel
 from ..errors import FilingYearOutsideSupportEnvelopeError, RegistryValidationError
 from ..renta_inmueble_bindings import RentaInmuebleOriginPart, RentaInmuebleProvider

@@ -35,9 +35,9 @@ from ......application.modelo.work_form_models import (
     ModeloWorkForm,
 )
 from ......application.modelo.work_form_wording import origin_words
+from ......core.absence_attestation_family import AbsenceAttestationFamily
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
-from ......domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ....components.host import ScreenHostApp
 from ....tests.settling import settle
 from ..casilla_list import CasillaList

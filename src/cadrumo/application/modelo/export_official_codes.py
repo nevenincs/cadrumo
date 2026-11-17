@@ -34,6 +34,10 @@ def draft_with_official_codes(
     """Return ``draft`` with its tipo de renta box holding the official code ``revision`` retained.
 
     A revision without a tipo de renta box, or whose box is empty, is returned unchanged.
+
+    Parameter types: ``draft`` (:class:`~cadrumo.domain.filing.schema.ModeloDraft`),
+    ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
     """
     casilla_id = casilla_id_for_unique_semantic_role(snapshot, _IRNR_TIPO_RENTA_ROLE)
     if casilla_id is None:

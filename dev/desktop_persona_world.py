@@ -49,9 +49,9 @@ from typing import TYPE_CHECKING, Any, Final
 from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
 from cadrumo.application.modelo.operation_shared import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
+from cadrumo.core.absence_attestation_family import AbsenceAttestationFamily
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.tests.persona_materialisation import (

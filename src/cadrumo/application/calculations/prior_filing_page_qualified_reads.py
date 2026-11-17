@@ -28,6 +28,8 @@ only when the row itself shows it was written under an earlier authority:
 
 A row naming the box under both ids with different values is refused; the same
 value under both is one figure and reads once.
+
+The figures read are :class:`CasillaObservation` rows.
 """
 
 from __future__ import annotations

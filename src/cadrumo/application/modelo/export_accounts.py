@@ -854,6 +854,9 @@ def resolve_export_model_profile(
 ) -> tuple[FilingModelProfileFacts, M303FilingFacts | None]:
     """Return the model profile facts this modelo's export reads, and the Modelo 303 filing facts for a 303.
 
+    ``revision`` is the :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision` exported and
+    ``workflow_profile`` is the :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile` it is filed for; the
+    profile facts come from the :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     ``export_layout`` is the layout the export renders; the annual Impuesto sobre
     Sociedades reads from it how many page 002 rows of each family fit.
     ``periodo`` is the período impositivo a period without a calendar span is
@@ -1037,6 +1040,8 @@ def resolve_m303_filing_facts_from_arrivals(
     The last return of the year reads the register as filing ``revision`` will
     leave it (LIVA art. 105.Cuatro), derived in memory from its own casillas;
     nothing is written before the filing exists.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     prorrata_register_repository = arrivals.prorrata_register
     prorrata_register = require_prorrata_register_coordinates_current(

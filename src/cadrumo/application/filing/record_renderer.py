@@ -1,4 +1,4 @@
-"""Canonical fixed-width filing record renderer."""
+"""Canonical fixed-width filing record renderer for a :class:`ModeloRevision` layout."""
 
 from __future__ import annotations
 

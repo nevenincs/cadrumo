@@ -460,6 +460,8 @@ def declared_attestable_carry_requirements(
     statement is admitted now depends on which of those returns the profile
     holds (:func:`attestable_carry_sources`). ``support`` is as for
     :func:`cross_period_dependency_requirements`.
+
+    Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
     """
     return {
         binding_id: tuple(requirements)
@@ -508,6 +510,8 @@ def attestable_carry_sources(
     sourced from records and are never offered. A binding in
     ``set_aside_binding_ids``, whose held return the current return's marks set
     aside, is offered whether or not its sources are held.
+
+    Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
     """
     by_binding = _attestable_requirements_by_binding(snapshot, support=operation.supported_filing_years())
     return {
@@ -535,7 +539,7 @@ def attestable_carry_binding_ids(
     work_catalogue: WorkUnitCatalogue,
     set_aside_binding_ids: frozenset[BindingId] = frozenset(),
 ) -> frozenset[BindingId]:
-    """Return the bindings an operator may state a figure for."""
+    """Return the bindings an operator may state a figure for in the :class:`RegistrySnapshot`."""
     return frozenset(
         attestable_carry_sources(
             snapshot,
