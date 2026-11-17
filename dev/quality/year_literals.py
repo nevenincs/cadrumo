@@ -118,8 +118,13 @@ What may stay, and why
 - A number written as hex, octal or with digit separators, such as a Unicode
   codepoint range: no year is spelled that way.
 
-There is no allowance list, baseline or exemption by file. What the rules do
-not cover is stated below; it is never a reason to leave a year standing.
+There is no allowance list or exemption by file. The years that stood in code
+when the gate became blocking are recorded in a shrink-only baseline
+(``dev/quality/metadata/year_literal_baseline.json``), keyed by module, rule and
+text without the line: the gate fails on any year beyond the record and on a
+recorded year that no longer stands, which ``--shrink-baseline`` removes and
+nothing ever adds. What the rules do not cover is stated below; it is never a
+reason to leave a year standing.
 
 How to satisfy the gate
 -----------------------
@@ -152,7 +157,9 @@ What this gate cannot see
 
 from __future__ import annotations
 
+import json
 import sys
+from collections import Counter
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Final
@@ -166,6 +173,9 @@ from .year_literal_typescript import typescript_findings
 
 PYTHON_SUFFIXES: Final[frozenset[str]] = frozenset({".py", ".pyi"})
 TYPESCRIPT_SUFFIXES: Final[frozenset[str]] = frozenset({".ts", ".tsx", ".mts", ".cts"})
+
+#: The shrink-only record of the years still standing in code, relative to the scanned root.
+BASELINE: Final[str] = "dev/quality/metadata/year_literal_baseline.json"
 
 #: The bundled authority's data root: the one place a year is declared.
 AUTHORITY_DATA_ROOTS: Final[tuple[str, ...]] = ("src/cadrumo/_data/",)
@@ -194,11 +204,39 @@ def scan(root: Path = REPO_ROOT) -> Iterator[Finding]:
         yield from findings_for(relative, (root / relative).read_text(encoding="utf-8", errors="replace"))
 
 
-def main(argv: list[str] | None = None, root: Path = REPO_ROOT) -> int:
-    """Print every year written into code and return the process exit status.
+def occurrence(finding: Finding) -> str:
+    """A finding as the baseline keys it: module, rule and text, without the line an edit above it moves."""
+    return f"{finding.path}: {finding.rule}: {finding.text}"
 
-    ``--summary`` prints counts by rule and top-level area instead of each
-    finding. A walk that reads no module is refused rather than reported
+
+def recorded(root: Path) -> Counter[str]:
+    """The baseline under ``root``, or nothing when the tree records none."""
+    path = root / BASELINE
+    if not path.is_file():
+        return Counter()
+    return Counter(json.loads(path.read_text(encoding="utf-8"))["occurrences"])
+
+
+def _write_baseline(root: Path, occurrences: Counter[str]) -> None:
+    document = {"schema_version": 1, "count": occurrences.total(), "occurrences": sorted(occurrences.elements())}
+    text = json.dumps(document, ensure_ascii=False, indent=2) + "\n"
+    (root / BASELINE).write_text(text, encoding="utf-8", newline="")
+
+
+def _print_summary(found: list[Finding]) -> None:
+    by_rule: dict[str, int] = {}
+    for finding in found:
+        by_rule[finding.rule] = by_rule.get(finding.rule, 0) + 1
+    for rule, count in sorted(by_rule.items(), key=lambda item: -item[1]):
+        print(f"{rule}: {count}")
+
+
+def main(argv: list[str] | None = None, root: Path = REPO_ROOT) -> int:
+    """Print every year beyond the baseline and return the process exit status.
+
+    ``--summary`` prints counts by rule instead of each new finding.
+    ``--shrink-baseline`` removes the recorded years that no longer stand and
+    adds none. A walk that reads no module is refused rather than reported
     clean, because an empty population means the walk did not read the tree.
     """
     arguments = sys.argv[1:] if argv is None else argv
@@ -206,20 +244,36 @@ def main(argv: list[str] | None = None, root: Path = REPO_ROOT) -> int:
         print(f"found no Python or TypeScript module under {root}, so nothing was read", file=sys.stderr)
         return 1
     found = list(scan(root))
+    standing = Counter(occurrence(finding) for finding in found)
+    baseline = recorded(root)
+    if "--shrink-baseline" in arguments:
+        _write_baseline(root, baseline & standing)
+        baseline = recorded(root)
+    grown = standing - baseline
     if "--summary" in arguments:
-        by_rule: dict[str, int] = {}
-        for finding in found:
-            by_rule[finding.rule] = by_rule.get(finding.rule, 0) + 1
-        for rule, count in sorted(by_rule.items(), key=lambda item: -item[1]):
-            print(f"{rule}: {count}")
+        _print_summary(found)
     else:
-        for finding in found:
+        _print_new(found, grown)
+    return _report(standing, baseline, found)
+
+
+def _print_new(found: list[Finding], grown: Counter[str]) -> None:
+    for finding in found:
+        if occurrence(finding) in grown:
             print(f"{finding.path}:{finding.line}: {finding.rule}: {finding.text}")
-    if found:
-        files = len({finding.path for finding in found})
-        print(f"{len(found)} years written into code in {files} modules; read them from the authority")
-        return 1
-    return 0
+
+
+def _report(standing: Counter[str], baseline: Counter[str], found: list[Finding]) -> int:
+    """Print the counts and return 1 when a year grew past the record or a recorded year is gone."""
+    grown = standing - baseline
+    gone = baseline - standing
+    print(f"year literals: {standing.total()} standing, {baseline.total()} recorded, {grown.total()} new")
+    if gone:
+        print(f"{gone.total()} recorded years no longer stand; run with --shrink-baseline to drop them")
+    if grown:
+        files = len({finding.path for finding in found if occurrence(finding) in grown})
+        print(f"{grown.total()} new years written into code in {files} modules; read them from the authority")
+    return 1 if grown or gone else 0
 
 
 if __name__ == "__main__":

@@ -13,11 +13,14 @@ second shrink-only list. Regenerate both with
 
 from __future__ import annotations
 
+import sys
+
 import pytest
 
 from cadrumo.application.modelo.action_errors import ModeloOperationSubjectNotWorkUnitError, ModeloRecordNotFoundError
 from cadrumo.application.modelo.credit_resolution_repository import CreditResolutionRefusedError
 from cadrumo.application.operations.next_step import OperationNextStepWording
+from cadrumo.core.errors.error_codes import get_registered_error_code
 from dev.quality.refusal_shape import (
     GOVERNED_TREES,
     Site,
@@ -221,3 +224,22 @@ def test_the_gate_counts_classmethod_factory_calls_as_construction_sites(monkeyp
     assert doorless_site_ids(found) == sorted(found[index].site_id for index in (1, 2, 4))
     # Free text: positional words with no key in the factory body, as a direct construction would be.
     assert [site.free_text for site in found] == [False, True, False, True, True]
+
+
+_CENSUS_FIXTURE = """
+def refuse():
+    from cadrumo.application.modelo.action_errors import ModeloRecordNotFoundError
+    from cadrumo.undeclared_package import UndeclaredError
+
+    raise ModeloRecordNotFoundError("work-unit")
+    raise UndeclaredError()
+"""
+
+
+def test_a_name_from_a_module_the_census_does_not_declare_is_never_imported() -> None:
+    """A function-local import resolves through the census; an undeclared module is no site and is not imported."""
+    (site,) = scan_source(_CENSUS_FIXTURE, path=_FIXTURE_PATH, module="synthetic_tree.holder")
+
+    assert site.qualname == "refuse"
+    assert site.code == get_registered_error_code(ModeloRecordNotFoundError).code
+    assert "cadrumo.undeclared_package" not in sys.modules
