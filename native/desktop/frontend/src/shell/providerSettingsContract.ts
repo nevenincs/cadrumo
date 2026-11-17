@@ -15,6 +15,29 @@ export type ProviderSignInEvent =
   | "cancelled"
   | "failed";
 
+/** What the profile holds for a provider. */
+export type ProviderSettingsMode =
+  "key" | "oauth_token" | "provider_sign_in" | "disabled" | "unset";
+
+/** Where the provider's credential comes from. */
+export type ProviderCredentialSource = "profile" | "none";
+
+/** Whether the provider can be used now, and if not, why. */
+export type ProviderReadiness =
+  | "ready"
+  | "not_verified"
+  | "missing"
+  | "disabled"
+  | "sign_in_required"
+  | "unusable";
+
+/** Why a provider is not usable, as a stable code. */
+export type ProviderStatusReason =
+  | "not_configured"
+  | "turned_off"
+  | "sign_in_with_provider_tool"
+  | "record_unreadable";
+
 /** Masked status of one provider. */
 export type ProviderSettingsRecord = {
   /** The lane id every change addresses. */
@@ -28,24 +51,13 @@ export type ProviderSettingsRecord = {
   auth_kind:
     "api_key" | "api_key_with_base_url" | "provider_sign_in_only" | "none";
   consumers: readonly "assistant"[];
-  mode: "key" | "oauth_token" | "provider_sign_in" | "disabled" | "unset";
+  mode: ProviderSettingsMode;
   /** Whether a direct credential is stored for the lane, whatever the mode; never the credential itself. */
   credential_saved: boolean;
   available: boolean;
-  source: "profile" | "none";
-  readiness:
-    | "ready"
-    | "not_verified"
-    | "missing"
-    | "disabled"
-    | "sign_in_required"
-    | "unusable";
-  reason?:
-    | "not_configured"
-    | "turned_off"
-    | "sign_in_with_provider_tool"
-    | "record_unreadable"
-    | null;
+  source: ProviderCredentialSource;
+  readiness: ProviderReadiness;
+  reason?: ProviderStatusReason | null;
   /** The person's stored base URL only; never the catalog default. */
   base_url?: string | null;
   default_base_url?: string | null;
