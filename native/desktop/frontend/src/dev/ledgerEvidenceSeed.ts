@@ -16,7 +16,7 @@ import type {
   CatalogueInvoiceSnapshot,
   InvoiceKind,
 } from "../shell/ledgerInvoiceContract";
-import type { PublicDecimal } from "../shell/ledger";
+import type { PublicDecimal } from "../shell/ledgerInvoiceContract";
 import { fixtureDay, fixtureInstant } from "@/dev/fixtureDates";
 
 export const decimal = (value: string | null): PublicDecimal | null =>

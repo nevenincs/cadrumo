@@ -1,7 +1,7 @@
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount, formatPercent } from "../../../shared/numbers";
 import { facts } from "../../../shell/compose";
-import type { PublicDecimal } from "../../../shell/ledger";
+import type { PublicDecimal } from "../../../shell/ledgerInvoiceContract";
 import { canonicalDecimal } from "../../../shell/ledgerGrammar";
 import type {
   ActivityAssetPlanRow,
@@ -196,7 +196,10 @@ export function changeValueText(
 
 /** Why a year has no planned figure: the typed absence and the reason the
  * backend gives for it where it gives one. */
-export function absentText(t: Translate, planned: ActivityAssetPlanRow): string | null {
+export function absentText(
+  t: Translate,
+  planned: ActivityAssetPlanRow,
+): string | null {
   if (planned.absence === null) return null;
   const word = tokenWord(t, "plan_absence", planned.absence);
   return facts(t, [word, planned.absence_reason_words ?? null]);

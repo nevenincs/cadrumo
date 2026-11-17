@@ -5,7 +5,7 @@
 // so a value never spills into the next cell or row.
 
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
-import type { PublicDecimal } from "../../../shell/ledger";
+import type { PublicDecimal } from "../../../shell/ledgerInvoiceContract";
 import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 const FORMULA = /^\s*[=+\-@\t\r]/;

@@ -1,3 +1,4 @@
+import type { StageFieldName } from "./ledgerMovementCheckContract";
 // The Ledger page's commands that several controls reach: one definition
 // each, so a group header, a shortcut, the palette and the inspector cannot
 // do the same thing in different ways. A command decides here what it would
@@ -17,7 +18,6 @@ import {
   storedFieldValue,
   type StageCell,
   type StageEvent,
-  type StageField,
 } from "./ledgerStage";
 import type { LedgerTransactionReviewProjection } from "./ledgerReadContract";
 
@@ -279,7 +279,7 @@ export function classifyCells(
     // category given takes the place of a stored one, and a share is
     // handled above.
     for (const dropped of fieldsDroppedBy(CLASSIFICATION_OF[request.kind])) {
-      const name = dropped as StageField;
+      const name = dropped as StageFieldName;
       const held = storedFieldValue(row, name);
       if (held != null && !cells.some((c) => c.id === id && c.field === name))
         cells.push({ id, field: name, value: { kind: "clear" }, stored: held });

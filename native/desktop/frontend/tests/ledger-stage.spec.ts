@@ -1,3 +1,4 @@
+import type { StageFieldName } from "../src/shell/ledgerMovementCheckContract";
 import { expect, test } from "@playwright/test";
 import {
   EMPTY_STAGE,
@@ -9,7 +10,6 @@ import {
   storedFieldValue,
   type StageCell,
   type StageEvent,
-  type StageField,
   type StageState,
   type StagedAction,
   type StagedRowChanges,
@@ -43,13 +43,13 @@ const rowA = movement(A, {
 const rowB = movement(B);
 const stored = { [A]: rowA, [B]: rowB };
 
-const set = (id: string, field: StageField, value: string): StageCell => ({
+const set = (id: string, field: StageFieldName, value: string): StageCell => ({
   id,
   field,
   value: { kind: "set", value },
   stored: storedFieldValue(stored[id]!, field),
 });
-const clear = (id: string, field: StageField): StageCell => ({
+const clear = (id: string, field: StageFieldName): StageCell => ({
   id,
   field,
   value: { kind: "clear" },

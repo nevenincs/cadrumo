@@ -20,7 +20,7 @@ import type {
   InvoiceFiguresPreviewRuleFinding,
   InvoiceUpdateValues,
 } from "../../../shell/ledgerInvoiceContract";
-import type { PublicDecimal } from "../../../shell/ledger";
+import type { PublicDecimal } from "../../../shell/ledgerInvoiceContract";
 import {
   INVOICE_UPDATE_FIELDS,
   OPERATION_TYPES,

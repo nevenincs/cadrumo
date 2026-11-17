@@ -14,9 +14,9 @@ import type { LedgerEvidenceRecordProjection } from "../../../shell/ledgerDocume
 import {
   servedNextStep,
   servedRefusalWords,
-  type LedgerNextStep,
   type LedgerPort,
 } from "../../../shell/ledger";
+import type { OperationNextStepV1 } from "../../../shell/ledgerDocumentContract";
 import {
   EVIDENCE_UPDATE_FIELDS,
   type EvidenceUpdateField,
@@ -62,7 +62,7 @@ type Notice =
       kind: "refused";
       code: string;
       words: string | null;
-      step: LedgerNextStep | null;
+      step: OperationNextStepV1 | null;
     }
   | { kind: "unknown"; asked: "update" | "remove" | "read" }
   | { kind: "checked"; saved: boolean };

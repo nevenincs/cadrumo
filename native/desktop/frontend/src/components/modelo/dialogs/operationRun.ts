@@ -4,10 +4,10 @@ import {
   servedRefusalWords,
   type LedgerErrorDetail,
   type LedgerFailureCode,
-  type LedgerNextStep,
   type LedgerOutcome,
   type TerminalOperationFailure,
 } from "../../../shell/ledger";
+import type { OperationNextStepV1 } from "../../../shell/ledgerDocumentContract";
 import type { ModeloPort } from "../../../shell/modelo";
 import type { ModeloEditApplyBaselineV1 } from "../../../shell/modeloContract/modeloEditWork";
 
@@ -45,7 +45,7 @@ export type OperationRun<Result> =
       operationId: string;
       reason: string | null;
       words: string | null;
-      step: LedgerNextStep | null;
+      step: OperationNextStepV1 | null;
       detail: LedgerErrorDetail | null;
     }
   /** The request never reached the runtime; nothing was changed. */
