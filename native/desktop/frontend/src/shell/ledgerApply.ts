@@ -15,6 +15,7 @@ import {
   type LedgerPort,
 } from "./ledger";
 import type {
+  LedgerUpdateOperationResult,
   LedgerAddOperationResult,
   LedgerBulkClassifyProjection,
   LedgerClassifyField,
@@ -22,7 +23,6 @@ import type {
   LedgerClassifyOperationResult,
 } from "./ledgerMovementContract";
 import type { LedgerLlmReviewWindowRequest } from "./ledgerMovementCheckContract";
-import type { LedgerUpdateResult } from "./ledgerMovementOperations";
 import type { LedgerPlan, PlanStep } from "./ledgerPlan";
 import {
   actionRows,
@@ -199,7 +199,7 @@ function settledOutcome(
       );
     }
     case "update": {
-      const written = result as unknown as LedgerUpdateResult;
+      const written = result as unknown as LedgerUpdateOperationResult;
       if (!written.bucket_event_ids.length) return each({ kind: "unchanged" });
       const after = written.transaction?.transaction_id ?? null;
       return each({

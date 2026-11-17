@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { facts, listed } from "@/shell/compose";
 import type { LedgerHistoryTypedProjection } from "../../../shell/ledgerMovementCheckContract";
-import type { LedgerTrackResult } from "../../../shell/ledgerMovementOperations";
+import type { LedgerTrackProjection } from "../../../shell/ledgerMovementCheckContract";
 import type { StagedRowChanges } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { fieldName } from "../editing/editingWords";
@@ -40,7 +40,7 @@ export function HistorySection({
   row: LedgerTransactionReviewProjection;
   changes: StagedRowChanges | undefined;
   history: InspectorRead<LedgerHistoryTypedProjection> | null;
-  track: InspectorRead<LedgerTrackResult> | null;
+  track: InspectorRead<LedgerTrackProjection> | null;
   /** The window's movements, by id, for the split's other parts. */
   rows: ReadonlyMap<string, LedgerTransactionReviewProjection>;
   locale: string;

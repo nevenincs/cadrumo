@@ -2508,6 +2508,10 @@ modelo:
               - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación
               - 2023 - AID pendientes aplicación periodos futuros - Sin derecho conversión
               crédito exigible [01422]
+          '01423':
+            label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
+              - Exceso cuota líquida positiva - Ejercicio generación - 2023 - Exceso
+              cuota líquida positiva pendiente a principio periodo [01423]
           '01424':
             label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
               - Exceso cuota líquida positiva - Ejercicio generación - 2023 - Exceso
@@ -16738,6 +16742,18 @@ modelo:
             label: Deducc. para incentivar determ.actividades - {year} Gran Premio
               de España de Fórmula 1 (F1) - Pendiente de aplicación en periodos futuros
               [02379]
+          is-m200-dp200018b-01217:
+            label: Deducc. para incentivar determ.actividades - {year} Mundo Voluntario
+              2030/35º Aniversario Plataforma del Voluntariado de España (V30) - Deducción
+              pendiente/generada [01217]
+          is-m200-dp200018b-01218:
+            label: Deducc. para incentivar determ.actividades - {year} Mundo Voluntario
+              2030/35º Aniversario Plataforma del Voluntariado de España (V30) - Aplicado
+              en esta liquidación [01218]
+          is-m200-dp200018b-01219:
+            label: Deducc. para incentivar determ.actividades - {year} Mundo Voluntario
+              2030/35º Aniversario Plataforma del Voluntariado de España (V30) - Pendiente
+              de aplicación en periodos futuros [01219]
           is-m200-dp200018b-01883:
             label: Deducc. para incentivar determ.actividades - {year} Año Santo Jubilar
               San Isidro Labrador (JI) - Deducción pendiente/generada [01883]
@@ -20279,11 +20295,6 @@ modelo:
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
                 incrementada - 2023 - Sin reiteración de donaciones a una misma entidad
                 - Pendiente de aplicación en periodos futuros [01373]
-            '01423':
-              label: Conversión activos impuesto diferido crédito exigible frente
-                Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2023 - Exceso cuota líquida positiva pendiente a principio periodo
-                [01423]
             '01575':
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Operaciones del art. 19 LIS distintas del cambio de

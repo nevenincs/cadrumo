@@ -2509,6 +2509,11 @@ modelo:
               érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS 130.
               cikk - Keletkezés éve - 2023 - Jövőbeli időszakokban alkalmazásra váró
               AID - Érvényesíthető követeléssé alakítás joga nélkül [01422]
+          '01423':
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
+              - Keletkezés éve - 2023 - Az időszak elején fennálló pozitív nettó adótöbblet
+              [01423]
           '01424':
             label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
               érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
@@ -16867,6 +16872,18 @@ modelo:
           is-m200-dp200018-02379:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Forma–1
               Spanyol Nagydíj (F1) - Jövőbeli időszakokban alkalmazandó [02379]
+          is-m200-dp200018b-01217:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Önkéntes
+              Világ 2030/A Spanyol Önkéntes Platform 35. évfordulója (V30) - Függőben
+              lévő/keletkezett levonás [01217]
+          is-m200-dp200018b-01218:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Önkéntes
+              Világ 2030/A Spanyol Önkéntes Platform 35. évfordulója (V30) - Ebben
+              az elszámolásban alkalmazva [01218]
+          is-m200-dp200018b-01219:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Önkéntes
+              Világ 2030/A Spanyol Önkéntes Platform 35. évfordulója (V30) - Jövőbeli
+              időszakokban alkalmazandó [01219]
           is-m200-dp200018b-01883:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Szent
               Izidor földműves szent jubileumi éve (JI) - Függőben lévő/keletkezett
@@ -20441,11 +20458,6 @@ modelo:
                 és más, növelt levonásra jogosító célokra adott adományok - 2023 -
                 Ugyanazon szervezetnek ismételten nem nyújtott adományok - Jövőbeli
                 időszakokban alkalmazandó [01373]
-            '01423':
-              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
-                érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
-                - Keletkezés éve - 2023 - Az időszak elején fennálló pozitív nettó
-                adótöbblet [01423]
             '01575':
               label: Elszámolás II - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - A LIS 19. cikke szerinti, az Európai Unió vagy az EGT
