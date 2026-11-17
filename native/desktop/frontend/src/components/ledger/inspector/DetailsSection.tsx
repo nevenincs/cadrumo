@@ -1,9 +1,10 @@
+import type { StageFieldName } from "../../../shell/ledgerMovementCheckContract";
 import { Icon } from "@/components/ui/icon";
 import type { Suggestion } from "@/components/ui/suggestions";
 import { facts } from "@/shell/compose";
 import type { LedgerTrackProjection } from "../../../shell/ledgerMovementCheckContract";
 import { usePeriods } from "../../../shell/ledgerPeriods";
-import { effectiveFacts, type StageField } from "../../../shell/ledgerStage";
+import { effectiveFacts } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { rowCells } from "../editing/editingModel";
 import { periodText } from "../ledgerWords";
@@ -18,10 +19,10 @@ import { formatDay, formatTime } from "../../../shared/dateFormats";
 
 /** What a pick offers the fields beside it, by the key the suggestion
  * carries. */
-const FROM_DESCRIPTION: Partial<Record<string, StageField>> = {
+const FROM_DESCRIPTION: Partial<Record<string, StageFieldName>> = {
   counterparty: "counterparty",
 };
-const FROM_COUNTERPARTY: Partial<Record<string, StageField>> = {
+const FROM_COUNTERPARTY: Partial<Record<string, StageFieldName>> = {
   counterparty_country: "counterparty_country",
   counterparty_identification_state: "counterparty_identification_state",
 };
@@ -48,8 +49,9 @@ export function DetailsSection({
   // A pick fills only what is still empty, and stages it where the person
   // sees it before anything is saved.
   const fillEmpty =
-    (targets: Partial<Record<string, StageField>>) => (picked: Suggestion) => {
-      const cells = emptyFills<StageField>(picked.fills, effective, targets)
+    (targets: Partial<Record<string, StageFieldName>>) =>
+    (picked: Suggestion) => {
+      const cells = emptyFills<StageFieldName>(picked.fills, effective, targets)
         .filter(([name]) => fieldLock(scope, name) === null)
         .flatMap(([name, value]) =>
           rowCells(tx.transaction_id, row, name, { value }),

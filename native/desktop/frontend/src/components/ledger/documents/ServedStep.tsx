@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
-import type { LedgerNextStep } from "../../../shell/ledger";
+import type { OperationNextStepV1 } from "../../../shell/ledgerDocumentContract";
 import { useModelList } from "../../../shell/agentModelList";
 
 /** The control a refusal's served step leads to where this window answers the
@@ -12,7 +12,7 @@ export function ServedStep({
   step,
   className,
 }: {
-  step: LedgerNextStep | null | undefined;
+  step: OperationNextStepV1 | null | undefined;
   className?: string;
 }) {
   const models = useModelList();

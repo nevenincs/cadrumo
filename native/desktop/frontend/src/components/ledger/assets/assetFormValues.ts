@@ -1,7 +1,7 @@
 import type { SuggestionProps } from "@/components/editors/editorProps";
 import type { FieldSpec } from "../../../shared/fieldKind";
 import { heldDecimal } from "../../../shared/numbers";
-import type { PublicDecimal } from "../../../shell/ledger";
+import type { PublicDecimal } from "../../../shell/ledgerInvoiceContract";
 import {
   canonicalDecimal,
   parseDecimal,

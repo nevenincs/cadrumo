@@ -1,3 +1,7 @@
+import type {
+  StageFieldName,
+  DraftFieldName,
+} from "../../../shell/ledgerMovementCheckContract";
 import {
   useEffect,
   useId,
@@ -22,7 +26,7 @@ import {
 import { formatDay } from "@/shared/dateFormats";
 import type { FieldSpec } from "@/shared/fieldKind";
 import { formatDecimal } from "@/shared/numbers";
-import type { DraftField, StageField } from "../../../shell/ledgerStage";
+
 import {
   DECIDED_CLASSIFICATIONS,
   DIRECTIONS,
@@ -74,7 +78,10 @@ export const isTyped = (kind: EditKind) => TYPED.has(kind);
 
 /** The field a typed cell is: money to the cent, a percentage typed in
  * points, a day, or a line of text. */
-function specOf(kind: EditKind, field: StageField | DraftField): FieldSpec {
+function specOf(
+  kind: EditKind,
+  field: StageFieldName | DraftFieldName,
+): FieldSpec {
   switch (kind) {
     case "amount":
     case "figure":
@@ -125,7 +132,7 @@ export function TypedEditor({
 }: {
   context: EditorContext;
   kind: EditKind;
-  field: StageField | DraftField;
+  field: StageFieldName | DraftFieldName;
   /** The text this cell may be picked from, where it offers any. */
   offers?: SuggestionKind | null;
   /** A pick's offer to the fields beside this cell. */

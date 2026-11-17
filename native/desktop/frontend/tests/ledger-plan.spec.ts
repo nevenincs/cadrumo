@@ -1,3 +1,4 @@
+import type { StageFieldName } from "../src/shell/ledgerMovementCheckContract";
 import "./support/servedLimits";
 import { expect, test } from "@playwright/test";
 import { RELAY_PAYLOAD_LIMIT } from "../src/shell/relayBounds";
@@ -18,7 +19,6 @@ import {
   movementsToTrack,
   reduceStage,
   type Draft,
-  type StageField,
   type StagedAction,
   type StagedContent,
   type StagedRowChanges,
@@ -89,7 +89,7 @@ test("a selected new draft is never read as a stored movement's filing participa
 });
 
 test("every field routes by the operation that accepts it, and by set or clear", () => {
-  type Case = [StageField, "set" | "clear", boolean, string];
+  type Case = [StageFieldName, "set" | "clear", boolean, string];
   const cases: Case[] = [
     // Identity and other update-only fields.
     ["description", "set", true, "update"],

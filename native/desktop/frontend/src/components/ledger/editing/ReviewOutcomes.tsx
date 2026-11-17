@@ -1,3 +1,4 @@
+import type { StageFieldName } from "../../../shell/ledgerMovementCheckContract";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
@@ -8,7 +9,6 @@ import type { PlanStep } from "../../../shell/ledgerPlan";
 import {
   actionRows,
   storedFieldValue,
-  type StageField,
   type StagedAction,
   type StagedContent,
 } from "../../../shell/ledgerStage";
@@ -105,7 +105,7 @@ function outcomeText(
   t: Translate,
   locale: string,
   outcome: StepOutcome,
-  stored: { field: StageField; value: string | null } | null,
+  stored: { field: StageFieldName; value: string | null } | null,
 ): string {
   switch (outcome.kind) {
     case "applied":
@@ -160,8 +160,8 @@ export function outcomeItems(
 ): OutcomeItem[] {
   const storedOf = (
     id: string,
-    fields: StageField[],
-  ): { field: StageField; value: string | null } | null => {
+    fields: StageFieldName[],
+  ): { field: StageFieldName; value: string | null } | null => {
     const row = fresh?.get(id);
     const field = fields[0];
     if (!row || !field) return null;
