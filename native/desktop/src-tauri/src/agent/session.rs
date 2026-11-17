@@ -175,19 +175,21 @@ pub fn admit_document_removal(conversation: &str, name: Option<&str>) -> Result<
 }
 
 /// One stored document as the column reads it: its name, size, time, digest
-/// and type, and nothing else the agent says of it.
+/// and type, and nothing else the agent says of it. The agent states each of
+/// them for every stored document; one without its type is not read as one.
 pub fn document_record(item: &Value) -> Result<Value, Refused> {
     let name = text(item, "name").filter(|name| plain_name(name));
     let sha256 = text(item, "sha256").filter(|sha| digest(sha));
     let size = item.get("size_bytes").and_then(Value::as_u64);
     let modified = text(item, "modified_at");
-    match (name, sha256, size, modified) {
-        (Some(name), Some(sha256), Some(size), Some(modified)) => Ok(json!({
+    let media_type = text(item, "media_type").filter(|media| !media.is_empty());
+    match (name, sha256, size, modified, media_type) {
+        (Some(name), Some(sha256), Some(size), Some(modified), Some(media_type)) => Ok(json!({
             "name": name,
             "size_bytes": size,
             "modified_at": modified,
             "sha256": sha256,
-            "media_type": text(item, "media_type"),
+            "media_type": media_type,
         })),
         _ => Err(refused("agent_gateway_unreadable")),
     }
@@ -1637,7 +1639,8 @@ mod tests {
         let page = json!({"workspace_root": "C:\\private\\ws", "attachments": [
             {"name": "a.pdf", "size_bytes": 10, "modified_at": "2026-10-18T10:00:00Z",
              "sha256": SHA, "media_type": "application/pdf"},
-            {"name": "b", "size_bytes": 0, "modified_at": "2026-10-18T10:00:00Z", "sha256": SHA}],
+            {"name": "b", "size_bytes": 0, "modified_at": "2026-10-18T10:00:00Z", "sha256": SHA,
+             "media_type": "application/octet-stream"}],
             "skipped": [{"name": "link", "reason": "link"}], "truncated": true, "next_after": "b"});
         // The workspace's path and what was skipped never reach the column.
         assert_eq!(
@@ -1646,7 +1649,7 @@ mod tests {
                 {"name": "a.pdf", "size_bytes": 10, "modified_at": "2026-10-18T10:00:00Z",
                  "sha256": SHA, "media_type": "application/pdf"},
                 {"name": "b", "size_bytes": 0, "modified_at": "2026-10-18T10:00:00Z",
-                 "sha256": SHA, "media_type": null}],
+                 "sha256": SHA, "media_type": "application/octet-stream"}],
                 "next_after": "b"})
         );
         assert_eq!(
@@ -1656,6 +1659,11 @@ mod tests {
         for bad in [
             json!({}),
             json!({"attachments": [{"name": "a", "size_bytes": 1, "modified_at": "t"}]}),
+            json!({"attachments": [{"name": "a", "size_bytes": 1, "modified_at": "t", "sha256": SHA}]}),
+            json!({"attachments": [{"name": "a", "size_bytes": 1, "modified_at": "t", "sha256": SHA,
+                                    "media_type": ""}]}),
+            json!({"attachments": [{"name": "a", "size_bytes": 1, "modified_at": "t", "sha256": SHA,
+                                    "media_type": null}]}),
             json!({"attachments": [{"name": "a/b", "size_bytes": 1, "modified_at": "t", "sha256": SHA}]}),
             json!({"attachments": [{"name": "a", "size_bytes": -1, "modified_at": "t", "sha256": SHA}]}),
             json!({"attachments": [], "next_after": "../x"}),
