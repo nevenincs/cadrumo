@@ -11,15 +11,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
-from cadrumo.tests.personas import (
-    ExpectedObligation,
-    Persona,
-    PersonaCatalogueError,
-    YearEnvelope,
-    persona_ids,
-    read_persona,
-)
+from cadrumo.entrypoints.tests.persona_world import year_envelope
+from cadrumo.tests.persona_types import ExpectedObligation, Persona, PersonaCatalogueError, YearEnvelope
+from cadrumo.tests.personas import persona_ids, read_persona
 
 from ..coverage import APPLICABLE, CalendarObservation
 from ..rows import (

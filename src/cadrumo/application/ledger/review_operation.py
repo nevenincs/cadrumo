@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -25,6 +26,7 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
 from .id_resolution import resolve_lineage_transaction_id
 from .manual_read import query_ledger_review_rows
+from .models import LedgerReviewRow
 from .read_access import resolve_ledger_read_access
 from .review_filter import ledger_review_query_for_spec
 from .transaction_projection import LedgerTransactionProjection
@@ -33,13 +35,17 @@ LEDGER_REVIEW_OPERATION_DEFINITION_ID = "ledger.review"
 
 
 class LedgerReviewRequest(BaseModel):
-    """Private review filters and an optional stable transaction handle."""
+    """Private review filters and an optional stable transaction handle.
+
+    ``output_language`` is the language a detail row's transaction link fields are named in.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     filters: tuple[str, ...] = ()
     transaction_prefix: str | None = Field(default=None, min_length=1, max_length=64, pattern=r"^[0-9a-f]+$")
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     def filter_spec(self) -> LedgerReviewFilterSpec:
         """Resolve authority and execution through the same canonical grammar."""
@@ -92,6 +98,20 @@ class LedgerReviewProjection(BaseModel):
         return self
 
 
+def _row_projection(row: LedgerReviewRow, language: OutputLanguage) -> LedgerReviewRowProjection:
+    """Copy one canonical row; a detail row's transaction names its link fields in ``language``."""
+    return LedgerReviewRowProjection(
+        id=row.id,
+        date=row.date,
+        amount=row.amount,
+        description=row.description,
+        status=LedgerReviewStatus(row.status),
+        transaction=None
+        if row.transaction is None
+        else LedgerTransactionProjection.from_payload(row.transaction, language=language),
+    )
+
+
 class LedgerReviewExecutor:
     """Run the existing review query wholly inside retained profile custody."""
 
@@ -129,7 +149,7 @@ class LedgerReviewExecutor:
             return LedgerReviewProjection(
                 profile_id=payload.profile_id,
                 transaction_prefix=payload.transaction_prefix,
-                rows=tuple(LedgerReviewRowProjection.model_validate_json(row.model_dump_json()) for row in result.rows),
+                rows=tuple(_row_projection(row, payload.output_language) for row in result.rows),
                 filters=result.filters,
             )
 

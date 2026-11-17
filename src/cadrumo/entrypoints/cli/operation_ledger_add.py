@@ -22,6 +22,8 @@ from ...application.ledger.ledger_add_contracts import (
 )
 from ...application.ledger.transaction_projection import LedgerTransactionProjection
 from ...core.errors.hierarchy import InternalInvariantError
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -150,6 +152,7 @@ def run_ledger_add(
     client = bound_profile_client(ctx)
     request = LedgerAddRequest(
         profile_id=client.profile_id,
+        output_language=OutputLanguage(active_output_language()),
         booked_date=booked_date,
         amount=amount,
         direction=direction.value,

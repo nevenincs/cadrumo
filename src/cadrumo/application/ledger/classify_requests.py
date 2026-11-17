@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_va
 
 from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal.grammar import DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
 from ...core.unit_proportion import is_unit_proportion
@@ -211,7 +212,10 @@ class LedgerClassifyM210Options(BaseModel):
 
 
 class LedgerClassifyRequest(BaseModel):
-    """Exact-profile single-classify request; optional nulls use an explicit mask."""
+    """Exact-profile single-classify request; optional nulls use an explicit mask.
+
+    ``output_language`` is the language the result's transaction link fields are named in.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -222,6 +226,7 @@ class LedgerClassifyRequest(BaseModel):
     m210: LedgerClassifyM210Options | None = None
     actor: Annotated[str, Field(min_length=1, max_length=64)] | None = None
     reaffirm: bool = False
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     @field_validator("patch_fields")
     @classmethod

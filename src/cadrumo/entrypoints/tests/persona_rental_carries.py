@@ -39,8 +39,10 @@ from ...domain.calculations.registry.renta_inmueble_bindings import (
     renta_inmueble_origin_columns,
 )
 from ...domain.contribuyente.inmueble_facts import inmuebles_from_facts
-from ...tests.personas import Persona, RentalProperty
-from .persona_materialisation import PersonaMaterialisationError, PersonaWorld, load_profile_record, run_operation
+from ...tests.persona_types import Persona, RentalProperty
+from .persona_operations import run_operation
+from .persona_replay_requests import load_profile_record
+from .persona_world import PersonaMaterialisationError, PersonaWorld
 
 _MODELO = "100"
 _PERIOD = "0A"

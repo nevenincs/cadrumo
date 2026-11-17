@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.external_constants import OutputLanguage
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.iva.schema import IvaExemptionArticle
 from ...domain.iva.vehicle_use import IvaVehicleUse
@@ -84,6 +85,8 @@ def _optional_token_text(token: object | None) -> str | None:
 def classification_result_from_action(
     profile_id: UUID,
     result: ManualLedgerTransactionResult,
+    *,
+    language: OutputLanguage,
 ) -> LedgerClassifyOperationResult:
     """Validate exact identity, project canonical output, and enforce its byte bound."""
     canonical: LedgerTransactionResultPayload = ledger_transaction_result_payload(result)
@@ -91,7 +94,7 @@ def classification_result_from_action(
     projected = LedgerClassifyOperationResult(
         outcome="classified",
         profile_id=profile_id,
-        transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
+        transaction=LedgerTransactionProjection.from_payload(canonical.transaction, language=language),
         deduction_fact_kind=(
             result.transaction.deduction_fact_kind.value
             if (result.transaction.deduction_fact_kind is not None and result.transaction.deduction_fact_kind)

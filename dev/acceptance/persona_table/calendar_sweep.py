@@ -31,15 +31,16 @@ from cadrumo.application.overview.read_request import (
 from cadrumo.application.overview.read_result import OverviewReadProjection
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.entrypoints.tests.persona_materialisation import (
+from cadrumo.entrypoints.tests.persona_materialisation import materialised_persona
+from cadrumo.entrypoints.tests.persona_operations import run_operation
+from cadrumo.entrypoints.tests.persona_world import (
     PersonaMaterialisationError,
     PersonaWorld,
     ReplayScope,
-    materialised_persona,
-    run_operation,
     year_envelope,
 )
-from cadrumo.tests.personas import Persona, PersonaCatalogueError, YearEnvelope, persona_ids, read_persona
+from cadrumo.tests.persona_types import Persona, PersonaCatalogueError, YearEnvelope
+from cadrumo.tests.personas import persona_ids, read_persona
 
 from .coverage import APPLICABLE, OUT_ENV, PERSONAS_ENV, CalendarObservation, CalendarRefusal
 

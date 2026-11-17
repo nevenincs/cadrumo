@@ -18,7 +18,7 @@ from decimal import Decimal, InvalidOperation
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
 from cadrumo.domain.calculations.registry.export_parse_models import ParsedExportFieldValue
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from cadrumo.tests.personas import ExpectedValue, Identity, IdentityCatalogue
+from cadrumo.tests.persona_types import ExpectedValue, Identity, IdentityCatalogue
 
 _AMOUNTS = frozenset(
     {"importe_anual", "base", "base_retenciones", "retenciones", "porcentaje_retencion", "importe_integro"}

@@ -9,16 +9,9 @@ from functools import cache
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
-from cadrumo.tests.personas import (
-    ExpectedValue,
-    Persona,
-    ProvisionPeriods,
-    YearEnvelope,
-    YearToken,
-    persona_ids,
-    read_persona,
-)
+from cadrumo.entrypoints.tests.persona_world import year_envelope
+from cadrumo.tests.persona_types import ExpectedValue, Persona, ProvisionPeriods, YearEnvelope, YearToken
+from cadrumo.tests.personas import persona_ids, read_persona
 
 from ..rows import (
     GREEN,

@@ -87,9 +87,11 @@ ERROR_CONTEXT_LABEL_KEYS: Final[tuple[str, ...]] = (
     "row",
     "schema_version",
     "section",
+    "source",
     "state",
     "status",
     "tax_year",
+    "terminal_condition",
     "value",
     "year",
 )

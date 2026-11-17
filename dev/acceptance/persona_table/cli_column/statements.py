@@ -23,16 +23,12 @@ from cadrumo.domain.calculations.registry.renta_inmueble_bindings import (
     renta_inmueble_origin_columns,
 )
 from cadrumo.domain.contribuyente.inmueble_facts import inmuebles_from_facts
-from cadrumo.entrypoints.tests.persona_materialisation import (
-    MaterialisedPersona,
-    PersonaMaterialisationError,
-    PersonaWorld,
-    attested_before_calculating,
-    load_profile_record,
-)
+from cadrumo.entrypoints.tests.persona_operations import attested_before_calculating
 from cadrumo.entrypoints.tests.persona_prior_values import entries_on
+from cadrumo.entrypoints.tests.persona_replay_requests import load_profile_record
 from cadrumo.entrypoints.tests.persona_work_inputs import WorkInputError, resolved_casillas, work_inputs_for
-from cadrumo.tests.personas import AttestedPriorValue, Persona, PriorCarries, RentalProperty, YearEnvelope
+from cadrumo.entrypoints.tests.persona_world import MaterialisedPersona, PersonaMaterialisationError, PersonaWorld
+from cadrumo.tests.persona_types import AttestedPriorValue, Persona, PriorCarries, RentalProperty, YearEnvelope
 
 from ..rows import PlannedRow
 from .world_report import Phase, Statement, StatementKind

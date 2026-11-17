@@ -43,7 +43,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
-from ...tests.personas import Persona, WorkInput, YearEnvelope
+from ...tests.persona_types import Persona, WorkInput, YearEnvelope
 from .persona_prior_values import SettleOperation
 
 

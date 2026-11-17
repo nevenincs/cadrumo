@@ -346,6 +346,9 @@ export type LedgerLlmReviewProjection = {
  *
  * `actor` is recorded as sent for a person's session. An automation's session
  * is recorded under its own session label, whatever the request carries.
+ *
+ * `output_language` is the language the result's transaction link fields are
+ * named in.
  */
 export type LedgerLlmReviewRequest = {
   profile_id: string;
@@ -357,6 +360,7 @@ export type LedgerLlmReviewRequest = {
   read_evidence?: boolean;
   reason?: string;
   preview?: boolean;
+  output_language?: OutputLanguage;
 };
 
 /**
@@ -801,10 +805,14 @@ export type LedgerTrackProjection = {
 
 /**
  * An exact profile and a current or superseded transaction handle.
+ *
+ * `output_language` is the language the transaction's link fields are named
+ * in.
  */
 export type LedgerTrackRequest = {
   profile_id: string;
   transaction_prefix: string;
+  output_language?: OutputLanguage;
 };
 
 /**

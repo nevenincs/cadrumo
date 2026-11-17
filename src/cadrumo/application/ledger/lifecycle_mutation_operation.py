@@ -289,6 +289,7 @@ class _LedgerLifecycleExecutor:
             self._operation_id,
             settled,
             tracked.replaced(prepared.transaction_id),
+            language=payload.output_language,
         )
         result = LedgerLifecycleOperationResult(
             outcome="updated",

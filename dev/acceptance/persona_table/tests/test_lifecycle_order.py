@@ -10,7 +10,7 @@ from typing import cast
 import pytest
 
 from cadrumo.application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2
-from cadrumo.entrypoints.tests.persona_materialisation import PersonaWorld
+from cadrumo.entrypoints.tests.persona_world import PersonaWorld
 
 from .. import planner, sweep
 from ..__main__ import _selection, main

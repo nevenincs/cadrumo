@@ -40,7 +40,7 @@ from ...domain.contribuyente.inventory.records import (
     derive_inventory_acquisition_totals,
 )
 from ...domain.filing_evidence import FilingEvidenceReference
-from ...tests.personas import InventoryBook, LedgerRow, Persona
+from ...tests.persona_types import InventoryBook, LedgerRow, Persona
 
 type SettleOperation = Callable[[str, BaseModel], BaseModel | None]
 """Settles one registered operation against the persona's profile and returns its public result."""

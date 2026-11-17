@@ -20,7 +20,8 @@ from cadrumo.application.user_profile.validation import reject_invalid_profile_f
 from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.tests.personas import IdentityRef, Persona, YearEnvelope, read_persona
+from cadrumo.tests.persona_types import IdentityRef, Persona, YearEnvelope
+from cadrumo.tests.personas import read_persona
 
 _PERSONA_ID = "autonomo-fontanero"
 

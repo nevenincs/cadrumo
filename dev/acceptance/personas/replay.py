@@ -4,15 +4,9 @@ from __future__ import annotations
 
 import json
 
-from cadrumo.entrypoints.tests.persona_materialisation import (
-    bank_statement,
-    document_path,
-    inventory_statement,
-    patch_answers,
-)
-from cadrumo.tests.personas import (
-    LedgerRow,
-)
+from cadrumo.entrypoints.tests.persona_replay_profile import document_path, inventory_statement
+from cadrumo.entrypoints.tests.persona_replay_requests import bank_statement, patch_answers
+from cadrumo.tests.persona_types import LedgerRow
 
 from . import commands
 from .journey import (

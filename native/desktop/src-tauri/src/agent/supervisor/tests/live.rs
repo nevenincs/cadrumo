@@ -635,12 +635,12 @@ async fn each_sign_in_trigger_stops_the_launcher_and_its_tree() {
         (
             "runtime unavailable",
             observed(true, false, Some("A")),
-            "refused",
+            "awaiting",
         ),
         (
             "unreadable status",
             Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)),
-            "refused",
+            "awaiting",
         ),
         (
             "local sign-in mutation in progress",
@@ -663,7 +663,7 @@ async fn each_sign_in_trigger_stops_the_launcher_and_its_tree() {
         let changed = rig.statuses.lock().unwrap().len();
         *rig.observation.lock().unwrap() = observation;
         // Each outcome is published only after the launcher is stopped.
-        let settled = if published == "ready" {
+        let settled = if published == "ready" || published == "awaiting" {
             "stopped"
         } else {
             published
@@ -690,6 +690,25 @@ async fn each_sign_in_trigger_stops_the_launcher_and_its_tree() {
                     .windows(2)
                     .any(|w| w[0] == "stopped" && w[1] == "starting"),
                 "{states:?}"
+            );
+        } else if published == "awaiting" {
+            // The runtime is waited for within its readiness bound: the
+            // service stops for it and nothing is refused yet.
+            assert_eq!(
+                stop_causes(&rig),
+                [
+                    AgentStopCause::RuntimeUnavailable,
+                    AgentStopCause::RuntimeUnavailable
+                ],
+                "{trigger}: stopping and stopped"
+            );
+            assert!(
+                !rig.diagnostics
+                    .snapshot(u64::MAX)
+                    .events
+                    .iter()
+                    .any(|event| matches!(event.service, Some(ServiceFact::AgentRefused { .. }))),
+                "{trigger}"
             );
         } else if published == "refused" {
             let signed_out = trigger.starts_with("sign-out");

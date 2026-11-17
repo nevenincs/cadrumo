@@ -17,7 +17,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.renta_inmueble_bindings import renta_inmueble_columns
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormPlacementKind
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
-from cadrumo.entrypoints.tests.persona_materialisation import PersonaWorld
+from cadrumo.entrypoints.tests.persona_world import PersonaWorld
 
 
 def single_row_figures(

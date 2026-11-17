@@ -31,20 +31,22 @@ from cadrumo.application.modelo.work_create_operation import (
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import binding_source_modelo
-from cadrumo.entrypoints.tests.persona_materialisation import (
+from cadrumo.entrypoints.tests.persona_history_replay import filing_key
+from cadrumo.entrypoints.tests.persona_operations import (
+    attest_before_first_calculation,
+    run_operation,
+    settle_operation,
+)
+from cadrumo.entrypoints.tests.persona_prior_carries import attest_prior_carries
+from cadrumo.entrypoints.tests.persona_world import (
     PERSONA_ACTOR,
     MaterialisedPersona,
     PersonaMaterialisationError,
     PersonaWorld,
     ReplayScope,
-    attest_before_first_calculation,
-    filing_key,
-    run_operation,
-    settle_operation,
     year_envelope,
 )
-from cadrumo.entrypoints.tests.persona_prior_carries import attest_prior_carries
-from cadrumo.tests.personas import ExpectedValue, Persona, YearEnvelope
+from cadrumo.tests.persona_types import ExpectedValue, Persona, YearEnvelope
 
 from .cli_column.world_report import StatementKind
 from .counterparties import is_compared

@@ -14,7 +14,8 @@ from textual.widget import Widget
 from textual.widgets import Input, Static
 
 from ....application.ledger.allocate_operation import LedgerAllocateRequest
-from ....core.i18n.render import tr
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
 from .categorisation_common import (
     CategorisationScreen,
     StagedChangeV1,
@@ -80,6 +81,7 @@ class LedgerAllocateScreen(CategorisationScreen):
             category_id=blank_to_none(self.query_one("#categorisation-allocate-category", Input).value),
             usage_ratio_id=blank_to_none(self.query_one("#categorisation-allocate-ratio", Input).value),
             prorrata_reference=blank_to_none(self.query_one("#categorisation-allocate-prorrata", Input).value),
+            output_language=OutputLanguage(output_language()),
         )
 
         async def write() -> bool:

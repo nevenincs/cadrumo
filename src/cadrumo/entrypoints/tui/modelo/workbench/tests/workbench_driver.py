@@ -73,7 +73,8 @@ from ......domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
 )
-from .....tests.persona_materialisation import PERSONA_ACTOR, PersonaWorld, public_result, run_operation
+from .....tests.persona_operations import public_result, run_operation
+from .....tests.persona_world import PERSONA_ACTOR, PersonaWorld
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
 from ....operations.controller_port import OperationResponseControlPort
