@@ -383,7 +383,24 @@ jobs:
         env:
           SHARD: ${{ matrix.shard }}
           CHANGED_FILES: ${{ needs.plan.outputs.scoped == 'true' && 'var/ci/changed-paths.txt' || '' }}
-        run: just test-gate-shard "$SHARD" "$CHANGED_FILES"
+        # A runner that runs out of memory or disk is stopped, and fails no
+        # test: the log ends without a reason. The sampler prints the machine's
+        # memory, disk, load and largest processes into this step's log while
+        # the tests run, so its last lines say what the runner had left. It is
+        # stopped with the step; the tests' exit status is the step's.
+        run: |
+          uv run --no-sync python -m dev.ci.runner_resources --every 30 &
+          trap 'kill "$!" 2>/dev/null || true' EXIT
+          just test-gate-shard "$SHARD" "$CHANGED_FILES"
+
+      # The kernel names each process it killed for memory. A runner that
+      # survives a failed shard prints those records; an empty answer says so.
+      - name: Report the kernel's kill records
+        if: ${{ failure() }}
+        shell: bash
+        run: |
+          sudo dmesg --ctime | grep -E -i 'out of memory|oom-kill|killed process' | tail -n 40 \
+            || echo "the kernel recorded no kill"
 
       # As in the goldens job: the failed sandboxes' redacted logs, nothing else.
       - name: Upload the failed sandbox logs
