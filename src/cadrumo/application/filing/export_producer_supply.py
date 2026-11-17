@@ -33,16 +33,10 @@ from .producer_profile_facts import missing_producer_fact_names
 #: Año" and "fin - Año" as Num fields of length 2 with an empty Contenido cell,
 #: and the Orden's documento de ingreso o devolución draws undivided boxes: no
 #: official text says which two digits of the year are written.
-#:
-#: Page 1 field 26 of the Modelo 200 designs that carry it, "Autoliquidación
-#: rectificativa - Como consecuencia de la presentación de la autoliquidación
-#: rectificativa solicito dar de baja la domiciliación efectuada", has empty
-#: Validación and Contenido cells, and the Orden's page 1 prints no box for it.
 UNSUPPORTED_PRODUCER_KEYS: Final[frozenset[FilingProducerKey]] = frozenset(
     {
         FilingProducerKey.M200_PERIODO_IMPOSITIVO_INICIO_ANO,
         FilingProducerKey.M200_PERIODO_IMPOSITIVO_FIN_ANO,
-        FilingProducerKey.M200_COMO_CONSECUENCIA_DE_LA_PRESENTACION_DE_LA_A,
     }
 )
 

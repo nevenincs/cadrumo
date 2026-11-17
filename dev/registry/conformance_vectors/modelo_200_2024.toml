@@ -10,7 +10,7 @@
 
 authority_id = "dev.registry.filing-export-conformance"
 mechanism_source_ref = "generated-provenance/200/2024"
-generation_manifest_sha256 = "17fab55519e5090490e50524e245be741f94a05b437e79bfdeada38f4be66f45"
+generation_manifest_sha256 = "3e75bf2002b5df21861d75652c6655c6e45e3d15ecae95caff23033e8e8fd76e"
 filing_year = 2024
 period_code = "0A"
 
