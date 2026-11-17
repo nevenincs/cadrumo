@@ -11,7 +11,18 @@
 
 import type { BindingSourceKind } from "./modelo";
 import type { SourceSurface } from "./modeloWork";
-import type { SourceFamily, SourceOverridePolicy } from "./modeloWorkForm";
+import type { SourceFamily } from "./modeloWorkForm";
+
+/**
+ * What a filer may do about a value this source supplies.
+ */
+export type SourceOverridePolicy =
+  | "fix_at_source"
+  | "override_with_reason"
+  | "edit_at_home"
+  | "enter"
+  | "fixed"
+  | "undecided";
 
 /**
  * The family, policy and owning surface of one binding source kind.
