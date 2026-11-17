@@ -1,8 +1,11 @@
-import type { InventoryMovement } from "../../src/shell/ledgerSetup";
+import type { InventoryMovementProjection } from "../../src/shell/ledgerInventoryContract";
 import { fixtureDay } from "../../src/dev/fixtureDates";
 
 /** A sale of stock as the inventory reads serve a movement. */
-export const movement = (id: string, quantity: string): InventoryMovement => ({
+export const movement = (
+  id: string,
+  quantity: string,
+): InventoryMovementProjection => ({
   movement_id: id,
   movement_date: fixtureDay(11, 20, -1),
   kind: "cogs",

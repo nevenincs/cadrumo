@@ -104,3 +104,13 @@ export type LedgerCapitalGoodsContracts = {
     result: BienesInversionListProjection;
   };
 };
+
+export type BienesInversionDeclareWindowRequest = Omit<
+  BienesInversionDeclareRequest,
+  "profile_id"
+>;
+
+export type BienesInversionListWindowRequest = Omit<
+  BienesInversionListRequest,
+  "profile_id"
+>;

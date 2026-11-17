@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, MutableMapping, MutableSequence, MutableSet, Sequence, Set
-from typing import TypeAliasType, get_args, get_origin, is_typeddict
+from collections.abc import Callable, Mapping, MutableMapping, MutableSequence, MutableSet, Sequence, Set
+from types import MappingProxyType
+from typing import Final, TypeAliasType, get_args, get_origin, is_typeddict
 
 from pydantic import BaseModel
 
+from ...core.models import OPERATION_FILLED_BY_SCHEMA_KEY, require_filled_by_annotation
 from ...core.type_guards import is_object_dict
 from .form_field_annotation import OPERATION_FORM_FIELD_SCHEMA_KEY, require_form_field_annotation
 
@@ -168,26 +170,36 @@ def _require_no_custom_core_schema_hook(annotation: object, *, path: str) -> Non
     raise ValueError(f"operation {path} must not customize its Pydantic core schema")
 
 
+_CHECKED_FIELD_ANNOTATIONS: Final[Mapping[str, Callable[[object], object]]] = MappingProxyType(
+    {
+        OPERATION_FORM_FIELD_SCHEMA_KEY: require_form_field_annotation,
+        OPERATION_FILLED_BY_SCHEMA_KEY: require_filled_by_annotation,
+    }
+)
+
+
+def _require_checked_annotations(extra: Mapping[object, object], *, path: str) -> None:
+    for key, require in _CHECKED_FIELD_ANNOTATIONS.items():
+        if key not in extra:
+            continue
+        try:
+            require(extra[key])
+        except ValueError as error:
+            raise ValueError(f"operation {path} {error}") from None
+
+
 def _require_nonstructural_json_schema_extra(extra: object, *, path: str, admits_form_field: bool = False) -> None:
-    """Admit plain annotations, and on a field its checked form annotation; refuse anything structural."""
+    """Admit plain annotations, and on a field its checked annotations; refuse anything structural."""
     if extra is None:
         return
     if not is_object_dict(extra):
         raise ValueError(f"operation {path} must not use callable JSON schema customization")
-    typed_extra = extra
-    admitted: frozenset[str] = (
-        _NONSTRUCTURAL_JSON_SCHEMA_EXTRA_KEYS | {OPERATION_FORM_FIELD_SCHEMA_KEY}
-        if admits_form_field
-        else _NONSTRUCTURAL_JSON_SCHEMA_EXTRA_KEYS
-    )
-    unsupported = {key for key in typed_extra if not isinstance(key, str) or key not in admitted}
-    if unsupported:
+    admitted: frozenset[str] = _NONSTRUCTURAL_JSON_SCHEMA_EXTRA_KEYS
+    if admits_form_field:
+        admitted = admitted | frozenset(_CHECKED_FIELD_ANNOTATIONS)
+    if any(not isinstance(key, str) or key not in admitted for key in extra):
         raise ValueError(f"operation {path} JSON schema extras must be nonstructural annotations only")
-    if OPERATION_FORM_FIELD_SCHEMA_KEY in typed_extra:
-        try:
-            require_form_field_annotation(typed_extra[OPERATION_FORM_FIELD_SCHEMA_KEY])
-        except ValueError as error:
-            raise ValueError(f"operation {path} {error}") from None
+    _require_checked_annotations(extra, path=path)
 
 
 def _require_annotation_contract(

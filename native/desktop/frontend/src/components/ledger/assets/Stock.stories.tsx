@@ -13,7 +13,7 @@ import {
 } from "@/dev/LedgerStage";
 import type { LedgerShape } from "@/dev/ledgerFixture";
 import type { LedgerPort } from "../../../shell/ledger";
-import type { InventoryListResult } from "../../../shell/ledgerSetup";
+import type { InventoryListProjection } from "../../../shell/ledgerInventoryContract";
 import { translator } from "../../../shell/strings";
 import { usePagePause, WritePauseContext } from "../WritePause";
 import type { SetupProps } from "../setup/setupProps";
@@ -142,8 +142,11 @@ function withListAnswer(
           ? {
               ...outcome,
               result: {
-                ...(outcome.result as InventoryListResult),
-                rows: (outcome.result as InventoryListResult).rows.slice(0, 1),
+                ...(outcome.result as InventoryListProjection),
+                rows: (outcome.result as InventoryListProjection).rows.slice(
+                  0,
+                  1,
+                ),
               },
             }
           : outcome,

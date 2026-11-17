@@ -41,7 +41,7 @@ import { useScrolls } from "@/components/ui/useScrolls";
 import { useMetric } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
 import type { CoverageAdviceReason } from "../shell/calendarContract";
-import type { CalendarEntry } from "../shell/views";
+import type { FilingCalendarServed } from "../shell/calendarContract";
 import type { UserProfile } from "../shell/userProfile";
 import { CalendarMonths } from "./calendar/CalendarMonths";
 import {
@@ -144,7 +144,7 @@ export function FilingCalendarView({
   onYearCurrent?: () => void;
   /** Take the person to where this obligation is worked on. Left out where
    * the window cannot: no row then offers a way it does not have. */
-  onOpen?: (entry: CalendarEntry) => void;
+  onOpen?: (entry: FilingCalendarServed["entries"][number]) => void;
   profile?: UserProfile | null;
   onNavigate?: (url: string) => void;
 }) {

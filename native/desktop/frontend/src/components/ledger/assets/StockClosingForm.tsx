@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import type { LedgerPort } from "../../../shell/ledger";
-import type { InventoryBookRow } from "../../../shell/ledgerSetup";
+import type { InventoryListRowProjection } from "../../../shell/ledgerInventoryContract";
 import { useStrings } from "../../../shell/strings";
 import {
   CallLine,
@@ -46,7 +46,7 @@ export function ClosingForm({
   onWritten,
 }: {
   port: LedgerPort;
-  book: InventoryBookRow;
+  book: InventoryListRowProjection;
   catalogue: OfferState;
   onClose(): void;
   onWritten(): void;

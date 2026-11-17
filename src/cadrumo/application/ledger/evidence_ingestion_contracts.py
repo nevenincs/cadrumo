@@ -9,7 +9,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.identity.digest import ContentDigest
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG, host_filled_schema
 from ...core.operations import OperationEffect
 from ...domain.iva.schema import InvoiceKind
 from ..operations.public_scalar import PublicNamedScalar, project_facts, restore_facts
@@ -33,7 +33,7 @@ class LedgerEvidenceBatchRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
     sources: Annotated[tuple[_Path, ...], Field(min_length=1)]
-    source_directory: _Path
+    source_directory: _Path = Field(json_schema_extra=host_filled_schema())
     direction: InvoiceKind
 
     @model_validator(mode="after")

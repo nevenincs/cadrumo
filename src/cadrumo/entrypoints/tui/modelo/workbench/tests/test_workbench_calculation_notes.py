@@ -39,7 +39,6 @@ from ......domain.modelos.verification_report import (
 from ....components.host import ScreenHostApp
 from ....tests.settling import settle
 from ..issue_projection import issue_lines
-from ..issue_scale import IssueLevel
 from ..issues import WorkbenchIssuesScreen
 from .workbench_fixture import served_load, synthetic_form
 
@@ -155,9 +154,9 @@ def test_notes_join_the_findings_on_one_scale() -> None:
         lines = issue_lines(form)
 
     assert [(line.level, line.from_calculation) for line in lines] == [
-        (IssueLevel.BLOCKS, True),
-        (IssueLevel.CHECK, False),
-        (IssueLevel.CHECK, True),
+        (ModeloFormAttention.BLOCKS, True),
+        (ModeloFormAttention.CHECK, False),
+        (ModeloFormAttention.CHECK, True),
     ]
     assert lines[0].where == "In your records"
     assert lines[0].message == "An amount from your records is not placed in any box of this declaration."

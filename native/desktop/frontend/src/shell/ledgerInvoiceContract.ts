@@ -1157,3 +1157,52 @@ export type LedgerInvoiceContracts = {
     result: LedgerLinkOperationResult;
   };
 };
+
+export type InvoiceAddWindowRequest = Omit<InvoiceAddRequest, "profile_id">;
+
+export type InvoiceDocumentAttachWindowRequest = Omit<
+  InvoiceDocumentAttachRequest,
+  "profile_id" | "source_directory"
+>;
+
+export type InvoiceFiguresPreviewWindowRequest = Omit<
+  InvoiceFiguresPreviewRequest,
+  "profile_id"
+>;
+
+export type InvoiceImportWindowRequest = Omit<
+  InvoiceImportRequest,
+  "profile_id"
+>;
+
+export type InvoiceListWindowRequest = Omit<InvoiceListRequest, "profile_id">;
+
+export type InvoiceRemoveWindowRequest = Omit<
+  InvoiceRemoveRequest,
+  "profile_id"
+>;
+
+export type InvoiceUpdateWindowRequest = Omit<
+  InvoiceUpdateRequest,
+  "profile_id"
+>;
+
+export type InvoiceViewWindowRequest = Omit<InvoiceViewRequest, "profile_id">;
+
+export type LedgerAttachWindowRequest = Omit<LedgerAttachRequest, "profile_id">;
+
+export type LedgerCheckWindowRequest = Omit<LedgerCheckRequest, "profile_id">;
+
+export type LedgerDetachWindowRequest = Omit<LedgerDetachRequest, "profile_id">;
+
+export type LedgerInvoiceDuplicateWindowRequest = Omit<
+  LedgerInvoiceDuplicateRequest,
+  "profile_id"
+>;
+
+export type LedgerInvoiceMatchWindowRequest = Omit<
+  LedgerInvoiceMatchRequest,
+  "profile_id"
+>;
+
+export type LedgerLinkWindowRequest = Omit<LedgerLinkRequest, "profile_id">;

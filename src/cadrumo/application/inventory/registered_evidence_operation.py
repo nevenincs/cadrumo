@@ -19,7 +19,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.digest import ContentDigest
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG, host_filled_schema
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.contribuyente.inventory.corrections import inventory_refusal_key
@@ -62,7 +62,7 @@ class InventoryEvidenceAddRequest(BaseModel):
 
     profile_id: UUID
     source_path: _EvidencePath
-    source_directory: _EvidencePath
+    source_directory: _EvidencePath = Field(json_schema_extra=host_filled_schema())
 
 
 class InventoryEvidenceAddProjection(BaseModel):

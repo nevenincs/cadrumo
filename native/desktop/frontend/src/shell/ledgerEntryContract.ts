@@ -317,3 +317,15 @@ export type LedgerEntryContracts = {
     result: LedgerResetOperationResult;
   };
 };
+
+export type LedgerEntryOptionsWindowRequest = Omit<
+  LedgerEntryOptionsRequest,
+  "profile_id"
+>;
+
+export type LedgerParticipationRebuildWindowRequest = Omit<
+  LedgerParticipationRebuildRequest,
+  "profile_id"
+>;
+
+export type LedgerResetWindowRequest = Omit<LedgerResetRequest, "profile_id">;

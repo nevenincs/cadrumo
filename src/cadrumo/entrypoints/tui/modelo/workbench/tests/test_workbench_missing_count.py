@@ -29,7 +29,6 @@ from ......domain.modelos.verification_report import (
 )
 from ..header import attention_chips
 from ..issue_projection import issue_lines
-from ..issue_scale import IssueLevel
 from .workbench_fixture import registry_form, served_progress
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -80,7 +79,10 @@ def test_the_missing_values_only_findings_name_are_the_ones_the_findings_list_sh
     records = _missing_values(operation, "349", 2026, "1T", _RECORD_VALUES)
     listed = _missing_values(operation, "210", 2025, "0A", ("tipo_renta", "rendimientos_integros"))
     with override_settings(cadrumo_output_language="en"):
-        shown = [sum(1 for line in issue_lines(form) if line.level is IssueLevel.MISSING) for form in (records, listed)]
+        shown = [
+            sum(1 for line in issue_lines(form) if line.level is ModeloFormAttention.MISSING)
+            for form in (records, listed)
+        ]
 
     assert len(listed.issues) == 2
     assert [missing_findings(records), missing_findings(listed)] == shown == [len(_RECORD_VALUES), 0]

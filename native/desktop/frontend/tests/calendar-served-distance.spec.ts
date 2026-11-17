@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { CalendarEntry } from "../src/shell/views";
+import type { FilingCalendarServed } from "../src/shell/calendarContract";
 import { calendarEntry, FIXTURE_TODAY } from "../src/dev/fixtures/calendar";
 import { fixtureDay, fixtureYear } from "../src/dev/fixtureDates";
 import { markupOf } from "./support/markup";
@@ -11,12 +11,12 @@ import { markupOf } from "./support/markup";
 
 const drawRow = () =>
   markupOf<{
-    entry: CalendarEntry;
+    entry: FilingCalendarServed["entries"][number];
     locale: string;
     selected: boolean;
     onSelect: (key: string) => void;
   }>("components/calendar/CalendarEntryRow.tsx", "CalendarEntryRow");
-const row = async (entry: CalendarEntry) =>
+const row = async (entry: FilingCalendarServed["entries"][number]) =>
   (await drawRow())({
     entry,
     locale: "en",
