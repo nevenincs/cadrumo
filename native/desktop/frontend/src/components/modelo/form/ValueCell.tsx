@@ -327,7 +327,10 @@ export function ValueCell({
         onEditingChange({});
       }}
       className={cn(
-        "flex h-control-sm min-w-32 items-center justify-end rounded-md px-2 text-base tabular-nums disabled:cursor-default",
+        "flex min-h-control-sm min-w-32 items-center justify-end rounded-md px-2 text-right text-base tabular-nums disabled:cursor-default",
+        // Served text, unlike an amount, can run longer than the room its
+        // column has beside the label, so it wraps there, whole.
+        field.value?.kind === "string" && "py-0.5 wrap-anywhere",
         align === "grid" && "w-full",
         editable &&
           "cursor-text border border-input bg-card hover:border-border-strong",
