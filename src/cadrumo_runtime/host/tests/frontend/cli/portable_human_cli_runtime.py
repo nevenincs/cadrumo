@@ -353,7 +353,7 @@ class _Authorization(WorkerAuthorizationClient):
         settled: tuple[OperationId, ...] = (),
     ) -> None:
         # The runtime owner receives the worker's report as its endpoint would hand it on.
-        self.owner.operations_advanced(operation_ids, records_changed=records_changed)
+        self.owner.operations_advanced(operation_ids, records_changed=records_changed, settled=settled)
 
 
 class _Worker(ProfileWorkerHumanAdmission):
