@@ -28,7 +28,7 @@ from ....domain.iva.schema import InvoiceKind
 from ..components.language import localized
 from ..components.workspace_host import replace_workspace_body
 from .controller import LedgerWorkspaceController
-from .evidence_files_common import EvidenceFilesToolScreen, blank_to_none, shown
+from .evidence_files_common import EvidenceFilesToolScreen, shown
 from .evidence_files_doors import LedgerEvidenceFilesDoorsV1
 from .evidence_files_write import (
     EvidenceFilesOutcomeRowV1,
@@ -36,6 +36,7 @@ from .evidence_files_write import (
     EvidenceFilesWordingV1,
     LedgerEvidenceFilesWriteScreen,
 )
+from .text_values import blank_to_none
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
 from .workspace_screen import LedgerWorkspaceScreen
 

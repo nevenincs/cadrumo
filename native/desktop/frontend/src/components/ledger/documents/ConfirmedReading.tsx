@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Icon } from "@/components/ui/icon";
 import { facts } from "../../../shell/compose";
-import type { EvidenceConfirmResult } from "../../../shell/ledgerDocumentOperations";
+import type { LedgerEvidenceConfirmProjection } from "../../../shell/ledgerDocumentReviewContract";
 import type { InvoiceMatchView } from "../../../shell/ledgerInvoiceMatch";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
@@ -40,7 +40,7 @@ export function ConfirmedReading({
   rootRef: RefObject<HTMLDivElement | null>;
   /** The offered link's button, focused when it arrives in time. */
   linkRef(button: HTMLButtonElement | null): void;
-  confirmed: EvidenceConfirmResult;
+  confirmed: LedgerEvidenceConfirmProjection;
   rows: LedgerTransactionReviewProjection[] | null;
   linkMatches: InvoiceMatchView;
   actions: StagedAction[];

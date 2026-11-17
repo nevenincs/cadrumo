@@ -95,11 +95,15 @@ No other job in the gate may be skipped or advisory.
 
 **Scope.** For a pull request into `feature/tui`, `dev.ci.change_scope` maps
 the changed paths to the test directories they can affect, and the plan deals
-those test files into shards (`dev.ci.gate_shards`): about 900 files to a
-shard, eight shards at most, largest files first onto the lightest shard. A
-typical pull request is one shard. A promotion pull request into `main`, and a
-call from the release proof, read no change list and run the full population
-in eight shards.
+those test files into shards (`dev.ci.gate_shards`): at most 400 files to a
+shard, twenty-four shards at most, largest files first onto the lightest shard.
+The size is set by the runner's memory, not by time: each test worker keeps
+what its tests leave behind, and at about 900 files to a shard every hosted
+runner of a full-tree run used its memory and swap and was lost before
+pytest's summary. A contract holds the full tree within the cap at that size.
+A typical pull request is one shard. A promotion pull request into `main`, and
+a call from the release proof, read no change list and run the full population
+(19 shards at 7231 test files).
 
 **Concurrency.** A pull request's runs share one group and a newer event
 cancels the older run. A push run's group ends in its own commit, so the runs
@@ -110,7 +114,7 @@ not only `cancel-in-progress: false`, because a group holds one running and
 one pending run: a third landing would replace the pending run of the second,
 and trains land faster than a run finishes. The cost is that the gate applies
 no back-pressure. Runs for successive heads overlap, each starts its own
-seventeen jobs at eight shards, and when landings outpace the account's
+its jobs (twenty-eight at nineteen shards), and when landings outpace the account's
 hosted-runner allowance the jobs wait in GitHub's queue, so a head's verdict
 can arrive well after its landing.
 
@@ -148,7 +152,8 @@ disk, load and the four processes holding the most memory, by name and process
 id only; no command line is read, because the log of a public run is public.
 The tests remain the step's last command, so their exit status is the step's.
 A shard that fails on a runner that survives also prints the kernel's kill
-records.
+records. The shards provision Chromium (the setup action's `browser` input),
+because their population holds the tests that drive a real browser.
 
 **Speed.** The expected critical path for a pull request is `authority`
 (toolchain, then compiling the registry) followed by the longest of `tests`,

@@ -33,18 +33,20 @@ import {
   TABLE_GROUPS,
 } from "../../src/dev/assetsRegister";
 import { servedEditionOf } from "../../src/dev/servedYearAuthority";
+import type { LedgerEntryLimitsProjection } from "../../src/shell/ledgerEntryContract";
 import type {
-  AcquisitionCandidate,
   AssetKind,
-  DisposalFacts,
-  FormOptions,
-  LedgerEntryLimits,
-} from "../../src/shell/ledgerSetup";
+  ActivityAssetDisposalSnapshot,
+} from "../../src/shell/ledgerActivityAssetContract";
+import type {
+  ActivityAssetAcquisitionCandidate,
+  ActivityAssetFormOptionsView,
+} from "../../src/shell/ledgerActivityAssetReadContract";
 import { holdLedgerLimits } from "../../src/shell/ledgerLimits";
 
 /** What the backend serves with the options of a form. */
 type Served = Omit<
-  FormOptions,
+  ActivityAssetFormOptionsView,
   "tax_year" | "asset_kind" | "regime" | "edition" | "table_groups"
 >;
 
@@ -61,7 +63,7 @@ type Scenario =
       id: string;
       kind: "baja";
       base: RevisionBase;
-      disposal: DisposalFacts | null;
+      disposal: ActivityAssetDisposalSnapshot | null;
     }
   | { id: string; kind: "fixture" }
   | {
@@ -76,23 +78,29 @@ type Scenario =
 
 type Input = {
   served: Served;
-  limits: LedgerEntryLimits;
+  limits: LedgerEntryLimitsProjection;
   /** The payments the ledger offers, as it accounts for them. A draft picks one
    * by its identifier, the way the window picks from what the register serves;
    * a draft that names none takes the first. */
-  candidates: AcquisitionCandidate[];
+  candidates: ActivityAssetAcquisitionCandidate[];
   scenarios: Scenario[];
 };
 
 /** What one run was given beyond its scenarios. */
-type Given = { served: Served; candidates: AcquisitionCandidate[] };
+type Given = {
+  served: Served;
+  candidates: ActivityAssetAcquisitionCandidate[];
+};
 
 const hex = (seed: string) => seed.repeat(64).slice(0, 64);
 
 /** The scenario's own year, read from its date. */
 const scenarioYear = Number(SCENARIO_TODAY.slice(0, 4));
 
-const optionsFor = (kind: string, served: Served): FormOptions => ({
+const optionsFor = (
+  kind: string,
+  served: Served,
+): ActivityAssetFormOptionsView => ({
   tax_year: scenarioYear,
   // A scenario names only kinds the register defines.
   asset_kind: kind as AssetKind,
@@ -104,7 +112,7 @@ const optionsFor = (kind: string, served: Served): FormOptions => ({
 
 const contextFor = (
   kind: "element" | "correction",
-  options: FormOptions,
+  options: ActivityAssetFormOptionsView,
   base: RevisionBase | null,
 ): FieldContext => ({
   kind,
@@ -117,9 +125,9 @@ const contextFor = (
 
 /** The payment a draft picks, or the first on offer where it names none. */
 const pickedBy = (
-  candidates: AcquisitionCandidate[],
+  candidates: ActivityAssetAcquisitionCandidate[],
   named: string | undefined,
-): AcquisitionCandidate | null =>
+): ActivityAssetAcquisitionCandidate | null =>
   candidates.find((found) => found.transaction_id === named) ??
   (named === undefined ? (candidates[0] ?? null) : null);
 

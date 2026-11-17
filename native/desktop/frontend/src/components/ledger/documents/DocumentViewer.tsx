@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Spinner } from "@/components/ui/spinner";
-import type { EvidencePageResult } from "../../../shell/ledgerDocumentOperations";
+import type { LedgerEvidencePageProjection } from "../../../shell/ledgerDocumentContract";
 import type {
   EvidenceStructuredFactV1,
   EvidenceStructuredInvoiceV1,
@@ -98,7 +98,7 @@ export function DocumentPage({
   fileName,
 }: {
   t: Translate;
-  shown: EvidencePageResult;
+  shown: LedgerEvidencePageProjection;
   scale: number;
   fileName: string;
 }) {
@@ -229,7 +229,7 @@ export function DocumentViewer({
   );
   // While a sharper drawing of the same page is read, the one already
   // drawn stays on screen.
-  const [kept, setKept] = useState<EvidencePageResult | null>(null);
+  const [kept, setKept] = useState<LedgerEvidencePageProjection | null>(null);
   useEffect(() => {
     if (read.phase === "ready") setKept(read.value);
   }, [read]);

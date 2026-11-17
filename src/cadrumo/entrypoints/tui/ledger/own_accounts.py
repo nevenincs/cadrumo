@@ -34,6 +34,7 @@ from ..components.theme import tokenised
 from ..components.widgets import ContentDataTable
 from ..operations.outcome import OperationOutcomeUnknownError
 from .controller import LedgerWorkspaceController
+from .text_values import blank_to_none
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
 from .workspace_screen import LedgerWorkspaceScreen
 
@@ -70,11 +71,6 @@ class LedgerOwnAccountDoorV1(Protocol):
     async def __call__(self, request: LedgerOwnAccountRequest) -> LedgerOwnAccountResult:
         """Submit one request and return its masked, receipt-correlated result."""
         ...
-
-
-def _blank_to_none(value: str) -> str | None:
-    stripped = value.strip()
-    return stripped or None
 
 
 def _role_label(role: OwnAccountRole) -> str:
@@ -312,15 +308,15 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
     def _detail_fields(self) -> dict[str, object]:
         """Collect the entered details; a blank field is not part of the request."""
         fields: dict[str, object] = {
-            "label": _blank_to_none(self._value("#own-account-label")),
+            "label": blank_to_none(self._value("#own-account-label")),
             "holding": OwnAccountHolding(self._select("#own-account-holding")),
-            "iban": _blank_to_none(self._value("#own-account-iban")),
-            "swift_bic": _blank_to_none(self._value("#own-account-bic")),
-            "bank_name": _blank_to_none(self._value("#own-account-bank-name")),
-            "bank_address": _blank_to_none(self._value("#own-account-bank-address")),
-            "bank_city": _blank_to_none(self._value("#own-account-bank-city")),
-            "bank_country_code": _blank_to_none(self._value("#own-account-bank-country")),
-            "currency": _blank_to_none(self._value("#own-account-currency")),
+            "iban": blank_to_none(self._value("#own-account-iban")),
+            "swift_bic": blank_to_none(self._value("#own-account-bic")),
+            "bank_name": blank_to_none(self._value("#own-account-bank-name")),
+            "bank_address": blank_to_none(self._value("#own-account-bank-address")),
+            "bank_city": blank_to_none(self._value("#own-account-bank-city")),
+            "bank_country_code": blank_to_none(self._value("#own-account-bank-country")),
+            "currency": blank_to_none(self._value("#own-account-currency")),
             "opened_on": require_iso8601_date_unless_blank(self._value("#own-account-opened-on")),
         }
         return {name: value for name, value in fields.items() if value is not None}
@@ -353,7 +349,7 @@ class LedgerOwnAccountsScreen(LedgerWorkspaceScreen):
         if button_id == "own-account-review":
             return self._stage_details()
         role = OwnAccountRole(self._select("#own-account-role"))
-        modelo = _blank_to_none(self._value("#own-account-modelo"))
+        modelo = blank_to_none(self._value("#own-account-modelo"))
         if button_id == "own-account-review-undesignate":
             request = self._request(action="undesignate", role=role, modelo=modelo)
             return request, tr(

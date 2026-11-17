@@ -8,13 +8,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { LedgerCheckResult } from "../../../shell/ledgerInvoiceOperations";
+import type { LedgerCheckProjection } from "../../../shell/ledgerInvoiceContract";
 import { publicPeriod } from "../../../shell/ledgerGrammar";
 import { useTextLimit } from "../../../shell/ledgerLimits";
 import type {
-  LedgerParticipationRebuildResult,
-  LedgerResetResult,
-} from "../../../shell/ledgerSetup";
+  LedgerParticipationRebuildProjection,
+  LedgerResetOperationResult,
+} from "../../../shell/ledgerEntryContract";
 import {
   checkReadiness,
   readinessSnapshot,
@@ -113,14 +113,16 @@ export function HealthSection({
   const [own, setOwn] = useState<{ key: string; readiness: Readiness } | null>(
     null,
   );
-  const [check, setCheck] = useState<SetupCall<LedgerCheckResult> | null>(null);
+  const [check, setCheck] = useState<SetupCall<LedgerCheckProjection> | null>(
+    null,
+  );
   const [checking, setChecking] = useState(false);
   const rebuild = useSetupWrite(
     t("desktop.ledger.health.links"),
     "ledger/health",
   );
   const [rebuilt, setRebuilt] =
-    useState<LedgerParticipationRebuildResult | null>(null);
+    useState<LedgerParticipationRebuildProjection | null>(null);
   const [reason, setReason] = useState("");
   // A reset records its reason as a ledger event, so the event's value bound is the limit.
   const reasonLimit = useTextLimit("event_payload_value");
@@ -128,7 +130,7 @@ export function HealthSection({
   const [resetOpen, setResetOpen] = useState(false);
   const [dryRun, setDryRun] = useState<{
     reason: string;
-    call: SetupCall<LedgerResetResult>;
+    call: SetupCall<LedgerResetOperationResult>;
   } | null>(null);
   const resetting = useSetupWrite(
     t("desktop.ledger.section.health"),

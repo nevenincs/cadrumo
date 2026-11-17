@@ -24,6 +24,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from ...application.operations.public_scalar import PublicDecimal
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.i18n.render import tr
 from .common import bad
@@ -34,6 +35,7 @@ __all__ = [
     "parse_fraction",
     "parse_optional_decimal_amount",
     "parse_optional_fraction",
+    "parse_public_decimal_amount",
 ]
 
 
@@ -75,6 +77,11 @@ def parse_decimal_amount(raw: str, *, label: str, signed: bool = True) -> Decima
     if parsed is None:
         raise bad(tr("cli.ledger.errors.invalid_decimal", label=label, raw=raw))
     return parsed
+
+
+def parse_public_decimal_amount(raw: str, *, label: str) -> PublicDecimal:
+    """Parse a non-negative amount into its lossless operation contract."""
+    return PublicDecimal(decimal=str(parse_decimal_amount(raw, label=label, signed=False)))
 
 
 def parse_optional_decimal_amount(raw: str | None, *, label: str, signed: bool = True) -> Decimal | None:

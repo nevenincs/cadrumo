@@ -26,6 +26,8 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.filing.schema import ModeloScalar
+from ..cli_exception_preconditions import nested_terminal_precondition_verdict
+from ..operator_actions.projection import PreconditionVerdictSnapshot
 from .action_errors import modelo_edit_refusal_error
 from .edit_models import (
     ModeloEditAddressV1,
@@ -114,6 +116,17 @@ def edit_refusal_words(refusal: ModeloEditRefusalV1, language: OutputLanguage) -
     return resolve_error_message(modelo_edit_refusal_error(refusal), locale=language.value)
 
 
+def edit_refusal_door(refusal: ModeloEditRefusalV1, language: OutputLanguage) -> PreconditionVerdictSnapshot | None:
+    """The door of a refused edit, the one its Apply would settle under, served in ``language``.
+
+    ``None`` when the refusal offers no door, as a value the grammar refused does not.
+    """
+    if isinstance(refusal, ModeloEditParseRefusalV1):
+        return None
+    verdict = nested_terminal_precondition_verdict(modelo_edit_refusal_error(refusal))
+    return None if verdict is None else PreconditionVerdictSnapshot.from_verdict(verdict, language)
+
+
 def _form_address(address: ModeloEditAddressV1 | None) -> ModeloFormAddressV1 | None:
     if isinstance(address, ModeloEditScalarAddressV1):
         return ModeloFormCasillaAddressV1(casilla_id=address.casilla_id)
@@ -163,6 +176,7 @@ __all__ = [
     "WORDED_FINDING_CODES",
     "ModeloEditReviewFindingV1",
     "edit_finding_words",
+    "edit_refusal_door",
     "edit_refusal_words",
     "entry_read_back",
     "grammar_data_type",

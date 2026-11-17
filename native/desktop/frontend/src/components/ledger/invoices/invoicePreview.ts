@@ -9,20 +9,20 @@ import { ReadSessionScheduler } from "../../../shell/readSessionScheduler";
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type {
-  InvoicePreviewRequest,
-  InvoicePreviewResult,
-} from "../../../shell/ledgerInvoiceOperations";
+  InvoiceFiguresPreviewWindowRequest,
+  InvoiceFiguresPreviewResult,
+} from "../../../shell/ledgerInvoiceContract";
 import type { LedgerPort } from "../../../shell/ledger";
 import { readAnswer } from "../../../shell/ledgerWindow";
 
 export type PreviewReply =
-  { kind: "answer"; result: InvoicePreviewResult } | { kind: "failed" };
+  { kind: "answer"; result: InvoiceFiguresPreviewResult } | { kind: "failed" };
 
 export type PreviewView = {
   /** The last answer, for this draft or an earlier one, to draw figures from. */
-  shown: InvoicePreviewResult | null;
+  shown: InvoiceFiguresPreviewResult | null;
   /** The answer to the draft as it stands now, the only one to act on. */
-  current: InvoicePreviewResult | null;
+  current: InvoiceFiguresPreviewResult | null;
   /** The digest of `current`. */
   digest: string | null;
   /** A newer answer is awaited. */
@@ -44,14 +44,14 @@ const IDLE: PreviewView = {
 };
 
 export class InvoicePreviewSession extends ReadSessionScheduler<
-  InvoicePreviewRequest,
+  InvoiceFiguresPreviewWindowRequest,
   string,
-  InvoicePreviewResult,
-  InvoicePreviewResult,
+  InvoiceFiguresPreviewResult,
+  InvoiceFiguresPreviewResult,
   PreviewView
 > {
   constructor(
-    ask: (request: InvoicePreviewRequest) => Promise<PreviewReply>,
+    ask: (request: InvoiceFiguresPreviewWindowRequest) => Promise<PreviewReply>,
     pauseMs = PAUSE_MS,
   ) {
     super({
@@ -71,7 +71,7 @@ export class InvoicePreviewSession extends ReadSessionScheduler<
 /** Asks the ledger once. Every way of not answering is the same failure. */
 export async function askPreview(
   port: LedgerPort,
-  request: InvoicePreviewRequest,
+  request: InvoiceFiguresPreviewWindowRequest,
 ): Promise<PreviewReply> {
   try {
     const answer = readAnswer(
@@ -88,7 +88,7 @@ export async function askPreview(
 /** The preview of `request`, kept current while the editor is open. */
 export function useInvoicePreview(
   port: LedgerPort,
-  request: InvoicePreviewRequest,
+  request: InvoiceFiguresPreviewWindowRequest,
 ) {
   const [session] = useState(
     () => new InvoicePreviewSession((asked) => askPreview(port, asked)),
@@ -100,7 +100,7 @@ export function useInvoicePreview(
     return () => session.stop();
   }, [session]);
   useEffect(() => {
-    session.want(JSON.parse(key) as InvoicePreviewRequest);
+    session.want(JSON.parse(key) as InvoiceFiguresPreviewWindowRequest);
   }, [session, key]);
   return useMemo(
     () => ({

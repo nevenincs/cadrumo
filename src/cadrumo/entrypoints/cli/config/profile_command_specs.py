@@ -32,7 +32,6 @@ from cadrumo_client.commands.shared_contracts import (
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     DeferredTarget,
-    LazyBinding,
     LiteralValue,
     ParameterConstraint,
     ParameterDefault,
@@ -49,6 +48,7 @@ from cadrumo_client.contracts.command_ports import (
 
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
+from .lazy_bindings import lazy_handler
 
 if TYPE_CHECKING:
     pass
@@ -104,10 +104,6 @@ _HANDLER_MODULES: Final[dict[str, str]] = {
     "_profile_repeatable_row": ".profile_row_commands",
     "restore_cli": ".restore_cli",
 }
-
-
-def _handler(module: str, name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name, __package__))
 
 
 def _schema(module: str, name: str, identity: str) -> ResultSchemaSpec:
@@ -207,7 +203,7 @@ def _leaf(
         InvocationSpec(context_parameter="ctx"),
         parameters,
         policy,
-        _handler(module, handler),
+        lazy_handler(_HANDLER_MODULES, module, handler),
         _schema(
             schema_module,
             schema_name,
@@ -242,7 +238,7 @@ def _plantilla_media_leaf(
         InvocationSpec(context_parameter="ctx"),
         parameters,
         policy,
-        _handler("_plantilla_media", handler),
+        lazy_handler(_HANDLER_MODULES, "_plantilla_media", handler),
         _schema(
             "..config_plantilla_media_payloads",
             "ConfigProfilePlantillaMediaResult",
@@ -499,7 +495,7 @@ PROFILE_COMMAND_SPECS = (
         ),
         (_LANGUAGE,),
         ENCRYPTED_READ,
-        _handler("_descendiente", "descendiente_door"),
+        lazy_handler(_HANDLER_MODULES, "_descendiente", "descendiente_door"),
         _schema(
             "..config_descendiente_payloads",
             "ConfigProfileDescendienteListResult",

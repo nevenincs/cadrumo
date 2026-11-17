@@ -6,9 +6,9 @@
 // link is permanent. Nothing here decides which pair is best.
 
 import type {
-  LedgerCheckResult,
+  LedgerCheckProjection,
   LedgerInvoiceMatchResult,
-} from "../../../shell/ledgerInvoiceOperations";
+} from "../../../shell/ledgerInvoiceContract";
 import type {
   CatalogueInvoiceSnapshot,
   LedgerInvoiceMatchPair,
@@ -253,7 +253,7 @@ export type LinkInconsistency = {
  * that other invoice one-sided.
  */
 export function inconsistencies(
-  found: LedgerCheckResult["link_inconsistencies"],
+  found: LedgerCheckProjection["link_inconsistencies"],
   rows: readonly LedgerTransactionReviewProjection[] | null,
   invoices: readonly CatalogueInvoiceSnapshot[],
 ): LinkInconsistency[] {

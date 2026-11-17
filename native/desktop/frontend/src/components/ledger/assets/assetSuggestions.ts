@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
 import type { SuggestionProps } from "@/components/editors/editorProps";
 import type { Suggestion } from "@/components/ui/suggestions";
-import type { AcquisitionCandidate } from "../../../shell/ledgerSetup";
+import type {
+  ActivityAssetAcquisitionCandidate,
+} from "../../../shell/ledgerActivityAssetReadContract";
 import {
   useFieldSuggestions,
   useHeldInvoices,
@@ -47,7 +49,7 @@ export function useAssetSuggestions({
   draft: FormDraft;
   set(changes: FormDraft): void;
   /** The purchase a new element names as its acquisition. */
-  purchase: AcquisitionCandidate | undefined;
+  purchase: ActivityAssetAcquisitionCandidate | undefined;
   /** How the ledger describes the purchase an element already owns. */
   purchaseDescription: string | null;
 }): FormField[] {

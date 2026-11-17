@@ -5,9 +5,9 @@
 // the live answer, and a test here holds this stand-in to the recording.
 
 import type {
-  LedgerSplitCheckRequest,
+  LedgerSplitCheckWindowRequest,
   LedgerSplitCheckResult,
-} from "../shell/ledgerMovementOperations";
+} from "../shell/ledgerMovementCheckContract";
 
 const MOST_PARTS = 128;
 const LONGEST_DESCRIPTION = 1024;
@@ -29,7 +29,7 @@ function spelled(value: bigint): string {
 
 export function answerSplitCheck(
   parentAmount: string,
-  parts: LedgerSplitCheckRequest["parts"],
+  parts: LedgerSplitCheckWindowRequest["parts"],
   profileId: string,
 ): LedgerSplitCheckResult {
   const none = { index: null, max: null, difference: null, over: null };

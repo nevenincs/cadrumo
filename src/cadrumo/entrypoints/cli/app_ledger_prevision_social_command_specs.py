@@ -26,6 +26,7 @@ from .app_ledger_command_spec_policies import (
     POLICY_4,
     POLICY_5,
 )
+from .ledger_command_fragments import argument, option, result_schema
 
 _CLI_MODULE: Final[str] = ".prevision_social_commands"
 _RESULT_MODULE: Final[str] = ".prevision_social_results"
@@ -51,57 +52,21 @@ _LEAF_INVOCATION: Final[InvocationSpec] = InvocationSpec(
 )
 
 
-def _option(
-    *, name: str, declaration: str, value: ValueContract, default: ParameterDefault, help_key: str
-) -> OptionSpec:
-    """Build one ordinary non-flag option."""
-    return OptionSpec(
-        name=name,
-        declarations=(declaration,),
-        value=value,
-        default=default,
-        help_key=TranslationKey(help_key),
-        metavar=None,
-        is_flag=False,
-        flag_value=None,
-        multiple=False,
-        count=False,
-        eager=False,
-        constraint=ParameterConstraint(),
-        show_default=True,
-        hidden=False,
-    )
-
-
-def _argument(*, name: str, help_key: str) -> ArgumentSpec:
-    """Build one required positional text argument."""
-    return ArgumentSpec(
-        name=name,
-        value=TEXT_VALUE,
-        default=_REQUIRED,
-        help_key=TranslationKey(help_key),
-        metavar=None,
-        constraint=ParameterConstraint(),
-        show_default=True,
-        hidden=False,
-    )
-
-
-_EJERCICIO_OPTION: Final[OptionSpec] = _option(
+_EJERCICIO_OPTION: Final[OptionSpec] = option(
     name="ejercicio",
     declaration="--ejercicio",
     value=WHOLE_NUMBER_VALUE,
     default=_REQUIRED,
     help_key="cli.app.ledger.prevision_social.ejercicio_help",
 )
-_CLAVE_OPTION: Final[OptionSpec] = _option(
+_CLAVE_OPTION: Final[OptionSpec] = option(
     name="clave",
     declaration="--clave",
     value=_CLAVE_VALUE,
     default=_REQUIRED,
     help_key="cli.app.ledger.prevision_social.clave_help",
 )
-_SUBCLAVE_OPTION: Final[OptionSpec] = _option(
+_SUBCLAVE_OPTION: Final[OptionSpec] = option(
     name="subclave",
     declaration="--subclave",
     value=_SUBCLAVE_VALUE,
@@ -130,23 +95,15 @@ _CERTIFICATE_FILE_OPTION: Final[OptionSpec] = OptionSpec(
 )
 
 
-def _result_schema(model: str, identity: str) -> ResultSchemaSpec:
-    return ResultSchemaSpec(
-        SchemaState.TARGET,
-        target=DeferredTarget(_RESULT_MODULE, model, __package__),
-        identity=identity,
-    )
-
-
 def _handler(name: str) -> LazyBinding:
     return LazyBinding.available(DeferredTarget(_CLI_MODULE, name, __package__))
 
 
 _RECORD_PARAMETERS: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
-    _argument(name="issuer_tax_id", help_key="cli.app.ledger.prevision_social.issuer_tax_id_help"),
+    argument(name="issuer_tax_id", help_key="cli.app.ledger.prevision_social.issuer_tax_id_help"),
     _EJERCICIO_OPTION,
     _CLAVE_OPTION,
-    _option(
+    option(
         name="amount",
         declaration="--amount",
         value=TEXT_VALUE,
@@ -154,35 +111,35 @@ _RECORD_PARAMETERS: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
         help_key="cli.app.ledger.prevision_social.amount_help",
     ),
     _SUBCLAVE_OPTION,
-    _option(
+    option(
         name="beneficiary",
         declaration="--beneficiary",
         value=_BENEFICIARY_VALUE,
         default=ParameterDefault.value("taxpayer"),
         help_key="cli.app.ledger.prevision_social.beneficiary_help",
     ),
-    _option(
+    option(
         name="employer_same_plan",
         declaration="--employer-same-plan",
         value=_SAME_PLAN_VALUE,
         default=_OPTIONAL,
         help_key="cli.app.ledger.prevision_social.employer_same_plan_help",
     ),
-    _option(
+    option(
         name="issuer_name",
         declaration="--issuer-name",
         value=TEXT_VALUE,
         default=_OPTIONAL,
         help_key="cli.app.ledger.prevision_social.issuer_name_help",
     ),
-    _option(
+    option(
         name="plan_nif",
         declaration="--plan-nif",
         value=TEXT_VALUE,
         default=_OPTIONAL,
         help_key="cli.app.ledger.prevision_social.plan_nif_help",
     ),
-    _option(
+    option(
         name="plan_name",
         declaration="--plan-name",
         value=TEXT_VALUE,
@@ -190,14 +147,14 @@ _RECORD_PARAMETERS: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
         help_key="cli.app.ledger.prevision_social.plan_name_help",
     ),
     _CERTIFICATE_FILE_OPTION,
-    _option(
+    option(
         name="evidence_sha256",
         declaration="--evidence-sha256",
         value=TEXT_VALUE,
         default=_OPTIONAL,
         help_key="cli.app.ledger.prevision_social.evidence_sha256_help",
     ),
-    _option(
+    option(
         name="expected_revision",
         declaration="--expected-revision",
         value=TEXT_VALUE,
@@ -207,10 +164,10 @@ _RECORD_PARAMETERS: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
 )
 
 _REMOVE_PARAMETERS: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
-    _argument(name="issuer_ref", help_key="cli.app.ledger.prevision_social.issuer_ref_help"),
+    argument(name="issuer_ref", help_key="cli.app.ledger.prevision_social.issuer_ref_help"),
     _EJERCICIO_OPTION,
     _CLAVE_OPTION,
-    _option(
+    option(
         name="expected_revision",
         declaration="--expected-revision",
         value=TEXT_VALUE,
@@ -218,7 +175,7 @@ _REMOVE_PARAMETERS: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
         help_key="cli.app.ledger.prevision_social.remove_expected_revision_help",
     ),
     _SUBCLAVE_OPTION,
-    _option(
+    option(
         name="plan_ref",
         declaration="--plan-ref",
         value=TEXT_VALUE,
@@ -253,7 +210,9 @@ LEDGER_PREVISION_SOCIAL_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=_RECORD_PARAMETERS,
         policy=POLICY_4,
         handler=_handler("prevision_social_record"),
-        result_schema=_result_schema("PrevisionSocialRecordResult", "ledger.prevision_social.record"),
+        result_schema=result_schema(
+            "PrevisionSocialRecordResult", "ledger.prevision_social.record", result_module=_RESULT_MODULE
+        ),
     ),
     CommandSpec(
         "app_ledger_prevision_social_list",
@@ -266,7 +225,9 @@ LEDGER_PREVISION_SOCIAL_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(_EJERCICIO_OPTION,),
         policy=POLICY_5,
         handler=_handler("prevision_social_list"),
-        result_schema=_result_schema("PrevisionSocialListResult", "ledger.prevision_social.list"),
+        result_schema=result_schema(
+            "PrevisionSocialListResult", "ledger.prevision_social.list", result_module=_RESULT_MODULE
+        ),
     ),
     CommandSpec(
         "app_ledger_prevision_social_remove",
@@ -279,7 +240,9 @@ LEDGER_PREVISION_SOCIAL_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=_REMOVE_PARAMETERS,
         policy=POLICY_4,
         handler=_handler("prevision_social_remove"),
-        result_schema=_result_schema("PrevisionSocialRemoveResult", "ledger.prevision_social.remove"),
+        result_schema=result_schema(
+            "PrevisionSocialRemoveResult", "ledger.prevision_social.remove", result_module=_RESULT_MODULE
+        ),
     ),
 )
 

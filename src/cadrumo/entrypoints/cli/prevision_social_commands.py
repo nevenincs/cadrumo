@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from uuid import UUID
 
 import typer
 from pydantic import ValidationError
@@ -16,7 +15,7 @@ from ...application.prevision_social_contribution.requests import (
 )
 from ...core.i18n.render import tr
 from ...core.prevision_social import PrevisionSocialBeneficiario, PrevisionSocialClave, PrevisionSocialSubclave
-from .common import active_bucket_id_or_refuse, bad, emit_envelope
+from .common import bad, emit_envelope
 from .decimal_parsing import parse_decimal_amount
 from .operation_ledger_prevision_social import (
     list_prevision_social,
@@ -25,10 +24,7 @@ from .operation_ledger_prevision_social import (
 )
 from .prevision_social_options import PrevisionSocialSamePlanAnswer
 from .prevision_social_results import PrevisionSocialRowPayload
-
-
-def _profile_id() -> UUID:
-    return UUID(active_bucket_id_or_refuse())
+from .profile_bound_clients import active_profile_id
 
 
 def _stated(value: object | None) -> str:
@@ -67,7 +63,7 @@ def prevision_social_record(
     contribution = PublicDecimal(decimal=str(parse_decimal_amount(amount, label="--amount", signed=False)))
     try:
         request = PrevisionSocialRecordRequest(
-            profile_id=_profile_id(),
+            profile_id=active_profile_id(),
             ejercicio=ejercicio,
             issuer_tax_id=issuer_tax_id,
             issuer_legal_name=issuer_name,
@@ -97,7 +93,7 @@ def prevision_social_record(
 def prevision_social_list(ctx: typer.Context, ejercicio: int) -> None:
     """Read the stored contribution records of one ejercicio and present them without tax identifiers."""
     try:
-        request = PrevisionSocialListRequest(profile_id=_profile_id(), ejercicio=ejercicio)
+        request = PrevisionSocialListRequest(profile_id=active_profile_id(), ejercicio=ejercicio)
     except ValidationError:
         raise _invalid() from None
     result = list_prevision_social(ctx, request)
@@ -121,7 +117,7 @@ def prevision_social_remove(
     """Remove one contribution record against the revision a list showed."""
     try:
         request = PrevisionSocialRemoveRequest(
-            profile_id=_profile_id(),
+            profile_id=active_profile_id(),
             ejercicio=ejercicio,
             issuer_ref=issuer_ref,
             plan_ref=plan_ref,

@@ -7,12 +7,9 @@ from uuid import UUID
 import typer
 from pydantic import BaseModel
 
-from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
-from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ...application.ledger.invoice_evidence_confirm_operation import (
     LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
@@ -31,15 +28,7 @@ from ...core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from .common import active_bucket_id_or_refuse
-
-
-def _client(ctx: typer.Context, profile_id: UUID) -> FrontendClient:
-    """Return only the runtime client bound to the immutable active profile."""
-    expected_profile_id = UUID(active_bucket_id_or_refuse())
-    if profile_id != expected_profile_id:
-        raise RefusalError(RefusalCode.INVALID_FRAME)
-    return require_profile_client(ctx, expected_profile_id=expected_profile_id)
+from .profile_bound_clients import exact_profile_client
 
 
 def _submit[ProjectionT: BaseModel](
@@ -54,7 +43,7 @@ def _submit[ProjectionT: BaseModel](
     profile_id = getattr(request, "profile_id", None)
     if not isinstance(profile_id, UUID):
         raise InternalInvariantError("invoice evidence request has no typed profile identity")
-    client = _client(ctx, profile_id)
+    client = exact_profile_client(ctx, profile_id)
     return run_registered_operation(
         client,
         request,

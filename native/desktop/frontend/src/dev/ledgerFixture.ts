@@ -28,14 +28,14 @@ import {
   type LedgerReview,
 } from "../shell/ledger";
 import type {
-  LedgerInvoiceDuplicateRequest,
-  LedgerInvoiceMatchRequest,
-} from "../shell/ledgerInvoiceOperations";
+  LedgerInvoiceDuplicateWindowRequest,
+  LedgerInvoiceMatchWindowRequest,
+} from "../shell/ledgerInvoiceContract";
 import type { CatalogueInvoiceSnapshot } from "../shell/ledgerInvoiceContract";
 import type {
-  LedgerSplitCheckRequest,
-  LedgerStagedCheckRequest,
-} from "../shell/ledgerMovementOperations";
+  LedgerSplitCheckWindowRequest,
+  LedgerStagedCheckWindowRequest,
+} from "../shell/ledgerMovementCheckContract";
 import { RELAY_PAYLOAD_LIMIT, RELAY_REQUEST_LIMIT } from "../shell/relayBounds";
 import { answerStagedCheck } from "./ledgerStagedCheckFixture";
 import {
@@ -618,13 +618,13 @@ export function ledgerFixture(options: Options): LedgerPort {
     },
     "ledger.invoice.duplicate": (request) =>
       answerInvoiceDuplicate(
-        request as unknown as LedgerInvoiceDuplicateRequest,
+        request as unknown as LedgerInvoiceDuplicateWindowRequest,
         ledger.invoices,
         LEDGER_FIXTURE_PROFILE_ID,
       ) as unknown as JsonObject,
     "ledger.invoice.match": (request) =>
       answerInvoiceMatch(
-        request as unknown as LedgerInvoiceMatchRequest,
+        request as unknown as LedgerInvoiceMatchWindowRequest,
         ledger.movements,
         ledger.invoices,
         LEDGER_FIXTURE_PROFILE_ID,
@@ -636,13 +636,13 @@ export function ledgerFixture(options: Options): LedgerPort {
       if (!movement) throw new Error("no such movement to split");
       return answerSplitCheck(
         movement.transaction.amount,
-        request.parts as LedgerSplitCheckRequest["parts"],
+        request.parts as LedgerSplitCheckWindowRequest["parts"],
         LEDGER_FIXTURE_PROFILE_ID,
       ) as unknown as JsonObject;
     },
     "ledger.staged.check": (request) => {
       const answer = answerStagedCheck(
-        request as unknown as LedgerStagedCheckRequest,
+        request as unknown as LedgerStagedCheckWindowRequest,
         (id) => {
           const movement = ledger.movements.find(
             (each) => each.transaction.transaction_id === id,

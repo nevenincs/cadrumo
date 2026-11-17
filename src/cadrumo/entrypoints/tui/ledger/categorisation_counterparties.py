@@ -43,13 +43,13 @@ from .categorisation_common import (
     StagedChangeV1,
     action,
     action_row,
-    blank_to_none,
     field,
     heading,
     line,
 )
 from .categorisation_doors import LedgerCounterpartyDoorV1
 from .controller import LedgerWorkspaceController
+from .text_values import blank_to_none
 
 _PARTY_KINDS: Final = (DeclaredPartyKind.NATURAL_PERSON.value, DeclaredPartyKind.ENTITY.value)
 _RENDERING_SEPARATOR: Final = ";"

@@ -8,7 +8,7 @@
 // read failed, each is empty and `state` says which. Nothing here decides
 // whether a value is allowed; the ledger does.
 
-import type { LedgerEntryOptionsResult } from "./ledgerSetup";
+import type { LedgerEntryOptionsProjection } from "./ledgerEntryContract";
 
 /** One figure a payer's withholding certificate states, as the ledger serves
  * it: `field` is the record's own field name, `group` the income class whose
@@ -87,7 +87,7 @@ export const NO_VOCABULARY: ServedVocabulary = {
 /** The lists out of a served answer; with none, the state says why there are
  * none. */
 export function servedVocabulary(
-  result: LedgerEntryOptionsResult | null,
+  result: LedgerEntryOptionsProjection | null,
   state: VocabularyState,
 ): ServedVocabulary {
   if (result === null) return { ...NO_VOCABULARY, state };

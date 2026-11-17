@@ -1,13 +1,15 @@
 import type {
-  AcquisitionCandidate,
-  ActivityAssetCorrectRequest,
-  ActivityAssetCorrection,
-  ActivityAssetCreateRequest,
-  ActivityAssetRevision,
-  DescriptorFacts,
-  DisposalFacts,
-  FormOptions,
-} from "../../../shell/ledgerSetup";
+  ActivityAssetCorrectWindowRequest,
+  ActivityAssetCorrectionRevisionSnapshot,
+  ActivityAssetCreateWindowRequest,
+  ActivityAssetRevisionSnapshot,
+  ActivityAssetDescriptorFacts,
+  ActivityAssetDisposalSnapshot,
+} from "../../../shell/ledgerActivityAssetContract";
+import type {
+  ActivityAssetAcquisitionCandidate,
+  ActivityAssetFormOptionsView,
+} from "../../../shell/ledgerActivityAssetReadContract";
 import {
   factsOf,
   FURTHER_SHAPE,
@@ -27,7 +29,7 @@ import type { FormValue, FormValues } from "./assetFormValues";
 
 /** The revision a correction supersedes, with its identity. */
 export type RevisionBase = {
-  revision: ActivityAssetRevision;
+  revision: ActivityAssetRevisionSnapshot;
   revision_id: string;
 };
 
@@ -37,13 +39,13 @@ export type RevisionContext = {
   /** The modality the registry's options were read under; null until read. */
   regime: string | null;
   /** The purchase a new element names as its acquisition. */
-  candidate: AcquisitionCandidate | null;
+  candidate: ActivityAssetAcquisitionCandidate | null;
   /** The later ledger payment an element bought outside the ledger owns. */
-  further?: AcquisitionCandidate | null;
+  further?: ActivityAssetAcquisitionCandidate | null;
   /** The revision a correction supersedes; null when creating. */
   base: RevisionBase | null;
   /** What the registry admits, which says the facts each method takes. */
-  options?: FormOptions | null;
+  options?: ActivityAssetFormOptionsView | null;
 };
 
 type Tree = { [key: string]: unknown };
@@ -91,7 +93,7 @@ const textOf = (found: FormValue | undefined): string | null =>
 
 /** The descriptor a new element is created with: its name and serial number;
  * the rest of the description is added afterwards. */
-function descriptorOf(values: FormValues): DescriptorFacts | null {
+function descriptorOf(values: FormValues): ActivityAssetDescriptorFacts | null {
   const name = textOf(values.name);
   if (name === null) return null;
   return {
@@ -109,7 +111,7 @@ function descriptorOf(values: FormValues): DescriptorFacts | null {
  * serve for the stage, and none of the facts only another stage states. The
  * date the building was built is a fact of an element bought used. Without
  * the options, nothing is judged. */
-function tidyBasis(revision: Tree, options: FormOptions | null): void {
+function tidyBasis(revision: Tree, options: ActivityAssetFormOptionsView | null): void {
   const basis = revision.basis as Tree | undefined;
   if (basis === undefined) return;
   const stages = options?.basis_stages ?? [];
@@ -124,7 +126,7 @@ function tidyBasis(revision: Tree, options: FormOptions | null): void {
 /** The facts only another condition states, taken out: the options name them,
  * those of the election and those beside it. Without the options, or with a
  * condition they do not list, nothing is judged. */
-function tidyCondition(revision: Tree, options: FormOptions | null): void {
+function tidyCondition(revision: Tree, options: ActivityAssetFormOptionsView | null): void {
   const elsewhere = factsOfOtherConditions(
     options,
     String(revision.acquired_condition ?? ""),
@@ -138,7 +140,7 @@ function tidyCondition(revision: Tree, options: FormOptions | null): void {
 
 /** The vehicle declaration a class that is not charged on one cannot state.
  * A class the options do not list is not judged. */
-function tidyVehicle(revision: Tree, options: FormOptions | null): void {
+function tidyVehicle(revision: Tree, options: ActivityAssetFormOptionsView | null): void {
   const election = revision.amortization as Tree | undefined;
   const chosen = String(election?.authority_class_key ?? "");
   if (requiresVehicle(options, chosen) === false)
@@ -147,7 +149,7 @@ function tidyVehicle(revision: Tree, options: FormOptions | null): void {
 
 /** The opening history without the facts its status cannot state, as the
  * options serve them. */
-function tidyOpening(revision: Tree, options: FormOptions | null): void {
+function tidyOpening(revision: Tree, options: ActivityAssetFormOptionsView | null): void {
   const opening = revision.opening_history as Tree | undefined;
   if (opening === undefined) return;
   const statuses = options?.opening_statuses ?? [];
@@ -162,7 +164,7 @@ function tidyOpening(revision: Tree, options: FormOptions | null): void {
  * lineage the revision carries it under; none where nothing is chosen. */
 function furtherRows(
   values: FormValues,
-  further: AcquisitionCandidate | null | undefined,
+  further: ActivityAssetAcquisitionCandidate | null | undefined,
 ): Tree[] {
   const shape = textOf(values[FURTHER_SHAPE]);
   if (further === null || further === undefined || shape === null) return [];
@@ -188,7 +190,7 @@ function furtherRows(
 export function createRequest(
   values: FormValues,
   context: RevisionContext,
-): ActivityAssetCreateRequest | null {
+): ActivityAssetCreateWindowRequest | null {
   const { candidate, regime } = context;
   const descriptor = descriptorOf(values);
   if (regime === null || descriptor === null) return null;
@@ -227,7 +229,7 @@ export function createRequest(
   tidyCondition(revision, context.options ?? null);
   tidyVehicle(revision, context.options ?? null);
   return {
-    revision: revision as unknown as ActivityAssetRevision,
+    revision: revision as unknown as ActivityAssetRevisionSnapshot,
     descriptor,
   };
 }
@@ -238,7 +240,7 @@ export function createRequest(
 function electionAfter(
   base: Tree,
   values: FormValues,
-  options: FormOptions | null,
+  options: ActivityAssetFormOptionsView | null,
 ): Tree {
   const before = (base.amortization ?? {}) as Tree;
   const method = textOf(values.method);
@@ -270,7 +272,7 @@ export function correctRequest(
   values: FormValues,
   context: RevisionContext,
   supersede: readonly string[],
-): ActivityAssetCorrectRequest | null {
+): ActivityAssetCorrectWindowRequest | null {
   const { base } = context;
   if (base === null) return null;
   const before = structuredClone(base.revision) as unknown as Tree;
@@ -288,7 +290,7 @@ export function correctRequest(
   tidyVehicle(revision, context.options ?? null);
   tidyOpening(revision, context.options ?? null);
   return {
-    revision: revision as unknown as ActivityAssetCorrection,
+    revision: revision as unknown as ActivityAssetCorrectionRevisionSnapshot,
     superseding_claims: supersede.map((claim) => ({
       supersedes_claim_id: claim,
       requested_free_amount: null,
@@ -304,8 +306,8 @@ export function correctRequest(
  */
 export function bajaRequest(
   base: RevisionBase | null,
-  disposal: DisposalFacts | null,
-): ActivityAssetCorrectRequest | null {
+  disposal: ActivityAssetDisposalSnapshot | null,
+): ActivityAssetCorrectWindowRequest | null {
   if (base === null) return null;
   const before = structuredClone(base.revision) as unknown as Tree;
   const revision: Tree = {
@@ -315,7 +317,7 @@ export function bajaRequest(
   };
   delete revision.revision_number;
   return {
-    revision: revision as unknown as ActivityAssetCorrection,
+    revision: revision as unknown as ActivityAssetCorrectionRevisionSnapshot,
     superseding_claims: [],
   };
 }

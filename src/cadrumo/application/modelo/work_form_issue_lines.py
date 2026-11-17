@@ -40,14 +40,17 @@ from pydantic import BaseModel, Field
 
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
+from ...core.identifier_grammar import NamespacedId
 from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.precondition_action_invariants import ServedActionWords
 from ...domain.modelos.calculation_revision_sources import CalculationNoteSentence
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
 )
+from ..operator_actions.served_actions import served_action_fields
 from .calculation_notes import (
     DERIVED_GATE_REASONS,
     PROFILE_REASONS,
@@ -178,6 +181,23 @@ _SAVED_WITH_CHANGES_LOCALE_KEY: Final[str] = "workspace.modelo.issues.verdict.sa
 _ATTENTION_ORDER: Final[tuple[ModeloFormAttention, ...]] = tuple(ModeloFormAttention)
 
 
+class ModeloFormIssueDoorV1(ServedActionWords):
+    """The served operator action that resolves one listed finding, with the words and operations to offer it by."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    action_id: NamespacedId
+
+
+def _issue_door(issue: ModeloFormIssue, context: _Context) -> ModeloFormIssueDoorV1 | None:
+    action_id = issue.door_action_id
+    if action_id is None:
+        return None
+    return ModeloFormIssueDoorV1.model_validate(
+        {"action_id": action_id, **served_action_fields(action_id, context.language)}
+    )
+
+
 class ModeloFormIssueLine(BaseModel):
     """One finding or calculation note as the check view lists it, in the form's language.
 
@@ -226,6 +246,9 @@ class ModeloFormIssueLine(BaseModel):
     #: The invoice this line opens in the Libro de facturas: the one whose document it asks for, or one of
     #: the counterparty whose fact it lacks.
     invoice_id: InvoiceId | None = None
+    #: The operator action that resolves this line's finding, such as amending a filed declaration, served
+    #: with its words and the operations it submits; ``None`` when no action resolves it.
+    door: ModeloFormIssueDoorV1 | None = None
 
 
 class ModeloFormVerdict(BaseModel):
@@ -391,6 +414,7 @@ def _record_line(issue: ModeloFormIssue, value: _RecordValue, message: str, cont
         technical=_technical(finding, context),
         address=_casilla_address(finding),
         in_records=True,
+        door=_issue_door(issue, context),
     )
 
 
@@ -459,6 +483,7 @@ def _finding_line(issue: ModeloFormIssue, context: _Context) -> ModeloFormIssueL
         compared_surface=None if doors is None else doors[1],
         recalculates=finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION,
         invoice_id=issue.open_invoice_id,
+        door=_issue_door(issue, context),
     )
 
 

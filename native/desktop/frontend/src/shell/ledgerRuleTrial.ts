@@ -7,7 +7,7 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { LedgerPort } from "./ledger";
-import type { LedgerRuleTrialResult } from "./ledgerMovementOperations";
+import type { LedgerRuleTrialResult } from "./ledgerMovementCheckContract";
 import { LatestAnswerSession, type LatestAnswer } from "./ledgerLatestAnswer";
 import { readAnswer } from "./ledgerWindow";
 import type { LedgerTransactionReviewProjection } from "./ledgerReadContract";
