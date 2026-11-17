@@ -114,6 +114,20 @@ seventeen jobs at eight shards, and when landings outpace the account's
 hosted-runner allowance the jobs wait in GitHub's queue, so a head's verdict
 can arrive well after its landing.
 
+**Worker containment.** The runtime launches every profile worker as a
+transient systemd user unit and refuses with `runtime_containment_unavailable`
+when it cannot drive the user manager. A hosted job runs as `runner` outside a
+login session, so it has no `user@<uid>.service` and no bus at
+`/run/user/<uid>/bus`. The setup action's `worker-containment` input enables
+lingering, starts the user manager, waits for the bus and runs one transient
+user unit the way the runtime does (fixed tool path, cleared environment, no
+`DBUS_SESSION_BUS_ADDRESS`); any of those failing fails the job at its first
+step. `goldens`, `tests` and `harness` start the runtime and ask for it. A
+hosted job that runs a `test-*` recipe must ask, unless the recipe is named in
+`dev/ci/tests/test_worker_containment.py` as launching no worker. No
+self-hosted job asks: lingering is a lasting change to a machine that keeps
+state, and its own session holds its user manager.
+
 **Speed.** The expected critical path for a pull request is `authority`
 (toolchain, then compiling the registry) followed by the longest of `tests`,
 `goldens`, `checks`, `fixtures`, `contracts` and `harness`, then `verdict`:
