@@ -108,6 +108,7 @@ ACTION_WORDS_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "operator.profile.archive.reconcile": "application.operator_actions.served.action.profile_archive_reconcile",
         "operator.profile.arrendamiento": "application.operator_actions.served.action.profile_arrendamiento",
         "operator.profile.ascendiente": "application.operator_actions.served.action.profile_ascendiente",
+        "operator.profile.ascendiente.edit": "application.operator_actions.served.action.profile_ascendiente_edit",
         "operator.profile.complete_setup": "application.operator_actions.served.action.profile_complete_setup",
         "operator.profile.create": "application.operator_actions.served.action.profile_create",
         "operator.profile.descendiente": "application.operator_actions.served.action.profile_descendiente",
