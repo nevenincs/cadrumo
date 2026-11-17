@@ -23,6 +23,7 @@ from .kdf_codec import close_fd
 from .kdf_lease_worker import KDF_LEASE_ACQUIRED, KDF_LEASE_WAITING
 from .kdf_process import launch_lease_worker, terminate_process_tree
 from .kdf_refusals import resource_refusal, supervision_refusal
+from .process_pidfd import open_process_pidfd
 
 if sys.platform == "win32":
     import ctypes
@@ -303,12 +304,14 @@ def _await_linux_exit(
 
     if sys.platform == "linux":
         try:
-            process_fd = os.pidfd_open(process.pid)
+            process_fd = open_process_pidfd(process.pid)
         except ProcessLookupError:
             result = process.poll()
             if result is None:
                 raise supervision_refusal() from None
             return result
+        except OSError:
+            raise supervision_refusal() from None
         try:
             watched = [process_fd] if cancelled is None else [process_fd, cancelled]
             ready = select.select(watched, [], [], remaining)[0]

@@ -61,6 +61,84 @@ def test_unknown_linux_containment_refuses_before_private_worker_launch(
     assert scope._guardian is None and scope._worker_pid == 0
 
 
+# Every long option systemd-run accepts in systemd 255, the user manager of the Ubuntu 24.04 hosted runner:
+# the getopt table `options[]` in src/run/run.c at tag v255. An option added later, such as --no-pager in
+# v258, makes that manager refuse the launch.
+_SYSTEMD_RUN_255_OPTIONS = frozenset(
+    {
+        "--help",
+        "--version",
+        "--user",
+        "--system",
+        "--scope",
+        "--unit",
+        "--description",
+        "--slice",
+        "--slice-inherit",
+        "--remain-after-exit",
+        "--expand-environment",
+        "--send-sighup",
+        "--host",
+        "--machine",
+        "--service-type",
+        "--wait",
+        "--uid",
+        "--gid",
+        "--nice",
+        "--setenv",
+        "--property",
+        "--tty",
+        "--pty",
+        "--pipe",
+        "--quiet",
+        "--on-active",
+        "--on-boot",
+        "--on-startup",
+        "--on-unit-active",
+        "--on-unit-inactive",
+        "--on-calendar",
+        "--on-timezone-change",
+        "--on-clock-change",
+        "--timer-property",
+        "--path-property",
+        "--socket-property",
+        "--no-block",
+        "--no-ask-password",
+        "--collect",
+        "--working-directory",
+        "--same-dir",
+        "--shell",
+    }
+)
+
+
+def test_the_worker_launch_passes_systemd_run_only_options_the_ubuntu_24_04_manager_accepts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    launched: list[tuple[ContainmentCommand, tuple[str, ...]]] = []
+
+    def refuse_after_recording(tool: ContainmentCommand, arguments: tuple[str, ...]) -> None:
+        launched.append((tool, arguments))
+        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+
+    monkeypatch.setattr(linux_worker_process, "run_containment_command_sync", refuse_after_recording)
+    scope = LinuxProcessScope(worker_id=uuid4())
+    with pytest.raises(RefusalError):
+        scope.launch(
+            executable=Path(sys.executable),
+            arguments=("-I", "-B", "-m", "cadrumo_runtime.host.worker"),
+            directory=tmp_path,
+            environment={"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"},
+        )
+
+    ((tool, arguments),) = launched
+    assert tool is ContainmentCommand.SYSTEMD_RUN, tool
+    options = arguments[: arguments.index("/usr/bin/env")]
+    names = {option.split("=", 1)[0] for option in options}
+    assert all(option.startswith("--") for option in options), options
+    assert names <= _SYSTEMD_RUN_255_OPTIONS, sorted(names - _SYSTEMD_RUN_255_OPTIONS)
+
+
 def _dead(pidfd: int) -> bool:
     if sys.platform != "linux":
         pytest.skip("requires native Linux PIDFD capability")
