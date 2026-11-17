@@ -60,25 +60,22 @@ from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin,
 from ...domain.transactions.models import TransactionCatalogue
 from ...domain.transactions.rental_link import RENTAL_LINK_IRPF_CATEGORY
 from ...domain.user_profile.values import ProfileSetupState
-from ...tests.personas import InventoryBook, Persona, YearEnvelope, persona_ids
+from ...tests.persona_types import InventoryBook, Persona, YearEnvelope
+from ...tests.personas import persona_ids
 from ..ledger_action_composition import compose_ledger_action_ports
-from .persona_materialisation import (
+from .persona_history_replay import filing_key
+from .persona_materialisation import materialised_persona
+from .persona_operations import run_operation, settle_operation
+from .persona_rental_replay import tenant_age_band
+from .persona_replay_requests import household_leaves, informative_party_roles, load_profile_record, patch_answers
+from .persona_world import (
     PERSONA_ACTOR,
     MaterialisedPersona,
     PersonaMaterialisationError,
     PersonaWorld,
     ReplayScope,
-    filing_key,
-    household_leaves,
-    informative_party_roles,
-    load_profile_record,
-    materialised_persona,
-    patch_answers,
     persona_profile_id,
-    run_operation,
-    settle_operation,
 )
-from .persona_rental_replay import tenant_age_band
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

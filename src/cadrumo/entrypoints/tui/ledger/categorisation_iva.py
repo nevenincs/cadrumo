@@ -15,7 +15,8 @@ from textual.widget import Widget
 from textual.widgets import Input, Static
 
 from ....application.ledger.operator_iva_contracts import LedgerOperatorIvaRequest, LedgerOperatorIvaResult
-from ....core.i18n.render import tr
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
 from .categorisation_common import CategorisationScreen, StagedChangeV1, action, action_row, field, heading, line
 from .categorisation_doors import LedgerOperatorIvaDoorV1
 from .controller import LedgerWorkspaceController
@@ -75,7 +76,10 @@ class LedgerIvaDeriveScreen(CategorisationScreen):
         if not category:
             raise ValueError(tr("tui.ledger.categorisation.iva.category_required"))
         request = LedgerOperatorIvaRequest(
-            profile_id=self.door.profile_id, transaction_id=self.target, iva_category=category
+            profile_id=self.door.profile_id,
+            transaction_id=self.target,
+            iva_category=category,
+            output_language=OutputLanguage(output_language()),
         )
 
         async def write() -> bool:

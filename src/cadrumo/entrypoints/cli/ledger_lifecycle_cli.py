@@ -37,6 +37,8 @@ from ...application.ledger.llm_review_results import LedgerLlmOperationResult
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ...application.ledger.models import SplitChildCommand
 from ...core.bucket_pointer import resolve_active_bucket_id
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip
 from ...core.operations import OperationEffect, OperationTerminalCondition
@@ -573,6 +575,7 @@ def _ledger_split_llm(
     client = bound_profile_client(ctx)
     request = LedgerLlmReviewRequest(
         profile_id=client.profile_id,
+        output_language=OutputLanguage(active_output_language()),
         transaction_id=resolve_ledger_transaction_id(client, transaction_id),
         mode="split",
         origin=LlmReviewInvocationOrigin.SPLIT_LLM,

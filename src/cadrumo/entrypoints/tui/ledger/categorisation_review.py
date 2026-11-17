@@ -25,7 +25,8 @@ from ....application.ledger.llm_review_results import LedgerLlmOperationResult
 from ....application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....core.errors.hierarchy import CadrumoError
-from ....core.i18n.render import tr
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ..account import AccountSessionExpiredError
 from ..operations.modal import OperationModal, OperationModalDetachedOutcomeV1, OperationModalSettledOutcomeV1
@@ -400,6 +401,7 @@ class LedgerSuggestionReviewScreen(ReviewingCategorisationScreen):
             business_pct=blank_to_none(self.query_one("#categorisation-review-business-pct", Input).value),
             read_evidence=evidence == _EVIDENCE_YES,
             reason=self.query_one("#categorisation-review-reason", Input).value.strip(),
+            output_language=OutputLanguage(output_language()),
         )
 
     @override

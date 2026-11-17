@@ -25,6 +25,7 @@ from .....application.user_profile.access_errors import ProfileAccessRefusedErro
 from .....core.config import override_settings
 from .....core.confirmation_gate import ConfirmationBlockReason, ReviewAdvisoryKind
 from .....core.errors.hierarchy import RecordedRegisteredError
+from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from ...account import AccountSessionExpiredError
 from ...components.host import ScreenHostApp
@@ -105,7 +106,7 @@ async def test_the_review_area_lists_the_queue_the_review_operation_answers() ->
             await settle(pilot)
             # The operation's queue, not the projection's two review identities.
             assert _keys(screen, "ledger-review") == [row.id for row in rows]
-            assert door.requests == [LedgerReviewRequest(profile_id=door.profile_id)]
+            assert door.requests == [LedgerReviewRequest(profile_id=door.profile_id, output_language=OutputLanguage.EN)]
             table = cast("DataTable[str]", screen.query_one("#ledger-review", DataTable))
             first = [str(cell) for cell in table.get_row(rows[0].id)]
             assert first == [

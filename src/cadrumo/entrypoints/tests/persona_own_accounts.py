@@ -13,7 +13,7 @@ from ...application.ledger.own_account_operation import (
     LedgerOwnAccountResult,
 )
 from ...domain.transactions.own_accounts import OwnAccountHolding, OwnAccountRole
-from ...tests.personas import OwnAccount, Persona
+from ...tests.persona_types import OwnAccount, Persona
 
 type SettleOperation = Callable[[str, BaseModel], BaseModel | None]
 """Settles one registered operation against the persona's profile and returns its public result."""

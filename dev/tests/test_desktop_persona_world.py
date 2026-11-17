@@ -22,10 +22,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-from cadrumo.entrypoints.tests.persona_materialisation import (
-    PERSONA_PROFILE_CREDENTIAL,
-    year_envelope,
-)
+from cadrumo.entrypoints.tests.persona_world import PERSONA_PROFILE_CREDENTIAL, year_envelope
 
 from .. import desktop_persona_world
 from ..acceptance.persona_table.cli_column.world_report import Phase, Statement, StatementKind

@@ -31,27 +31,19 @@ from ...application.operations.public_scalar import restore_scalar
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
-from ...tests.personas import (
-    Expectations,
-    ExpectedValue,
-    Persona,
-    WorkInput,
-    YearEnvelope,
-    YearToken,
-    read_persona,
-)
-from .persona_materialisation import (
+from ...tests.persona_types import Expectations, ExpectedValue, Persona, WorkInput, YearEnvelope, YearToken
+from ...tests.personas import read_persona
+from .persona_materialisation import materialised_persona
+from .persona_operations import run_operation, settle_operation
+from .persona_work_inputs import WorkInputError, check_work_inputs, resolved_casillas
+from .persona_world import (
     PERSONA_ACTOR,
     MaterialisedPersona,
     PersonaMaterialisationError,
     PersonaWorld,
     ReplayScope,
-    materialised_persona,
-    run_operation,
-    settle_operation,
     year_envelope,
 )
-from .persona_work_inputs import WorkInputError, check_work_inputs, resolved_casillas
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

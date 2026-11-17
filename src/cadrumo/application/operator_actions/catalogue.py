@@ -223,6 +223,44 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="config.profile.arrendamiento.list",
         ),
         ActionCatalogueEntry(
+            action_id="operator.profile.arrendamiento.add",
+            target_command_key="config.profile.arrendamiento.add",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="value",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="value",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.arrendamiento.edit",
+            target_command_key="config.profile.arrendamiento.edit",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="row",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="row",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="value",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="value",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.arrendamiento.remove",
+            target_command_key="config.profile.arrendamiento.remove",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="row",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="row",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.profile.ascendiente",
             target_command_key="config.profile.ascendiente.list",
         ),
@@ -326,6 +364,33 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             # The verb edits the active profile when no name is given, so a
             # producer that does not hold one still names a reachable command.
             materialisable_without_arguments=True,
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.inmueble.add",
+            target_command_key="config.profile.inmueble.add",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="value",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="value",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.inmueble.edit",
+            target_command_key="config.profile.inmueble.edit",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="row",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="row",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="value",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="value",
+                ),
+            ),
         ),
         ActionCatalogueEntry(
             action_id="operator.profile.list",

@@ -14,10 +14,10 @@ profile. The answers here are orientation, not authority.
 from __future__ import annotations
 
 import re
-import unicodedata
 from typing import Any, Final
 
 from cadrumo.core.i18n.render import lookup_translation
+from cadrumo.core.text_fold import fold_for_matching
 from cadrumo_client.contracts.navigation import (
     PREFER_KEY,
     NavigationElement,
@@ -50,9 +50,7 @@ _PREFIX_SCORE: Final = 1
 
 def _words(text: str) -> tuple[str, ...]:
     """Lowercase, accent-free words, so ``sincronización`` matches ``sincronizacion``."""
-    folded = unicodedata.normalize("NFKD", text.casefold())
-    bare = "".join(char for char in folded if not unicodedata.combining(char))
-    return tuple(match.group() for match in _WORD.finditer(bare))
+    return tuple(match.group() for match in _WORD.finditer(fold_for_matching(text)))
 
 
 def _translated(key: str, language: str) -> str:

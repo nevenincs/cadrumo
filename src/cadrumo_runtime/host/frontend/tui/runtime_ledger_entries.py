@@ -96,6 +96,8 @@ from cadrumo.application.operations.registry import OperationPublicDefinitionCon
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.operator_actions.catalogue import lookup_action
 from cadrumo.application.review.filter import LedgerReviewStatus
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import output_language
 from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.entrypoints.tui.ledger.entries_add import LedgerEntryAddScreen
 from cadrumo.entrypoints.tui.ledger.entries_add_form import (
@@ -517,7 +519,9 @@ class RuntimeLedgerExclusionSubmitterV1:
         if submission.action.action_id != lookup_action("operator.ledger.classify").action_id:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         request = LedgerLifecycleMutationRequest(
-            profile_id=self._door.profile_id, transaction_id=submission.transaction_id
+            profile_id=self._door.profile_id,
+            transaction_id=submission.transaction_id,
+            output_language=OutputLanguage(output_language()),
         )
         result = await self._door(request)
         # The correlation already held the receipt to this: a validation refusal committed nothing,

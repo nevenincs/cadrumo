@@ -14,6 +14,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.external_constants import OutputLanguage
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.time.clock import now
@@ -199,6 +200,7 @@ async def _commit_update(
             bucket_id=bucket_id,
             transaction_id=transaction_id,
             current=current,
+            language=payload.output_language,
         )
         await context.events.effect(OperationEffect.UNKNOWN)
         try:
@@ -224,6 +226,7 @@ def _validate_update_projection(
     bucket_id: str,
     transaction_id: str,
     current: Transaction,
+    language: OutputLanguage,
 ) -> None:
     _operation_result(
         profile_id,
@@ -233,6 +236,7 @@ def _validate_update_projection(
             bucket_event_ids=(),
         ),
         source_transaction_id=transaction_id,
+        language=language,
     )
 
 
@@ -263,14 +267,16 @@ async def _finish_update(
     source_transaction_id: str,
     context: OperationExecutorContext,
 ) -> str:
-    projected = _operation_result(payload.profile_id, result, source_transaction_id=source_transaction_id)
+    projected = _operation_result(
+        payload.profile_id, result, source_transaction_id=source_transaction_id, language=payload.output_language
+    )
     await context.events.effect(OperationEffect.UPDATED if result.bucket_event_ids else OperationEffect.NONE)
     result_ref = LedgerUpdateExecutionResult(outcome="updated", profile_id=payload.profile_id, result=projected)
     return await context.operands.put(result_ref, written_at=now())
 
 
 def _operation_result(
-    profile_id: UUID, result: ManualLedgerTransactionResult, *, source_transaction_id: str
+    profile_id: UUID, result: ManualLedgerTransactionResult, *, source_transaction_id: str, language: OutputLanguage
 ) -> LedgerUpdateOperationResult:
     """Validate identity and the complete canonical display projection."""
     canonical: LedgerTransactionResultPayload = ledger_transaction_result_payload(result)
@@ -285,7 +291,7 @@ def _operation_result(
         outcome="updated",
         profile_id=profile_id,
         source_transaction_id=source_transaction_id,
-        transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
+        transaction=LedgerTransactionProjection.from_payload(canonical.transaction, language=language),
         review_status=canonical.review_status,
         bucket_event_ids=result.bucket_event_ids,
         group_label=result.transaction.group_label,

@@ -40,29 +40,32 @@ from cadrumo.core.logging import get_logger
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
 from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
-from cadrumo.entrypoints.tests.persona_materialisation import (
-    PERSONA_ACTOR,
-    MaterialisedPersona,
-    PersonaMaterialisationError,
-    PersonaWorld,
-    ReplayScope,
+from cadrumo.entrypoints.tests.persona_history_replay import filing_key
+from cadrumo.entrypoints.tests.persona_materialisation import materialised_persona
+from cadrumo.entrypoints.tests.persona_operations import (
     attest_before_first_calculation,
     enter_return_work_inputs,
-    filing_key,
-    materialised_persona,
     public_result,
     settle_operation,
     state_offered_statements,
 )
 from cadrumo.entrypoints.tests.persona_prior_carries import attest_prior_carries
 from cadrumo.entrypoints.tests.persona_rental_carries import attest_pending_rental_carries
+from cadrumo.entrypoints.tests.persona_world import (
+    PERSONA_ACTOR,
+    MaterialisedPersona,
+    PersonaMaterialisationError,
+    PersonaWorld,
+    ReplayScope,
+)
 from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_driver import (
     DialogAnswers,
     ShownOutcome,
     WorkbenchDriver,
     open_workbench,
 )
-from cadrumo.tests.personas import Persona, PersonaCatalogueError, read_persona
+from cadrumo.tests.persona_types import Persona, PersonaCatalogueError
+from cadrumo.tests.personas import read_persona
 
 from ..persona_table.frontend import DIFFERS, NOT_REACHED
 from ..persona_table.rows import PlannedRow, TableRow

@@ -40,16 +40,12 @@ from ...application.user_profile.view_operation import (
 )
 from ...application.user_profile.view_reader import read_profile_view_page
 from ...domain.user_profile.values import ProfileSetupState
-from ...tests.personas import ExpectedValue, YearEnvelope, values_in_force
-from .persona_materialisation import (
-    PERSONA_ACTOR,
-    PersonaWorld,
-    ReplayScope,
-    load_profile_record,
-    materialised_persona,
-    run_operation,
-    settle_operation,
-)
+from ...tests.persona_expectations import values_in_force
+from ...tests.persona_types import ExpectedValue, YearEnvelope
+from .persona_materialisation import materialised_persona
+from .persona_operations import run_operation, settle_operation
+from .persona_replay_requests import load_profile_record
+from .persona_world import PERSONA_ACTOR, PersonaWorld, ReplayScope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

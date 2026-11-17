@@ -23,7 +23,8 @@ from ....application.ledger.review_operation import (
 )
 from ....application.ledger.workspace import LedgerWorkspaceArea
 from ....core.errors.hierarchy import CadrumoError
-from ....core.i18n.render import tr
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
 from ....core.identity.transaction_ids import TransactionId
 from ..account import AccountSessionExpiredError
 from ..components.language import localized, repaint_tables
@@ -152,7 +153,9 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         status = self.query_one("#ledger-flow-status", Static)
         refusal = self.query_one("#ledger-refusal", Static)
         try:
-            result = await door(LedgerReviewRequest(profile_id=door.profile_id))
+            result = await door(
+                LedgerReviewRequest(profile_id=door.profile_id, output_language=OutputLanguage(output_language()))
+            )
         except AccountSessionExpiredError as error:
             self._forget_rows()
             status.update(tr("tui.ledger.review.failed"))

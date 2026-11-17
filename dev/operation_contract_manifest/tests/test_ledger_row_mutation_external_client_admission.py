@@ -163,12 +163,19 @@ def test_no_request_of_the_opened_operations_carries_a_path_bytes_or_a_confirmat
     """Every member is an identifier, typed text or a typed amount; none stands for a file or the person's consent."""
     registry = production_operation_registry()
     expected: dict[str, set[str]] = {
-        "ledger.archive": {"profile_id", "transaction_id", "actor", "reason"},
-        "ledger.stash": {"profile_id", "transaction_id", "actor", "reason"},
-        "ledger.restore": {"profile_id", "transaction_id", "actor", "reason"},
-        "ledger.exclude": {"profile_id", "transaction_id", "actor", "reason"},
-        "ledger.attach": {"profile_id", "transaction_id", "purchase_invoice_evidence_id", "attachment_ids", "actor"},
-        "ledger.detach": {"profile_id", "transaction_id", "attachment_ids", "actor"},
+        "ledger.archive": {"profile_id", "transaction_id", "actor", "reason", "output_language"},
+        "ledger.stash": {"profile_id", "transaction_id", "actor", "reason", "output_language"},
+        "ledger.restore": {"profile_id", "transaction_id", "actor", "reason", "output_language"},
+        "ledger.exclude": {"profile_id", "transaction_id", "actor", "reason", "output_language"},
+        "ledger.attach": {
+            "profile_id",
+            "transaction_id",
+            "purchase_invoice_evidence_id",
+            "attachment_ids",
+            "actor",
+            "output_language",
+        },
+        "ledger.detach": {"profile_id", "transaction_id", "attachment_ids", "actor", "output_language"},
         "ledger.split.manual": {"profile_id", "transaction_id", "children", "reason", "actor"},
     }
 

@@ -8,20 +8,16 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from cadrumo.entrypoints.tests.persona_materialisation import (
-    PersonaMaterialisationError,
+from cadrumo.entrypoints.tests.persona_history_replay import history_periods
+from cadrumo.entrypoints.tests.persona_withholding_capture import (
     WithholdingCapture,
-    history_periods,
     professional_fee_payments,
     professional_withholding_capture,
     rent_payments,
     rent_withholding_capture,
 )
-from cadrumo.tests.personas import (
-    FiledReturns,
-    LeasedPremises,
-    LedgerRow,
-)
+from cadrumo.entrypoints.tests.persona_world import PersonaMaterialisationError
+from cadrumo.tests.persona_types import FiledReturns, LeasedPremises, LedgerRow
 
 from . import commands
 from .journey import (

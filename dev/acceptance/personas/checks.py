@@ -5,9 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from cadrumo.tests.personas import (
-    ExpectedObligation,
-)
+from cadrumo.tests.persona_types import ExpectedObligation
 
 from .assessment import (
     CalculationObservation,

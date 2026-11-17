@@ -26,7 +26,7 @@ from ...application.modelo.workbench_operations import (
 from ...application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1
 from ...core.absence_attestation_family import AbsenceAttestationFamily
 from ...core.external_constants import OutputLanguage
-from ...tests.personas import WorkIncomeNoneStatement, YearEnvelope
+from ...tests.persona_types import WorkIncomeNoneStatement, YearEnvelope
 from .persona_prior_values import PriorValueAttestationError, SettleOperation
 
 _MODELO = "100"

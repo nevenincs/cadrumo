@@ -12,7 +12,7 @@ from cadrumo.application.overview.calendar_models import OverviewCalendarRange
 from cadrumo.application.overview.read_calendar_projection import OverviewCalendarSnapshot
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import TemporalSupportEnvelope
-from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
+from cadrumo.entrypoints.tests.persona_world import year_envelope
 
 from ..calendar_sweep import SUPPORT_FILE, support_line
 

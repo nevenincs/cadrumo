@@ -26,6 +26,8 @@ from ...application.ledger.link_operation import (
     LedgerLinkRequest,
 )
 from ...application.operations.public_period import PublicPeriod
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as active_output_language
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 
@@ -78,6 +80,7 @@ def link_ledger_invoice_for_cli(
     actor_label = (actor or "operator").strip() or "operator"
     request = LedgerLinkRequest(
         profile_id=client.profile_id,
+        output_language=OutputLanguage(active_output_language()),
         transaction_id=transaction_id,
         invoice_id=invoice_id,
         actor=actor_label,

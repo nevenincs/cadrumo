@@ -13,7 +13,7 @@ from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...tests.personas import read_persona
 from .persona_aeat_filings import PRESENTED_TIME, justificante_pdf_bytes, recorded_filing
-from .persona_materialisation import year_envelope
+from .persona_world import year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

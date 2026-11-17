@@ -9,7 +9,8 @@ from typing import Literal
 
 import pytest
 
-from cadrumo.tests.personas import ExpectedObligation, ExpectedValue, YearToken, per_period_modelos
+from cadrumo.tests.persona_expectations import per_period_modelos
+from cadrumo.tests.persona_types import ExpectedObligation, ExpectedValue, YearToken
 
 from ...persona_table.roles import edition_identities, resolve
 from ..assessment import (
