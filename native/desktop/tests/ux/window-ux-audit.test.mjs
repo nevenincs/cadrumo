@@ -2125,9 +2125,10 @@ async function reachExport() {
     await chooseTab(VIEWS, label("desktop.modelo.view.form"));
     await readAgainIfHeld();
     let head = await exec(pageHeaderStep, nextActionLabels(), busyText);
-    // A button the window holds while its own read runs is not yet the
-    // declaration's answer: wait for the read to settle, then judge it.
-    if (head.disabled && head.busy) {
+    // A button the window holds, or the busy line that replaces the next step
+    // while the read after its own write runs, is not yet the declaration's
+    // answer: wait for the read to settle, then judge it.
+    if (head.busy && (head.disabled || !head.action)) {
       const waited = Date.now();
       const settled = await waitFor(
         async () => {

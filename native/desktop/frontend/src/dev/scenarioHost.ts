@@ -233,6 +233,10 @@ declare global {
      * skills and the access keys) until released, as a service slow
      * everywhere but the settings would. */
     __scenarioAgentReadsHold?: { hold(): void; release(): void };
+    /** Holds the agent's status reads and its status watch until released,
+     * each logged as held when it is asked, as a service slow to answer only
+     * where it is would. */
+    __scenarioAgentStatusHold?: { hold(): void; release(): void };
     /** Commits a change to the fixture agent's local model list elsewhere. */
     __scenarioLocalModelsChangeElsewhere?: () => void;
     /** Which models the made-up computer holds, changed behind the window's
@@ -728,6 +732,31 @@ export function scenarioHost(
   const afterReads = async () => {
     if (readsHeld) await readsHeld;
   };
+  let statusHeld: Promise<void> | null = null;
+  let releaseStatus = () => {};
+  window.__scenarioAgentStatusHold = {
+    hold() {
+      statusHeld = new Promise((release) => {
+        releaseStatus = release;
+      });
+    },
+    release() {
+      statusHeld = null;
+      releaseStatus();
+    },
+  };
+  const statusRead =
+    <Args extends unknown[], Result>(
+      call: string,
+      read: (...args: Args) => Promise<Result>,
+    ) =>
+    async (...args: Args) => {
+      if (statusHeld) {
+        say(`${call}Held`);
+        await statusHeld;
+      }
+      return read(...args);
+    };
   // The window calls the served session through this one, looking each method
   // up when it is called: a spec that replaces a method of the served session
   // (window.__fixtureAgentSession) is then the one the window calls.
@@ -742,8 +771,14 @@ export function scenarioHost(
   const agentSession: typeof servedSession = Object.assign(
     Object.create(servedSession) as typeof servedSession,
     {
-      status: heldSession(() => servedSession.status)!,
-      observeStatus: heldSession(() => servedSession.observeStatus)!,
+      status: statusRead(
+        "agentStatus",
+        heldSession(() => servedSession.status)!,
+      ),
+      observeStatus: statusRead(
+        "agentObserveStatus",
+        heldSession(() => servedSession.observeStatus)!,
+      ),
       providerCatalog: heldSession(() => servedSession.providerCatalog)!,
       localModels: heldSession(() => servedSession.localModels),
       localEngine: heldSession(() => servedSession.localEngine),

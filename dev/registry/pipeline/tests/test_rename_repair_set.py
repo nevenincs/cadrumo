@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 from typing import Literal
 
@@ -10,15 +12,16 @@ import pytest
 import typer
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import (
-    RegistryLoadError,
-    RegistryValidationError,
-    UndeclaredExportTargetError,
-)
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_modelo_directory
+from ...compiler.revision_export_projection import (
+    UndeclaredExportTargetError,
+    undeclared_export_refusal,
+    undeclared_export_targets,
+)
 from ...form_layout.generator import generate_revision_layout
 from ...form_layout.serialization import form_layout_fragment_path, render_form_layout_toml
 from .. import cli
@@ -39,17 +42,44 @@ _FIRST = _SET.members[0]
 _RENAMED = tuple(sorted(_SET.renamed_casilla_ids))
 
 
-def _refusal(modelo: str, casilla_ids: tuple[str, ...], revision: str = "edition") -> UndeclaredExportTargetError:
+def _targets(modelo: str, casilla_ids: tuple[str, ...], revision: str = "edition") -> UndeclaredExportTargetError:
     return UndeclaredExportTargetError(Path("registry") / "modelos" / modelo, revision, casilla_ids)
 
 
 def test_typed_refusal_carries_its_identities_and_stays_a_load_error() -> None:
-    refusal = _refusal(_SET.modelo, _RENAMED)
+    targets = _targets(_SET.modelo, _RENAMED)
+    refusal = undeclared_export_refusal(targets)
 
-    assert isinstance(refusal, RegistryLoadError)
+    assert type(refusal) is RegistryLoadError
     assert not isinstance(refusal, RegistryValidationError)
-    assert (refusal.modelo_id, refusal.revision_id, refusal.casilla_ids) == (_SET.modelo, "edition", _RENAMED)
+    assert undeclared_export_targets(refusal) is targets
+    assert (targets.modelo_id, targets.revision_id, targets.casilla_ids) == (_SET.modelo, "edition", _RENAMED)
     assert all(casilla_id in str(refusal) for casilla_id in _RENAMED)
+
+
+def test_any_other_load_refusal_carries_no_stale_export_identities() -> None:
+    unrelated = RegistryLoadError("an unrelated malformed table")
+    unrelated.__cause__ = ValueError("a different cause")
+
+    assert undeclared_export_targets(RegistryLoadError("an unrelated malformed table")) is None
+    assert undeclared_export_targets(unrelated) is None
+
+
+def test_the_projection_module_loads_after_the_error_code_catalogue() -> None:
+    """A CadrumoError subclass defined in dev/ is refused once the catalogue has loaded, so none may stand there."""
+    loaded = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from cadrumo.core.errors.error_codes import declared_error_codes_by_qualname as codes; codes(); "
+            "import dev.registry.compiler.revision_export_projection",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert loaded.returncode == 0, loaded.stderr[-2000:]
 
 
 def test_the_reviewed_member_and_manifest_select_its_set() -> None:
@@ -71,16 +101,16 @@ def test_an_unreviewed_target_or_manifest_refuses(modelo: str, source_ref: str, 
 
 
 def test_exactly_the_renamed_ids_are_admitted() -> None:
-    validate_rename_refusal(_SET, _refusal(_SET.modelo, _RENAMED))
+    validate_rename_refusal(_SET, _targets(_SET.modelo, _RENAMED))
 
 
 @pytest.mark.parametrize(
     "refusal",
     [
-        pytest.param(_refusal(_SET.modelo, (*_RENAMED, "00999")), id="extra-unknown-id"),
-        pytest.param(_refusal(_SET.modelo, _RENAMED[:-1]), id="missing-id"),
-        pytest.param(_refusal(_SET.modelo, (*_RENAMED, _RENAMED[0])), id="duplicate-id"),
-        pytest.param(_refusal("303", _RENAMED), id="other-modelo"),
+        pytest.param(_targets(_SET.modelo, (*_RENAMED, "00999")), id="extra-unknown-id"),
+        pytest.param(_targets(_SET.modelo, _RENAMED[:-1]), id="missing-id"),
+        pytest.param(_targets(_SET.modelo, (*_RENAMED, _RENAMED[0])), id="duplicate-id"),
+        pytest.param(_targets("303", _RENAMED), id="other-modelo"),
     ],
 )
 def test_any_other_unknown_id_set_refuses(refusal: UndeclaredExportTargetError) -> None:
@@ -95,7 +125,7 @@ def test_a_committed_tree_whose_manifest_moved_refuses_before_any_overlay(tmp_pa
     assert live, "the reviewed modelo must carry committed exports"
     with pytest.raises(RegistryValidationError, match="manifest differs from the reviewed digest"):
         validated_rename_repair_source(
-            refusal=_refusal(_SET.modelo, _RENAMED),
+            refusal=_targets(_SET.modelo, _RENAMED),
             modelo=_SET.modelo,
             revision=sorted(live)[0],
             source_ref=_FIRST.source_ref,
@@ -135,12 +165,12 @@ def _route(
 
 
 def test_only_the_typed_refusal_routes_a_republish_to_the_rename_set(monkeypatch: pytest.MonkeyPatch) -> None:
-    refusal = _refusal(_SET.modelo, _RENAMED)
+    targets = _targets(_SET.modelo, _RENAMED)
     routed: list[UndeclaredExportTargetError] = []
 
-    _route(monkeypatch, refusal, "republish", routed)
+    _route(monkeypatch, undeclared_export_refusal(targets), "republish", routed)
 
-    assert routed == [refusal]
+    assert routed == [targets]
 
 
 @pytest.mark.parametrize("action", ["check", "publish"])
@@ -149,7 +179,7 @@ def test_the_typed_refusal_outside_republication_still_refuses(
 ) -> None:
     routed: list[UndeclaredExportTargetError] = []
     with pytest.raises(typer.Exit):
-        _route(monkeypatch, _refusal(_SET.modelo, _RENAMED), action, routed)
+        _route(monkeypatch, undeclared_export_refusal(_targets(_SET.modelo, _RENAMED)), action, routed)
     assert routed == []
 
 
@@ -214,11 +244,13 @@ def test_source_chain_staging_from_the_live_root_meets_a_stale_sibling_export(tm
     modelo_root, target, sibling = _two_edition_modelo(tmp_path / "live")
     _plant_undeclared_export_target(modelo_root / "revisions" / sibling)
 
-    with pytest.raises(UndeclaredExportTargetError) as refused:
+    with pytest.raises(RegistryLoadError) as refused:
         stage_source_chain(modelo_root, tmp_path / "staged", revision=target, include_target_export=False)
 
-    assert refused.value.revision_id == sibling
-    assert refused.value.casilla_ids == ("99999",)
+    targets = undeclared_export_targets(refused.value)
+    assert targets is not None
+    assert targets.revision_id == sibling
+    assert targets.casilla_ids == ("99999",)
 
 
 def test_source_chain_staging_from_an_overlay_without_the_stale_export_succeeds(tmp_path: Path) -> None:

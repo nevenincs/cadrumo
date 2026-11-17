@@ -38,16 +38,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.calculations.registry.errors.UndeclaredExportTargetError",
-        ErrorCode(
-            code="ERROR_CALCULATIONS_REGISTRY_UNDECLARED_EXPORT_TARGET",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_calculations_registry_load",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.domain.calculations.registry.errors.RegistryValidationError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY_VALIDATION",

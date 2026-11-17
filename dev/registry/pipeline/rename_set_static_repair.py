@@ -24,7 +24,7 @@ import rtoml
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError, UndeclaredExportTargetError
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
@@ -35,6 +35,7 @@ from ..compiler.authority import (
 from ..compiler.identity import resolve_registry_identity
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_fingerprints import collect_registry_tree_fingerprints
+from ..compiler.revision_export_projection import UndeclaredExportTargetError
 from ..form_layout.generator import generate_revision_layout
 from ..form_layout.serialization import form_layout_fragment_path, render_form_layout_toml
 from .export_tree import render_complete_export_tree
