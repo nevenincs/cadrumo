@@ -99,3 +99,58 @@ test("provider settings answered at once are drawn within 4 s while every other 
   await target.evaluate(() => window.__scenarioAgentReadsHold?.release());
   await expect(providers(target)).toBeVisible();
 });
+
+test("provider settings are drawn from their status while the access keys and the catalog are both asked and held, and one opening reads the catalog once", async ({
+  page: target,
+}) => {
+  await target.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off");
+  await expect(settingsDoor(target)).toBeVisible();
+  // The column is shown again with the access keys and the catalog held, so
+  // its own catalog read is still unanswered when the settings open.
+  await target.evaluate(() => {
+    window.__scenarioAgentAccessHold?.hold();
+    window.__scenarioAgentCatalogHold?.hold();
+  });
+  const agentRail = target.locator("[data-rail=agent]");
+  await agentRail.click();
+  await expect(settingsDoor(target)).toBeHidden();
+  const since = await target.evaluate(
+    () => (window.__scenarioHostCalls ?? []).length,
+  );
+  await agentRail.click();
+  await expect(settingsDoor(target)).toBeVisible();
+  const asked = async () =>
+    target.evaluate(
+      (from) => (window.__scenarioHostCalls ?? []).slice(from),
+      since,
+    );
+  await expect
+    .poll(async () => (await asked()).includes("agentProviderCatalogHeld"))
+    .toBe(true);
+
+  // The lanes are drawn from the status while nothing else has answered.
+  expect(await openAndTime(target)).toBeLessThanOrEqual(FIRST_DRAW_MS);
+  // The access keys and the catalog are both asked before either answers.
+  await expect
+    .poll(async () => (await asked()).includes("agentAccessList"))
+    .toBe(true);
+  const held = await asked();
+  expect(held).not.toContain("agentProviderCatalogResolved");
+  // The column's catalog read still out when the settings open is the one
+  // answer the opening shares: the catalog is asked once.
+  expect(held.filter((call) => call === "agentProviderCatalogHeld")).toEqual([
+    "agentProviderCatalogHeld",
+  ]);
+
+  await target.evaluate(() => {
+    window.__scenarioAgentAccessHold?.release();
+    window.__scenarioAgentCatalogHold?.release();
+  });
+  await expect
+    .poll(async () => (await asked()).includes("agentProviderCatalogResolved"))
+    .toBe(true);
+  await expect(providers(target)).toBeVisible();
+  expect(
+    (await asked()).filter((call) => call === "agentProviderCatalog"),
+  ).toEqual(["agentProviderCatalog"]);
+});

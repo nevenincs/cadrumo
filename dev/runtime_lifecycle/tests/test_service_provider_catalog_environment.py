@@ -73,7 +73,7 @@ def test_the_service_runs_the_declared_agent_catalog_and_projects_its_status(tmp
             store=store,
             catalog_source=source,
         )
-        status = settings.status()
+        status = settings.status(reads_pending=lambda _lanes: False)
         assert isinstance(status, ProviderSettingsStatus), status
         assert sorted(entry.id for entry in status.providers) == expected
         initial = next(entry for entry in status.providers if entry.id == KEY_LANE)
@@ -86,7 +86,7 @@ def test_the_service_runs_the_declared_agent_catalog_and_projects_its_status(tmp
         assert accepted.entry.source is ProviderCredentialSource.PROFILE
         assert accepted.entry.readiness is ProviderReadiness.NOT_VERIFIED
         assert accepted.entry.revision != initial.revision
-        reread = settings.status()
+        reread = settings.status(reads_pending=lambda _lanes: False)
         assert isinstance(reread, ProviderSettingsStatus), reread
         assert next(entry for entry in reread.providers if entry.id == KEY_LANE) == accepted.entry
         stale = settings.set_credential(
@@ -116,6 +116,6 @@ def test_a_service_without_a_declared_agent_returns_typed_catalog_unavailability
             selected_engine=lambda: LocalEngine.LLAMACPP,
             store=SecureProviderSettingsStore(client=client),
             catalog_source=source,
-        ).status()
+        ).status(reads_pending=lambda _lanes: False)
         assert isinstance(status, ProviderSettingsRefusal), status
         assert status.code is ProviderSettingsRefusalCode.CATALOG_UNAVAILABLE
