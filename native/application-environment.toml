@@ -648,6 +648,18 @@ arguments = [
 ]
 
 [[invocations]]
+profile = "agent-auth"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "auth" },
+  { literal = "logout" },
+  { literal = "--provider" },
+  { slot = "provider", kind = "identifier" },
+]
+
+[[invocations]]
 profile = "agent-providers"
 platform = "all"
 arguments = [
