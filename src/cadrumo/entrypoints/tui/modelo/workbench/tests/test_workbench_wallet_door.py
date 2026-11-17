@@ -34,6 +34,7 @@ from ......application.operations.error_detail import build_operation_error_deta
 from ......application.operations.public_period import PublicPeriod
 from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.config import override_settings
+from ......core.external_constants import DEFAULT_OUTPUT_LANGUAGE
 from ......core.i18n.render import tr
 from ......core.period import Period
 from ......domain.calculations.registry.authority import bundled_indexed_authority
@@ -131,7 +132,7 @@ class FakeDoor:
 
     def read_balance(self, as_of_year: int) -> ModeloIvaWalletBalanceProjection:
         self.read.append(as_of_year)
-        return ModeloIvaWalletBalanceProjection(
+        return ModeloIvaWalletBalanceProjection.worded(
             profile_id=_PROFILE,
             as_of_year=as_of_year,
             total_balance="0",
@@ -140,6 +141,7 @@ class FakeDoor:
             lot_count=0,
             next_expiry_year=None,
             unallocated_applied_amount="0",
+            language=DEFAULT_OUTPUT_LANGUAGE,
         )
 
     def record(self, entry: IvaWalletEntryV1) -> IvaWalletReceiptV1:

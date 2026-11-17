@@ -450,8 +450,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         "desktop.ledger.invoices.payment.": ("paid", "pending", "partially_paid", "overdue", "cancelled"),
         "desktop.ledger.invoices.problem.": (
             "choose_kind",
-            "country_letters",
-            "currency_letters",
             "choose_rate",
             "no_line",
             "payment_id_shape",

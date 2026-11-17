@@ -3633,8 +3633,6 @@ desktop:
       problem:
         choose_kind: Add meg, hogy kiállítottad vagy befogadtad.
         choose_rate: Válassz kulcsot.
-        country_letters: Két betű, pl. ES.
-        currency_letters: Három betű, pl. EUR.
         missing: Kötelező.
         no_line: Adj hozzá legalább egy tételsort.
         payment_id_shape: 64 hexadecimális karakter.
