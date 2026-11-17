@@ -9,9 +9,9 @@ import pytest
 
 from ....core.errors.hierarchy import ProfileAnswerTypeError
 from ...calculations.registry.tests.authored_editions import filing_year_envelope
-from ..inmueble_facts import facts_for_row
 from ..posicion_facts import POSICION_SECTION, posicion_from_row, posicion_row_values, posiciones_from_facts
 from ..posicion_record import PosicionTipo
+from .profile_row_facts import facts_for_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

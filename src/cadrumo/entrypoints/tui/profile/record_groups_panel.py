@@ -149,11 +149,6 @@ def block_rows(block: RecordGroupBlock) -> tuple[BlockLine, ...]:
     return tuple(lines)
 
 
-def block_lines(block: RecordGroupBlock) -> tuple[tuple[str, str], ...]:
-    """The lines of one group as ``(class, text)``, in served order, each text served or chrome."""
-    return tuple((line.css, line.text) for line in block_rows(block))
-
-
 class RecordGroupsScreen(ModalScreen[RecordGroupDoor | None]):
     """Read every served kind of record group and draw it a page at a time; a pressed door closes it."""
 
@@ -291,7 +286,6 @@ __all__ = [
     "RECORD_GROUPS_TITLE_LOCALE_KEY",
     "BlockLine",
     "RecordGroupsScreen",
-    "block_lines",
     "block_rows",
     "fact_text",
     "ledger_row_text",
