@@ -70,7 +70,6 @@ from .vocabulary import DONE_MARK, AttentionCounts, WorkbenchMark, field_counts
 DETAILS_PAGE_ID: Final[str] = "details"
 #: The page of the answers the calculation reads that no page of the form takes.
 ANSWERS_PAGE_ID: Final[str] = "answers"
-_RATIO_DATA_TYPE: Final[str] = "ratio"
 _COLUMN_UNNAMED_LOCALE_KEY: Final[str] = "workspace.modelo.grid.column_unnamed"
 _NAMELESS_DISCLOSURES: Final[frozenset[ModeloFormTextDisclosure]] = frozenset(
     {ModeloFormTextDisclosure.TECHNICAL, ModeloFormTextDisclosure.UNNAMED}
@@ -268,24 +267,6 @@ def _entry(
     )
 
 
-def _base_empty(row: ModeloFormGridRow, rate_box: ModeloFormField | None) -> bool | None:
-    """Whether the base box before a row's rate box holds no amount; ``None`` where the row has no such box."""
-    if rate_box is None:
-        return None
-    fields = [cell.field for cell in row.cells]
-    index = next((position for position, item in enumerate(fields) if item is rate_box), None)
-    base = None if not (index is not None and index) else fields[index - 1]
-    if base is None or base.data_type == _RATIO_DATA_TYPE:
-        return None
-    return not _holds_amount(base)
-
-
-def _rate_box(row: ModeloFormGridRow) -> ModeloFormField | None:
-    """The one rate box an official row prints, or ``None`` when it prints none or several."""
-    rates = [cell.field for cell in row.cells if cell.field is not None and cell.field.data_type == _RATIO_DATA_TYPE]
-    return rates[0] if len(rates) == 1 else None
-
-
 def _column_headings(columns: tuple[ModeloFormGridColumn, ...], rows: tuple[ModeloFormGridRow, ...]) -> tuple[str, ...]:
     """Each column's heading: the official words, else the label of its first box, never a technical key."""
     headings: list[str] = []
@@ -341,8 +322,8 @@ def _grid_row_items(
     mode: WorkbenchFilter,
     page: WorkbenchPage,
 ) -> tuple[CasillaListHeading | None, list[CasillaListItem]]:
-    rate_box = _rate_box(row)
-    base_empty = _base_empty(row, rate_box)
+    rate_box = row.cells[row.rate_cell].field if row.rate_cell is not None else None
+    base_empty = row.rate_base_empty
     row_items: list[CasillaListItem] = []
     slots: list[GridSlot] = []
     for heading, cell in zip(headings, row.cells, strict=True):

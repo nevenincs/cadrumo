@@ -16,7 +16,6 @@ filer reads the balance again and decides.
 from __future__ import annotations
 
 import asyncio
-from decimal import Decimal, InvalidOperation
 from functools import partial
 from typing import ClassVar, Final, Literal, override
 
@@ -31,7 +30,6 @@ from textual.widgets.option_list import Option
 from ....application.modelo.iva_wallet_balance_operation import ModeloIvaWalletBalanceProjection
 from ....application.modelo.iva_wallet_correction_operation import ModeloIvaWalletCorrectionProjection
 from ....application.modelo.iva_wallet_override_operation import ModeloIvaWalletOverrideProjection
-from ....application.modelo.value_presentation import format_casilla_value
 from ....application.modelo.work_form_models import ModeloWorkForm
 from ....application.modelo.work_form_wording import period_words
 from ....core.external_constants import OutputLanguage
@@ -109,23 +107,8 @@ def mode_help_key(kind: IvaWalletActionKind) -> str:
     return f"{_PREFIX}.help.{kind.value}"
 
 
-def written_amount(text: str, language: OutputLanguage) -> str:
-    """A recording's amount written as a box writes money; text that is not a number stays as served.
-
-    A recording's receipt serves its amounts as numbers only; the balance serves its own in words.
-    """
-    try:
-        value = Decimal(text)
-    except InvalidOperation:
-        return text
-    return format_casilla_value(value, data_type="money", language=language)
-
-
 def balance_lines(balance: ModeloIvaWalletBalanceProjection) -> tuple[str, ...]:
-    """The released balance facts, each with the catalogue's label for it, in the application's field order.
-
-    Each amount is the words it was served in.
-    """
+    """The released balance facts, each with the catalogue's label for it and its amounts as served in words."""
 
     def line(name: str, value: str) -> str:
         return f"{tr(f'{_PREFIX}.{name}')}: {value}"
@@ -151,10 +134,10 @@ def receipt_lines(receipt: IvaWalletReceiptV1, language: OutputLanguage) -> tupl
     lines = [
         tr(RECORDED_LOCALE_KEY),
         f"{tr(PERIOD_LOCALE_KEY)}: {period_words(receipt.period.to_period(), language)}",
-        f"{tr(AMOUNT_LOCALE_KEY)}: {written_amount(receipt.amount, language)}",
+        f"{tr(AMOUNT_LOCALE_KEY)}: {receipt.amount_words}",
     ]
     if isinstance(receipt, ModeloIvaWalletCorrectionProjection):
-        lines.append(f"{tr(PREVIOUS_AMOUNT_LOCALE_KEY)}: {written_amount(receipt.previous_amount, language)}")
+        lines.append(f"{tr(PREVIOUS_AMOUNT_LOCALE_KEY)}: {receipt.previous_amount_words}")
     if isinstance(receipt, ModeloIvaWalletCorrectionProjection | ModeloIvaWalletOverrideProjection):
         lines.append(f"{tr(REASON_LOCALE_KEY)}: {receipt.reason}")
     if isinstance(receipt, ModeloIvaWalletOverrideProjection):
@@ -533,5 +516,4 @@ __all__ = [
     "mode_help_key",
     "mode_label_key",
     "receipt_lines",
-    "written_amount",
 ]
