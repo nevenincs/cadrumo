@@ -10,6 +10,13 @@ import type { Channel } from "@tauri-apps/api/core";
 import type { AgentAccessAnswer } from "../shell/agentAccess";
 import type { ServedCatalogAnswer } from "../shell/agentCatalogContract";
 import type {
+  AttachmentCardAnswer,
+  AttachmentGrantRevokeAnswer,
+  AttachmentGrantsAnswer,
+  AttachmentReleaseAnswer,
+  ReleaseScope,
+} from "../shell/attachmentAdminContract";
+import type {
   LocalEngine,
   LocalEngineStatus,
   LocalModelListStatus,
@@ -25,11 +32,6 @@ import type {
 import type {
   AgentAnswerResult,
   AgentApproval,
-  AgentAttachmentCard,
-  AgentAttachmentGrants,
-  AgentAttachmentRefusal,
-  AgentAttachmentRelease,
-  AgentAttachmentScope,
   AgentDropSignal,
   AgentQuestionnaire,
   AgentQuestionnaireAnswer,
@@ -1163,24 +1165,24 @@ export interface HostCommands {
     args: Authorized<{
       approval: Pick<AgentApproval, "reply_id" | "request_id">;
     }>;
-    result: AgentAttachmentCard;
+    result: AttachmentCardAnswer;
   };
   /** Puts the person's answer to the service; the request is answered only once released. */
   agent_attachment_release: {
     args: Authorized<{
       approval: Pick<AgentApproval, "reply_id" | "request_id">;
       optionId: string;
-      scope: AgentAttachmentScope | null;
+      scope: ReleaseScope | null;
     }>;
-    result: AgentAttachmentRelease;
+    result: AttachmentReleaseAnswer;
   };
   agent_attachment_grants: {
     args: Authorized<Record<string, never>>;
-    result: AgentAttachmentGrants;
+    result: AttachmentGrantsAnswer;
   };
   agent_attachment_grant_revoke: {
     args: Authorized<{ grantId: string }>;
-    result: { kind: "revoked" } | AgentAttachmentRefusal;
+    result: AttachmentGrantRevokeAnswer;
   };
   agent_observe: {
     args: Authorized<{
