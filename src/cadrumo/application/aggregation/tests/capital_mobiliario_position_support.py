@@ -13,8 +13,8 @@ from ....domain.calculations.registry.capital_mobiliario_position_bindings impor
     capital_mobiliario_position_bindings,
 )
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-from ....domain.contribuyente.inmueble_facts import facts_for_row
 from ....domain.contribuyente.posicion_facts import POSICION_SECTION
+from ....domain.contribuyente.tests.profile_row_facts import facts_for_row
 from ....domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
 from ....domain.renta.retencion_soportada_absence import RetencionSoportadaAbsence
 from ....domain.transactions.enums import TransactionDirection

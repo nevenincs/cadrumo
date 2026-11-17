@@ -43,7 +43,7 @@ def _public(value: Decimal) -> PublicDecimal:
     return PublicDecimal(decimal=str(value))
 
 
-def _public_or_none(value: Decimal | None) -> PublicDecimal | None:
+def public_or_none(value: Decimal | None) -> PublicDecimal | None:
     return None if value is None else _public(value)
 
 
@@ -143,10 +143,10 @@ class InventoryMovementProjection(BaseModel):
             kind=movement.kind,
             sku=movement.sku,
             quantity=_public(movement.quantity),
-            unit_cost=_public_or_none(movement.unit_cost),
-            taxable_base=_public_or_none(movement.taxable_base),
+            unit_cost=public_or_none(movement.unit_cost),
+            taxable_base=public_or_none(movement.taxable_base),
             iva_rate=_public(movement.iva_rate),
-            iva_amount=_public_or_none(movement.iva_amount),
+            iva_amount=public_or_none(movement.iva_amount),
             deductible_iva_ratio=_public(movement.deductible_iva_ratio),
             acquisition_cost=_acquisition_cost_projection(acquisition),
             schema_version=movement.schema_version,
@@ -209,7 +209,7 @@ class InventoryHistoryEntryProjection(BaseModel):
                 else None
             ),
             replacement_movement_id=entry.replacement_movement_id,
-            prior_opening_stock=_public_or_none(entry.prior_opening_stock),
+            prior_opening_stock=public_or_none(entry.prior_opening_stock),
             prior_valuation_method=entry.prior_valuation_method,
             prior_descriptor=(
                 InventoryDescriptorProjection.from_descriptor(entry.prior_descriptor)

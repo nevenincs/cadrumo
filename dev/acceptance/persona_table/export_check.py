@@ -10,6 +10,7 @@ from pathlib import Path
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryError
+from cadrumo.domain.calculations.registry.export_shared_owner import unadjudicated_shared_owners
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.domain.filing.errors import ModeloBuilderError
 from cadrumo.tests.personas import ExpectedValue
@@ -36,7 +37,10 @@ def export_readback_reason(plan: PlannedRow, values: list[ExpectedValue], output
     """
     casillas = edition_identities(plan.modelo, plan.year, plan.period)
     with bundled_indexed_authority().operation() as operation:
-        layout = export_layout(operation, plan)
+        revision = operation.revision_for_context(plan.modelo, filing_year=plan.year, period=plan.period)
+        full = operation.revision_with_export_layouts(plan.modelo, revision.id)
+        layout = full.export_layouts[0]
+        unadjudicated = [owner.casilla_id for owner in unadjudicated_shared_owners(layout, full.casillas)]
         try:
             parsed = read_fields(
                 layout,
@@ -49,7 +53,7 @@ def export_readback_reason(plan: PlannedRow, values: list[ExpectedValue], output
         except (RegistryError, ModeloBuilderError) as error:
             return unreadable_reason(error)
     mismatches = readback_mismatches(values, casillas, plan.unchecked, parsed)
-    found = [*cross_page_reuse_mismatches(plan.modelo, parsed), *foreign_carrier_mismatches(plan.modelo, parsed)]
+    found = [*cross_page_reuse_mismatches(unadjudicated, parsed), *foreign_carrier_mismatches(plan.modelo, parsed)]
     return readback_reason([*mismatches, *found])
 
 
