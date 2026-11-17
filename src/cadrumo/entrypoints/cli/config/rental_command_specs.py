@@ -14,6 +14,7 @@ _PAYLOADS = "..config_rental_payloads"
 _END = record_leaf(
     "arrendamiento",
     "end",
+    handlers=".arrendamiento",
     payloads=_PAYLOADS,
     result="ConfigProfileArrendamientoEndResult",
     policy=ENCRYPTED_WRITE,
@@ -29,8 +30,10 @@ _END = record_leaf(
 )
 
 RENTAL_COMMAND_SPECS: tuple[CommandSpec, ...] = (
-    *record_family_specs("arrendamiento", "Arrendamiento", payloads=_PAYLOADS, extra=(_END,)),
-    *record_family_specs("inmueble", "Inmueble", payloads=_PAYLOADS),
+    *record_family_specs(
+        "arrendamiento", "Arrendamiento", handlers=".arrendamiento", payloads=_PAYLOADS, extra=(_END,)
+    ),
+    *record_family_specs("inmueble", "Inmueble", handlers=".inmueble", payloads=_PAYLOADS),
 )
 
 __all__ = ["RENTAL_COMMAND_SPECS"]

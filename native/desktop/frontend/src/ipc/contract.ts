@@ -10,6 +10,13 @@ import type { Channel } from "@tauri-apps/api/core";
 import type { AgentAccessAnswer } from "../shell/agentAccess";
 import type { ServedCatalogAnswer } from "../shell/agentCatalogContract";
 import type {
+  AttachmentCardAnswer,
+  AttachmentGrantRevokeAnswer,
+  AttachmentGrantsAnswer,
+  AttachmentReleaseAnswer,
+  ReleaseScope,
+} from "../shell/attachmentAdminContract";
+import type {
   LocalEngine,
   LocalEngineStatus,
   LocalModelListStatus,
@@ -18,16 +25,13 @@ import type {
 import type {
   AttachmentPolicyResponse,
   ModelLicenceResponse,
+  SkillDetailRecord,
   SkillListResponse,
+  SkillVerificationRecord,
 } from "../shell/agentGatewayContract";
 import type {
   AgentAnswerResult,
   AgentApproval,
-  AgentAttachmentCard,
-  AgentAttachmentGrants,
-  AgentAttachmentRefusal,
-  AgentAttachmentRelease,
-  AgentAttachmentScope,
   AgentDropSignal,
   AgentQuestionnaire,
   AgentQuestionnaireAnswer,
@@ -1072,9 +1076,15 @@ export interface HostCommands {
    * name outside the skill grammar is refused as `agent_invalid_request`
    * before the agent is asked, and an unknown one as
    * `agent_gateway_skill_not_found`. */
-  agent_skill: { args: Authorized<{ name: string }>; result: unknown };
+  agent_skill: {
+    args: Authorized<{ name: string }>;
+    result: SkillDetailRecord;
+  };
   /** The agent's checks of one skill, from `POST /v1/skills/{name}/verify`. */
-  agent_skill_verify: { args: Authorized<{ name: string }>; result: unknown };
+  agent_skill_verify: {
+    args: Authorized<{ name: string }>;
+    result: SkillVerificationRecord;
+  };
   agent_conversation_start: {
     args: Authorized;
     result: AgentConversationRecord;
@@ -1155,24 +1165,24 @@ export interface HostCommands {
     args: Authorized<{
       approval: Pick<AgentApproval, "reply_id" | "request_id">;
     }>;
-    result: AgentAttachmentCard;
+    result: AttachmentCardAnswer;
   };
   /** Puts the person's answer to the service; the request is answered only once released. */
   agent_attachment_release: {
     args: Authorized<{
       approval: Pick<AgentApproval, "reply_id" | "request_id">;
       optionId: string;
-      scope: AgentAttachmentScope | null;
+      scope: ReleaseScope | null;
     }>;
-    result: AgentAttachmentRelease;
+    result: AttachmentReleaseAnswer;
   };
   agent_attachment_grants: {
     args: Authorized<Record<string, never>>;
-    result: AgentAttachmentGrants;
+    result: AttachmentGrantsAnswer;
   };
   agent_attachment_grant_revoke: {
     args: Authorized<{ grantId: string }>;
-    result: { kind: "revoked" } | AgentAttachmentRefusal;
+    result: AttachmentGrantRevokeAnswer;
   };
   agent_observe: {
     args: Authorized<{

@@ -44,7 +44,7 @@ from cadrumo.core.errors.failure_report import log_boundary_failure
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.logging import get_logger
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt, ProfileSessionRefusalReason
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo.domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -169,7 +169,7 @@ class ProfileWorkerHumanLogin:
                     self.cancel()
                     raise ProfileAccessRefusedError(AccessDenialCode.CUSTODY_CHANGED)
                 identity = uuid4()
-                self._candidate = identity, candidate, now() + timedelta(minutes=5), time.monotonic() + 300
+                self._candidate = identity, candidate, wall_now() + timedelta(minutes=5), time.monotonic() + 300
                 self._candidate_attempt = attempt_id
                 self._measure_stronger_kdf_later(candidate)
                 return identity, candidate.outcome
@@ -340,7 +340,7 @@ class ProfileWorkerHumanLogin:
                 )
                 cancellation.raise_if_cancelled()
                 identity = uuid4()
-                self._candidate = identity, candidate, now() + timedelta(minutes=5), time.monotonic() + 300
+                self._candidate = identity, candidate, wall_now() + timedelta(minutes=5), time.monotonic() + 300
                 self._candidate_attempt = attempt_id
                 self._resumed_login = login_id
                 self._candidate_sealing_key = bytearray(receipt_key)
@@ -500,7 +500,7 @@ class ProfileWorkerHumanLogin:
                 held.append(self._candidate[1:])
         if not held:
             return None
-        instant, elapsed = now(), time.monotonic()
+        instant, elapsed = wall_now(), time.monotonic()
         return max(
             0.0,
             min(
@@ -542,7 +542,7 @@ class ProfileWorkerHumanLogin:
 
 
 def _abandoned(candidate: ProfileLoginCandidate, deadline: UtcInstant, monotonic_deadline: float) -> bool:
-    instant = now()
+    instant = wall_now()
     return (
         instant < candidate.outcome.authenticated_at
         or instant >= min(deadline, candidate.outcome.idle_deadline, candidate.outcome.absolute_deadline)

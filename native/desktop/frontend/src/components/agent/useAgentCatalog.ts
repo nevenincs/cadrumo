@@ -19,6 +19,7 @@ import type {
   AgentServiceStatus,
   AgentSession,
 } from "../../shell/agentSession";
+import type { ServedCatalogAnswer } from "../../shell/agentCatalogContract";
 import { useAgentRead, type AgentRanWith } from "../../shell/agentViews";
 import { catalogLanes } from "../../shell/localModelLanes";
 import {
@@ -89,14 +90,28 @@ export function useAgentCatalog({
   } | null>(null);
   // Whether a read is wanted, so a busy refusal is followed by another.
   const reading = useRef(false);
+  // Reads asked for by anything but an opening of the settings, which an
+  // answer asked before them cannot serve.
+  const [catalogAgain, setCatalogAgain] = useState(0);
+  const [busyReads, setBusyReads] = useState(0);
+  const freshness = catalogAgain + settingsChanges + busyReads;
+  const fresh = useRef(freshness);
+  useLayoutEffect(() => {
+    fresh.current = freshness;
+  }, [freshness]);
   const catalogRequest = useMemo(
     () => ({ reader, ready, starting, session, retry: catalogRetry }),
     [reader, ready, starting, session, catalogRetry],
   );
   const readCatalog = useMemo(() => {
     const { reader, ready, starting, session } = catalogRequest;
+    // The read still out, which an opening of the settings shares rather
+    // than asking the catalog a second time.
+    let out: { promise: Promise<ServedCatalogAnswer>; fresh: number } | null =
+      null;
     return reader !== null && (ready || starting) && session
       ? () => {
+          if (out && out.fresh === fresh.current) return out.promise;
           // A read asked under a newly published status starts its pauses
           // afresh.
           if (askedUnder.current !== published.current) {
@@ -119,9 +134,16 @@ export function useAgentCatalog({
             wait.noted = true;
             return false;
           };
-          return session.providerCatalog(
+          const promise = session.providerCatalog(
             catalogReadRetry(() => reading.current, expected),
           );
+          const mine = { promise, fresh: fresh.current };
+          out = mine;
+          const settled = () => {
+            if (out === mine) out = null;
+          };
+          promise.then(settled, settled);
+          return promise;
         }
       : null;
   }, [catalogRequest]);
@@ -131,10 +153,8 @@ export function useAgentCatalog({
       reading.current = false;
     };
   }, [readCatalog]);
-  // Setup and provider settings invalidate the catalog independently.
-  const [catalogAgain, setCatalogAgain] = useState(0);
-  // Reads asked for while the service was busy.
-  const [busyReads, setBusyReads] = useState(0);
+  // Setup, provider settings and a busy answer ask for the catalog
+  // independently; an opening joins a read still out.
   const catalog = useAgentRead(
     readCatalog,
     catalogAgain + settingsChanges + busyReads + opened,

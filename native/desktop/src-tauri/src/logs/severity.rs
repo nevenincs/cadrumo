@@ -60,6 +60,7 @@ pub fn level(event: &Event) -> Level {
             ServiceFact::AgentReady { .. }
             | ServiceFact::ManagerInstallationCompleted { .. }
             | ServiceFact::SetupAdmissionRead { .. }
+            | ServiceFact::AgentAdmissionTiming { .. }
             | ServiceFact::PersonRestore { .. } => Level::Info,
             _ => Level::Debug,
         };

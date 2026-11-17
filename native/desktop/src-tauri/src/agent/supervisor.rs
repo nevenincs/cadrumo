@@ -587,6 +587,24 @@ async fn stop_running(
     ended.map(|_| ())
 }
 
+fn cancelled_start() -> ApplicationError {
+    ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+        .with_reason("agent_start_cancelled")
+}
+
+/// Stops a service process this start launched and will not run.
+async fn stop_supervised(shared: &Arc<Shared>, supervised: Supervised) -> Result<()> {
+    let grace = shared.grace;
+    tauri::async_runtime::spawn_blocking(move || supervised.stop(grace))
+        .await
+        .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))?
+        .map(|_| ())
+}
+
+fn millis(duration: Duration) -> u64 {
+    duration.as_millis().try_into().unwrap_or(u64::MAX)
+}
+
 async fn prepare_start(
     shared: &Arc<Shared>,
     launch: &Launch,
@@ -601,35 +619,31 @@ async fn prepare_start(
     let launch = launch.clone();
     let prepare_bearer = bearer.clone();
     let prepare_profile = profile.clone();
-    // Include held-person acquisition (which can wait on another consumer)
-    // in the visible startup interval, not just the child launch afterwards.
     shared
         .diagnostics
         .service(None, ServiceFact::AgentStarting { generation });
-    let (
-        Prepared {
-            command,
-            person,
-            local_engine_default,
-        },
-        person_failure,
-    ) = tauri::async_runtime::spawn_blocking(move || {
-        let prepared = launch(&prepare_bearer, &prepare_profile)?;
-        let failure = prepared
-            .person
-            .as_ref()
-            .map(|person| lock(person).failures());
-        Ok::<_, ApplicationError>((prepared, failure))
-    })
-    .await
-    .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
+    let Prepared {
+        command,
+        person: acquire_person,
+        local_engine_default,
+    } = tauri::async_runtime::spawn_blocking(move || launch(&prepare_bearer, &prepare_profile))
+        .await
+        .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
     let prepared_at = Instant::now();
     if cancelled.load(Ordering::Acquire) || shared.closed.load(Ordering::Acquire) {
-        return Err(
-            ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
-                .with_reason("agent_start_cancelled"),
-        );
+        return Err(cancelled_start());
     }
+    // The person session, which on a cold start resumes the stored sign-in
+    // (it can also wait on another consumer doing so), is acquired while the
+    // service process starts on the profile id alone. The service's signals
+    // wait as early ones until this start is running with its person, so
+    // nothing is admitted without it.
+    let acquiring = tauri::async_runtime::spawn_blocking(move || {
+        let began = Instant::now();
+        let person = acquire_person()?;
+        let failure = person.as_ref().map(|person| lock(person).failures());
+        Ok::<_, ApplicationError>((person, failure, began.elapsed()))
+    });
     let sender = signals.clone();
     let diagnostics = shared.diagnostics.clone();
     let secret = bearer.clone();
@@ -650,31 +664,30 @@ async fn prepare_start(
     })
     .await
     .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
+    let spawned_at = Instant::now();
+    let acquired = acquiring
+        .await
+        .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))
+        .and_then(|acquired| acquired);
+    let (person, person_failure, person_wait) = match acquired {
+        Ok(acquired) => acquired,
+        Err(error) => {
+            stop_supervised(shared, supervised).await?;
+            return Err(error);
+        }
+    };
     shared.diagnostics.service(
         None,
         ServiceFact::AgentStartupTiming {
             generation,
-            prepare_ms: prepared_at
-                .duration_since(preparation_started)
-                .as_millis()
-                .try_into()
-                .unwrap_or(u64::MAX),
-            spawn_ms: prepared_at
-                .elapsed()
-                .as_millis()
-                .try_into()
-                .unwrap_or(u64::MAX),
+            command_ms: millis(prepared_at.duration_since(preparation_started)),
+            spawn_ms: millis(spawned_at.duration_since(prepared_at)),
+            person_ms: millis(person_wait),
         },
     );
     if cancelled.load(Ordering::Acquire) || shared.closed.load(Ordering::Acquire) {
-        let grace = shared.grace;
-        tauri::async_runtime::spawn_blocking(move || supervised.stop(grace))
-            .await
-            .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
-        return Err(
-            ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
-                .with_reason("agent_start_cancelled"),
-        );
+        stop_supervised(shared, supervised).await?;
+        return Err(cancelled_start());
     }
     Ok(Running {
         supervised,
@@ -1207,6 +1220,7 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
                 gate: Default::default(),
             };
             let task = tauri::async_runtime::spawn(async move {
+                let began = Instant::now();
                 let result = admit_person(AdmissionWork {
                     person,
                     boot: runtime_boot_id,
@@ -1219,6 +1233,16 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
                 })
                 .await
                 .map(|()| endpoint);
+                // The status the window waits on answers only once this
+                // admission completes, so its cost is kept beside startup's.
+                owner.diagnostics.service(
+                    None,
+                    ServiceFact::AgentAdmissionTiming {
+                        generation,
+                        admitted: result.is_ok(),
+                        elapsed_ms: began.elapsed().as_millis().try_into().unwrap_or(u64::MAX),
+                    },
+                );
                 let _ = owner
                     .completions
                     .send(Completion::Admitted(generation, result));

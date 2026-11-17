@@ -20,7 +20,7 @@ from cadrumo.domain.calculations.registry.export_parse_models import ParsedExpor
 
 @dataclass(frozen=True, slots=True)
 class ForeignCarrier:
-    """A design cell whose export field must not carry the bare casilla identity of another page's field."""
+    """A design cell whose export field must not carry the casilla identity of another page's field."""
 
     modelo: str
     cell: str
@@ -29,12 +29,12 @@ class ForeignCarrier:
 
 
 KNOWN_FOREIGN_CARRIERS: tuple[ForeignCarrier, ...] = (
-    ForeignCarrier(modelo="200", cell="dp200032.f0092", casilla="00524", owner_cell="dp200010.f0080"),
-    ForeignCarrier(modelo="200", cell="dp200043.f0054", casilla="00524", owner_cell="dp200010.f0080"),
-    ForeignCarrier(modelo="200", cell="dp200043.f0055", casilla="00525", owner_cell="dp200010.f0081"),
-    ForeignCarrier(modelo="200", cell="dp200043.f0056", casilla="00526", owner_cell="dp200010.f0082"),
+    ForeignCarrier(modelo="200", cell="dp200032.f0092", casilla="DP200010:00524", owner_cell="dp200010.f0080"),
+    ForeignCarrier(modelo="200", cell="dp200043.f0054", casilla="DP200010:00524", owner_cell="dp200010.f0080"),
+    ForeignCarrier(modelo="200", cell="dp200043.f0055", casilla="DP200010:00525", owner_cell="dp200010.f0081"),
+    ForeignCarrier(modelo="200", cell="dp200043.f0056", casilla="DP200010:00526", owner_cell="dp200010.f0082"),
 )
-"""The cells found carrying DP200010's casillas, each with the cell that owns the identity."""
+"""The cells found carrying DP200010's casillas, each with the page-qualified identity its owner cell holds."""
 
 CLASSIFIED_MODELOS: frozenset[str] = frozenset({"200"})
 """The modelos whose export map is held red while a bare casilla identity is bound on more than one page.

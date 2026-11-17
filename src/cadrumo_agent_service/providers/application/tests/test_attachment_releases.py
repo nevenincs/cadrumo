@@ -144,10 +144,16 @@ class _World:
     off_host: list[bool]
 
     def card(self) -> dict[str, Any]:
-        return self.releases.card(_RUN, _REQUEST)
+        return self.releases.card(_RUN, _REQUEST).model_dump(mode="json")
 
     def release(self, scope: ReleaseScope | None) -> dict[str, Any]:
-        return self.releases.release(_RUN, _REQUEST, scope)
+        return self.releases.release(_RUN, _REQUEST, scope).model_dump(mode="json")
+
+    def grants(self) -> dict[str, Any]:
+        return self.releases.grants().model_dump(mode="json")
+
+    def revoke(self, grant_id: str) -> dict[str, Any]:
+        return self.releases.revoke(grant_id).model_dump(mode="json")
 
 
 @pytest.fixture
@@ -228,13 +234,13 @@ def test_a_remembered_grant_lasts_until_revoked(world: _World) -> None:
     world.session[0] = "session-after-restart"
     assert world.release(None) == {"kind": "released"}
 
-    (grant,) = world.releases.grants()["grants"]
+    (grant,) = world.grants()["grants"]
     assert grant["display_name"] == "nota.txt"
-    assert world.releases.revoke(grant["grant_id"]) == {"kind": "revoked"}
+    assert world.revoke(grant["grant_id"]) == {"kind": "revoked"}
 
     assert world.agent.withdrawn == [f"/v1/conversations/{_CONVERSATION}/attachment-releases"]
     assert _code(world.release(None)) == "acknowledgement_missing"
-    assert _code(world.releases.revoke(grant["grant_id"])) == "grant_revoked"
+    assert _code(world.revoke(grant["grant_id"])) == "grant_revoked"
     assert len(world.agent.releases) == 2
 
 
@@ -300,7 +306,10 @@ def test_a_lane_that_stays_here_needs_no_grant_and_records_nothing(world: _World
 
 
 def test_a_removed_document_and_an_unknown_request_are_named(world: _World) -> None:
-    assert _code(world.releases.release(_RUN, "perm-other", ReleaseScope.ONCE)) == "reference_unknown"
+    assert (
+        _code(world.releases.release(_RUN, "perm-other", ReleaseScope.ONCE).model_dump(mode="json"))
+        == "reference_unknown"
+    )
     world.agent.tool_call = "read_file"
     assert _code(world.release(ReleaseScope.ONCE)) == "reference_unknown"
     world.agent.tool_call = "read_attachment"
@@ -331,7 +340,7 @@ def test_forgetting_a_conversation_ends_its_text_grants_and_keeps_page_image_one
     world.agent.description += "; page images"
     world.release(ReleaseScope.REMEMBER)
 
-    assert world.releases.forget_conversation(_CONVERSATION) == {"kind": "forgotten"}
+    assert world.releases.forget_conversation(_CONVERSATION).model_dump(mode="json") == {"kind": "forgotten"}
 
     assert [grant.action for grant in world.store.grants] == ["page_images"]
     assert world.agent.withdrawn == [f"/v1/conversations/{_CONVERSATION}/attachment-releases"]
@@ -344,7 +353,7 @@ def test_no_answer_carries_document_content(world: _World) -> None:
         world.card(),
         world.release(None),
         world.release(ReleaseScope.REMEMBER),
-        world.releases.grants(),
+        world.grants(),
     ]
     assert _CONTENT not in json.dumps(answers)
     assert all(_CONTENT not in repr(record) for record in world.store.ledger)

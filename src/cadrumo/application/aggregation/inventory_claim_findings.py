@@ -50,7 +50,10 @@ def _row_date(row: Transaction) -> date:
 
 
 def year_has_ledger_expense_rows(transactions: TransactionCatalogue, year: int) -> bool:
-    """Whether the ledger holds an active business expense row dated in ``year``, of any activity."""
+    """Whether the ledger holds an active business expense row dated in ``year``, of any activity.
+
+    Parameter types: ``transactions`` (:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`).
+    """
     return any(
         row.lifecycle_state is TransactionLifecycleState.ACTIVE
         and row.direction is TransactionDirection.OUTGOING

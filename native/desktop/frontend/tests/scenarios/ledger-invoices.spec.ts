@@ -13,18 +13,23 @@ import { windowFixture } from "../support/windowFixtures";
 // accepts. Writes are reviewed first, an unseen outcome is said to be
 // unknown, and leaving with edits asks first.
 
-/** The counterparty's tax id the recorded invoice drafts were asked with: the
- * scenario's ledger answers a draft only when it is one of those. */
-const RECORDED_TAX_ID = (
+/** The draft the recorded invoice drafts start from: the scenario's ledger
+ * answers a draft only when it is one of those. */
+const RECORDED_DRAFT = (
   JSON.parse(
     readFileSync(
       windowFixture("ledger-recordings", "ledgerInvoicePreview"),
       "utf8",
     ),
   ) as {
-    recordings: Record<string, { request: { counterparty_tax_id: string } }>;
+    recordings: Record<
+      string,
+      { request: { counterparty_tax_id: string; invoice_number: string } }
+    >;
   }
-).recordings.two_lines!.request.counterparty_tax_id;
+).recordings.two_lines!.request;
+/** The counterparty's tax id the recorded invoice drafts were asked with. */
+const RECORDED_TAX_ID = RECORDED_DRAFT.counterparty_tax_id;
 
 const open = (target: Page, extra = "") =>
   target.goto(`/scenarios.html?scenario=ledger&latency=0&bar=off${extra}`);
@@ -289,10 +294,15 @@ test("each requirement and rule is refused on its own field", async ({
   );
 
   await fillIssued(target);
+  // A country the ledger does not take is refused in the ledger's words.
+  await field(target, "counterparty_country").focus();
   await field(target, "counterparty_country").fill("ESP");
+  await field(target, "counterparty_country").blur();
   await expect(
     editor(target).getByText(
-      label("desktop.ledger.invoices.problem.country_letters"),
+      label(
+        "application.invoices.figures_preview.rule_finding.counterparty_country_invalid",
+      ),
     ),
   ).toBeVisible();
   await expect(
@@ -359,6 +369,56 @@ test("each requirement and rule is refused on its own field", async ({
       ),
     ),
   ).toBeVisible();
+});
+
+test("the currency is picked from the served codes and the add stores exactly that code", async ({
+  page: target,
+}) => {
+  await openInvoices(target);
+  await allPeriods(target);
+  await addNew(target);
+  await fillIssued(target);
+  await field(target, "currency").fill("");
+  await field(target, "currency").pressSequentially("eu");
+  await target.getByRole("option").filter({ hasText: /^EUR/ }).first().click();
+  await expect(
+    editor(target).locator("[data-invariant][data-met]"),
+  ).toHaveCount(4);
+  await button(target, "desktop.ledger.invoices.review").click();
+  await button(target, "desktop.ledger.invoices.add").click();
+  await expect(editor(target)).toBeHidden();
+  await openStored(target, RECORDED_DRAFT.invoice_number);
+  await expect(
+    editor(target).getByRole("group", {
+      name: label("desktop.ledger.invoices.field.currency"),
+    }),
+  ).toContainText("EUR");
+});
+
+test("a currency the ledger does not take is refused in the ledger's words, and nothing is added", async ({
+  page: target,
+}) => {
+  await openInvoices(target);
+  await addNew(target);
+  await fillIssued(target);
+  await field(target, "currency").focus();
+  await field(target, "currency").fill("EU");
+  await field(target, "currency").blur();
+  await expect(
+    editor(target).getByText(
+      label(
+        "application.invoices.figures_preview.rule_finding.currency_invalid",
+      ),
+    ),
+  ).toBeVisible();
+  await expect(field(target, "currency")).toHaveAttribute(
+    "aria-invalid",
+    "true",
+  );
+  await button(target, "desktop.ledger.invoices.review").click();
+  await expect(editor(target).locator(".ledger-invoice-confirm")).toHaveCount(
+    0,
+  );
 });
 
 test("an invoice already in the catalogue is refused on its number", async ({

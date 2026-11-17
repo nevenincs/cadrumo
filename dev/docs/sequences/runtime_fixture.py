@@ -255,7 +255,6 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
             capture_login=lambda channel: SequenceLoginObservation(channel.peer.os_owner_id, str(boot)),
             secret_store=_UnavailableSecretStore,
             worker_script=WORKER_SCRIPT.get() or Path(__file__).resolve(),
-            wall_clock=sandbox_instant,
         )
         profiles.prepare_registry()
         server = _SequenceRuntimeTransportServer(

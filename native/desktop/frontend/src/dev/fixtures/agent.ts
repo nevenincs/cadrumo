@@ -1,9 +1,11 @@
-import type { AttachmentPolicyResponse } from "../../shell/agentGatewayContract";
+import type {
+  AttachmentPolicyResponse,
+  ProviderCondition,
+} from "../../shell/agentGatewayContract";
 import type {
   AgentConversationRecord,
   AgentDocumentRecord,
   AgentDocumentReference,
-  AgentProviderCondition,
   AgentRanWith,
   AgentRunStatus,
   AgentToolCall,
@@ -50,7 +52,7 @@ export type FixtureRun = {
    * own. */
   messages: FixtureMessage[];
   tools: AgentToolCall[];
-  provider_condition?: AgentProviderCondition;
+  provider_condition?: ProviderCondition;
   failure_reason?: string;
   queued_messages?: number;
   selection?: AgentRanWith;

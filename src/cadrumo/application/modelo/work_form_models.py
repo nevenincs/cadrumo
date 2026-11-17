@@ -42,6 +42,7 @@ from typing import Annotated, Final, Literal
 
 from pydantic import Field, model_validator
 
+from ...core.absence_attestation_family import AbsenceAttestationFamily
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -49,7 +50,6 @@ from ...core.external_constants import OutputLanguage
 from ...core.hashing import sha256_hex
 from ...core.period import Period
 from ...core.type_guards import is_object_list_or_tuple
-from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, RevisionId
 from ...domain.calculations.registry.schema_form_layouts import (
     FormCellKind,
@@ -418,7 +418,8 @@ class ModeloFormField(ModeloFormBase):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _derived_from_the_field_itself(self) -> ModeloFormField:
-        derived = dict(self)
+        # ``dict(self)`` would first look the model up for ``keys``; pydantic answers that miss slowly.
+        derived = dict(iter(self))
         if self.edit_address != _edit_address_of(self.address, self.editability, self.bindings):
             raise ValueError("a field's edit address is the one its own address, editability and bindings give")
         if self.confirmable is not _confirmable_of(derived):
@@ -436,7 +437,7 @@ class ModeloFormField(ModeloFormBase):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _derived_edit_values_match(self) -> ModeloFormField:
-        derived = dict(self)
+        derived = dict(iter(self))
         if (self.takes_typed_value, self.clearable, self.removable) != (
             _takes_typed_value_of(derived),
             _clearable_of(derived),

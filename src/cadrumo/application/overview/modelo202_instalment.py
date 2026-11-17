@@ -306,6 +306,8 @@ def modelo_202_instalment_verdict(
     under modalidad cuota or the navieras tonelaje regime: every other verdict,
     including the incomplete one of an undeclared INCN and the applicable one
     above the threshold, passes through unchanged.
+
+    Parameter types: ``profile`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
     """
     if applicability.verdict is not ApplicabilityVerdict.INCOMPLETE or not is_modelo_202(
         str(applicability.modelo), operation=operation

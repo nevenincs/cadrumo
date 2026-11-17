@@ -122,6 +122,8 @@ def m200_page_002_family_answers(
     A family a stored entity form rules out is not applicable whatever else the
     profile holds; otherwise its rows answer it, then its stated answer, and with
     neither it is unanswered.
+
+    Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
     """
     values = record_to_path_values(record, as_of=as_of)
     return tuple(_family_answer(rule, values, rules=rules) for rule in rules.families)
@@ -165,6 +167,8 @@ def modelo_200_profile_facts(
     profile_record: UserProfileRecord | None,
 ) -> Modelo200ProfileFacts:
     """Build the Modelo 200 profile facts whose page 002 rows the profile in force supplies.
+
+    Parameter types: ``profile_record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
 
     Raises:
         ModeloProfileReadinessError: When a family the return must carry is not

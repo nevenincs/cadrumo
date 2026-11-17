@@ -199,6 +199,30 @@ pub(crate) fn read_status(
 /// the settings until the window asks again. A service still starting when the
 /// bound elapses answers the busy word the window retries; a service that is
 /// not starting reaches `call`, which refuses as it always has.
+/// The window's status read, answered within `limit`. It is not waited for while the
+/// service starts the agent: the window draws the busy answer at once and reads again
+/// when the service publishes the agent ready, which it does only after admission. An
+/// exchange the service holds past `limit` (behind a cold catalog read) is answered busy
+/// too; the read is left to finish on its own and the window's next read asks again.
+pub(crate) async fn window_status(
+    admitted: impl FnOnce() -> AdminWait + Send + 'static,
+    exchange: impl FnMut() -> Result<Value, ApplicationError> + Send + 'static,
+    limit: Duration,
+) -> Result<Status, CommandFailure> {
+    let read = tauri::async_runtime::spawn_blocking(move || {
+        when_admitted(admitted, || {
+            read_status(exchange, Duration::from_millis(250), limit)
+        })
+    });
+    match tokio::time::timeout(limit, read).await {
+        Err(_) => Err(Refusal::Busy.into()),
+        Ok(joined) => joined
+            .map_err(|_| invalid().with_reason("provider_settings_task_failed"))
+            .map_err(CommandFailure::from)
+            .and_then(|result| result),
+    }
+}
+
 pub(crate) fn when_admitted<T>(
     wait: impl FnOnce() -> AdminWait,
     call: impl FnOnce() -> Result<T, CommandFailure>,
@@ -244,28 +268,18 @@ pub async fn provider_settings_status(
     state: State<'_, Arc<AgentHost>>,
 ) -> Result<Status, CommandFailure> {
     let host = state.inner().clone();
-    // The status is not waited for while the service starts the agent: the
-    // window draws the busy answer at once and reads again when the service
-    // publishes the agent ready, which it does only after admission.
-    let read = tauri::async_runtime::spawn_blocking({
-        let host = host.clone();
-        move || {
-            when_admitted(
-                || host.admin_now(),
-                || {
-                    read_status(
-                        || host.administer(json!({"action":"status"}), None),
-                        Duration::from_millis(250),
-                        WINDOW_STATUS_PATIENCE,
-                    )
-                },
-            )
-        }
-    })
-    .await
-    .map_err(|_| invalid().with_reason("provider_settings_task_failed"))
-    .map_err(CommandFailure::from)
-    .and_then(|result| result);
+    let read = window_status(
+        {
+            let host = host.clone();
+            move || host.admin_now()
+        },
+        {
+            let host = host.clone();
+            move || host.administer(json!({"action":"status"}), None)
+        },
+        WINDOW_STATUS_PATIENCE,
+    )
+    .await;
     logged(&host, "provider_settings_status", read)
 }
 #[tauri::command]
@@ -461,6 +475,33 @@ fn change_request(action: &str, provider: &str, revision: &str) -> Result<Value,
 mod tests {
     use super::*;
 
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_status_exchange_held_past_the_windows_patience_answers_busy_within_it() {
+        let limit = Duration::from_millis(400);
+        let began = Instant::now();
+        let read = window_status(
+            || AdminWait::Admitted,
+            || {
+                std::thread::sleep(Duration::from_secs(3));
+                Err(invalid().with_reason("held_behind_a_catalog_read"))
+            },
+            limit,
+        )
+        .await;
+        assert!(
+            began.elapsed() < limit + Duration::from_millis(600),
+            "answered after {:?}",
+            began.elapsed()
+        );
+        assert!(matches!(
+            read,
+            Err(CommandFailure::Refused(wire::Refused {
+                code: Refusal::Busy,
+                ..
+            }))
+        ));
+    }
+
     fn sign_out_answer(served: Value) -> Result<Entry, CommandFailure> {
         wire::changed(outcome(served), "beta_cli")
     }
@@ -548,7 +589,7 @@ mod tests {
                 Ok(if calls < 3 {
                     json!({"kind":"refused","code":"busy"})
                 } else {
-                    json!({"providers":[]})
+                    json!({"providers":[],"reads_pending":false})
                 })
             },
             Duration::ZERO,
@@ -569,7 +610,7 @@ mod tests {
                 Ok(if calls <= 20 {
                     json!({"kind":"refused","code":"busy"})
                 } else {
-                    json!({"providers":[]})
+                    json!({"providers":[],"reads_pending":false})
                 })
             },
             Duration::ZERO,

@@ -64,6 +64,23 @@ REVIEWED_SHARED_SEGMENTS: Final[dict[str, dict[str, str]]] = {
             "Denominacion Social and Razon social, with the official o accented in one edition"
         ),
         "Taxation by territory": ("por razon de territorio, shortened to por territorio"),
+        (
+            "Application of the art. 11.12 LIS limit to impairment losses under art. 13.1 LIS "
+            "and provisions and expenses"
+        ): ("Aplicac. abbreviates Aplicacion del, and one edition drops the accents and the space after art."),
+        "Equity and liabilities": (
+            "Patrimonio neto y pasivo, shortened to Patrimonio y pasivo for the same balance-sheet heading"
+        ),
+        "Free depreciation with employment maintenance (RDL 6/2010 and Transitional Provision 13.2 LIS)": (
+            "one edition writes DT 13a.2 and the other DT13a.2, without the space"
+        ),
+        "Other adjustments to the profit and loss account result": ("cta. abbreviates de la cuenta"),
+        "Reversal of impairment value adjustments on property, plant and equipment and investments": (
+            "Aplic. correc. abbreviates the same reversal, written once with de and y de and once with e"
+        ),
+        "Value adjustments to property, plant and equipment and investments": (
+            "Correcciones and the official misspelling Correciones"
+        ),
     },
     "ca": {
         "1r fraccionament": ("1er and 1o spell the same first instalment"),
@@ -93,6 +110,20 @@ REVIEWED_SHARED_SEGMENTS: Final[dict[str, dict[str, str]]] = {
             "Part integrada en la base imposable a nivell de quota per operacions de quitament o espera "
             "(només cooperatives)"
         ): ("op. abbreviates operaciones"),
+        "Altres provisions no deduïbles fiscalment (art. 14 LIS) no afectades per l'art. 11.12 LIS": (
+            "afectadas and the official short form afectas"
+        ),
+        (
+            "Aplicació del límit de l'art. 11.12 LIS a les pèrdues per deteriorament de l'art. 13.1 LIS "
+            "i provisions i despeses"
+        ): ("Aplicac. abbreviates Aplicacion del, and one edition drops the accents and the space after art."),
+        "Correccions de valor de l'immobilitzat material i inversions": (
+            "Correcciones and the official misspelling Correciones"
+        ),
+        "Fons de provisions tècniques": ("Fondo de provisiones tecnicas, shortened to Fondos provisiones tecnicas"),
+        "Llibertat d'amortització amb manteniment d'ocupació (RDL 6/2010 i DT 13a.2 LIS)": (
+            "one edition writes DT 13a.2 and the other DT13a.2, without the space"
+        ),
     },
     "hu": {
         "1. részletfizetés": ("1er fraccionamiento and 1er. pago fraccionado name the same first instalment"),
@@ -149,6 +180,18 @@ REVIEWED_SHARED_SEGMENTS: Final[dict[str, dict[str, str]]] = {
             "razon social and denominacion social name one thing, the registered name of a company"
         ),
         "Évi korrekciók": ("Correcciones and the official misspelling Correciones"),
+        "A tárgyi eszközök és befektetések értékvesztési korrekcióinak visszaírása": (
+            "Aplic. correc. abbreviates the same reversal, written once with de and y de and once with e"
+        ),
+        "Az eredménykimutatás eredményének egyéb korrekciói": ("cta. abbreviates de la cuenta"),
+        "Saját tőke és kötelezettségek": (
+            "Patrimonio neto y pasivo, shortened to Patrimonio y pasivo for the same balance-sheet heading"
+        ),
+        "Tárgyi eszközök és befektetések értékkorrekciói": (
+            "Correc. abbreviates Correcciones, also given with the official misspelling Correciones"
+        ),
+        "Átvezetések az eredménykimutatásba": ("Transf. abbreviates Transferencias a la, and cta. de la cuenta"),
+        "Átértékelési tartalék [00382]": ("Reserva and the official plural Reservas name the same revaluation reserve"),
     },
 }
 

@@ -165,10 +165,22 @@ pub enum ServiceFact {
     AgentStarting {
         generation: u64,
     },
+    /// A start's host side: building the service command, launching its
+    /// process, and acquiring the person session, which runs alongside the
+    /// launch and the service's own start.
     AgentStartupTiming {
         generation: u64,
-        prepare_ms: u64,
+        command_ms: u64,
         spawn_ms: u64,
+        person_ms: u64,
+    },
+    /// How long the runtime's admission of the service's person connection
+    /// took, from the service's ready report until its administration could
+    /// answer, or until it was refused.
+    AgentAdmissionTiming {
+        generation: u64,
+        admitted: bool,
+        elapsed_ms: u64,
     },
     AgentReady {
         generation: u64,

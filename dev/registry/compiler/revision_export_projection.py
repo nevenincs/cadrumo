@@ -32,12 +32,16 @@ from .loader_semantics import (
 from .toml_helpers import as_toml_table
 
 
-class UndeclaredExportTargetError(RegistryLoadError):
+class UndeclaredExportTargetError(Exception):
     """A committed export names casillas its edition no longer declares.
 
-    The typed refusal a stale generated export raises after a reviewed casilla
-    rename, carrying the exact identities so a reviewed repair can admit this
-    refusal alone and nothing broader.
+    A stale generated export after a reviewed casilla rename is refused as an
+    ordinary :class:`RegistryLoadError`, so every loader closes on it as on any
+    load refusal. This payload is that error's cause and keeps the exact
+    identities, so a reviewed repair can admit this refusal alone and nothing
+    broader. It is not a ``CadrumoError``: the declared error-code catalogue
+    holds production classes only, and a subclass created after it loads is
+    refused at class creation.
     """
 
     def __init__(self, source_path: Path, revision_id: str, casilla_ids: tuple[str, ...]) -> None:
@@ -49,6 +53,19 @@ class UndeclaredExportTargetError(RegistryLoadError):
             f"{source_path}: invalid revision {revision_id!r}: export fields resolve to casillas "
             f"{list(casilla_ids)!r}, which the edition does not declare",
         )
+
+
+def undeclared_export_refusal(targets: UndeclaredExportTargetError) -> RegistryLoadError:
+    """The load refusal a stale export raises, with ``targets`` as its cause."""
+    refusal = RegistryLoadError(str(targets))
+    refusal.__cause__ = targets
+    return refusal
+
+
+def undeclared_export_targets(error: BaseException) -> UndeclaredExportTargetError | None:
+    """The stale-export identities ``error`` was raised for, or ``None`` for any other refusal."""
+    cause = error.__cause__
+    return cause if isinstance(cause, UndeclaredExportTargetError) else None
 
 
 def refuse_authored_export_refs(source_path: Path, revision_id: str, payload: Mapping[str, object]) -> None:
@@ -96,7 +113,7 @@ def _require_declared_export_targets(
     declared = {casilla.id for casilla in revision.casillas}
     undeclared = sorted(casilla_id for casilla_id in derived if casilla_id not in declared)
     if undeclared:
-        raise UndeclaredExportTargetError(source_path, str(revision.id), tuple(undeclared))
+        raise undeclared_export_refusal(UndeclaredExportTargetError(source_path, str(revision.id), tuple(undeclared)))
 
 
 def _casillas_with_export_references(

@@ -357,6 +357,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.agent.condition_budget_exhausted",
         "desktop.agent.condition_credits_exhausted",
         "desktop.agent.condition_invalid_request",
+        "desktop.agent.condition_model_does_not_fit",
         "desktop.agent.condition_network_unreachable",
         "desktop.agent.condition_no_answer",
         "desktop.agent.condition_provider_overloaded",

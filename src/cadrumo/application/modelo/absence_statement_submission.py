@@ -15,11 +15,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Final
 
-from ...domain.calculations.registry.binding_absence_attestation import (
-    PRIOR_CARRY_FAMILIES,
-    ROW_GRAIN_FAMILIES,
-    AbsenceAttestationFamily,
-)
+from ...core.absence_attestation_family import PRIOR_CARRY_FAMILIES, ROW_GRAIN_FAMILIES, AbsenceAttestationFamily
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.modelos.errors import ModeloError
 from ..operator_actions.models import PreconditionVerdict

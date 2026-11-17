@@ -115,6 +115,8 @@ def inventory_purchase_claim_refusal(
 
     The first such note names the refusal and its door; ``action`` is the gated verb
     (``verify``, ``file`` or ``export``).
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     leaf = _STAGE_LEAVES.get(action)
     notes = inventory_purchase_claim_notes(issues)

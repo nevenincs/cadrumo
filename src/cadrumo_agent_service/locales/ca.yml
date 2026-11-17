@@ -54,6 +54,8 @@ desktop:
     condition_budget_exhausted: Pressupost esgotat
     condition_credits_exhausted: Sense crèdits
     condition_invalid_request: El proveïdor ha rebutjat la petició
+    condition_model_does_not_fit: El model no cap en els recursos que aquest ordinador
+      pot donar-li. Tria un model més petit o un altre proveïdor.
     condition_network_unreachable: No es pot contactar amb el proveïdor
     condition_no_answer: El model no ha donat cap resposta utilitzable per a aquest
       document. Prova un altre model (instruct) o torna-ho a provar.

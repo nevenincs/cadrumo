@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from pathlib import Path
 
@@ -32,16 +33,25 @@ def _declaration(
     *,
     family: str = "formulas",
     windows: tuple[LegalWindow, ...] = (),
-    **flags: bool,
+    states_new_on_form: bool = False,
+    removed_by_next_edition: bool = False,
+    calculated: bool = True,
 ) -> DeclarationView:
-    return DeclarationView(family, declaration_id, windows, **flags)
+    return DeclarationView(
+        family,
+        declaration_id,
+        windows,
+        states_new_on_form=states_new_on_form,
+        removed_by_next_edition=removed_by_next_edition,
+        calculated=calculated,
+    )
 
 
 def _edition(year: int, *declarations: DeclarationView, track: tuple[str, ...] = ()) -> EditionView:
     return EditionView(str(year), date(year, 1, 1), date(year, 12, 31), declarations, track)
 
 
-def _editions(per_year: dict[int, tuple[DeclarationView, ...]]) -> list[EditionView]:
+def _editions(per_year: Mapping[int, tuple[DeclarationView, ...]]) -> list[EditionView]:
     return [_edition(year, *per_year.get(year, ())) for year in YEARS]
 
 

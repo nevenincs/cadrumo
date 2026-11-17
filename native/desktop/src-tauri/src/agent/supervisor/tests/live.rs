@@ -33,7 +33,7 @@ async fn launcher_refusal_is_handled_while_status_read_is_pending() {
     });
     let launch: Launch = Arc::new(|_, _| {
         Ok(Prepared {
-            person: None,
+            person: Box::new(|| Ok(None)),
             local_engine_default:
                 cadrumo_application::provisioning::local_ai::LocalEngine::LlamaCpp,
             command: powershell(
@@ -207,7 +207,7 @@ fn held_protocol_fixture(
     );
     (
         Prepared {
-            person: Some(Arc::new(Mutex::new(person))),
+            person: Box::new(move || Ok(Some(Arc::new(Mutex::new(person))))),
             command: powershell(&script),
             local_engine_default:
                 cadrumo_application::provisioning::local_ai::LocalEngine::LlamaCpp,
@@ -897,7 +897,7 @@ async fn a_launcher_that_ends_unasked_is_a_failed_service_and_is_not_restarted_a
     let launch: Launch = Arc::new(move |_, _| {
         counted.fetch_add(1, Ordering::AcqRel);
         Ok(Prepared {
-            person: None,
+            person: Box::new(|| Ok(None)),
             local_engine_default:
                 cadrumo_application::provisioning::local_ai::LocalEngine::LlamaCpp,
             command: powershell(
@@ -936,4 +936,220 @@ async fn a_launcher_that_ends_unasked_is_a_failed_service_and_is_not_restarted_a
         tokio::time::sleep(Duration::from_millis(50)).await;
     }
     supervisor.close().await.unwrap();
+}
+
+/// A service process that writes its process id to `witness` once it has
+/// read its startup, announces itself ready when `ready` is given, and waits
+/// to be stopped.
+fn witnessed_service(
+    witness: &std::path::Path,
+    ready: Option<&serde_json::Value>,
+) -> std::process::Command {
+    let announce = ready.map_or(String::new(), |ready| {
+        format!("[Console]::Out.WriteLine('{ready}'); [Console]::Out.Flush(); ")
+    });
+    powershell(&format!(
+        "$null = [Console]::In.ReadLine(); [IO.File]::WriteAllText('{}', \"$PID\"); {announce}Start-Sleep -Seconds 120",
+        witness.display()
+    ))
+}
+
+fn witness_path(case: &str) -> std::path::PathBuf {
+    let path = std::env::temp_dir().join(format!(
+        "cadrumo-person-alongside-{case}-{}.pid",
+        std::process::id()
+    ));
+    let _ = std::fs::remove_file(&path);
+    path
+}
+
+/// The process id the service wrote, once it has started.
+fn started_service(witness: &std::path::Path, within: Duration) -> Option<u32> {
+    let deadline = Instant::now() + within;
+    loop {
+        if let Ok(text) = std::fs::read_to_string(witness)
+            && let Ok(pid) = text.trim().parse()
+        {
+            return Some(pid);
+        }
+        if Instant::now() >= deadline {
+            return None;
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
+}
+
+async fn ended(pid: u32, within: Duration) -> bool {
+    let deadline = Instant::now() + within;
+    while alive(pid) {
+        if Instant::now() >= deadline {
+            return false;
+        }
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+    true
+}
+
+/// The first start launches `first` with `person`; any later one launches nothing.
+fn first_start(
+    first: std::process::Command,
+    person: super::super::protocol::AcquirePerson,
+) -> Launch {
+    let pending = Arc::new(Mutex::new(Some((first, person))));
+    Arc::new(move |_, _| {
+        let (command, person) = lock(&pending).take().unwrap_or_else(|| {
+            let none: super::super::protocol::AcquirePerson = Box::new(|| Ok(None));
+            (
+                std::process::Command::new("cadrumo-no-later-start-in-this-test"),
+                none,
+            )
+        });
+        Ok(Prepared {
+            command,
+            person,
+            local_engine_default:
+                cadrumo_application::provisioning::local_ai::LocalEngine::LlamaCpp,
+        })
+    })
+}
+
+fn signed_in(profile: Arc<Mutex<&'static str>>) -> Observe {
+    Arc::new(move || {
+        let profile = *lock(&profile);
+        Box::pin(async move { observed(true, true, Some(profile)) })
+    })
+}
+
+fn supervising(observe: Observe, launch: Launch) -> Supervisor {
+    Supervisor::with_timing(
+        observe,
+        every(Duration::from_millis(5)),
+        Some(launch),
+        Arc::new(Diagnostics::default()),
+        // The stop grace: these services ignore their input, so they are
+        // terminated once it runs out.
+        Duration::from_secs(1),
+        Duration::from_secs(60),
+    )
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn the_service_starts_while_the_person_resumes_and_stops_when_that_fails() {
+    let witness = witness_path("failed");
+    let seen = witness.clone();
+    let started_alongside = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let noted = started_alongside.clone();
+    let supervisor = supervising(
+        signed_in(Arc::new(Mutex::new("A"))),
+        first_start(
+            witnessed_service(&witness, None),
+            Box::new(move || {
+                // The service process runs on the profile id alone while the
+                // person session is still being acquired.
+                noted.store(
+                    started_service(&seen, Duration::from_secs(20)).is_some(),
+                    Ordering::SeqCst,
+                );
+                Err(
+                    ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+                        .with_reason("person_not_signed_in"),
+                )
+            }),
+        ),
+    );
+    supervisor.status();
+    let pid = tokio::task::block_in_place(|| started_service(&witness, Duration::from_secs(30)))
+        .expect("the service process started");
+    assert!(
+        ended(pid, Duration::from_secs(20)).await,
+        "the service outlived its failed person"
+    );
+    assert!(
+        started_alongside.load(Ordering::SeqCst),
+        "the service did not start while the person resumed"
+    );
+    assert!(lock(&supervisor.shared.admin).is_none());
+    supervisor.close().await.unwrap();
+    let _ = std::fs::remove_file(&witness);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_start_cancelled_while_the_person_resumes_stops_its_service() {
+    let witness = witness_path("cancelled");
+    let (release, gate) = std::sync::mpsc::channel::<()>();
+    let profile = Arc::new(Mutex::new("A"));
+    let supervisor = supervising(
+        signed_in(profile.clone()),
+        first_start(
+            witnessed_service(&witness, None),
+            Box::new(move || {
+                let _ = gate.recv();
+                Ok(None)
+            }),
+        ),
+    );
+    supervisor.status();
+    let pid = tokio::task::block_in_place(|| started_service(&witness, Duration::from_secs(30)))
+        .expect("the service process started");
+    *lock(&profile) = "B";
+    tokio::time::timeout(Duration::from_secs(10), async {
+        while !lock(&supervisor.shared.preparing)
+            .as_ref()
+            .is_some_and(|pending| pending.cancelled.load(Ordering::Acquire))
+        {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+    })
+    .await
+    .expect("the profile change cancelled the start");
+    drop(release);
+    assert!(
+        ended(pid, Duration::from_secs(20)).await,
+        "a cancelled start kept its service"
+    );
+    assert!(lock(&supervisor.shared.admin).is_none());
+    supervisor.close().await.unwrap();
+    let _ = std::fs::remove_file(&witness);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_ready_service_is_not_admitted_before_its_person_is_held() {
+    let witness = witness_path("ready");
+    let ready = serde_json::json!({
+        "event": "service_ready",
+        "protocol": 1,
+        "admin_port": 4001,
+        "runtime_boot_id": "33333333-3333-4333-8333-333333333333",
+        "connection_id": "44444444-4444-4444-8444-444444444444",
+        "profile_id": "11111111-1111-4111-8111-111111111111",
+        "service_id": "cadrumo-agent-service",
+    });
+    let (release, gate) = std::sync::mpsc::channel::<()>();
+    let supervisor = supervising(
+        signed_in(Arc::new(Mutex::new("A"))),
+        first_start(
+            witnessed_service(&witness, Some(&ready)),
+            Box::new(move || {
+                let _ = gate.recv();
+                // Answered without a person: nothing may be admitted.
+                Ok(None)
+            }),
+        ),
+    );
+    supervisor.status();
+    let pid = tokio::task::block_in_place(|| started_service(&witness, Duration::from_secs(30)))
+        .expect("the service process started");
+    // The service has announced itself ready while its person still resumes.
+    tokio::time::sleep(Duration::from_millis(1500)).await;
+    assert!(lock(&supervisor.shared.admitting).is_none());
+    assert!(lock(&supervisor.shared.admin).is_none());
+    assert!(lock(&supervisor.shared.running).is_none());
+    drop(release);
+    assert!(
+        ended(pid, Duration::from_secs(20)).await,
+        "a service without a person kept running"
+    );
+    assert!(lock(&supervisor.shared.admin).is_none());
+    supervisor.close().await.unwrap();
+    let _ = std::fs::remove_file(&witness);
 }

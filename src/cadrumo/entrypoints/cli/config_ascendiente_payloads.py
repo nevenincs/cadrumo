@@ -11,6 +11,8 @@ declares its incapacity. A leaf the row does not state is ``None``, never a defa
 ``none_declared`` (the profile states that there are none) or ``unknown`` (nothing
 was stated). An empty ``ascendientes`` list means no row is stored; only ``state``
 says whether that is an answer.
+
+The schemas are declared as an :class:`OutputSchema`.
 """
 
 from __future__ import annotations

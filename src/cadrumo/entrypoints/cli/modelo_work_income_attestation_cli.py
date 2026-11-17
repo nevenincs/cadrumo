@@ -25,10 +25,10 @@ from ...application.modelo.edit_apply_contracts import ModeloEditApplyPublicResu
 from ...application.modelo.edit_models import ModeloEditRefusedV1, ModeloEditSubmissionV1
 from ...application.modelo.work_form_models import ModeloFormCarryAttestation
 from ...application.modelo.workbench_operations import ModeloEditPreflightProjectionV1
+from ...core.absence_attestation_family import AbsenceAttestationFamily
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
-from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from .common import emit_envelope
 from .modelo_cli_support import resolve_explicit_or_active_bucket_id
 from .modelo_work_income_attestation_payloads import WorkAttestWorkIncomeResult, WorkIncomeStatementPayload

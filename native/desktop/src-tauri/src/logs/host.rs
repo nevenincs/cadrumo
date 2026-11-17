@@ -233,7 +233,8 @@ pub(super) fn entry(event: &Event) -> Entry {
             let name = match key.as_str() {
                 "gatewayPort" => "gateway_port",
                 "delayMs" => "delay_ms",
-                "prepareMs" => "prepare_ms",
+                "commandMs" => "command_ms",
+                "personMs" => "person_ms",
                 "spawnMs" => "spawn_ms",
                 "elapsedMs" => "elapsed_ms",
                 "packageAbi" => "package_abi",
@@ -278,14 +279,27 @@ pub(super) fn entry(event: &Event) -> Entry {
             message.push_str(&format!(" at http://127.0.0.1:{gateway_port}"));
         }
         if let cadrumo_application::diagnostics::service::ServiceFact::AgentStartupTiming {
-            prepare_ms,
+            command_ms,
             spawn_ms,
+            person_ms,
             ..
         } = fact
         {
             message.push_str(&format!(
-                ": preparation {prepare_ms} ms, process launch {spawn_ms} ms"
+                ": command {command_ms} ms, process launch {spawn_ms} ms, person session {person_ms} ms"
             ));
+        }
+        if let cadrumo_application::diagnostics::service::ServiceFact::AgentAdmissionTiming {
+            admitted,
+            elapsed_ms,
+            ..
+        } = fact
+        {
+            message.push_str(&if admitted {
+                format!(": admitted in {elapsed_ms} ms")
+            } else {
+                format!(": refused after {elapsed_ms} ms")
+            });
         }
         if let cadrumo_application::diagnostics::service::ServiceFact::SetupAdmissionRead {
             read,
@@ -841,18 +855,48 @@ mod tests {
             None,
             cadrumo_application::diagnostics::service::ServiceFact::AgentStartupTiming {
                 generation: 2,
-                prepare_ms: 2400,
+                command_ms: 4,
                 spawn_ms: 350,
+                person_ms: 2400,
             },
         );
         let entries = HostEvents::default().poll(&diagnostics);
         assert_eq!(entries.len(), 1);
         assert_eq!(
             entries[0].message,
-            "agent_startup_timing: preparation 2400 ms, process launch 350 ms"
+            "agent_startup_timing: command 4 ms, process launch 350 ms, person session 2400 ms"
         );
-        assert_eq!(entries[0].context["service_prepare_ms"], 2400);
+        assert_eq!(entries[0].context["service_command_ms"], 4);
         assert_eq!(entries[0].context["service_spawn_ms"], 350);
+        assert_eq!(entries[0].context["service_person_ms"], 2400);
+    }
+
+    #[test]
+    fn agent_admission_duration_is_visible_and_projects_as_closed_scalars() {
+        let diagnostics = Diagnostics::default();
+        for (admitted, elapsed_ms) in [(true, 1310), (false, 20_000)] {
+            diagnostics.service(
+                None,
+                cadrumo_application::diagnostics::service::ServiceFact::AgentAdmissionTiming {
+                    generation: 3,
+                    admitted,
+                    elapsed_ms,
+                },
+            );
+        }
+        let entries = HostEvents::default().poll(&diagnostics);
+        assert_eq!(entries.len(), 2);
+        assert_eq!(
+            entries[0].message,
+            "agent_admission_timing: admitted in 1310 ms"
+        );
+        assert_eq!(entries[0].context["service_admitted"], true);
+        assert_eq!(entries[0].context["service_elapsed_ms"], 1310);
+        assert_eq!(
+            entries[1].message,
+            "agent_admission_timing: refused after 20000 ms"
+        );
+        assert_eq!(entries[1].context["service_admitted"], false);
     }
 
     #[test]

@@ -238,7 +238,10 @@ class ConsumedBindingChannels:
 
     @classmethod
     def of(cls, revision: ModeloRevision) -> ConsumedBindingChannels:
-        """Walk the revision's formula graph once for both sets."""
+        """Walk the revision's formula graph once for both sets.
+
+        Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+        """
         return cls(
             date_ids=frozenset(revision_date_binding_ids(revision)),
             enum_ids=frozenset(enum_consumed_binding_ids(revision)),

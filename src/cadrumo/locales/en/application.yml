@@ -4294,6 +4294,7 @@ application:
         profile_archive_reconcile: Reconcile the profile archive
         profile_arrendamiento: Review your arrendamientos
         profile_ascendiente: Review your ascendientes
+        profile_ascendiente_edit: Complete your ascendiente's details
         profile_complete_setup: Complete your profile setup
         profile_create: Create a profile
         profile_descendiente: Review your descendientes

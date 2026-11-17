@@ -339,7 +339,7 @@ def _printed_numeric_constant(field_id: str, stem: str) -> str:
     """Return the decimal run a cell prints, refusing content that is not one."""
     match = OFFICIAL_LITERAL_RE.fullmatch(stem) or OFFICIAL_UNQUOTED_LITERAL_RE.fullmatch(stem)
     constant = None if match is None else match.group("literal")
-    if constant is None or not constant.isascii() or not constant.isdecimal():
+    if not isinstance(constant, str) or not constant.isascii() or not constant.isdecimal():
         raise RegistryValidationError(
             f"note-governed reading of {field_id!r} addresses a cell whose content {stem!r} "
             "is neither a numeric constant nor a numeric enumeration",
@@ -591,11 +591,14 @@ def _m369_closed_period_range(
 ) -> ExportFieldDerivation | None:
     """Read only the three source-anchored two-digit period ranges of M369."""
     field = joined_field.parser_field
-    expected = {
+    expected_by_cell: dict[tuple[str, int, str | None, str | None, int, int], str] = {
         ("T36901 Ext", 22, "A22", "17", 218, 2): "1 a 4",
         ("T36904 Un", 21, "A21", "16", 203, 2): "1 a 4",
         ("T36910 Imp", 24, "A24", "19", 234, 2): "1 a 12",
-    }.get((field.record_identity, field.source_row, field.source_cell, field.ordinal, field.offset, field.length))
+    }
+    expected = expected_by_cell.get(
+        (field.record_identity, field.source_row, field.source_cell, field.ordinal, field.offset, field.length)
+    )
     if expected is None or content != expected:
         return None
     upper = 4 if expected == "1 a 4" else 12

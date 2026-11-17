@@ -196,7 +196,7 @@ def test_the_status_read_serves_the_field_for_every_lane() -> None:
         selected_engine=lambda: LocalEngine.LLAMACPP,
         cli_state_probe=agent.probe,
     )
-    status = providers.status()
+    status = providers.status(reads_pending=lambda _lanes: False)
     assert isinstance(status, ProviderSettingsStatus)
     served = {entry.id: entry.sign_out_available for entry in status.providers}
     assert served[SIGN_IN_ONLY_LANE] is True

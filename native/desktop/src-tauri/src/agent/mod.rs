@@ -120,7 +120,12 @@ impl AgentHost {
         #[cfg(windows)]
         let launch: supervisor::protocol::Launch = Arc::new(move |_bearer: &str, profile: &str| {
             let profile_id = sign_in.profile_id(profile)?;
-            let person = sign_in.person(&profile_id)?;
+            // Held only once the service process has started on the profile id
+            // alone: on a cold start it resumes the stored sign-in, for seconds.
+            let resuming = sign_in.clone();
+            let resumed_profile = profile_id.clone();
+            let person: supervisor::protocol::AcquirePerson =
+                Box::new(move || resuming.person(&resumed_profile).map(Some));
             let mut command = sign_in.service()?.command();
             command.args(["serve", "--profile-id", &profile_id]);
             // The service demands the local AI server through the manager before it reads
@@ -135,7 +140,7 @@ impl AgentHost {
             }
             Ok(supervisor::protocol::Prepared {
                 command,
-                person: Some(person),
+                person,
                 local_engine_default:
                     cadrumo_application::provisioning::local_ai::package_default_engine(
                         &launched_from,

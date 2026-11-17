@@ -426,14 +426,20 @@ def _stable(value: object) -> object:
 
 
 def taxpayer_projection_fingerprint(taxpayer: TaxpayerProfile) -> SnapshotId:
-    """Digest a projected taxpayer, its sets in a stable order."""
+    """Digest a projected taxpayer, its sets in a stable order.
+
+    Parameter types: ``taxpayer`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
+    """
     return content_hash_hex(_stable(taxpayer.model_dump(mode="python")))
 
 
 def taxpayer_projection_read_fingerprint(
     record: UserProfileRecord, selector: str, *, schema: ProfileSchemaDefinition
 ) -> SnapshotId | None:
-    """Project the taxpayer ``selector`` names from ``record`` again, or ``None`` for another projection."""
+    """Project the taxpayer ``selector`` names from ``record`` again, or ``None`` for another projection.
+
+    Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
+    """
     loaded: object = json.loads(selector)
     if not isinstance(loaded, dict):
         return None

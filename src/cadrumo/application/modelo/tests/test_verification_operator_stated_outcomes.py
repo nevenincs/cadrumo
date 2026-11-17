@@ -42,7 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
 _EXERCISES = tuple(filing_year_envelope().years)
-_EXTINCION = validated_casilla_id("00072", surface="test extinción")
+_EXTINCION = validated_casilla_id("DP200001:00072", surface="test extinción")
 _BASE_CASILLA = validated_casilla_id("DP200012:00501", surface="test resultado")
 _STOCK_BINDING = "modelo-200-bin-pendiente-ejercicios-anteriores"
 _STATED = Decimal("4000000")  # above the 70 per cent limit, which an extinction does not apply
@@ -188,7 +188,7 @@ def test_an_extinction_without_the_compensation_stated_is_blocked_with_the_door_
     snapshot = _snapshot(exercise)
     box = _compensation_box(snapshot)
 
-    findings, failures = _verify(exercise, {_in_edition(snapshot, "00072"): Decimal("1")})
+    findings, failures = _verify(exercise, {_in_edition(snapshot, "DP200001:00072"): Decimal("1")})
 
     blocking = _blocking(findings)
     assert [f.casilla_id for f in blocking] == [box]
@@ -207,7 +207,7 @@ def test_stating_the_compensation_admits_the_extinction(exercise: int) -> None:
     snapshot = _snapshot(exercise)
 
     findings, _failures = _verify(
-        exercise, {_in_edition(snapshot, "00072"): Decimal("1"), _compensation_box(snapshot): _STATED}
+        exercise, {_in_edition(snapshot, "DP200001:00072"): Decimal("1"), _compensation_box(snapshot): _STATED}
     )
 
     assert _blocking(findings) == []

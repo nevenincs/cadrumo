@@ -345,14 +345,16 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
     if (kind !== "issued" && kind !== "received") invalid();
     const name = text(request.counterparty_name, true)!;
     if (!name) invalid();
+    // The request takes a country of two characters and the ledger folds it;
+    // a currency must already be an upper-case ISO 4217 code.
     const country = text(request.counterparty_country, true)!;
-    if (!/^[A-Za-z]{2}$/.test(country)) invalid();
+    if (country.length !== 2) invalid();
     const number = text(request.invoice_number, true)!;
     if (!number) invalid();
     const issued = text(request.issued_at, true)!;
     if (!DATE.test(issued)) invalid();
     const currency = text(request.currency, true)!;
-    if (!currency || currency.length > 16) invalid();
+    if (!/^[A-Z]{3}$/.test(currency)) invalid();
     const operationDate = text(request.operation_date);
     if (operationDate !== null && !DATE.test(operationDate)) invalid();
     const stated = text(request.operation_type);
@@ -425,7 +427,7 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
             number,
             issued,
             (taxId ?? "").toUpperCase(),
-            currency.toUpperCase(),
+            currency,
             textOf(total),
           ]),
         ),
@@ -439,7 +441,7 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
       base_total: { decimal: textOf(baseUnits) },
       iva_total: { decimal: textOf(ivaUnits) },
       grand_total: { decimal: textOf(total) },
-      currency: currency.toUpperCase(),
+      currency,
       payment_status: "PENDING",
       linked_transaction_ids: [],
       source_filename: null,

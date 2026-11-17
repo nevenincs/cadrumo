@@ -25,7 +25,7 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 zero_needs_attestation = true
 before_activity_unresolved = true
-held_source_set_aside_when_marked = ["00039"]
+held_source_set_aside_when_marked = ["DP200001:00039"]
 legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-101"]
 
 [[revisions."2023".bindings.source_citations]]

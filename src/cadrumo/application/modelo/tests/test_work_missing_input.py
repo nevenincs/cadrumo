@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES, ROW_GRAIN_FAMILIES
+from ....core.absence_attestation_family import PRIOR_CARRY_FAMILIES, ROW_GRAIN_FAMILIES
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ..work_missing_input import PRIOR_CARRY_MESSAGE_LOCALE_KEYS, ModeloWorkMissingInputError
 
