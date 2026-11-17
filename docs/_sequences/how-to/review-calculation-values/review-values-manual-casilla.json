@@ -398,7 +398,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "ac17175f6655d1d2253e12b061897571fb20e73942e45aac107119c7daefe92f",
+          "calculation_revision_id": "7ecbd1157f9b24d976825beb4c87035b124ae717fc46cdf0f4febc91cc23d7dd",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",
@@ -548,7 +548,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision ac17175f6655d1d2253e12b061897571fb20e73942e45aac107119c7daefe92f (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 7ecbd1157f9b24d976825beb4c87035b124ae717fc46cdf0f4febc91cc23d7dd (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -584,10 +584,21 @@
               "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
             },
             {
+              "contributor_binding_source": "ledger_renta_income_aggregation",
+              "contributor_source_kind": "ledger_renta_income_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_renta_income_aggregation",
+              "resolver_id": "ledger_renta_income_aggregation",
+              "source_ref": "bound_input:06"
+            },
+            {
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",

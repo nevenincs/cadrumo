@@ -3650,8 +3650,6 @@ desktop:
       problem:
         choose_kind: Indica si l'has emesa o rebuda.
         choose_rate: Tria un tipus.
-        country_letters: Dues lletres, p. ex. ES.
-        currency_letters: Tres lletres, p. ex. EUR.
         missing: Obligatori.
         no_line: Afegeix almenys una línia.
         payment_id_shape: 64 caràcters hexadecimals.

@@ -212,6 +212,7 @@
                 {
                   "filing_year": 2024,
                   "legal_refs": [
+                    "ley-35-2006:art-49",
                     "ley-35-2006:art-50",
                     "orden-hac-277-2026:art-3"
                   ],
@@ -220,13 +221,29 @@
                     "renta-base-liquidable-negativa-general-anterior",
                     "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
                     "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
-                    "renta-base-liquidable-negativa-general-em4-pendiente-inicio"
+                    "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+                    "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio",
+                    "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio",
+                    "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio",
+                    "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio",
+                    "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio",
+                    "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio",
+                    "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio",
+                    "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio"
                   ],
                   "period": {
                     "code": "0A",
                     "filing_year": 2024
                   },
                   "required_source_casilla_ids": [
+                    "1263",
+                    "1266",
+                    "1269",
+                    "1270",
+                    "1276",
+                    "1279",
+                    "1282",
+                    "1283",
                     "1384",
                     "1387",
                     "1390",
@@ -234,6 +251,14 @@
                   ],
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
+                    "1263",
+                    "1266",
+                    "1269",
+                    "1270",
+                    "1276",
+                    "1279",
+                    "1282",
+                    "1283",
                     "1384",
                     "1387",
                     "1390",

@@ -232,7 +232,7 @@ _RELATIVE_CLOCK_MODULES: frozenset[str] = frozenset({"core.time", "core.time.clo
 
 _HOST_INERT = "Runtime host or frontend process: it never enters frozen_clock, so the seam read equals real time here."
 _AUTHORITY_MINT = (
-    "Lease, permit, sign-in or enrollment-offer expiry minted or judged here; it follows real time, so a"
+    "Lease, permit, session, sign-in or enrollment-offer expiry minted or judged here; it follows real time, so a"
     " frozen document clock in a host connection thread or a worker never dates or extends authority."
 )
 
@@ -293,6 +293,12 @@ _RUNTIME_CLASSIFICATION.update(
             "host/profile_receipt.py::resume_profile_candidate",
             "host/session_owner.py::ProfileWorkerSessionOwner.__init__",
             "host/session_watch.py::_seconds_until_deadline",
+            "host/frontend/tui/bound_session.py::_status_confirms_session",
+            "host/frontend/tui/bound_session.py::BoundSession._arm_expiry",
+            "host/frontend/tui/bound_session.py::BoundSession._expiry_due",
+            "host/frontend/tui/bound_session.py::BoundSession.lifetime_ended",
+            "host/frontend/tui/runtime_session.py::RuntimeRestrictedSessionApp._status_is_current",
+            "host/frontend/tui/runtime_session.py::RuntimeRestrictedSessionApp._arm_lapse",
         ),
         (_WALL, _AUTHORITY_MINT),
     ),
@@ -302,14 +308,8 @@ _RUNTIME_CLASSIFICATION.update(
         (
             "commands/runtime_access_management.py::profile_sessions",
             "host/frontend/tui/aeat_sync/runtime_handoff.py::_select_handoff_action",
-            "host/frontend/tui/bound_session.py::_status_confirms_session",
-            "host/frontend/tui/bound_session.py::BoundSession._arm_expiry",
-            "host/frontend/tui/bound_session.py::BoundSession._expiry_due",
-            "host/frontend/tui/bound_session.py::BoundSession.lifetime_ended",
             "host/frontend/tui/runtime_access_management.py::RuntimeAccessManagementScreen._retain_self_lock_after_human_refusal",
             "host/frontend/tui/runtime_account_session.py::read_runtime_account_session",
-            "host/frontend/tui/runtime_session.py::RuntimeRestrictedSessionApp._status_is_current",
-            "host/frontend/tui/runtime_session.py::RuntimeRestrictedSessionApp._arm_lapse",
             "host/frontend/tui/secret/automation_requester.py::RuntimeAutomationRequesterScreen.on_mount",
             "host/frontend/tui/secret/runtime_login_attempt.py::RuntimeLoginAttemptMixin._accepted_handoff",
             "host/operation_host.py::ProfileWorkerOperationHost.operation_secret",
