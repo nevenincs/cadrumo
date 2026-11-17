@@ -1774,4 +1774,31 @@ mod tests {
             assert!(!is_revision(revision), "{revision:?}");
         }
     }
+
+    #[test]
+    fn a_busy_sign_in_refusal_reaches_the_window_with_its_code_cause_and_log_reference() {
+        let log_ref = "9eb9ca70-7425-40d5-b3a8-1ee20b8d52ac";
+        let failure = CommandFailure::Refused(Refused {
+            code: Refusal::Busy,
+            cause: Some(SignInCause::SignInInProgress),
+            log_ref: Some(log_ref.to_owned()),
+        });
+        assert_eq!(
+            serde_json::to_value(&failure).unwrap(),
+            serde_json::json!({
+                "code": "busy",
+                "cause": "sign_in_in_progress",
+                "log_ref": log_ref,
+            })
+        );
+        let bare = CommandFailure::Refused(Refused {
+            code: Refusal::Busy,
+            cause: None,
+            log_ref: None,
+        });
+        assert_eq!(
+            serde_json::to_value(&bare).unwrap(),
+            serde_json::json!({"code": "busy"})
+        );
+    }
 }
