@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "counts": {
-    "wire-type": 1154,
+    "wire-type": 1149,
     "tui-date-decision": 1,
     "tui-precedence": 7,
     "duplicated-helper": 97
@@ -363,14 +363,9 @@
       "wire-type:native/desktop/frontend/src/components/settings/AgentAccess.tsx:IssuedKey",
       "wire-type:native/desktop/frontend/src/components/settings/connectionStatus.ts:ConnectionStatus",
       "wire-type:native/desktop/frontend/src/components/settings/types.ts:CliState",
-      "wire-type:native/desktop/frontend/src/components/settings/types.ts:ProviderAuthKind",
-      "wire-type:native/desktop/frontend/src/components/settings/types.ts:ProviderMode",
       "wire-type:native/desktop/frontend/src/components/settings/types.ts:ProviderOutcome",
-      "wire-type:native/desktop/frontend/src/components/settings/types.ts:ProviderReadiness",
       "wire-type:native/desktop/frontend/src/components/settings/types.ts:ProviderSecret",
-      "wire-type:native/desktop/frontend/src/components/settings/types.ts:ProviderSource",
       "wire-type:native/desktop/frontend/src/components/settings/types.ts:ProviderStatus",
-      "wire-type:native/desktop/frontend/src/components/settings/types.ts:ProviderTransport",
       "wire-type:native/desktop/frontend/src/components/setup/ProvisioningRow.tsx:StepProgress",
       "wire-type:native/desktop/frontend/src/components/setup/setupWords.ts:RowTone",
       "wire-type:native/desktop/frontend/src/components/ui/calendar.tsx:CalendarLabels",
