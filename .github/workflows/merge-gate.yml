@@ -332,9 +332,10 @@ jobs:
           if-no-files-found: ignore
           retention-days: 3
 
-  # The scoped test population, dealt over the matrix the plan printed. Three
-  # workers, not one per core: each holds 3 to 4 GB once its tests have run,
-  # and four of them used the runner's 16 GB and its swap until it was lost.
+  # The scoped test population, dealt over the matrix the plan printed. Two
+  # workers, not one per core: each holds 3 to 5 GB once its tests have run and
+  # one reached 6.8 GB, so three of them still used the runner's 16 GB and its
+  # swap until it was lost.
   tests:
     name: "Test: Scoped tests (Linux, shard ${{ matrix.shard }})"
     needs: [plan, authority]
@@ -345,7 +346,7 @@ jobs:
       matrix:
         shard: ${{ fromJSON(needs.plan.outputs.shards) }}
     env:
-      CADRUMO_PYTEST_WORKERS: "3"
+      CADRUMO_PYTEST_WORKERS: "2"
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
