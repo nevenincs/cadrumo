@@ -192,8 +192,8 @@ def test_the_planned_shards_together_select_the_whole_full_gate(
 def test_the_default_matrix_holds_the_full_tree_without_growing_a_shard(capsys: pytest.CaptureFixture[str]) -> None:
     """On the real tree: the cap on the matrix never stretches a shard past its file budget.
 
-    A hosted runner's memory grows with the tests it runs; a full-tree plan that
-    hit the cap dealt about 900 files to each runner and every one ran out.
+    A cap the tree has outgrown deals every shard more files than its budget,
+    silently, so each runs longer than the plan was sized for.
     """
     assert main(["plan"]) == 0
     planned = json.loads(capsys.readouterr().out)
