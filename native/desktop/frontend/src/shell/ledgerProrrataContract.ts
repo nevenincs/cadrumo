@@ -358,3 +358,47 @@ export type LedgerProrrataContracts = {
     result: ProrrataMutationProjection;
   };
 };
+
+export type ProrrataDeclareGrossWindowRequest = Omit<
+  ProrrataDeclareGrossRequest,
+  "profile_id"
+>;
+
+export type ProrrataDeclareSectorWindowRequest = Omit<
+  ProrrataDeclareSectorRequest,
+  "profile_id"
+>;
+
+export type ProrrataElectEspecialWindowRequest = Omit<
+  ProrrataElectEspecialRequest,
+  "profile_id"
+>;
+
+export type ProrrataElectGeneralWindowRequest = Omit<
+  ProrrataElectGeneralRequest,
+  "profile_id"
+>;
+
+export type ProrrataListWindowRequest = Omit<ProrrataListRequest, "profile_id">;
+
+export type ProrrataRemoveGrossWindowRequest = Omit<
+  ProrrataRemoveGrossRequest,
+  "profile_id"
+>;
+
+export type ProrrataRevokeEspecialWindowRequest = Omit<
+  ProrrataRevokeEspecialRequest,
+  "profile_id"
+>;
+
+export type ProrrataSeedWindowRequest = Omit<ProrrataSeedRequest, "profile_id">;
+
+export type ProrrataSeedSectorWindowRequest = Omit<
+  ProrrataSeedSectorRequest,
+  "profile_id"
+>;
+
+export type ProrrataSettleSectorWindowRequest = Omit<
+  ProrrataSettleSectorRequest,
+  "profile_id"
+>;

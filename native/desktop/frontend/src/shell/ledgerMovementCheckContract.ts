@@ -909,3 +909,30 @@ export type LedgerMovementCheckContracts = {
     result: LedgerTrackProjection;
   };
 };
+
+export type LedgerHistoryWindowRequest = Omit<
+  LedgerHistoryRequest,
+  "profile_id"
+>;
+
+export type LedgerLlmReviewWindowRequest = Omit<
+  LedgerLlmReviewRequest,
+  "profile_id"
+>;
+
+export type LedgerRuleTrialWindowRequest = Omit<
+  LedgerRuleTrialRequest,
+  "profile_id"
+>;
+
+export type LedgerSplitCheckWindowRequest = Omit<
+  LedgerSplitCheckRequest,
+  "profile_id"
+>;
+
+export type LedgerStagedCheckWindowRequest = Omit<
+  LedgerStagedCheckRequest,
+  "profile_id"
+>;
+
+export type LedgerTrackWindowRequest = Omit<LedgerTrackRequest, "profile_id">;

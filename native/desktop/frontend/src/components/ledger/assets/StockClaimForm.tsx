@@ -8,9 +8,9 @@ import { formatAmount } from "../../../shared/numbers";
 import { LEDGER_PAGE_SIZE } from "../../../shell/ledgerWindow";
 import type { LedgerPort } from "../../../shell/ledger";
 import type {
-  InventoryBookRow,
-  InventoryMovement,
-} from "../../../shell/ledgerSetup";
+  InventoryListRowProjection,
+  InventoryMovementProjection,
+} from "../../../shell/ledgerInventoryContract";
 import { useStrings } from "../../../shell/strings";
 import { ChoiceField, useSetupRead } from "../setup/SetupParts";
 import { EditorField } from "../setup/EditorField";
@@ -41,9 +41,9 @@ export function MovementClaimForm({
   port: LedgerPort;
   reader: string | null;
   locale: string;
-  book: InventoryBookRow;
+  book: InventoryListRowProjection;
   catalogue: OfferState;
-  target: InventoryMovement;
+  target: InventoryMovementProjection;
   onClose(): void;
   onWritten(): void;
 }) {

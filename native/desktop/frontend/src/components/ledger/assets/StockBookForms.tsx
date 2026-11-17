@@ -3,10 +3,10 @@ import { Alert } from "@/components/ui/alert";
 import { Icon } from "@/components/ui/icon";
 import type { LedgerPort } from "../../../shell/ledger";
 import type {
-  InventoryBook,
-  InventoryBookRow,
-  InventoryMovement,
-} from "../../../shell/ledgerSetup";
+  InventoryLedgerProjection,
+  InventoryListRowProjection,
+  InventoryMovementProjection,
+} from "../../../shell/ledgerInventoryContract";
 import { useStrings } from "../../../shell/strings";
 import {
   CallLine,
@@ -61,7 +61,7 @@ export function BookForm({
   port: LedgerPort;
   year: number;
   /** The books held, in every year; null while unread or where it failed. */
-  books: readonly InventoryBookRow[] | null;
+  books: readonly InventoryListRowProjection[] | null;
   catalogue: OfferState;
   onClose(): void;
   onWritten(): void;
@@ -145,8 +145,8 @@ export function DescribeForm({
   onWritten,
 }: {
   port: LedgerPort;
-  book: InventoryBookRow;
-  ledger: InventoryBook;
+  book: InventoryListRowProjection;
+  ledger: InventoryLedgerProjection;
   onClose(): void;
   onWritten(): void;
 }) {
@@ -203,7 +203,7 @@ export function CorrectForm({
   onWritten,
 }: {
   port: LedgerPort;
-  book: InventoryBookRow;
+  book: InventoryListRowProjection;
   catalogue: OfferState;
   onClose(): void;
   onWritten(): void;
@@ -266,8 +266,8 @@ export function ReverseForm({
 }: {
   port: LedgerPort;
   catalogue: OfferState;
-  book: InventoryBookRow;
-  target: InventoryMovement;
+  book: InventoryListRowProjection;
+  target: InventoryMovementProjection;
   locale: string;
   onClose(): void;
   onWritten(): void;
@@ -331,7 +331,7 @@ export function RetireForm({
 }: {
   port: LedgerPort;
   catalogue: OfferState;
-  book: InventoryBookRow;
+  book: InventoryListRowProjection;
   onClose(): void;
   onWritten(): void;
 }) {
@@ -385,7 +385,7 @@ export function RestoreForm({
   onWritten,
 }: {
   port: LedgerPort;
-  book: InventoryBookRow;
+  book: InventoryListRowProjection;
   onClose(): void;
   onWritten(): void;
 }) {

@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 
 from ......application.modelo.action_errors import WORKFLOW_GATE_LEGAL_REFS
-from ......application.modelo.work_form_findings import ModeloFormIssue
+from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
 from ......core.config import override_settings
 from ......core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ......core.i18n.render import tr
@@ -21,7 +21,6 @@ from ......domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ..issue_projection import issue_lines
-from ..issue_scale import IssueLevel
 from .workbench_fixture import synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -45,7 +44,7 @@ def test_the_annual_compensation_finding_blocks_and_reads_in_the_served_words(la
         expected_message = tr(_KEY, source_issue_count=2)
         expected_action = tr(_ACTION)
 
-    assert line.level is IssueLevel.BLOCKS
+    assert line.level is ModeloFormAttention.BLOCKS
     assert line.message == expected_message
     assert "2" in line.message and "%{" not in line.message
     assert expected_action in line.action

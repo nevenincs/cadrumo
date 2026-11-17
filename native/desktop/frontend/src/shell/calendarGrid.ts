@@ -1,6 +1,6 @@
 import { DAY_MS, dayOrdinal, isoDate } from "../shared/dates";
 import { closeUnknown, entryKey, entrySpan } from "./calendarEntries";
-import type { CalendarEntry, CalendarEvent } from "./views";
+import type { FilingCalendarServed } from "./calendarContract";
 
 // The filing calendar laid out as months of weeks. This is arithmetic on the
 // dates the product gave and nothing else: which day falls in which column,
@@ -10,7 +10,7 @@ import type { CalendarEntry, CalendarEvent } from "./views";
 
 /** One obligation's window as it crosses one week of one month. */
 export type GridBar = {
-  entry: CalendarEntry;
+  entry: FilingCalendarServed["entries"][number];
   /** First and last column it covers in this week, 0 to 6. */
   from: number;
   to: number;
@@ -33,7 +33,7 @@ export type GridDay = {
   day: number;
   today: boolean;
   /** What was observed on this day. */
-  events: CalendarEvent[];
+  events: FilingCalendarServed["events"][number][];
 };
 
 export type GridWeek = {
@@ -64,8 +64,8 @@ export type GridMonth = {
  */
 export function calendarMonths(
   range: { from_date: string; to_date: string },
-  entries: readonly CalendarEntry[],
-  events: readonly CalendarEvent[],
+  entries: readonly FilingCalendarServed["entries"][number][],
+  events: readonly FilingCalendarServed["events"][number][],
   today: string | null,
   weekStart: number,
   attention: readonly number[] = entries.map((_, index) => index),
@@ -84,7 +84,7 @@ export function calendarMonths(
     // Earlier first, and of two that open together the one the product
     // serves as needing the person first takes the first row.
     .sort((a, b) => a.from - b.from || a.attention - b.attention);
-  const observed = new Map<string, CalendarEvent[]>();
+  const observed = new Map<string, FilingCalendarServed["events"][number][]>();
   for (const event of events) {
     const day = event.event_date.slice(0, 10);
     observed.set(day, [...(observed.get(day) ?? []), event]);
@@ -259,7 +259,7 @@ export function drawnWeeks(
       for (const week of month.weeks)
         for (const { bar } of take(month, week, null).shown)
           if (entryKey(bar.entry) === chosen) anyway.add(bar);
-  const reached = new Set<CalendarEntry>();
+  const reached = new Set<FilingCalendarServed["entries"][number]>();
   const drawn = new Map<GridWeek, DrawnWeek>();
   for (const month of months)
     for (const week of month.weeks) {

@@ -9,10 +9,8 @@
 import type { LedgerActivityAssetContracts } from "./ledgerActivityAssetContract";
 import type { LedgerActivityAssetReadContracts } from "./ledgerActivityAssetReadContract";
 import type { LedgerEntryContracts } from "./ledgerEntryContract";
-import type { LedgerInventoryContracts } from "./ledgerInventoryContract";
 
-type Contracts = LedgerInventoryContracts &
-  LedgerActivityAssetContracts &
+type Contracts = LedgerActivityAssetContracts &
   LedgerActivityAssetReadContracts &
   LedgerEntryContracts;
 type Definition = keyof Contracts;
@@ -26,67 +24,6 @@ type Sent<D extends Definition, Host extends string = never> = Omit<
 
 /** What the operation serves. */
 type Served<D extends Definition> = Contracts[D]["result"];
-
-// ---- Inventory -----------------------------------------------------------
-
-export type InventoryListResult = Served<"ledger.inventory.list">;
-export type InventoryBookRow = InventoryListResult["rows"][number];
-export type ValuationMethod = InventoryBookRow["valuation_method"];
-
-export type InventoryInspectResult = Served<"ledger.inventory.inspect">;
-export type InventoryBook = NonNullable<InventoryInspectResult["ledger"]>;
-export type InventoryRefusal = NonNullable<InventoryInspectResult["refusal"]>;
-export type InventoryAdvisory = InventoryBook["advisories"][number];
-export type InventoryMovement = InventoryBook["period_movements"][number];
-export type InventoryHistoryEntry = InventoryBook["history"][number];
-export type InventoryHistoryKind = InventoryHistoryEntry["kind"];
-
-export type InventoryCreateRequest = Sent<"ledger.inventory.create">;
-export type InventoryCreateResult = Served<"ledger.inventory.create">;
-
-export type InventoryMovementAddRequest = Sent<"ledger.inventory.movement.add">;
-export type InventoryMovementAddResult =
-  Served<"ledger.inventory.movement.add">;
-export type InventoryAcquisitionCostRequest = NonNullable<
-  InventoryMovementAddRequest["acquisition_cost"]
->;
-/** A named piece of proof: a fingerprint of the file the person attached,
- * under a reference minted for it. */
-export type InventoryProof =
-  InventoryAcquisitionCostRequest["evidence"][number];
-
-export type InventoryBookRequest = Sent<"ledger.inventory.inspect">;
-export type InventoryValuationResult =
-  Served<"ledger.inventory.valuation.preview">;
-
-export type InventoryClosingAuthorityRequest =
-  Sent<"ledger.inventory.closing-authority.record">;
-export type InventoryClosingAuthorityResult =
-  Served<"ledger.inventory.closing-authority.record">;
-export type InventoryClosingValueRequest =
-  Sent<"ledger.inventory.closing-value.record">;
-export type InventoryOptionsResult = Served<"ledger.inventory.options">;
-
-export type InventoryEvidenceAddRequest = Sent<
-  "ledger.inventory.evidence.add",
-  "source_directory"
->;
-export type InventoryEvidenceAddResult =
-  Served<"ledger.inventory.evidence.add">;
-
-export type InventoryDescribeRequest = Sent<"ledger.inventory.describe">;
-export type InventoryCorrectRequest = Sent<"ledger.inventory.correct">;
-export type InventoryMovementCorrectRequest =
-  Sent<"ledger.inventory.movement.correct">;
-export type InventoryMovementReverseRequest =
-  Sent<"ledger.inventory.movement.reverse">;
-export type InventoryMovementClaimRequest =
-  Sent<"ledger.inventory.movement.claim">;
-export type InventoryRetireRequest = Sent<"ledger.inventory.retire">;
-export type InventoryRestoreRequest = Sent<"ledger.inventory.restore">;
-
-/** A change applied, or found already applied under the same reference. */
-export type InventoryChangeResult = Served<"ledger.inventory.correct">;
 
 // ---- Activity assets -----------------------------------------------------
 

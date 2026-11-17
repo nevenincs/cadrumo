@@ -234,3 +234,7 @@ export type LedgerTransferContracts = {
     result: LedgerImportResultProjection;
   };
 };
+
+export type LedgerExportWindowRequest = Omit<LedgerExportRequest, "profile_id">;
+
+export type LedgerImportWindowRequest = Omit<LedgerImportRequest, "profile_id">;

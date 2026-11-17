@@ -2,7 +2,7 @@ import type { IconName } from "@/components/ui/icon";
 import { closeUnknown } from "@/shell/calendarEntries";
 import type { Translate } from "@/shell/strings";
 import type { OverviewPeriodState } from "@/shell/calendarContract";
-import type { CalendarEntry, CalendarEvent } from "@/shell/views";
+import type { FilingCalendarServed } from "@/shell/calendarContract";
 
 export const STATE_TONE: Record<
   OverviewPeriodState,
@@ -14,7 +14,7 @@ export const STATE_TONE: Record<
  * mark and a message a hollow one, told apart by shape, with or without
  * colour.
  */
-export const EVENT_MARK: Record<CalendarEvent["event_type"], string> = {
+export const EVENT_MARK: Record<FilingCalendarServed["events"][number]["event_type"], string> = {
   filing: "bg-success forced-colors:bg-[CanvasText]",
   message: "border-(length:--mark-edge) border-muted-foreground",
 };
@@ -36,7 +36,7 @@ export const STATE_MARK: Record<OverviewPeriodState, IconName | null> = {
  * is called that, in the product's own words for it, rather than by the
  * general reading it shares with what could not be placed at all.
  */
-export const stateWords = (t: Translate, entry: CalendarEntry) =>
+export const stateWords = (t: Translate, entry: FilingCalendarServed["entries"][number]) =>
   closeUnknown(entry)
     ? t("workspace.declarations.calendar.legal.unknown")
     : t(`desktop.calendar.state.${entry.user_state}`);

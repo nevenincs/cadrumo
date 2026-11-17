@@ -1,5 +1,5 @@
 import type { OverviewCalendarSupport } from "../../shell/calendarContract";
-import type { FilingCalendar } from "../../shell/views";
+import type { FilingCalendarServed } from "../../shell/calendarContract";
 import { fixtureYear } from "../fixtureDates";
 import { EMPTY_CALENDAR, FIXTURE_CALENDAR } from "./calendar";
 
@@ -32,12 +32,12 @@ export const SUPPORT_BOUNDED: Pick<
   hard_ceiling: fixtureYear + 1,
 };
 
-export const SUPPORTED_CALENDAR: FilingCalendar = {
+export const SUPPORTED_CALENDAR: FilingCalendarServed = {
   ...FIXTURE_CALENDAR,
   support: support("supported", SUPPORT_OPEN),
 };
 
-export const BOUNDED_CALENDAR: FilingCalendar = {
+export const BOUNDED_CALENDAR: FilingCalendarServed = {
   ...FIXTURE_CALENDAR,
   support: support("supported", SUPPORT_BOUNDED),
 };
@@ -48,27 +48,27 @@ export const SUPPORT_PROJECTED: Pick<
   "floor" | "horizon" | "hard_ceiling"
 > = { ...SUPPORT_OPEN, horizon: fixtureYear - 1 };
 
-export const PROJECTED_CALENDAR: FilingCalendar = {
+export const PROJECTED_CALENDAR: FilingCalendarServed = {
   ...FIXTURE_CALENDAR,
   support: support("projected", SUPPORT_PROJECTED),
 };
 
-export const PARTIAL_CALENDAR: FilingCalendar = {
+export const PARTIAL_CALENDAR: FilingCalendarServed = {
   ...FIXTURE_CALENDAR,
   support: support("partial", SUPPORT_OPEN),
 };
 
-export const PARTIAL_BOUNDED_CALENDAR: FilingCalendar = {
+export const PARTIAL_BOUNDED_CALENDAR: FilingCalendarServed = {
   ...FIXTURE_CALENDAR,
   support: support("partial", SUPPORT_BOUNDED),
 };
 
-export const BELOW_FLOOR_CALENDAR: FilingCalendar = {
+export const BELOW_FLOOR_CALENDAR: FilingCalendarServed = {
   ...EMPTY_CALENDAR,
   support: support("below_floor", SUPPORT_OPEN),
 };
 
-export const ABOVE_CEILING_CALENDAR: FilingCalendar = {
+export const ABOVE_CEILING_CALENDAR: FilingCalendarServed = {
   ...EMPTY_CALENDAR,
   support: support("above_ceiling", SUPPORT_BOUNDED),
 };
