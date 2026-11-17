@@ -619,6 +619,7 @@ arguments = [
   { literal = "auth" },
   { literal = "status" },
   { literal = "--json" },
+  { literal = "--causes" },
 ]
 
 [[invocations]]
@@ -671,6 +672,7 @@ arguments = [
   { literal = "browser" },
   { literal = "--timeout" },
   { literal = "300" },
+  { literal = "--causes" },
 ]
 
 [[invocations]]
@@ -687,6 +689,7 @@ arguments = [
   { literal = "device" },
   { literal = "--timeout" },
   { literal = "300" },
+  { literal = "--causes" },
 ]
 
 [[invocations]]
@@ -703,6 +706,7 @@ arguments = [
   { literal = "browser-code" },
   { literal = "--timeout" },
   { literal = "300" },
+  { literal = "--causes" },
 ]
 
 # The Windows supervisor starts the worker without site (-S): that is the exact
