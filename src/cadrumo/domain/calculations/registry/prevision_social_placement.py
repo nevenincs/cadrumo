@@ -190,6 +190,8 @@ def prevision_social_placement_revision_failures(revision: ModeloRevision) -> tu
     A placed casilla must be one of the edition's casillas; a key is declared
     once; and a pair split on the same-plan answer declares both answers and no
     unsplit row, so no record falls between them.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     key_counts = Counter(row.key for row in revision.prevision_social_placements)
     return (

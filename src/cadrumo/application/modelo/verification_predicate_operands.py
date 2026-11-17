@@ -90,7 +90,10 @@ def roll_forward_balance_reconciles(
 
 
 def profile_flag(profile: TaxpayerProfile, field: str, fact_date: _date | None) -> bool:
-    """Read one named profile flag; the EU/EEA status is a fact of ``fact_date``."""
+    """Read one named profile flag; the EU/EEA status is a fact of ``fact_date``.
+
+    Parameter types: ``profile`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
+    """
     if field == _UE_EEE_STATUS_FIELD:
         if fact_date is None:
             raise ModeloPredicateDateRequiredError(

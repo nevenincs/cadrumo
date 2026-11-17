@@ -145,6 +145,8 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     filer's residence, whose box resolved to zero, whose unit is indeterminate (a
     joint return or a partnered filer) and whose window count is strictly positive.
     Returns ``None`` when no enrolment qualifies or the bucket has no profile.
+
+    Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
     """
     candidates = _unit_limited_window_enrolments(snapshot)
     if not candidates:

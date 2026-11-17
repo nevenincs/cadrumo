@@ -33,10 +33,10 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, Final, Literal, override
 
+from ...core.absence_attestation_family import PRIOR_CARRY_FAMILIES
 from ...core.errors.hierarchy import CadrumoError, RecordedRegisteredError
 from ...core.errors.not_found import CoreNotFoundError
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES
 from ...domain.modelos.errors import ModeloError
 from ..operations.next_step import OperationNextStepErrorMixin, OperationNextStepWording
 from ..operator_actions.models import PreconditionVerdict

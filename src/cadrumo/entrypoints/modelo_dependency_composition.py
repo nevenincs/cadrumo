@@ -1,4 +1,7 @@
-"""Bind dependency inspection to the active immutable worker profile."""
+"""Bind dependency inspection to the active immutable worker profile.
+
+The ledger is read through the :class:`TransactionCatalogueRepository`.
+"""
 
 from __future__ import annotations
 

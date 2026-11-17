@@ -42,6 +42,7 @@ from typing import Annotated, Final, Literal
 
 from pydantic import Field, model_validator
 
+from ...core.absence_attestation_family import AbsenceAttestationFamily
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -49,7 +50,6 @@ from ...core.external_constants import OutputLanguage
 from ...core.hashing import sha256_hex
 from ...core.period import Period
 from ...core.type_guards import is_object_list_or_tuple
-from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, RevisionId
 from ...domain.calculations.registry.schema_form_layouts import (
     FormCellKind,

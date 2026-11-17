@@ -10,6 +10,8 @@ stated it. A column the calculation resolved, a zero included, is not asked
 about, because a resolved zero leaves the box off and so cannot be told apart
 from an unknown one by the row's values. A form with no calculation holds no
 row and offers none.
+
+The calculation is the one held by the :class:`CalculationRevision`.
 """
 
 from __future__ import annotations
@@ -18,7 +20,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Final
 
-from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
+from ...core.absence_attestation_family import AbsenceAttestationFamily
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.modelos.calculation_revision import CalculationRevision
 from .edit_models import ModeloEditBindingIntentKind, ModeloEditWritableBindingOverrideSurfaceEntryV1

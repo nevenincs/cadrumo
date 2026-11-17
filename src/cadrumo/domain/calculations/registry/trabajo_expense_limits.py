@@ -36,7 +36,10 @@ class TrabajoExpenseLimits:
 def trabajo_expense_limits(
     modelo_id: str, revision: ModeloRevision, *, operation: PinnedAuthorityOperation, effective_date: date
 ) -> TrabajoExpenseLimits:
-    """Read both limits of ``revision`` of ``modelo_id`` from the pinned ``operation`` on ``effective_date``."""
+    """Read both limits of ``revision`` of ``modelo_id`` from the pinned ``operation`` on ``effective_date``.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+    """
     declared = {parameter.id for parameter in revision.parameters}
     revision_id: RevisionId = revision.id
     date_context = {"filing_period": effective_date}

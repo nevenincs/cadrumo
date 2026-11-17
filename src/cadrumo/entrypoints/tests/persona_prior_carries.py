@@ -34,9 +34,9 @@ from ...application.modelo.workbench_operations import (
     ModeloWorkbenchFormRequest,
 )
 from ...application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1
+from ...core.absence_attestation_family import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.external_constants import OutputLanguage
-from ...domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ...domain.calculations.registry.binding_targets import casillas_by_binding
 from ...domain.calculations.registry.ids import BindingId
 from ...tests.personas import Persona, PriorCarries

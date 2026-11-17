@@ -65,6 +65,8 @@ def incn_periodo_anterior_disagreement_finding(
     turnover, when the período facts are unstated (their own gates name them),
     when the preceding período was shorter than twelve months (its turnover is
     not the twelve-month one), and when no work catalogue is bound.
+
+    Parameter types: ``workflow_profile`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
     """
     if work_unit_repository is None or str(work_unit.modelo) != form_for_role(_IS_ANNUAL_ROLE, authority=operation):
         return None

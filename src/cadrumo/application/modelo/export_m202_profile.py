@@ -237,8 +237,8 @@ def modelo_202_producer_profile(
     """Return the Modelo 202 producer view, or refuse naming every profile fact the layout needs and lacks.
 
     Args:
-        workflow_profile: The taxpayer the export files for; its turnover answers
-            the 6.000.000 mark and the band.
+        workflow_profile: The :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`
+            the export files for; its turnover answers the 6.000.000 mark and the band.
         profile_values: The profile facts in force for the period, keyed by path.
         cited_producer_keys: Every producer key the selected edition's layout cites.
         effective_date: The date the threshold fact is resolved for.

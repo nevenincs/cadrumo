@@ -136,7 +136,10 @@ def _profile_path(revision: ModeloRevision, binding_id: str) -> str:
 
 
 def enrolment_count_path(revision: ModeloRevision, enrolment: AutonomicDeduccionEnrolment) -> str:
-    """The profile path the enrolment's count binding reads."""
+    """The profile path the enrolment's count binding reads.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+    """
     return _profile_path(revision, enrolment.count_binding)
 
 
@@ -239,6 +242,7 @@ def inject_autonomic_deduccion_facts(
 ) -> AutonomicDeduccionDerivation:
     """Supply the count of every enrolled deducción, withhold the open ones, and serve the limitation.
 
+    ``snapshot`` is the :class:`RegistrySnapshot` of the pinned authority.
     ``schema`` says which count paths are derived. An edition with no autonomic
     deducción boxes gets nothing from this dispatch.
     """

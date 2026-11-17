@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .work_form_context import WorkFormContext
 
+from ...core.absence_attestation_family import AbsenceAttestationFamily
 from ...core.aggregation import BindingSourceKind
-from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ...domain.calculations.registry.modelo_localization import binding_locale_key, resolve_modelo_localization
 from ...domain.calculations.registry.schema import BindingDefinition

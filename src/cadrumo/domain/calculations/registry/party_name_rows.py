@@ -58,6 +58,8 @@ type RowValues = dict[tuple[BindingId, int], Decimal | str]
 def party_name_fields(revision: ModeloRevision, name_bindings: frozenset[BindingId]) -> dict[BindingId, PartyNameField]:
     """Index the layout field that files each ``party_filing_name`` binding, with its design rule and width.
 
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+
     Raises:
         RegistryValidationError: A binding files a party name but no layout
             field states how, or two fields filing it state different rules.
@@ -107,6 +109,8 @@ def file_party_names[ObservationT: DeclaredPartyObservation](
 
     A revision read without its export layouts has no slot to file into, so its
     name cells are dropped rather than left holding the reference.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     if not name_bindings:
         return rows

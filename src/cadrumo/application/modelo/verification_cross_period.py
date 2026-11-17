@@ -279,6 +279,8 @@ def modelo_202_instalment_resolver_for_snapshot(
 
     Without a work-unit store no base stated on an instalment's own work unit
     can be read, so only a presented Modelo 200 decides a base.
+
+    Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
     """
     if not any(
         is_modelo_202(requirement.source_modelo, operation=operation)

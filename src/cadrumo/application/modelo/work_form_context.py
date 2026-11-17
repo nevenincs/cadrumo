@@ -9,9 +9,9 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 
+from ...core.absence_attestation_family import AbsenceAttestationFamily
 from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
-from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.export_field_casilla import (
     export_field_casilla_id,
     layout_fields_in_emission_order,

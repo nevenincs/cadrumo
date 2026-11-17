@@ -86,7 +86,10 @@ def is_marked(value: object) -> bool:
 
 
 def set_aside_binding_ids(revision: ModeloRevision, current_values: Mapping[CasillaId, object]) -> frozenset[BindingId]:
-    """The carries whose held earlier return the current return's marked boxes set aside."""
+    """The carries whose held earlier return the current return's marked boxes set aside.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+    """
     return frozenset(
         binding.id
         for binding in revision.bindings
@@ -96,7 +99,10 @@ def set_aside_binding_ids(revision: ModeloRevision, current_values: Mapping[Casi
 
 
 def set_aside_declaring_binding_ids(revision: ModeloRevision) -> frozenset[BindingId]:
-    """The carries that declare boxes under which their held earlier return is set aside."""
+    """The carries that declare boxes under which their held earlier return is set aside.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+    """
     return frozenset(
         binding.id for binding in revision.bindings if binding.held_source_set_aside_when_marked is not None
     )
