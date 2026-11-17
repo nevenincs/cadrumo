@@ -381,6 +381,13 @@ jobs:
         shell: bash
         run: just setup-desktop-frontend
 
+      # Tests bundle frontend sources that import the window projections
+      # through the @fixtures alias, which resolves only into a build tree; a
+      # hosted runner has none until they are produced.
+      - name: Window projections
+        shell: bash
+        run: just fixtures-seed-window
+
       - name: Scoped tests
         shell: bash
         env:
