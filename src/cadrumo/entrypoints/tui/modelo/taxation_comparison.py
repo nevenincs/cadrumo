@@ -56,8 +56,6 @@ _RECOMMENDED_LOCALE_KEY: Final = "desktop.modelo.compare.taxation.recommended"
 _WORDS_LANGUAGE_LOCALE_KEY: Final = "desktop.modelo.compare.words_language"
 _READING_LOCALE_KEY: Final = "tui.modelo.taxation.reading"
 _CLOSE_LOCALE_KEY: Final = "workspace.modelo.key.close"
-KEY_LOCALE_KEY: Final = "tui.modelo.taxation.key"
-"""What the workbench's key that opens the comparison says in its footer."""
 
 _CASILLA_IDS_CONTEXT: Final = "casilla_ids"
 _LANGUAGE_NAME_KEY: Final = "wizard.setup.profile.output-language.choices.{language}.label"
@@ -448,7 +446,6 @@ class ModeloTaxationComparisonScreen(ModalScreen[str | None]):
 
 
 __all__ = [
-    "KEY_LOCALE_KEY",
     "ComparisonDoor",
     "ComparisonPhase",
     "ModeloTaxationComparerV1",
