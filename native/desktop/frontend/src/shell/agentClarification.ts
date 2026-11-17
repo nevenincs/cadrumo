@@ -1,4 +1,4 @@
-import type { AgentQuestion } from "./agentSession";
+import type { ClarificationQuestion } from "./agentGatewayContract";
 
 // cadrumo-agent's clarification contract, as the column and the scenario
 // host read it: what a questionnaire may hold, and what an answer to it may
@@ -51,7 +51,7 @@ const labelled = (text: string, most: number): boolean =>
  */
 export function questionnaireFaults(request: {
   request_id: string;
-  questions: readonly AgentQuestion[];
+  questions: readonly ClarificationQuestion[];
 }): string[] {
   const notes: string[] = [];
   if (!identifier(request.request_id, MAX_REQUEST_ID_CHARS))
@@ -112,7 +112,7 @@ export type AnswerFault = {
  * of its options exactly as written.
  */
 export function answerFaults(
-  questions: readonly AgentQuestion[],
+  questions: readonly ClarificationQuestion[],
   answers: Readonly<Record<string, string>>,
 ): AnswerFault[] {
   const entries = Object.entries(answers);

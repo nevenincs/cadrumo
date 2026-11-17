@@ -20,17 +20,11 @@ ordinal = "52"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m200-2025-dp200001-r0057"
-decision_statement = "DP200001 source row 57: encode selected as 1 and absent or unselected as 0."
-justification = "Reviewed exact-anchor policy for DP200001 source row 57; it is not represented as official-source text."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "DP200001"
-source_row = 57
-source_cell = "A57"
-ordinal = "52"
-record_identity = "DP200001"
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G106"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200e25 design states no value in the own cells of field DP200001 row 57. Its sibling cell DP200001!G106, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. BOE-A-2026-11583 (Orden HAC/529/2026) anexo I, PDF page 15, BOE Pág. 73136 prints this field as the checkbox '00078 Diócesis, provincia religiosa o entidad eclesiástica que', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -50,17 +44,11 @@ ordinal = "53"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m200-2025-dp200001-r0058"
-decision_statement = "DP200001 source row 58: encode selected as 1 and absent or unselected as 0."
-justification = "Reviewed exact-anchor policy for DP200001 source row 58; it is not represented as official-source text."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "DP200001"
-source_row = 58
-source_cell = "A58"
-ordinal = "53"
-record_identity = "DP200001"
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G106"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200e25 design states no value in the own cells of field DP200001 row 58. Its sibling cell DP200001!G106, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. BOE-A-2026-11583 (Orden HAC/529/2026) anexo I, PDF page 15, BOE Pág. 73136 prints this field as the checkbox '00056 Entidad en régimen de atribución de rentas con tributación', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -80,17 +68,11 @@ ordinal = "54"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m200-2025-dp200001-r0059"
-decision_statement = "DP200001 source row 59: encode selected as 1 and absent or unselected as 0."
-justification = "Reviewed exact-anchor policy for DP200001 source row 59; it is not represented as official-source text."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "DP200001"
-source_row = 59
-source_cell = "A59"
-ordinal = "54"
-record_identity = "DP200001"
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G106"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200e25 design states no value in the own cells of field DP200001 row 59. Its sibling cell DP200001!G106, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. BOE-A-2026-11583 (Orden HAC/529/2026) anexo I, PDF page 15, BOE Pág. 73136 prints this field as the checkbox '00006 Incentivos entidad de reducida dimensión', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -110,17 +92,11 @@ ordinal = "55"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m200-2025-dp200001-r0060"
-decision_statement = "DP200001 source row 60: encode selected as 1 and absent or unselected as 0."
-justification = "Reviewed exact-anchor policy for DP200001 source row 60; it is not represented as official-source text."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "DP200001"
-source_row = 60
-source_cell = "A60"
-ordinal = "55"
-record_identity = "DP200001"
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G106"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200e25 design states no value in the own cells of field DP200001 row 60. Its sibling cell DP200001!G106, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. BOE-A-2026-11583 (Orden HAC/529/2026) anexo I, PDF page 15, BOE Pág. 73136 prints this field as the checkbox '00015 Entidad ZEC (sin consolidación fiscal)', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -140,17 +116,11 @@ ordinal = "56"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m200-2025-dp200001-r0061"
-decision_statement = "DP200001 source row 61: encode selected as 1 and absent or unselected as 0."
-justification = "Reviewed exact-anchor policy for DP200001 source row 61; it is not represented as official-source text."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "DP200001"
-source_row = 61
-source_cell = "A61"
-ordinal = "56"
-record_identity = "DP200001"
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G106"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200e25 design states no value in the own cells of field DP200001 row 61. Its sibling cell DP200001!G106, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. BOE-A-2026-11583 (Orden HAC/529/2026) anexo I, PDF page 15, BOE Pág. 73136 prints this field as the checkbox '00079 Entidad ZEC en consolidación fiscal', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -170,17 +140,11 @@ ordinal = "57"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m200-2025-dp200001-r0062"
-decision_statement = "DP200001 source row 62: encode selected as 1 and absent or unselected as 0."
-justification = "Reviewed exact-anchor policy for DP200001 source row 62; it is not represented as official-source text."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "DP200001"
-source_row = 62
-source_cell = "A62"
-ordinal = "57"
-record_identity = "DP200001"
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G106"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200e25 design states no value in the own cells of field DP200001 row 62. Its sibling cell DP200001!G106, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. BOE-A-2026-11583 (Orden HAC/529/2026) anexo I, PDF page 15, BOE Pág. 73136 prints this field as the checkbox '00022 Régimen entidades navieras en función del tonelaje', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -200,17 +164,11 @@ ordinal = "58"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m200-2025-dp200001-r0063"
-decision_statement = "DP200001 source row 63: encode selected as 1 and absent or unselected as 0."
-justification = "Reviewed exact-anchor policy for DP200001 source row 63; it is not represented as official-source text."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "DP200001"
-source_row = 63
-source_cell = "A63"
-ordinal = "58"
-record_identity = "DP200001"
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G106"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200e25 design states no value in the own cells of field DP200001 row 63. Its sibling cell DP200001!G106, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. BOE-A-2026-11583 (Orden HAC/529/2026) anexo I, PDF page 15, BOE Pág. 73136 prints this field as the checkbox '00028 Tributación conjunta Estado/Diputaciones Comunidades', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -230,17 +188,11 @@ ordinal = "59"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m200-2025-dp200001-r0064"
-decision_statement = "DP200001 source row 64: encode selected as 1 and absent or unselected as 0."
-justification = "Reviewed exact-anchor policy for DP200001 source row 64; it is not represented as official-source text."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "DP200001"
-source_row = 64
-source_cell = "A64"
-ordinal = "59"
-record_identity = "DP200001"
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G106"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200e25 design states no value in the own cells of field DP200001 row 64. Its sibling cell DP200001!G106, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. BOE-A-2026-11583 (Orden HAC/529/2026) anexo I, PDF page 15, BOE Pág. 73136 prints this field as the checkbox '00047 Entidades sometidas a la normativa foral', so 1 writes a marked box and 0 an unmarked one."
 
 [design_identity]
 modelo = "200"
