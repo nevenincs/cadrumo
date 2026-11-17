@@ -327,6 +327,7 @@ function withAssetNotes(
         resolution_answer: null,
         answer_lead_words: null,
         answer_lead_words_language: null,
+        door: null,
       })),
     ],
   };
@@ -361,6 +362,7 @@ function withWithholdingLine(
         resolution_answer: null,
         answer_lead_words: null,
         answer_lead_words_language: null,
+        door: null,
       },
       ...form.issue_lines,
     ],
