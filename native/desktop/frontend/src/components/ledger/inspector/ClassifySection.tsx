@@ -13,7 +13,7 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { facts } from "@/shell/compose";
-import type { LedgerHistoryTypedResult } from "../../../shell/ledgerMovementOperations";
+import type { LedgerHistoryTypedProjection } from "../../../shell/ledgerMovementCheckContract";
 import type { LedgerPort } from "../../../shell/ledger";
 import {
   isIvaDerivableReason,
@@ -100,7 +100,7 @@ export function ClassifySection({
   /** The actions staged on this movement. */
   actions: readonly StagedAction[];
   rejectedBefore: boolean;
-  history: LedgerHistoryTypedResult | null;
+  history: LedgerHistoryTypedProjection | null;
   onFocusField: (field: string) => void;
   say: (text: string) => void;
 }) {

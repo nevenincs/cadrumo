@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 import type {
-  LedgerStagedCheckRequest,
+  LedgerStagedCheckWindowRequest,
   LedgerStagedCheckResult,
-} from "../src/shell/ledgerMovementOperations";
+} from "../src/shell/ledgerMovementCheckContract";
 import {
   StagedCheckSession,
   type CheckReply,
@@ -12,7 +12,7 @@ import {
 // to the exact request, a stale reply says nothing, and no answer is no answer.
 // No rule is tested here; the answers are opaque to the session.
 
-const request = (id: string): LedgerStagedCheckRequest => ({
+const request = (id: string): LedgerStagedCheckWindowRequest => ({
   rows: [
     {
       transaction_id: id,
@@ -36,7 +36,7 @@ const result = (digest: string): LedgerStagedCheckResult => ({
 
 function held() {
   const replies: ((reply: CheckReply) => void)[] = [];
-  const asked: LedgerStagedCheckRequest[] = [];
+  const asked: LedgerStagedCheckWindowRequest[] = [];
   const session = new StagedCheckSession((sent) => {
     asked.push(sent);
     return new Promise((resolve) => replies.push(resolve));

@@ -4,7 +4,10 @@ import { Icon } from "@/components/ui/icon";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatDecimal, formatPercent } from "../../../shared/numbers";
 import { facts } from "../../../shell/compose";
-import type { ElectionLimits, LegalCitation } from "../../../shell/ledgerSetup";
+import type {
+  ActivityAssetElectionLimits,
+  ActivityAssetLegalCitation,
+} from "../../../shell/ledgerActivityAssetReadContract";
 import { useStrings } from "../../../shell/strings";
 import { ASSET_KEYS, fieldWord, tokenWord } from "./assetsWords";
 
@@ -28,7 +31,7 @@ function Citations({
   complete,
   onOpenLink,
 }: {
-  citations: readonly LegalCitation[];
+  citations: readonly ActivityAssetLegalCitation[];
   complete: boolean;
   onOpenLink?: (url: string) => void;
 }) {
@@ -93,7 +96,7 @@ export function AmortizationLimits({
   onOpenLink,
 }: {
   locale: string;
-  limits: ElectionLimits;
+  limits: ActivityAssetElectionLimits;
   onOpenLink?: (url: string) => void;
 }) {
   const t = useStrings();

@@ -675,3 +675,12 @@ export type LedgerRemoveWindowRequest = Omit<LedgerRemoveRequest, "profile_id">;
 export type LedgerSplitWindowRequest = Omit<LedgerSplitRequest, "profile_id">;
 
 export type LedgerUpdateWindowRequest = Omit<LedgerUpdateRequest, "profile_id">;
+
+export type LedgerAddValidation = NonNullable<
+  LedgerAddOperationResult["validation_code"]
+>;
+
+export type LedgerClassifyField = LedgerClassifyRequest["patch_fields"][number];
+
+export type LedgerClassifyValidation =
+  LedgerClassifyOperationResult["validation_kind"];

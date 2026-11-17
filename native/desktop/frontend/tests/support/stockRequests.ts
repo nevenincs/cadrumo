@@ -42,7 +42,7 @@ import type {
   InventoryMovementProjection,
   InventoryOptionsProjection,
 } from "../../src/shell/ledgerInventoryContract";
-import type { LedgerEntryLimits } from "../../src/shell/ledgerSetup";
+import type { LedgerEntryLimitsProjection } from "../../src/shell/ledgerEntryContract";
 
 /** A file the backend kept: what it named it by, and the mark it answered. */
 type Proof = { kind?: string; reference: string; digest: string };
@@ -264,7 +264,7 @@ process.stdin.on("end", () => {
     /** What the options read serves: every choice, with its role. */
     options: InventoryOptionsProjection;
     /** What the entry options serve: the limits typed text is held to. */
-    limits: LedgerEntryLimits;
+    limits: LedgerEntryLimitsProjection;
     scenarios: Scenario[];
   };
   holdLedgerLimits(given.limits);

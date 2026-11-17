@@ -3,9 +3,9 @@
 // way once it is served.
 import recorded from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import { holdLedgerClassifications } from "../../src/shell/ledgerClassifications";
-import type { LedgerEntryClassification } from "../../src/shell/ledgerSetup";
+import type { LedgerEntryClassificationProjection } from "../../src/shell/ledgerEntryContract";
 
 export const servedClassifications =
-  recorded.classifications as LedgerEntryClassification[];
+  recorded.classifications as LedgerEntryClassificationProjection[];
 
 holdLedgerClassifications(servedClassifications);

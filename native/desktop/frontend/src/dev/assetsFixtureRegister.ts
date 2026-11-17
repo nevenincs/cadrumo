@@ -3,13 +3,15 @@
 // of a revision as the backend judges it.
 
 import type {
-  DescriptorFacts,
-  PlanClaim,
-  PlanRow,
-  ReasonFact,
-  TimelineClaimUse,
-  TimelineEvent,
-} from "@/shell/ledgerSetup";
+  ActivityAssetDescriptorFacts,
+  ActivityAssetReasonFact,
+} from "@/shell/ledgerActivityAssetContract";
+import type {
+  ActivityAssetPlanClaim,
+  ActivityAssetPlanRow,
+  ActivityAssetTimelineClaimUse,
+  ActivityAssetTimelineEvent,
+} from "@/shell/ledgerActivityAssetReadContract";
 import type { JsonObject, LedgerDefinitionId } from "../shell/ledger";
 import type { OutputLanguage } from "../shell/ledgerClassificationContract";
 import {
@@ -158,7 +160,7 @@ export function makeRegister(
           reason_key: key === null ? null : `${ERRORS}${key}`,
           reason_facts: Object.entries(facts)
             .sort(([a], [b]) => a.localeCompare(b))
-            .map(([name, fact]): ReasonFact =>
+            .map(([name, fact]): ActivityAssetReasonFact =>
               typeof fact === "string"
                 ? { key: name, value: fact, kind: "text" }
                 : { key: name, ...fact },
@@ -204,13 +206,13 @@ export function makeRegister(
   /** What the timeline says of a dotación: its year and last day, and that it
    * is in effect; a replaced one is judged against nothing. */
   const claimUse = (
-    claim: PlanClaim,
+    claim: ActivityAssetPlanClaim,
     year: number,
     verdict: Pick<
-      TimelineClaimUse,
+      ActivityAssetTimelineClaimUse,
       "matches_current_schedule" | "stale_reason"
     >,
-  ): TimelineClaimUse => ({
+  ): ActivityAssetTimelineClaimUse => ({
     used_by: [],
     ...verdict,
     in_effect: claim.effective,
@@ -235,12 +237,12 @@ export function makeRegister(
   };
   const record = (
     element: Element,
-    kind: TimelineEvent["kind"],
-    eventKind: TimelineEvent["event_kind"],
+    kind: ActivityAssetTimelineEvent["kind"],
+    eventKind: ActivityAssetTimelineEvent["event_kind"],
     origin: string,
     effect: string | null,
     changes: { field: string; before: string | null; after: string | null }[],
-    extra: Partial<TimelineEvent> = {},
+    extra: Partial<ActivityAssetTimelineEvent> = {},
   ) => {
     const labelOf = (field: string, value: string | null): string | null => {
       if (value === null) return null;
@@ -291,7 +293,7 @@ export function makeRegister(
   // ---- Restating a year after a claim -------------------------------------------
 
   /** The parts of [from, until) the effective claims leave uncovered. */
-  const uncovered = (row: PlanRow, from: string, until: string) => {
+  const uncovered = (row: ActivityAssetPlanRow, from: string, until: string) => {
     const covered = row.claims
       .filter((claim) => claim.effective)
       .map((claim) => [claim.covered_from, claim.covered_until] as const)
@@ -313,7 +315,7 @@ export function makeRegister(
       .map(withThrough);
   };
 
-  const serviceWindow = (element: Element, row: PlanRow) => {
+  const serviceWindow = (element: Element, row: ActivityAssetPlanRow) => {
     const start = later(element.list.in_service_date, `${row.tax_year}-01-01`);
     const end =
       element.outOfService === null
@@ -325,7 +327,7 @@ export function makeRegister(
   /** What the backend derives of a row once its absence, reasons and open
    * spans are settled: whether the year applies, and the entry to fill in
    * where that is the remedy. */
-  const settle = (row: PlanRow) => {
+  const settle = (row: ActivityAssetPlanRow) => {
     row.applies =
       row.absence === null ||
       !NOT_APPLICABLE_ABSENCES.includes(row.absence) ||
@@ -338,7 +340,7 @@ export function makeRegister(
     row.claimable_refusal_remedy_field_key = remedy(row.claimable_refusal_key);
   };
 
-  const restate = (element: Element, row: PlanRow) => {
+  const restate = (element: Element, row: ActivityAssetPlanRow) => {
     const { start, end } = serviceWindow(element, row);
     const effective = row.claims.filter((claim) => claim.effective);
     row.claimed = dec(
@@ -364,7 +366,7 @@ export function makeRegister(
 
   /** The year a dotación form opens on: the latest year up to the scenario's
    * with something left to claim, else the earliest later one. */
-  const claimYearOf = (rows: readonly PlanRow[]): number | null => {
+  const claimYearOf = (rows: readonly ActivityAssetPlanRow[]): number | null => {
     const open = rows
       .filter((row) => row.claimable_intervals.length > 0)
       .map((row) => row.tax_year);
@@ -463,7 +465,7 @@ export function makeRegister(
             : {
                 ...claim,
                 matches_current_schedule: found.matches_current_schedule,
-                stale_reason: found.stale_reason as PlanClaim["stale_reason"],
+                stale_reason: found.stale_reason as ActivityAssetPlanClaim["stale_reason"],
               };
         }),
       }));
@@ -924,12 +926,12 @@ export function makeRegister(
     const id = required(request.asset_id);
     const element = find(id);
     if (!element) return notFound({ history: null });
-    const given = request.descriptor as unknown as DescriptorFacts;
+    const given = request.descriptor as unknown as ActivityAssetDescriptorFacts;
     if (typeof given !== "object" || given === null) return invalid();
     if (given.name.trim() === "")
       return refuse(INCOMPLETE, null, {}, { history: null }, ["name"]);
     const before = element.descriptor;
-    const facts: (keyof DescriptorFacts)[] = [
+    const facts: (keyof ActivityAssetDescriptorFacts)[] = [
       "name",
       "serial_number",
       "description",
@@ -1004,7 +1006,7 @@ export function makeRegister(
   const installed = (
     answer: ScenarioCreation,
     id: string,
-    descriptor: DescriptorFacts,
+    descriptor: ActivityAssetDescriptorFacts,
   ): Element => {
     const copy = structuredClone(answer) as unknown as ScenarioCreation;
     for (const row of copy.rows) {

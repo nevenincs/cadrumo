@@ -11,7 +11,7 @@ import type {
   LedgerRequest,
   LedgerResult,
 } from "../../../shell/ledger";
-import type { AssetListRow } from "../../../shell/ledgerSetup";
+import type { ActivityAssetListRow } from "../../../shell/ledgerActivityAssetReadContract";
 import { useWritePause } from "../WritePause";
 import { setupCall, type SetupCall } from "../setup/setupModel";
 import type { FormDraft } from "./assetFormValues";
@@ -57,7 +57,7 @@ export function useAssetRow(
   port: LedgerPort,
   reader: string | null | undefined,
   assetId: string | null,
-): { row: AssetListRow | null; reload(): void } {
+): { row: ActivityAssetListRow | null; reload(): void } {
   const { read, reload } = useLedgerRead(
     port,
     reader,

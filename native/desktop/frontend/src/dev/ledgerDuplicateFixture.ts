@@ -6,9 +6,9 @@
 
 import { sameDecimal } from "../shell/ledgerGrammar";
 import type {
-  LedgerInvoiceDuplicateRequest,
+  LedgerInvoiceDuplicateWindowRequest,
   LedgerInvoiceDuplicateResult,
-} from "../shell/ledgerInvoiceOperations";
+} from "../shell/ledgerInvoiceContract";
 import type { CatalogueInvoiceSnapshot } from "../shell/ledgerInvoiceContract";
 
 const folded = (text: string | null | undefined) =>
@@ -20,7 +20,7 @@ type Stored = Pick<
 > & { grand_total: { decimal: string } };
 
 export function answerInvoiceDuplicate(
-  request: LedgerInvoiceDuplicateRequest,
+  request: LedgerInvoiceDuplicateWindowRequest,
   invoices: readonly Stored[],
   profileId: string,
 ): LedgerInvoiceDuplicateResult {

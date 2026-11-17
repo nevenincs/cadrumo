@@ -1,15 +1,17 @@
 import { expect } from "@playwright/test";
 import { fieldsFor } from "../../src/components/ledger/assets/assetFields";
 import { answer } from "../../src/components/ledger/assets/assetFormValues";
-import {
-  type ActivityAssetListResult as AssetListResult,
-  type AssetKind,
-  type AssetListRow,
-  type DisposalFacts,
-  type PlanRow,
-  type TimelineEvent,
-  type FormOptions,
-} from "../../src/shell/ledgerSetup";
+import type { ActivityAssetListProjection } from "../../src/shell/ledgerActivityAssetReadContract";
+import type {
+  AssetKind,
+  ActivityAssetDisposalSnapshot,
+} from "../../src/shell/ledgerActivityAssetContract";
+import type {
+  ActivityAssetListRow,
+  ActivityAssetPlanRow,
+  ActivityAssetTimelineEvent,
+  ActivityAssetFormOptionsView,
+} from "../../src/shell/ledgerActivityAssetReadContract";
 import { createRequest } from "../../src/components/ledger/assets/assetRevision";
 import { type LedgerPort, type LedgerResult } from "../../src/shell/ledger";
 import type { Translate } from "../../src/shell/strings";
@@ -117,22 +119,22 @@ export async function refused(outcome: Promise<unknown>): Promise<Refused> {
 }
 
 export const registerOf = (port: LedgerPort) =>
-  settled<AssetListResult>(port.submit(LIST, {}));
+  settled<ActivityAssetListProjection>(port.submit(LIST, {}));
 export const listOf = async (port: LedgerPort) =>
-  (await settled<AssetListResult>(port.submit(LIST, {})))
-    .rows as AssetListRow[];
+  (await settled<ActivityAssetListProjection>(port.submit(LIST, {})))
+    .rows as ActivityAssetListRow[];
 export const planOf = async (port: LedgerPort, id: string) =>
   (
     await settled<LedgerResult<typeof PLAN>>(
       port.submit(PLAN, { asset_id: id }),
     )
-  ).rows as PlanRow[];
+  ).rows as ActivityAssetPlanRow[];
 export const eventsOf = async (port: LedgerPort, id: string) =>
   (
     await settled<LedgerResult<typeof TIMELINE>>(
       port.submit(TIMELINE, { asset_id: id }),
     )
-  ).events as TimelineEvent[];
+  ).events as ActivityAssetTimelineEvent[];
 
 // ---- Amounts compared to the cent -------------------------------------------
 
@@ -185,7 +187,7 @@ export async function newRequest(
     regime: options.regime,
     candidate: candidate ?? null,
     base: null,
-    options: options as FormOptions,
+    options: options as ActivityAssetFormOptionsView,
   });
 }
 
@@ -212,7 +214,7 @@ export const WHOLE_PROPERTY = creationDraft("whole_property");
 export const VEHICLE_ELEMENT = creationDraft("vehicle");
 export const SHIFT_HOURS = creationDraft("shift_hours");
 
-export const sale: DisposalFacts = {
+export const sale: ActivityAssetDisposalSnapshot = {
   disposal_date: "2025-06-30",
   reason: "sale",
   proceeds: { decimal: "9000.00" },
@@ -222,7 +224,7 @@ export const sale: DisposalFacts = {
   later_affectation_on: null,
 };
 
-export function servidorRow(): AssetListRow {
+export function servidorRow(): ActivityAssetListRow {
   return SCENARIO_ELEMENTS.find((seed) => seed.id === "servidor")!.list;
 }
 

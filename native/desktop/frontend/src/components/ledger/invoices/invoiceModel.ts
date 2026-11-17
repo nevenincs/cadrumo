@@ -5,11 +5,11 @@
 // an add sends the figures of the answer to the very draft on the page.
 
 import type {
-  InvoiceAddRequest,
-  InvoicePreviewRequest,
-  InvoicePreviewResult,
-  InvoiceUpdateRequest,
-} from "../../../shell/ledgerInvoiceOperations";
+  InvoiceAddWindowRequest,
+  InvoiceFiguresPreviewWindowRequest,
+  InvoiceFiguresPreviewResult,
+  InvoiceUpdateWindowRequest,
+} from "../../../shell/ledgerInvoiceContract";
 import type {
   CatalogueInvoiceSnapshot,
   InvoiceAddLine,
@@ -238,7 +238,7 @@ export type PlacedFindings = {
 /** Puts each finding on its field. A refusal becomes that field's problem,
  * unless the field already has one of its own. */
 function placeFindings(
-  answer: InvoicePreviewResult,
+  answer: InvoiceFiguresPreviewResult,
   problems: Record<string, Problem>,
 ): PlacedFindings {
   const placed: PlacedFindings = { warnings: {}, general: [] };
@@ -266,7 +266,7 @@ function placeFindings(
   return placed;
 }
 
-const refuses = (answer: InvoicePreviewResult) =>
+const refuses = (answer: InvoiceFiguresPreviewResult) =>
   answer.findings.some((finding) => finding.severity === "refusal");
 
 // ---- The new invoice -----------------------------------------------------------
@@ -360,7 +360,7 @@ export type DraftReading = {
   /** What is typed badly, by field; a line's by `line:<key>:<field>`. */
   problems: Record<string, Problem>;
   /** The draft as the ledger is asked about it: a blank field is null. */
-  preview: InvoicePreviewRequest;
+  preview: InvoiceFiguresPreviewWindowRequest;
 };
 
 /** The draft on the wire, with whatever is not well formed left blank. */
@@ -449,13 +449,13 @@ export type DraftCheck = {
   refusedUnsaid: boolean;
   /** The request and the id its invoice will have, where the ledger's answer
    * to this very draft would accept it. */
-  request: InvoiceAddRequest | null;
+  request: InvoiceAddWindowRequest | null;
   invoiceId: string | null;
 };
 
 /** Where the ledger names a missing fact, on the field that lacks it. */
 function placeMissing(
-  answer: InvoicePreviewResult,
+  answer: InvoiceFiguresPreviewResult,
   problems: Record<string, Problem>,
 ): void {
   for (const name of answer.missing_fields) {
@@ -477,9 +477,9 @@ function placeMissing(
  * answer's figures. Null unless every figure is there. */
 function addRequest(
   kind: InvoiceKind,
-  preview: InvoicePreviewRequest,
-  answer: InvoicePreviewResult,
-): InvoiceAddRequest | null {
+  preview: InvoiceFiguresPreviewWindowRequest,
+  answer: InvoiceFiguresPreviewResult,
+): InvoiceAddWindowRequest | null {
   const lines: InvoiceAddLine[] = [];
   for (const line of preview.lines ?? []) {
     const served = answer.lines.find((found) => found.key === line.key);
@@ -553,7 +553,7 @@ function addRequest(
 export function checkDraft(
   draft: InvoiceDraft,
   { problems: typed, preview }: DraftReading,
-  current: InvoicePreviewResult | null,
+  current: InvoiceFiguresPreviewResult | null,
 ): DraftCheck {
   const problems = { ...typed };
   let findings: PlacedFindings = { warnings: {}, general: [] };
@@ -727,7 +727,7 @@ export function correctionPreview(
   invoice: CatalogueInvoiceSnapshot,
   draft: CorrectionDraft,
   correctiveClass: string | null,
-): InvoicePreviewRequest {
+): InvoiceFiguresPreviewWindowRequest {
   const operation = parseIsoDate(draft.operationDate);
   const retention = correctionRetention(invoice, draft);
   return {
@@ -761,7 +761,7 @@ export type CorrectionCheck = {
   findings: PlacedFindings;
   /** A change the ledger judges has no answer from it yet. */
   awaitingAnswer: boolean;
-  request: InvoiceUpdateRequest | null;
+  request: InvoiceUpdateWindowRequest | null;
 };
 
 /** Whether `text` has the shape of a payment id, as the ledger serves it; null
@@ -778,7 +778,7 @@ export const isPaymentId = (text: string): boolean | null => {
 export function checkCorrection(
   invoice: CatalogueInvoiceSnapshot,
   draft: CorrectionDraft,
-  current: InvoicePreviewResult | null,
+  current: InvoiceFiguresPreviewResult | null,
   correctiveClass: string | null,
 ): CorrectionCheck {
   const problems: Record<string, Problem> = {};
@@ -899,7 +899,7 @@ export function checkCorrection(
  * back after its outcome was not seen. */
 export function holdsCorrection(
   invoice: CatalogueInvoiceSnapshot,
-  request: InvoiceUpdateRequest,
+  request: InvoiceUpdateWindowRequest,
 ): boolean {
   const { values, fields } = request.patch;
   const named: Readonly<Record<string, unknown>> = values;

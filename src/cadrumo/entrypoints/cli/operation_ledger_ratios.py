@@ -3,17 +3,14 @@
 from __future__ import annotations
 
 from typing import Any
-from uuid import UUID
 
 import typer
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
-from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.contracts.contracts import RefusalCode
-from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ...application.ledger.ratios_contracts import (
     LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE,
@@ -37,12 +34,7 @@ from ...application.ledger.ratios_contracts import (
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .common import active_bucket_id_or_refuse
-
-
-def _client(ctx: typer.Context) -> FrontendClient:
-    """Bind every ratio request to the invocation's selected profile."""
-    return require_profile_client(ctx, expected_profile_id=UUID(active_bucket_id_or_refuse()))
+from .profile_bound_clients import active_profile_client
 
 
 def _operation_error(completed: RegisteredOperationCompletion[Any], *, code: str) -> CliRefusedBoundaryError:
@@ -57,7 +49,7 @@ def _operation_error(completed: RegisteredOperationCompletion[Any], *, code: str
 
 def list_ratios(ctx: typer.Context, *, year: int) -> RegisteredOperationCompletion[LedgerRatiosListProjection]:
     """Read bounded override rows, or their registered censo refusal detail."""
-    client = _client(ctx)
+    client = active_profile_client(ctx)
     completed = run_registered_operation(
         client,
         LedgerRatiosListRequest(profile_id=client.profile_id, year=year),
@@ -91,7 +83,7 @@ def set_ratio(
     year: int,
 ) -> RegisteredOperationCompletion[LedgerRatiosSetProjection]:
     """Persist one override through the invocation's immutable profile worker."""
-    client = _client(ctx)
+    client = active_profile_client(ctx)
     completed = run_registered_operation(
         client,
         LedgerRatiosSetRequest(profile_id=client.profile_id, category=category, ratio=ratio, year=year),
@@ -121,7 +113,7 @@ def unset_ratio(
     category: str,
 ) -> RegisteredOperationCompletion[LedgerRatiosUnsetProjection]:
     """Clear one override or return its registered no-override refusal detail."""
-    client = _client(ctx)
+    client = active_profile_client(ctx)
     completed = run_registered_operation(
         client,
         LedgerRatiosUnsetRequest(profile_id=client.profile_id, category=category),
@@ -154,7 +146,7 @@ def list_eligible_ratios(
     year: int,
 ) -> RegisteredOperationCompletion[LedgerRatiosEligibleProjection]:
     """Read eligible ratio rows, said in this invocation's language, from the pinned authority."""
-    client = _client(ctx)
+    client = active_profile_client(ctx)
     completed = run_registered_operation(
         client,
         LedgerRatiosEligibleRequest(
@@ -183,7 +175,7 @@ def list_eligible_ratios(
 
 def validate_ratios(ctx: typer.Context) -> RegisteredOperationCompletion[LedgerRatiosValidateProjection]:
     """Read the existing validation report for the exact active profile."""
-    client = _client(ctx)
+    client = active_profile_client(ctx)
     completed = run_registered_operation(
         client,
         LedgerRatiosValidateRequest(profile_id=client.profile_id),

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Icon } from "@/components/ui/icon";
 import { formatDay } from "../../../shared/dateFormats";
-import type { PlanRow } from "../../../shell/ledgerSetup";
+import type { ActivityAssetPlanRow } from "../../../shell/ledgerActivityAssetReadContract";
 import { useStrings } from "../../../shell/strings";
 import { Hint, NotApplicable, NotKnown, NothingRecorded } from "./AssetList";
 import { ASSET_KEYS } from "./assetsWords";
@@ -30,7 +30,7 @@ export function Figure({
   estimatedYear,
 }: {
   locale: string;
-  amount: PlanRow["planned"];
+  amount: ActivityAssetPlanRow["planned"];
   /** Why the figure is not known, in the mark's tooltip. */
   why?: string;
   /** The reason the backend gives, shown under the mark. */

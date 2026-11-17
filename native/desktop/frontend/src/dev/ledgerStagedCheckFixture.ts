@@ -7,9 +7,9 @@
 
 import type { OutputLanguage } from "../shell/ledgerClassificationContract";
 import type {
-  LedgerStagedCheckRequest,
+  LedgerStagedCheckWindowRequest,
   LedgerStagedCheckResult,
-} from "../shell/ledgerMovementOperations";
+} from "../shell/ledgerMovementCheckContract";
 import type {
   LedgerStagedDraft,
   LedgerStagedRow,
@@ -89,7 +89,7 @@ const family = (name: string): readonly string[] =>
 /** The recorded answer to `request`, or null if any part of it was not
  * recorded. */
 export function answerStagedCheck(
-  request: LedgerStagedCheckRequest,
+  request: LedgerStagedCheckWindowRequest,
   rows: (id: string) => LedgerTransactionReviewProjection | undefined,
   profileId: string,
 ): LedgerStagedCheckResult | null {
