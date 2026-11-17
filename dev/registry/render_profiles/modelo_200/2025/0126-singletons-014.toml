@@ -92,17 +92,11 @@ ordinal = "144"
 record_identity = "DP200002B"
 
 [singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m200-2025-dp200002b-r0149"
-decision_statement = "DP200002B source row 149: encode selected as 1 and absent or unselected as 0."
-justification = "Reviewed exact-anchor policy for DP200002B source row 149; it is not represented as official-source text."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "DP200002B"
-source_row = 149
-source_cell = "A149"
-ordinal = "144"
-record_identity = "DP200002B"
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G106"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200e25 design states no value in the own cells of field DP200002B row 149. Its sibling cell DP200001!G106, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. BOE-A-2026-11583 (Orden HAC/529/2026) anexo I, PDF page 18, BOE Pág. 73139 prints this field as the checkbox 'Entidad sin obligación de identificar el titular real conforme al apartado 2 del artículo 4 de la Ley 10/2010, de 28 de abril, de prevención del blanqueo de cap', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
