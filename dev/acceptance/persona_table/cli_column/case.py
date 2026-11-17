@@ -17,9 +17,9 @@ from functools import cache
 from pathlib import Path
 
 from cadrumo.entrypoints.cli.tests.cli_runner import cadrumo_click_command
-from cadrumo.entrypoints.tests.persona_materialisation import PERSONA_PROFILE_CREDENTIAL
+from cadrumo.entrypoints.tests.persona_world import PERSONA_PROFILE_CREDENTIAL
 from cadrumo.tests.env_scope import scoped_env_var
-from cadrumo.tests.personas import ExpectedValue
+from cadrumo.tests.persona_types import ExpectedValue
 from dev.acceptance.installed_cli import authority_generation
 
 from ..export_check import export_reason

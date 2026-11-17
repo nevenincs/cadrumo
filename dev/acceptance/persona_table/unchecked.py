@@ -16,7 +16,8 @@ from __future__ import annotations
 import dataclasses
 from collections.abc import Iterable
 
-from cadrumo.tests.personas import ExpectedValue, Persona, PersonaCatalogueError, YearEnvelope, read_persona
+from cadrumo.tests.persona_types import ExpectedValue, Persona, PersonaCatalogueError, YearEnvelope
+from cadrumo.tests.personas import read_persona
 
 from .counterparties import DESIGNS, is_compared
 from .roles import unresolved_roles

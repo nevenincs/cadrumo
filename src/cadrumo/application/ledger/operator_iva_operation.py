@@ -147,7 +147,9 @@ class LedgerOperatorIvaExecutor:
                     taxable_base=format(derivation.taxable_base, "f") if derivation.taxable_base is not None else None,
                     iva_amount=format(derivation.iva_amount, "f") if derivation.iva_amount is not None else None,
                     note=derivation.note,
-                    classification=classification_result_from_action(payload.profile_id, derivation.result)
+                    classification=classification_result_from_action(
+                        payload.profile_id, derivation.result, language=payload.output_language
+                    )
                     if derivation.result is not None
                     else None,
                 )

@@ -24,7 +24,8 @@ from ....application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ....application.ledger.split_operation import LedgerSplitChildRequest, LedgerSplitRequest
 from ....application.ledger.workspace import LedgerWorkspaceEntryRefV1
 from ....core.decimal.grammar import try_parse_canonical_decimal
-from ....core.i18n.render import tr
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
 from ..components.widgets import ContentDataTable
 from .categorisation_common import StagedChangeV1, action, action_row, classification_label, field, heading, line
 from .categorisation_doors import LedgerSplitDoorV1, LedgerSuggestionReviewDoorV1
@@ -164,6 +165,7 @@ class LedgerSplitScreen(ReviewingCategorisationScreen):
                     transaction_id=self.target,
                     mode="split",
                     origin=LlmReviewInvocationOrigin.SPLIT_LLM,
+                    output_language=OutputLanguage(output_language()),
                 ),
             )
 

@@ -21,7 +21,7 @@ from textual.widgets import Input, Select
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.iva.schema import InvoiceKind
-from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
+from cadrumo.entrypoints.tests.persona_world import year_envelope
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController
 from cadrumo.entrypoints.tui.ledger.invoice_detail import LedgerInvoiceDetailScreen

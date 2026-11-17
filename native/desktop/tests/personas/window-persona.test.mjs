@@ -83,7 +83,7 @@ const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 const PROFILE = process.env.CADRUMO_PERSONA_PROFILE || "persona";
 const CREDENTIAL_SOURCE = resolve(
   repository,
-  "src/cadrumo/entrypoints/tests/persona_materialisation.py",
+  "src/cadrumo/entrypoints/tests/persona_world.py",
 );
 const MARK = "data-persona-target";
 // The kinds of file an official filing is saved as (fixed-width BOE design,
@@ -3179,7 +3179,7 @@ function profileCredential() {
   );
   if (!match)
     throw new Error(
-      "no PERSONA_PROFILE_CREDENTIAL in persona_materialisation.py",
+      "no PERSONA_PROFILE_CREDENTIAL in persona_world.py",
     );
   return match[1];
 }

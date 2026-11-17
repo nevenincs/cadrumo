@@ -12,6 +12,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -187,6 +188,99 @@ def _record_certificate(work: SeededOperatorWork, year: int) -> None:
     )
 
 
+def _assert_record_fills_the_boxes_it_states(work: SeededOperatorWork) -> None:
+    # The record fills the boxes it states, from the certificate alone.
+    values = work.require_head().casilla_values
+    assert values[next(c for c in values if str(c) == "0003")] == _GROSS
+    assert values[next(c for c in values if str(c) == "0013")] == _EXPENSES
+
+
+def _assert_unstated_boxes_block_and_serve_their_doors(work: SeededOperatorWork) -> None:
+    # The four boxes no certificate states block, and the deductions only the filer can evidence are served.
+    findings = _findings(work)
+    assert _blocking_boxes(findings) == set(_STATEMENT_BINDINGS)
+    assert [f for f, _ in findings if f.message_locale_key.endswith("trabajo_deduction_not_computed")]
+    # Each box's verdict serves the one statement first, and keeps the override of the binding it reads
+    # as the alternative that states that box alone.
+    for box, binding_id in _STATEMENT_BINDINGS.items():
+        assert _door(findings, box) == (
+            "operator.modelo.work.attest_work_income",
+            {"work_unit_id": work.work_unit_id},
+        )
+        assert _alternative_doors(findings, box) == [
+            (
+                "operator.modelo.work.override",
+                {"work_unit_id": work.work_unit_id, "binding_id": binding_id},
+                ("value",),
+            )
+        ]
+
+
+def _assert_one_action_names_all_four_boxes(work: SeededOperatorWork) -> dict[AbsenceAttestationFamily, Any]:
+    # One action, next to the finding, names all four boxes in its words and apart from the carry words.
+    offered = {attestation.family: attestation for attestation in _form(work).carry_attestations}
+    assert set(offered) == {_TRABAJO}
+    statement = offered[_TRABAJO]
+    assert set(statement.binding_ids) == set(_STATEMENT_BINDINGS.values())
+    assert all(box in statement.statement_words for box in _STATEMENT_BINDINGS)
+    assert "earlier" not in statement.statement_words
+    spanish = next(iter(_form(work, OutputLanguage.ES).carry_attestations))
+    assert spanish.statement_words != statement.statement_words
+    return offered
+
+
+def _assert_applying_the_statement_clears_every_box(
+    work: SeededOperatorWork, offered: dict[AbsenceAttestationFamily, Any]
+) -> None:
+    # Applying it stages four statements of none in one submission, kept apart from a typed zero.
+    submission = absence_statement_submission(work.baseline(), offered.values(), family=_TRABAJO)
+    assert len(submission.binding_intents) == 4
+    assert work.apply(binding=submission.binding_intents).refusal is None
+    layer = work.require_head().operator_layer
+    assert layer is not None
+    assert set(layer.attested_binding_ids) >= set(_STATEMENT_BINDINGS.values())
+    assert all(layer.binding_overrides[binding_id] == ATTESTED_ZERO for binding_id in _STATEMENT_BINDINGS.values())
+    assert _blocking_boxes(_findings(work)) == set()
+    assert _form(work).carry_attestations == ()
+    with pytest.raises(ModeloAbsenceStatementNothingOpenError):
+        absence_statement_submission(work.baseline(), _form(work).carry_attestations, family=_TRABAJO)
+
+
+def _assert_a_typed_figure_withdraws_only_its_box(work: SeededOperatorWork, typed: str) -> None:
+    # A figure typed over one box is the filer's figure and withdraws only that box's statement.
+    retyped = work.apply(
+        binding=(
+            ModeloBindingEditIntentV1(
+                address=ModeloEditBindingAddressV1(binding_id=typed),
+                kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+                value=Decimal("1500"),
+            ),
+        )
+    )
+    assert retyped.refusal is None
+    relayer = work.require_head().operator_layer
+    assert relayer is not None
+    assert typed not in relayer.attested_binding_ids
+    assert set(relayer.attested_binding_ids) >= set(_STATEMENT_BINDINGS.values()) - {typed}
+    assert _blocking_boxes(_findings(work)) == set()
+
+
+def _assert_removing_the_override_blocks_the_box_again(work: SeededOperatorWork, typed: str) -> None:
+    # Removing the override leaves that box neither typed nor stated: it blocks again.
+    removed = work.apply(
+        binding=(
+            ModeloBindingEditIntentV1(
+                address=ModeloEditBindingAddressV1(binding_id=typed),
+                kind=ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
+            ),
+        )
+    )
+    assert removed.refusal is None
+    assert _blocking_boxes(_findings(work)) == {"0008"}
+    assert {a.family for a in _form(work).carry_attestations} == {_TRABAJO}
+    assert next(iter(_form(work).carry_attestations)).binding_ids == (typed,)
+
+
 @pytest.mark.parametrize("year", _renta_years())
 def test_each_unstated_income_box_blocks_until_the_one_action_states_all_four_and_a_typed_figure_withdraws_one(
     tmp_path: Path, year: int
@@ -197,86 +291,14 @@ def test_each_unstated_income_box_blocks_until_the_one_action_states_all_four_an
     ):
         _record_certificate(work, year)
         assert work.apply(binding=tuple(_attest(binding_id) for binding_id in _CARRIES)).refusal is None
-        head = work.require_head()
 
-        # The record fills the boxes it states, from the certificate alone.
-        values = head.casilla_values
-        assert values[next(c for c in values if str(c) == "0003")] == _GROSS
-        assert values[next(c for c in values if str(c) == "0013")] == _EXPENSES
-
-        # The four boxes no certificate states block, and the deductions only the filer can evidence are served.
-        findings = _findings(work)
-        assert _blocking_boxes(findings) == set(_STATEMENT_BINDINGS)
-        assert [f for f, _ in findings if f.message_locale_key.endswith("trabajo_deduction_not_computed")]
-        # Each box's verdict serves the one statement first, and keeps the override of the binding it reads
-        # as the alternative that states that box alone.
-        for box, binding_id in _STATEMENT_BINDINGS.items():
-            assert _door(findings, box) == (
-                "operator.modelo.work.attest_work_income",
-                {"work_unit_id": work.work_unit_id},
-            )
-            assert _alternative_doors(findings, box) == [
-                (
-                    "operator.modelo.work.override",
-                    {"work_unit_id": work.work_unit_id, "binding_id": binding_id},
-                    ("value",),
-                )
-            ]
-
-        # One action, next to the finding, names all four boxes in its words and apart from the carry words.
-        offered = {attestation.family: attestation for attestation in _form(work).carry_attestations}
-        assert set(offered) == {_TRABAJO}
-        statement = offered[_TRABAJO]
-        assert set(statement.binding_ids) == set(_STATEMENT_BINDINGS.values())
-        assert all(box in statement.statement_words for box in _STATEMENT_BINDINGS)
-        assert "earlier" not in statement.statement_words
-        spanish = next(iter(_form(work, OutputLanguage.ES).carry_attestations))
-        assert spanish.statement_words != statement.statement_words
-
-        # Applying it stages four statements of none in one submission, kept apart from a typed zero.
-        submission = absence_statement_submission(work.baseline(), offered.values(), family=_TRABAJO)
-        assert len(submission.binding_intents) == 4
-        assert work.apply(binding=submission.binding_intents).refusal is None
-        layer = work.require_head().operator_layer
-        assert layer is not None
-        assert set(layer.attested_binding_ids) >= set(_STATEMENT_BINDINGS.values())
-        assert all(layer.binding_overrides[binding_id] == ATTESTED_ZERO for binding_id in _STATEMENT_BINDINGS.values())
-        assert _blocking_boxes(_findings(work)) == set()
-        assert _form(work).carry_attestations == ()
-        with pytest.raises(ModeloAbsenceStatementNothingOpenError):
-            absence_statement_submission(work.baseline(), _form(work).carry_attestations, family=_TRABAJO)
-
-        # A figure typed over one box is the filer's figure and withdraws only that box's statement.
+        _assert_record_fills_the_boxes_it_states(work)
+        _assert_unstated_boxes_block_and_serve_their_doors(work)
+        offered = _assert_one_action_names_all_four_boxes(work)
+        _assert_applying_the_statement_clears_every_box(work, offered)
         typed = _STATEMENT_BINDINGS["0008"]
-        retyped = work.apply(
-            binding=(
-                ModeloBindingEditIntentV1(
-                    address=ModeloEditBindingAddressV1(binding_id=typed),
-                    kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
-                    value=Decimal("1500"),
-                ),
-            )
-        )
-        assert retyped.refusal is None
-        relayer = work.require_head().operator_layer
-        assert relayer is not None
-        assert typed not in relayer.attested_binding_ids
-        assert set(relayer.attested_binding_ids) >= set(_STATEMENT_BINDINGS.values()) - {typed}
-        assert _blocking_boxes(_findings(work)) == set()
-
-        # Removing the override leaves that box neither typed nor stated: it blocks again.
-        removed = work.apply(
-            binding=(
-                ModeloBindingEditIntentV1(
-                    address=ModeloEditBindingAddressV1(binding_id=typed),
-                    kind=ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
-                ),
-            )
-        )
-        assert removed.refusal is None
-        assert _blocking_boxes(_findings(work)) == {"0008"}
-        assert {a.family for a in _form(work).carry_attestations} == {_TRABAJO}
-        assert next(iter(_form(work).carry_attestations)).binding_ids == (typed,)
+        _assert_a_typed_figure_withdraws_only_its_box(work, typed)
+        _assert_removing_the_override_blocks_the_box_again(work, typed)
 
 
 @pytest.mark.parametrize("year", _renta_years())

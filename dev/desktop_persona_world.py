@@ -54,13 +54,11 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-from cadrumo.entrypoints.tests.persona_materialisation import (
-    PersonaMaterialisationError,
-    materialised_persona,
-    year_envelope,
-)
+from cadrumo.entrypoints.tests.persona_materialisation import materialised_persona
+from cadrumo.entrypoints.tests.persona_world import PersonaMaterialisationError, year_envelope
 from cadrumo.tests.env_scope import scoped_env_var
-from cadrumo.tests.personas import PersonaCatalogueError, persona_ids, read_persona
+from cadrumo.tests.persona_types import PersonaCatalogueError
+from cadrumo.tests.personas import persona_ids, read_persona
 
 from .acceptance.persona_table.cli_column.world_report import Phase, Statement, StatementKind, statement_record
 from .desktop_agent_live.disposable_root import enclosing_git_project
@@ -69,12 +67,12 @@ from .paths import STORAGE_ROOT_ENV
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-    from cadrumo.entrypoints.tests.persona_materialisation import MaterialisedPersona
+    from cadrumo.entrypoints.tests.persona_world import MaterialisedPersona
 
     from .acceptance.persona_table.planner import PreparedReturn
     from .acceptance.persona_table.rows import PlannedRow
 
-CREDENTIAL_SOURCE: Final = "persona_materialisation.PERSONA_PROFILE_CREDENTIAL"
+CREDENTIAL_SOURCE: Final = "persona_world.PERSONA_PROFILE_CREDENTIAL"
 """Where the profile passphrase is defined; the tool never prints the passphrase itself."""
 NOT_RUN: Final = "not_run"
 """The calculate outcome of a return left for the window to calculate."""

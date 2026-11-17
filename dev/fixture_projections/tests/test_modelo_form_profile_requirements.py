@@ -47,7 +47,7 @@ def _recorded_profile_requirements(producer: ModuleType, tmp_path: Path, *, unan
     from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
     from cadrumo.core.time.clock import frozen_clock
     from cadrumo.domain.user_profile.values import UserProfileFact
-    from cadrumo.entrypoints.tests.persona_materialisation import load_profile_record
+    from cadrumo.entrypoints.tests.persona_replay_requests import load_profile_record
 
     directory = tmp_path / "envelopes"
     directory.mkdir(parents=True)

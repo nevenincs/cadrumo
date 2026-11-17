@@ -39,8 +39,9 @@ from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.external_constants import OutputLanguage
 from ...domain.calculations.registry.binding_targets import casillas_by_binding
 from ...domain.calculations.registry.ids import BindingId
-from ...tests.personas import Persona, PriorCarries
-from .persona_materialisation import PersonaMaterialisationError, PersonaWorld, run_operation
+from ...tests.persona_types import Persona, PriorCarries
+from .persona_operations import run_operation
+from .persona_world import PersonaMaterialisationError, PersonaWorld
 
 _MODELO = "100"
 _PERIOD = "0A"

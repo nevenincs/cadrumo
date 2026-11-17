@@ -17,7 +17,8 @@ from cadrumo.application.modelo.workbench_projection import ModeloWorkbenchFormP
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.entrypoints.cli.modelo_work_form_cli import work_form_result
 from cadrumo.entrypoints.cli.modelo_work_form_payloads import WorkFormResult
-from cadrumo.entrypoints.tests.persona_materialisation import PersonaMaterialisationError, PersonaWorld, run_operation
+from cadrumo.entrypoints.tests.persona_operations import run_operation
+from cadrumo.entrypoints.tests.persona_world import PersonaMaterialisationError, PersonaWorld
 
 from .cli_column.row_form import FormValue, text_figures
 

@@ -21,15 +21,9 @@ from pathlib import Path
 from typing import cast
 
 from cadrumo.domain.calculations.registry.applicability_models import ApplicabilityVerdict
-from cadrumo.tests.personas import (
-    ExpectedValue,
-    Persona,
-    PersonaCatalogueError,
-    YearEnvelope,
-    YearToken,
-    filed_period_order,
-    values_in_force,
-)
+from cadrumo.tests.persona_expectations import values_in_force
+from cadrumo.tests.persona_sections import filed_period_order
+from cadrumo.tests.persona_types import ExpectedValue, Persona, PersonaCatalogueError, YearEnvelope, YearToken
 
 from .counterparties import is_compared
 from .coverage import ABSENT, CalendarObservation, period_end, projection

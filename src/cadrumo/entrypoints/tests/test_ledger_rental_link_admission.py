@@ -31,6 +31,7 @@ from ...application.ledger.rental_link_admission import (
     rental_ledger_references,
 )
 from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
+from ...application.operator_actions.models import PreconditionVerdict
 from ...application.user_profile.login_session import authenticate_profile_for_invocation
 from ...application.user_profile.registration import register_profile_with_credentials
 from ...application.user_profile.section_rows import (
@@ -353,6 +354,13 @@ def test_the_csv_table_links_a_row_and_refuses_an_unknown_lease(world: _World, p
     assert LEASE_LIST_DOOR in str(refused.value.context)
 
 
+def _offered_action(refusal: UserProfileValidationError) -> str | None:
+    """Return the catalogue action a refusal offers as its door; the sentence names no command."""
+    verdict = refusal.terminal_precondition_verdict
+    assert isinstance(verdict, PreconditionVerdict)
+    return None if verdict.action is None else verdict.action.action_id
+
+
 def test_a_lease_a_ledger_row_names_is_kept_until_the_link_is_cleared(world: _World, ports: LedgerActionPorts) -> None:
     created = _row(
         world,
@@ -364,9 +372,8 @@ def test_a_lease_a_ledger_row_names_is_kept_until_the_link_is_cleared(world: _Wo
 
     with pytest.raises(UserProfileValidationError) as refused:
         _remove(world, ARRENDAMIENTO_SECTION, world.arrendamiento)
-    assert refused.value.context is not None
-    assert refused.value.context["door"] == "aeat app ledger classify"
-    assert refused.value.context["rows"] == 1
+    assert refused.value.context == {"row": world.arrendamiento, "rows": 1}
+    assert _offered_action(refused.value) == "operator.ledger.classify"
 
     _update(world, ports, created, arrendamiento_ref=None)
     _remove(world, ARRENDAMIENTO_SECTION, world.arrendamiento)
@@ -387,8 +394,8 @@ def test_a_property_a_ledger_row_names_is_kept_until_the_link_is_cleared(
 
     with pytest.raises(UserProfileValidationError) as refused:
         _remove(world, INMUEBLE_SECTION, world.inmueble)
-    assert refused.value.context is not None
-    assert refused.value.context["door"] == "aeat app ledger classify"
+    assert refused.value.context == {"row": world.inmueble, "rows": 1}
+    assert _offered_action(refused.value) == "operator.ledger.classify"
 
     _update(world, ports, created, inmueble_ref=None)
     _remove(world, INMUEBLE_SECTION, world.inmueble)

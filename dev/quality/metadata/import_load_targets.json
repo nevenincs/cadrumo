@@ -5468,6 +5468,7 @@
         "dev.quality.unreachable_module_coverage",
         "dev.quality.unread_inputs",
         "dev.quality.unused_symbol_coverage",
+        "dev.quality.window_wire_reach",
         "dev.quality.workspace_field_population_scan",
         "dev.quality.write_path_coverage",
         "dev.quality.year_literal_casilla_ids",

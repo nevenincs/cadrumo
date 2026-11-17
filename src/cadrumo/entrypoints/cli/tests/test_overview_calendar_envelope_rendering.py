@@ -11,7 +11,8 @@ import pytest
 
 from ....application.overview.read_calendar_projection import OverviewCalendarSnapshot
 from ...tests.overview_calendar_envelope_support import PERSONA, overview_calendar, registry_deadline_rows
-from ...tests.persona_materialisation import ReplayScope, materialised_persona
+from ...tests.persona_materialisation import materialised_persona
+from ...tests.persona_world import ReplayScope
 from ..overview_rendering import overview_calendar_output
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

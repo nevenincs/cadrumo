@@ -27,6 +27,8 @@ from ...application.ledger.operator_iva_contracts import (
     LedgerOperatorIvaRequest,
     LedgerOperatorIvaResult,
 )
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as active_output_language
 from ...core.operations import OperationTerminalCondition, profile_operation_subject
 from ...domain.transactions.enums import BusinessClassification
 from .ledger_classify_correlation import (
@@ -87,6 +89,7 @@ def run_ledger_classify(
     )
     request = LedgerClassifyRequest(
         profile_id=client.profile_id,
+        output_language=OutputLanguage(active_output_language()),
         transaction_id=transaction_id,
         patch=wire_patch,
         patch_fields=selected_patch_fields,
@@ -130,7 +133,11 @@ def run_ledger_operator_iva(
     """Derive the operator-selected IVA substrate in the exact-profile worker."""
     client = bound_profile_client(ctx)
     payload = LedgerOperatorIvaRequest(
-        profile_id=client.profile_id, transaction_id=transaction_id, iva_category=iva_category, actor=actor
+        profile_id=client.profile_id,
+        transaction_id=transaction_id,
+        iva_category=iva_category,
+        actor=actor,
+        output_language=OutputLanguage(active_output_language()),
     )
     completed = run_registered_operation(
         client,

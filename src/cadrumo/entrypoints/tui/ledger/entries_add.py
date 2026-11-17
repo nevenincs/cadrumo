@@ -27,7 +27,8 @@ from textual.widgets import Button, Collapsible, Input, Select, Static
 from ....application.ledger.ledger_add_contracts import LedgerAddOperationResult, LedgerAddRequest
 from ....application.ledger.list_operation import LedgerListRequest
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
-from ....core.i18n.render import tr
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
 from ..account import AccountSessionExpiredError
 from ..components.language import localized
 from ..components.theme import tokenised
@@ -255,6 +256,7 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
             if value:
                 fields[field.name] = value
         fields.update(self.query_one("#entries-add-links", LedgerLinkPickers).chosen())
+        fields["output_language"] = OutputLanguage(output_language())
         return LedgerAddRequest.model_validate(fields)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -308,6 +310,7 @@ class LedgerEntryAddScreen(LedgerConfirmationFlowScreen):
             profile_id=self.doors.profile_id,
             filters=(f"period={booked.month:02d}", f"year={booked.year}"),
             limit=BROWSE_PAGE_SIZE,
+            output_language=OutputLanguage(output_language()),
         )
         screen = LedgerEntriesBrowseScreen(
             self.controller,

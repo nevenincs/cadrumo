@@ -82,8 +82,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
-from cadrumo.tests.personas import YearEnvelope, persona_ids
+from cadrumo.entrypoints.tests.persona_world import year_envelope
+from cadrumo.tests.persona_types import YearEnvelope
+from cadrumo.tests.personas import persona_ids
 
 from .coverage import OUT_ENV, PERSONAS_ENV, compare, read_observations, render_markdown
 from .diff import diff_tables, render_diff, row_id

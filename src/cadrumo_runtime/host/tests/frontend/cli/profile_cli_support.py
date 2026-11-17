@@ -7,6 +7,7 @@ from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
+from typing import Final
 
 import pytest
 from click.testing import Result
@@ -23,6 +24,9 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
+
+#: The output language every native profile command here runs in, so results can be compared in it.
+NATIVE_CLI_LANGUAGE: Final = "en"
 
 
 @pytest.fixture
@@ -151,7 +155,16 @@ def invoke_native_profile(profile: NativeCliProfileFixture, *command: str) -> Re
     assert profile.label is not None
     close_active_bucket_session()
     result = invoke_cached_cli(
-        ("--language", "en", "--format", "json", "--profile", profile.label, "--profile-secrets-stdin", *command),
+        (
+            "--language",
+            NATIVE_CLI_LANGUAGE,
+            "--format",
+            "json",
+            "--profile",
+            profile.label,
+            "--profile-secrets-stdin",
+            *command,
+        ),
         input=json.dumps({"profile_passphrase": profile.passphrase}),
     )
     assert profile.passphrase not in result.output
@@ -189,7 +202,7 @@ def partial_taxpayer_invoker(tmp_path: Path, *, label: str) -> Generator[Callabl
             assert profile.label is not None
             close_active_bucket_session()
             return invoke_cached_cli(
-                ("--language", "en", "--profile", profile.label, "--profile-secrets-stdin", *args),
+                ("--language", NATIVE_CLI_LANGUAGE, "--profile", profile.label, "--profile-secrets-stdin", *args),
                 input=json.dumps({"profile_passphrase": profile.passphrase}),
             )
 

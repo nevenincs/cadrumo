@@ -4524,12 +4524,17 @@ application:
         overview_status: Revisa tus obligaciones tributarias
         profile_archive_reconcile: Concilia el archivo del perfil
         profile_arrendamiento: Revisa tus arrendamientos
+        profile_arrendamiento_add: Añade el arrendamiento
+        profile_arrendamiento_edit: Corrige el arrendamiento
+        profile_arrendamiento_remove: Elimina el arrendamiento
         profile_ascendiente: Revisa tus ascendientes
         profile_ascendiente_edit: Completa los datos de tu ascendiente
         profile_complete_setup: Completa la configuración de tu perfil
         profile_create: Crea un perfil
         profile_descendiente: Revisa tus descendientes
         profile_edit: Edita tu perfil
+        profile_inmueble_add: Añade el inmueble
+        profile_inmueble_edit: Corrige el inmueble
         profile_list: Revisa tus perfiles
         profile_login: Abre tu perfil
         profile_logout: Cierra tu perfil
@@ -5006,23 +5011,23 @@ application:
         de nuevo.
       registration_label_blank: El nombre del perfil no puede estar vacío.
       rental_lease_has_ledger_rows: El arrendamiento %{row} está nombrado por %{rows}
-        filas del libro; cambia o borra antes su vínculo con «%{door}».
+        filas del libro; cambia o borra antes su vínculo.
       rental_lease_property_missing: El arrendamiento nombra el inmueble %{inmueble},
-        que no está en tu perfil; añádelo antes con «%{door}».
+        que no está en tu perfil; añádelo antes.
       rental_ledger_unreadable: No se pudo leer el libro del perfil, así que no se
         hizo la eliminación. No se cambió nada.
       rental_principal_missing: El inmueble principal %{principal} no es otro inmueble
-        de tu perfil; añádelo antes con «%{door}».
+        de tu perfil; añádelo antes.
       rental_property_has_accessories: El inmueble %{inmueble} es el principal de
-        anejos (%{accessories}); cambia o borra su principal antes con «%{door}».
+        anejos (%{accessories}); cambia o borra antes su principal.
       rental_property_has_leases: El inmueble %{inmueble} tiene arrendamientos (%{leases});
-        elimínalos antes con «%{door}».
+        elimínalos antes.
       rental_property_has_ledger_rows: El inmueble %{row} está nombrado por %{rows}
-        filas del libro; cambia o borra antes su vínculo con «%{door}».
+        filas del libro; cambia o borra antes su vínculo.
       rental_row_invalid: El dato «%{leaf}» no es válido o contradice otros datos
-        del registro; no se guardó nada. Corrígelo y repite «%{door}».
+        del registro; no se guardó nada. Corrígelo y vuelve a intentarlo.
       rental_tenant_id_invalid: El NIF de un arrendatario no es válido; revisa sus
-        letras y cifras o márcalo como extranjero, y repite «%{door}».
+        letras y cifras o márcalo como extranjero, y vuelve a intentarlo.
       repository_classification_mismatch: El espacio de nombres de objeto seguro %{namespace}
         está registrado con sensibilidad %{expected}, pero la clasificación del registro
         almacenado es %{classification}.

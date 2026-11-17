@@ -21,15 +21,8 @@ from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 
-from cadrumo.tests.personas import (
-    ExpectedDeadline,
-    ExpectedObligation,
-    ExpectedValue,
-    Persona,
-    YearEnvelope,
-    per_period_modelos,
-    values_in_force,
-)
+from cadrumo.tests.persona_expectations import per_period_modelos, values_in_force
+from cadrumo.tests.persona_types import ExpectedDeadline, ExpectedObligation, ExpectedValue, Persona, YearEnvelope
 
 from ..persona_table.roles import edition_identities, resolve
 from .receipt import CheckStatus, ObligationCheck, ValueCheck

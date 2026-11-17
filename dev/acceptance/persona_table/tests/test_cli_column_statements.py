@@ -19,9 +19,9 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_targets import revision_bindings_by_id
-from cadrumo.entrypoints.tests.persona_materialisation import MaterialisedPersona, PersonaWorld
 from cadrumo.entrypoints.tests.persona_prior_values import entries_on
-from cadrumo.tests.personas import AttestedPriorValue, YearToken
+from cadrumo.entrypoints.tests.persona_world import MaterialisedPersona, PersonaWorld
+from cadrumo.tests.persona_types import AttestedPriorValue, YearToken
 
 from .. import planner
 from ..cli_column import statements as builder

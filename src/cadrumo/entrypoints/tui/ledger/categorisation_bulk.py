@@ -238,6 +238,7 @@ class LedgerBulkClassifyScreen(CategorisationScreen):
             offset=offset,
             sort_by=LedgerSortField.DATE,
             sort_order=LedgerSortOrder.ASC,
+            output_language=OutputLanguage(output_language()),
         )
 
     async def _read_page(self, offset: int = 0) -> None:

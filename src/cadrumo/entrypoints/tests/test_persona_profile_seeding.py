@@ -12,14 +12,9 @@ from ...application.user_profile.profile_record_repository import ProfileRecordR
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.user_profile.values import UserProfileFact
 from ...tests.personas import persona_ids
-from .persona_materialisation import (
-    ReplayScope,
-    load_profile_record,
-    materialised_persona,
-    persona_profile_id,
-    scenario_instant,
-    year_envelope,
-)
+from .persona_materialisation import materialised_persona
+from .persona_replay_requests import load_profile_record
+from .persona_world import ReplayScope, persona_profile_id, scenario_instant, year_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
