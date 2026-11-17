@@ -9,7 +9,8 @@ from pydantic import ValidationError
 from textual.widgets import Checkbox, Input, Select
 
 from ....application.ledger.list_operation import LedgerListRequest
-from ....core.i18n.render import tr
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
 from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
 from .entries_browse_model import BROWSE_PAGE_SIZE
 from .entries_common import read_period, selected_value
@@ -56,6 +57,7 @@ def form_request(
             sort_by=None if sort is None else LedgerSortField(sort),
             sort_order=LedgerSortOrder(str(select("#entries-browse-order").value)),
             exclude_llm_rejected=checkbox("#entries-browse-hide-rejected"),
+            output_language=OutputLanguage(output_language()),
         )
     except ValidationError:
         # The request's own grammar refused a clause; its message would echo the typed value.

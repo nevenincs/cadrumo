@@ -32,11 +32,9 @@ def render_fixture(root: Path) -> str:
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.domain.user_profile.values import UserProfileFact
     from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-    from cadrumo.entrypoints.tests.persona_materialisation import (
-        ReplayScope,
-        load_profile_record,
-        materialised_persona,
-    )
+    from cadrumo.entrypoints.tests.persona_materialisation import materialised_persona
+    from cadrumo.entrypoints.tests.persona_replay_requests import load_profile_record
+    from cadrumo.entrypoints.tests.persona_world import ReplayScope
 
     fixtures = {}
     with (

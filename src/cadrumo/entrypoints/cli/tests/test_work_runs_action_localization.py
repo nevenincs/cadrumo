@@ -8,6 +8,7 @@ import json
 import re
 from datetime import UTC, date, datetime
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -158,6 +159,71 @@ def _site_health_run() -> WorkflowResult:
     )
 
 
+def _run_row(run: WorkflowResult) -> dict[str, Any]:
+    """Project one run to its JSON payload row plus the flattened obligation and site-health fields."""
+    payload = workflow_run_payload(WorkflowRunSnapshot.from_run(run))
+    row = payload.model_dump(mode="json", exclude_none=False)
+    row["obligation_status"] = payload.obligation.status.value if payload.obligation is not None else None
+    health = payload.site_health_alert
+    row["site_health_state"] = health.status.state.value if health is not None else None
+    row["site_health_observed_at"] = health.status.observed_at.isoformat() if health is not None else None
+    row["site_health_http_status"] = health.status.http_status if health is not None else None
+    row["site_health_retry_after_seconds"] = health.status.retry_after_seconds if health is not None else None
+    row["site_health_detected_marker_count"] = health.status.detected_marker_count if health is not None else None
+    return row
+
+
+def _assert_action_row_is_the_draft_failure(action_row: dict[str, Any], language: str) -> None:
+    assert action_row["summary_locale_key"] == "application.workflow.steps.draft_build_failed"
+    assert action_row["summary_details"] == {
+        "kind": "workflow_failure",
+        "error_code": "workflow.draft.build_failure",
+    }
+    assert action_row["modelo"] == "130"
+    assert action_row["obligation_status"] == "UPCOMING"
+    assert action_row["summary_stage"] == WorkflowStage.BUILDING_DRAFT.value
+    assert action_row["site_health_state"] is None
+    assert action_row["action"]["action"] == {
+        "action_id": "operator.modelo.work.calculate",
+        "target_command_key": "modelo.work.calculate",
+        "cli_path": ["aeat", "app", "modelo", "work", "calculate"],
+    }
+    assert action_row["action"]["missing_argument_names"] == ["work_unit_id"]
+    assert action_row["action"]["action_words_language"] == language
+
+
+def _assert_health_row_is_the_maintenance_alert(health_row: dict[str, Any], language: str) -> None:
+    assert health_row["action"]["action"] is None
+    assert health_row["action"]["no_recovery_outcome"] == "operator_decision"
+    assert health_row["site_health_state"] == "mantenimiento"
+    assert health_row["site_health_observed_at"] == _T.isoformat()
+    assert health_row["site_health_http_status"] == 503
+    assert health_row["site_health_retry_after_seconds"] == 120
+    assert health_row["site_health_detected_marker_count"] == 2
+    assert health_row["action"]["no_recovery_words_language"] == language
+
+
+def _structural_digest(rows: dict[str, dict[str, Any]]) -> str:
+    """Digest the rows without their human text, which varies with the renderer language."""
+    structural_rows = []
+    for row in rows.values():
+        structural = dict(row)
+        structural.pop("summary")
+        # The served way-out words are human text in the renderer's language, like the summary.
+        structural["action"] = {
+            key: value for key, value in row["action"].items() if not key.endswith(("_words", "_words_language"))
+        }
+        structural_rows.append(structural)
+    return hashlib.sha256(
+        json.dumps(
+            sorted(structural_rows, key=lambda row: row["run_id"]),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8"),
+    ).hexdigest()
+
+
 def test_work_runs_localizes_only_human_text_and_keeps_one_structural_envelope() -> None:
     """Four renderer locales share one terminal graph and vary only human summaries."""
     action_run = _actionable_run()
@@ -169,70 +235,15 @@ def test_work_runs_localizes_only_human_text_and_keeps_one_structural_envelope()
         rows = {}
         with override_settings(cadrumo_output_language=language):
             for run in (action_run, health_run):
-                snapshot = WorkflowRunSnapshot.from_run(run)
-                payload = workflow_run_payload(snapshot)
-                row = payload.model_dump(mode="json", exclude_none=False)
-                row["obligation_status"] = payload.obligation.status.value if payload.obligation is not None else None
-                health = payload.site_health_alert
-                row["site_health_state"] = health.status.state.value if health is not None else None
-                row["site_health_observed_at"] = health.status.observed_at.isoformat() if health is not None else None
-                row["site_health_http_status"] = health.status.http_status if health is not None else None
-                row["site_health_retry_after_seconds"] = (
-                    health.status.retry_after_seconds if health is not None else None
-                )
-                row["site_health_detected_marker_count"] = (
-                    health.status.detected_marker_count if health is not None else None
-                )
+                row = _run_row(run)
                 rows[row["run_id"]] = row
         action_row = rows[action_run.run_id]
         health_row = rows[health_run.run_id]
         summaries_by_locale[language] = (action_row["summary"], health_row["summary"])
 
-        assert action_row["summary_locale_key"] == "application.workflow.steps.draft_build_failed"
-        assert action_row["summary_details"] == {
-            "kind": "workflow_failure",
-            "error_code": "workflow.draft.build_failure",
-        }
-        assert action_row["modelo"] == "130"
-        assert action_row["obligation_status"] == "UPCOMING"
-        assert action_row["summary_stage"] == WorkflowStage.BUILDING_DRAFT.value
-        assert action_row["site_health_state"] is None
-        assert action_row["action"]["action"] == {
-            "action_id": "operator.modelo.work.calculate",
-            "target_command_key": "modelo.work.calculate",
-            "cli_path": ["aeat", "app", "modelo", "work", "calculate"],
-        }
-        assert action_row["action"]["missing_argument_names"] == ["work_unit_id"]
-        assert health_row["action"]["action"] is None
-        assert health_row["action"]["no_recovery_outcome"] == "operator_decision"
-        assert health_row["site_health_state"] == "mantenimiento"
-        assert health_row["site_health_observed_at"] == _T.isoformat()
-        assert health_row["site_health_http_status"] == 503
-        assert health_row["site_health_retry_after_seconds"] == 120
-        assert health_row["site_health_detected_marker_count"] == 2
-
-        assert action_row["action"]["action_words_language"] == language
-        assert health_row["action"]["no_recovery_words_language"] == language
-
-        structural_rows = []
-        for row in rows.values():
-            structural = dict(row)
-            structural.pop("summary")
-            # The served way-out words are human text in the renderer's language, like the summary.
-            structural["action"] = {
-                key: value for key, value in row["action"].items() if not key.endswith(("_words", "_words_language"))
-            }
-            structural_rows.append(structural)
-        structural_digests.add(
-            hashlib.sha256(
-                json.dumps(
-                    sorted(structural_rows, key=lambda row: row["run_id"]),
-                    ensure_ascii=False,
-                    sort_keys=True,
-                    separators=(",", ":"),
-                ).encode("utf-8"),
-            ).hexdigest(),
-        )
+        _assert_action_row_is_the_draft_failure(action_row, language)
+        _assert_health_row_is_the_maintenance_alert(health_row, language)
+        structural_digests.add(_structural_digest(rows))
 
     assert len(structural_digests) == 1
     assert all(

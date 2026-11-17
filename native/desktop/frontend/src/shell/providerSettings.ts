@@ -58,6 +58,8 @@ export interface ProviderSignIn {
  * means the change was saved but its status could not be read back. */
 export interface ProviderSettings {
   status(plan?: CallPlan): Promise<ProviderSettingsAnswer>;
+  /** A console login completed. Its provider state must be read under the current profile. */
+  observeConsoleLogin?(changed: () => void): Promise<() => void>;
   /** Attended GUI sign-in is absent unless this host implements it. */
   readonly signIn?: ProviderSignIn;
   /** Saves a key or token. The secret is handed on once and never kept.
@@ -392,6 +394,32 @@ export function useProviderSettings(
     () => setState((held) => ({ ...held, again: held.again + 1 })),
     [],
   );
+  useEffect(() => {
+    if (!host?.observeConsoleLogin || reader === null) return;
+    let current = true;
+    let stop: (() => void) | undefined;
+    void host
+      .observeConsoleLogin(() => {
+        if (current) refresh();
+      })
+      .then((release) => {
+        if (current) {
+          stop = release;
+          // Include a login completed between the initial read and registration.
+          reread();
+        } else release();
+      })
+      .catch(() => {
+        if (current) {
+          window.addEventListener("focus", refresh);
+          stop = () => window.removeEventListener("focus", refresh);
+        }
+      });
+    return () => {
+      current = false;
+      stop?.();
+    };
+  }, [host, reader, refresh, reread]);
   return {
     read,
     busyId: state.busyId,

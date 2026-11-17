@@ -91,10 +91,18 @@ _INVOCATIONS = [
         ],
     ),
     ("agent-providers", _literals(*_MODULE, "providers", "--declared", "--json")),
-    ("agent-auth", _literals(*_MODULE, "auth", "status", "--json")),
+    ("agent-auth", _literals(*_MODULE, "auth", "status", "--json", "--causes")),
     (
         "agent-auth",
         [*_literals(*_MODULE, "auth", "login", "--provider"), {"slot": "provider", "kind": "identifier", "minimum": 0}],
+    ),
+    (
+        "agent-auth",
+        [
+            *_literals(*_MODULE, "auth", "login", "--provider"),
+            {"slot": "provider", "kind": "identifier", "minimum": 0},
+            *_literals("--device"),
+        ],
     ),
     ("agent-providers", _literals(*_MODULE, "auth", "providers", "--json")),
     ("agent-providers", _literals(*_MODULE, "auth", "providers", "--interface", "gui", "--json")),
@@ -104,7 +112,7 @@ _INVOCATIONS = [
             [
                 *_literals(*_MODULE, "auth", "connect", "--provider"),
                 {"slot": "provider", "kind": "identifier", "minimum": 0},
-                *_literals("--method", method, "--timeout", "300"),
+                *_literals("--method", method, "--timeout", "300", "--causes"),
             ],
         )
         for method in ("browser", "device", "browser-code")
@@ -332,10 +340,8 @@ def test_only_the_service_pins_the_agent_location_and_generic_hosts_take_no_agen
     assert profiles["cadrumo-runtime"]["slots"] == []
     assert profiles["python"]["slots"] == [{"name": "CADRUMO_PROFILE_ROOT", "kind": "directory", "required": False}]
     # The image that fixes a package fact cannot also take it from its parent.
-    relay = '  { name = "CADRUMO_PACKAGE_PYTHON_EXECUTABLE", image = "python" },\n]\n'
-    planted = _SOURCE.replace(
-        relay, relay + 'slots = [{ name = "CADRUMO_PACKAGE_AGENT_EXECUTABLE", required = false }]\n', 1
-    )
+    relay = '  { name = "CADRUMO_PACKAGE_PYTHON_EXECUTABLE", image = "python" },\n]\nslots = [\n'
+    planted = _SOURCE.replace(relay, relay + '  { name = "CADRUMO_PACKAGE_AGENT_EXECUTABLE", required = false },\n', 1)
     assert planted != _SOURCE
     with pytest.raises(ApplicationEnvironmentError, match="slot"):
         parse(planted)

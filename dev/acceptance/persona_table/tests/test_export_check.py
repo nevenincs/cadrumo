@@ -13,8 +13,9 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_absent_slot, render_fixed_width_export_field
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
-from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
-from cadrumo.tests.personas import ExpectedObligation, ExpectedValue, Persona, YearToken, persona_ids
+from cadrumo.entrypoints.tests.persona_world import year_envelope
+from cadrumo.tests.persona_types import ExpectedObligation, ExpectedValue, Persona, YearToken
+from cadrumo.tests.personas import persona_ids
 
 from ..cli_column.case import CaseSpec, build_case, expected_values, export_check_for
 from ..cli_column.hygiene import Redactor

@@ -107,12 +107,21 @@ ACTION_WORDS_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "operator.overview.status": "application.operator_actions.served.action.overview_status",
         "operator.profile.archive.reconcile": "application.operator_actions.served.action.profile_archive_reconcile",
         "operator.profile.arrendamiento": "application.operator_actions.served.action.profile_arrendamiento",
+        "operator.profile.arrendamiento.add": ("application.operator_actions.served.action.profile_arrendamiento_add"),
+        "operator.profile.arrendamiento.edit": (
+            "application.operator_actions.served.action.profile_arrendamiento_edit"
+        ),
+        "operator.profile.arrendamiento.remove": (
+            "application.operator_actions.served.action.profile_arrendamiento_remove"
+        ),
         "operator.profile.ascendiente": "application.operator_actions.served.action.profile_ascendiente",
         "operator.profile.ascendiente.edit": "application.operator_actions.served.action.profile_ascendiente_edit",
         "operator.profile.complete_setup": "application.operator_actions.served.action.profile_complete_setup",
         "operator.profile.create": "application.operator_actions.served.action.profile_create",
         "operator.profile.descendiente": "application.operator_actions.served.action.profile_descendiente",
         "operator.profile.edit": "application.operator_actions.served.action.profile_edit",
+        "operator.profile.inmueble.add": "application.operator_actions.served.action.profile_inmueble_add",
+        "operator.profile.inmueble.edit": "application.operator_actions.served.action.profile_inmueble_edit",
         "operator.profile.list": "application.operator_actions.served.action.profile_list",
         "operator.profile.login": "application.operator_actions.served.action.profile_login",
         "operator.profile.logout": "application.operator_actions.served.action.profile_logout",

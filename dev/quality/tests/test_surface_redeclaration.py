@@ -28,6 +28,35 @@ _BLANK = '''def blank_to_none(text: str) -> str | None:
     return stripped or None
 '''
 
+_IPC_MODULE = """import { invoke } from "@tauri-apps/api/core";
+import type { ShellView } from "./views";
+
+export const readView = () => invoke<ShellView>("shell_view");
+"""
+
+_LEVELS = """from enum import Enum
+
+class Level(Enum):
+    HIGH = 1
+    LOW = 2
+
+LEVEL_ORDER = (Level.HIGH, Level.LOW)
+LEVEL_MARKS = {Level.HIGH: "!", Level.LOW: "."}
+TO_DO_LEVELS = frozenset({Level.HIGH})
+"""
+
+_ISSUES = """from .levels import LEVEL_MARKS, LEVEL_ORDER, TO_DO_LEVELS
+
+def ranked(issues):
+    return sorted(issues, key=lambda issue: LEVEL_ORDER.index(issue.level))
+
+def chip(level, count):
+    return f"{LEVEL_MARKS[level]} {count}"
+
+def to_do(issue):
+    return issue.level in TO_DO_LEVELS
+"""
+
 
 def _write(root: Path, relative: str, text: str) -> None:
     path = root / relative
@@ -43,6 +72,7 @@ def _clean_tree(root: Path) -> None:
         "export type FilingCalendar = { support: string };\n",
     )
     _write(root, f"{_WINDOW}/shell/views.ts", "export type ShellView = { name: string };\n")
+    _write(root, f"{_WINDOW}/shell/tauriViews.ts", _IPC_MODULE)
     _write(root, f"{_WINDOW}/components/Row.tsx", "export type RowProps = { label: string };\n")
     _write(root, f"{_TUI}/home.py", _BLANK)
     _write(root, f"{_CLI}/words.py", "def words(text: str) -> str:\n    return text.upper()\n")
@@ -64,17 +94,144 @@ def test_the_repository_matches_its_baseline() -> None:
     assert main([], REPO_ROOT) == 0
 
 
-def test_a_clean_tree_counts_only_hand_written_wire_types(tree: Path) -> None:
+def test_a_clean_tree_counts_only_hand_written_wire_types(tree: Path, capsys: pytest.CaptureFixture[str]) -> None:
     found = current_keys(tree)
 
     # The generated contract, component props and a single-word name owned elsewhere are not counted.
     assert found["wire-type"] == {f"wire-type:{_WINDOW}/shell/views.ts:ShellView"}
     assert not found["duplicated-helper"]
     assert main([], tree) == 0
+    assert "wire-type 1 (raw 1)" in capsys.readouterr().out
+
+
+def test_only_types_an_ipc_signature_reaches_count_as_wire_types(tree: Path) -> None:
+    # The frame crosses through a renamed import of a re-exported alias, and its payload only as a field type.
+    _write(
+        tree,
+        f"{_WINDOW}/ipc/frames.ts",
+        "export type FramePayload = { text: string };\nexport interface Frame {\n  payload: FramePayload;\n}\n",
+    )
+    _write(tree, f"{_WINDOW}/shell/frameBarrel.ts", 'export type { Frame as HostFrame } from "../ipc/frames";\n')
+    _write(
+        tree,
+        f"{_WINDOW}/shell/tauriFrames.ts",
+        'import { Channel } from "@tauri-apps/api/core";\n'
+        'import type { HostFrame as Received } from "./frameBarrel";\n\n'
+        "export const frames = () => new Channel<Received>();\n",
+    )
+    # Window state no IPC signature reaches, though a component draws it.
+    _write(tree, f"{_WINDOW}/shell/calendarGrid.ts", "export type DrawnWeek = { days: number[] };\n")
+    _write(
+        tree,
+        f"{_WINDOW}/components/Week.tsx",
+        'import type { DrawnWeek } from "../shell/calendarGrid";\n\nexport type WeekState = { week: DrawnWeek };\n',
+    )
+
+    assert current_keys(tree)["wire-type"] == {
+        f"wire-type:{_WINDOW}/shell/views.ts:ShellView",
+        f"wire-type:{_WINDOW}/ipc/frames.ts:Frame",
+        f"wire-type:{_WINDOW}/ipc/frames.ts:FramePayload",
+    }
+    assert main([], tree) == 1
+
+
+def test_a_port_carries_the_shapes_its_members_reach(tree: Path) -> None:
+    # The port is declared where no IPC call is made and implemented in an IPC module.
+    _write(
+        tree,
+        f"{_WINDOW}/shell/profile.ts",
+        "export type ProfileField = { path: string; value: string | null };\n"
+        "export type UserProfile = { fields: ProfileField[] };\n"
+        "export type ProfilePort = {\n  read(): Promise<UserProfile>;\n};\n",
+    )
+    _write(
+        tree,
+        f"{_WINDOW}/shell/tauriProfile.ts",
+        'import { invoke } from "@tauri-apps/api/core";\n'
+        'import type { ProfilePort as Port } from "./profile";\n\n'
+        'export function tauriProfile(): Port {\n  return { read: () => invoke("profile_read") };\n}\n',
+    )
+    # A port another module builds over the host's answers, named only through an inline import.
+    _write(
+        tree,
+        f"{_WINDOW}/shell/viewHost.ts",
+        "export type ViewNote = { text: string };\n"
+        'export type ViewHost = {\n  read: () => Promise<import("./views").ShellView>;\n  note?: ViewNote;\n};\n'
+        "export type GridClipboard = {\n  copy: () => Promise<string>;\n};\n",
+    )
+    # A field-less alias of the generated contract adds no shape.
+    _write(
+        tree,
+        f"{_WINDOW}/shell/views.ts",
+        'import type { FilingCalendar } from "./calendarContract";\n\n'
+        "export type ShellView = { name: string; support: CalendarSupport };\n"
+        'export type CalendarSupport = NonNullable<FilingCalendar["support"]>;\n',
+    )
+
+    assert current_keys(tree)["wire-type"] == {
+        f"wire-type:{_WINDOW}/shell/views.ts:ShellView",
+        f"wire-type:{_WINDOW}/shell/profile.ts:ProfileField",
+        f"wire-type:{_WINDOW}/shell/profile.ts:UserProfile",
+        f"wire-type:{_WINDOW}/shell/profile.ts:ProfilePort",
+        f"wire-type:{_WINDOW}/shell/viewHost.ts:ViewHost",
+        f"wire-type:{_WINDOW}/shell/viewHost.ts:ViewNote",
+    }
+
+
+def test_frames_decoded_from_host_bytes_are_wire_types(tree: Path) -> None:
+    _write(
+        tree,
+        f"{_WINDOW}/ipc/streamFrames.ts",
+        'export type DataFrame = { type: "data"; bytes: Uint8Array };\n'
+        'export type EndFrame = { type: "end"; code: number };\n'
+        "export type StreamFrame = DataFrame | EndFrame;\n"
+        "export type TypedAnswer = { words: string[] };\n\n"
+        "export function decodeFrame(bytes: Uint8Array): StreamFrame {\n"
+        '  return bytes[0] === 0 ? { type: "data", bytes } : { type: "end", code: bytes[1] ?? 0 };\n}\n\n'
+        "export function parseAnswer(text: string): TypedAnswer {\n"
+        '  return { words: text.split(" ") };\n}\n',
+    )
+    _write(
+        tree,
+        f"{_WINDOW}/ipc/chunkFrames.ts",
+        "export const ChunkTag = { data: 0 } as const;\nexport type ChunkPayload = { size: number };\n",
+    )
+    _write(
+        tree,
+        f"{_WINDOW}/shell/tauriStream.ts",
+        'import { Channel } from "@tauri-apps/api/core";\n'
+        'import { decodeFrame } from "../ipc/streamFrames";\n'
+        'import { ChunkTag } from "../ipc/chunkFrames";\n\n'
+        "export function stream(listener: (frame: unknown) => void) {\n"
+        "  const channel = new Channel<ArrayBuffer>();\n"
+        "  channel.onmessage = (message) => {\n"
+        "    const bytes = new Uint8Array(message);\n"
+        "    switch (bytes[0]) {\n"
+        "      case ChunkTag.data:\n"
+        "        listener(decodeFrame(bytes));\n"
+        "    }\n"
+        "  };\n"
+        "  return channel;\n}\n",
+    )
+
+    # The decoder's frame union and the tag table's frames count; a parser of typed text does not.
+    assert current_keys(tree)["wire-type"] == {
+        f"wire-type:{_WINDOW}/shell/views.ts:ShellView",
+        f"wire-type:{_WINDOW}/ipc/streamFrames.ts:StreamFrame",
+        f"wire-type:{_WINDOW}/ipc/streamFrames.ts:DataFrame",
+        f"wire-type:{_WINDOW}/ipc/streamFrames.ts:EndFrame",
+        f"wire-type:{_WINDOW}/ipc/chunkFrames.ts:ChunkPayload",
+    }
 
 
 def test_a_hand_copied_wire_type_fails(tree: Path) -> None:
     _write(tree, f"{_WINDOW}/ipc/calendar.ts", "export interface FilingCalendar { support?: string }\n")
+    _write(
+        tree,
+        f"{_WINDOW}/shell/views.ts",
+        'import type { FilingCalendar } from "../ipc/calendar";\n\n'
+        "export type ShellView = { name: string; calendar: FilingCalendar };\n",
+    )
 
     assert main([], tree) == 1
     assert f"wire-type:{_WINDOW}/ipc/calendar.ts:FilingCalendar" in current_keys(tree)["wire-type"]
@@ -105,6 +262,18 @@ def test_a_workbench_precedence_table_over_enum_members_fails(tree: Path) -> Non
     assert current_keys(tree)["tui-precedence"] == {f"tui-precedence:{_TUI}/sorting.py:_ATTENTION_RANKS"}
 
 
+def test_only_a_precedence_table_that_decides_a_state_counts(tree: Path) -> None:
+    _write(tree, f"{_TUI}/levels.py", _LEVELS)
+    _write(tree, f"{_TUI}/issues.py", _ISSUES)
+
+    # The sort order and the to-do membership decide a state; the glyph map only presents one.
+    assert current_keys(tree)["tui-precedence"] == {
+        f"tui-precedence:{_TUI}/levels.py:LEVEL_ORDER",
+        f"tui-precedence:{_TUI}/levels.py:TO_DO_LEVELS",
+    }
+    assert main([], tree) == 1
+
+
 def test_a_copied_entry_point_helper_fails(tree: Path) -> None:
     _write(tree, f"{_CLI}/answers.py", _BLANK.replace("def blank_to_none", "def _blank_to_none"))
 
@@ -116,14 +285,28 @@ def test_a_copied_entry_point_helper_fails(tree: Path) -> None:
 
 
 def test_a_helper_redefined_beside_its_shared_owner_fails(tree: Path) -> None:
-    _write(tree, "src/cadrumo/core/answers.py", _BLANK.replace("stripped or None", "stripped if stripped else None"))
+    # The owner names its parameter and writes its body differently; the signature is the same.
+    owner = _BLANK.replace("text", "answer").replace("stripped or None", "stripped if stripped else None")
+    _write(tree, "src/cadrumo/core/answers.py", owner)
 
     assert main([], tree) == 1
     assert current_keys(tree)["duplicated-helper"] == {f"duplicated-helper:{_TUI}/home.py:blank_to_none"}
 
 
+def test_a_same_named_helper_with_another_signature_is_a_homonym(tree: Path) -> None:
+    _write(
+        tree,
+        "src/cadrumo/application/answers.py",
+        "def blank_to_none(value: object, *, language: str) -> str:\n    return str(value or language)\n",
+    )
+
+    assert not current_keys(tree)["duplicated-helper"]
+    assert main([], tree) == 0
+
+
 def test_a_fixed_occurrence_must_leave_the_baseline(tree: Path) -> None:
     (tree / f"{_WINDOW}/shell/views.ts").unlink()
+    (tree / f"{_WINDOW}/shell/tauriViews.ts").unlink()
 
     assert main([], tree) == 1
     assert main(["--write-baseline"], tree) == 0
@@ -135,6 +318,11 @@ def test_a_fixed_occurrence_must_leave_the_baseline(tree: Path) -> None:
 def test_the_baseline_refuses_to_grow(tree: Path) -> None:
     before = (tree / BASELINE_RELATIVE).read_text(encoding="utf-8")
     _write(tree, f"{_WINDOW}/shell/ledger.ts", "export type LedgerRow = { id: string };\n")
+    _write(
+        tree,
+        f"{_WINDOW}/shell/tauriViews.ts",
+        _IPC_MODULE.replace("./views", "./ledger").replace("ShellView", "LedgerRow"),
+    )
 
     assert main(["--write-baseline"], tree) == 1
     assert (tree / BASELINE_RELATIVE).read_text(encoding="utf-8") == before

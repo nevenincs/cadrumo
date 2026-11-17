@@ -36,10 +36,13 @@ from cadrumo.application.ledger.preflight import preflight_ledger_tax_readiness
 from cadrumo.application.ledger.readiness_query import LedgerReadinessIssueV1, ledger_readiness_issues
 from cadrumo.application.ledger.stale_filing_query import LedgerStaleFilingV1, read_stale_ledger_filings
 from cadrumo.application.ledger.status_operation import LEDGER_STATUS_OPERATION_DEFINITION_ID
+from cadrumo.application.ledger.transaction_projection import LedgerTransactionProjection
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.config import override_settings
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import output_language
 from cadrumo.core.period import Period
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
@@ -279,9 +282,15 @@ def _read_encrypted_oracle(
         )
         manual = get_manual_transaction(bucket_id=bucket_id, transaction_id=transaction_id, ports=ports)
         canonical_view = ledger_transaction_result_payload(manual).model_dump(mode="json")
+        # The in-process CLI names the link fields in the active output language, as ledger view does.
+        canonical_view["transaction"] = LedgerTransactionProjection.from_payload(
+            ledger_transaction_result_payload(manual).transaction, language=OutputLanguage(output_language())
+        ).model_dump(mode="json")
         canonical_track = {
             "bucket_id": bucket_id,
-            "transaction": ledger_transaction_payload(manual.transaction).model_dump(mode="json"),
+            "transaction": LedgerTransactionProjection.from_payload(
+                ledger_transaction_payload(manual.transaction), language=OutputLanguage(output_language())
+            ).model_dump(mode="json"),
             "tracking": ledger_transaction_tracking_payload(manual.transaction).model_dump(mode="json"),
             "source_filename": None,
             "source_row_index": None,

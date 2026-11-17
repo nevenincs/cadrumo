@@ -49,13 +49,9 @@ from cadrumo.application.operations.public_scalar import restore_scalar
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.entrypoints.tests.persona_materialisation import (
-    PERSONA_ACTOR,
-    MaterialisedPersona,
-    PersonaMaterialisationError,
-    PersonaWorld,
+from cadrumo.entrypoints.tests.persona_materialisation import materialised_persona
+from cadrumo.entrypoints.tests.persona_operations import (
     enter_return_work_inputs,
-    materialised_persona,
     run_operation,
     settle_operation,
     state_offered_statements,
@@ -63,7 +59,14 @@ from cadrumo.entrypoints.tests.persona_materialisation import (
 from cadrumo.entrypoints.tests.persona_prior_values import PriorValueAttestationError, attest_return_prior_values
 from cadrumo.entrypoints.tests.persona_rental_carries import attest_pending_rental_carries
 from cadrumo.entrypoints.tests.persona_work_income_statements import state_work_income_none, states_for
-from cadrumo.tests.personas import ExpectedValue, Persona, PersonaCatalogueError, persona_ids, read_persona
+from cadrumo.entrypoints.tests.persona_world import (
+    PERSONA_ACTOR,
+    MaterialisedPersona,
+    PersonaMaterialisationError,
+    PersonaWorld,
+)
+from cadrumo.tests.persona_types import ExpectedValue, Persona, PersonaCatalogueError
+from cadrumo.tests.personas import persona_ids, read_persona
 
 from .calendar_sweep import SUPPORT_FILE, calendar_observations, record_calendar_support
 from .cli_column.world_report import StatementKind

@@ -2,513 +2,42 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
-from collections.abc import Collection, Sequence
-from datetime import UTC, date, datetime
-from decimal import Decimal
+from datetime import date
 from pathlib import Path
 
 import pytest
-from click.testing import Result
 
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests.filing_report_support import seed_filing_gate_report
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend
-from cadrumo.application.modelo.calculation_screen import calculation_screen_stamp
 from cadrumo.application.modelo.export_m202_profile import (
     MARK_FACT_BY_PRODUCER_KEY,
     PRINCIPAL_CNAE_CLASSIFICATION_PATH,
     PRINCIPAL_CNAE_PATH,
 )
-from cadrumo.application.modelo.operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.tests.registry_revision import active_registry_revision_id
-from cadrumo.application.modelo.work_export_contracts import ModeloExportRequest
-from cadrumo.application.operations.frontend_requests import (
-    OperationObservationRequestV1,
-    OperationObservationSuccessV1,
-)
-from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
-from cadrumo.application.workflow.persistence import workflow_state_repository
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.errors.error_codes import get_registered_error_code_by_code
-from cadrumo.core.i18n.render import tr
-from cadrumo.core.operations import OperationTerminalCondition
-from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    authored_revisions_where,
-    revision_before_first_declaring,
-)
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.filing.software_identity import development_mock_software_identity
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
-    CalculationRevision,
     CalculationRevisionState,
-    derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.calculation_screen_stamp import CalculationScreenStamp
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.repository import upsert_work_unit
-from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.cli.tests.modelo_review_package_support import seed_exportable_modelo_revision
-from cadrumo.entrypoints.operation_composition import compose_operation_dependencies
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
-from .cli_runner import invoke_cached_cli
-from .modelo_profile_seed import ProfileSeeder, seed_profile
+from .modelo_export_verb_support import (
+    MODELO_111_INPUTS,
+    PRE_B2_LAST_EXERCISE,
+    export_operator,
+    invoke,
+    seed_exportable_modelo_202_pre_b2_revision,
+    seed_modelo_111_revisions,
+    seed_work_unit_only,
+    seed_work_unit_with_draft_revision,
+    set_emilio_legal_entity_export_profile,
+    set_export_profile_name,
+)
+from .modelo_profile_seed import seed_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-__all__ = ["isolated_cli_backend", "seed_profile"]
-
-
-@pytest.fixture(autouse=True)
-def _export_operator(seed_profile: ProfileSeeder) -> None:
-    """Register one password-custodied profile whose joined runtime admits every export command.
-
-    The command line submits export through the runtime, so the revisions each
-    test plants in this profile's encrypted catalogues are read by the same
-    registered operation an operator's export reaches.
-    """
-    seed_profile(label="export operator", facts={})
-
-
-def _invoke(args: Sequence[str]) -> Result:
-    return invoke_cached_cli(args)
-
-
-def _calculated_screen_stamp(
-    *, modelo: str, filing_year: int, period: str, operation: PinnedAuthorityOperation
-) -> CalculationScreenStamp:
-    """Return the stamp a calculation of this target persists; a seeded revision stands in for that calculation."""
-    snapshot = operation.snapshot(
-        modelo, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.CALCULATION
-    )
-    return calculation_screen_stamp(snapshot, operation=operation)
-
-
-def _seed_work_unit_only(
-    *, modelo: str = "130", filing_year: int = 2026, period: str = "1T", operation: PinnedAuthorityOperation
-) -> str:
-    state = workflow_state_repository().load()
-    bucket_id = state.active_profile_bucket_id()
-    assert bucket_id is not None
-    revision_id = active_registry_revision_id(
-        modelo=modelo, filing_year=filing_year, period=period, operation=operation
-    )
-    filing_period = Period.from_year_and_code(filing_year, period)
-    work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id,
-        modelo=modelo,
-        filing_year=filing_year,
-        period=filing_period,
-        revision_id=revision_id,
-    )
-    now = datetime.now(UTC)
-    work_unit = WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode(modelo),
-        filing_year=filing_year,
-        period=filing_period,
-        revision_id=revision_id,
-        name=f"{modelo}-{filing_year}-{period}",
-        created_at=now,
-        updated_at=now,
-    )
-    repo = WorkUnitCatalogueRepository()
-    repo.save(upsert_work_unit(repo.load(), work_unit))
-    return work_unit_id
-
-
-def _seed_work_unit_with_draft_revision(*, operation: PinnedAuthorityOperation) -> tuple[str, str]:
-    work_unit_id = _seed_work_unit_only(operation=operation)
-    now = datetime.now(UTC)
-    calculation_revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit_id,
-        input_values_by_casilla_id={},
-        binding_overrides={},
-        casilla_values={},
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-    revision = CalculationRevision(
-        calculation_revision_id=calculation_revision_id,
-        work_unit_id=work_unit_id,
-        registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="130",
-            revision_id=active_registry_revision_id(modelo="130", filing_year=2026, period="1T", operation=operation),
-            modelo_year=2026,
-            period="1T",
-        ),
-        state=CalculationRevisionState.BORRADOR,
-        created_at=now,
-        updated_at=now,
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-    cr_repo = CalculationRevisionCatalogueRepository()
-    cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
-    if revision.verified_at is not None:
-        seed_filing_gate_report(revision, VerificationReportCatalogueRepository())
-    return work_unit_id, calculation_revision_id
-
-
-def _seed_verified_revision_without_inputs(
-    *, modelo: str, filing_year: int, period: str, operation: PinnedAuthorityOperation
-) -> tuple[str, str]:
-    state = workflow_state_repository().load()
-    bucket_id = state.active_profile_bucket_id()
-    assert bucket_id is not None
-    revision_id = active_registry_revision_id(
-        modelo=modelo, filing_year=filing_year, period=period, operation=operation
-    )
-    filing_period = Period.from_year_and_code(filing_year, period)
-    work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id,
-        modelo=modelo,
-        filing_year=filing_year,
-        period=filing_period,
-        revision_id=revision_id,
-    )
-    now = datetime.now(UTC)
-    work_unit = WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode(modelo),
-        filing_year=filing_year,
-        period=filing_period,
-        revision_id=revision_id,
-        name=f"{modelo}-{filing_year}-{period}",
-        created_at=now,
-        updated_at=now,
-    )
-    screen_stamp = _calculated_screen_stamp(modelo=modelo, filing_year=filing_year, period=period, operation=operation)
-    calculation_revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit_id,
-        input_values_by_casilla_id={},
-        binding_overrides={},
-        casilla_values={},
-        filing_instance_evidence=None,
-        source_provenance=(),
-        screen_stamp=screen_stamp,
-    )
-    # The seeded revision stands in for a calculation, which makes it the work unit's current one.
-    work_unit = work_unit.model_copy(update={"current_calculation_revision_id": calculation_revision_id})
-    WorkUnitCatalogueRepository().save(upsert_work_unit(WorkUnitCatalogueRepository().load(), work_unit))
-    revision = CalculationRevision(
-        calculation_revision_id=calculation_revision_id,
-        work_unit_id=work_unit_id,
-        registry_snapshot_ref=RegistrySnapshotRef(
-            modelo=modelo,
-            revision_id=revision_id,
-            modelo_year=filing_year,
-            period=period,
-        ),
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        created_at=now,
-        updated_at=now,
-        verified_at=now,
-        verified_by="operator",
-        filing_instance_evidence=None,
-        source_provenance=(),
-        screen_stamp=screen_stamp,
-    )
-    cr_repo = CalculationRevisionCatalogueRepository()
-    cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
-    if revision.verified_at is not None:
-        seed_filing_gate_report(revision, VerificationReportCatalogueRepository())
-    return work_unit_id, calculation_revision_id
-
-
-_M111_CASILLA_03: CasillaId = validated_casilla_id("03", surface="modelo 111 export test casilla")
-_M111_CASILLA_06: CasillaId = validated_casilla_id("06", surface="modelo 111 export test casilla")
-_M111_CASILLA_09: CasillaId = validated_casilla_id("09", surface="modelo 111 export test casilla")
-_M111_CASILLA_12: CasillaId = validated_casilla_id("12", surface="modelo 111 export test casilla")
-_M111_CASILLA_15: CasillaId = validated_casilla_id("15", surface="modelo 111 export test casilla")
-_M111_CASILLA_18: CasillaId = validated_casilla_id("18", surface="modelo 111 export test casilla")
-_M111_CASILLA_21: CasillaId = validated_casilla_id("21", surface="modelo 111 export test casilla")
-_M111_CASILLA_24: CasillaId = validated_casilla_id("24", surface="modelo 111 export test casilla")
-_M111_CASILLA_27: CasillaId = validated_casilla_id("27", surface="modelo 111 export test casilla")
-_M111_CASILLA_29: CasillaId = validated_casilla_id("29", surface="modelo 111 export test casilla")
-_M202_CASILLA_01: CasillaId = validated_casilla_id("01", surface="modelo 202 export test casilla")
-_M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
-_M202_INCN_PRIOR_12_MONTHS_BINDING = "modelo-202-incn-prior-12-months"
-_M202_CUOTA_BASE_BINDING = "modelo-202-cuota-base-ejercicio-anterior"
-# The last exercise of the Modelo 202 revision the registry authors right before the
-# first one that declares the B2 tramo casilla 67; the exportable fixture revision
-# below is seeded for its first period.
-_PRE_B2 = revision_before_first_declaring("202", "67")
-assert _PRE_B2.valid_to is not None
-_PRE_B2_LAST_EXERCISE = _PRE_B2.valid_to.year
-
-_MODELO_111_INPUTS: dict[CasillaId, str] = {
-    _M111_CASILLA_03: "180.25",
-    _M111_CASILLA_06: "12.10",
-    _M111_CASILLA_09: "300.00",
-    _M111_CASILLA_12: "14.40",
-    _M111_CASILLA_15: "25.00",
-    _M111_CASILLA_18: "0.50",
-    _M111_CASILLA_21: "7.00",
-    _M111_CASILLA_24: "8.00",
-    _M111_CASILLA_27: "9.00",
-    _M111_CASILLA_29: "40.00",
-}
-
-
-def _set_export_profile_name() -> None:
-    set_active_test_profile_facts(
-        (
-            UserProfileFact(path="identity.name", value="Ana"),
-            UserProfileFact(path="identity.surnames", value="Export Test"),
-            UserProfileFact(path="activities.description", value="Consulting"),
-            # Modelo 111 declares whether the withholder is a colegio
-            # concertado in its own header field; the producer refuses an
-            # undeclared value rather than assume one.
-            UserProfileFact(path="withholding.colegio_concertado", value=False),
-        ),
-    )
-
-
-def _set_emilio_legal_entity_export_profile(
-    *,
-    activity_start_date: date | None = None,
-    constitution_date: date | None = None,
-    without: Collection[str] = (),
-) -> None:
-    activity_start = (
-        (UserProfileFact(path="censo.activity_start_date", value=activity_start_date.isoformat()),)
-        if activity_start_date is not None
-        else ()
-    )
-    # A calendar ejercicio: the declaración censal's closing day and month, and the constitution date.
-    periodo_impositivo = (
-        (
-            UserProfileFact(path="taxpayer_type.cierre_ejercicio_dia", value=31),
-            UserProfileFact(path="taxpayer_type.cierre_ejercicio_mes", value=12),
-            UserProfileFact(path="taxpayer_type.fecha_constitucion", value=constitution_date.isoformat()),
-        )
-        if constitution_date is not None
-        else ()
-    )
-    set_active_test_profile_facts(
-        persona_facts_beneath(
-            (
-                *activity_start,
-                *periodo_impositivo,
-                UserProfileFact(path="identity.tax_id", value="B00015016"),
-                UserProfileFact(path="identity.name", value="Emilio"),
-                UserProfileFact(path="identity.surnames", value="Corporate Persona"),
-                UserProfileFact(path="identity.legal_name", value="Emilio Consulting Sociedad Limitada"),
-                UserProfileFact(path="activities.description", value="Consulting"),
-                UserProfileFact(path="withholding.colegio_concertado", value=False),
-                UserProfileFact(path="withholding.has_employees", value=True),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value=""),
-                UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="500000"),
-            ),
-            persona_id="sociedad-limitada",
-            without=without,
-        ),
-    )
-
-
-def _clear_export_profile_surnames() -> None:
-    set_active_test_profile_facts(
-        (
-            UserProfileFact(path="identity.surnames", value=None),
-            UserProfileFact(path="activities.description", value="Consulting"),
-            UserProfileFact(path="withholding.colegio_concertado", value=False),
-        ),
-    )
-
-
-def _seed_modelo_111_revisions(
-    *,
-    states: tuple[CalculationRevisionState, ...],
-    current_index: int | None = None,
-    filed_index: int | None = None,
-    filing_year: int = 2026,
-    period: str = "1T",
-    operation: PinnedAuthorityOperation,
-) -> tuple[str, tuple[str, ...]]:
-    state = workflow_state_repository().load()
-    bucket_id = state.active_profile_bucket_id()
-    assert bucket_id is not None
-    registry_revision_id = active_registry_revision_id(
-        modelo="111", filing_year=filing_year, period=period, operation=operation
-    )
-    filing_period = Period.from_year_and_code(filing_year, period)
-    work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id,
-        modelo="111",
-        filing_year=filing_year,
-        period=filing_period,
-        revision_id=registry_revision_id,
-    )
-    now = datetime.now(UTC)
-    revision_ids: list[str] = []
-    revisions: list[CalculationRevision] = []
-    screen_stamp = _calculated_screen_stamp(modelo="111", filing_year=filing_year, period=period, operation=operation)
-    for index, state_value in enumerate(states):
-        inputs = {**_MODELO_111_INPUTS, _M111_CASILLA_03: f"{180 + index}.25"}
-        calculation_revision_id = derive_calculation_revision_id(
-            work_unit_id=work_unit_id,
-            input_values_by_casilla_id=inputs,
-            binding_overrides={},
-            casilla_values={},
-            filing_instance_evidence=None,
-            source_provenance=(),
-            screen_stamp=screen_stamp,
-        )
-        revision_ids.append(calculation_revision_id)
-        revisions.append(
-            CalculationRevision(
-                calculation_revision_id=calculation_revision_id,
-                work_unit_id=work_unit_id,
-                registry_snapshot_ref=RegistrySnapshotRef(
-                    modelo="111",
-                    revision_id=registry_revision_id,
-                    modelo_year=filing_year,
-                    period=period,
-                ),
-                state=state_value,
-                input_values_by_casilla_id=inputs,
-                created_at=now,
-                updated_at=now,
-                verified_at=now
-                if state_value in {CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO}
-                else None,
-                verified_by="operator"
-                if state_value in {CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO}
-                else None,
-                filed_at=now if state_value is CalculationRevisionState.PRESENTADO else None,
-                filed_by="operator" if state_value is CalculationRevisionState.PRESENTADO else None,
-                filing_instance_evidence=None,
-                source_provenance=(),
-                screen_stamp=screen_stamp,
-            ),
-        )
-
-    work_unit = WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode("111"),
-        filing_year=filing_year,
-        period=filing_period,
-        revision_id=registry_revision_id,
-        name=f"111-{filing_year}-{period}",
-        created_at=now,
-        updated_at=now,
-        current_calculation_revision_id=revision_ids[current_index] if current_index is not None else None,
-        filed_calculation_revision_id=revision_ids[filed_index] if filed_index is not None else None,
-    )
-    wu_repo = WorkUnitCatalogueRepository()
-    wu_repo.save(upsert_work_unit(wu_repo.load(), work_unit))
-    cr_repo = CalculationRevisionCatalogueRepository()
-    catalogue = cr_repo.load()
-    for revision in revisions:
-        catalogue = upsert_calculation_revision(catalogue, revision)
-    cr_repo.save(catalogue)
-    reports = VerificationReportCatalogueRepository()
-    for revision in revisions:
-        if revision.verified_at is not None:
-            seed_filing_gate_report(revision, reports)
-    return work_unit_id, tuple(revision_ids)
-
-
-def _seed_exportable_modelo_202_pre_b2_revision(*, operation: PinnedAuthorityOperation) -> tuple[str, str]:
-    """Persist a verified-complete pre-B2 M202 1P revision with the 2023-2024 binding channel."""
-
-    state = workflow_state_repository().load()
-    bucket_id = state.active_profile_bucket_id()
-    assert bucket_id is not None
-    revision_id = active_registry_revision_id(
-        modelo="202", filing_year=_PRE_B2_LAST_EXERCISE, period="1P", operation=operation
-    )
-    filing_period = Period.from_year_and_code(_PRE_B2_LAST_EXERCISE, "1P")
-    work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id,
-        modelo="202",
-        filing_year=_PRE_B2_LAST_EXERCISE,
-        period=filing_period,
-        revision_id=revision_id,
-    )
-    inputs = {_M202_CASILLA_01: "0"}
-    # Every supported year requires the prior-twelve-month turnover, recorded as the Emilio
-    # export profile declares it, and the art. 40.2 base, recorded as the zero instalment's.
-    binding_overrides = {
-        _M202_2023_2024_PRIOR_PAYMENTS_BINDING: "0",
-        _M202_INCN_PRIOR_12_MONTHS_BINDING: "500000",
-        _M202_CUOTA_BASE_BINDING: "0",
-    }
-    casilla_values = {_M202_CASILLA_01: Decimal("0")}
-    screen_stamp = _calculated_screen_stamp(
-        modelo="202", filing_year=_PRE_B2_LAST_EXERCISE, period="1P", operation=operation
-    )
-    calculation_revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit_id,
-        input_values_by_casilla_id=inputs,
-        binding_overrides=binding_overrides,
-        casilla_values=casilla_values,
-        filing_instance_evidence=None,
-        source_provenance=(),
-        screen_stamp=screen_stamp,
-    )
-    now = datetime.now(UTC)
-    work_unit = WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode("202"),
-        filing_year=_PRE_B2_LAST_EXERCISE,
-        period=filing_period,
-        revision_id=revision_id,
-        name=f"202-{_PRE_B2_LAST_EXERCISE}-1P",
-        created_at=now,
-        updated_at=now,
-        current_calculation_revision_id=calculation_revision_id,
-    )
-    WorkUnitCatalogueRepository().save(upsert_work_unit(WorkUnitCatalogueRepository().load(), work_unit))
-    revision = CalculationRevision(
-        calculation_revision_id=calculation_revision_id,
-        work_unit_id=work_unit_id,
-        registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="202",
-            revision_id=revision_id,
-            modelo_year=_PRE_B2_LAST_EXERCISE,
-            period="1P",
-        ),
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        input_values_by_casilla_id=inputs,
-        binding_overrides=binding_overrides,
-        casilla_values=casilla_values,
-        observations=registry_grounded_observations(
-            modelo="202",
-            filing_year=_PRE_B2_LAST_EXERCISE,
-            period="1P",
-            casilla_values=casilla_values,
-        ),
-        created_at=now,
-        updated_at=now,
-        verified_at=now,
-        verified_by="Emilio",
-        filing_instance_evidence=None,
-        source_provenance=(),
-        screen_stamp=screen_stamp,
-    )
-    cr_repo = CalculationRevisionCatalogueRepository()
-    cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
-    if revision.verified_at is not None:
-        seed_filing_gate_report(revision, VerificationReportCatalogueRepository())
-    return work_unit_id, calculation_revision_id
+__all__ = ["export_operator", "isolated_cli_backend", "seed_profile"]
 
 
 def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
@@ -527,13 +56,11 @@ def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
     export of a non-130 modelo succeeds.
     """
 
-    _set_export_profile_name()
-    work_unit_id, _ = seed_exportable_modelo_revision(
-        input_values_by_casilla_id=_MODELO_111_INPUTS, operation=operation
-    )
+    set_export_profile_name()
+    work_unit_id, _ = seed_exportable_modelo_revision(input_values_by_casilla_id=MODELO_111_INPUTS, operation=operation)
     out = tmp_path / "modelo-111.txt"
 
-    result = _invoke(
+    result = invoke(
         ["app", "modelo", "export", work_unit_id, "--output", str(out)],
     )
 
@@ -554,8 +81,8 @@ def test_export_modelo_111_emilio_legal_entity_uses_profile_identity_name(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    _set_emilio_legal_entity_export_profile()
-    _, (calculation_revision_id,) = _seed_modelo_111_revisions(
+    set_emilio_legal_entity_export_profile()
+    _, (calculation_revision_id,) = seed_modelo_111_revisions(
         states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
         current_index=0,
         filing_year=2024,
@@ -564,7 +91,7 @@ def test_export_modelo_111_emilio_legal_entity_uses_profile_identity_name(
     )
     out = tmp_path / "modelo-111-2024-1T.boe"
 
-    result = _invoke(
+    result = invoke(
         [
             "app",
             "modelo",
@@ -603,8 +130,8 @@ def test_export_refuses_output_path_with_missing_parent_directory(
     error: the operator needs the stable reason and the exact path that was
     refused, machine-readably.
     """
-    _set_emilio_legal_entity_export_profile()
-    _seed_modelo_111_revisions(
+    set_emilio_legal_entity_export_profile()
+    seed_modelo_111_revisions(
         states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
         current_index=0,
         filing_year=2024,
@@ -613,7 +140,7 @@ def test_export_refuses_output_path_with_missing_parent_directory(
     )
     out = tmp_path / "missing-parent" / "modelo-111-2024-1T.boe"
 
-    result = _invoke(
+    result = invoke(
         [
             "--format",
             "json",
@@ -649,8 +176,8 @@ def test_export_refuses_an_existing_output_path_without_replace(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """A pre-existing ``--output`` file without ``--replace`` carries a typed reason too."""
-    _set_emilio_legal_entity_export_profile()
-    _seed_modelo_111_revisions(
+    set_emilio_legal_entity_export_profile()
+    seed_modelo_111_revisions(
         states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
         current_index=0,
         filing_year=2024,
@@ -660,7 +187,7 @@ def test_export_refuses_an_existing_output_path_without_replace(
     out = tmp_path / "modelo-111-2024-1T.boe"
     out.write_bytes(b"already here")
 
-    result = _invoke(
+    result = invoke(
         [
             "--format",
             "json",
@@ -705,17 +232,17 @@ def test_export_modelo_202_without_page_01_entity_facts_refuses_with_the_door_to
 
     # The company started after the periodo impositivo the 1P art. 40.2 base reads, so that
     # instalment has no earlier Modelo 200 to take a base from and the export reaches the producer.
-    started = date(_PRE_B2_LAST_EXERCISE - 1, 1, 1)
+    started = date(PRE_B2_LAST_EXERCISE - 1, 1, 1)
     # The sociedad persona states its page 01 entity facts; this profile leaves them unstated.
-    _set_emilio_legal_entity_export_profile(
+    set_emilio_legal_entity_export_profile(
         activity_start_date=started,
         constitution_date=started,
         without=(PRINCIPAL_CNAE_PATH, PRINCIPAL_CNAE_CLASSIFICATION_PATH, *MARK_FACT_BY_PRODUCER_KEY.values()),
     )
-    _, calculation_revision_id = _seed_exportable_modelo_202_pre_b2_revision(operation=operation)
-    out = tmp_path / f"modelo-202-{_PRE_B2_LAST_EXERCISE}-1P.boe"
+    _, calculation_revision_id = seed_exportable_modelo_202_pre_b2_revision(operation=operation)
+    out = tmp_path / f"modelo-202-{PRE_B2_LAST_EXERCISE}-1P.boe"
 
-    result = _invoke(
+    result = invoke(
         [
             "--format",
             "json",
@@ -725,7 +252,7 @@ def test_export_modelo_202_without_page_01_entity_facts_refuses_with_the_door_to
             "--modelo",
             "202",
             "--year",
-            str(_PRE_B2_LAST_EXERCISE),
+            str(PRE_B2_LAST_EXERCISE),
             "--period",
             "1P",
             "--output",
@@ -760,8 +287,8 @@ def test_a_fixed_record_envelope_reports_the_development_identity_it_stamps(
     The file carries the all-zero identity, so the operator must be told it is
     not presentable at AEAT exactly as for an envelope-prefix layout.
     """
-    _set_emilio_legal_entity_export_profile()
-    _seed_modelo_111_revisions(
+    set_emilio_legal_entity_export_profile()
+    seed_modelo_111_revisions(
         states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
         current_index=0,
         filing_year=2024,
@@ -770,7 +297,7 @@ def test_a_fixed_record_envelope_reports_the_development_identity_it_stamps(
     )
     out = tmp_path / "modelo-111-2024-1T.boe"
 
-    result = _invoke(
+    result = invoke(
         [
             "--format",
             "json",
@@ -799,419 +326,12 @@ def test_a_fixed_record_envelope_reports_the_development_identity_it_stamps(
     assert written[100:109] == development_mock_software_identity().developer_tax_id.encode("ascii")
 
 
-def _export_through_the_operation(
-    *, work_unit_id: str, calculation_revision_id: str, output_path: Path, operation: PinnedAuthorityOperation
-) -> tuple[OperationTerminalCondition | None, str | None]:
-    """Submit the registered export operation the TUI uses and return its terminal condition and code."""
-
-    async def run() -> tuple[OperationTerminalCondition | None, str | None]:
-        services = compose_operation_dependencies(authority_operation=operation)
-        try:
-            submitted = await services.submission.submit(
-                OperationRequest(
-                    definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
-                    subject_ref=work_unit_id,
-                    payload=ModeloExportRequest(
-                        calculation_revision_id=calculation_revision_id,
-                        output_path=str(output_path),
-                        actor="Emilio",
-                    ),
-                ),
-                actor_ref="operator:export-parity",
-            )
-            await services.submission.start(submitted.receipt.operation_id)
-            await services.submission.settled(submitted.receipt.operation_id)
-            observed = await services.observation.observe(
-                OperationObservationRequestV1(
-                    operation_id=submitted.receipt.operation_id, after_cursor=0, page_limit=64
-                )
-            )
-            assert isinstance(observed, OperationObservationSuccessV1)
-            projection = observed.projection
-            return projection.terminal_condition, projection.refusal_ref or projection.failure_error_code
-        finally:
-            await services.shutdown()
-
-    return asyncio.run(run())
-
-
-def test_the_export_operation_and_the_command_line_reach_the_same_gate_for_one_revision(
-    tmp_path: Path,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Both surfaces carry the same elections and product identity, so one revision meets the same gate.
-
-    The operation once failed earlier than the command line for a Modelo 303,
-    because it forwarded none of the elections the command line supplies.
-    Byte parity of a successful export is proven for Modelo 303 in the
-    surface-parity module; here both routes must stop at the same producer gate.
-    """
-    _set_emilio_legal_entity_export_profile()
-    work_unit_id, calculation_revision_id = _seed_exportable_modelo_202_pre_b2_revision(operation=operation)
-    cli_out = tmp_path / "cli.boe"
-    operation_out = tmp_path / "operation.boe"
-
-    cli = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "export",
-            work_unit_id,
-            "--output",
-            str(cli_out),
-            "--by",
-            "Emilio",
-        ],
-    )
-    condition, operation_code = _export_through_the_operation(
-        work_unit_id=work_unit_id,
-        calculation_revision_id=calculation_revision_id,
-        output_path=operation_out,
-        operation=operation,
-    )
-
-    cli_code = json.loads(cli.output)["error"]["code"]
-    assert cli.exit_code != 0, cli.output
-    assert condition is not OperationTerminalCondition.SUCCEEDED
-    assert operation_code == cli_code
-    assert not cli_out.exists()
-    assert not operation_out.exists()
-
-
-def test_export_keeps_raw_revision_and_selector_refusals_distinct(tmp_path: Path) -> None:
-    """The handler preserves the shared resolver's address-versus-selector errors."""
-    _set_export_profile_name()
-    raw_revision = _invoke(
-        ["app", "modelo", "export", "--output", str(tmp_path / "raw.boe"), "--revision", "not-a-revision-id"]
-    )
-    selector = _invoke(
-        ["app", "modelo", "export", "--output", str(tmp_path / "selector.boe"), "--select", "not-a-selector"]
-    )
-
-    assert raw_revision.exit_code != 0, raw_revision.output
-    assert selector.exit_code != 0, selector.output
-    assert "not-a-revision-id" in raw_revision.output
-    assert "not-a-selector" in selector.output
-
-
-def test_export_invalid_period_names_the_selected_modelo_tokens(tmp_path: Path) -> None:
-    """An invalid period token is rejected with the selected modelo's valid token."""
-    _set_export_profile_name()
-
-    result = _invoke(
-        [
-            "app",
-            "modelo",
-            "export",
-            "--modelo",
-            "100",
-            "--year",
-            "2024",
-            "--period",
-            "INVALID",
-            "--output",
-            str(tmp_path / "invalid-period.boe"),
-        ]
-    )
-
-    assert result.exit_code != 0, result.output
-    assert "0A" in result.output
-
-
-@pytest.mark.parametrize(
-    ("output_language", "expected_notice"),
-    [
-        ("en", "The exported file is not an AEAT filing receipt."),
-        ("es", "El fichero exportado no es un justificante de presentación de la AEAT."),
-        ("ca", "El fitxer exportat no és un justificant de presentació de l'AEAT."),
-        ("hu", "Az exportált fájl nem az AEAT által kiállított benyújtási igazolás."),
-    ],
-)
-def test_export_resolves_visible_target_to_current_verified_revision(
-    tmp_path: Path,
-    output_language: str,
-    expected_notice: str,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Natural-key export defaults to the current verified-complete revision."""
-
-    _set_export_profile_name()
-    _, (calculation_revision_id,) = _seed_modelo_111_revisions(
-        states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
-        current_index=0,
-        operation=operation,
-    )
-    out = tmp_path / "modelo-111-current.txt"
-
-    result = _invoke(
-        [
-            "--language",
-            output_language,
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "export",
-            "--modelo",
-            "111",
-            "--year",
-            "2026",
-            "--period",
-            "1T",
-            "--output",
-            str(out),
-        ],
-    )
-
-    assert result.exit_code == 0, result.output
-    payload = unwrap_schema_envelope(result.output)
-    assert payload["calculation_revision_id"] == calculation_revision_id
-    notices = unwrap_envelope_notices(result.output)
-    notice = next(notice for notice in notices if notice["code"] == "modelo.export.local_export_not_official_evidence")
-    assert notice["severity"] == "warning"
-    assert notice["context"]["evidence_status"] == "local_export_not_official_aeat_filing_evidence"
-    assert notice["context"]["modelo"] == "111"
-    assert notice["context"]["filing_year"] == "2026"
-    assert notice["context"]["period"] == "1T"
-    assert notice["message"] == expected_notice
-    assert notice["action"] is None
-    assert out.exists()
-
-
-def test_export_selects_the_filed_revision_when_asked_and_the_current_calculation_by_default(
-    tmp_path: Path,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Natural-key export takes the declaration's current calculation unless ``--select filed`` names the filed one."""
-
-    _set_export_profile_name()
-    _, revision_ids = _seed_modelo_111_revisions(
-        states=(CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO),
-        current_index=0,
-        filed_index=1,
-        operation=operation,
-    )
-    target = ["--format", "json", "app", "modelo", "export", "--modelo", "111", "--year", "2026", "--period", "1T"]
-
-    for select, index in (("filed", 1), (None, 0)):
-        out = tmp_path / f"modelo-111-{select or 'default'}.txt"
-        result = _invoke([*target, "--output", str(out), *(("--select", select) if select else ())])
-
-        assert result.exit_code == 0, result.output
-        assert unwrap_schema_envelope(result.output)["calculation_revision_id"] == revision_ids[index]
-        assert out.exists()
-
-
-def test_export_refuses_a_work_unit_with_no_current_calculation_despite_stored_verified_revisions(
-    tmp_path: Path,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """A withdrawn calculation stays stored but is no longer the declaration's: export opens calculate."""
-
-    _seed_modelo_111_revisions(
-        states=(CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.VERIFICADO_COMPLETO),
-        operation=operation,
-    )
-    out = tmp_path / "modelo-111-withdrawn.txt"
-
-    result = _invoke(
-        [
-            "--language",
-            "en",
-            "app",
-            "modelo",
-            "export",
-            "--modelo",
-            "111",
-            "--year",
-            "2026",
-            "--period",
-            "1T",
-            "--output",
-            str(out),
-        ],
-    )
-
-    assert result.exit_code != 0, result.output
-    assert '"action_id":"operator.modelo.work.calculate"' in result.output, result.output
-    assert not out.exists()
-
-
-def test_export_modelo_111_refuses_when_profile_name_missing(
-    tmp_path: Path,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """When the active profile lacks ``identity.surnames`` the export
-    must refuse with a clear error naming the missing profile fact
-    rather than fabricating a placeholder name."""
-
-    _clear_export_profile_surnames()
-    work_unit_id, _ = seed_exportable_modelo_revision(
-        input_values_by_casilla_id=_MODELO_111_INPUTS, operation=operation
-    )
-    out = tmp_path / "modelo-111.txt"
-
-    result = _invoke(
-        ["app", "modelo", "export", work_unit_id, "--output", str(out)],
-    )
-
-    assert result.exit_code != 0, result.output
-    assert "surnames" in result.output.lower(), result.output
-    assert not out.exists()
-
-
-# Every Modelo 200 edition declaring calculation grade, chosen by grade from the
-# registry rather than named by year: each one computes but cannot be filed, so a
-# real export of its exercise must stop at the typed grade refusal.
-_M200_CALCULATION_GRADE_REVISIONS = authored_revisions_where(
-    "200", lambda revision: revision.authority_grade is RegistryAuthorityGrade.CALCULATION
-)
-assert _M200_CALCULATION_GRADE_REVISIONS, "Modelo 200 declares no calculation-grade edition to refuse"
-
-
-@pytest.mark.parametrize(
-    ("revision_id", "filing_year"),
-    [(str(revision.id), revision.valid_from.year) for revision in _M200_CALCULATION_GRADE_REVISIONS],
-    ids=lambda value: str(value),
-)
-def test_export_modelo_200_refuses_calculation_only_authority_for_filing(
-    revision_id: str, filing_year: int, tmp_path: Path, *, operation: PinnedAuthorityOperation
-) -> None:
-    """A Modelo 200 edition declaring calculation grade cannot satisfy filing-grade export."""
-
-    _set_export_profile_name()
-    work_unit_id, _ = _seed_verified_revision_without_inputs(
-        modelo="200", filing_year=filing_year, period="0A", operation=operation
-    )
-    out = tmp_path / "modelo-200.txt"
-
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "export",
-            work_unit_id,
-            "--output",
-            str(out),
-        ],
-    )
-
-    assert result.exit_code == 1, result.output
-    payload = json.loads(result.output)
-    assert payload["status"] == "error"
-    error = payload["error"]
-    assert error["code"] == "ERROR_CALCULATIONS_REGISTRY_VALIDATION"
-    assert error["category"] == "ERROR"
-    # The runtime names the stopped operation; the refusal's facts travel in its verdict.
-    assert set(error["context"]) == {"effect", "operation_id", "terminal_condition"}
-    assert error["context"]["terminal_condition"] == "failed"
-    assert error["action"]["failed_condition_id"] == "registry.snapshot.authority_grade.sufficient"
-    assert error["action"]["no_recovery_outcome"] == "safety"
-    evidence = error["action"]["evidence"]
-    assert len(evidence) == 1
-    assert evidence[0]["condition_id"] == "registry.snapshot.authority_grade.sufficient"
-    assert evidence[0]["provenance"] == "registry_record"
-    evidence_values = evidence[0]["values"]
-    assert evidence_values["authority_grade_declared"] is True
-    assert evidence_values["declared_authority_grade"] == "calculation"
-    assert evidence_values["modelo"] == "200"
-    assert evidence_values["requested_authority_grade"] == "filing"
-    assert evidence_values["revision_id"] == revision_id
-    # Free exception text never crosses the runtime; the catalogue sentence does.
-    assert error["message"] == tr(get_registered_error_code_by_code(error["code"]).message_key)
-    assert not out.exists()
-    assert "Traceback" not in result.output
-
-
-def test_export_modelo_303_cli_refuses_revision_without_filing_evidence(
-    tmp_path: Path, *, operation: PinnedAuthorityOperation
-) -> None:
-    work_unit_id, _ = _seed_verified_revision_without_inputs(
-        modelo="303", filing_year=2026, period="1T", operation=operation
-    )
-    out = tmp_path / "modelo-303.txt"
-
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "export",
-            work_unit_id,
-            "--output",
-            str(out),
-        ],
-    )
-
-    assert result.exit_code == 2, result.output
-    payload = json.loads(result.output)
-    assert payload["status"] == "error"
-    error = payload["error"]
-    # The producer's own registered refusal reaches the operator; the export
-    # lookup does not rewrap it as a generic export failure.
-    assert error["code"] == "REFUSED_MODELO_M303_FILING_EVIDENCE"
-    assert error["category"] == "REFUSED"
-    assert error["message"] == tr(get_registered_error_code_by_code(error["code"]).message_key)
-    action = error["action"]
-    assert action["failed_condition_id"] == "modelo.work.calculate.m303_filing_evidence.valid"
-    evidence = action["evidence"]
-    assert len(evidence) == 1
-    assert evidence[0]["evidence_id"] == "modelo.work.calculate.m303_filing_evidence.missing.observation"
-    assert evidence[0]["values"]["evidence_present"] is False
-    assert evidence[0]["values"]["modelo"] == "303"
-    assert not out.exists()
-    assert not out.with_name(out.name + ".tmp").exists()
-    assert "Traceback" not in result.output
-
-
-def test_export_modelo_100_reaches_xml_dictionary_path_before_cross_period_gate(
-    tmp_path: Path, *, operation: PinnedAuthorityOperation
-) -> None:
-    work_unit_id, _ = _seed_verified_revision_without_inputs(
-        modelo="100", filing_year=2025, period="0A", operation=operation
-    )
-    out = tmp_path / "modelo-100.xml"
-
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "export",
-            work_unit_id,
-            "--output",
-            str(out),
-        ],
-    )
-
-    assert result.exit_code == 2, result.output
-    payload = json.loads(result.output)
-    assert payload["status"] == "error"
-    assert payload["error"]["code"] == "REFUSED_MODELO_CROSS_PERIOD_CLEAN_STATE"
-    assert payload["error"]["category"] == "REFUSED"
-    assert "fixed_width" not in result.output
-    assert "xml_dictionary" not in payload["error"]["message"]
-    assert not out.exists()
-    assert "Traceback" not in result.output
-
-
 def test_export_requires_output_flag(*, operation: PinnedAuthorityOperation) -> None:
     """``--output`` is required; missing it surfaces as Typer usage error."""
 
-    work_unit_id = _seed_work_unit_only(operation=operation)
+    work_unit_id = seed_work_unit_only(operation=operation)
 
-    result = _invoke(["app", "modelo", "export", work_unit_id])
+    result = invoke(["app", "modelo", "export", work_unit_id])
     assert result.exit_code != 0, result.output
 
 
@@ -1220,7 +340,7 @@ def test_export_refuses_unknown_work_unit(tmp_path: Path) -> None:
     refuse rather than write an empty file."""
 
     out = tmp_path / "out.txt"
-    result = _invoke(
+    result = invoke(
         ["app", "modelo", "export", "0" * 64, "--output", str(out)],
     )
     assert result.exit_code != 0, result.output
@@ -1235,10 +355,10 @@ def test_export_refuses_work_unit_with_no_exportable_revision(
     """A work unit whose only revision is in DRAFT state must refuse;
     only verified-complete or filed revisions are exportable."""
 
-    work_unit_id, _ = _seed_work_unit_with_draft_revision(operation=operation)
+    work_unit_id, _ = seed_work_unit_with_draft_revision(operation=operation)
     out = tmp_path / "out.txt"
 
-    result = _invoke(
+    result = invoke(
         ["app", "modelo", "export", work_unit_id, "--output", str(out)],
     )
     assert result.exit_code != 0, result.output
@@ -1249,7 +369,7 @@ def test_export_help_advertises_local_only() -> None:
     """The export verb help string must state ``Local-only`` so the
     operator cannot mistake the verb for an AEAT-contacting submit."""
 
-    result = _invoke(["app", "modelo", "export", "--help"])
+    result = invoke(["app", "modelo", "export", "--help"])
     assert result.exit_code == 0, result.output
     assert "modelo" in result.output.lower()
     assert any(token in result.output.lower() for token in ("local-only", "local;", "local.", "nunca")), result.output
@@ -1267,10 +387,10 @@ def test_export_refuses_explicit_revision_in_draft_state(
     raises CalculationRevisionStateError; the CLI surfaces it as a
     refusal."""
 
-    work_unit_id, calc_rev_id = _seed_work_unit_with_draft_revision(operation=operation)
+    work_unit_id, calc_rev_id = seed_work_unit_with_draft_revision(operation=operation)
     out = tmp_path / "out.txt"
 
-    result = _invoke(
+    result = invoke(
         [
             "app",
             "modelo",

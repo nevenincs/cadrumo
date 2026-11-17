@@ -11,12 +11,7 @@ def _newest_revision(modelos_by_id: dict[str, ModeloDefinition], modelo_id: str)
     return modelos_by_id[modelo_id].revisions[str(authored_revisions(modelo_id)[-1].id)]
 
 
-def check_complete_registry_tree_locales_compile_and_validate_cleanly(
-    modelos_by_id: dict[str, ModeloDefinition],
-) -> None:
-    """Every derived Modelo key resolves through the shared catalogues."""
-    assert modelos_by_id, "No modelos loaded from registry"
-
+def _assert_modelo_130_translations_loaded(modelos_by_id: dict[str, ModeloDefinition]) -> None:
     # Verify that M130 has our translations loaded
     m130 = modelos_by_id["130"]
     revision = m130.revisions[str(open_ended_revision("130").id)]
@@ -32,6 +27,8 @@ def check_complete_registry_tree_locales_compile_and_validate_cleanly(
     assert casilla_01.get_help("ca") == "Ingressos acumulats de l'activitat econòmica."
     assert casilla_01.get_help("hu") == "Az adóévben elért összesített vállalkozási bevétel."
 
+
+def _assert_modelo_100_translations_loaded(modelos_by_id: dict[str, ModeloDefinition]) -> None:
     # Verify Modelo 100 (newest revision)
     rev100 = _newest_revision(modelos_by_id, "100")
     casilla_100_01 = next(c for c in rev100.casillas if c.id == "0001")
@@ -49,6 +46,8 @@ def check_complete_registry_tree_locales_compile_and_validate_cleanly(
     assert helped, "no authored Modelo 100 edition carries the help text of casilla 0001"
     assert set(helped.values()) == {"Selector for the taxpayer obtaining the business yield."}
 
+
+def _assert_modelo_200_translations_loaded(modelos_by_id: dict[str, ModeloDefinition]) -> None:
     # Verify Modelo 200 (newest revision)
     rev200 = _newest_revision(modelos_by_id, "200")
     casilla_200_01 = next(c for c in rev200.casillas if c.id == "DP200001:00001")
@@ -63,6 +62,8 @@ def check_complete_registry_tree_locales_compile_and_validate_cleanly(
         "Flag indicating if the entity is non-profit and subject to the Title II regime of Law 49/2002 [00001]."
     )
 
+
+def _assert_modelo_303_translations_loaded(modelos_by_id: dict[str, ModeloDefinition]) -> None:
     # Verify Modelo 303's newest revision.
     rev303 = _newest_revision(modelos_by_id, "303")
     casilla_303_gen = next(c for c in rev303.casillas if c.id == "iva.repercutido.general")
@@ -70,6 +71,17 @@ def check_complete_registry_tree_locales_compile_and_validate_cleanly(
     assert casilla_303_gen.get_label("ca") == "Quota IVA repercutit al tipus general (21%)"
     assert casilla_303_gen.get_label("hu") == "Felszámított ÁFA összeg általános kulccsal (21%)"
     assert casilla_303_gen.get_help("en") == "Total output VAT calculated at the standard 21% rate."
+
+
+def check_complete_registry_tree_locales_compile_and_validate_cleanly(
+    modelos_by_id: dict[str, ModeloDefinition],
+) -> None:
+    """Every derived Modelo key resolves through the shared catalogues."""
+    assert modelos_by_id, "No modelos loaded from registry"
+    _assert_modelo_130_translations_loaded(modelos_by_id)
+    _assert_modelo_100_translations_loaded(modelos_by_id)
+    _assert_modelo_200_translations_loaded(modelos_by_id)
+    _assert_modelo_303_translations_loaded(modelos_by_id)
 
 
 def check_modelo_130_all_casillas_have_shared_localized_labels_and_help(

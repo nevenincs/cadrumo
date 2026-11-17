@@ -25,7 +25,8 @@ from ....application.ledger.attachment_mutation_operation import (
 )
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.evidence_followup_contracts import LedgerEvidenceAttachmentQueueRequest
-from ....core.i18n.render import tr
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
 from ....core.identity.transaction_ids import TransactionId
 from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
@@ -304,6 +305,7 @@ class LedgerEvidenceFilesAttachmentsScreen(EvidenceFilesToolScreen):
                 transaction_id=target,
                 purchase_invoice_evidence_id=evidence,
                 attachment_ids=identities,
+                output_language=OutputLanguage(output_language()),
             )
         except ValidationError as error:
             self.refuse(door_refusal_text(error))
@@ -345,7 +347,10 @@ class LedgerEvidenceFilesAttachmentsScreen(EvidenceFilesToolScreen):
             return
         try:
             request = LedgerDetachRequest(
-                profile_id=self.doors.profile_id, transaction_id=target, attachment_ids=identities
+                profile_id=self.doors.profile_id,
+                transaction_id=target,
+                attachment_ids=identities,
+                output_language=OutputLanguage(output_language()),
             )
         except ValidationError as error:
             self.refuse(door_refusal_text(error))

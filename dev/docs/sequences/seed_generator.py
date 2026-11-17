@@ -53,8 +53,9 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Final
 
+from cadrumo.tests.persona_expectations import values_in_force
 from cadrumo.tests.persona_invoices import GeneratedDocument, generated_documents
-from cadrumo.tests.personas import LedgerRow, Persona, YearEnvelope, values_in_force
+from cadrumo.tests.persona_types import LedgerRow, Persona, YearEnvelope
 from dev.paths import REPO_ROOT, UTF_8
 
 from .persona_profile import SANDBOX_PERSONA_ID, pinned_persona, profile_option_arguments

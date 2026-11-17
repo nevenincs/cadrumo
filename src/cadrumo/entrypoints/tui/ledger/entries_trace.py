@@ -22,7 +22,8 @@ from ....application.ledger.history_operation import (
 )
 from ....application.ledger.track_operation import LedgerTrackProjection, LedgerTrackRequest
 from ....core.errors.hierarchy import CadrumoError
-from ....core.i18n.render import tr
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
 from ..account import AccountSessionExpiredError
 from ..components.language import localized, repaint_tables
 from ..components.theme import tokenised
@@ -179,7 +180,11 @@ class LedgerEntryTraceScreen(LedgerWorkspaceScreen):
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
 
     async def _read_typed(self) -> None:
-        track_request = LedgerTrackRequest(profile_id=self.doors.profile_id, transaction_prefix=self.transaction_id)
+        track_request = LedgerTrackRequest(
+            profile_id=self.doors.profile_id,
+            transaction_prefix=self.transaction_id,
+            output_language=OutputLanguage(output_language()),
+        )
         history_request = self._history_request()
         try:
             track = await self.doors.track(track_request)

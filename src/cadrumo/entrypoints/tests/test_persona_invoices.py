@@ -10,8 +10,9 @@ import pytest
 from ...adapters.inbound.einvoice.parsers import parse_einvoice_document
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...tests.persona_invoices import generated_documents, render_facturae
-from ...tests.personas import Persona, PersonaCatalogueError, YearEnvelope, persona_ids, read_persona
-from .persona_materialisation import year_envelope
+from ...tests.persona_types import Persona, PersonaCatalogueError, YearEnvelope
+from ...tests.personas import persona_ids, read_persona
+from .persona_world import year_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

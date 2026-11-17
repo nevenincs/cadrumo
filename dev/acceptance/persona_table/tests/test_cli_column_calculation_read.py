@@ -28,9 +28,9 @@ from cadrumo.application.modelo.work_calculation_contracts import (
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.cli.command_operation_table import COMMAND_OPERATION_ROWS
 from cadrumo.entrypoints.cli.tests.cli_runner import cadrumo_click_command
-from cadrumo.entrypoints.tests.persona_materialisation import MaterialisedPersona, PersonaWorld
 from cadrumo.entrypoints.tests.persona_prior_values import entries_on
 from cadrumo.entrypoints.tests.persona_work_inputs import resolved_casillas, work_inputs_for
+from cadrumo.entrypoints.tests.persona_world import MaterialisedPersona, PersonaWorld
 
 from .. import planner
 from ..cli_column.driver import READ_BACK, CalculateMode, Case, run_case, select_rows
