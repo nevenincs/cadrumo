@@ -28,7 +28,7 @@ from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.operations import OperationFrontendProjection
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo.entrypoints.tui.account import (
     AccountRecomposeReasonV1,
     AccountRecomposeRequiredV1,
@@ -217,7 +217,7 @@ class RuntimeRestrictedSessionApp(QuietApp[AccountRecomposeRequiredV1 | None]):
             status,
             profile_id=self._profile_id,
             session_id=self._session_id,
-            at=now(),
+            at=wall_now(),
             requires_automation_grant=True,
         )
 
@@ -316,7 +316,7 @@ class RuntimeRestrictedSessionApp(QuietApp[AccountRecomposeRequiredV1 | None]):
         """Read status once more when the session or its grant lapses."""
         if self._lapse_timer is not None:
             self._lapse_timer.stop()
-        delay = max(0.0, (deadline - now()).total_seconds()) + EXPIRY_MARGIN_SECONDS
+        delay = max(0.0, (deadline - wall_now()).total_seconds()) + EXPIRY_MARGIN_SECONDS
         self._lapse_timer = self.set_timer(delay, self._start_status_read)
 
     def _expire(self) -> None:
