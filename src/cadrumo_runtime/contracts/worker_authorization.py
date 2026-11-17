@@ -112,6 +112,14 @@ class WorkerOperationsAdvanced(BaseModel):
     request_id: UUID
     operation_ids: Annotated[tuple[OperationId, ...], Field(min_length=1, max_length=WORKER_OPERATIONS_ADVANCED_MAX)]
     records_changed: bool = False
+    # Those whose settlement committed, so the runtime's cue diagnostics keep their lines.
+    settled: Annotated[tuple[OperationId, ...], Field(max_length=WORKER_OPERATIONS_ADVANCED_MAX)] = ()
+
+    @model_validator(mode="after")
+    def _settled_are_reported(self) -> WorkerOperationsAdvanced:
+        if not set(self.settled) <= set(self.operation_ids):
+            raise ValueError("a settled operation is one of the reported operations")
+        return self
 
 
 type WorkerAuthorityRequest = Annotated[
@@ -327,8 +335,17 @@ class WorkerAuthorizationOwner(Protocol):
         """Read inventory for the original human session while its fence is held."""
         ...
 
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
-        """Cue the connections observing these operations of the worker's profile; never blocks."""
+    def operations_advanced(
+        self,
+        operation_ids: tuple[OperationId, ...],
+        *,
+        records_changed: bool = False,
+        settled: tuple[OperationId, ...] = (),
+    ) -> None:
+        """Cue the connections observing these operations of the worker's profile; never blocks.
+
+        ``settled`` names those whose settlement committed, for diagnostics only.
+        """
         ...
 
     def approval_preflight(self, request: WorkerApprovalRequest) -> None:

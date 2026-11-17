@@ -175,6 +175,13 @@ pub enum ServiceFact {
         generation: u64,
         command_ms: u64,
         spawn_ms: u64,
+        /// The parts of `spawn_ms`: waiting for a blocking thread to start the
+        /// process, waiting for the host's one process-creation lock, creating
+        /// the process, and containing it (its job, adoption and output readers).
+        queue_ms: u64,
+        creation_lock_ms: u64,
+        create_ms: u64,
+        contain_ms: u64,
         person_ms: u64,
     },
     /// How long the runtime's admission of the service's person connection

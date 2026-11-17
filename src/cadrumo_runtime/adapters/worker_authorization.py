@@ -342,10 +342,12 @@ class WorkerAuthorizationServer:
 
         Return whether the acknowledgement was sent, which ends the exchange cleanly.
         """
-        log_operation_cue_timing("parent_received", report.operation_ids)
+        log_operation_cue_timing("parent_received", report.operation_ids, settled=report.settled)
         if self._owner is not None:
             try:
-                self._owner.operations_advanced(report.operation_ids, records_changed=report.records_changed)
+                self._owner.operations_advanced(
+                    report.operation_ids, records_changed=report.records_changed, settled=report.settled
+                )
             except Exception as error:
                 # An incomplete publication must not acknowledge and discard the report.
                 diagnostic_event(
@@ -364,7 +366,7 @@ class WorkerAuthorizationServer:
             )
         except RefusalError:
             return False
-        log_operation_cue_timing("parent_ack_written", report.operation_ids)
+        log_operation_cue_timing("parent_ack_written", report.operation_ids, settled=report.settled)
         return True
 
     def _approval_phase(self, channel: WorkerChannel, request: WorkerApprovalRequest, replied: list[bool]) -> None:

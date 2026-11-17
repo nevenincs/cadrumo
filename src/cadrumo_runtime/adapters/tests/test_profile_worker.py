@@ -86,7 +86,13 @@ class AllowWorkerOperations(UnavailableApprovalAuthority):
             expires_at=now() + timedelta(seconds=20),
         )
 
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
+    def operations_advanced(
+        self,
+        operation_ids: tuple[OperationId, ...],
+        *,
+        records_changed: bool = False,
+        settled: tuple[OperationId, ...] = (),
+    ) -> None:
         # No observer is connected in these cases, so a progress cue has nobody to wake.
         return
 
