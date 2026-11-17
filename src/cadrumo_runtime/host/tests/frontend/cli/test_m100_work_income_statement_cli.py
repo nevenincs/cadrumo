@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from cadrumo.core.absence_attestation_family import PRIOR_CARRY_FAMILIES
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.config import load_settings
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -110,6 +111,10 @@ def _invoke(args: Sequence[str]) -> Result:
     )
 
 
+#: Every open prior-carry family named, each by its own ``--family``, as the command's family door prints them.
+_EVERY_FAMILY = tuple(arg for family in sorted(PRIOR_CARRY_FAMILIES) for arg in ("--family", family.value))
+
+
 def _create(year: int) -> str:
     created = _invoke(("app", "modelo", "work", "create", "--modelo", "100", "--year", str(year), "--period", "0A"))
     assert created.exit_code == 0, created.output
@@ -122,7 +127,7 @@ def test_the_work_income_statement_refuses_when_no_payer_record_leaves_a_box_to_
 ) -> None:
     year = max(_renta_years(authority_operation))
     work_unit_id = _create(year)
-    carries = _invoke(("app", "modelo", "work", "attest-prior-carries", work_unit_id, "--yes"))
+    carries = _invoke(("app", "modelo", "work", "attest-prior-carries", work_unit_id, *_EVERY_FAMILY, "--yes"))
     assert carries.exit_code == 0, carries.output
     revision_id = str(require_schema_envelope(carries.output)["calculation_revision_id"])
 

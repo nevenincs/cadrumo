@@ -111,6 +111,26 @@ def _prepare_m100_profile(profile_id: UUID, root: Path, authority_operation: Pin
     )
 
 
+#: The boxes of the earlier Modelo 100 the current declaration's carries read: the negative general
+#: bases still pending (1384, 1387, 1390, 1391) and the negative savings balances of gains and losses
+#: (1263, 1266, 1269, 1270) and of capital income (1276, 1279, 1282, 1283). The seeded earlier return
+#: shows each as zero, so every carry is settled by that return rather than by a typed value.
+_PRIOR_YEAR_CARRY_SOURCE_BOXES = (
+    "1384",
+    "1387",
+    "1390",
+    "1391",
+    "1263",
+    "1266",
+    "1269",
+    "1270",
+    "1276",
+    "1279",
+    "1282",
+    "1283",
+)
+
+
 def _seed_prior_year_zero_carry(profile_id: UUID) -> None:
     repository = CalculationObservationRepository(bucket_id=str(profile_id))
     repository.save(
@@ -123,7 +143,7 @@ def _seed_prior_year_zero_carry(profile_id: UUID) -> None:
                     modelo="100",
                     filing_year=_REVIEWED_EDITION - 1,
                     period="0A",
-                    casilla_values=dict.fromkeys(("1384", "1387", "1390", "1391"), Decimal("0")),
+                    casilla_values=dict.fromkeys(_PRIOR_YEAR_CARRY_SOURCE_BOXES, Decimal("0")),
                 ),
             ),
             source_kind=APP_FILING_SOURCE_KIND,
@@ -170,8 +190,6 @@ def test_m100_cli_salary_certificate_retenciones_populates_0596(
             "work",
             "calculate",
             work_unit_id,
-            "--casilla",
-            "0003=32000",
             "--casilla",
             "0102=9600",
             "--relation",
