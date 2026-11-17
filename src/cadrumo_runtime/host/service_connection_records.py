@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from time import monotonic
 from uuid import UUID
 
 from cadrumo.application.operations.person_acts import is_persons_frontend
@@ -45,6 +46,9 @@ class PendingServiceAdmission:
     started: bool = False
     complete: bool = False
     result: ServiceConnected | AccessDenied | None = None
+    queued_at: float = field(default_factory=monotonic)
+    """When the job was queued, so its log can say how long it waited for a verification slot."""
+    started_at: float | None = None
 
     def active(self) -> bool:
         """Read cancellation afresh after work that can run beside the owner."""
