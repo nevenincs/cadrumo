@@ -2,8 +2,8 @@
   "schema_version": 1,
   "counts": {
     "wire-type": 925,
-    "tui-date-decision": 1,
-    "tui-precedence": 5,
+    "tui-date-decision": 0,
+    "tui-precedence": 4,
     "duplicated-helper": 61
   },
   "occurrences": {
@@ -934,14 +934,11 @@
       "wire-type:native/desktop/frontend/src/shell/views.ts:NotificationsSummary",
       "wire-type:native/desktop/frontend/src/shell/views.ts:ProfileViews"
     ],
-    "tui-date-decision": [
-      "tui-date-decision:src/cadrumo/entrypoints/tui/account_session_app.py:AccountSessionApp._session_expired"
-    ],
+    "tui-date-decision": [],
     "tui-precedence": [
       "tui-precedence:src/cadrumo/entrypoints/tui/ledger/entries_browse_layout.py:_ORDER_LOCALE_KEYS",
       "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list_values.py:LEVEL_ROLES",
       "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/issue_scale.py:LEVEL_MARKS",
-      "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py:_RECORD_FINDING_LEVELS",
       "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/screen_constants.py:FILTER_ORDER"
     ],
     "duplicated-helper": [
