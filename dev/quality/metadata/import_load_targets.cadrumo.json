@@ -1708,6 +1708,7 @@
         "cadrumo.application.modelo.work_unit_repository",
         "cadrumo.application.modelo.work_verification_contracts",
         "cadrumo.application.modelo.work_wizard",
+        "cadrumo.application.modelo.workbench_form_read_memo",
         "cadrumo.application.modelo.workbench_operations",
         "cadrumo.application.modelo.workbench_projection",
         "cadrumo.application.modelo.workbench_projection_memory",

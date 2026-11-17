@@ -60,9 +60,49 @@ export type Provider =
   | "llamacpp";
 
 /**
+ * Why a provider failed, in terms a client can act on.
+ *
+ * The value is the wire form: lowercase, underscore-separated, and stable.
+ */
+export type ProviderCondition =
+  | "network_unreachable"
+  | "provider_overloaded"
+  | "unauthenticated"
+  | "throttled"
+  | "usage_exhausted"
+  | "credits_exhausted"
+  | "budget_exhausted"
+  | "invalid_request"
+  | "model_does_not_fit"
+  | "no_answer"
+  | "unknown";
+
+/**
  * How a run reaches a named provider product.
  */
 export type ProviderTransport = "api" | "cli";
+
+/**
+ * One skill with the whole text of its `SKILL.md`.
+ */
+export type SkillDetailRecord = {
+  name: string;
+  description: string;
+  /**
+   * The skill's parsed selection predicate, without the keys it leaves unset;
+   * null when it declares none.
+   */
+  applies_when: { [key: string]: unknown } | null;
+  digest: string;
+  /**
+   * Every file of the skill, SKILL.md included, in path order.
+   */
+  files: SkillFileRecord[];
+  /**
+   * SKILL.md as written, front matter included.
+   */
+  content: string;
+};
 
 /**
  * One file of a skill: its path within the skill, size and digest.
@@ -77,6 +117,20 @@ export type SkillFileRecord = {
    */
   bytes: number;
   digest: string;
+};
+
+/**
+ * One thing a check found in a skill.
+ */
+export type SkillFindingRecord = {
+  severity: "error" | "warning";
+  code: string;
+  message: string;
+  /**
+   * The file the finding is about, relative to the skill; null for the skill
+   * as a whole.
+   */
+  path: string | null;
 };
 
 /**
@@ -103,4 +157,14 @@ export type SkillRecord = {
    * Every file of the skill, SKILL.md included, in path order.
    */
   files: SkillFileRecord[];
+};
+
+/**
+ * What checking one skill found; `valid` is false if any finding is an error.
+ */
+export type SkillVerificationRecord = {
+  name: string;
+  digest: string;
+  valid: boolean;
+  findings: SkillFindingRecord[];
 };

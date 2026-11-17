@@ -8,7 +8,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from .providers.application.attachment_releases import AttachmentReleases, ReleaseScope
+from .providers.application.attachment_releases import (
+    AttachmentAdminAnswer,
+    AttachmentAdminRefusalCode,
+    AttachmentRefusal,
+    AttachmentReleases,
+    ReleaseScope,
+)
 
 
 def answer_attachment_admin(
@@ -22,25 +28,30 @@ def answer_attachment_admin(
     grant_id: str | None,
     conversation_id: str | None,
 ) -> dict[str, Any]:
-    """Answer one attachment administration action, refusing while the service is stopping."""
+    """Answer one attachment administration action as its typed answer's document.
+
+    The desktop host passes the document on to the window unchanged.
+    """
     if closing:
-        return {"kind": "refused", "code": "service_stopping"}
-    if action == "attachment_grants":
-        return releases.grants()
-    if action == "attachment_grant_revoke" and grant_id is not None:
-        return releases.revoke(grant_id)
-    if action == "attachment_conversation_forget" and conversation_id is not None:
-        return releases.forget_conversation(conversation_id)
-    return _answer_request_action(releases, action, run_id, request_id, scope)
+        answer: AttachmentAdminAnswer = AttachmentRefusal(code=AttachmentAdminRefusalCode.SERVICE_STOPPING)
+    elif action == "attachment_grants":
+        answer = releases.grants()
+    elif action == "attachment_grant_revoke" and grant_id is not None:
+        answer = releases.revoke(grant_id)
+    elif action == "attachment_conversation_forget" and conversation_id is not None:
+        answer = releases.forget_conversation(conversation_id)
+    else:
+        answer = _answer_request_action(releases, action, run_id, request_id, scope)
+    return answer.model_dump(mode="json")
 
 
 def _answer_request_action(
     releases: AttachmentReleases, action: str, run_id: str | None, request_id: str | None, scope: str | None
-) -> dict[str, Any]:
+) -> AttachmentAdminAnswer:
     if run_id is None or request_id is None:
-        return {"kind": "refused", "code": "invalid_request"}
+        return AttachmentRefusal(code=AttachmentAdminRefusalCode.INVALID_REQUEST)
     if action == "attachment_card":
         return releases.card(run_id, request_id)
     if action == "attachment_release":
         return releases.release(run_id, request_id, None if scope is None else ReleaseScope(scope))
-    return {"kind": "refused", "code": "invalid_request"}
+    return AttachmentRefusal(code=AttachmentAdminRefusalCode.INVALID_REQUEST)

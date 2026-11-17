@@ -16,10 +16,12 @@ records created or removed since instead of classifying every record again.
 One memory belongs to one authenticated session. In addition to calendar
 projections and journal identifiers, it retains decrypted derived taxpayer
 form values in a public subtree, its strictly validated canonical inverse and
-an exact copied value key. It does not retain a repository catalogue, edit
-admission or an issued baseline. The form reader checks those afresh before
-lookup. The owning composition clears this private session memory on sign-out,
-lock, handover, expiry and shutdown.
+an exact copied value key, and the last served form keyed by a digest of
+every stored row it was read from. It does not retain a repository catalogue
+or an issued baseline: the form reader admits the edit baseline afresh on
+every read and serves the kept form with that new baseline. The owning
+composition clears this private session memory on sign-out, lock, handover,
+expiry and shutdown.
 """
 
 from __future__ import annotations
@@ -33,6 +35,8 @@ from uuid import UUID
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.authority_artifact import AuthorityGenerationPin
+    from .modelo.workbench_form_read_memo import WorkbenchFormReadKey
+    from .modelo.workbench_projection import ModeloWorkbenchFormProjectionV1
     from .modelo.workbench_projection_memory import FormProjectionPair
     from .overview.agenda import OverviewAgenda
     from .overview.calendar_models import OverviewCalendar
@@ -173,12 +177,14 @@ class WorkbenchCaptureMemory:
         self.calendar: WorkbenchMemoSlot[WorkbenchCalendarMemoKey, WorkbenchCalendarWork] = WorkbenchMemoSlot()
         self.census = WorkbenchCensusMemo()
         self.form_projection: WorkbenchMemoSlot[Hashable, FormProjectionPair | None] = WorkbenchMemoSlot()
+        self.form_read: WorkbenchMemoSlot[WorkbenchFormReadKey, ModeloWorkbenchFormProjectionV1] = WorkbenchMemoSlot()
 
     def close(self) -> None:
         """Drop every stored result deterministically when the session ends."""
         self.calendar.close()
         self.census.close()
         self.form_projection.close()
+        self.form_read.close()
 
 
 class WorkbenchCaptureMemoryOwner:

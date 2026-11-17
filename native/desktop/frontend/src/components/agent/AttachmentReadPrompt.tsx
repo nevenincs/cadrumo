@@ -6,12 +6,11 @@ import {
   type ReactNode,
 } from "react";
 import { failureCode } from "../../errors";
+import type { AgentApproval, AgentSession } from "../../shell/agentSession";
 import type {
-  AgentApproval,
-  AgentAttachmentCard,
-  AgentAttachmentScope,
-  AgentSession,
-} from "../../shell/agentSession";
+  AttachmentCardAnswer,
+  ReleaseScope,
+} from "../../shell/attachmentAdminContract";
 import { useStrings } from "../../shell/strings";
 import { AgentTextAction } from "./AgentAction";
 import { ConsentPrompt } from "./ConsentPrompt";
@@ -68,7 +67,7 @@ export function AttachmentReadPrompt({
   plain: ReactNode;
 }) {
   const t = useStrings();
-  const [card, setCard] = useState<AgentAttachmentCard | null>(null);
+  const [card, setCard] = useState<AttachmentCardAnswer | null>(null);
   const [refusal, setRefusal] = useState<string | null>(null);
   const [sent, setSent] = useState<Sent>("idle");
   const allowOnce = approval.options.find(
@@ -77,7 +76,7 @@ export function AttachmentReadPrompt({
   const asked = useRef(false);
 
   const answer = useCallback(
-    async (scope: AgentAttachmentScope | null) => {
+    async (scope: ReleaseScope | null) => {
       if (!allowOnce) return;
       setSent("sending");
       setRefusal(null);

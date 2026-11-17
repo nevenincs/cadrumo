@@ -164,6 +164,8 @@ class ModeloWorkbenchReadPorts:
     ledger: ModeloWorkbenchLedgerPorts | None = None
     reconciliation_sources: Callable[[WorkUnit, RegistrySnapshot], tuple[ReconciliationSourceNeed, ...]] | None = None
     observations: CalculationObservationRepositoryProtocol | None = None
+    store_epoch: Callable[[], str] | None = None
+    """A digest of every row of the profile store all the ports above read, changing on any write to it."""
 
 
 type ModeloWorkbenchReadPortsFactory = Callable[[str, PinnedAuthorityOperation], ModeloWorkbenchReadPorts]
@@ -402,6 +404,44 @@ def _filing_facts(
     )
 
 
+def _admit(
+    work_unit_id: str,
+    *,
+    ports: ModeloWorkbenchReadPorts,
+    operation: PinnedAuthorityOperation,
+    operation_contracts: OperationPublicContractSetV1,
+    calculation_catalogue: CalculationRevisionCatalogue,
+) -> ModeloEditAdmissionResultV1:
+    return admit_modelo_edit_baseline(
+        work_unit_id=work_unit_id,
+        work_catalogue=ports.work_units.load(),
+        calculation_catalogue=calculation_catalogue,
+        operation=operation,
+        operation_contracts=operation_contracts,
+        observation_repository=ports.observations,
+        filing_catalogue=_filing_catalogue(ports),
+    )
+
+
+def admit_workbench_form_edit(
+    work_unit_id: str,
+    *,
+    bucket_id: str,
+    ports: ModeloWorkbenchReadPorts,
+    operation: PinnedAuthorityOperation,
+    operation_contracts: OperationPublicContractSetV1,
+) -> ModeloEditAdmissionResultV1:
+    """Admit the edit baseline a form read issues, as that read would, for a declaration of this profile."""
+    _work_unit(work_unit_id, bucket_id=bucket_id, ports=ports)
+    return _admit(
+        work_unit_id,
+        ports=ports,
+        operation=operation,
+        operation_contracts=operation_contracts,
+        calculation_catalogue=ports.calculations.load(operation=operation),
+    )
+
+
 def read_modelo_workbench_form(
     work_unit_id: str,
     *,
@@ -410,20 +450,23 @@ def read_modelo_workbench_form(
     operation: PinnedAuthorityOperation,
     operation_contracts: OperationPublicContractSetV1,
     language: OutputLanguage,
+    admission: ModeloEditAdmissionResultV1 | None = None,
 ) -> ModeloWorkbenchFormReadV1:
-    """Admit an edit baseline, read the declaration's form and the facts its actions need."""
+    """Admit an edit baseline, read the declaration's form and the facts its actions need.
+
+    ``admission`` is one the caller admitted for this declaration just before, through
+    :func:`admit_workbench_form_edit`; without it the read admits its own.
+    """
     unit = _work_unit(work_unit_id, bucket_id=bucket_id, ports=ports)
-    work_catalogue = ports.work_units.load()
     calculation_catalogue = ports.calculations.load(operation=operation)
-    admission = admit_modelo_edit_baseline(
-        work_unit_id=work_unit_id,
-        work_catalogue=work_catalogue,
-        calculation_catalogue=calculation_catalogue,
-        operation=operation,
-        operation_contracts=operation_contracts,
-        observation_repository=ports.observations,
-        filing_catalogue=_filing_catalogue(ports),
-    )
+    if admission is None:
+        admission = _admit(
+            work_unit_id,
+            ports=ports,
+            operation=operation,
+            operation_contracts=operation_contracts,
+            calculation_catalogue=calculation_catalogue,
+        )
     loaded = _load_form(
         unit,
         ports=ports,
@@ -729,6 +772,7 @@ __all__ = [
     "ModeloWorkbenchFormReadV1",
     "ModeloWorkbenchReadPorts",
     "ModeloWorkbenchReadPortsFactory",
+    "admit_workbench_form_edit",
     "modelo_edit_prerequisite_source_boxes",
     "read_modelo_casilla_help",
     "read_modelo_workbench_filing_state",

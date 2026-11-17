@@ -12,8 +12,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, Final, Literal, Protocol
+from typing import Final, Literal, Protocol
 from uuid import uuid4
+
+from cadrumo.core.json_contract import OutputSchema
 
 RELEASE_SECONDS: Final = 300
 """How long the agent holds a release for a read it is about to retry."""
@@ -46,6 +48,94 @@ class ReleaseScope(StrEnum):
 
 
 type ReleaseAction = Literal["document_text", "page_images"]
+
+
+class AttachmentAdminRefusalCode(StrEnum):
+    """Why an attachment administration request was refused before any decision was read."""
+
+    SERVICE_STOPPING = "service_stopping"
+    INVALID_REQUEST = "invalid_request"
+    """The request named no run and read, or no action this surface answers."""
+    BUSY = "busy"
+    """Answered by the administration ingress when it has no place for the request; nothing was done."""
+
+
+class AttachmentRefusal(OutputSchema):
+    """A refused attachment request, by its closed code; nothing else is said."""
+
+    kind: Literal["refused"] = "refused"
+    code: DisclosureRefusalCode | AttachmentAdminRefusalCode
+
+
+class AttachmentNotRequired(OutputSchema):
+    """The read stays on this computer, so no decision of the person's is asked for."""
+
+    kind: Literal["not_required"] = "not_required"
+
+
+class AttachmentCard(OutputSchema):
+    """What the approval card shows, from the agent's own record of the read and the stored document."""
+
+    kind: Literal["card"] = "card"
+    name: str
+    media_type: str
+    size_bytes: int
+    provider: str
+    transport: str
+    model: str
+    action: ReleaseAction
+    existing_grant: bool
+    """Whether a grant held now already covers this read, so it is released without asking."""
+
+
+class AttachmentReleased(OutputSchema):
+    """The read was recorded and released to the agent."""
+
+    kind: Literal["released"] = "released"
+
+
+class AttachmentGrantEntry(OutputSchema):
+    """One remembered grant as the settings list shows it; never the bytes' digest or conversation."""
+
+    grant_id: str
+    action: ReleaseAction
+    lane: str
+    model: str
+    display_name: str | None
+    """The attachment's name for a text grant; ``None`` for a page-image grant."""
+
+
+class AttachmentGrantList(OutputSchema):
+    """The remembered grants, in the order they were kept."""
+
+    kind: Literal["grants"] = "grants"
+    grants: tuple[AttachmentGrantEntry, ...]
+
+
+class AttachmentGrantRevoked(OutputSchema):
+    """The grant is gone, and what it released that nothing has read was taken back."""
+
+    kind: Literal["revoked"] = "revoked"
+
+
+class AttachmentConversationForgotten(OutputSchema):
+    """The conversation's text grants are gone, kept or held for the session."""
+
+    kind: Literal["forgotten"] = "forgotten"
+
+
+type AttachmentCardAnswer = AttachmentCard | AttachmentNotRequired | AttachmentRefusal
+type AttachmentReleaseAnswer = AttachmentReleased | AttachmentNotRequired | AttachmentRefusal
+type AttachmentGrantsAnswer = AttachmentGrantList | AttachmentRefusal
+type AttachmentGrantRevokeAnswer = AttachmentGrantRevoked | AttachmentRefusal
+type AttachmentForgetAnswer = AttachmentConversationForgotten | AttachmentRefusal
+type AttachmentAdminAnswer = (
+    AttachmentCardAnswer
+    | AttachmentReleaseAnswer
+    | AttachmentGrantsAnswer
+    | AttachmentGrantRevokeAnswer
+    | AttachmentForgetAnswer
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -156,8 +246,8 @@ class DisclosureStore(Protocol):
         ...
 
 
-def _refused(code: DisclosureRefusalCode) -> dict[str, Any]:
-    return {"kind": "refused", "code": code.value}
+def _refused(code: DisclosureRefusalCode) -> AttachmentRefusal:
+    return AttachmentRefusal(code=code)
 
 
 def _covers(grant: DisclosureGrant, read: PendingRead, document: StoredDocument) -> bool:
@@ -208,7 +298,7 @@ class AttachmentReleases:
         document = self._gateway.document(read.conversation_id, read.name)
         return DisclosureRefusalCode.DOCUMENT_REMOVED if document is None else (read, document)
 
-    def card(self, run_id: str, request_id: str) -> dict[str, Any]:
+    def card(self, run_id: str, request_id: str) -> AttachmentCardAnswer:
         """Return what the approval card shows; none of it comes from the request's words."""
         session = self._session()
         if session is None:
@@ -218,7 +308,7 @@ class AttachmentReleases:
             return _refused(resolved)
         read, document = resolved
         if not self._off_host(read.provider, read.transport):
-            return {"kind": "not_required"}
+            return AttachmentNotRequired()
         barred = self._eligibility()
         if barred is not None:
             return _refused(barred)
@@ -226,19 +316,18 @@ class AttachmentReleases:
         if stored is None:
             return _refused(DisclosureRefusalCode.NOT_SIGNED_IN)
         held = (*self._current_session_grants(session), *stored.grants)
-        return {
-            "kind": "card",
-            "name": read.name,
-            "media_type": document.media_type,
-            "size_bytes": document.size_bytes,
-            "provider": read.provider,
-            "transport": read.transport,
-            "model": read.model,
-            "action": read.action,
-            "existing_grant": any(_covers(grant, read, document) for grant in held),
-        }
+        return AttachmentCard(
+            name=read.name,
+            media_type=document.media_type,
+            size_bytes=document.size_bytes,
+            provider=read.provider,
+            transport=read.transport,
+            model=read.model,
+            action=read.action,
+            existing_grant=any(_covers(grant, read, document) for grant in held),
+        )
 
-    def release(self, run_id: str, request_id: str, scope: ReleaseScope | None) -> dict[str, Any]:
+    def release(self, run_id: str, request_id: str, scope: ReleaseScope | None) -> AttachmentReleaseAnswer:
         """Release one read under an existing grant, or under the person's answer in ``scope``."""
         session = self._session()
         if session is None:
@@ -248,7 +337,7 @@ class AttachmentReleases:
             return _refused(resolved)
         read, document = resolved
         if not self._off_host(read.provider, read.transport):
-            return {"kind": "not_required"}
+            return AttachmentNotRequired()
         barred = self._eligibility()
         if barred is not None:
             return _refused(barred)
@@ -293,7 +382,7 @@ class AttachmentReleases:
 
     def _record_and_release(
         self, read: PendingRead, document: StoredDocument, scope: ReleaseScope | None
-    ) -> dict[str, Any]:
+    ) -> AttachmentReleaseAnswer:
         recorded = self._store.append_release(
             DisclosureRecord(
                 record_id=uuid4().hex,
@@ -313,30 +402,29 @@ class AttachmentReleases:
         if answer is GatewayAnswer.UNAVAILABLE:
             return _refused(DisclosureRefusalCode.SERVICE_FAILED)
         self._released_to.setdefault(f"{read.lane}\x1f{read.model}", set()).add(read.conversation_id)
-        return {"kind": "released"}
+        return AttachmentReleased()
 
-    def grants(self) -> dict[str, Any]:
+    def grants(self) -> AttachmentGrantsAnswer:
         """List the remembered grants for the agent panel's settings."""
         if self._session() is None:
             return _refused(DisclosureRefusalCode.NOT_SIGNED_IN)
         stored = self._store.read_grants()
         if stored is None:
             return _refused(DisclosureRefusalCode.NOT_SIGNED_IN)
-        return {
-            "kind": "grants",
-            "grants": [
-                {
-                    "grant_id": grant.grant_id,
-                    "action": grant.action,
-                    "lane": grant.lane,
-                    "model": grant.model,
-                    "display_name": grant.display_name,
-                }
+        return AttachmentGrantList(
+            grants=tuple(
+                AttachmentGrantEntry(
+                    grant_id=grant.grant_id,
+                    action=grant.action,
+                    lane=grant.lane,
+                    model=grant.model,
+                    display_name=grant.display_name,
+                )
                 for grant in stored.grants
-            ],
-        }
+            )
+        )
 
-    def revoke(self, grant_id: str) -> dict[str, Any]:
+    def revoke(self, grant_id: str) -> AttachmentGrantRevokeAnswer:
         """Remove a remembered grant, and take back what it released and nothing has read."""
         if self._session() is None:
             return _refused(DisclosureRefusalCode.NOT_SIGNED_IN)
@@ -351,9 +439,9 @@ class AttachmentReleases:
             return _refused(DisclosureRefusalCode.SERVICE_FAILED)
         for conversation in self._released_to.pop(f"{grant.lane}\x1f{grant.model}", set()):
             self._gateway.withdraw(conversation)
-        return {"kind": "revoked"}
+        return AttachmentGrantRevoked()
 
-    def forget_conversation(self, conversation_id: str) -> dict[str, Any]:
+    def forget_conversation(self, conversation_id: str) -> AttachmentForgetAnswer:
         """Remove the conversation's text grants, kept or held for the session."""
         self._session_grants = tuple(
             grant for grant in self._session_grants if grant.conversation_id != conversation_id
@@ -365,13 +453,28 @@ class AttachmentReleases:
         kept = tuple(grant for grant in stored.grants if grant.conversation_id != conversation_id)
         if kept != stored.grants and not self._store.write_grants(kept, expected_revision=stored.revision):
             return _refused(DisclosureRefusalCode.SERVICE_FAILED)
-        return {"kind": "forgotten"}
+        return AttachmentConversationForgotten()
 
 
 __all__ = [
     "MAX_REMEMBERED_GRANTS",
     "RELEASE_SECONDS",
+    "AttachmentAdminAnswer",
+    "AttachmentAdminRefusalCode",
+    "AttachmentCard",
+    "AttachmentCardAnswer",
+    "AttachmentConversationForgotten",
+    "AttachmentForgetAnswer",
     "AttachmentGateway",
+    "AttachmentGrantEntry",
+    "AttachmentGrantList",
+    "AttachmentGrantRevokeAnswer",
+    "AttachmentGrantRevoked",
+    "AttachmentGrantsAnswer",
+    "AttachmentNotRequired",
+    "AttachmentRefusal",
+    "AttachmentReleaseAnswer",
+    "AttachmentReleased",
     "AttachmentReleases",
     "DisclosureGrant",
     "DisclosureRecord",

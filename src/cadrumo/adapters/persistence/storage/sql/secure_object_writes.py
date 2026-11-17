@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Callable, Sequence
 from datetime import datetime
@@ -31,7 +32,7 @@ from .secure_object_crypto import derive_revision_id
 from .secure_object_records import SecureObjectDeletion
 from .secure_object_schema import build_revision_ancestor_ids, parse_revision_ancestor_ids
 from .session import session_scope
-from .tables import secure_objects_table
+from .tables import secure_objects_table, transaction_date_index_table
 
 if TYPE_CHECKING:
     from sqlalchemy.engine import Engine
@@ -185,6 +186,44 @@ class SecureObjectWriteOperations:
                 ).where(secure_objects_table.c.namespace == namespace),
             ).all()
         return {object_key: payload_hash for object_key, payload_hash in rows}
+
+    def content_epoch(self, *, excluding: frozenset[str] = frozenset()) -> str:
+        """Return a digest that changes whenever any stored object or date-index row of this store changes.
+
+        A decryption-free scan of each row's identity, revision and hashes in one read transaction: an
+        insert, an update, a deletion or a revision change of any object in any namespace yields another
+        epoch, so a reader keyed on it never serves a result computed from rows that have since changed.
+        ``excluding`` names namespaces the reader provably never reads, whose rows the digest leaves out.
+        """
+        self._check_session_freshness()
+        digest = hashlib.sha256()
+        with session_scope(self._engine) as session:
+            objects = session.execute(
+                select(
+                    secure_objects_table.c.namespace,
+                    secure_objects_table.c.object_key,
+                    secure_objects_table.c.revision_id,
+                    secure_objects_table.c.payload_hash,
+                    secure_objects_table.c.ciphertext_hash,
+                )
+                .where(secure_objects_table.c.namespace.not_in(sorted(excluding)))
+                .order_by(secure_objects_table.c.id)
+            ).all()
+            dated = session.execute(
+                select(
+                    transaction_date_index_table.c.bucket_id,
+                    transaction_date_index_table.c.transaction_id,
+                    transaction_date_index_table.c.filing_date,
+                    transaction_date_index_table.c.eligible_from,
+                    transaction_date_index_table.c.eligible_to,
+                ).order_by(transaction_date_index_table.c.id)
+            ).all()
+        for table, rows in (("secure_objects", objects), ("transaction_date_index", dated)):
+            digest.update(f"{table}:{len(rows)}\n".encode())
+            for row in rows:
+                digest.update(repr(tuple(row)).encode())
+                digest.update(b"\n")
+        return digest.hexdigest()
 
     def apply_batch(
         self,

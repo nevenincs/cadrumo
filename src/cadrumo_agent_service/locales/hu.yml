@@ -53,6 +53,8 @@ desktop:
     condition_budget_exhausted: A költségkeret elfogyott
     condition_credits_exhausted: Elfogytak a kreditek
     condition_invalid_request: A szolgáltató elutasította a kérést
+    condition_model_does_not_fit: A modell nem fér el abban, amit ez a számítógép
+      biztosítani tud neki. Válassz kisebb modellt vagy másik szolgáltatót.
     condition_network_unreachable: A szolgáltató nem érhető el
     condition_no_answer: A modell nem adott használható választ ehhez a dokumentumhoz.
       Próbálj ki másik (instruct) modellt, vagy próbáld újra.
