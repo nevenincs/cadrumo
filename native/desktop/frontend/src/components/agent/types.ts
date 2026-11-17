@@ -2,7 +2,11 @@
 // only and follow no wire format: whatever serves the column maps its own
 // answers onto these shapes.
 
-import type { AuthKind } from "../../shell/agentCatalogContract";
+import type {
+  AuthKind,
+  ProviderTransport,
+} from "../../shell/agentCatalogContract";
+import type { ToolCallStatus } from "../../shell/agentGatewayContract";
 
 /** One of a few things to choose among, as shown. */
 export type Choice = {
@@ -10,10 +14,6 @@ export type Choice = {
   name: string;
   description?: string;
 };
-
-/** How a provider is reached: its web API, or its own command-line app on
- * this computer. */
-export type ProviderTransport = "api" | "cli";
 
 /** One way into a provider, with the models it offers. */
 export type ProviderWay = {
@@ -186,17 +186,13 @@ export type TranscriptMessage =
       thinking?: string;
     };
 
-/** Where a tool the agent called is, in cadrumo-agent's own four states. */
-export type ToolActivityState =
-  "pending" | "in_progress" | "completed" | "failed";
-
 /** A tool the agent called, such as reading ledger entries. */
 export type TranscriptToolActivity = {
   kind: "tool";
   id: string;
   /** The tool's title, as the agent names it. */
   label: string;
-  state: ToolActivityState;
+  state: ToolCallStatus;
   /** More about the call, such as what kind of tool it is, already worded. */
   detail?: string;
   /** What the call took and gave, as the agent recorded it: shown, as it
