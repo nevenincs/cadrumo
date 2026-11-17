@@ -7,7 +7,7 @@ from cadrumo_client.commands.parameters import ArgumentSpec
 from cadrumo_client.commands.shared_contracts import TEXT_VALUE, ParameterDefault, translation_key
 from cadrumo_client.commands.spec import CommandSpec
 
-from .record_family_command_specs import record_family_specs, record_leaf, record_row_argument
+from .record_family_command_specs import RecordFamilyHandlers, record_family_specs, record_leaf, record_row_argument
 
 _PAYLOADS = "..config_rental_payloads"
 
@@ -15,6 +15,7 @@ _END = record_leaf(
     "arrendamiento",
     "end",
     handlers=".arrendamiento",
+    handler="arrendamiento_end",
     payloads=_PAYLOADS,
     result="ConfigProfileArrendamientoEndResult",
     policy=ENCRYPTED_WRITE,
@@ -31,9 +32,22 @@ _END = record_leaf(
 
 RENTAL_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *record_family_specs(
-        "arrendamiento", "Arrendamiento", handlers=".arrendamiento", payloads=_PAYLOADS, extra=(_END,)
+        "arrendamiento",
+        "Arrendamiento",
+        handlers=".arrendamiento",
+        handler_names=RecordFamilyHandlers(
+            "arrendamiento_add", "arrendamiento_edit", "arrendamiento_list", "arrendamiento_remove"
+        ),
+        payloads=_PAYLOADS,
+        extra=(_END,),
     ),
-    *record_family_specs("inmueble", "Inmueble", handlers=".inmueble", payloads=_PAYLOADS),
+    *record_family_specs(
+        "inmueble",
+        "Inmueble",
+        handlers=".inmueble",
+        handler_names=RecordFamilyHandlers("inmueble_add", "inmueble_edit", "inmueble_list", "inmueble_remove"),
+        payloads=_PAYLOADS,
+    ),
 )
 
 __all__ = ["RENTAL_COMMAND_SPECS"]
