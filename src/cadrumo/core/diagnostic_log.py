@@ -28,7 +28,18 @@ _LIFECYCLE_FIELDS = tuple(
     sorted(
         {
             "action",
+            "admission_ms",
             "call_name",
+            "changed_key_parts",
+            "commit_ms",
+            "epoch_ms",
+            "form_ms",
+            "guard_wait_ms",
+            "heap_frozen",
+            "projection_ms",
+            "queued_ms",
+            "recheck_ms",
+            "total_ms",
             "checked_out_count",
             "child_process_id",
             "definition_id",

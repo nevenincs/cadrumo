@@ -11,6 +11,7 @@ real walk and the real lease against a private copy of the published authority.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from pathlib import Path
 from typing import cast
@@ -18,7 +19,8 @@ from typing import cast
 import pytest
 
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
-from cadrumo.core.diagnostic_log import diagnostic_process
+from cadrumo.core.diagnostic_log import DiagnosticFormatter, diagnostic_process
+from cadrumo.core.logging import LOG_FILE_FORMAT
 from cadrumo.domain.calculations.registry import profile_grounding
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -48,7 +50,10 @@ def _host() -> ProfileWorkerOperationHost:
 
 
 @pytest.mark.asyncio
-async def test_admission_warm_up_caches_the_index_of_the_workers_own_generation(tmp_path: Path) -> None:
+async def test_admission_warm_up_caches_the_index_of_the_workers_own_generation(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger=operation_host.__name__)
     with isolated_shared_authority(tmp_path) as database:
         host = _host()
 
@@ -64,6 +69,14 @@ async def test_admission_warm_up_caches_the_index_of_the_workers_own_generation(
             index = profile_grounding.build_profile_grounding_index(host.pinned())
         assert index is profile_grounding._grounding_index_cache[generation]
         assert "censo.status" in index
+        (finished,) = [
+            record
+            for record in delivered_records(caplog, operation_host.__name__)
+            if record.getMessage() == "profile_grounding_warmup_finished"
+        ]
+        # The fields as the diagnostic log file writes them, after its field allowlist.
+        logged = json.loads(DiagnosticFormatter(LOG_FILE_FORMAT).format(finished).split(" | ", 1)[1])
+        assert isinstance(logged.get("heap_frozen"), bool), logged
 
         result = await host.close()
         assert not result.needs_containment
