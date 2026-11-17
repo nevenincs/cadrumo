@@ -34,11 +34,10 @@ def _is_opaque_operation_id(identifier: OperationId) -> bool:
     return len(identifier) == 64 and all(character in "0123456789abcdef" for character in identifier)
 
 
-def _claim_identifiers(operation_ids: tuple[OperationId, ...]) -> tuple[OperationId, ...]:
-    """Claim bounded diagnostic slots without waiting or resetting old budgets."""
-    identifiers = dict.fromkeys(identifier for identifier in operation_ids[:4] if _is_opaque_operation_id(identifier))
+def _claim_budgeted(identifiers: tuple[OperationId, ...]) -> list[OperationId]:
+    """Spend one budgeted slot for each identifier that still has one, without waiting for the budget."""
     if not identifiers or not _budget_lock.acquire(blocking=False):
-        return ()
+        return []
     claimed: list[OperationId] = []
     try:
         for identifier in identifiers:
@@ -51,7 +50,24 @@ def _claim_identifiers(operation_ids: tuple[OperationId, ...]) -> tuple[Operatio
             claimed.append(identifier)
     finally:
         _budget_lock.release()
-    return tuple(claimed)
+    return claimed
+
+
+def _claim_identifiers(
+    operation_ids: tuple[OperationId, ...], settled: frozenset[OperationId]
+) -> tuple[OperationId, ...]:
+    """Claim bounded diagnostic slots without waiting or resetting old budgets.
+
+    A settled operation is named first and needs no slot: it settles once, so
+    its lines stay bounded, and the settlement is the line a reader needs most.
+    """
+    # The first four positions of the batch, behind any settlement it names.
+    candidates = (*(identifier for identifier in operation_ids if identifier in settled), *operation_ids[:4])
+    identifiers = tuple(
+        identifier for identifier in tuple(dict.fromkeys(candidates))[:4] if _is_opaque_operation_id(identifier)
+    )
+    budgeted = _claim_budgeted(tuple(identifier for identifier in identifiers if identifier not in settled))
+    return tuple(identifier for identifier in identifiers if identifier in settled or identifier in budgeted)
 
 
 def log_operation_cue_timing(
@@ -60,6 +76,7 @@ def log_operation_cue_timing(
     *,
     cue_attempt_count: int | None = None,
     primary_error: BaseException | None = None,
+    settled: tuple[OperationId, ...] = (),
 ) -> None:
     """Observe a stage without turning diagnostics into a delivery fence.
 
@@ -71,17 +88,23 @@ def log_operation_cue_timing(
     Parent ACK written and worker ACK received are distinct observations.
     This cohort records at most 32 lines per operation per process, retaining
     at most 1024 operation budgets. Contention or exhaustion drops diagnostics
-    only; no budget is evicted, reset or used to control cue delivery.
+    only; no budget is evicted, reset or used to control cue delivery. The
+    operations in ``settled`` committed their settlement: their lines spend
+    no budget and say so.
     """
     try:
         if not _LOGGER.isEnabledFor(logging.INFO):
             return
-        bounded = _claim_identifiers(operation_ids)
+        exempt = frozenset(settled)
+        bounded = _claim_identifiers(operation_ids, exempt)
         if not bounded:
             return
         epoch_ms = time_ns() // 1_000_000
         ticks = monotonic_ns()
         attempts = "" if cue_attempt_count is None else f" cue_attempt_count={cue_attempt_count}"
+        settlement = sum(identifier in exempt for identifier in bounded)
+        if settlement:
+            attempts += f" settled_count={settlement}"
         diagnostic_event(
             _LOGGER,
             f"operation cue timing stage={stage} epoch_ms={epoch_ms} monotonic_ns={ticks} "

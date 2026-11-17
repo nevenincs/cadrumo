@@ -65,10 +65,10 @@ def exercise(root: Path) -> None:
     def mark(stage: Literal["commit", "send", "refused", "ack"]) -> None:
         marks.append(ProgressMark(stage=stage, ticks=time.perf_counter_ns()))
 
-    def send(operation_ids: tuple[OperationId, ...]) -> None:
+    def send(operation_ids: tuple[OperationId, ...], settled: tuple[OperationId, ...]) -> None:
         mark("send")
         try:
-            client.operations_advanced(operation_ids, records_changed=seed.records_changed)
+            client.operations_advanced(operation_ids, records_changed=seed.records_changed, settled=settled)
         except Exception:
             mark("refused")
             raise

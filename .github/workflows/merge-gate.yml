@@ -362,6 +362,8 @@ jobs:
         uses: ./.github/actions/setup
         with:
           authority-artifact: cadrumo-registry-authority-headless
+          # The population holds tests that drive a real Chromium.
+          browser: "true"
           cache: ${{ env.CADRUMO_CI_CACHE }}
           worker-containment: "true"
 

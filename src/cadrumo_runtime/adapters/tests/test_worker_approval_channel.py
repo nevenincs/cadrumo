@@ -90,7 +90,13 @@ class ApprovalAuthority:
     ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
+    def operations_advanced(
+        self,
+        operation_ids: tuple[OperationId, ...],
+        *,
+        records_changed: bool = False,
+        settled: tuple[OperationId, ...] = (),
+    ) -> None:
         # Publication commits no operation an observer waits on, so a cue has nobody to wake.
         return
 

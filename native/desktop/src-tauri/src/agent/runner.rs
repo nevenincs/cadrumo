@@ -66,6 +66,18 @@ pub struct Supervised {
     process: u64,
     threads: Vec<JoinHandle<()>>,
     diagnostics: Arc<Diagnostics>,
+    phases: SpawnPhases,
+}
+
+/// Where a start's process launch spent its time.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct SpawnPhases {
+    /// Waiting for the host's one process-creation lock; none outside Windows.
+    pub creation_lock: Duration,
+    /// Creating the process.
+    pub create: Duration,
+    /// Containing it: its job or scope, its adoption, and its output readers.
+    pub contain: Duration,
 }
 
 /// Starts `command` contained, writes the startup frame, and reports each
@@ -110,14 +122,18 @@ pub fn start_child(
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .creation_flags(CREATE_NO_WINDOW | CREATE_SUSPENDED);
+    let began = Instant::now();
     let job =
         ProcessJob::new().map_err(|cause| failure(ErrorCode::SpawnFailed).caused_by(cause))?;
-    let mut child =
-        cadrumo_application::process::creation::run(|| command.spawn()).map_err(|cause| {
-            let error = failure(ErrorCode::SpawnFailed).caused_by(cause);
-            diagnostics.spawn_failure(ProcessRole::AgentLauncher, error.clone());
-            error
-        })?;
+    let asked = Instant::now();
+    let (entered, spawned) =
+        cadrumo_application::process::creation::run(|| (Instant::now(), command.spawn()));
+    let created = Instant::now();
+    let mut child = spawned.map_err(|cause| {
+        let error = failure(ErrorCode::SpawnFailed).caused_by(cause);
+        diagnostics.spawn_failure(ProcessRole::AgentLauncher, error.clone());
+        error
+    })?;
     if let Err(cause) = job.adopt_suspended(&child) {
         // The child is still suspended: none of its code has run.
         let _ = child.kill();
@@ -126,7 +142,13 @@ pub fn start_child(
         diagnostics.spawn_failure(ProcessRole::AgentLauncher, error.clone());
         return Err(error);
     }
-    supervise(child, job, bearer, signals, diagnostics)
+    let mut supervised = supervise(child, job, bearer, signals, diagnostics)?;
+    supervised.phases = SpawnPhases {
+        creation_lock: entered.duration_since(asked),
+        create: created.duration_since(entered),
+        contain: asked.duration_since(began) + created.elapsed(),
+    };
+    Ok(supervised)
 }
 
 /// Starts `command` contained, as [`start`] does: its process is created into a
@@ -143,14 +165,23 @@ pub fn start_child(
         diagnostics.spawn_failure(ProcessRole::AgentLauncher, error.clone());
         error
     };
+    let began = Instant::now();
     let scope = cadrumo_platform::process_scope::ProcessScope::new().map_err(spawn_failure)?;
     scope.join(&mut command).map_err(spawn_failure)?;
     command
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
+    let entered = Instant::now();
     let child = command.spawn().map_err(spawn_failure)?;
-    supervise(child, scope, bearer, signals, diagnostics)
+    let created = Instant::now();
+    let mut supervised = supervise(child, scope, bearer, signals, diagnostics)?;
+    supervised.phases = SpawnPhases {
+        creation_lock: Duration::ZERO,
+        create: created.duration_since(entered),
+        contain: entered.duration_since(began) + created.elapsed(),
+    };
+    Ok(supervised)
 }
 
 /// Supervises a launcher its containment already holds: reads its output, and
@@ -172,6 +203,7 @@ fn supervise(
         process,
         threads: Vec::new(),
         diagnostics,
+        phases: SpawnPhases::default(),
     };
     let (Some(stdout), Some(stderr)) = (stdout, stderr) else {
         supervised.abandon(failure(ErrorCode::SpawnFailed));
@@ -213,6 +245,11 @@ fn supervise(
 }
 
 impl Supervised {
+    /// Where launching this process spent its time.
+    pub fn phases(&self) -> SpawnPhases {
+        self.phases
+    }
+
     pub fn process_ref(&self) -> u64 {
         self.process
     }
@@ -519,6 +556,7 @@ exit 0
         let sink = seen.clone();
         let diagnostics = Arc::new(Diagnostics::default());
         let bearer = "b".repeat(64);
+        let launching = Instant::now();
         let running = start(
             test_launcher(false),
             &bearer,
@@ -528,6 +566,15 @@ exit 0
             diagnostics.clone(),
         )
         .unwrap();
+        let launched = launching.elapsed();
+        // The launch's parts are measured and lie within it.
+        let phases = running.phases();
+        assert!(phases.create > Duration::ZERO, "{phases:?}");
+        assert!(phases.contain > Duration::ZERO, "{phases:?}");
+        assert!(
+            phases.creation_lock + phases.create + phases.contain <= launched,
+            "{phases:?} within {launched:?}"
+        );
         // The script reports the bearer's length and its grandchild's id as
         // its version, which keeps both checkable.
         let (grandchild, version) = ready(&seen);
@@ -552,6 +599,37 @@ exit 0
                 .unwrap()
                 .contains(&bearer)
         );
+    }
+
+    /// A start waiting while another process is being created reports that wait
+    /// as the creation lock's, not as creating its own process.
+    #[cfg(windows)]
+    #[test]
+    fn a_wait_on_the_creation_lock_is_reported_apart_from_the_creation() {
+        const HELD: Duration = Duration::from_millis(400);
+        let (holding, held) = std::sync::mpsc::channel();
+        let holder = thread::spawn(move || {
+            cadrumo_application::process::creation::run(|| {
+                holding.send(()).unwrap();
+                thread::sleep(HELD);
+            })
+        });
+        held.recv().unwrap();
+        let running = start(
+            test_launcher(false),
+            &"b".repeat(64),
+            "synthetic-gateway-secret",
+            cadrumo_application::provisioning::local_ai::LocalEngine::LlamaCpp,
+            |_| {},
+            Arc::new(Diagnostics::default()),
+        )
+        .unwrap();
+        holder.join().unwrap();
+        let phases = running.phases();
+        // The start asks for the lock a few milliseconds into the holder's hold.
+        assert!(phases.creation_lock >= HELD / 2, "{phases:?}");
+        assert!(phases.creation_lock > phases.create, "{phases:?}");
+        running.stop(STOP_GRACE).unwrap();
     }
 
     #[test]

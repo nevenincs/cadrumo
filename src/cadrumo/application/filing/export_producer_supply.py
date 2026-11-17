@@ -60,11 +60,12 @@ def unsupported_producer_keys(
     citing it is required and so has no blank to fall back on.
     """
     refused = {
-        field.producer_key
+        key
         for record in layout.records
         for field in record.fields
-        if field.producer_key in UNSUPPORTED_PRODUCER_KEYS
-        and (field.required or not _is_blank(headers.get(field.producer_key)))
+        if (key := field.producer_key) is not None
+        and key in UNSUPPORTED_PRODUCER_KEYS
+        and (field.required or not _is_blank(headers.get(key)))
     }
     return tuple(sorted(refused, key=lambda key: key.value))
 

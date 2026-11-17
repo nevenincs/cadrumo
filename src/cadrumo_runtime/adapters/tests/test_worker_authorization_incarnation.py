@@ -61,7 +61,9 @@ class Owner(UnavailableApprovalAuthority):
     ) -> AbstractContextManager[AccessAllowed | OperationResponseScopeAllowed]:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
-    def operations_advanced(self, operation_ids: tuple[str, ...], *, records_changed: bool = False) -> None:
+    def operations_advanced(
+        self, operation_ids: tuple[str, ...], *, records_changed: bool = False, settled: tuple[str, ...] = ()
+    ) -> None:
         self.advanced.append(operation_ids)
 
     def model_run(

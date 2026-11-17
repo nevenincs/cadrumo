@@ -97,10 +97,16 @@ class WorkerAuthorizationClient:
             asyncio.to_thread(self._approval_phase, request, password), task_name="worker-approval-phase"
         )
 
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
+    def operations_advanced(
+        self,
+        operation_ids: tuple[OperationId, ...],
+        *,
+        records_changed: bool = False,
+        settled: tuple[OperationId, ...] = (),
+    ) -> None:
         """Report committed operations to the runtime parent; it acknowledges and grants nothing."""
         report = WorkerOperationsAdvanced(
-            request_id=uuid4(), operation_ids=operation_ids, records_changed=records_changed
+            request_id=uuid4(), operation_ids=operation_ids, records_changed=records_changed, settled=settled
         )
         deadline = time.monotonic() + _REPORT_SECONDS
         channel = self.connections.checkout(deadline)
@@ -111,7 +117,7 @@ class WorkerAuthorizationClient:
             if acknowledged.request_id != report.request_id:
                 raise RefusalError(RefusalCode.INVALID_FRAME)
             clean = True
-            log_operation_cue_timing("worker_ack_received", operation_ids)
+            log_operation_cue_timing("worker_ack_received", operation_ids, settled=settled)
         finally:
             self.connections.checkin(channel, reusable=clean)
 

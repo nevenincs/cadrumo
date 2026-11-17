@@ -217,3 +217,29 @@ def test_diagnostic_interrupt_preserves_an_active_primary(monkeypatch: pytest.Mo
     operation_cue_timing.log_operation_cue_timing("report_unacknowledged", ("a" * 64,), primary_error=primary)
     with pytest.raises(KeyboardInterrupt):
         operation_cue_timing.log_operation_cue_timing("report_send", ("a" * 64,))
+
+
+def test_a_settlement_is_logged_after_its_operation_spent_its_budget(monkeypatch: pytest.MonkeyPatch) -> None:
+    messages: list[str] = []
+
+    def record(_logger: logging.Logger, event: str, *, level: int, primary_error: BaseException | None) -> None:
+        messages.append(event)
+
+    monkeypatch.setattr(operation_cue_timing._LOGGER, "isEnabledFor", lambda _level: True)
+    monkeypatch.setattr(operation_cue_timing, "diagnostic_event", record)
+    spent, other = "a" * 64, "b" * 64
+    for _ in range(40):
+        operation_cue_timing.log_operation_cue_timing("fanout_start", (spent,))
+    assert len(messages) == 32
+    operation_cue_timing.log_operation_cue_timing("fanout_start", (spent,))
+    assert len(messages) == 32
+    # Named fifth in its batch, the settlement still comes first among the four kept.
+    batch = (*(character * 64 for character in "cdef"), spent)
+    operation_cue_timing.log_operation_cue_timing("publish_cues_complete", batch, cue_attempt_count=1, settled=(spent,))
+    operation_cue_timing.log_operation_cue_timing("parent_ack_written", (other, spent), settled=(spent,))
+    assert len(messages) == 34
+    assert f"operation_ids={spent},{'c' * 64},{'d' * 64},{'e' * 64} " in messages[32]
+    assert messages[32].endswith("batch_count=5 truncated=True cue_attempt_count=1 settled_count=1")
+    assert f"operation_ids={spent},{other} " in messages[33]
+    assert messages[33].endswith("settled_count=1")
+    assert operation_cue_timing._line_counts[spent] == 32
