@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import logging
+from collections.abc import Generator
+from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass, field
 from time import monotonic
 from uuid import UUID
 
 from cadrumo.application.operations.person_acts import is_persons_frontend
+from cadrumo.core.diagnostic_log import diagnostic_event
+from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.access_refusals import AccessDenied
 from cadrumo_client.contracts.contracts import ByteChannel
 from cadrumo_client.contracts.service_access import (
@@ -136,3 +141,44 @@ def cancel_pending_status(
     if pending.complete or not pending.started:
         admissions.pop(request.admission_id, None)
     return pending_service_reply(boot, pending, request.request_id).model_copy(update={"cancelled": True})
+
+
+_LOGGER = get_logger(__name__)
+
+
+@contextmanager
+def timed_stage(stages: dict[str, float], name: str) -> Generator[None]:
+    """Record in ``stages`` how long the enclosed work took, however it ends."""
+    began = monotonic()
+    try:
+        yield
+    finally:
+        stages[name] = monotonic() - began
+
+
+@contextmanager
+def entered_timed(lock: AbstractContextManager[object], stages: dict[str, float], name: str) -> Generator[None]:
+    """Hold ``lock`` for the enclosed work, recording in ``stages`` how long entering it waited."""
+    began = monotonic()
+    with lock:
+        stages[name] = monotonic() - began
+        yield
+
+
+def log_admission_timing(
+    pending: PendingServiceAdmission, stages: dict[str, float], result: ServiceConnected | AccessDenied
+) -> None:
+    """Log how long one service admission waited and spent in each stage, beside the desktop's own timing.
+
+    Only durations and the outcome are logged, never an identity.
+    """
+    started = pending.started_at
+    fields: dict[str, str | int | float | bool | None] = {
+        "outcome": "admitted" if isinstance(result, ServiceConnected) else "denied",
+        "queued_ms": None if started is None else round((started - pending.queued_at) * 1000),
+        "total_ms": round((monotonic() - pending.queued_at) * 1000),
+    }
+    for stage in ("recheck", "guard_wait", "commit"):
+        spent = stages.get(stage)
+        fields[f"{stage}_ms"] = None if spent is None else round(spent * 1000)
+    diagnostic_event(_LOGGER, "service_admission_timing", fields=fields, level=logging.INFO)

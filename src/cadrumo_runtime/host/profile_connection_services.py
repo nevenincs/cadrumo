@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-import logging
 from threading import Thread
 from time import monotonic
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from cadrumo.application.operations.person_acts import is_persons_frontend
-from cadrumo.core.diagnostic_log import diagnostic_event
-from cadrumo.core.logging import get_logger
 from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import Availability
@@ -37,34 +34,15 @@ from .service_connection_records import (
     admission_status_matches,
     cancel_pending_status,
     cancel_service_admissions,
+    entered_timed,
+    log_admission_timing,
     pending_service_reply,
     person_holder_matches,
+    timed_stage,
 )
 
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
-
-
-_LOGGER = get_logger(__name__)
-
-
-def _log_admission_timing(
-    pending: PendingServiceAdmission, stages: dict[str, float], result: ServiceConnected | AccessDenied
-) -> None:
-    """Log how long one service admission waited and spent in each stage, beside the desktop's own timing.
-
-    Only durations and the outcome are logged, never an identity.
-    """
-    started = pending.started_at
-    fields: dict[str, str | int | float | bool | None] = {
-        "outcome": "admitted" if isinstance(result, ServiceConnected) else "denied",
-        "queued_ms": None if started is None else round((started - pending.queued_at) * 1000),
-        "total_ms": round((monotonic() - pending.queued_at) * 1000),
-    }
-    for stage in ("recheck", "guard_wait", "commit"):
-        spent = stages.get(stage)
-        fields[f"{stage}_ms"] = None if spent is None else round(spent * 1000)
-    diagnostic_event(_LOGGER, "service_admission_timing", fields=fields, level=logging.INFO)
 
 
 class ProfileConnectionServicesMixin:
@@ -261,7 +239,7 @@ class ProfileConnectionServicesMixin:
             result = self._admit_service(context, request, pending=pending, stages=stages)
         except Exception:
             result = AccessDenied(code=AccessDenialCode.AUTHORITY_UNAVAILABLE)
-        _log_admission_timing(pending, stages, result)
+        log_admission_timing(pending, stages, result)
         with self._guard:
             pending.complete = True
             pending.result = result
@@ -431,24 +409,17 @@ class ProfileConnectionServicesMixin:
         if service is None or recipient is None or host is None or service.descriptor.service_id != request.service_id:
             return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
         # Native process inspection can stall; it must not fence unrelated profile work.
-        began = monotonic()
-        rechecked = self._service_verifier.recheck_service(recipient.context, service.channel, service.peer)
-        timed["recheck"] = monotonic() - began
+        with timed_stage(timed, "recheck"):
+            rechecked = self._service_verifier.recheck_service(recipient.context, service.channel, service.peer)
         if not rechecked:
             return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
-        began = monotonic()
-        with host.guard:
-            timed["guard_wait"] = monotonic() - began
-            began = monotonic()
-            try:
-                with self._guard:
-                    if self._admission_holder_changed(holder, context, request, pending):
-                        return AccessDenied(code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
-                    if self._admission_recipient_changed(service, recipient, host, request):
-                        return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
-                return self._commit_service_admission(context, request, holder, recipient, host, service, pending)
-            finally:
-                timed["commit"] = monotonic() - began
+        with entered_timed(host.guard, timed, "guard_wait"), timed_stage(timed, "commit"):
+            with self._guard:
+                if self._admission_holder_changed(holder, context, request, pending):
+                    return AccessDenied(code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+                if self._admission_recipient_changed(service, recipient, host, request):
+                    return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
+            return self._commit_service_admission(context, request, holder, recipient, host, service, pending)
 
     def _service_tree_owner(
         self: RuntimeProfileConnections, context: ConnectionContext, channel: ByteChannel

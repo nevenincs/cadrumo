@@ -600,7 +600,7 @@ def test_service_record_verification_allows_profile_status_and_lock_without_stal
 def test_a_service_admission_logs_how_long_it_waited_for_the_profile_and_each_stage(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.INFO, logger="cadrumo_runtime.host.profile_connection_services")
+    caplog.set_level(logging.INFO, logger="cadrumo_runtime.host.service_connection_records")
     with service_record_runtime(tmp_path) as runtime:
         service = runtime.connect_service()
         assert service.connected is not None
