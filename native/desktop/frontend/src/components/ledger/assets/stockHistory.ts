@@ -1,9 +1,9 @@
 import type {
-  InventoryBook,
+  InventoryLedgerProjection,
   InventoryHistoryKind,
-  InventoryMovement,
+  InventoryMovementProjection,
   ValuationMethod,
-} from "../../../shell/ledgerSetup";
+} from "../../../shell/ledgerInventoryContract";
 
 // ---- The history of a book ------------------------------------------------------------
 
@@ -13,7 +13,7 @@ export type HistoryFact =
   | { kind: "method"; value: ValuationMethod }
   | { kind: "label"; value: string }
   | { kind: "description"; value: string | null }
-  | { kind: "movement"; value: InventoryMovement }
+  | { kind: "movement"; value: InventoryMovementProjection }
   | { kind: "removed" };
 
 /** One change, with what it displaced and what stood in its place. */
@@ -37,7 +37,7 @@ export type HistoryRow = {
  * change of the same fact states what that change displaced, else the book
  * as it stands. Nothing is worked out.
  */
-export function historyRows(ledger: InventoryBook): HistoryRow[] {
+export function historyRows(ledger: InventoryLedgerProjection): HistoryRow[] {
   const entries = ledger.history ?? [];
   const movements = [
     ...ledger.period_movements,

@@ -1,4 +1,4 @@
-import type { InventoryOptionsResult } from "../../../shell/ledgerSetup";
+import type { InventoryOptionsProjection } from "../../../shell/ledgerInventoryContract";
 
 // ---- What the backend offers -------------------------------------------------
 //
@@ -29,7 +29,7 @@ export type Vocabulary = {
 export const NO_OFFERS: Offers = {};
 export const NO_VOCABULARY: Vocabulary = { values: {}, roles: {} };
 
-export const offersOf = (result: InventoryOptionsResult): Offers =>
+export const offersOf = (result: InventoryOptionsProjection): Offers =>
   Object.fromEntries(
     result.families.map((found) => [found.family, found.options]),
   );

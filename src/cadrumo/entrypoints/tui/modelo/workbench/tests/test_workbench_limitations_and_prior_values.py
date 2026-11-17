@@ -49,7 +49,7 @@ from ....refusal.tests.refusal_fixtures import CREATE_WORK, primary_verdict
 from ....tests.settling import settle
 from ..header import attention_chips
 from ..issue_projection import issue_lines
-from ..issue_scale import IssueLevel, level_counts, title_text
+from ..issue_scale import level_counts, title_text
 from ..issues import WorkbenchIssuesScreen
 from ..ports import WorkbenchChangeKind
 from ..screen import ModeloWorkbenchScreen
@@ -90,7 +90,7 @@ def test_a_disclosed_limitation_has_its_own_chip_mark_and_level() -> None:
     (chip,) = [chip for chip in chips if chip.level is ModeloFormAttention.LIMITATION]
     assert chip.mark is LIMITATION_MARK
     assert chip.text == f"{LIMITATION_MARK.glyph} {chip.tally.words}"
-    assert [line.level for line in lines] == [IssueLevel.LIMITATION]
+    assert [line.level for line in lines] == [ModeloFormAttention.LIMITATION]
     assert title.endswith(f"{LIMITATION_MARK.glyph} 1")
     assert LIMITATION_MARK.glyph not in "◆◐▲!i"
 

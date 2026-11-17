@@ -30,7 +30,7 @@ from pydantic_core import CoreSchema
 
 from ....core.identity.digest import ContentDigest
 from ....core.identity.hex_ids import WorkUnitId
-from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.models import OPERATION_FILLED_BY_SCHEMA_KEY, STRICT_FROZEN_CONFIG, host_filled_schema
 from ....core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -40,6 +40,7 @@ from ....core.operations import (
     OperationInteractionKind,
     OperationLifecycle,
 )
+from ....core.type_guards import is_object_dict
 from ...operator_actions.models import ActionReference
 from ..capabilities import (
     OperationBaselinePolicy,
@@ -948,6 +949,39 @@ def test_public_schema_identity_refuses_structural_json_schema_extras() -> None:
             schema_id="profile.sync.structural-schema-extra",
             schema_version=1,
             model_type=StructuralSchemaExtraPayload,
+        )
+
+
+def test_public_schema_binding_accepts_host_filled_field_annotation() -> None:
+    class HostFilledPayload(BaseModel):
+        model_config = STRICT_FROZEN_CONFIG
+
+        value: str = Field(json_schema_extra=host_filled_schema())
+
+    binding = OperationSchemaBindingV1.bind(
+        schema_id="profile.sync.host-filled", schema_version=1, model_type=HostFilledPayload
+    )
+
+    assert binding.model_type is HostFilledPayload
+    schema = strict_model_json_schema(HostFilledPayload)
+    properties = schema["properties"]
+    assert is_object_dict(properties)
+    value = properties["value"]
+    assert is_object_dict(value)
+    assert value[OPERATION_FILLED_BY_SCHEMA_KEY] == "host"
+    with pytest.raises(ValidationError):
+        HostFilledPayload.model_validate({})
+
+
+def test_public_schema_binding_refuses_bad_host_filled_annotation() -> None:
+    class BadHostFilledPayload(BaseModel):
+        model_config = STRICT_FROZEN_CONFIG
+
+        value: str = Field(json_schema_extra={OPERATION_FILLED_BY_SCHEMA_KEY: "window"})
+
+    with pytest.raises(ValueError, match="malformed x-cadrumo-filled-by"):
+        OperationSchemaBindingV1.bind(
+            schema_id="profile.sync.bad-host-filled", schema_version=1, model_type=BadHostFilledPayload
         )
 
 

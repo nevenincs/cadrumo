@@ -1,4 +1,4 @@
-import type { CalendarEntry, FilingCalendar } from "../../shell/views";
+import type { FilingCalendarServed } from "../../shell/calendarContract";
 import {
   calendarEntry,
   calendarEvent,
@@ -30,7 +30,7 @@ const entry = (
   opens: string,
   closes: string,
   change: EntryChange = {},
-): CalendarEntry =>
+): FilingCalendarServed["entries"][number] =>
   calendarEntry(modelo, period, opens, closes, change, BUSY_TODAY);
 
 // What closes on the thirtieth of January is drawn as moved past a weekend
@@ -40,7 +40,7 @@ const moved = {
   shift_reason: "weekend",
 };
 
-export const BUSY_CALENDAR: FilingCalendar = servedCalendar({
+export const BUSY_CALENDAR: FilingCalendarServed = servedCalendar({
   ...FIXTURE_CALENDAR,
   range: { from_date: fixtureDay(11, 1), to_date: fixtureDay(4, 30, 1) },
   generated_at: `${BUSY_TODAY}T08:02:00Z`,

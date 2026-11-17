@@ -8,7 +8,7 @@ import { isoDay as day } from "@/shared/dates";
 import { dateFormats } from "@/shared/dateFormats";
 import { closeUnknown, entryKey } from "@/shell/calendarEntries";
 import { useStrings } from "@/shell/strings";
-import type { CalendarEntry } from "@/shell/views";
+import type { FilingCalendarServed } from "@/shell/calendarContract";
 import { STATE_MARK, STATE_TONE, stateWords } from "./calendarMarks";
 
 // A row is drawn again only when it changes: choosing one obligation does
@@ -20,12 +20,12 @@ export const CalendarEntryRow = memo(function CalendarEntryRow({
   onSelect,
   onOpen,
 }: {
-  entry: CalendarEntry;
+  entry: FilingCalendarServed["entries"][number];
   locale: string;
   /** Chosen, here or in the months beside the list. */
   selected: boolean;
   onSelect: (key: string) => void;
-  onOpen?: (entry: CalendarEntry) => void;
+  onOpen?: (entry: FilingCalendarServed["entries"][number]) => void;
 }) {
   const t = useStrings();
   const closes = day(entry.adjusted_closes_on);

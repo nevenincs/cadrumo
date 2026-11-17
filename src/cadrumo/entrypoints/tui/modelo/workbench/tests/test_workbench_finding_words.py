@@ -57,7 +57,7 @@ from ....components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NA
 from ....tests.settling import settle
 from ..casilla_list_models import CasillaListHeading
 from ..issue_projection import issue_lines
-from ..issue_scale import IssueLevel, IssueLine
+from ..issue_scale import IssueLine
 from ..issues import WorkbenchIssuesScreen
 from ..navigator import NavigatorState, navigator_rows, presented_form
 from ..page_items import WorkbenchPage, page_items, workbench_pages
@@ -443,12 +443,12 @@ def test_a_period_date_and_amount_read_as_the_filer_writes_them() -> None:
     with override_settings(cadrumo_output_language="en"):
         english = {line.level: line.message for line in issue_lines(form)}
 
-    assert "periodo 4.º trimestre" in spanish[IssueLevel.INFO]
-    assert "1 mar 2025" in spanish[IssueLevel.INFO]
-    assert "(1.234,50 EUR)" in spanish[IssueLevel.CHECK]
-    assert "difieren en 234,50 EUR" in spanish[IssueLevel.CHECK]
-    assert "period 4th quarter" in english[IssueLevel.INFO]
-    assert "(1,234.50 EUR)" in english[IssueLevel.CHECK]
+    assert "periodo 4.º trimestre" in spanish[ModeloFormAttention.INFO]
+    assert "1 mar 2025" in spanish[ModeloFormAttention.INFO]
+    assert "(1.234,50 EUR)" in spanish[ModeloFormAttention.CHECK]
+    assert "difieren en 234,50 EUR" in spanish[ModeloFormAttention.CHECK]
+    assert "period 4th quarter" in english[ModeloFormAttention.INFO]
+    assert "(1,234.50 EUR)" in english[ModeloFormAttention.CHECK]
 
 
 def test_a_missing_value_already_listed_among_the_missing_boxes_is_not_listed_twice() -> None:
@@ -470,7 +470,7 @@ def test_a_missing_value_already_listed_among_the_missing_boxes_is_not_listed_tw
 
     assert ModeloFormIssue(finding=listed).attention is ModeloFormAttention.MISSING
     assert [(line.level, line.box, line.message) for line in lines] == [
-        (IssueLevel.MISSING, "06", "Required box [06] is empty.")
+        (ModeloFormAttention.MISSING, "06", "Required box [06] is empty.")
     ]
 
 
@@ -502,7 +502,7 @@ def test_a_missing_value_of_the_operator_records_is_named_by_its_heading_and_lea
         "EU VAT number",
         "Transaction code",
     ]
-    assert {line.level for line in lines} == {IssueLevel.MISSING}
+    assert {line.level for line in lines} == {ModeloFormAttention.MISSING}
     assert {line.message for line in lines} == {"This table has no records yet, and every record needs this value."}
     assert all(line.in_records and line.box == "·" for line in lines)
     assert [line.key for line in lines] == [
@@ -641,7 +641,7 @@ def test_reconciliation_wire_findings_reach_tui_issue_lines(locale):
         lines = issue_lines(form)
     matched = [line for line in lines if "test-reconciliation-evidence" in line.technical]
     assert len(matched) == 3
-    assert all(line.level is IssueLevel.CHECK for line in matched)
+    assert all(line.level is ModeloFormAttention.CHECK for line in matched)
     assert all("application.modelo" not in line.message and "%{" not in line.message for line in matched)
     by_key = {
         finding.message_locale_key: next(line for line in matched if finding.message_locale_key in line.technical)

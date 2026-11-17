@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from .....application.modelo.edit_prerequisite_wording import prerequisite_words
 from .....application.modelo.work_form_field_vocabulary import address_key
+from .....application.modelo.work_form_findings import ModeloFormAttention
 from .....application.modelo.work_form_models import (
     ModeloFormField,
     ModeloWorkForm,
@@ -18,7 +19,7 @@ from .....core.i18n.render import tr
 from ...components.dialogs import ConfirmScreen
 from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
 from .editor import open_area_target
-from .issue_scale import CalculateAgain, ConfirmAssumedValues, IssueLevel, IssueLine, IssuesChoice
+from .issue_scale import CalculateAgain, ConfirmAssumedValues, IssueLine, IssuesChoice
 from .issues import WorkbenchIssuesScreen
 from .ports import ModeloWorkbenchActionsV1, WorkbenchApplyPrerequisite
 from .progress import WorkbenchProgress, workbench_progress
@@ -208,7 +209,7 @@ class WorkbenchNextStepMixin:
         field = next(field for field in form.fields() if field.address == prerequisite.address)
         message = self._prerequisite_message(form, field, prerequisite)
         return IssueLine(
-            level=IssueLevel.BLOCKS,
+            level=ModeloFormAttention.BLOCKS,
             box=field.box or "·",
             where=field.label.text,
             message=message,

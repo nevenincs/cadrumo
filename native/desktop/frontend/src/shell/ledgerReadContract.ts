@@ -335,3 +335,19 @@ export type LedgerReadContracts = {
   };
   "ledger.view": { request: LedgerViewRequest; result: LedgerViewProjection };
 };
+
+export type LedgerKnownValuesWindowRequest = Omit<
+  LedgerKnownValuesRequest,
+  "profile_id"
+>;
+
+export type LedgerListWindowRequest = Omit<LedgerListRequest, "profile_id">;
+
+export type LedgerPreflightWindowRequest = Omit<
+  LedgerPreflightRequest,
+  "profile_id"
+>;
+
+export type LedgerStatusWindowRequest = Omit<LedgerStatusRequest, "profile_id">;
+
+export type LedgerViewWindowRequest = Omit<LedgerViewRequest, "profile_id">;

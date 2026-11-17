@@ -102,3 +102,8 @@ export type LedgerOwnAccountContracts = {
     result: LedgerOwnAccountResult;
   };
 };
+
+export type LedgerOwnAccountWindowRequest = Omit<
+  LedgerOwnAccountRequest,
+  "profile_id"
+>;
