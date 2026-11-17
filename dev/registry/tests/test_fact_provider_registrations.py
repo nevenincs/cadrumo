@@ -13,6 +13,7 @@ from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatal
 from ..compiler import fact_providers as provider_module
 from ..compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS, compile_registered_fact_providers
 from ..maintenance_support import reset_registry_caches
+from .compiler_reset_support import held_authorities_kept_registered
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -68,6 +69,7 @@ def test_authority_reset_invokes_every_provider_reset(monkeypatch: pytest.Monkey
         for registration in FACT_PROVIDER_REGISTRATIONS
     )
     monkeypatch.setattr(provider_module, "FACT_PROVIDER_REGISTRATIONS", registrations)
-    reset_registry_caches()
+    with held_authorities_kept_registered():
+        reset_registry_caches()
 
     assert resets == list(_REGISTERED_PROVIDER_IDS)
