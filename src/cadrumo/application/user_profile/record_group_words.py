@@ -181,7 +181,7 @@ def row_actions(
 
 
 def _require_total_tables() -> None:
-    sections = summarised_sections() | {PENSION_CONTRIBUTION_SECTION_KEY}
+    sections = {*summarised_sections(), PENSION_CONTRIBUTION_SECTION_KEY}
     if set(SECTION_KIND_WORDS_LOCALE_KEYS) != sections:
         raise ValueError("every listed record section needs its kind words")
     if any(set(labels) != sections or set(operations) != sections for _door, operations, labels in _DOORS):

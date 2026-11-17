@@ -38,12 +38,12 @@ from ....iva.schema import (
 )
 from ..authority import bundled_indexed_authority
 from ..binding_provider import BindingProvider
+from ..binding_provider_coordinates import absolute_coordinate_offenders
 from ..binding_provider_registration import (
     BINDING_PROVIDER_REGISTRATIONS,
     BindingProviderRegistration,
     NonRuntimeOwnership,
     RouteOwnership,
-    absolute_coordinate_offenders,
     binding_temporal_reach_diagnostic,
     registration_for,
     require_relative_provider_coordinates,

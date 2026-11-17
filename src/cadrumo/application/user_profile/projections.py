@@ -13,10 +13,10 @@ coercer so field-level coercion logic stays in one place.
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import date
 from types import MappingProxyType
-from typing import Final, TypeGuard
+from typing import Final, TypeGuard, cast
 
 from pydantic import BaseModel
 
@@ -368,6 +368,7 @@ def projection_for_taxpayer(
         UserProfileValidationError: ``as_of`` was supplied with a
             pre-projected mapping, which no longer carries effective windows.
     """
+    mapping: Mapping[str, object]
     if isinstance(facts, UserProfileRecord | UserProfileSnapshot):
         mapping = _merged_taxpayer_values(facts, schema=_schema_for_record(facts, schema), as_of=as_of)
     elif as_of is not None:
@@ -411,11 +412,14 @@ def taxpayer_projection_read_selector(
 
 def _stable(value: object) -> object:
     if isinstance(value, set | frozenset):
-        return sorted((_stable(member) for member in value), key=lambda member: json.dumps(member, sort_keys=True))
+        members = cast("Iterable[object]", value)
+        return sorted((_stable(member) for member in members), key=lambda member: json.dumps(member, sort_keys=True))
     if isinstance(value, Mapping):
-        return {str(key): _stable(member) for key, member in value.items()}
+        pairs = cast("Mapping[object, object]", value)
+        return {str(key): _stable(member) for key, member in pairs.items()}
     if isinstance(value, list | tuple):
-        return [_stable(member) for member in value]
+        ordered = cast("Iterable[object]", value)
+        return [_stable(member) for member in ordered]
     if value is None or isinstance(value, bool | int | str):
         return value
     return str(getattr(value, "value", value))
@@ -430,8 +434,11 @@ def taxpayer_projection_read_fingerprint(
     record: UserProfileRecord, selector: str, *, schema: ProfileSchemaDefinition
 ) -> SnapshotId | None:
     """Project the taxpayer ``selector`` names from ``record`` again, or ``None`` for another projection."""
-    named = json.loads(selector)
-    if not isinstance(named, dict) or named.get("projection") != _TAXPAYER_PROJECTION:
+    loaded: object = json.loads(selector)
+    if not isinstance(loaded, dict):
+        return None
+    named = cast("dict[str, object]", loaded)
+    if named.get("projection") != _TAXPAYER_PROJECTION:
         return None
     as_of = named.get("as_of")
     iva_regime_default = named.get("iva_regime_default")

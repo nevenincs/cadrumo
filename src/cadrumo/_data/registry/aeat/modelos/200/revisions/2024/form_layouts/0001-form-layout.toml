@@ -7,7 +7,7 @@ revision_id = "2024"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "24bac761eadc49535f08ddefd258fedf41780d6f209b509b1122e813b3184b93"
+source_state_digest = "789ca7f056dd5ead4608da3c65237a8c932e862f5dd2bd04e540535ea522ccad"
 design_sources = [
     { source_ref = "aeat-dr-200-2024", sha256 = "2d98f21f5ad41477d2c43491150c11f48bfa6370ce0c05b2434ec0e2956e80c8" },
 ]
@@ -496,9 +496,6 @@ placements = [
     { casilla_id = "00521", kind = "on_form", box_number = "00521", aliases = [{ page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200042", section_id = "entidades-aseguradoras-estado-cambios-pat-bc9797-2", official_ref = "DP200042" }] },
     { casilla_id = "00522", kind = "on_form", box_number = "00522", aliases = [{ page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200018", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200018" }, { page_id = "dp200042", section_id = "entidades-aseguradoras-estado-cambios-pat-bc9797-2", official_ref = "DP200042" }] },
     { casilla_id = "00523", kind = "on_form", box_number = "00523", aliases = [{ page_id = "dp200018", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200018" }, { page_id = "dp200042", section_id = "entidades-aseguradoras-estado-cambios-pat-bc9797-2", official_ref = "DP200042" }] },
-    { casilla_id = "00524", kind = "on_form", box_number = "00524", aliases = [{ page_id = "dp200012", section_id = "liquidacion-i-detalle-correcciones-result-9465bc", official_ref = "DP200012" }, { page_id = "dp200013", section_id = "liquidacion-ii-detalle-correcciones-resul-56f905", official_ref = "DP200013" }, { page_id = "dp200043", section_id = "entidades-aseguradoras-estado-cambios-pat-153b5c", official_ref = "DP200043" }] },
-    { casilla_id = "00525", kind = "on_form", box_number = "00525", aliases = [{ page_id = "dp200012", section_id = "liquidacion-i-detalle-correcciones-result-9465bc", official_ref = "DP200012" }, { page_id = "dp200043", section_id = "entidades-aseguradoras-estado-cambios-pat-153b5c", official_ref = "DP200043" }] },
-    { casilla_id = "00526", kind = "on_form", box_number = "00526", aliases = [{ page_id = "dp200043", section_id = "entidades-aseguradoras-estado-cambios-pat-153b5c", official_ref = "DP200043" }] },
     { casilla_id = "00527", kind = "on_form", box_number = "00527", aliases = [{ page_id = "dp200017", section_id = "deducc-para-incentivar-determ-actividades", official_ref = "DP200017" }, { page_id = "dp200043", section_id = "entidades-aseguradoras-estado-cambios-pat-153b5c", official_ref = "DP200043" }] },
     { casilla_id = "00528", kind = "on_form", box_number = "00528", aliases = [{ page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200033", section_id = "contabilidad-banco-de-espana-estado-cambi-27d9ae", official_ref = "DP200033" }, { page_id = "dp200043", section_id = "entidades-aseguradoras-estado-cambios-pat-153b5c", official_ref = "DP200043" }] },
     { casilla_id = "00529", kind = "on_form", box_number = "00529", aliases = [{ page_id = "dp200016b", section_id = "deducciones-inversion-canarias", official_ref = "DP200016B" }, { page_id = "dp200043", section_id = "entidades-aseguradoras-estado-cambios-pat-153b5c", official_ref = "DP200043" }] },
@@ -3296,6 +3293,9 @@ placements = [
     { casilla_id = "DP200008:00316", kind = "on_form", box_number = "00316" },
     { casilla_id = "DP200008:00325", kind = "on_form", box_number = "00325" },
     { casilla_id = "DP200010:00399", kind = "on_form", box_number = "00399" },
+    { casilla_id = "DP200010:00524", kind = "on_form", box_number = "00524" },
+    { casilla_id = "DP200010:00525", kind = "on_form", box_number = "00525" },
+    { casilla_id = "DP200010:00526", kind = "on_form", box_number = "00526" },
     { casilla_id = "DP200010:00550", kind = "on_form", box_number = "00550" },
     { casilla_id = "DP200010:00552", kind = "on_form", box_number = "00552" },
     { casilla_id = "DP200010:00562", kind = "on_form", box_number = "00562" },
@@ -3345,6 +3345,8 @@ placements = [
     { casilla_id = "DP200012:00310", kind = "on_form", box_number = "00310" },
     { casilla_id = "DP200012:00325", kind = "on_form", box_number = "00325" },
     { casilla_id = "DP200012:00501", kind = "on_form", box_number = "00501" },
+    { casilla_id = "DP200012:00524", kind = "on_form", box_number = "00524" },
+    { casilla_id = "DP200012:00525", kind = "on_form", box_number = "00525" },
     { casilla_id = "DP200013:00311", kind = "on_form", box_number = "00311" },
     { casilla_id = "DP200013:00312", kind = "on_form", box_number = "00312" },
     { casilla_id = "DP200013:00313", kind = "on_form", box_number = "00313" },
@@ -3424,6 +3426,7 @@ placements = [
     { casilla_id = "DP200032:00310", kind = "on_form", box_number = "00310" },
     { casilla_id = "DP200032:00417", kind = "on_form", box_number = "00417" },
     { casilla_id = "DP200032:00501", kind = "on_form", box_number = "00501" },
+    { casilla_id = "DP200032:00524", kind = "on_form", box_number = "00524" },
     { casilla_id = "DP200032:00558", kind = "on_form", box_number = "00558" },
     { casilla_id = "DP200032:00562", kind = "on_form", box_number = "00562" },
     { casilla_id = "DP200033:00301", kind = "on_form", box_number = "00301" },
@@ -3488,6 +3491,9 @@ placements = [
     { casilla_id = "DP200042:00611", kind = "on_form", box_number = "00611" },
     { casilla_id = "DP200042:00625", kind = "on_form", box_number = "00625" },
     { casilla_id = "DP200043:00501", kind = "on_form", box_number = "00501" },
+    { casilla_id = "DP200043:00524", kind = "on_form", box_number = "00524" },
+    { casilla_id = "DP200043:00525", kind = "on_form", box_number = "00525" },
+    { casilla_id = "DP200043:00526", kind = "on_form", box_number = "00526" },
     { casilla_id = "DP200043:00550", kind = "on_form", box_number = "00550" },
     { casilla_id = "DP200043:00552", kind = "on_form", box_number = "00552" },
     { casilla_id = "DP200043:00563", kind = "on_form", box_number = "00563" },
@@ -4364,7 +4370,7 @@ id = "estado-de-cambios-patrimonio-neto-ii-oper-bb7f03-2"
 heading_key = "modelo.schema.200.form.section.estado-de-cambios-patrimonio-neto-ii-oper-bb7f03.heading"
 official_heading = "Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios"
 blocks = [
-    { kind = "grid", id = "grid", columns = [{ key = "prima-de-emision", heading_key = "modelo.schema.200.form.column.prima-de-emision.heading", official_heading = "Prima de emisión" }, { key = "reservas", heading_key = "modelo.schema.200.form.column.reservas.heading", official_heading = "Reservas" }, { key = "acciones-y-participaciones-en-patrimonio-propias", heading_key = "modelo.schema.200.form.column.acciones-y-participaciones-en-patrimonio-propias.heading", official_heading = "Acciones y participaciones en patrimonio propias" }, { key = "resultados-ejercicios-anteriores", heading_key = "modelo.schema.200.form.column.resultados-ejercicios-anteriores.heading", official_heading = "Resultados ejercicios anteriores" }, { key = "otras-aportaciones-de-socios", heading_key = "modelo.schema.200.form.column.otras-aportaciones-de-socios.heading", official_heading = "Otras aportaciones de socios" }], rows = [{ key = "aumentos-de-capital", heading_key = "modelo.schema.200.form.row.aumentos-de-capital.heading", official_heading = "Aumentos de capital", cells = [{ kind = "casilla", casilla_id = "00522" }, { kind = "casilla", casilla_id = "00523" }, { kind = "casilla", casilla_id = "00524" }, { kind = "casilla", casilla_id = "00525" }, { kind = "casilla", casilla_id = "00526" }] }] },
+    { kind = "grid", id = "grid", columns = [{ key = "prima-de-emision", heading_key = "modelo.schema.200.form.column.prima-de-emision.heading", official_heading = "Prima de emisión" }, { key = "reservas", heading_key = "modelo.schema.200.form.column.reservas.heading", official_heading = "Reservas" }, { key = "acciones-y-participaciones-en-patrimonio-propias", heading_key = "modelo.schema.200.form.column.acciones-y-participaciones-en-patrimonio-propias.heading", official_heading = "Acciones y participaciones en patrimonio propias" }, { key = "resultados-ejercicios-anteriores", heading_key = "modelo.schema.200.form.column.resultados-ejercicios-anteriores.heading", official_heading = "Resultados ejercicios anteriores" }, { key = "otras-aportaciones-de-socios", heading_key = "modelo.schema.200.form.column.otras-aportaciones-de-socios.heading", official_heading = "Otras aportaciones de socios" }], rows = [{ key = "aumentos-de-capital", heading_key = "modelo.schema.200.form.row.aumentos-de-capital.heading", official_heading = "Aumentos de capital", cells = [{ kind = "casilla", casilla_id = "00522" }, { kind = "casilla", casilla_id = "00523" }, { kind = "casilla", casilla_id = "DP200010:00524" }, { kind = "casilla", casilla_id = "DP200010:00525" }, { kind = "casilla", casilla_id = "DP200010:00526" }] }] },
 ]
 
 [[revisions.2024.form_layouts.pages.sections]]
@@ -4643,7 +4649,7 @@ blocks = [
     { kind = "field", id = "field-8", casilla_id = "01006" },
     { kind = "grid", id = "grid-3", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "amortizacion-inmovilizado-afecto-investig-b2365c", heading_key = "modelo.schema.200.form.row.amortizacion-inmovilizado-afecto-investig-b2365c.heading", official_heading = "Amortización inmovilizado afecto investigación y desarrollo (art. 12.3.b) LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00305" }, { kind = "casilla", casilla_id = "DP200012:00306" }] }, { key = "libertad-de-amortizacion-de-gastos-de-inv-ef8596", heading_key = "modelo.schema.200.form.row.libertad-de-amortizacion-de-gastos-de-inv-ef8596.heading", official_heading = "Libertad de amortización de gastos de investigación y desarrollo (art. 12.3.c) LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00307" }, { kind = "casilla", casilla_id = "DP200012:00308" }] }, { key = "libertad-de-amortizacion-inmovilizado-mat-e46d93", heading_key = "modelo.schema.200.form.row.libertad-de-amortizacion-inmovilizado-mat-e46d93.heading", official_heading = "Libertad de amortización inmovilizado material nuevo (art. 12.3 e) LIS)", cells = [{ kind = "casilla", casilla_id = "01003" }, { kind = "casilla", casilla_id = "01004" }] }, { key = "otros-supuestos-de-libertad-de-amortizaci-dcc843", heading_key = "modelo.schema.200.form.row.otros-supuestos-de-libertad-de-amortizaci-dcc843.heading", official_heading = "Otros supuestos de libertad de amortización (art. 12.3 a) y d) DA 16ª y 17ª LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00309" }, { kind = "casilla", casilla_id = "DP200012:00310" }] }, { key = "amortizacion-acelerada-de-determinados-ve-e62c7c", heading_key = "modelo.schema.200.form.row.amortizacion-acelerada-de-determinados-ve-e62c7c.heading", official_heading = "Amortización acelerada de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 5/2023)", cells = [{ kind = "casilla", casilla_id = "00775" }, { kind = "casilla", casilla_id = "00776" }] }, { key = "libertad-de-amortizacion-de-determinados-c0ad65", heading_key = "modelo.schema.200.form.row.libertad-de-amortizacion-de-determinados-c0ad65.heading", official_heading = "Libertad de amortización de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 4/2024)", cells = [{ kind = "casilla", casilla_id = "DP200012:00005" }, { kind = "casilla", casilla_id = "DP200012:00006" }] }] },
     { kind = "field", id = "field-9", casilla_id = "DP200012:00325" },
-    { kind = "grid", id = "grid-4", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "ajustes-por-deterioro-de-valores-repr-de-0f4333", heading_key = "modelo.schema.200.form.row.ajustes-por-deterioro-de-valores-repr-de-0f4333.heading", official_heading = "Ajustes por deterioro de valores repr. de partic. en el capital o fondos propios (DT 16ª.1 y 2 LIS)", cells = [{ kind = "casilla", casilla_id = "02919" }, { kind = "casilla", casilla_id = "02920" }] }] },
+    { kind = "grid", id = "grid-4", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "ajustes-por-deterioro-de-valores-repr-de-0f4333", heading_key = "modelo.schema.200.form.row.ajustes-por-deterioro-de-valores-repr-de-0f4333.heading", official_heading = "Ajustes por deterioro de valores repr. de partic. en el capital o fondos propios (DT 16ª.1 y 2 LIS)", cells = [{ kind = "casilla", casilla_id = "02919" }, { kind = "casilla", casilla_id = "02920" }] }, { key = "ajustes-por-deterioro-de-valores-repr-de-6da1b4", heading_key = "modelo.schema.200.form.row.ajustes-por-deterioro-de-valores-repr-de-6da1b4.heading", official_heading = "Ajustes por deterioro de valores repr. de partic. en el capital o fondos propios (DT 16ª.3 LIS)", cells = [{ kind = "casilla", casilla_id = "DP200012:00524" }, { kind = "casilla", casilla_id = "DP200012:00525" }] }] },
     { kind = "field", id = "field-10", casilla_id = "00335" },
     { kind = "field", id = "field-11", casilla_id = "00368" },
     { kind = "field", id = "field-12", casilla_id = "01815" },
@@ -4710,6 +4716,7 @@ blocks = [
     { kind = "field", id = "field-24", casilla_id = "DP200032:00501" },
     { kind = "field", id = "field-25", casilla_id = "01026" },
     { kind = "field", id = "field-26", casilla_id = "01014" },
+    { kind = "field", id = "field-27", casilla_id = "DP200032:00524" },
     { kind = "grid", id = "grid-12", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "eliminaciones-pdte-de-incorporar-sdes-que-bea9f8", heading_key = "modelo.schema.200.form.row.eliminaciones-pdte-de-incorporar-sdes-que-bea9f8.heading", official_heading = "Eliminaciones pdte. de incorporar sdes.que dejen de pertenecer a un grupo", cells = [{ kind = "casilla", casilla_id = "01027" }, { kind = "casilla", casilla_id = "01028" }] }] },
 ]
 
@@ -10974,16 +10981,19 @@ heading_key = "modelo.schema.200.form.section.entidades-aseguradoras-estado-camb
 official_heading = "Entidades aseguradoras - Estado cambios patrimonio propio (III) - Operaciones con socios o mutualistas"
 blocks = [
     { kind = "field", id = "field", casilla_id = "DP200043:00501" },
-    { kind = "field", id = "field-2", casilla_id = "DP200043:00550" },
-    { kind = "field", id = "field-3", casilla_id = "DP200043:00552" },
-    { kind = "field", id = "field-4", casilla_id = "DP200043:00563" },
-    { kind = "field", id = "field-5", casilla_id = "DP200043:00565" },
-    { kind = "field", id = "field-6", casilla_id = "DP200043:00566" },
-    { kind = "field", id = "field-7", casilla_id = "DP200043:00567" },
-    { kind = "field", id = "field-8", casilla_id = "DP200043:00568" },
-    { kind = "field", id = "field-9", casilla_id = "DP200043:00576" },
-    { kind = "field", id = "field-10", casilla_id = "DP200043:00577" },
-    { kind = "field", id = "field-11", casilla_id = "DP200043:00581" },
+    { kind = "field", id = "field-2", casilla_id = "DP200043:00524" },
+    { kind = "field", id = "field-3", casilla_id = "DP200043:00525" },
+    { kind = "field", id = "field-4", casilla_id = "DP200043:00526" },
+    { kind = "field", id = "field-5", casilla_id = "DP200043:00550" },
+    { kind = "field", id = "field-6", casilla_id = "DP200043:00552" },
+    { kind = "field", id = "field-7", casilla_id = "DP200043:00563" },
+    { kind = "field", id = "field-8", casilla_id = "DP200043:00565" },
+    { kind = "field", id = "field-9", casilla_id = "DP200043:00566" },
+    { kind = "field", id = "field-10", casilla_id = "DP200043:00567" },
+    { kind = "field", id = "field-11", casilla_id = "DP200043:00568" },
+    { kind = "field", id = "field-12", casilla_id = "DP200043:00576" },
+    { kind = "field", id = "field-13", casilla_id = "DP200043:00577" },
+    { kind = "field", id = "field-14", casilla_id = "DP200043:00581" },
 ]
 
 [[revisions.2024.form_layouts.pages.sections]]
