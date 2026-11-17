@@ -22,7 +22,6 @@ __all__ = [
     "PENDING_PERCEPTOR_NIF",
     "DeclaredWithholdingParty",
     "is_prescribed_pending_record",
-    "withholding_party",
 ]
 
 #: The row field whose cell holds the perceptor's declared filing name rather than any text a source printed.
@@ -48,11 +47,6 @@ class DeclaredWithholdingParty:
     party_tax_id: str
     party_handle: str | None
     party_filing_name: DeclaredPartyFilingName | None
-
-
-def withholding_party(observation: WithholdingObservation) -> tuple[str, str]:
-    """Return the country (empty when unstated) and tax id a perceptor row is named by."""
-    return observation.country_code or "", observation.perceptor_tax_id
 
 
 def is_prescribed_pending_record(row_observations: Iterable[WithholdingObservation]) -> bool:

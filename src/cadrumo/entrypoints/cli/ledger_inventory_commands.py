@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
 
@@ -12,7 +11,11 @@ from pydantic import ValidationError
 from ...application.inventory.registered_claim_candidates_operation import InventoryClaimCandidatesRequest
 from ...application.inventory.registered_evidence_operation import InventoryEvidenceAddRequest
 from ...application.inventory.registered_options_operation import InventoryOptionsRequest
-from ...application.inventory.registered_projections import InventoryLedgerProjection, InventoryListRowProjection
+from ...application.inventory.registered_projections import (
+    InventoryLedgerProjection,
+    InventoryListRowProjection,
+    public_or_none,
+)
 from ...application.inventory.registered_requests import (
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
@@ -78,10 +81,6 @@ def inventory_notices(ledger: InventoryLedgerProjection | InventoryListRowProjec
         )
         for item in ledger.advisories
     ]
-
-
-def _public_or_none(amount: Decimal | None) -> PublicDecimal | None:
-    return PublicDecimal(decimal=str(amount)) if amount is not None else None
 
 
 def _parse_acquisition_cost(*, from_stdin: bool) -> InventoryAcquisitionCostRequest | None:
@@ -180,8 +179,8 @@ def inventory_movement_add(
         movement_date=parse_iso_date(movement_date, label="--date"),
         kind=kind,
         quantity=PublicDecimal(decimal=str(parse_decimal_amount(quantity, label="quantity"))),
-        unit_cost=_public_or_none(unit_cost_amount),
-        taxable_base=_public_or_none(taxable_base_amount),
+        unit_cost=public_or_none(unit_cost_amount),
+        taxable_base=public_or_none(taxable_base_amount),
         acquisition_cost=_parse_acquisition_cost(from_stdin=acquisition_cost_stdin),
     )
     completion, payload = add_inventory_movement(ctx, request=request)
@@ -290,7 +289,7 @@ def inventory_correct(
             year=year,
             correction_id=correction_id,
             reason=reason,
-            opening_stock=_public_or_none(amount),
+            opening_stock=public_or_none(amount),
             valuation_method=valuation_method,
         ),
     )
@@ -328,8 +327,8 @@ def inventory_movement_correct(
             movement_date=parse_iso_date(movement_date, label="--date"),
             kind=kind,
             quantity=PublicDecimal(decimal=str(parse_decimal_amount(quantity, label="quantity"))),
-            unit_cost=_public_or_none(unit_cost_amount),
-            taxable_base=_public_or_none(taxable_base_amount),
+            unit_cost=public_or_none(unit_cost_amount),
+            taxable_base=public_or_none(taxable_base_amount),
             acquisition_cost=_parse_acquisition_cost(from_stdin=acquisition_cost_stdin),
         ),
     )

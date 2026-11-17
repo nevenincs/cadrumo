@@ -30,7 +30,6 @@ from ..withholding_party_rows import (
     PENDING_PERCEPTOR_NAME,
     PENDING_PERCEPTOR_NIF,
     DeclaredWithholdingParty,
-    withholding_party,
 )
 from .authored_editions import authored_revisions, filing_year_envelope
 from .published_authority import published_revision
@@ -92,9 +91,11 @@ def _observation(
 
 
 def _party(observation: WithholdingObservation, name: DeclaredPartyFilingName | None) -> DeclaredWithholdingParty:
-    country, tax_id = withholding_party(observation)
     return DeclaredWithholdingParty(
-        country_code=country, party_tax_id=tax_id, party_handle=_HANDLE, party_filing_name=name
+        country_code=observation.country_code or "",
+        party_tax_id=observation.perceptor_tax_id,
+        party_handle=_HANDLE,
+        party_filing_name=name,
     )
 
 

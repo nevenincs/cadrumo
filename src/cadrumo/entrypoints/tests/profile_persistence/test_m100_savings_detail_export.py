@@ -38,8 +38,8 @@ from cadrumo.domain.calculations.registry.capital_mobiliario_position_bindings i
     CapitalMobiliarioQuantity,
     capital_mobiliario_position_bindings,
 )
-from cadrumo.domain.contribuyente.inmueble_facts import facts_for_row
 from cadrumo.domain.contribuyente.posicion_facts import POSICION_SECTION
+from cadrumo.domain.contribuyente.tests.profile_row_facts import facts_for_row
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import TransactionCatalogue
