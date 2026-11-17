@@ -19,6 +19,12 @@ export const CATALOG_BUSY_PAUSE_CEILING_MS = 4_000;
 export const catalogBusyPause = (pauses: number): number =>
   Math.min(CATALOG_BUSY_PAUSE_CEILING_MS, CATALOG_BUSY_PAUSE_MS * 2 ** pauses);
 
+/** The pause before a busy provider status read is asked again. That read is
+ * the service's own store read and waits on nothing; busy only means the host
+ * has not yet admitted the service, which takes a moment, so it is asked again
+ * soon while the wait stays within `CATALOG_BUSY_QUIET_MS`. */
+export const STATUS_BUSY_PAUSE_MS = 250;
+
 /** Only these read refusals can recover under the same signed-in owner. */
 export const catalogReadBusy = (code: string): boolean =>
   code === "agent_service_busy" || code === "agent_reconnecting";

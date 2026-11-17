@@ -63,6 +63,7 @@ from .providers.application.contracts import CliState, ProviderSettingsRefusal
 from .providers.application.service import AssistantAuthChoice
 from .service_administration import AgentServiceAdministration
 from .service_support import (
+    name_cancel_cause,
     service_failure,
 )
 
@@ -306,6 +307,7 @@ class AgentServiceStartup(AgentServiceAdministration):
             try:
                 return self._start_owned(deadline, cancellation)
             except BaseException as error:
+                name_cancel_cause(error, cancellation)
                 if self._has_unsettled_tree():
                     raise AgentHostError(AgentHostRefusal.STORES_UNPREPARED) from error
                 if isinstance(error, OrchestrationTimeoutError):
@@ -396,6 +398,7 @@ class AgentServiceStartup(AgentServiceAdministration):
         try:
             ready = controller.start(deadline=deadline)
         except AgentHostError as error:
+            name_cancel_cause(error, cancellation)
             if controller.state is AgentHostState.DETACHED:
                 self._controller = None
             return service_failure(error)

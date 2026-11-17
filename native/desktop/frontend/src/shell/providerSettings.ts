@@ -14,7 +14,11 @@ import type {
 import { failureCode } from "../errors";
 import type { CallPlan } from "./hostCall";
 import { useCachedRead, type AgentRead } from "./agentViews";
-import { CATALOG_BUSY_QUIET_MS, catalogBusyPause } from "./catalogReadPolicy";
+import {
+  CATALOG_BUSY_QUIET_MS,
+  STATUS_BUSY_PAUSE_MS,
+  catalogBusyPause,
+} from "./catalogReadPolicy";
 import {
   cliStateCause,
   consoleCommandTemplate,
@@ -131,6 +135,9 @@ export type ProviderSettingsView = {
     signInMethods: Readonly<Record<string, readonly ProviderSignInMethod[]>>;
     consoleSignInCommand?: string;
     revisions: Readonly<Record<string, string>>;
+    /** The service is still reading the sign-in routes and the apps' states
+     * behind this answer, as it serves `reads_pending`. */
+    readsPending: boolean;
   }>;
   busyId: string | null;
   outcomes: Readonly<Record<string, ProviderOutcome>>;
@@ -158,6 +165,9 @@ export type ProviderSettingsView = {
  * starting the agent) is read again after a pause, growing to a ceiling,
  * for as long as they are open: the settings follow their own read, not the
  * agent's other reads or the ready it publishes, which can come much later.
+ * That read is the service's own store read and waits on nothing, so its busy
+ * answer (the host has not yet admitted the service) is asked again after a
+ * short pause while the wait is the one expected, then on the catalog's.
  * An answer the service says it is still completing (`reads_pending`: the
  * sign-in routes and the apps' states are read behind it) is read again on
  * the same pauses while they are open, until an answer says it is complete.
@@ -231,12 +241,24 @@ export function useProviderSettings(
       pauses.current = 0;
       return;
     }
-    if (busy) following.current ??= { since: performance.now() };
+    let pause: number;
+    if (busy) {
+      following.current ??= { since: performance.now() };
+      const admitting =
+        performance.now() - following.current.since < CATALOG_BUSY_QUIET_MS;
+      pause = admitting
+        ? STATUS_BUSY_PAUSE_MS
+        : catalogBusyPause(pauses.current);
+      if (!admitting) pauses.current += 1;
+    } else {
+      // The pending reads wait on the agent's own reads of its apps.
+      pause = catalogBusyPause(pauses.current);
+      pauses.current += 1;
+    }
     const again = window.setTimeout(
       () => setState((held) => ({ ...held, again: held.again + 1 })),
-      catalogBusyPause(pauses.current),
+      pause,
     );
-    pauses.current += 1;
     return () => window.clearTimeout(again);
   }, [answer, busy, pending]);
   const read = useMemo(
@@ -277,6 +299,7 @@ export function useProviderSettings(
                   ({ id, revision }) => [id, revision] as const,
                 ),
               ),
+              readsPending: answer.value.reads_pending,
             },
           }
         : answer,

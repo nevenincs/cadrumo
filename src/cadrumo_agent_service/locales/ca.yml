@@ -483,6 +483,7 @@ desktop:
       timed_out: L'inici de sessió ha trigat massa.
       unsupported_method: L'aplicació del proveïdor no admet aquesta manera d'iniciar
         la sessió.
+    sign_in_checking: S'està comprovant l'inici de sessió…
     sign_in_cleanup_failed: Reinicia Cadrumo abans de tornar a iniciar la sessió.
     sign_in_close: Tanca l'inici de sessió
     sign_in_code_checking: Comprovant el codi d’autorització…
