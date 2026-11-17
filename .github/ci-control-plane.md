@@ -138,6 +138,18 @@ sandbox. That file is written through the product's redacting log filter, from
 the committed synthetic profile, on a runner that holds no secret. No job reads
 the artifact back.
 
+**Runner resources.** A hosted runner that runs out of memory or disk is
+stopped and fails no test: the job ends with "the runner has received a
+shutdown signal", "lost communication with the server" or its time limit, and
+the log holds no reason. A `tests` shard therefore runs
+`dev.ci.runner_resources` in the background of its test step. Every 30 seconds
+it prints one line with the machine's used and available memory, swap, free
+disk, load and the four processes holding the most memory, by name and process
+id only; no command line is read, because the log of a public run is public.
+The tests remain the step's last command, so their exit status is the step's.
+A shard that fails on a runner that survives also prints the kernel's kill
+records.
+
 **Speed.** The expected critical path for a pull request is `authority`
 (toolchain, then compiling the registry) followed by the longest of `tests`,
 `goldens`, `checks`, `fixtures`, `contracts` and `harness`, then `verdict`:
