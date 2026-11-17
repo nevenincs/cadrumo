@@ -1408,6 +1408,7 @@
         "cadrumo.application.modelo.invoice_withholding_capture_operation",
         "cadrumo.application.modelo.invoice_withholding_capture_projection",
         "cadrumo.application.modelo.invoice_withholding_capture_public",
+        "cadrumo.application.modelo.iva_wallet_amount_words",
         "cadrumo.application.modelo.iva_wallet_balance_operation",
         "cadrumo.application.modelo.iva_wallet_binding",
         "cadrumo.application.modelo.iva_wallet_correction_operation",

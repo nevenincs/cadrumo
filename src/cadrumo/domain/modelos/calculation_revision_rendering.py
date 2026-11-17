@@ -31,7 +31,7 @@ from pydantic import (
 )
 from pydantic_core import CoreSchema, SchemaSerializer, core_schema
 
-from ...core.hashing import content_hash_hex, sha256_hex
+from ...core.hashing import CanonicalJsonValue, content_hash_hex, sha256_hex
 from ...core.hex import Hex64Str
 from ...core.i18n.render import lookup_translation
 from ...core.identity.documents import TAX_ID_FORMAT_CONTEXT
@@ -206,7 +206,23 @@ def registry_payload(snapshot: RegistrySnapshot) -> dict[str, object]:
     its own; the serialization is computed once per live snapshot object and
     serializer, and later calls rebuild an equal mapping from it.
     """
+    return _registry_payload_under(snapshot, REGISTRY_SERIALIZER.serializer())
+
+
+def registry_canonical_value(snapshot: RegistrySnapshot) -> CanonicalJsonValue:
+    """The canonical JSON encoding of :func:`registry_payload` for ``snapshot``.
+
+    Equal in bytes to ``CanonicalJsonValue(registry_payload(snapshot))``. It is
+    encoded once per live snapshot object and serializer; the value holds only
+    immutable bytes, so every caller may share it.
+    """
     serializer = REGISTRY_SERIALIZER.serializer()
+    return VERIFIED_REGISTRY.registry_canonical(
+        snapshot, serializer, lambda: CanonicalJsonValue(_registry_payload_under(snapshot, serializer))
+    )
+
+
+def _registry_payload_under(snapshot: RegistrySnapshot, serializer: SchemaSerializer) -> dict[str, object]:
     return VERIFIED_REGISTRY.registry_payload(
         snapshot,
         serializer,
@@ -256,6 +272,7 @@ class _SnapshotDigests:
     registry_digest: str | None = None
     rendering_digests: dict[_RenderingDigestKey, str] = field(default_factory=dict)
     registry_payload: tuple[SchemaSerializer, str] | None = None
+    registry_canonical: tuple[SchemaSerializer, CanonicalJsonValue] | None = None
 
 
 class VerifiedRegistryMemo:
@@ -385,6 +402,29 @@ class VerifiedRegistryMemo:
         if encoded is not None:
             digests.registry_payload = (serializer, encoded)
         return payload
+
+    def registry_canonical(
+        self,
+        snapshot: RegistrySnapshot,
+        serializer: SchemaSerializer,
+        compute: Callable[[], CanonicalJsonValue],
+    ) -> CanonicalJsonValue:
+        """Return the canonical encoding of a snapshot's serialization under ``serializer``, encoding it once.
+
+        A calculation head's concurrency digest encodes its whole registry
+        snapshot on every edit admission. The encoding is immutable bytes,
+        kept for the live snapshot object and the serializer it came from, so
+        another snapshot object, a copy included, is encoded afresh.
+        """
+        digests = self._digests_of(snapshot)
+        if digests is None:
+            return compute()
+        held = digests.registry_canonical
+        if held is not None and held[0] is serializer:
+            return held[1]
+        value = compute()
+        digests.registry_canonical = (serializer, value)
+        return value
 
     def _digests_of(self, snapshot: RegistrySnapshot) -> _SnapshotDigests | None:
         key = id(snapshot)
