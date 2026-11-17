@@ -5,12 +5,12 @@
 // into parts the host will carry.
 
 import type {
+  LedgerUpdateWindowRequest,
   LedgerAddWindowRequest,
   LedgerBulkClassifyWindowRequest,
   LedgerClassifyField,
   LedgerClassifyWindowRequest,
 } from "./ledgerMovementContract";
-import type { LedgerUpdateRequest } from "./ledgerMovementOperations";
 import type {
   LedgerStagedBlocker,
   LedgerWriteRoute,
@@ -159,7 +159,7 @@ export type PlanStep =
       transactionId: string;
       fields: StageField[];
       newIdentity: boolean;
-      request: LedgerUpdateRequest;
+      request: LedgerUpdateWindowRequest;
     }
   | { kind: "add"; draftKey: string; request: LedgerAddWindowRequest }
   | {
@@ -741,7 +741,7 @@ function updateStep(
   );
   if (!fields.length) return null;
   const changes = content.rows[entry.transactionId] ?? {};
-  const patch: LedgerUpdateRequest["patch"] = {};
+  const patch: LedgerUpdateWindowRequest["patch"] = {};
   const mask: LedgerUpdateField[] = [];
   for (const name of LEDGER_UPDATE_FIELDS) {
     const change = changes[name];
