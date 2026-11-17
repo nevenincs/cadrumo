@@ -2928,3 +2928,11 @@ fields = { id = "DP200018:01218", segmento = "DP200018" }
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "DP200018B:01219" }
 fields = { id = "DP200018:01219", segmento = "DP200018" }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200014B:001043" }
+fields = { id = "DP200015:001043", segmento = "DP200015" }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200014B:001044" }
+fields = { id = "DP200015:001044", segmento = "DP200015" }

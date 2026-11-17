@@ -46429,3 +46429,39 @@ data_type = "money"
 semantic_role = "is_deduccion_eventos_especiales_pendiente"
 rotating_year_offset = 0
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# Boxes the 2022 record design prints on the sheet a later edition moved them from, declared
+# here at the earliest edition whose design prints them; the later sheet is an override.
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1555 DP200014B 71|1118|17|Num
+# aeat-dr-200-2023 prints the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1589 (DP200015 field 8) and aeat-dr-200-2024 at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1652 (DP200015 field 8).
+[[revisions."2022".casillas]]
+id = "DP200014B:001043"
+continuidad_id = "01043"
+number = "001043"
+segmento = "DP200014B"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "abono_por_conversion_de_activos_por_impuesto_difer"]
+semantic_role = "is_conversion_aid_abono"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1558 DP200014B 74|1169|17|Num
+# aeat-dr-200-2023 prints the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1592 (DP200015 field 11) and aeat-dr-200-2024 at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1655 (DP200015 field 11).
+[[revisions."2022".casillas]]
+id = "DP200014B:001044"
+continuidad_id = "01044"
+number = "001044"
+segmento = "DP200014B"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "compensacion_por_conversion_de_activos_por_impuest"]
+semantic_role = "is_conversion_aid_compensacion"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2610 DP200018B 52|795|17|Num
+# aeat-dr-200-2023 prints the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2673 (DP200018B field 64) and aeat-dr-200-2024 at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2664 (DP200018 field 172).
+[[revisions."2022".casillas]]
+id = "DP200018B:00588"
+continuidad_id = "incentive-deductions-detail-total-applied"
+number = "00588"
+segmento = "DP200018B"
+section = ["deducciones_incentivos", "total_aplicado"]
+semantic_role = "is_liquidacion_iv_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
