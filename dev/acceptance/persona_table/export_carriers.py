@@ -15,6 +15,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 
+from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.export_parse_models import ParsedExportFieldValue
 
 
@@ -35,14 +36,6 @@ KNOWN_FOREIGN_CARRIERS: tuple[ForeignCarrier, ...] = (
     ForeignCarrier(modelo="200", cell="dp200043.f0056", casilla="DP200010:00526", owner_cell="dp200010.f0082"),
 )
 """The cells found carrying DP200010's casillas, each with the page-qualified identity its owner cell holds."""
-
-CLASSIFIED_MODELOS: frozenset[str] = frozenset({"200"})
-"""The modelos whose export map is held red while a bare casilla identity is bound on more than one page.
-
-Cross-page reuse of a bare identity is legitimate only where the registry admits a repeat of one box. Until the
-registry's classification leaves only admitted repeats, every reuse counts; the expectation then reads the admitted
-set from the registry instead of counting all of them.
-"""
 
 
 def _cell(field: ParsedExportFieldValue) -> str:
@@ -71,18 +64,27 @@ def foreign_carrier_mismatches(modelo: str, parsed: Iterable[ParsedExportFieldVa
     return found
 
 
-def cross_page_reuse_mismatches(modelo: str, parsed: Iterable[ParsedExportFieldValue]) -> list[str]:
-    """The bare casilla identities the map binds to fields on more than one page, as one counted reason."""
-    if modelo not in CLASSIFIED_MODELOS:
+def cross_page_reuse_mismatches(
+    unadjudicated: Iterable[CasillaId], parsed: Iterable[ParsedExportFieldValue]
+) -> list[str]:
+    """The casilla identities the registry leaves unadjudicated that the fichero binds on more than one page.
+
+    The registry owns which cross-page reuse is a declared repeat of one box (a segment on the casilla, a split value
+    policy, or an echo cell); this check only reports an identity the registry itself leaves without a declared
+    relation, read from the written fichero, as one counted reason.
+    """
+    wanted = {str(casilla) for casilla in unadjudicated}
+    if not wanted:
         return []
     pages: dict[str, set[str]] = {}
     for field in parsed:
-        if field.casilla_id is not None:
+        if field.casilla_id is not None and str(field.casilla_id) in wanted:
             pages.setdefault(str(field.casilla_id), set()).add(_cell(field).partition(".")[0])
     reused = sorted(casilla for casilla, sheets in pages.items() if len(sheets) > 1)
     if not reused:
         return []
     first = ", ".join(reused[:3])
     return [
-        f"{len(reused)} casilla identities are bound on more than one page (first {first}), not classified as repeats"
+        f"{len(reused)} casilla identities are bound on more than one page (first {first}), "
+        "not declared as repeats by the registry"
     ]

@@ -54,22 +54,27 @@ def test_another_modelo_is_not_held_to_the_listed_cells() -> None:
     assert foreign_carrier_mismatches("303", parsed) == []
 
 
-def test_a_bare_identity_bound_on_two_pages_is_counted_once_as_unclassified() -> None:
+_UNADJUDICATED = ["00524"]
+
+
+def test_an_identity_the_registry_leaves_unadjudicated_and_bound_on_two_pages_is_counted_once() -> None:
     parsed = [
-        _field("dp200010.f0080", "00524"),
         _field("dp200032.f0092", "00524"),
         _field("dp200043.f0054", "00524"),
         _field("dp200010.f0001", "00001"),
         _field("dp200010.f0002", "00001"),
-        _field("dp200012.f0003", "00777"),
         _field("dp200012.f0004", None),
-        _field("dp200032.f0003", "00778"),
     ]
-    assert cross_page_reuse_mismatches("200", parsed) == [
-        "1 casilla identities are bound on more than one page (first 00524), not classified as repeats"
+    assert cross_page_reuse_mismatches(_UNADJUDICATED, parsed) == [
+        "1 casilla identities are bound on more than one page (first 00524), not declared as repeats by the registry"
     ]
 
 
-def test_cross_page_reuse_is_judged_only_for_the_classified_modelos() -> None:
+def test_a_repeat_the_registry_declares_is_not_reported() -> None:
     parsed = [_field("dp200010.f0080", "00524"), _field("dp200032.f0092", "00524")]
-    assert cross_page_reuse_mismatches("303", parsed) == []
+    assert cross_page_reuse_mismatches([], parsed) == []
+
+
+def test_an_unadjudicated_identity_written_on_one_page_only_is_not_reported() -> None:
+    parsed = [_field("dp200010.f0080", "00524"), _field("dp200010.f0081", "00524")]
+    assert cross_page_reuse_mismatches(_UNADJUDICATED, parsed) == []
