@@ -32,8 +32,6 @@ if TYPE_CHECKING:
     from .....application.modelo.work_amend_correction import ModeloAmendmentCorrectionContextV1
     from .screen import ModeloWorkbenchScreen
 
-AMENDMENT_KEY = "m"
-"""The workbench key that prepares a correction of a declaration recorded as filed."""
 _UNAVAILABLE_LOCALE_KEY = "workspace.modelo.correction.unavailable"
 _UNKNOWN_LOCALE_KEY = "tui.modelo.amendment.unknown"
 
@@ -171,4 +169,4 @@ class WorkbenchAmendmentMixin:
         self._notice(tr(_UNKNOWN_LOCALE_KEY))
 
 
-__all__ = ["AMENDMENT_KEY", "WorkbenchAmendmentMixin"]
+__all__ = ["WorkbenchAmendmentMixin"]

@@ -53,7 +53,7 @@ from ...tests.settling import settle, settle_until
 from ..edit_screens import FieldEditScreen
 from ..overview import ProfileManagerScreen
 from ..record_groups import MalformedRecordGroupPageError, RecordGroupDoor, RecordGroupsPin, RecordGroupStream
-from ..record_groups_panel import RecordGroupsScreen, block_lines, block_rows, fact_text, ledger_row_text
+from ..record_groups_panel import RecordGroupsScreen, block_rows, fact_text, ledger_row_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -244,7 +244,7 @@ def test_a_group_is_drawn_in_served_words_only(authority_operation: PinnedAuthor
     stream_items = _stream(authority_operation)
     stream = RecordGroupStream(ProfileRecordGroupKind.RENTAL_PROPERTY)
     stream.accept(_page(stream_items, 0, len(stream_items)))
-    texts = [text for _css, text in block_lines(stream.blocks[0])]
+    texts = [line.text for line in block_rows(stream.blocks[0])]
     group = stream.blocks[0].group
     assert texts[0] == f"{group.kind_words} · {group.summary_words}"
     for member in stream.blocks[0].members:
