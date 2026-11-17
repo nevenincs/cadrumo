@@ -22,10 +22,10 @@ import {
   type AgentDocumentReference,
   type AgentRead,
   type AgentReplyRecord,
-  type AgentToolStatus,
   type AgentTurnRecord,
   type AgentViews,
 } from "./agentViews";
+import type { ToolCallStatus } from "./agentGatewayContract";
 
 // A conversation as it is being written: its history, read from the host,
 // with the host's stream applied on top. The stream is watched before the
@@ -210,7 +210,7 @@ function replied(
   };
 }
 
-const RANK: Record<AgentToolStatus, number> = {
+const RANK: Record<ToolCallStatus, number> = {
   pending: 0,
   in_progress: 1,
   completed: 2,

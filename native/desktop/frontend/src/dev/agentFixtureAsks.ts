@@ -11,15 +11,15 @@ import { offeredOptions } from "../shell/agentPermission";
 import type {
   AgentApproval,
   AgentApprovalOption,
-  AgentQuestion,
   AgentQuestionnaire,
 } from "../shell/agentSession";
+import type { ClarificationQuestion } from "../shell/agentGatewayContract";
 
 // The questions, as cadrumo-agent serves them: every field present, a text
 // question's options null. A reply that asks is given these unless its
 // message asks for the most the agent can: four questions of four options,
 // a prompt and an option at the longest they can be.
-export const QUESTIONS: AgentQuestion[] = [
+export const QUESTIONS: ClarificationQuestion[] = [
   {
     id: "q-trimestre",
     prompt: "¿Qué trimestre preparo?",
@@ -41,7 +41,7 @@ export const QUESTIONS: AgentQuestion[] = [
 export const exactly = (words: string, length: number) =>
   `${words.repeat(Math.ceil(length / words.length)).slice(0, length - 1)}.`;
 
-export const MOST_QUESTIONS: AgentQuestion[] = [
+export const MOST_QUESTIONS: ClarificationQuestion[] = [
   {
     id: "q-trimestre",
     prompt: exactly(

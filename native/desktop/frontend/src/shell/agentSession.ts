@@ -9,12 +9,14 @@ import type {
 } from "./agentCatalogContract";
 import type {
   AttachmentPolicyResponse,
+  ClarificationQuestion,
   ModelLicenceResponse,
   Provider,
   ProviderCondition,
   SkillDetailRecord,
   SkillListResponse,
   SkillVerificationRecord,
+  ToolKind,
 } from "./agentGatewayContract";
 import type {
   AttachmentCardAnswer,
@@ -216,22 +218,6 @@ export type AgentSendResult = {
 // frame. Their bounds are the agent's (see agentClarification); the host maps
 // what the agent serves onto these, and the column holds to them.
 
-/** One question the agent asks the person: a choice among its options, or
- * free text. cadrumo-agent's `ClarificationQuestion`. */
-export type AgentQuestion = {
-  /** One to 64 of `A-Z a-z 0-9 _ . -`, not starting with a dot or a hyphen.
-   * The answers are keyed by it. */
-  id: string;
-  /** One to 512 characters, on one line. */
-  prompt: string;
-  kind: "choice" | "text";
-  /** A choice's one to four distinct options of one to 128 characters each,
-   * answered with exactly one of them as written. A text question has none. */
-  options?: string[] | null;
-  /** Whether it must be answered; it must be when this is absent. */
-  required?: boolean;
-};
-
 /** One to four questions the agent asks together; the reply waits until the
  * person answers them, sends a new message instead, or declines.
  * `request_id` is cadrumo-agent's `ClarificationRequest.request_id`;
@@ -239,7 +225,7 @@ export type AgentQuestion = {
 export type AgentQuestionnaire = {
   request_id: string;
   reply_id: string;
-  questions: AgentQuestion[];
+  questions: ClarificationQuestion[];
 };
 
 /** How the person resolves a questionnaire: one of cadrumo-agent's three
@@ -281,19 +267,6 @@ export type AgentApprovalOption = {
     | "reject_always";
 };
 
-/** What a tool does, as cadrumo-agent classes it. */
-export type AgentToolKind =
-  | "read"
-  | "edit"
-  | "delete"
-  | "move"
-  | "search"
-  | "execute"
-  | "think"
-  | "fetch"
-  | "switch_mode"
-  | "other";
-
 /** Something the reply cannot do until the person decides: a tool the agent
  * wants to call, or a Cadrumo operation's review before it commits. Only a
  * deliberate gesture of the person answers it; no tool the model can call
@@ -309,7 +282,7 @@ export type AgentApproval = {
   /** The declared server that owns the requested tool. */
   tool_server?: string | null;
   /** What kind of tool it is, one of cadrumo-agent's ten. The card words it. */
-  tool_kind?: AgentToolKind | null;
+  tool_kind?: ToolKind | null;
   /** Bounded description supplied by the service, including supported targets.
    * It is not the call's full argument document. */
   description?: string | null;
