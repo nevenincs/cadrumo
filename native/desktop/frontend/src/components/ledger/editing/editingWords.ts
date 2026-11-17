@@ -1,9 +1,13 @@
+import type {
+  StageFieldName,
+  DraftFieldName,
+} from "../../../shell/ledgerMovementCheckContract";
 // How staged editing says what it does: why a value was refused, why a cell
 // takes no edit, a field's name and a value before and after, in the chrome
 // language and the product's terms. Nothing here decides anything.
 
 import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
-import type { DraftField, StageField } from "../../../shell/ledgerStage";
+
 import type { Translate } from "../../../shell/strings";
 import type { ColumnId } from "../movements/movementsModel";
 import {
@@ -40,28 +44,29 @@ export function lockText(t: Translate, lock: LockReason): string {
 }
 
 /** The column a field is shown in, where it has one. */
-const FIELD_COLUMN: Partial<Record<StageField | DraftField, ColumnId>> = {
-  booked_date: "date",
-  value_date: "date",
-  amount: "amount",
-  direction: "direction",
-  counterparty: "counterparty",
-  description: "description",
-  group_label: "group_label",
-  business_classification: "classification",
-  category_id: "category",
-  taxable_base: "taxable_base",
-  iva_rate: "iva_rate",
-  iva_amount: "iva_amount",
-  iva_category: "iva_category",
-  irpf_category: "irpf_category",
-  notes: "notes",
-};
+const FIELD_COLUMN: Partial<Record<StageFieldName | DraftFieldName, ColumnId>> =
+  {
+    booked_date: "date",
+    value_date: "date",
+    amount: "amount",
+    direction: "direction",
+    counterparty: "counterparty",
+    description: "description",
+    group_label: "group_label",
+    business_classification: "classification",
+    category_id: "category",
+    taxable_base: "taxable_base",
+    iva_rate: "iva_rate",
+    iva_amount: "iva_amount",
+    iva_category: "iva_category",
+    irpf_category: "irpf_category",
+    notes: "notes",
+  };
 
 /** A field's name: its column's where it has one. */
 export function fieldName(
   t: Translate,
-  field: StageField | DraftField,
+  field: StageFieldName | DraftFieldName,
 ): string {
   if (field === "booked_date" || field === "value_date")
     return t(`desktop.ledger.field.${field}`);
@@ -84,7 +89,7 @@ const FIGURES: ReadonlySet<string> = new Set([
 export function valueText(
   t: Translate,
   locale: string,
-  field: StageField | DraftField,
+  field: StageFieldName | DraftFieldName,
   value: string | null,
 ): string {
   if (value === null || value === "") return t("desktop.ledger.edit.empty");

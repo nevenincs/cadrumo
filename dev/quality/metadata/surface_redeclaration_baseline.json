@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "counts": {
-    "wire-type": 934,
-    "tui-date-decision": 1,
-    "tui-precedence": 5,
+    "wire-type": 925,
+    "tui-date-decision": 0,
+    "tui-precedence": 4,
     "duplicated-helper": 61
   },
   "occurrences": {
@@ -698,16 +698,12 @@
       "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerDefinitionId",
       "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerDropSignal",
       "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerErrorDetail",
-      "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerExportFormat",
       "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerFailure",
       "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerFailureCode",
       "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerIvaWalletStep",
-      "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerMovementStep",
-      "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerNextStep",
       "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerOutcome",
       "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerPort",
       "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerProfileStep",
-      "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerReadingModelStep",
       "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerRequest",
       "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerRequests",
       "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerResult",
@@ -716,7 +712,6 @@
       "wire-type:native/desktop/frontend/src/shell/ledger.ts:LedgerWorkStep",
       "wire-type:native/desktop/frontend/src/shell/ledger.ts:OwnAccountChange",
       "wire-type:native/desktop/frontend/src/shell/ledger.ts:PickedFile",
-      "wire-type:native/desktop/frontend/src/shell/ledger.ts:PublicDecimal",
       "wire-type:native/desktop/frontend/src/shell/ledger.ts:TerminalOperationFailure",
       "wire-type:native/desktop/frontend/src/shell/ledgerApply.ts:ApplyReport",
       "wire-type:native/desktop/frontend/src/shell/ledgerApply.ts:NotSentWhy",
@@ -774,14 +769,10 @@
       "wire-type:native/desktop/frontend/src/shell/ledgerSplitCheck.ts:SplitCheckQuestion",
       "wire-type:native/desktop/frontend/src/shell/ledgerSplitCheck.ts:SplitCheckView",
       "wire-type:native/desktop/frontend/src/shell/ledgerStage.ts:Draft",
-      "wire-type:native/desktop/frontend/src/shell/ledgerStage.ts:DraftField",
-      "wire-type:native/desktop/frontend/src/shell/ledgerStage.ts:LifecycleKind",
-      "wire-type:native/desktop/frontend/src/shell/ledgerStage.ts:M210Options",
       "wire-type:native/desktop/frontend/src/shell/ledgerStage.ts:MovementFacts",
       "wire-type:native/desktop/frontend/src/shell/ledgerStage.ts:SplitPartClassification",
       "wire-type:native/desktop/frontend/src/shell/ledgerStage.ts:StageCell",
       "wire-type:native/desktop/frontend/src/shell/ledgerStage.ts:StageEvent",
-      "wire-type:native/desktop/frontend/src/shell/ledgerStage.ts:StageField",
       "wire-type:native/desktop/frontend/src/shell/ledgerStage.ts:StageHistoryEntry",
       "wire-type:native/desktop/frontend/src/shell/ledgerStage.ts:StageKeep",
       "wire-type:native/desktop/frontend/src/shell/ledgerStage.ts:StageLabel",
@@ -943,14 +934,11 @@
       "wire-type:native/desktop/frontend/src/shell/views.ts:NotificationsSummary",
       "wire-type:native/desktop/frontend/src/shell/views.ts:ProfileViews"
     ],
-    "tui-date-decision": [
-      "tui-date-decision:src/cadrumo/entrypoints/tui/account_session_app.py:AccountSessionApp._session_expired"
-    ],
+    "tui-date-decision": [],
     "tui-precedence": [
       "tui-precedence:src/cadrumo/entrypoints/tui/ledger/entries_browse_layout.py:_ORDER_LOCALE_KEYS",
       "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list_values.py:LEVEL_ROLES",
       "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/issue_scale.py:LEVEL_MARKS",
-      "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py:_RECORD_FINDING_LEVELS",
       "tui-precedence:src/cadrumo/entrypoints/tui/modelo/workbench/screen_constants.py:FILTER_ORDER"
     ],
     "duplicated-helper": [

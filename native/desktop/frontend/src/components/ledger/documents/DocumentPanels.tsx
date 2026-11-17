@@ -25,10 +25,10 @@ import {
   servedNextStep,
   servedRefusalWords,
   type FilePick,
-  type LedgerNextStep,
   type LedgerPort,
   type PickedFile,
 } from "../../../shell/ledger";
+import type { OperationNextStepV1 } from "../../../shell/ledgerDocumentContract";
 import type { InvoiceKind } from "../../../shell/ledgerInvoiceContract";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { formatTime } from "../../../shared/dateFormats";
@@ -149,7 +149,7 @@ export function AttachmentQueue({
     /** The sentence the backend served for a refusal, if any. */
     words: string | null;
     /** The step the backend served for putting it right, if any. */
-    step: LedgerNextStep | null;
+    step: OperationNextStepV1 | null;
   } | null>(null);
   if (read.phase === "failed")
     return <Failed t={t} read={read} onRetry={onRetry} />;

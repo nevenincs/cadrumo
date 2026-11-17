@@ -1,3 +1,8 @@
+import type {
+  StageFieldName,
+  DraftFieldName,
+  LifecycleAction,
+} from "./ledgerMovementCheckContract";
 // The changes the person has staged on the Ledger page and not yet saved:
 // field changes per movement, new movements, and actions. They live in this
 // reducer's state only, never in storage, and nothing is written until an
@@ -5,8 +10,7 @@
 // check a staged change against the others before anything is sent.
 
 import type { FileToken, LedgerDecision } from "./ledger";
-import type { LedgerClassifyWindowRequest } from "./ledgerMovementContract";
-import type { LedgerStagedDraftField } from "./ledgerMovementCheckContract";
+import type { LedgerClassifyM210Options } from "./ledgerMovementContract";
 import { fieldsDroppedBy } from "./ledgerClassifications";
 import { isTransactionPrefix, sameDecimal } from "./ledgerGrammar";
 import type { LedgerTransactionReviewProjection } from "./ledgerReadContract";
@@ -39,9 +43,8 @@ export const STAGE_FIELDS = [
   "counterparty_country",
   "counterparty_identification_state",
 ] as const;
-export type StageField = (typeof STAGE_FIELDS)[number];
 
-const DECIMAL_FIELDS: ReadonlySet<StageField> = new Set([
+const DECIMAL_FIELDS: ReadonlySet<StageFieldName> = new Set([
   "amount",
   "business_pct",
   "taxable_base",
@@ -52,30 +55,26 @@ const DECIMAL_FIELDS: ReadonlySet<StageField> = new Set([
 /** A staged value: a canonical value to set, or a clear. A blank paste is
  * neither: it stages nothing. */
 export type StagedValue = { kind: "set"; value: string } | { kind: "clear" };
-export type StagedRowChanges = Partial<Record<StageField, StagedValue>>;
+export type StagedRowChanges = Partial<Record<StageFieldName, StagedValue>>;
 
-/** The fields a new movement can carry when it is added. */
-export type DraftField = LedgerStagedDraftField["field"];
 /** A new movement. Its idempotency key is drawn once and kept until the add
  * settles, so an add sent again after an unknown outcome is the same add. */
 export type Draft = {
   key: string;
   idempotencyKey: string;
-  fields: Partial<Record<DraftField, string>>;
+  fields: Partial<Record<DraftFieldName, string>>;
 };
 
-export type M210Options = NonNullable<LedgerClassifyWindowRequest["m210"]>;
 /** A split part's classification, set when the split is staged. */
 export type SplitPartClassification = {
   classification: string;
   category_id?: string | null;
   business_pct?: string | null;
 };
-export type LifecycleKind = "archive" | "stash" | "restore" | "exclude";
 /** An action on one or more movements, each sent through its own
  * operation. */
 export type StagedAction =
-  | { id: string; kind: LifecycleKind; transactionId: string; reason: string }
+  | { id: string; kind: LifecycleAction; transactionId: string; reason: string }
   | { id: string; kind: "link"; transactionId: string; invoiceId: string }
   | {
       id: string;
@@ -131,7 +130,7 @@ export type StagedAction =
       /** What approving it writes, field by field, as the review showed
        * it: the review lists each before it is approved. */
       writes?: {
-        field: StageField;
+        field: StageFieldName;
         value: string | null;
         /** Worked out by Cadrumo from the registry's rate, not proposed
          * by the model. */
@@ -142,7 +141,7 @@ export type StagedAction =
       id: string;
       kind: "m210";
       transactionId: string;
-      options: M210Options;
+      options: LedgerClassifyM210Options;
     }
   | {
       /** Base, rate and IVA worked out from the registry's rate for the
@@ -219,24 +218,29 @@ export type StageState = {
  * empty and undefined when the read does not show it. */
 export type StageCell = {
   id: string;
-  field: StageField;
+  field: StageFieldName;
   value: StagedValue;
   stored: string | null | undefined;
 };
 
 /** What the apply leaves staged: refused, unknown and not-sent work. */
 export type StageKeep = {
-  rows: Record<string, StageField[]>;
+  rows: Record<string, StageFieldName[]>;
   drafts: string[];
   actions: string[];
 };
 
 export type StageEvent =
   | { type: "stage"; label: StageLabel; cells: StageCell[] }
-  | { type: "revert_cell"; id: string; field: StageField }
+  | { type: "revert_cell"; id: string; field: StageFieldName }
   | { type: "revert_movement"; id: string; keepActions?: boolean }
   | { type: "add_draft"; draft: Draft }
-  | { type: "edit_draft"; key: string; field: DraftField; value: string | null }
+  | {
+      type: "edit_draft";
+      key: string;
+      field: DraftFieldName;
+      value: string | null;
+    }
   | { type: "remove_draft"; key: string }
   | { type: "stage_action"; action: StagedAction }
   | { type: "drop_action"; id: string }
@@ -264,7 +268,7 @@ export const EMPTY_STAGE: StageState = {
 
 /** Whether staging `value` over `stored` would change nothing. */
 export function unchangedBy(
-  field: StageField,
+  field: StageFieldName,
   stored: string | null | undefined,
   value: StagedValue,
 ): boolean {
@@ -295,7 +299,7 @@ function committed(
 function withoutField(
   rows: Record<string, StagedRowChanges>,
   id: string,
-  field: StageField,
+  field: StageFieldName,
 ): Record<string, StagedRowChanges> {
   const changes = rows[id];
   if (!changes || !(field in changes)) return rows;
@@ -579,7 +583,7 @@ export function reconcileMovementSelection(
  * the read does not carry it. */
 export function storedFieldValue(
   row: LedgerTransactionReviewProjection,
-  field: StageField,
+  field: StageFieldName,
 ): string | null | undefined {
   const t = row.transaction;
   switch (field) {
@@ -595,7 +599,7 @@ export function storedFieldValue(
   }
 }
 
-export type MovementFacts = Record<StageField, string | null | undefined>;
+export type MovementFacts = Record<StageFieldName, string | null | undefined>;
 
 /** The movement as it would be once its staged changes are saved. The page
  * draws the stored row; this is for checking staged changes only. */
@@ -617,7 +621,8 @@ export function effectiveFacts(
   const chosen = changes?.business_classification;
   if (chosen?.kind === "set")
     for (const field of fieldsDroppedBy(chosen.value))
-      if (!changes?.[field as StageField]) facts[field as StageField] = null;
+      if (!changes?.[field as StageFieldName])
+        facts[field as StageFieldName] = null;
   return facts;
 }
 

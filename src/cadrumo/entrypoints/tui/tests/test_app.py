@@ -454,7 +454,7 @@ async def test_with_pushed_retirement_the_session_is_read_only_at_its_expiry() -
                 profile_label="Current profile",
                 expires_at=datetime.now(UTC) + timedelta(seconds=0.6),
             )
-        return HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Current profile", expires_at=None)
+        raise AccountSessionExpiredError()
 
     factories = account_factories()
     object.__setattr__(factories, "subscribe_retirement", lambda _retired: lambda: None)

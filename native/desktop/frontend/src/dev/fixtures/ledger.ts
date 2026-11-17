@@ -7,7 +7,7 @@ import type {
   CatalogueInvoiceSnapshot,
   LedgerTransactionProjection,
 } from "../../shell/ledgerInvoiceContract";
-import type { PublicDecimal } from "../../shell/ledger";
+import type { PublicDecimal } from "../../shell/ledgerInvoiceContract";
 import { exampleInvoices } from "./ledgerInvoices";
 import { settlementOf } from "../ledgerSettlement";
 import { fixtureDay, fixtureInstant, fixtureYear } from "@/dev/fixtureDates";

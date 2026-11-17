@@ -10,6 +10,7 @@
 import type { LedgerProrrataContracts } from "./ledgerProrrataContract";
 import type { LedgerReadContracts } from "./ledgerReadContract";
 import type {
+  OperationNextStepV1,
   LedgerEvidenceAttachmentQueueProjection,
   LedgerEvidenceAttachmentViewWindowRequest,
   LedgerEvidenceAttachmentViewProjection,
@@ -439,94 +440,43 @@ export type LedgerErrorDetail = {
   refusal_words_language?: string | null;
   /** The registered operation the refusal names for putting it right, where
    * it names one. */
-  next_step?: LedgerNextStep | null;
+  next_step?: OperationNextStepV1 | null;
 };
-
-/** The step a refusal serves for putting it right: a closed kind, what it
- * concerns and the words that offer it, in the language of the refusal's own
- * sentence. The window does what it already knows for the kind: runs the
- * creation or the calculation, opens the declaration whose own form says what
- * it lacks, opens the profile at one detail, or offers declaring the profile
- * setup complete. It holds no table of operator actions. */
-export type LedgerNextStep =
-  | {
-      kind: "create_work";
-      modelo: string;
-      filing_year: number;
-      period_code: string;
-      words: string;
-    }
-  | { kind: "calculate_work"; work_unit_id: string; words: string }
-  | { kind: "open_work"; work_unit_id: string; words: string }
-  /** `path` is the profile detail's own schema address, which the profile
-   * page already addresses its rows by. */
-  | { kind: "open_profile_field"; path: string; words: string }
-  | { kind: "complete_profile_setup"; words: string }
-  /** Opens one ledger movement in the Libro, where the fact the refusal
-   * names is recorded. */
-  | { kind: "open_movement"; transaction_id: string; words: string }
-  /** Opens the IVA balance of the declaration one work unit holds, where its
-   * carried compensation is recorded. */
-  | { kind: "open_iva_wallet"; work_unit_id: string; words: string }
-  /** Opens the IVA balance of the declaration named here, at the entry that
-   * records the opening balance its carry reads. */
-  | {
-      kind: "open_iva_wallet_opening_balance";
-      modelo: string;
-      filing_year: number;
-      period_code: string;
-      words: string;
-    }
-  /** Opens the model picker of the agent column, where the person picks the
-   * model documents are read with. */
-  | { kind: "choose_reading_model"; words: string };
-
-/** The step the agent column's model picker answers. */
-export type LedgerReadingModelStep = Extract<
-  LedgerNextStep,
-  { kind: "choose_reading_model" }
->;
 
 /** The steps the profile page answers, the two a readiness refusal serves. */
 export type LedgerProfileStep = Extract<
-  LedgerNextStep,
+  OperationNextStepV1,
   { kind: "open_profile_field" } | { kind: "complete_profile_setup" }
 >;
 
 /** The step a declaration's IVA balance answers, naming the declaration whose
  * opening balance is missing. */
 export type LedgerIvaWalletStep = Extract<
-  LedgerNextStep,
+  OperationNextStepV1,
   { kind: "open_iva_wallet_opening_balance" } | { kind: "open_iva_wallet" }
->;
-
-/** The step the Libro answers, naming one movement. */
-export type LedgerMovementStep = Extract<
-  LedgerNextStep,
-  { kind: "open_movement" }
 >;
 
 /** The steps a declaration surface answers, each naming a declaration. */
 export type LedgerWorkStep = Extract<
-  LedgerNextStep,
+  OperationNextStepV1,
   { kind: "create_work" } | { kind: "calculate_work" } | { kind: "open_work" }
 >;
 
 /** Whether a served step is one a declaration surface answers. */
-export const isWorkStep = (step: LedgerNextStep): step is LedgerWorkStep =>
+export const isWorkStep = (step: OperationNextStepV1): step is LedgerWorkStep =>
   step.kind === "create_work" ||
   step.kind === "calculate_work" ||
   step.kind === "open_work";
 
 /** Whether a served step is one the profile page answers. */
 export const isProfileStep = (
-  step: LedgerNextStep,
+  step: OperationNextStepV1,
 ): step is LedgerProfileStep =>
   step.kind === "open_profile_field" || step.kind === "complete_profile_setup";
 
 /** The step the backend served on a refusal's detail; null when it served
  * none, or one of a kind this window does not run. */
-export function servedNextStep(detail: unknown): LedgerNextStep | null {
+export function servedNextStep(detail: unknown): OperationNextStepV1 | null {
   if (typeof detail !== "object" || detail === null) return null;
   const step = (detail as { next_step?: unknown }).next_step;
   if (typeof step !== "object" || step === null) return null;
@@ -669,11 +619,6 @@ export type LedgerDropSignal =
 // ---- Typed requests and results, by definition --------------------------
 // Field names are the registered Python contracts' own. A request omits the
 // profile, which the host fills.
-
-export type PublicDecimal = { decimal: string };
-
-/** An export format as the host's save dialog command names it. */
-export type LedgerExportFormat = string;
 
 export interface LedgerRequests {
   "ledger.known-values": Omit<
