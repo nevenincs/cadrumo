@@ -101,6 +101,7 @@ class AgentHostError(RuntimeError):
         self.reason = reason
         self.agent_code = agent_code
         self.native_refusal = native_refusal
+        self.cancel_cause: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
