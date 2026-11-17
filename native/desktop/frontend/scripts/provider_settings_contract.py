@@ -33,9 +33,13 @@ from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
 from cadrumo_agent_service.providers.application.contracts import (
+    ProviderCredentialSource,
+    ProviderReadiness,
     ProviderSettingsAnswer,
+    ProviderSettingsMode,
     ProviderSignInSnapshot,
     ProviderStatusEntry,
+    ProviderStatusReason,
     SignInEvent,
     SignInMethod,
 )
@@ -56,6 +60,10 @@ _MODELS: dict[type[BaseModel], str] = {
 _WORDS: tuple[tuple[object, str, str], ...] = (
     (SignInMethod, "ProviderSignInMethod", "The attended sign-in routes a person can select for a provider."),
     (SignInEvent, "ProviderSignInEvent", "A service-owned sign-in attempt's current transient event."),
+    (ProviderSettingsMode, "ProviderSettingsMode", "What the profile holds for a provider."),
+    (ProviderCredentialSource, "ProviderCredentialSource", "Where the provider's credential comes from."),
+    (ProviderReadiness, "ProviderReadiness", "Whether the provider can be used now, and if not, why."),
+    (ProviderStatusReason, "ProviderStatusReason", "Why a provider is not usable, as a stable code."),
 )
 """Each closed word list emitted as a named type, and referred to by that name where a field uses it."""
 
@@ -76,6 +84,8 @@ def _join(parts: list[str]) -> str:
 
 
 def _literal_words(annotation: object, field: str) -> list[str]:
+    if isinstance(annotation, type) and issubclass(annotation, StrEnum):
+        return [_quote(member.value) for member in annotation]
     words = get_args(annotation)
     if not all(isinstance(word, str) for word in words):
         raise TypeError(f"{field}: only string literals are mapped, not {annotation!r}")
