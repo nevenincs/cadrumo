@@ -34,6 +34,25 @@ def _is_opaque_operation_id(identifier: OperationId) -> bool:
     return len(identifier) == 64 and all(character in "0123456789abcdef" for character in identifier)
 
 
+def _claim_budgeted(identifiers: tuple[OperationId, ...]) -> list[OperationId]:
+    """Spend one budgeted slot for each identifier that still has one, without waiting for the budget."""
+    if not identifiers or not _budget_lock.acquire(blocking=False):
+        return []
+    claimed: list[OperationId] = []
+    try:
+        for identifier in identifiers:
+            count = _line_counts.get(identifier, 0)
+            if count >= _MAX_LINES_PER_OPERATION:
+                continue
+            if count == 0 and len(_line_counts) >= _MAX_TRACKED_OPERATIONS:
+                continue
+            _line_counts[identifier] = count + 1
+            claimed.append(identifier)
+    finally:
+        _budget_lock.release()
+    return claimed
+
+
 def _claim_identifiers(
     operation_ids: tuple[OperationId, ...], settled: frozenset[OperationId]
 ) -> tuple[OperationId, ...]:
@@ -44,25 +63,11 @@ def _claim_identifiers(
     """
     # The first four positions of the batch, behind any settlement it names.
     candidates = (*(identifier for identifier in operation_ids if identifier in settled), *operation_ids[:4])
-    identifiers = tuple(dict.fromkeys(candidates))[:4]
-    identifiers = tuple(identifier for identifier in identifiers if _is_opaque_operation_id(identifier))
-    exempt = tuple(identifier for identifier in identifiers if identifier in settled)
-    budgeted = tuple(identifier for identifier in identifiers if identifier not in settled)
-    if not budgeted or not _budget_lock.acquire(blocking=False):
-        return exempt
-    claimed: list[OperationId] = list(exempt)
-    try:
-        for identifier in budgeted:
-            count = _line_counts.get(identifier, 0)
-            if count >= _MAX_LINES_PER_OPERATION:
-                continue
-            if count == 0 and len(_line_counts) >= _MAX_TRACKED_OPERATIONS:
-                continue
-            _line_counts[identifier] = count + 1
-            claimed.append(identifier)
-    finally:
-        _budget_lock.release()
-    return tuple(claimed)
+    identifiers = tuple(
+        identifier for identifier in tuple(dict.fromkeys(candidates))[:4] if _is_opaque_operation_id(identifier)
+    )
+    budgeted = _claim_budgeted(tuple(identifier for identifier in identifiers if identifier not in settled))
+    return tuple(identifier for identifier in identifiers if identifier in settled or identifier in budgeted)
 
 
 def log_operation_cue_timing(
