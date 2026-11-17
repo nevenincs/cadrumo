@@ -71,6 +71,9 @@ impl AgentRefusal {
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AgentStopCause {
+    /// The person signed out, or the runtime retired their session as signed out.
+    SignedOut,
+    /// No person session is held yet, and none is signed out.
     SignInUnavailable,
     RuntimeUnavailable,
     ProfileChanged,
