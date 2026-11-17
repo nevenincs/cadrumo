@@ -998,6 +998,8 @@ export type PublicModeloFormGridRow = {
   key: string;
   heading: ModeloFormText;
   cells: PublicModeloFormGridCell[];
+  rate_cell: number | null;
+  rate_base_empty: boolean | null;
 };
 
 /**
