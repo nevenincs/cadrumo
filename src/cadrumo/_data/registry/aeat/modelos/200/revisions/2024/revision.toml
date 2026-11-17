@@ -5266,3 +5266,46 @@ id = "DP200026F:01868"
 [revisions."2024".casilla_removals.selector]
 revision = "2023"
 id = "DP200026F:01869"
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "DP200026F:02301" }
+fields = { id = "DP200026G:02301", segmento = "DP200026G" }
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "DP200026F:02302" }
+fields = { id = "DP200026G:02302", segmento = "DP200026G" }
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "03276" }
+fields = { legal_refs = ["ley-49-2002:art-6", "ley-49-2002:art-7", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"] }
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "03277" }
+fields = { legal_refs = ["ley-49-2002:art-6", "ley-49-2002:art-7", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"] }
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "03278" }
+fields = { legal_refs = ["ley-49-2002:art-6", "ley-49-2002:art-7", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"] }
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "03279" }
+fields = { legal_refs = ["ley-49-2002:art-6", "ley-49-2002:art-7", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"] }
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "03280" }
+fields = { legal_refs = ["ley-49-2002:art-6", "ley-49-2002:art-7", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"] }
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018:01217"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018:01218"
+
+[[revisions."2024".casilla_removals]]
+[revisions."2024".casilla_removals.selector]
+revision = "2023"
+id = "DP200018:01219"
