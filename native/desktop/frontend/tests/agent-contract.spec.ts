@@ -7,31 +7,32 @@ import {
   questionnaireFaults,
 } from "../src/shell/agentClarification";
 import { offeredOptions } from "../src/shell/agentPermission";
-import type {
-  AgentApprovalOption,
-  AgentQuestion,
-} from "../src/shell/agentSession";
+import type { AgentApprovalOption } from "../src/shell/agentSession";
+import type { ClarificationQuestion } from "../src/shell/agentGatewayContract";
 
 // cadrumo-agent's clarification and permission rules, as the column reads
 // them. Every expected value is written out from the agent's contract (its
 // bounds, its identifier grammar, the Unicode Cc rule, the answer checks),
 // not derived from the code under test.
 
-const text = (id: string): AgentQuestion => ({
+const text = (id: string): ClarificationQuestion => ({
   id,
   prompt: "¿Algo más?",
   kind: "text",
   options: null,
   required: false,
 });
-const choice = (options: string[], required = true): AgentQuestion => ({
+const choice = (options: string[], required = true): ClarificationQuestion => ({
   id: "q",
   prompt: "¿Cuál?",
   kind: "choice",
   options,
   required,
 });
-const request = (questions: AgentQuestion[], request_id = "clar-1") => ({
+const request = (
+  questions: ClarificationQuestion[],
+  request_id = "clar-1",
+) => ({
   request_id,
   questions,
 });
@@ -141,15 +142,15 @@ test.describe("a questionnaire the agent could have built", () => {
 });
 
 test.describe("an answer the agent takes", () => {
-  const quarter: AgentQuestion = {
+  const quarter: ClarificationQuestion = {
     id: "quarter",
     prompt: "¿Qué trimestre?",
     kind: "choice",
     options: ["Primero", "Segundo"],
     required: true,
   };
-  const notes: AgentQuestion = { ...text("notes"), required: false };
-  const nif: AgentQuestion = { ...text("nif"), required: true };
+  const notes: ClarificationQuestion = { ...text("notes"), required: false };
+  const nif: ClarificationQuestion = { ...text("nif"), required: true };
   const questions = [quarter, nif, notes];
   const faults = (answers: Record<string, string>) =>
     answerFaults(questions, answers).map(({ id, kind }) => `${id}:${kind}`);

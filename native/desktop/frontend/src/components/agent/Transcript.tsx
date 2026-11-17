@@ -12,6 +12,7 @@ import { cn } from "@/components/ui/cn";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
+import type { ToolCallStatus } from "../../shell/agentGatewayContract";
 import { describedGap } from "../../shell/compose";
 import { useStrings, type Translate } from "../../shell/strings";
 import { AgentTextAction } from "./AgentAction";
@@ -19,7 +20,6 @@ import { KIND_GLYPH } from "./files";
 import { Markdown, type OpenLink } from "./Markdown";
 import type {
   SentFile,
-  ToolActivityState,
   TranscriptItem,
   TranscriptMessage,
   TranscriptToolActivity,
@@ -34,7 +34,7 @@ const NEWEST_SLACK = 8;
 /** How much of the agent's thinking the preview keeps: its newest part. */
 const THINKING_SHOWN = 4_000;
 
-function toolWords(t: Translate): Record<ToolActivityState, string> {
+function toolWords(t: Translate): Record<ToolCallStatus, string> {
   return {
     pending: t("desktop.agent.tool_pending"),
     in_progress: t("desktop.agent.tool_running"),
