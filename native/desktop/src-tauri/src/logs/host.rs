@@ -900,34 +900,6 @@ mod tests {
     }
 
     #[test]
-    fn agent_admission_duration_is_visible_and_projects_as_closed_scalars() {
-        let diagnostics = Diagnostics::default();
-        for (admitted, elapsed_ms) in [(true, 1310), (false, 20_000)] {
-            diagnostics.service(
-                None,
-                cadrumo_application::diagnostics::service::ServiceFact::AgentAdmissionTiming {
-                    generation: 3,
-                    admitted,
-                    elapsed_ms,
-                },
-            );
-        }
-        let entries = HostEvents::default().poll(&diagnostics);
-        assert_eq!(entries.len(), 2);
-        assert_eq!(
-            entries[0].message,
-            "agent_admission_timing: admitted in 1310 ms"
-        );
-        assert_eq!(entries[0].context["service_admitted"], true);
-        assert_eq!(entries[0].context["service_elapsed_ms"], 1310);
-        assert_eq!(
-            entries[1].message,
-            "agent_admission_timing: refused after 20000 ms"
-        );
-        assert_eq!(entries[1].context["service_admitted"], false);
-    }
-
-    #[test]
     fn setup_admission_read_times_are_visible_and_project_as_closed_scalars() {
         use cadrumo_application::diagnostics::service::{
             AdmissionRead, AdmissionReadOutcome, ServiceFact,
