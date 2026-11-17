@@ -93,6 +93,10 @@ struct Shared {
     completed: Mutex<Option<mpsc::UnboundedReceiver<Completion>>>,
     tasks: Mutex<Vec<tauri::async_runtime::JoinHandle<()>>>,
     closed: AtomicBool,
+    /// Set when the service is stopped because its person signed out, until
+    /// another start begins: an administration call that stop cut short is the
+    /// sign-out, not a failure.
+    signed_out: AtomicBool,
     started: AtomicBool,
     retry_requested: AtomicBool,
     wake: Notify,
@@ -229,6 +233,7 @@ impl Supervisor {
                 completed: Mutex::new(Some(completed)),
                 tasks: Mutex::new(Vec::new()),
                 closed: AtomicBool::new(false),
+                signed_out: AtomicBool::new(false),
                 started: AtomicBool::new(false),
                 retry_requested: AtomicBool::new(false),
                 wake: Notify::new(),
@@ -375,6 +380,17 @@ impl Supervisor {
     }
 
     /// The admitted service identity for a sequence of related administration reads.
+    /// Whether the service is stopping, or stopped, because its person signed out.
+    pub fn signed_out(&self) -> bool {
+        self.shared.signed_out.load(Ordering::Acquire)
+            || matches!(
+                lock(&self.shared.status).state,
+                State::Refused {
+                    code: Refusal::SignedOut
+                }
+            )
+    }
+
     pub fn admin_generation(&self) -> Result<u64> {
         self.begin();
         lock(&self.shared.admin)
@@ -526,6 +542,9 @@ async fn stop_running(
     generation: Option<u64>,
     cause: AgentStopCause,
 ) -> Result<()> {
+    if cause == AgentStopCause::SignedOut {
+        shared.signed_out.store(true, Ordering::Release);
+    }
     if let Some(preparing) = lock(&shared.preparing).as_ref()
         && generation.is_none_or(|wanted| wanted == preparing.generation)
     {
@@ -708,6 +727,7 @@ fn start(
     signals: &mpsc::UnboundedSender<(u64, Signal)>,
 ) {
     let generation = shared.generation.fetch_add(1, Ordering::AcqRel) + 1;
+    shared.signed_out.store(false, Ordering::Release);
     let cancelled = Arc::new(AtomicBool::new(false));
     let started = Instant::now();
     *lock(&shared.preparing) = Some(Preparing {
@@ -999,7 +1019,7 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                 let cause = match &allowed {
                     Allowed::Serve(_) => AgentStopCause::ProfileChanged,
                     Allowed::Pending => AgentStopCause::SignInUnavailable,
-                    Allowed::Refuse(Refusal::SignedOut) => AgentStopCause::SignInUnavailable,
+                    Allowed::Refuse(Refusal::SignedOut) => AgentStopCause::SignedOut,
                     Allowed::Refuse(_) => AgentStopCause::RuntimeUnavailable,
                 };
                 let _ = stop_running(&shared, None, cause).await;
@@ -1137,7 +1157,7 @@ async fn retire_failed_person(
         },
     );
     let cause = if retired {
-        AgentStopCause::SignInUnavailable
+        AgentStopCause::SignedOut
     } else {
         AgentStopCause::ProtocolRefused
     };

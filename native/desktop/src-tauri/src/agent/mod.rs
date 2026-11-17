@@ -357,6 +357,7 @@ impl AgentHost {
         command_refusal(
             &self.diagnostics,
             &self.supervisor.status().state,
+            self.supervisor.signed_out(),
             code,
             error,
         )
@@ -444,14 +445,19 @@ fn sync_local_engine(host: &std::sync::Weak<AgentHost>) {
     }
 }
 
-/// Calls racing service admission are retryable; other failures keep their diagnostics.
+/// Calls racing service admission are retryable; a call cut short by the person's
+/// sign-out answers that sign-out; other failures keep their diagnostics.
 fn command_refusal(
     diagnostics: &Diagnostics,
     state: &supervisor::protocol::State,
+    signed_out: bool,
     code: &str,
     error: cadrumo_application::error::application::ApplicationError,
 ) -> Refused {
     use cadrumo_application::error::application::ErrorCode;
+    if signed_out {
+        return Refused::new("agent_signed_out".to_owned());
+    }
     let awaiting_admission = matches!(state, supervisor::protocol::State::Starting)
         && matches!(
             (error.code, error.reason.as_deref()),
@@ -1641,11 +1647,48 @@ mod tests {
             ] {
                 let diagnostics = Diagnostics::default();
                 let error = ApplicationError::new(code, Operation::Cli).with_reason(reason);
-                let refused = command_refusal(&diagnostics, &state, "agent_service_failed", error);
+                let refused =
+                    command_refusal(&diagnostics, &state, false, "agent_service_failed", error);
                 assert_eq!(refused.code, expected);
                 assert_eq!(diagnostics.snapshot(u64::MAX).events.len(), failures);
             }
         }
+    }
+
+    #[test]
+    fn a_call_the_persons_sign_out_cut_short_answers_signed_out_and_logs_no_failure() {
+        // b26: the service stopped for the sign-out while the catalogue read was
+        // in flight, and its unreadable reply was logged as a failure.
+        let diagnostics = Diagnostics::default();
+        let error = ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+            .with_reason("admin_catalog")
+            .caused_by(
+                ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                    .with_reason("admin_read"),
+            );
+        let refused = command_refusal(
+            &diagnostics,
+            &supervisor::protocol::State::Ready {
+                agent_version: "synthetic".into(),
+            },
+            true,
+            "agent_service_failed",
+            error.clone(),
+        );
+        assert_eq!(refused.code, "agent_signed_out");
+        assert!(diagnostics.snapshot(u64::MAX).events.is_empty());
+        // The same failure while the person is signed in stays a failure.
+        let refused = command_refusal(
+            &diagnostics,
+            &supervisor::protocol::State::Ready {
+                agent_version: "synthetic".into(),
+            },
+            false,
+            "agent_service_failed",
+            error,
+        );
+        assert_eq!(refused.code, "agent_service_failed");
+        assert_eq!(diagnostics.snapshot(u64::MAX).events.len(), 1);
     }
 
     #[test]
@@ -1660,6 +1703,7 @@ mod tests {
             let refused = command_refusal(
                 &diagnostics,
                 &supervisor::protocol::State::Starting,
+                false,
                 "agent_service_failed",
                 error,
             );
