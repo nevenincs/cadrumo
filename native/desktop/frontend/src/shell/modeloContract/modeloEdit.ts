@@ -14,6 +14,7 @@ import type {
   CasillaId,
   ModeloDetailRowWireV1,
   OutputLanguage,
+  PreconditionVerdictSnapshot,
   WorkUnitId,
 } from "./modelo";
 import type {
@@ -312,6 +313,7 @@ export type ModeloEditPreflightProjectionV1 = {
   findings: ModeloEditReviewFindingV1[];
   operator_entries_unknown: boolean;
   refusal_words: string | null;
+  refusal_door: PreconditionVerdictSnapshot | null;
   rebase: ModeloFormRebaseEntryV1[];
 };
 

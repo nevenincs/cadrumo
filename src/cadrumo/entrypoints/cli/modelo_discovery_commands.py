@@ -32,6 +32,7 @@ from ...core.aggregation import BindingSourceKind
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.period import Period
+from ...core.presentation_marks import flag_mark
 from ...core.tax_domain import TaxDomain
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
@@ -514,11 +515,11 @@ def support_matrix(ctx: typer.Context) -> None:
     for entry in result.entries:
         lines.append(
             f"{entry.modelo_id:>6}  {entry.revision_count:>4}  {entry.latest_revision_id:<12}  "
-            f"{modelo_discovery_rendering.mark(entry.calc_grade):>4}  "
-            f"{modelo_discovery_rendering.mark(entry.has_completeness_manifest):>8}  "
-            f"{modelo_discovery_rendering.mark(entry.has_fixed_width_export):>3}  "
-            f"{modelo_discovery_rendering.mark(entry.has_xml_dictionary_export):>3}  "
-            f"{modelo_discovery_rendering.mark(entry.has_extractor):>9}  {len(entry.renames):>7}"
+            f"{flag_mark(entry.calc_grade):>4}  "
+            f"{flag_mark(entry.has_completeness_manifest):>8}  "
+            f"{flag_mark(entry.has_fixed_width_export):>3}  "
+            f"{flag_mark(entry.has_xml_dictionary_export):>3}  "
+            f"{flag_mark(entry.has_extractor):>9}  {len(entry.renames):>7}"
         )
     emit_envelope(ctx, command="modelo.support_matrix", result=result, lines=lines)
 
