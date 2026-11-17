@@ -110,10 +110,16 @@ pub type Changed = Arc<dyn Fn() -> Pin<Box<dyn Future<Output = ()> + Send>> + Se
 /// Builds the command for the profile, given the bearer minted for it.
 pub type Launch = Arc<dyn Fn(&str, &str) -> Result<Prepared> + Send + Sync>;
 
+/// Acquires the person session a start is admitted under. It runs while the
+/// service process starts, which is given only the profile id; nothing is
+/// admitted until it has answered.
+pub type AcquirePerson =
+    Box<dyn FnOnce() -> Result<Option<super::super::person::HeldPerson>> + Send>;
+
 /// What one start runs.
 pub struct Prepared {
     pub command: Command,
-    pub person: Option<super::super::person::HeldPerson>,
+    pub person: AcquirePerson,
     /// The local engine a profile that chose none runs, as the package decides it.
     pub local_engine_default: cadrumo_application::provisioning::local_ai::LocalEngine,
 }

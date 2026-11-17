@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from threading import Thread
+from time import monotonic
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
@@ -33,8 +34,11 @@ from .service_connection_records import (
     admission_status_matches,
     cancel_pending_status,
     cancel_service_admissions,
+    entered_timed,
+    log_admission_timing,
     pending_service_reply,
     person_holder_matches,
+    timed_stage,
 )
 
 if TYPE_CHECKING:
@@ -214,6 +218,7 @@ class ProfileConnectionServicesMixin:
                 if pending is None or not self._service_admission_slots.acquire(blocking=False):
                     return
                 pending.started = True
+                pending.started_at = monotonic()
             try:
                 Thread(
                     target=self._verify_pending_service_admission,
@@ -229,10 +234,12 @@ class ProfileConnectionServicesMixin:
 
     def _verify_pending_service_admission(self: RuntimeProfileConnections, pending: PendingServiceAdmission) -> None:
         context, request = pending.context, pending.request
+        stages: dict[str, float] = {}
         try:
-            result = self._admit_service(context, request, pending=pending)
+            result = self._admit_service(context, request, pending=pending, stages=stages)
         except Exception:
             result = AccessDenied(code=AccessDenialCode.AUTHORITY_UNAVAILABLE)
+        log_admission_timing(pending, stages, result)
         with self._guard:
             pending.complete = True
             pending.result = result
@@ -389,7 +396,9 @@ class ProfileConnectionServicesMixin:
         request: ServiceAdmission,
         *,
         pending: PendingServiceAdmission | None = None,
+        stages: dict[str, float] | None = None,
     ):
+        timed = {} if stages is None else stages
         holder = self._connected(context.connection_id)
         if not person_holder_matches(holder, context, request):
             return AccessDenied(code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
@@ -400,9 +409,11 @@ class ProfileConnectionServicesMixin:
         if service is None or recipient is None or host is None or service.descriptor.service_id != request.service_id:
             return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
         # Native process inspection can stall; it must not fence unrelated profile work.
-        if not self._service_verifier.recheck_service(recipient.context, service.channel, service.peer):
+        with timed_stage(timed, "recheck"):
+            rechecked = self._service_verifier.recheck_service(recipient.context, service.channel, service.peer)
+        if not rechecked:
             return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
-        with host.guard:
+        with entered_timed(host.guard, timed, "guard_wait"), timed_stage(timed, "commit"):
             with self._guard:
                 if self._admission_holder_changed(holder, context, request, pending):
                     return AccessDenied(code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
