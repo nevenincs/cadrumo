@@ -15,6 +15,7 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 import inspect
+import logging
 from collections.abc import Callable, Hashable, Iterator
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -61,6 +62,8 @@ from .production_operation_registry import production_operation_registry
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LIFETIME = frozenset({"baseline_id", "issued_at", "expires_at"})
+
+_OPERATIONS_LOGGER = "cadrumo.application.modelo.workbench_operations"
 
 _FORM_INPUT_PORTS = frozenset(
     {
@@ -272,6 +275,29 @@ def test_a_write_to_the_profile_moves_the_epoch_and_the_next_read_is_fresh(reade
     assert reader.keys[0].store_epoch != reader.keys[1].store_epoch
     assert reader.builds == 2
     assert after.calculation_revision_id != before.calculation_revision_id
+
+
+def _memo_reads(caplog: pytest.LogCaptureFixture) -> list[tuple[str, str]]:
+    return [
+        (str(vars(record)["outcome"]), str(vars(record)["changed"]))
+        for record in caplog.records
+        if record.getMessage() == "workbench_form_memo_read"
+    ]
+
+
+def test_each_read_logs_whether_it_was_served_and_which_key_parts_moved(
+    reader: _Reader, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger=_OPERATIONS_LOGGER)
+    reader.read()
+    reader.read()
+    applied = reader.work.apply(scalar=(_SET_06,))
+    assert applied.refusal is None
+    reader.read()
+    reader.read(OutputLanguage.ES)
+
+    reads = _memo_reads(caplog)
+    assert reads == [("empty", ""), ("hit", ""), ("miss", "store_epoch,admission"), ("miss", "language")], reads
 
 
 def test_another_language_is_read_afresh(reader: _Reader) -> None:

@@ -68,6 +68,12 @@ class WorkbenchMemoSlot[KeyT: Hashable, ValueT]:
         self._entry: tuple[KeyT, ValueT] | None = None
         self._closed = False
 
+    def kept_key(self) -> KeyT | None:
+        """The key of the result kept now, or ``None`` when nothing is kept."""
+        with self._lock:
+            entry = self._entry
+        return None if entry is None else entry[0]
+
     def reuse(self, key: KeyT, build: Callable[[], ValueT]) -> ValueT:
         """Return the stored result for ``key``, or build, store and return it."""
         with self._lock:

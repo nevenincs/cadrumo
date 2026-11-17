@@ -21,6 +21,7 @@ None of them writes taxpayer data; each settles with no effect.
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Callable, Mapping
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
@@ -39,9 +40,11 @@ from cadrumo_client.contracts.access_vocabulary import (
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.casilla_id import CasillaId
+from ...core.diagnostic_log import diagnostic_event
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
+from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now, today_madrid
@@ -110,7 +113,12 @@ from .work_form_scalar_values import comparable_entry
 from .work_form_service import modelo_form_snapshot
 from .work_lifecycle import get_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
-from .workbench_form_read_memo import WorkbenchFormReadKey, admission_identity, with_fresh_admission
+from .workbench_form_read_memo import (
+    WorkbenchFormReadKey,
+    admission_identity,
+    changed_key_parts,
+    with_fresh_admission,
+)
 from .workbench_projection import (
     ModeloWorkbenchFormProjectionV1,
     ModeloWorkFilingStateProjectionV1,
@@ -341,6 +349,24 @@ class ModeloEditApplyPrerequisiteProjectionV1(BaseModel):
 # -- executors ----------------------------------------------------------------
 
 
+_log = get_logger(__name__)
+
+
+def _log_form_memo_read(kept: WorkbenchFormReadKey | None, key: WorkbenchFormReadKey) -> None:
+    """Say whether a form read was served from the session memo and, when not, which key parts moved.
+
+    Only the parts' names are logged, never their values.
+    """
+    if kept is None:
+        outcome, changed = "empty", ""
+    else:
+        parts = changed_key_parts(kept, key)
+        outcome, changed = ("miss", ",".join(parts)) if parts else ("hit", "")
+    diagnostic_event(
+        _log, "workbench_form_memo_read", fields={"outcome": outcome, "changed": changed}, level=logging.INFO
+    )
+
+
 def _bucket_id(profile_id: UUID) -> str:
     bucket_id = str(profile_id)
     if require_active_bucket_id() != bucket_id:
@@ -423,7 +449,9 @@ class ModeloWorkbenchFormExecutor:
                 as_of=today_madrid(),
                 admission=admission_identity(admission),
             )
+            kept = held.form_read.kept_key()
             served = held.form_read.reuse(key, lambda: fresh(bucket_id, ports, contracts, admission))
+            _log_form_memo_read(kept, key)
             return with_fresh_admission(served, admission)
 
         def fresh(
