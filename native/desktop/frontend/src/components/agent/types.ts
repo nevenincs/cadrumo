@@ -2,7 +2,7 @@
 // only and follow no wire format: whatever serves the column maps its own
 // answers onto these shapes.
 
-import type { ProviderAuthKind } from "../settings/types";
+import type { AuthKind } from "../../shell/agentCatalogContract";
 
 /** One of a few things to choose among, as shown. */
 export type Choice = {
@@ -22,7 +22,7 @@ export type ProviderWay = {
   transport: ProviderTransport;
   /** What the catalog states the way is authenticated with; a way that needs
    * nothing is a server on this computer, whatever its transport. */
-  authKind: ProviderAuthKind;
+  authKind: AuthKind;
   selectable: boolean;
   /** Why it cannot be chosen, shown beside it when `selectable` is false. */
   unavailableReason?: string;
