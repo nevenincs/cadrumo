@@ -21,11 +21,11 @@ import typer
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryLoadError, RegistryValidationError
 from dev.temporary_output import prepare_temp_root
 
 from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
-from ..compiler.revision_export_projection import UndeclaredExportTargetError
+from ..compiler.revision_export_projection import UndeclaredExportTargetError, undeclared_export_targets
 from .authored_form_bridge import AuthoredFormBridge, prepare_authored_form_bridge
 from .authority_cli import publish_authority
 from .bootstrap_supersession import (
@@ -894,15 +894,20 @@ def run(
             root = Path(temporary_name)
             try:
                 prepared = prepare_generated_tree_invocation(invocation, root)
-            except UndeclaredExportTargetError as refusal:
+            except RegistryLoadError as load_refusal:
                 # Only the typed stale-export refusal of a reviewed rename reaches
                 # the set repair; every other load refusal stays closed.
-                if action != "republish" or any(
-                    (
-                        reconcile_authored_form,
-                        reconcile_casilla_splits,
-                        reconcile_row_bindings,
-                        reconcile_scalar_sources,
+                refusal = undeclared_export_targets(load_refusal)
+                if (
+                    refusal is None
+                    or action != "republish"
+                    or any(
+                        (
+                            reconcile_authored_form,
+                            reconcile_casilla_splits,
+                            reconcile_row_bindings,
+                            reconcile_scalar_sources,
+                        )
                     )
                 ):
                     raise

@@ -46,7 +46,7 @@ jobs:
     # The host preset configures the desktop targets only with the payload,
     # and the payload needs the runner's cadrumo-agent checkout.
     env:
-      CADRUMO_PACKAGE_AGENT_SOURCE_DIR: ${{ vars.CADRUMO_PACKAGE_AGENT_SOURCE_DIR }}
+      CADRUMO_PACKAGE_AGENT_SOURCE_DIR: ${{ vars.CADRUMO_PACKAGE_AGENT_SOURCE_DIR_LINUX }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -57,7 +57,7 @@ jobs:
         shell: bash
         run: |
           if [ -z "${CADRUMO_PACKAGE_AGENT_SOURCE_DIR// /}" ]; then
-            echo "Repository variable CADRUMO_PACKAGE_AGENT_SOURCE_DIR must name the cadrumo-agent project directory." >&2
+            echo "Repository variable CADRUMO_PACKAGE_AGENT_SOURCE_DIR_LINUX must name the cadrumo-agent project directory on the Linux runner." >&2
             exit 1
           fi
 
@@ -151,7 +151,7 @@ jobs:
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 150
     env:
-      CADRUMO_PACKAGE_AGENT_SOURCE_DIR: ${{ vars.CADRUMO_PACKAGE_AGENT_SOURCE_DIR }}
+      CADRUMO_PACKAGE_AGENT_SOURCE_DIR: ${{ vars.CADRUMO_PACKAGE_AGENT_SOURCE_DIR_WINDOWS }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -167,7 +167,7 @@ jobs:
         shell: pwsh
         run: |
           if ([string]::IsNullOrWhiteSpace($env:CADRUMO_PACKAGE_AGENT_SOURCE_DIR)) {
-            throw 'Repository variable CADRUMO_PACKAGE_AGENT_SOURCE_DIR must name the cadrumo-agent project directory.'
+            throw 'Repository variable CADRUMO_PACKAGE_AGENT_SOURCE_DIR_WINDOWS must name the cadrumo-agent project directory on the Windows runner.'
           }
 
       - name: Native package verification

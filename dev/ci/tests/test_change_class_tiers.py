@@ -39,8 +39,8 @@ _RELEASE_BRANCH: Final = "main"
 #: Pull requests into either branch run the merge gate.
 _GATED_BRANCHES: Final = [_DEFAULT_BRANCH, _RELEASE_BRANCH]
 
-#: The only workflow a push to the default branch may start.
-_PUSH_WORKFLOWS: Final = frozenset({_RELEASE_PLEASE.name})
+#: The workflows a push may start: the release proposal on main, the merge gate on feature/tui.
+_PUSH_WORKFLOWS: Final = frozenset({_RELEASE_PLEASE.name, _MERGE_GATE.name})
 #: The artifact the release build job seals and every verifier downloads.
 _COHORT_ARTIFACT: Final = "cadrumo-release-cohort"
 _COHORT_BUILD_JOB: Final = "build-cohort"
@@ -116,12 +116,14 @@ def _push_workflows(documents: list[tuple[Path, dict[str, Any]]]) -> set[str]:
     return {path.name for path, document in documents if "push" in _triggers(document)}
 
 
-def test_no_workflow_but_release_please_starts_on_a_push() -> None:
-    """Only a push to main starts a workflow, the release proposal; feature/tui pushes start none."""
+def test_a_push_starts_only_the_release_proposal_on_main_and_the_merge_gate_on_feature_tui() -> None:
+    """A push to main proposes a release; a landing pushed to feature/tui is measured by the merge gate alone."""
     documents = [(path, _document(path)) for path in _workflow_paths()]
     assert _push_workflows(documents) == set(_PUSH_WORKFLOWS)
     release_please = _triggers(_document(_RELEASE_PLEASE))["push"]
     assert release_please["branches"] == [_RELEASE_BRANCH]
+    merge_gate = _triggers(_document(_MERGE_GATE))["push"]
+    assert merge_gate["branches"] == [_DEFAULT_BRANCH]
 
 
 def test_the_push_gate_refuses_a_second_push_workflow() -> None:
