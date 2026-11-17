@@ -80,6 +80,8 @@ def prorrata_settlement_values(
     ``None`` when the work unit is not the periodic IVA return, is not the
     year's annual settlement period, or its revision lacks any of the three
     casillas.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     if str(work_unit.modelo) != form_for_role("iva.periodic"):
         return None
@@ -166,6 +168,8 @@ def settled_prorrata_register(
 
     Pure: the caller decides whether the result is written (local filing) or
     only read (export of the revision about to be filed).
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
 
     Raises:
         ProrrataSettlementEspecialContinuationError: When the prior year's

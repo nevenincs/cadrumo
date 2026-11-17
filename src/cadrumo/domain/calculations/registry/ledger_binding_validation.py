@@ -71,6 +71,8 @@ def ledger_selector_vocabulary_date(revision: ModeloRevision, support: TemporalS
     the support floor first governs a supported filing on the floor date, which is
     then the earliest date its vocabulary can be read on; a revision that ends
     before the floor, or starts after a hard ceiling, governs none.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     window = support.date_envelope()
     start = max(revision.valid_from, window.floor)

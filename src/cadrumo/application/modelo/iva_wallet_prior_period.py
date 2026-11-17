@@ -165,6 +165,8 @@ def prior_compensation_source_period(revision: ModeloRevision, carry_period: Per
     declared balance is the one the period after it carries; ``revision`` is the
     edition calculating ``carry_period``, whose own requirement names it.
     ``None`` when the revision reads no single earlier period for it.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     requirement = _prior_compensation_requirement(
         revision, filing_year=carry_period.filing_year, period=carry_period.registry_token

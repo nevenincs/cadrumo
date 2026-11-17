@@ -72,6 +72,8 @@ def revision_granting_reports(
     left by an attempt whose lock never landed and stands for nothing. An
     unlocked revision has no witness yet, so every grant recorded for it is
     returned.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     grants = tuple(
         candidate

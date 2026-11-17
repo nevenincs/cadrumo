@@ -43,7 +43,10 @@ class InventoryClaimLedgerReads:
 
 
 def claimable_transaction_facts(transactions: TransactionCatalogue) -> dict[str, ClaimedTransactionFacts]:
-    """The tax substrate of every active ledger row; an archived, stashed or split row is not in the ledger's totals."""
+    """The tax substrate of every active ledger row; an archived, stashed or split row is not in the ledger's totals.
+
+    Parameter types: ``transactions`` (:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`).
+    """
     return {
         row.transaction_id: ClaimedTransactionFacts(
             transaction_id=row.transaction_id,

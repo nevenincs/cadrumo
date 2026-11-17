@@ -3,6 +3,8 @@
 Each registration keeps its persisted identity and is registered by the
 namespace registry alongside the product namespaces; its remote mirror policy
 is test-only, so no mirror ever publishes these rows.
+
+Each namespace declares the :class:`SensitivityClass` of its rows.
 """
 
 from __future__ import annotations

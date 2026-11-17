@@ -575,6 +575,8 @@ def ledger_iva_revision_vocabulary_failures(
 
     The date is :func:`ledger_selector_vocabulary_date`: the revision's own
     ``valid_from``, raised to the support floor when the revision starts below it.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     on_date = ledger_selector_vocabulary_date(revision, authority.supported_filing_years())
     if on_date is None:

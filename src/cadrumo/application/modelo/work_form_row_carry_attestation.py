@@ -10,6 +10,8 @@ stated it. A column the calculation resolved, a zero included, is not asked
 about, because a resolved zero leaves the box off and so cannot be told apart
 from an unknown one by the row's values. A form with no calculation holds no
 row and offers none.
+
+The calculation is the one held by the :class:`CalculationRevision`.
 """
 
 from __future__ import annotations

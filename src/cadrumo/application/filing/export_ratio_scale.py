@@ -19,7 +19,10 @@ from ...domain.calculations.registry.schema import ModeloRevision
 def casilla_values_as_designed(
     casilla_values: Mapping[CasillaId, object], *, revision: ModeloRevision
 ) -> dict[CasillaId, object]:
-    """Return ``casilla_values`` with each fraction-scaled ratio of ``revision`` as its percentage."""
+    """Return ``casilla_values`` with each fraction-scaled ratio of ``revision`` as its percentage.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+    """
     fractions = fraction_casilla_ids(revision.casillas)
     return {
         casilla_id: as_percentage(value) if casilla_id in fractions and isinstance(value, Decimal) else value

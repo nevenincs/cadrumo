@@ -1,4 +1,7 @@
-"""Registered cross-period dependency inspection under one authority pin."""
+"""Registered cross-period dependency inspection under one authority pin.
+
+It reads a :class:`CalculationRevision` against the pinned :class:`RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 

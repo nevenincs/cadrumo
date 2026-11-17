@@ -160,6 +160,8 @@ def renta_inmueble_origin_columns(
     """Return the anexo C.1 origin columns ``revision`` declares, by part and by origin back.
 
     A pair declared twice keeps the first; :func:`renta_inmueble_origin_failures` refuses it.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     columns: dict[RentaInmuebleOriginPart, dict[int, BindingDefinition]] = {}
     for binding, provider in renta_inmueble_columns(revision):
@@ -228,6 +230,8 @@ def renta_inmueble_origin_failures(revision: ModeloRevision) -> tuple[str, ...]:
     carries nothing further; and the opening columns, which are carries of
     earlier returns, take the per-row statement of the pending-expense family
     while the computed ones take none.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
 
     Returns:
         The failures found, empty when the revision declares no origin column or declares them well.
