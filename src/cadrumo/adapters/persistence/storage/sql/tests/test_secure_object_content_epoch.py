@@ -2,20 +2,21 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
 from ......core.classification.policies import SensitivityClass
 from ......core.secure_object_write import SecureObjectWrite
+from ......core.time.clock import now
 from .secure_objects_support import ephemeral_secure_repo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NAMESPACE = "cadrumo-test.content.epoch"
 _OTHER_NAMESPACE = "cadrumo-test.content.epoch.other"
-_WRITTEN_AT = datetime(2026, 5, 22, 18, 0, 0, tzinfo=UTC)
+# The epoch digests no write time; one instant keeps every write here alike.
+_WRITTEN_AT = now()
 
 
 def _write(key: str, payload: bytes, namespace: str = _NAMESPACE) -> SecureObjectWrite:
