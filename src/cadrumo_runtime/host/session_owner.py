@@ -17,7 +17,7 @@ from cadrumo.application.user_profile.proof_cancellation import ProfileProofCanc
 from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo.core.time.fixed_clock import FixedClock
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
@@ -55,7 +55,7 @@ class ProfileWorkerSessionOwner:
         guard: AbstractContextManager[object],
         authorization: WorkerAuthorizationOwner | None = None,
         worker_script: Path | None = None,
-        wall_clock: Callable[[], datetime] = now,
+        wall_clock: Callable[[], datetime] = wall_now,
         lost: Callable[[], None] | None = None,
         fixed_clock: FixedClock | None = None,
     ) -> None:

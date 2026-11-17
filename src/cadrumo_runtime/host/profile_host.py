@@ -58,7 +58,7 @@ from cadrumo.application.user_profile.automation_operations import (
 from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
 from cadrumo.application.user_profile.session_retirement import SessionRetirement, SessionRetirementKind
 from cadrumo.core.operations import profile_operation_subject
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo.core.time.fixed_clock import FixedClock
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, OperationResponseScopeAllowed
 from cadrumo_client.contracts.access_vocabulary import (
@@ -116,7 +116,7 @@ class RuntimeProfileHost:
         admitting: Callable[[], bool],
         recipient: Callable[[EnrollmentRequester], ProtectedEnrollmentRecipient] | None = None,
         worker_script: Path | None = None,
-        wall_clock: Callable[[], datetime] = now,
+        wall_clock: Callable[[], datetime] = wall_now,
         retired: Callable[[SessionEvent, SessionKind], None] | None = None,
         operations_advanced: Callable[[tuple[OperationId, ...], bool], None] | None = None,
         model_runs: Callable[[WorkerModelRun, bytearray], tuple[ModelRunOutcome, bytearray]] | None = None,

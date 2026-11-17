@@ -6,10 +6,10 @@ idle deadline passes, so the deadline has to follow the leases: sooner than a
 live lease, and an admitted request is refused by storage; later than the last
 lease, and key material outlives every authority to use it.
 
-Lease admission and storage freshness read the wall clock separately. Custody
-is therefore left on its production clock and every step runs inside one frozen
-instant, so both readers observe the same controlled time; only the monotonic
-half of a lease lifetime is injected. Storage is read through the real
+Lease admission reads the wall clock in production and storage freshness reads
+the clock seam. Custody is therefore handed the seam clock here and every step
+runs inside one frozen instant, so both readers observe the same controlled
+time; the monotonic half of a lease lifetime is injected too. Storage is read through the real
 secure-object repository, whose freshness check is the reader that refuses.
 """
 
@@ -585,7 +585,7 @@ def _exercise(tmp_path: Path, case: str) -> None:
         identity = published_capsule_identity(profile_id, root)
         clock = _Clock(now())
         with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(profile_id)):
-            custody = ProfileWorkerCustody(identity, storage_root=root, monotonic=clock.monotonic)
+            custody = ProfileWorkerCustody(identity, storage_root=root, clock=now, monotonic=clock.monotonic)
             try:
                 _CASES[case](custody, clock, derive_test_bucket_key(str(profile_id), purpose="dek"))
             finally:
