@@ -11,6 +11,7 @@ from ....core.time.clock import frozen_clock, today_madrid
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.renta_codes_catalogue import (
     EnvelopeMembership,
+    is_ue_eea_country_code,
     ue_eea_country_codes,
     ue_eea_membership_across_envelope,
 )
@@ -20,7 +21,6 @@ from ...contribuyente.renta_codes import FiscalResidency
 from ..models import (
     IVARegime,
     TaxpayerProfile,
-    irnr_representante_fiscal_required,
     irnr_representante_fiscal_required_on_every_date,
 )
 
@@ -64,9 +64,9 @@ def test_a_country_that_leaves_between_editions_depends_on_the_date_of_the_fact(
         assert ue_eea_membership_across_envelope("GB") is EnvelopeMembership.DEPENDS_ON_DATE
         assert ue_eea_membership_across_envelope("FR") is EnvelopeMembership.EVERY_EDITION
         assert irnr_representante_fiscal_required_on_every_date("GB") is None
-        assert irnr_representante_fiscal_required("GB", effective_date=_BEFORE) is False
-        assert irnr_representante_fiscal_required("GB", effective_date=_LEAVES_ON) is True
-        assert irnr_representante_fiscal_required("FR", effective_date=_LEAVES_ON) is False
+        assert is_ue_eea_country_code("GB", effective_date=_BEFORE) is True
+        assert is_ue_eea_country_code("GB", effective_date=_LEAVES_ON) is False
+        assert is_ue_eea_country_code("FR", effective_date=_LEAVES_ON) is True
 
 
 @pytest.mark.parametrize(
@@ -81,8 +81,8 @@ def test_no_answer_changes_with_the_date_the_program_runs(run_date: date) -> Non
         assert today_madrid() == run_date
         assert irnr_representante_fiscal_required_on_every_date("GB") is None
         assert ue_eea_country_codes() == frozenset(_MEMBERS_BEFORE)
-        assert irnr_representante_fiscal_required("GB", effective_date=_BEFORE) is False
-        assert irnr_representante_fiscal_required("GB", effective_date=_LEAVES_ON) is True
+        assert is_ue_eea_country_code("GB", effective_date=_BEFORE) is True
+        assert is_ue_eea_country_code("GB", effective_date=_LEAVES_ON) is False
 
 
 def test_a_profile_decides_a_country_whose_membership_never_changes_without_a_date() -> None:
