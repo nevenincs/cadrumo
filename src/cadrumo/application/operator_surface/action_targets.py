@@ -158,9 +158,29 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ),
     ActionTarget("config.profile.create", ("config", "profile", "create"), "ConfigProfileCreateResult"),
     ActionTarget(
+        "config.profile.arrendamiento.add",
+        ("config", "profile", "arrendamiento", "add"),
+        "ConfigProfileArrendamientoAddResult",
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "config.profile.arrendamiento.edit",
+        ("config", "profile", "arrendamiento", "edit"),
+        "ConfigProfileArrendamientoEditResult",
+        required_inputs=("row",),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "config.profile.arrendamiento.list",
         ("config", "profile", "arrendamiento", "list"),
         "ConfigProfileArrendamientoListResult",
+    ),
+    ActionTarget(
+        "config.profile.arrendamiento.remove",
+        ("config", "profile", "arrendamiento", "remove"),
+        "ConfigProfileArrendamientoRemoveResult",
+        required_inputs=("row",),
+        profile_bound_write=True,
     ),
     ActionTarget(
         "config.profile.ascendiente.edit",
@@ -181,6 +201,19 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ),
     ActionTarget(
         "config.profile.edit", ("config", "profile", "edit"), "ConfigProfileEditResult", profile_bound_write=True
+    ),
+    ActionTarget(
+        "config.profile.inmueble.add",
+        ("config", "profile", "inmueble", "add"),
+        "ConfigProfileInmuebleAddResult",
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "config.profile.inmueble.edit",
+        ("config", "profile", "inmueble", "edit"),
+        "ConfigProfileInmuebleEditResult",
+        required_inputs=("row",),
+        profile_bound_write=True,
     ),
     ActionTarget("config.profile.list", ("config", "profile", "list"), "ConfigListResult"),
     ActionTarget("config.profile.status", ("config", "profile", "status"), "ConfigStatusResult"),

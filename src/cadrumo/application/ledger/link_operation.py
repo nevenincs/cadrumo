@@ -12,6 +12,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 
 from ...core.errors.hierarchy import CoreValidationError
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
@@ -87,6 +88,8 @@ class LedgerLinkRequest(BaseModel):
 
     ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
+
+    ``output_language`` is the language the result's transaction link fields are named in.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -94,6 +97,7 @@ class LedgerLinkRequest(BaseModel):
     transaction_id: _Identifier
     invoice_id: _Identifier
     actor: Annotated[str, Field(max_length=64)] | None = None
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
 
 class LedgerLinkProjection(BaseModel):
@@ -292,7 +296,9 @@ class LedgerLinkExecutor:
             actor=actor,
             bucket_event_ids=result.bucket_event_ids,
             review_status=canonical.review_status,
-            transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
+            transaction=LedgerTransactionProjection.from_payload(
+                canonical.transaction, language=payload.output_language
+            ),
         )
 
 

@@ -4,7 +4,9 @@ The generic ``config profile add-row`` command and the specific ``inmueble`` and
 ``arrendamiento`` verbs submit the same registered row operations, so one case here
 speaks for all of them: the leaves typed are admitted into one canonical stored form,
 the row lands at a stable position, an edit changes only the named leaves, and what
-would orphan a lease or an accessory is refused naming the command that resolves it.
+would orphan a lease or an accessory is refused with the typed door that resolves it:
+a catalogue action that the command line, the workbench and the window each render,
+never a command string inside the sentence.
 """
 
 from __future__ import annotations
@@ -17,6 +19,9 @@ import pytest
 
 from ...adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ...application.operator_actions.catalogue import lookup_action
+from ...application.operator_actions.models import PreconditionVerdict
+from ...application.operator_surface.action_targets import ACTION_TARGETS
 from ...application.user_profile.login_session import authenticate_profile_for_invocation
 from ...application.user_profile.operations import build_user_profile_operation_definitions
 from ...application.user_profile.profile_operation_contracts import (
@@ -32,6 +37,8 @@ from ...application.user_profile.section_rows import (
     update_profile_repeatable_section_row,
 )
 from ...core.config import override_settings
+from ...core.errors.error_codes import render_error_text
+from ...core.operator_action_enums import ActionArgumentStatus
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.contribuyente.inmueble_facts import (
@@ -154,7 +161,24 @@ def _refusal(world: _World, act: Callable[[], object]) -> UserProfileValidationE
     with pytest.raises(UserProfileValidationError) as refused:
         act()
     assert world.facts() == before
+    assert "aeat " not in render_error_text(refused.value)
+    assert "door" not in (refused.value.context or {})
     return refused.value
+
+
+def _door(refusal: UserProfileValidationError) -> tuple[tuple[str, ...], dict[str, object]]:
+    """Return the command path the catalogue binds a refusal's typed door to, and the row arguments it binds."""
+    verdict = refusal.terminal_precondition_verdict
+    assert isinstance(verdict, PreconditionVerdict)
+    assert verdict.action is not None
+    command_key = lookup_action(verdict.action.action_id).target_command_key
+    target = next(row for row in ACTION_TARGETS if row.command_key == command_key)
+    bound: dict[str, object] = {
+        item.argument_name: item.value
+        for item in verdict.argument_bindings
+        if item.status is ActionArgumentStatus.RESOLVED
+    }
+    return target.cli_path, bound
 
 
 def test_a_property_is_stored_in_its_canonical_form_at_a_stable_position(world: _World) -> None:
@@ -170,7 +194,7 @@ def test_an_incoherent_property_is_refused_naming_the_leaf_and_the_add_door(worl
     refused = _refusal(world, lambda: world.add(INMUEBLE_SECTION, _property() | {"porcentaje_propiedad": "100.5"}))
 
     assert refused.translated_message == "application.user_profile.errors.rental_row_invalid"
-    assert (refused.context or {})["door"] == "aeat config profile inmueble add"
+    assert _door(refused) == (("config", "profile", "inmueble", "add"), {})
 
 
 def test_an_edit_changes_only_the_named_leaves_and_a_clear_removes_one(world: _World) -> None:
@@ -197,7 +221,8 @@ def test_an_incoherent_edit_is_refused_by_the_operation_naming_the_edit_door(wor
     refused = _refusal(world, lambda: world.edit(INMUEBLE_SECTION, row, {"porcentaje_propiedad": "50"}))
 
     assert refused.translated_message == "application.user_profile.errors.rental_row_invalid"
-    assert refused.context == {"leaf": "importes_movimientos", "door": "aeat config profile inmueble edit"}
+    assert refused.context == {"leaf": "importes_movimientos"}
+    assert _door(refused) == (("config", "profile", "inmueble", "edit"), {"row": row})
 
 
 def test_a_co_owned_property_states_what_its_ledger_rows_hold(world: _World) -> None:
@@ -214,7 +239,7 @@ def test_an_accessory_names_an_existing_other_property_as_its_principal(world: _
 
     missing = _refusal(world, lambda: world.add(INMUEBLE_SECTION, {"situacion": "5", "inmueble_principal": "9"}))
     assert missing.translated_message == "application.user_profile.errors.rental_principal_missing"
-    assert (missing.context or {})["door"] == "aeat config profile inmueble add"
+    assert _door(missing) == (("config", "profile", "inmueble", "add"), {})
 
     accessory = world.add(INMUEBLE_SECTION, {"situacion": "5", "inmueble_principal": str(principal)})
     assert world.stored(INMUEBLE_SECTION, accessory)["inmueble_principal"] == str(principal)
@@ -222,6 +247,7 @@ def test_an_accessory_names_an_existing_other_property_as_its_principal(world: _
     own = _refusal(world, lambda: world.edit(INMUEBLE_SECTION, accessory, {"inmueble_principal": str(accessory)}))
     assert own.translated_message == "application.user_profile.errors.rental_row_invalid"
     assert (own.context or {})["leaf"] == "inmueble_principal"
+    assert _door(own) == (("config", "profile", "inmueble", "edit"), {"row": accessory})
 
 
 def test_a_principal_with_an_accessory_cannot_be_removed_until_the_accessory_goes(world: _World) -> None:
@@ -231,6 +257,7 @@ def test_a_principal_with_an_accessory_cannot_be_removed_until_the_accessory_goe
     refused = _refusal(world, lambda: world.remove(INMUEBLE_SECTION, principal))
     assert refused.translated_message == "application.user_profile.errors.rental_property_has_accessories"
     assert (refused.context or {})["accessories"] == str(accessory)
+    assert _door(refused) == (("config", "profile", "inmueble", "edit"), {"row": accessory})
 
     world.remove(INMUEBLE_SECTION, accessory)
     world.remove(INMUEBLE_SECTION, principal)
@@ -241,7 +268,7 @@ def test_a_lease_must_name_a_property_the_profile_holds(world: _World) -> None:
     refused = _refusal(world, lambda: world.add(ARRENDAMIENTO_SECTION, _lease(7)))
 
     assert refused.translated_message == "application.user_profile.errors.rental_lease_property_missing"
-    assert (refused.context or {})["door"] == "aeat config profile inmueble add"
+    assert _door(refused) == (("config", "profile", "inmueble", "add"), {})
 
 
 def test_a_tenant_identifier_is_checked_unless_declared_foreign(world: _World) -> None:
@@ -251,12 +278,12 @@ def test_a_tenant_identifier_is_checked_unless_declared_foreign(world: _World) -
         world, lambda: world.add(ARRENDAMIENTO_SECTION, _lease(row) | {"inquilinos": "99999999A:otra:no"})
     )
     assert invalid.translated_message == "application.user_profile.errors.rental_tenant_id_invalid"
-    assert (invalid.context or {})["door"] == "aeat config profile arrendamiento add"
+    assert _door(invalid) == (("config", "profile", "arrendamiento", "add"), {})
 
     lease = world.add(ARRENDAMIENTO_SECTION, _lease(row) | {"inquilinos": "99999999A:otra:si"})
     assert world.stored(ARRENDAMIENTO_SECTION, lease)["inquilinos"] == "99999999A:otra:si"
     edit = _refusal(world, lambda: world.edit(ARRENDAMIENTO_SECTION, lease, {"inquilinos": "99999999A:otra:no"}))
-    assert (edit.context or {})["door"] == "aeat config profile arrendamiento edit"
+    assert _door(edit) == (("config", "profile", "arrendamiento", "edit"), {"row": lease})
 
 
 def test_a_lease_states_no_more_tenants_than_the_form_has_identification_slots(world: _World) -> None:
@@ -270,6 +297,7 @@ def test_a_lease_states_no_more_tenants_than_the_form_has_identification_slots(w
     refused = _refusal(world, lambda: world.add(ARRENDAMIENTO_SECTION, tenants(4)))
     assert refused.translated_message == "application.user_profile.errors.rental_row_invalid"
     assert (refused.context or {})["leaf"] == "inquilinos"
+    assert _door(refused) == (("config", "profile", "arrendamiento", "add"), {})
 
 
 def test_a_lease_is_stored_in_its_canonical_form_and_carries_the_lau_fact(world: _World) -> None:
@@ -289,7 +317,7 @@ def test_a_property_a_lease_names_cannot_be_removed_until_the_lease_goes(world: 
 
     refused = _refusal(world, lambda: world.remove(INMUEBLE_SECTION, property_row))
     assert refused.translated_message == "application.user_profile.errors.rental_property_has_leases"
-    assert (refused.context or {})["door"] == "aeat config profile arrendamiento remove"
+    assert _door(refused) == (("config", "profile", "arrendamiento", "remove"), {"row": lease_row})
 
     world.remove(ARRENDAMIENTO_SECTION, lease_row)
     world.remove(INMUEBLE_SECTION, property_row)
@@ -303,6 +331,7 @@ def test_an_edit_cannot_point_a_lease_at_a_missing_property(world: _World) -> No
     refused = _refusal(world, lambda: world.edit(ARRENDAMIENTO_SECTION, lease, {"inmueble": "42"}))
 
     assert refused.translated_message == "application.user_profile.errors.rental_lease_property_missing"
+    assert _door(refused) == (("config", "profile", "inmueble", "add"), {})
 
 
 def test_a_removed_position_is_never_given_to_the_next_property(world: _World) -> None:
@@ -332,11 +361,13 @@ def test_a_letting_start_is_stored_and_a_start_later_than_a_lease_is_refused_on_
     later = date(YEAR, 3, 1).isoformat()
     refused = _refusal(world, lambda: world.edit(INMUEBLE_SECTION, row, {"arrendado_desde": later}))
     assert refused.translated_message == "application.user_profile.errors.rental_row_invalid"
-    assert refused.context == {"leaf": "arrendado_desde", "door": "aeat config profile inmueble edit"}
+    assert refused.context == {"leaf": "arrendado_desde"}
+    assert _door(refused) == (("config", "profile", "inmueble", "edit"), {"row": row})
 
     other = world.add(INMUEBLE_SECTION, _property() | {"arrendado_desde": later, "referencia_catastral": CATASTRAL})
     refused_lease = _refusal(world, lambda: world.add(ARRENDAMIENTO_SECTION, _lease(other)))
     assert (refused_lease.context or {})["leaf"] == "arrendado_desde"
+    assert _door(refused_lease) == (("config", "profile", "inmueble", "edit"), {"row": other})
 
 
 def test_the_earliest_lease_start_does_not_fill_an_unstated_letting_start(world: _World) -> None:
@@ -362,7 +393,8 @@ def test_a_property_a_ledger_row_names_is_not_removed(world: _World) -> None:
 
     refusal = _refusal(world, lambda: world.remove(INMUEBLE_SECTION, row))
 
-    assert "aeat app ledger classify" in str(refusal.context)
+    assert refusal.translated_message == "application.user_profile.errors.rental_property_has_ledger_rows"
+    assert _door(refusal) == (("app", "ledger", "classify"), {})
     world.properties_named_by_ledger = {}
     world.remove(INMUEBLE_SECTION, row)
     assert row not in rows_from_facts(INMUEBLE_SECTION, world.facts())
@@ -375,7 +407,8 @@ def test_a_lease_a_ledger_row_names_is_not_removed(world: _World) -> None:
 
     refusal = _refusal(world, lambda: world.remove(ARRENDAMIENTO_SECTION, lease_row))
 
-    assert "aeat app ledger classify" in str(refusal.context)
+    assert refusal.translated_message == "application.user_profile.errors.rental_lease_has_ledger_rows"
+    assert _door(refusal) == (("app", "ledger", "classify"), {})
     assert lease_row in rows_from_facts(ARRENDAMIENTO_SECTION, world.facts())
 
 

@@ -28,7 +28,7 @@ from dev.prettier_json import dump_json
 
 if TYPE_CHECKING:
     from cadrumo.domain.user_profile.values import UserProfileFact
-    from cadrumo.entrypoints.tests.persona_materialisation import MaterialisedPersona
+    from cadrumo.entrypoints.tests.persona_world import MaterialisedPersona
 
 LANGUAGES = ("en", "es", "ca", "hu")
 _OBJECT = TypeAdapter(dict[str, object])
@@ -78,7 +78,7 @@ def _tax_year(persona: MaterialisedPersona) -> int:
 def _state(persona: MaterialisedPersona, statements: tuple[tuple[str, int, str | None], ...]) -> None:
     """State ``statements`` over the persona's elections through the profile fact writer."""
     from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
-    from cadrumo.entrypoints.tests.persona_materialisation import load_profile_record
+    from cadrumo.entrypoints.tests.persona_replay_requests import load_profile_record
 
     apply_profile_fact_changes(
         profile_id=str(persona.world.profile_id),
@@ -119,7 +119,7 @@ def _refusal(persona: MaterialisedPersona, language: str, name: str) -> dict[str
     from cadrumo.application.user_profile.imputation_election_service import apply_imputation_election
     from cadrumo.core.config import override_settings
     from cadrumo.core.errors.hierarchy import CadrumoError
-    from cadrumo.entrypoints.tests.persona_materialisation import load_profile_record
+    from cadrumo.entrypoints.tests.persona_replay_requests import load_profile_record
 
     current = load_profile_record(persona.world)
     answers = {"criterion": "monthly"} if name == "unknown_choice" else {"criterion": "devengo"}
@@ -146,7 +146,8 @@ def _refusal(persona: MaterialisedPersona, language: str, name: str) -> dict[str
 @contextmanager
 def _persona(root: Path, name: str) -> Generator[MaterialisedPersona]:
     """A copy of the persona's replayed profile, for one state to state its elections into."""
-    from cadrumo.entrypoints.tests.persona_materialisation import ReplayScope, materialised_persona
+    from cadrumo.entrypoints.tests.persona_materialisation import materialised_persona
+    from cadrumo.entrypoints.tests.persona_world import ReplayScope
 
     with materialised_persona(PERSONA_ID, root / name, ReplayScope.PROFILE, reuse=True) as persona:
         yield persona

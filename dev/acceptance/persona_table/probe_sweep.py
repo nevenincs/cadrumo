@@ -30,14 +30,11 @@ from cadrumo.application.modelo.work_calculation_contracts import ModeloWorkCalc
 from cadrumo.application.modelo.work_verification_contracts import ModeloWorkVerifyRequest
 from cadrumo.core.logging import flush_logging
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.entrypoints.tests.persona_materialisation import (
-    PERSONA_ACTOR,
-    PersonaWorld,
-    materialised_persona,
-    settle_operation,
-    year_envelope,
-)
-from cadrumo.tests.personas import YearEnvelope, read_persona
+from cadrumo.entrypoints.tests.persona_materialisation import materialised_persona
+from cadrumo.entrypoints.tests.persona_operations import settle_operation
+from cadrumo.entrypoints.tests.persona_world import PERSONA_ACTOR, PersonaWorld, year_envelope
+from cadrumo.tests.persona_types import YearEnvelope
+from cadrumo.tests.personas import read_persona
 
 from .planner import PreparedReturn, plan_rows, replay_scope, stated_values
 from .probe import EXECUTOR_LOGGER, PROBE_OUT_ENV, ProbeLine, classify

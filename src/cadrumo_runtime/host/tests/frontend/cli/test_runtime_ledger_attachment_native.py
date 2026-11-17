@@ -22,8 +22,10 @@ from cadrumo.application.ledger.attachment_mutation_operation import LedgerAttac
 from cadrumo.application.ledger.manual_read import ledger_transaction_result_payload
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionResult
 from cadrumo.application.ledger.tests.manual_transaction_support import create_manual_transaction
+from cadrumo.application.ledger.transaction_projection import LedgerTransactionProjection
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from cadrumo.core.decimal.formatting import format_decimal
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from cadrumo.domain.buckets.event import (
@@ -46,7 +48,7 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 )
 
 from ...native_profile_facts import native_general_iva_facts
-from .profile_cli_support import invoke_native_profile_revealing
+from .profile_cli_support import NATIVE_CLI_LANGUAGE, invoke_native_profile_revealing
 
 pytestmark = [
     pytest.mark.integration,
@@ -96,6 +98,10 @@ def _expected_result(
     payload = {
         **canonical.model_dump(mode="json"),
         "bucket_event_ids": list(event_ids),
+        # The result names the link fields in the language the command ran in, as ledger view does.
+        "transaction": LedgerTransactionProjection.from_payload(
+            canonical.transaction, language=OutputLanguage(NATIVE_CLI_LANGUAGE)
+        ).model_dump(mode="json"),
     }
     if result_type is LedgerAttachResult:
         result = LedgerAttachResult.model_validate(payload)

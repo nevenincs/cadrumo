@@ -45,6 +45,7 @@ from ....application.operations.owner import OperationExecutorContext
 from ....application.operations.refusal_evidence import OperationRefusalEvidence
 from ....application.review.filter import LedgerReviewStatus
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
+from ....core.external_constants import DEFAULT_OUTPUT_LANGUAGE
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.attachments.protocols import AttachmentStoreProtocol
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -292,7 +293,7 @@ async def test_canonical_success_is_fenced_and_result_is_published_afterward(
     monkeypatch.setattr(
         operation_module,
         "project_lifecycle_mutation_from_action",
-        lambda *_args: _projection(operation_id),
+        lambda *_args, **_kwargs: _projection(operation_id),
     )
 
     executor_type = {
@@ -567,6 +568,7 @@ def test_a_lifecycle_result_states_the_replaced_state_and_the_operations_that_re
         operation_id,
         build_manual_ledger_result(str(_PROFILE), written, (_EVENT_ID,)),
         replaced,
+        language=DEFAULT_OUTPUT_LANGUAGE,
     )
 
     assert projection.transaction.lifecycle_state == after.value
@@ -594,6 +596,7 @@ def test_an_exclusion_result_states_the_classification_and_share_it_overwrote() 
         LEDGER_EXCLUDE_OPERATION_DEFINITION_ID,
         build_manual_ledger_result(str(_PROFILE), written, (_EVENT_ID,)),
         replaced,
+        language=DEFAULT_OUTPUT_LANGUAGE,
     )
 
     assert projection.transaction.business_classification == "REVIEWED_EXCLUDED"
@@ -619,5 +622,5 @@ def test_a_lifecycle_result_is_refused_without_the_row_the_action_replaced() -> 
     for missing in (None, another_row):
         with pytest.raises(ProfileAccessRefusedError):
             lifecycle_projections.project_lifecycle_mutation_from_action(
-                _PROFILE, LEDGER_ARCHIVE_OPERATION_DEFINITION_ID, result, missing
+                _PROFILE, LEDGER_ARCHIVE_OPERATION_DEFINITION_ID, result, missing, language=DEFAULT_OUTPUT_LANGUAGE
             )

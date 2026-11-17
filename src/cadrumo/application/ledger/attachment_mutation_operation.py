@@ -13,6 +13,7 @@ from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTE
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import CadrumoError
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.identity.transaction_ids import TransactionId
@@ -101,6 +102,8 @@ class LedgerAttachRequest(BaseModel):
     Every evidence member is the identifier of evidence already stored in the
     profile. ``actor`` is recorded as sent for a person's session. An automation's
     session is recorded under its own session label, whatever the request carries.
+
+    ``output_language`` is the language the result's transaction link fields are named in.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -110,6 +113,7 @@ class LedgerAttachRequest(BaseModel):
     purchase_invoice_evidence_id: _EvidenceId | None = None
     attachment_ids: _AttachmentIds = ()
     actor: _Actor | None = None
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     @field_validator("purchase_invoice_evidence_id")
     @classmethod
@@ -125,6 +129,8 @@ class LedgerDetachRequest(BaseModel):
 
     ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
+
+    ``output_language`` is the language the result's transaction link fields are named in.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -133,6 +139,7 @@ class LedgerDetachRequest(BaseModel):
     transaction_id: _TransactionPrefix
     attachment_ids: Annotated[tuple[_AttachmentId, ...], Field(min_length=1, max_length=256)]
     actor: _Actor | None = None
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
 
 class LedgerAttachmentStaleRevisionProjection(BaseModel):
@@ -304,6 +311,7 @@ class _LedgerAttachmentExecutor:
                     payload.profile_id,
                     self._operation_id,
                     result,
+                    language=payload.output_language,
                 )
                 operation_result = LedgerAttachmentOperationResult(
                     outcome="updated",
@@ -437,6 +445,8 @@ def operation_projection(
     profile_id: UUID,
     operation_id: LedgerAttachmentOperationId,
     result: ManualLedgerTransactionResult,
+    *,
+    language: OutputLanguage,
 ) -> LedgerAttachmentProjection:
     """Copy the full canonical transaction result and all finalized-revision facts."""
     canonical = ledger_transaction_result_payload(result)
@@ -450,7 +460,7 @@ def operation_projection(
     return LedgerAttachmentProjection(
         profile_id=profile_id,
         operation_id=operation_id,
-        transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
+        transaction=LedgerTransactionProjection.from_payload(canonical.transaction, language=language),
         review_status=canonical.review_status,
         bucket_event_ids=result.bucket_event_ids,
         stale_finalized_revisions=tuple(

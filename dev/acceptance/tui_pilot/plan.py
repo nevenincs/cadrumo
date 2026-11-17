@@ -16,8 +16,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
-from cadrumo.tests.personas import YearEnvelope
+from cadrumo.entrypoints.tests.persona_world import year_envelope
+from cadrumo.tests.persona_types import YearEnvelope
 
 from ..persona_table.rows import PlannedRow, TableRow, owed_rows, read_rows
 from ..persona_table.unchecked import persona_at

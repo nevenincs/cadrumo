@@ -9,6 +9,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.identity.digest import ContentDigest
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -39,6 +40,8 @@ class LedgerLlmReviewRequest(BaseModel):
 
     ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
+
+    ``output_language`` is the language the result's transaction link fields are named in.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -55,6 +58,7 @@ class LedgerLlmReviewRequest(BaseModel):
     read_evidence: bool = False
     reason: LedgerLlmLongText = ""
     preview: bool = False
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     @field_validator("business_pct")
     @classmethod

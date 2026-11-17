@@ -63,6 +63,9 @@ export type LedgerAddOperationResult = {
 /**
  * Bounded private CLI input; taxpayer-derived values are resolved in the
  * worker.
+ *
+ * `output_language` is the language the result's transaction link fields are
+ * named in.
  */
 export type LedgerAddRequest = {
   profile_id: string;
@@ -107,6 +110,7 @@ export type LedgerAddRequest = {
   idempotency_key?: string | null;
   source_jurisdiction?: string | null;
   own_account_id?: string | null;
+  output_language?: OutputLanguage;
 };
 
 /**
@@ -121,6 +125,9 @@ export type LedgerAllocateOperationResult = {
 
 /**
  * Private exact-profile request; `transaction_id` may be a CLI prefix.
+ *
+ * `output_language` is the language the result's transaction link fields are
+ * named in.
  */
 export type LedgerAllocateRequest = {
   profile_id: string;
@@ -130,6 +137,7 @@ export type LedgerAllocateRequest = {
   usage_ratio_id?: string | null;
   prorrata_reference?: string | null;
   actor?: string | null;
+  output_language?: OutputLanguage;
 };
 
 /**
@@ -233,6 +241,9 @@ export type LedgerClassifyPatch = {
 
 /**
  * Exact-profile single-classify request; optional nulls use an explicit mask.
+ *
+ * `output_language` is the language the result's transaction link fields are
+ * named in.
  */
 export type LedgerClassifyRequest = {
   profile_id: string;
@@ -265,6 +276,7 @@ export type LedgerClassifyRequest = {
   m210?: LedgerClassifyM210Options | null;
   actor?: string | null;
   reaffirm?: boolean;
+  output_language?: OutputLanguage;
 };
 
 /**
@@ -298,12 +310,16 @@ export type LedgerLifecycleMutationProjection = {
  *
  * `actor` is recorded as sent for a person's session. An automation's session
  * is recorded under its own session label, whatever the request carries.
+ *
+ * `output_language` is the language the result's transaction link fields are
+ * named in.
  */
 export type LedgerLifecycleMutationRequest = {
   profile_id: string;
   transaction_id: string;
   actor?: string | null;
   reason?: string;
+  output_language?: OutputLanguage;
 };
 
 /**
@@ -381,12 +397,16 @@ export type LedgerMergeRequest = {
  *
  * `actor` is recorded as sent for a person's session. An automation's session
  * is recorded under its own session label, whatever the request carries.
+ *
+ * `output_language` is the language the result's transaction link fields are
+ * named in.
  */
 export type LedgerOperatorIvaRequest = {
   profile_id: string;
   transaction_id: string;
   iva_category: string;
   actor?: string | null;
+  output_language?: OutputLanguage;
 };
 
 /**
@@ -543,6 +563,9 @@ export type LedgerUpdatePatch = {
  * `patch_fields` preserves explicit `None` clears across JSON serialization.
  * Nested defaults serialize as null, so every unselected value must be null;
  * that rule makes the mask a safe omission equivalent after worker decode.
+ *
+ * `output_language` is the language the result's transaction link fields are
+ * named in.
  */
 export type LedgerUpdateRequest = {
   profile_id: string;
@@ -567,6 +590,7 @@ export type LedgerUpdateRequest = {
     | "own_account_id"
   )[];
   actor?: string | null;
+  output_language?: OutputLanguage;
 };
 
 /**

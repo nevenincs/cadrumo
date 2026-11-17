@@ -69,7 +69,7 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import newest_
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
 if TYPE_CHECKING:
-    from cadrumo.tests.personas import Persona, WithholdingCertificate, YearEnvelope
+    from cadrumo.tests.persona_types import Persona, WithholdingCertificate, YearEnvelope
 
 FRONTEND = Path(__file__).resolve().parents[1]
 #: The scenario envelopes' folder in the window projections, build output that is never committed.
@@ -208,7 +208,7 @@ RENTA_AFTER_FILING_PERIOD_DAY = datetime(RENTA_YEAR + 1, 7, 1, 9, 0, tzinfo=UTC)
 def _catalogue_persona(persona_id: str) -> tuple[Persona, YearEnvelope]:
     """The catalogue persona ``persona_id`` and the registry's year envelope it is read in."""
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-    from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
+    from cadrumo.entrypoints.tests.persona_world import year_envelope
     from cadrumo.tests.personas import read_persona
 
     with bundled_indexed_authority().operation() as operation:
@@ -218,7 +218,7 @@ def _catalogue_persona(persona_id: str) -> tuple[Persona, YearEnvelope]:
 
 def scenario_as_of() -> datetime:
     """The instant the scenarios are read as of: the activity persona's clock, which every persona shares."""
-    from cadrumo.entrypoints.tests.persona_materialisation import scenario_instant
+    from cadrumo.entrypoints.tests.persona_world import scenario_instant
 
     return scenario_instant(*_catalogue_persona(ACTIVITY_PERSONA))
 
@@ -688,11 +688,9 @@ def _persona_profile(
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.domain.user_profile.values import UserProfileFact
     from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-    from cadrumo.entrypoints.tests.persona_materialisation import (
-        ReplayScope,
-        load_profile_record,
-        materialised_persona,
-    )
+    from cadrumo.entrypoints.tests.persona_materialisation import materialised_persona
+    from cadrumo.entrypoints.tests.persona_replay_requests import load_profile_record
+    from cadrumo.entrypoints.tests.persona_world import ReplayScope
 
     with (
         profile_adapter_composition(),
@@ -1805,7 +1803,7 @@ def _record_certificate(persona: Any, filer: RentaFiler, *, figures: Certificate
     from cadrumo.application.retencion_soportada_certificado.results import RetencionSoportadaMutationProjection
     from cadrumo.core.retencion_soportada import RetencionSoportadaClase
     from cadrumo.domain.renta.retencion_soportada import RetencionSoportadaOrigen
-    from cadrumo.entrypoints.tests.persona_materialisation import run_operation, settle_operation
+    from cadrumo.entrypoints.tests.persona_operations import run_operation, settle_operation
 
     world = persona.world
     for token in filer.attested_none:

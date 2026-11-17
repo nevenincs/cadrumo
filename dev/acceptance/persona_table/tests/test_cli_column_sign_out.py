@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from cadrumo.entrypoints.tests.persona_materialisation import PERSONA_PROFILE_CREDENTIAL
+from cadrumo.entrypoints.tests.persona_world import PERSONA_PROFILE_CREDENTIAL
 
 from ..cli_column.case import with_sign_out_findings
 from ..cli_column.driver import CaseSummary

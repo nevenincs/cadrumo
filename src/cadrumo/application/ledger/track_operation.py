@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
@@ -35,10 +36,14 @@ LEDGER_TRACK_OPERATION_DEFINITION_ID = "ledger.track"
 
 
 class LedgerTrackRequest(CredentialFreeOperationRequest):
-    """An exact profile and a current or superseded transaction handle."""
+    """An exact profile and a current or superseded transaction handle.
+
+    ``output_language`` is the language the transaction's link fields are named in.
+    """
 
     profile_id: UUID
     transaction_prefix: str = Field(min_length=1, max_length=64, pattern=r"^[0-9a-f]+$")
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
 
 class LedgerTrackProjection(BaseModel):
@@ -106,7 +111,9 @@ class LedgerTrackExecutor:
             return LedgerTrackProjection(
                 profile_id=payload.profile_id,
                 transaction_prefix=payload.transaction_prefix,
-                transaction=LedgerTransactionProjection.from_payload(ledger_transaction_payload(result.transaction)),
+                transaction=LedgerTransactionProjection.from_payload(
+                    ledger_transaction_payload(result.transaction), language=payload.output_language
+                ),
                 tracking=LedgerTrackingProjection.from_payload(ledger_transaction_tracking_payload(result.transaction)),
                 imported_provenance=LedgerImportedProvenanceProjection.from_transaction(result.transaction),
                 participated_in=LedgerParticipationProjection.from_index(index),

@@ -17,7 +17,7 @@ import pytest
 from cadrumo.application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_targets import revision_bindings_by_id
-from cadrumo.entrypoints.tests.persona_materialisation import PERSONA_ACTOR, MaterialisedPersona, PersonaWorld
+from cadrumo.entrypoints.tests.persona_world import PERSONA_ACTOR, MaterialisedPersona, PersonaWorld
 
 from .. import planner, sweep
 from ..cli_column.world_report import StatementKind

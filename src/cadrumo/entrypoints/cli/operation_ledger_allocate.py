@@ -15,6 +15,8 @@ from ...application.ledger.allocate_operation import (
     LedgerAllocateOperationResult,
     LedgerAllocateRequest,
 )
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as active_output_language
 from ...core.operations import profile_operation_subject
 from .ledger_allocate_correlation import correlate_ledger_allocation
 
@@ -33,6 +35,7 @@ def run_ledger_allocate(
     client = bound_profile_client(ctx)
     request = LedgerAllocateRequest(
         profile_id=client.profile_id,
+        output_language=OutputLanguage(active_output_language()),
         transaction_id=transaction_id,
         business_pct=display_decimal(business_pct),
         category_id=category_id,

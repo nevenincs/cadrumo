@@ -190,9 +190,11 @@ errors:
     row: sor
     schema_version: sémaverzió
     section: szakasz
+    source: forrás
     state: állapot
     status: állapot
     tax_year: adóév
+    terminal_condition: eredmény
     value: érték
     year: év
   error:

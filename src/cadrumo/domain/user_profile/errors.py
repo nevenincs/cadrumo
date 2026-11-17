@@ -7,7 +7,7 @@ from typing import Final
 
 from pydantic import ValidationError
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 
 #: Registered operator text for a user-profile schema that cannot be loaded.
 #: Stated once so the refusal and the gate that pins it read the same spelling,
@@ -46,8 +46,13 @@ class UserProfileSchemaLoadError(UserProfileError):
         )
 
 
-class UserProfileValidationError(UserProfileError):
-    """Raised on invalid user profile values."""
+class UserProfileValidationError(TerminalPreconditionErrorMixin[object], UserProfileError):
+    """Raised on invalid user profile values.
+
+    A refusal whose remedy is an operator action carries it as a typed
+    precondition verdict the application owns, so every frontend renders the
+    same door; the sentence states the facts and never a command.
+    """
 
 
 class UserProfileNotFoundError(UserProfileError):

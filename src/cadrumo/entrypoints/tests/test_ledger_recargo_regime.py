@@ -19,12 +19,9 @@ from ...application.ledger.classify_requests import (
     LedgerClassifyRequest,
 )
 from ..ledger_action_composition import compose_ledger_action_ports
-from .persona_materialisation import (
-    PERSONA_ACTOR,
-    PersonaMaterialisationError,
-    materialised_persona,
-    settle_operation,
-)
+from .persona_materialisation import materialised_persona
+from .persona_operations import settle_operation
+from .persona_world import PERSONA_ACTOR, PersonaMaterialisationError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

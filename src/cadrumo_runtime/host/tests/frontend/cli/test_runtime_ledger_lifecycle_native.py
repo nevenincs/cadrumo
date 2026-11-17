@@ -15,7 +15,9 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.application.ledger.actions_common import blocking_modelo_references, build_manual_ledger_result
 from cadrumo.application.ledger.manual_read import ledger_transaction_result_payload
+from cadrumo.application.ledger.transaction_projection import LedgerTransactionProjection
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.buckets.event import (
     BucketEvent,
     BucketEventHistoryCatalogue,
@@ -42,7 +44,7 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 )
 
 from ...native_profile_facts import native_general_iva_facts
-from .profile_cli_support import invoke_native_profile_revealing
+from .profile_cli_support import NATIVE_CLI_LANGUAGE, invoke_native_profile_revealing
 
 pytestmark = [
     pytest.mark.integration,
@@ -83,6 +85,10 @@ def _expected_result(
     )
     payload = canonical.model_dump(mode="json")
     payload["bucket_event_ids"] = list(event_ids)
+    # The result names the link fields in the language the command ran in, as ledger view does.
+    payload["transaction"] = LedgerTransactionProjection.from_payload(
+        canonical.transaction, language=OutputLanguage(NATIVE_CLI_LANGUAGE)
+    ).model_dump(mode="json")
     result = result_schema.model_validate(payload)
     dumped = result.model_dump(mode="json")
     return cast("dict[str, object]", dumped)
