@@ -2,7 +2,7 @@
 // the backend said for the same reason, facts and language, looked up in a
 // recording.
 
-import type { ReasonFact } from "@/shell/ledgerSetup";
+import type { ActivityAssetReasonFact } from "@/shell/ledgerActivityAssetContract";
 import type { JsonObject, JsonValue } from "../shell/ledger";
 import { said } from "./assetsServedWords";
 import { decimalOf, textOf } from "./assetsFixtureBase";
@@ -17,7 +17,7 @@ export function makeWords(session: Session, elements: Register["elements"]) {
   /** A reason said whole, as it was recorded. */
   function reasonWords(
     key: string | null,
-    reasonFacts: readonly ReasonFact[],
+    reasonFacts: readonly ActivityAssetReasonFact[],
   ): string | null {
     if (key === null) return null;
     return (
@@ -42,8 +42,8 @@ export function makeWords(session: Session, elements: Register["elements"]) {
       said({ kind: "remedy", field_key: fieldKey }, session.language) ?? null
     );
   }
-  const factsOf = (found: unknown): ReasonFact[] =>
-    Array.isArray(found) ? (found as ReasonFact[]) : [];
+  const factsOf = (found: unknown): ActivityAssetReasonFact[] =>
+    Array.isArray(found) ? (found as ActivityAssetReasonFact[]) : [];
   const rowsOf = (found: unknown): JsonObject[] =>
     Array.isArray(found) ? (found as JsonObject[]) : [];
 

@@ -5,7 +5,7 @@
 // suggestion writes, and whether a date moves a movement to another
 // quarter. Nothing here reads or writes the ledger.
 
-import type { LedgerLlmSuggestion } from "../../../shell/ledgerMovementOperations";
+import type { LedgerLlmReviewProjection } from "../../../shell/ledgerMovementCheckContract";
 import type { LedgerStagedRowAnswer } from "../../../shell/ledgerMovementCheckContract";
 import { takesChanges } from "../../../shell/ledgerContract";
 import { takesBusinessShare } from "../../../shell/ledgerClassifications";
@@ -286,7 +286,7 @@ export type SuggestionWrite = {
  * parts instead, which the review lists.
  */
 export function suggestionWrites(
-  suggestion: LedgerLlmSuggestion["suggestion"],
+  suggestion: LedgerLlmReviewProjection["suggestion"],
 ): SuggestionWrite[] {
   if (suggestion.kind === "split") return [];
   const writes: SuggestionWrite[] = [];
@@ -313,7 +313,9 @@ export function suggestionWrites(
 
 /** Whether a suggestion can be approved as it stands: a Mixed one needs a
  * share, which only a new review asked with it can carry. */
-export const needsShare = (suggestion: LedgerLlmSuggestion["suggestion"]) =>
+export const needsShare = (
+  suggestion: LedgerLlmReviewProjection["suggestion"],
+) =>
   suggestion.kind !== "split" &&
   !!suggestion.classification &&
   takesBusinessShare(suggestion.classification) === true &&

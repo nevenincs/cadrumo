@@ -2,11 +2,11 @@
 // scenario's clock and vocabulary, whole-cent amounts and the element it holds.
 
 import type {
-  DescriptorFacts,
-  DisposalFacts,
-  MethodFactKind,
-  ReasonFactKind,
-} from "@/shell/ledgerSetup";
+  ActivityAssetDescriptorFacts,
+  ActivityAssetDisposalSnapshot,
+  ActivityAssetReasonFactKind,
+} from "@/shell/ledgerActivityAssetContract";
+import type { FactKind } from "@/shell/ledgerActivityAssetReadContract";
 import type { JsonObject } from "../shell/ledger";
 import {
   METHOD_FACTS,
@@ -19,7 +19,7 @@ export type Handler = (request: JsonObject) => JsonObject;
 /** One fact an election of a method states, as the options serve it. */
 export type ServedFact = {
   path: string[];
-  kind: MethodFactKind;
+  kind: FactKind;
   required: boolean;
   required_with_group: boolean;
   token_family: string | null;
@@ -65,9 +65,9 @@ export const dec = (value: string) => ({ decimal: value });
 
 /** A reason fact stated with the kind of the value it was raised with, as the
  * backend serves it; a bare string is a text. */
-export type Fact = string | { value: string; kind: ReasonFactKind };
+export type Fact = string | { value: string; kind: ActivityAssetReasonFactKind };
 export const typed =
-  (kind: ReasonFactKind) =>
+  (kind: ActivityAssetReasonFactKind) =>
   (value: string | number): Fact => ({ value: String(value), kind });
 export const asDate = typed("date");
 export const asCount = typed("count");
@@ -101,11 +101,11 @@ export const earlier = (a: string, b: string) => (a < b ? a : b);
 export type Element = Omit<ScenarioElement, "id"> & {
   id: string;
   /** The facts of the latest description. */
-  descriptor: DescriptorFacts | null;
+  descriptor: ActivityAssetDescriptorFacts | null;
   /** The day after the last day of service, if it has a baja. */
   outOfService: string | null;
   /** The baja the element carries, if any. */
-  baja: DisposalFacts | null;
+  baja: ActivityAssetDisposalSnapshot | null;
 };
 
 /** Whether a stated token is one of the served list of them. */

@@ -9,15 +9,20 @@
 
 import { useSyncExternalStore } from "react";
 import type { LedgerEntryYearWindow } from "./ledgerEntryContract";
-import type { LedgerEntryLimits, TextLimitName } from "./ledgerSetup";
+import type {
+  LedgerEntryLimitsProjection,
+  TextLimitName,
+} from "./ledgerEntryContract";
 
-let held: LedgerEntryLimits | null = null;
+let held: LedgerEntryLimitsProjection | null = null;
 // The years the periods reader was served, held while it is registered.
 let servedYears: LedgerEntryYearWindow | null = null;
 const listeners = new Set<() => void>();
 
 /** Holds what the backend served, or null where it has served nothing. */
-export function holdLedgerLimits(limits: LedgerEntryLimits | null): void {
+export function holdLedgerLimits(
+  limits: LedgerEntryLimitsProjection | null,
+): void {
   if (held === limits) return;
   held = limits;
   for (const listener of listeners) listener();
@@ -40,7 +45,7 @@ export const useHeldEntryYears = (): LedgerEntryYearWindow | null =>
   useSyncExternalStore(subscribe, entryYears);
 
 /** The limits served, or null where none are. */
-export const ledgerLimits = (): LedgerEntryLimits | null => held;
+export const ledgerLimits = (): LedgerEntryLimitsProjection | null => held;
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
@@ -48,7 +53,7 @@ function subscribe(listener: () => void): () => void {
 }
 
 /** The limits served, drawing again when they arrive or go. */
-export const useLedgerLimits = (): LedgerEntryLimits | null =>
+export const useLedgerLimits = (): LedgerEntryLimitsProjection | null =>
   useSyncExternalStore(subscribe, ledgerLimits);
 
 /** A served text limit, or null where it is not served: the Ledger page is

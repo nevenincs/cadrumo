@@ -46,7 +46,6 @@ from ...application.modelo.edit_models import (
 )
 from ...application.modelo.edit_parsing import modelo_edit_address_grammar, parse_modelo_edit_lexeme
 from ...application.modelo.edit_review_wording import edit_refusal_words, entry_read_back, grammar_data_type
-from ...application.modelo.workbench_operations import ModeloEditPreflightProjectionV1
 from ...application.modelo.workbench_projection import restore_modelo_workbench_form
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language as active_output_language
@@ -55,6 +54,7 @@ from ...core.identity.documents import SpanishTaxIdFormat
 from .common import emit_envelope
 from .modelo_cli_support import resolve_explicit_or_active_bucket_id
 from .modelo_work_manual_entry_payloads import WorkManualEntryResult
+from .modelo_work_preflight_findings import checked
 from .operation_modelo_carry_attestation import (
     apply_modelo_edit_for_cli,
     preflight_modelo_edit_for_cli,
@@ -124,13 +124,6 @@ def _typed_value(
     return outcome, entry_read_back(outcome.value, data_type=grammar_data_type(grammar, address), language=language)
 
 
-def _checked(review: ModeloEditPreflightProjectionV1) -> list[str]:
-    """The check's findings in words, refusing the staged change the check refused."""
-    if isinstance(review.outcome, ModeloEditRefusedV1):
-        raise modelo_edit_refusal_error(review.outcome.refusal)
-    return [finding.words for finding in review.findings]
-
-
 def _result(
     baseline: ModeloEditBaselineV1,
     *,
@@ -192,7 +185,7 @@ def _settle(
 ) -> None:
     """Check the staged change, apply it when confirmed, and emit what happened."""
     review = preflight_modelo_edit_for_cli(client, submission, language=language)
-    findings = _checked(review)
+    findings = checked(review)
     applied: ModeloEditApplyPublicResultV1 | None = None
     if confirmed:
         if any(finding.blocking for finding in review.findings):

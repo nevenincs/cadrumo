@@ -5,12 +5,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import type { FieldSpec } from "@/shared/fieldKind";
 import { StringsContext, translator } from "@/shell/strings";
 import { holdLedgerLimits } from "@/shell/ledgerLimits";
-import type { LedgerEntryLimits } from "@/shell/ledgerSetup";
+import type { LedgerEntryLimitsProjection } from "@/shell/ledgerEntryContract";
 import recorded from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 
 // The editors take their numeric limits from what the backend served, so the page holds
 // the answer recorded with the entry options, as a Ledger page holds the live one.
-holdLedgerLimits(recorded.limits as LedgerEntryLimits);
+holdLedgerLimits(recorded.limits as LedgerEntryLimitsProjection);
 
 /** One typed editor alone, with what it holds and what its check says beside
  * it, from the page's address. */

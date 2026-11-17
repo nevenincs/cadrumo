@@ -21,7 +21,7 @@ import {
 } from "../../../shell/ledgerGrammar";
 import { textLimit } from "../../../shell/ledgerLimits";
 import type { LedgerPlan } from "../../../shell/ledgerPlan";
-import type { TextLimitName } from "../../../shell/ledgerSetup";
+import type { TextLimitName } from "../../../shell/ledgerEntryContract";
 import type {
   SinceReadConflict,
   StepOutcome,

@@ -19,7 +19,10 @@ import {
   specOf,
   type FormField,
 } from "../src/components/ledger/assets/assetFormValues";
-import { type AssetListRow, type FormOptions } from "../src/shell/ledgerSetup";
+import type {
+  ActivityAssetListRow,
+  ActivityAssetFormOptionsView,
+} from "../src/shell/ledgerActivityAssetReadContract";
 import {
   changeFieldWord,
   COUNT_ICON,
@@ -167,7 +170,7 @@ test("a handoff for a year alone states the Modelo 100 boxes and no Modelo 130 s
 
 test("the vehicle declaration is stated, with no question, for a table class the options say requires one, and nothing is drawn for any other", async () => {
   const port = portOf();
-  const options = (await optionsOf(port, "material")) as FormOptions;
+  const options = (await optionsOf(port, "material")) as ActivityAssetFormOptionsView;
   const classKey = factKey(["authority_class_key"]);
   const drawn = (chosen: string, assetKind = "material") =>
     fieldsFor(
@@ -210,7 +213,7 @@ test("the vehicle declaration is stated, with no question, for a table class the
 
 test("a baja form offers exactly the reasons the options serve, each worded by the key served with it", async () => {
   const port = portOf();
-  const reasonsOf = (options: FormOptions | null) =>
+  const reasonsOf = (options: ActivityAssetFormOptionsView | null) =>
     fieldsFor(
       {
         kind: "baja",
@@ -223,7 +226,7 @@ test("a baja form offers exactly the reasons the options serve, each worded by t
       {},
     ).find((found) => found.key === "reason")!.choices;
   for (const kind of ["material", "intangible"] as const) {
-    const options = (await optionsOf(port, kind)) as FormOptions;
+    const options = (await optionsOf(port, kind)) as ActivityAssetFormOptionsView;
     const reasons = reasonsOf(options);
     expect(options.disposal_reasons.length).toBeGreaterThan(0);
     expect(reasons.map((choice) => [choice.token, choice.word])).toEqual(
@@ -447,7 +450,7 @@ test("a record says what it did and the day it takes effect, and a replaced dota
   // A correction takes effect from the day of service; one that records a
   // dotación again replaces it, which is then no longer in effect.
   const base = await inspect("servidor");
-  const options = (await optionsOf(port)) as FormOptions;
+  const options = (await optionsOf(port)) as ActivityAssetFormOptionsView;
   const context = {
     kind: "correction" as const,
     row: servidorRow(),
@@ -495,13 +498,13 @@ test("a record says what it did and the day it takes effect, and a replaced dota
       expect(event.event_kind, `${id} ${event.sequence}`).not.toBeNull();
 });
 
-function servidorLike(id: string): AssetListRow {
+function servidorLike(id: string): ActivityAssetListRow {
   return SCENARIO_ELEMENTS.find((seed) => seed.id === id)!.list;
 }
 
 test("the facts of a basis stage and of an opening status are the ones the options serve, and a correction drops what its stage no longer states", async () => {
   const port = portOf();
-  const options = (await optionsOf(port)) as FormOptions;
+  const options = (await optionsOf(port)) as ActivityAssetFormOptionsView;
   const context = {
     kind: "element" as const,
     row: null,
@@ -590,7 +593,7 @@ test("the facts of a basis stage and of an opening status are the ones the optio
 
 test("an element bought outside the ledger can own a later ledger payment, which the request carries as the backend takes it", async () => {
   const port = portOf();
-  const options = (await optionsOf(port)) as FormOptions;
+  const options = (await optionsOf(port)) as ActivityAssetFormOptionsView;
   const candidates = (
     await settled<LedgerResult<typeof CANDIDATES>>(port.submit(CANDIDATES, {}))
   ).candidates!;
@@ -812,8 +815,8 @@ test("the handoff marks an amount that leaves elements out with the sentence the
 
 test("the facts of a condition are drawn from the conditions the options serve, so a fact no condition lists is never asked", async () => {
   const port = portOf();
-  const options = (await optionsOf(port, "material")) as FormOptions;
-  const keys = (served: FormOptions, draft: Record<string, string>) =>
+  const options = (await optionsOf(port, "material")) as ActivityAssetFormOptionsView;
+  const keys = (served: ActivityAssetFormOptionsView, draft: Record<string, string>) =>
     fieldsFor(
       {
         kind: "element",
@@ -841,7 +844,7 @@ test("the facts of a condition are drawn from the conditions the options serve, 
     "building_construction_date",
   );
   // The options alone decide: a used condition that lists no fact asks none.
-  const bare: FormOptions = {
+  const bare: ActivityAssetFormOptionsView = {
     ...options,
     acquired_conditions: options.acquired_conditions.map((found) => ({
       ...found,
@@ -878,12 +881,12 @@ test("the facts of a condition are drawn from the conditions the options serve, 
 
 test("the shapes of a later payment are the ones the options serve", async () => {
   const port = portOf();
-  const options = (await optionsOf(port, "material")) as FormOptions;
+  const options = (await optionsOf(port, "material")) as ActivityAssetFormOptionsView;
   expect(options.further_acquisition_shapes).toEqual([
     "split_payment",
     "ancillary_cost",
   ]);
-  const choices = (served: FormOptions["further_acquisition_shapes"]) =>
+  const choices = (served: ActivityAssetFormOptionsView["further_acquisition_shapes"]) =>
     fieldsFor(
       {
         kind: "element",

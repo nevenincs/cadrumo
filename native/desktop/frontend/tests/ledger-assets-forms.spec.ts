@@ -30,7 +30,10 @@ import {
   parseField,
   type FormField,
 } from "../src/components/ledger/assets/assetFormValues";
-import { type AssetListRow, type FormOptions } from "../src/shell/ledgerSetup";
+import type {
+  ActivityAssetListRow,
+  ActivityAssetFormOptionsView,
+} from "../src/shell/ledgerActivityAssetReadContract";
 import {
   ASSET_FAMILY,
   keyedText,
@@ -134,7 +137,7 @@ test("typed text becomes the values of its control, and nothing typed is not zer
 });
 
 test("a correction states only what changed from the record, and an emptied field is stated cleared or named", () => {
-  const row = servidorRow() as AssetListRow;
+  const row = servidorRow() as ActivityAssetListRow;
   const context = {
     kind: "correction" as const,
     row,
@@ -180,7 +183,7 @@ test("a correction states only what changed from the record, and an emptied fiel
 
 test("a cleared fact is taken out of the corrected revision, and the baja the revision records travels with it", async () => {
   const port = portOf();
-  const options = (await optionsOf(port)) as FormOptions;
+  const options = (await optionsOf(port)) as ActivityAssetFormOptionsView;
   const inspect = async (id: string) =>
     (
       await settled<LedgerResult<typeof INSPECT>>(
@@ -267,7 +270,7 @@ test("a cleared fact is taken out of the corrected revision, and the baja the re
     descriptor: null,
     revision: disposed.revision,
     tokens: () => [],
-    options: (await optionsOf(port)) as FormOptions,
+    options: (await optionsOf(port)) as ActivityAssetFormOptionsView,
   };
   const before = initialOf(taladro, fieldsFor(taladro, {}));
   const edit = { ...before, residual_value: "5" };
@@ -347,8 +350,8 @@ test("a cleared fact is taken out of the corrected revision, and the baja the re
 });
 
 test("each act's fields and requests come from the backend's choices", () => {
-  const methods: FormOptions["methods"] = ["linear", "low_value_free"];
-  const options: FormOptions = {
+  const methods: ActivityAssetFormOptionsView["methods"] = ["linear", "low_value_free"];
+  const options: ActivityAssetFormOptionsView = {
     tax_year: servedSupport.horizon,
     asset_kind: "material",
     regime: "normal",
@@ -358,7 +361,7 @@ test("each act's fields and requests come from the backend's choices", () => {
     methods,
     method_facts: METHOD_FACTS.material!.filter((found) =>
       methods.some((method) => method === found.method),
-    ) as unknown as FormOptions["method_facts"],
+    ) as unknown as ActivityAssetFormOptionsView["method_facts"],
     table_groups: TABLE_GROUPS.material!.slice(0, 2),
     disposal_reasons: [...DISPOSAL_REASONS],
     basis_stages: [...BASIS_STAGES],
@@ -456,7 +459,7 @@ test("each act's fields and requests come from the backend's choices", () => {
 test("the add form offers the methods the options serve, each with the facts they serve, and a correction keeps the element's own", async () => {
   const port = portOf();
   for (const kind of ["material", "intangible"] as const) {
-    const options = (await optionsOf(port, kind)) as FormOptions;
+    const options = (await optionsOf(port, kind)) as ActivityAssetFormOptionsView;
     // Every served fact has a word, and no method is offered without its facts.
     expect(unlabelledFacts(options)).toEqual([]);
     // Every fact a basis stage or an opening status serves has a control.
@@ -491,7 +494,7 @@ test("the add form offers the methods the options serve, each with the facts the
       );
     }
   }
-  const options = (await optionsOf(port)) as FormOptions;
+  const options = (await optionsOf(port)) as ActivityAssetFormOptionsView;
   const keptContext = {
     kind: "correction" as const,
     row: null,
@@ -793,7 +796,7 @@ test("an element bought outside the ledger names its document, its date and its 
   expect(refusal.detail.refusal.reason_key).toBe(
     "ledger.actividad_asset.errors.declared_acquisition_after_service",
   );
-  const options = (await optionsOf(port)) as FormOptions;
+  const options = (await optionsOf(port)) as ActivityAssetFormOptionsView;
   const drawn = (shape: string) =>
     fieldsFor(
       {
@@ -896,7 +899,7 @@ test("a whole property states its parts, a vehicle its declaration, and a linear
         descriptor: null,
         revision: null,
         tokens: () => [],
-        options: intangible as FormOptions,
+        options: intangible as ActivityAssetFormOptionsView,
       },
       { asset_kind: "intangible", vehicle_declared: "yes" },
     ).map((found) => found.key),
@@ -916,14 +919,14 @@ test("a whole property states its parts, a vehicle its declaration, and a linear
 });
 
 test("a method with a fact that has no form is not offered, and its repeated rows are never drawn", () => {
-  const options: FormOptions = {
+  const options: ActivityAssetFormOptionsView = {
     tax_year: servedSupport.horizon,
     asset_kind: "material",
     regime: "normal",
     edition: servedEditionOf(servedSupport.horizon)!,
     disposal_reasons: [],
     // Methods the registry does not define: they exercise facts with no form.
-    methods: ["plain", "rows", "unworded"] as unknown as FormOptions["methods"],
+    methods: ["plain", "rows", "unworded"] as unknown as ActivityAssetFormOptionsView["methods"],
     acquisition_shapes: [...ACQUISITION_SHAPES],
     declared_activities: [...DECLARED_ACTIVITIES],
     method_facts: [
@@ -954,7 +957,7 @@ test("a method with a fact that has no form is not offered, and its repeated row
           },
         ],
       },
-    ] as unknown as FormOptions["method_facts"],
+    ] as unknown as ActivityAssetFormOptionsView["method_facts"],
     table_groups: [],
     basis_stages: [],
     opening_statuses: [],

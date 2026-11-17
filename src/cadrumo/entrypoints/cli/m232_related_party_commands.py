@@ -32,7 +32,6 @@ from ...application.m232_related_party.requests import (
     Modelo232TurnoverStateRequest,
     Modelo232TurnoverWithdrawRequest,
 )
-from ...application.operations.public_scalar import PublicDecimal
 from ...core.i18n.render import tr
 from ...domain.modelos.m232_related_party import (
     Modelo232Direction,
@@ -41,7 +40,7 @@ from ...domain.modelos.m232_related_party import (
     Modelo232TurnoverSource,
 )
 from .common import active_bucket_id_or_refuse, bad, emit_envelope
-from .decimal_parsing import parse_decimal_amount
+from .decimal_parsing import parse_public_decimal_amount
 from .m232_related_party_results import (
     Modelo232NoneStatementResult,
     Modelo232OperationResult,
@@ -65,10 +64,6 @@ __all__ = [
     "m232_related_party_withdraw_operation",
     "m232_related_party_withdraw_turnover",
 ]
-
-
-def _amount(raw: str, *, label: str) -> PublicDecimal:
-    return PublicDecimal(decimal=str(parse_decimal_amount(raw, label=label, signed=False)))
 
 
 def _request[RequestT: Modelo232RelatedPartyWriteRequest | Modelo232RelatedPartyListRequest](
@@ -163,8 +158,10 @@ def m232_related_party_state_operation(
     expected_guard_revision: str | None = None,
 ) -> None:
     """State one related-party or tax-haven operation of an ejercicio and present the stored row."""
-    amount_eur = _amount(amount, label="--amount")
-    participation_percent = None if participation is None else _amount(participation, label="--participation")
+    amount_eur = parse_public_decimal_amount(amount, label="--amount")
+    participation_percent = (
+        None if participation is None else parse_public_decimal_amount(participation, label="--participation")
+    )
     request = _request(
         lambda profile_id: Modelo232OperationStateRequest(
             profile_id=profile_id,
@@ -239,7 +236,7 @@ def m232_related_party_state_turnover(
     expected_guard_revision: str | None = None,
 ) -> None:
     """State an ejercicio's cifra de negocios and where it was taken from."""
-    turnover_eur = _amount(cifra_negocios, label="--cifra-negocios")
+    turnover_eur = parse_public_decimal_amount(cifra_negocios, label="--cifra-negocios")
     request = _request(
         lambda profile_id: Modelo232TurnoverStateRequest(
             profile_id=profile_id,

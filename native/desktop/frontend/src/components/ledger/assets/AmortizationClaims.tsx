@@ -5,7 +5,10 @@ import { IconButton } from "@/components/ui/icon-button";
 import { useTableView } from "@/components/ui/table-view";
 import { formatDay } from "../../../shared/dateFormats";
 import { facts } from "../../../shell/compose";
-import type { PlanClaim, PlanRow } from "../../../shell/ledgerSetup";
+import type {
+  ActivityAssetPlanClaim,
+  ActivityAssetPlanRow,
+} from "../../../shell/ledgerActivityAssetReadContract";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
 import { Interval } from "./AmortizationFigures";
@@ -22,12 +25,12 @@ export function Claims({
   onCorrectClaim,
 }: {
   locale: string;
-  planned: PlanRow;
+  planned: ActivityAssetPlanRow;
   onCorrectClaim?: (claimId: string, year: number) => void;
 }) {
   const t = useStrings();
   const column = ASSET_KEYS.plan.column;
-  const replacement = (claim: PlanClaim) =>
+  const replacement = (claim: ActivityAssetPlanClaim) =>
     claim.superseded_by === null
       ? undefined
       : planned.claims.find((other) => other.claim_id === claim.superseded_by);
@@ -192,7 +195,7 @@ export function Status({
   onCorrectElement,
 }: {
   locale: string;
-  planned: PlanRow;
+  planned: ActivityAssetPlanRow;
   onCorrectElement?: () => void;
 }) {
   const t = useStrings();
@@ -279,7 +282,7 @@ export function Days({
   planned,
   applies,
 }: {
-  planned: PlanRow;
+  planned: ActivityAssetPlanRow;
   applies: boolean;
 }) {
   const t = useStrings();

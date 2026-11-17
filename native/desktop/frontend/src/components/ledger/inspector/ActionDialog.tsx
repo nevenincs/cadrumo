@@ -14,7 +14,7 @@ import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { listed } from "@/shell/compose";
 import { ledgerFailure, type LedgerPort } from "../../../shell/ledger";
-import type { LedgerRemoveResult } from "../../../shell/ledgerMovementOperations";
+import type { LedgerRemoveOperationResult } from "../../../shell/ledgerMovementContract";
 import { EMPTY_CONTENT, type StageEvent } from "../../../shell/ledgerStage";
 import {
   stagedCheckRequest,
@@ -44,7 +44,7 @@ export type ActionRequest =
 
 type Preview =
   | { kind: "reading" }
-  | { kind: "ready"; report: LedgerRemoveResult["report"] }
+  | { kind: "ready"; report: LedgerRemoveOperationResult["report"] }
   | { kind: "failed"; code: string };
 
 const NOTHING_ASKED: readonly string[] = [];

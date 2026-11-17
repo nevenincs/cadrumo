@@ -17,6 +17,7 @@ from cadrumo_client.contracts.contracts import RefusalCode
 from ....application.ledger import ratios_contracts as ratios
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .. import operation_ledger_ratios as bridge
+from .. import profile_bound_clients
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -34,9 +35,9 @@ def _bind(
     allow_refusal_detail: bool = False,
 ) -> list[BaseModel]:
     submitted: list[BaseModel] = []
-    monkeypatch.setattr(bridge, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_bound_clients, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
     monkeypatch.setattr(
-        bridge,
+        profile_bound_clients,
         "require_profile_client",
         lambda _ctx, *, expected_profile_id: SimpleNamespace(profile_id=expected_profile_id),
     )

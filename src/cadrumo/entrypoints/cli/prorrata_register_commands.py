@@ -57,7 +57,7 @@ from ...core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from .common import active_bucket_id_or_refuse, emit_envelope
+from .common import emit_envelope
 from .decimal_parsing import parse_decimal_amount
 from .operation_ledger_prorrata_register import (
     submit_prorrata_list,
@@ -65,6 +65,7 @@ from .operation_ledger_prorrata_register import (
     validate_prorrata_list_completion,
     validate_prorrata_mutation_completion,
 )
+from .profile_bound_clients import active_profile_id
 from .prorrata_register_results import (
     ProrrataDeclareGrossResult,
     ProrrataDeclareSectorResult,
@@ -194,10 +195,6 @@ def _invalid_refusal_error() -> CliRefusedBoundaryError:
 
 def _invalid_projection_error() -> CliRefusedBoundaryError:
     return CliRefusedBoundaryError(context={"reason": "invalid_prorrata_projection"})
-
-
-def _profile_id() -> UUID:
-    return UUID(active_bucket_id_or_refuse())
 
 
 def _decimal_text(value: PublicDecimal | None) -> str | None:
@@ -343,7 +340,7 @@ def _manual_election(
     result_class: type[ProrrataElectResult],
     command: str,
 ) -> None:
-    profile_id = _profile_id()
+    profile_id = active_profile_id()
     completed, projection = _run_mutation(
         ctx,
         request,
@@ -386,7 +383,7 @@ def prorrata_elect_especial(
     sector: str | None = None,
 ) -> None:
     """Submit the special-prorrata election through its registered operation."""
-    profile_id = _profile_id()
+    profile_id = active_profile_id()
     request = ProrrataElectEspecialRequest(
         profile_id=profile_id,
         ejercicio=ejercicio,
@@ -416,7 +413,7 @@ def prorrata_elect_general(
     sector: str | None = None,
 ) -> None:
     """Submit the general-prorrata election through its registered operation."""
-    profile_id = _profile_id()
+    profile_id = active_profile_id()
     request = ProrrataElectGeneralRequest(
         profile_id=profile_id,
         ejercicio=ejercicio,
@@ -446,7 +443,7 @@ def prorrata_revoke_especial(
     sector: str | None = None,
 ) -> None:
     """Submit an evidence-backed special-prorrata revocation."""
-    profile_id = _profile_id()
+    profile_id = active_profile_id()
     request = ProrrataRevokeEspecialRequest(
         profile_id=profile_id,
         ejercicio=ejercicio,
@@ -474,7 +471,7 @@ def prorrata_declare_sector(
     activity_code: tuple[str, ...] = (),
 ) -> None:
     """Submit one differentiated-sector partition row."""
-    profile_id = _profile_id()
+    profile_id = active_profile_id()
     request = ProrrataDeclareSectorRequest(
         profile_id=profile_id,
         sector_id=sector_id,
@@ -599,7 +596,7 @@ def prorrata_seed(
                 "ejercicio": ejercicio,
             },
         )
-    profile_id = _profile_id()
+    profile_id = active_profile_id()
     request = ProrrataSeedRequest(
         profile_id=profile_id,
         ejercicio=ejercicio,
@@ -653,7 +650,7 @@ def prorrata_seed(
 
 def prorrata_seed_sector(ctx: typer.Context, ejercicio: int, sector_id: str) -> None:
     """Carry one differentiated sector's own prior register definitive."""
-    profile_id = _profile_id()
+    profile_id = active_profile_id()
     request = ProrrataSeedSectorRequest(
         profile_id=profile_id,
         ejercicio=ejercicio,
@@ -703,7 +700,7 @@ def prorrata_settle_sector(
     sin_derecho_volume: str,
 ) -> None:
     """Settle one sector's year-end definitive from its annual volumes."""
-    profile_id = _profile_id()
+    profile_id = active_profile_id()
     request = ProrrataSettleSectorRequest(
         profile_id=profile_id,
         ejercicio=ejercicio,
@@ -798,7 +795,7 @@ def prorrata_declare_gross(
     replace: bool = False,
 ) -> None:
     """Declare an earlier liquidation period's gross deducible cuota before prorrata."""
-    profile_id = _profile_id()
+    profile_id = active_profile_id()
     request = ProrrataDeclareGrossRequest(
         profile_id=profile_id,
         ejercicio=ejercicio,
@@ -831,7 +828,7 @@ def prorrata_remove_gross(
     sector: str | None = None,
 ) -> None:
     """Remove an earlier liquidation period's operator gross declaration."""
-    profile_id = _profile_id()
+    profile_id = active_profile_id()
     request = ProrrataRemoveGrossRequest(
         profile_id=profile_id,
         ejercicio=ejercicio,
@@ -856,7 +853,7 @@ def prorrata_remove_gross(
 
 def prorrata_list(ctx: typer.Context) -> None:
     """Read every period and differentiated-sector row through the runtime."""
-    profile_id = _profile_id()
+    profile_id = active_profile_id()
     request = ProrrataListRequest(profile_id=profile_id)
     completed: RegisteredOperationCompletion[ProrrataListProjection] = submit_prorrata_list(ctx, request)
     projection = validate_prorrata_list_completion(completed)

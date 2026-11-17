@@ -9,7 +9,10 @@
 
 import type { IconName } from "@/components/ui/icon";
 import type { Translate } from "../../../shell/strings";
-import type { AssetCounts, ListDisposal } from "../../../shell/ledgerSetup";
+import type {
+  ActivityAssetFindingCounts,
+  ActivityAssetListDisposal,
+} from "../../../shell/ledgerActivityAssetReadContract";
 import { formatDay } from "../../../shared/dateFormats";
 
 /** What the register's amounts are in: it keeps every figure in euros, and a
@@ -282,7 +285,7 @@ export const changeFieldWord = (t: Translate, key: string | null) =>
 export function bajaText(
   t: Translate,
   locale: string,
-  disposal: ListDisposal,
+  disposal: ActivityAssetListDisposal,
 ): string {
   return t(ASSET_KEYS.plan.baja, {
     date: formatDay(locale, disposal.disposal_date),
@@ -315,10 +318,10 @@ const COUNT = {
   unsupported: "desktop.ledger.assets.count.unsupported",
   without_tables: "desktop.ledger.assets.count.without_tables",
   stale: "desktop.ledger.assets.count.stale",
-} as const satisfies Record<keyof AssetCounts, string>;
+} as const satisfies Record<keyof ActivityAssetFindingCounts, string>;
 
 /** The glyph each kind of count is drawn with; no two share one. */
-export const COUNT_ICON: Record<keyof AssetCounts, IconName> = {
+export const COUNT_ICON: Record<keyof ActivityAssetFindingCounts, IconName> = {
   missing: "alert",
   incomplete: "unknown",
   conflict: "refused",
@@ -328,12 +331,12 @@ export const COUNT_ICON: Record<keyof AssetCounts, IconName> = {
 };
 
 /** The kinds of count a list row can carry, in the order they are shown. */
-export const COUNT_KINDS = Object.keys(COUNT) as (keyof AssetCounts)[];
+export const COUNT_KINDS = Object.keys(COUNT) as (keyof ActivityAssetFindingCounts)[];
 
 /** What a count of `kind` says in a tooltip or an accessible name. */
 export const countWord = (
   t: Translate,
-  kind: keyof AssetCounts,
+  kind: keyof ActivityAssetFindingCounts,
   count: number,
 ) => t(COUNT[kind], { count });
 

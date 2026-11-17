@@ -22,6 +22,7 @@ from ..components.language import localized
 from .controller import LedgerWorkspaceController
 from .invoice_entry_wording import SITUACION_LOCALE_KEYS, invoice_line_row, supplemental_summary_lines
 from .models import LedgerFlowState, LedgerInvoiceClassChoice, LedgerInvoiceEntryV1, LedgerInvoiceLineEntryV1
+from .text_values import field_label
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 from .workspace_screen import LedgerInvoiceEntryRequested
 
@@ -115,10 +116,6 @@ _CLASS_LOCALE_KEYS: Final[dict[LedgerInvoiceClassChoice, str]] = {
 }
 
 
-def _field_label(name: str) -> str:
-    return tr(_FIELD_LOCALE_KEYS[name])
-
-
 def _line_field_label(name: str) -> str:
     return tr(_LINE_FIELD_LOCALE_KEYS[name])
 
@@ -174,7 +171,7 @@ def _parsed_invoice_line(values: dict[str, str]) -> tuple[LedgerInvoiceLineEntry
 
 def _required_entry_problems(values: dict[str, str], lines: list[LedgerInvoiceLineEntryV1]) -> list[str]:
     problems = [
-        tr("tui.ledger.invoice.problem.required", field=_field_label(name))
+        tr("tui.ledger.invoice.problem.required", field=field_label(name, _FIELD_LOCALE_KEYS))
         for name, required in _TEXT_FIELDS
         if required and not values[name]
     ]
@@ -189,7 +186,7 @@ def _entry_day(values: dict[str, str], name: str) -> tuple[date | None, str | No
     try:
         return require_iso8601_date_unless_blank(values[name]), None
     except ValueError:
-        return None, tr("tui.ledger.invoice.problem.date", field=_field_label(name))
+        return None, tr("tui.ledger.invoice.problem.date", field=field_label(name, _FIELD_LOCALE_KEYS))
 
 
 def _entry_dates(values: dict[str, str]) -> tuple[date | None, date | None, list[str]]:
@@ -205,7 +202,7 @@ def _entry_amount(values: dict[str, str], name: str) -> tuple[Decimal | None, st
         return None, None
     parsed = try_parse_canonical_decimal(raw, max_fraction_digits=2)
     if parsed is None:
-        return None, tr("tui.ledger.invoice.problem.amount", field=_field_label(name))
+        return None, tr("tui.ledger.invoice.problem.amount", field=field_label(name, _FIELD_LOCALE_KEYS))
     return parsed, None
 
 
@@ -286,7 +283,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
         with ledger_workspace_page() as navigation:
             yield navigation
             yield localized(Static(tr("tui.ledger.invoice.prompt"), markup=False), "tui.ledger.invoice.prompt")
-            yield Static(_field_label("kind"), markup=False)
+            yield Static(field_label("kind", _FIELD_LOCALE_KEYS), markup=False)
             yield Select[str](
                 tuple((tr(_KIND_LOCALE_KEYS[kind]), kind.value) for kind in InvoiceKind),
                 value=InvoiceKind.RECEIVED.value,
@@ -294,13 +291,16 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 id="ledger-invoice-kind",
             )
             for name, required in _TEXT_FIELDS:
-                label = _field_label(name)
+                label = field_label(name, _FIELD_LOCALE_KEYS)
                 yield Static(label if required else tr("tui.ledger.invoice.optional", label=label), markup=False)
                 yield Input(value=_DEFAULTS.get(name, ""), id=f"ledger-invoice-{name.replace('_', '-')}")
             yield localized(
-                Static(tr("tui.ledger.invoice.optional", label=_field_label("operation_type")), markup=False),
+                Static(
+                    tr("tui.ledger.invoice.optional", label=field_label("operation_type", _FIELD_LOCALE_KEYS)),
+                    markup=False,
+                ),
                 "tui.ledger.invoice.optional",
-                label=_field_label("operation_type"),
+                label=field_label("operation_type", _FIELD_LOCALE_KEYS),
             )
             yield Select[str](
                 tuple((key.value, key.value) for key in IntracomOperationType),
@@ -308,14 +308,14 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 allow_blank=True,
                 id="ledger-invoice-operation-type",
             )
-            yield Static(_field_label("invoice_class"), markup=False)
+            yield Static(field_label("invoice_class", _FIELD_LOCALE_KEYS), markup=False)
             yield Select[str](
                 tuple((tr(_CLASS_LOCALE_KEYS[choice]), choice.value) for choice in LedgerInvoiceClassChoice),
                 value=LedgerInvoiceClassChoice.ORDINARIA.value,
                 allow_blank=False,
                 id="ledger-invoice-class",
             )
-            yield Static(_field_label("arrendamiento_local_negocio"), markup=False)
+            yield Static(field_label("arrendamiento_local_negocio", _FIELD_LOCALE_KEYS), markup=False)
             yield Select[str](
                 tuple((tr(key), str(choice)) for key, choice in _LEASE_CHOICES),
                 value=str(False),
@@ -323,9 +323,12 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 id="ledger-invoice-lease",
             )
             yield localized(
-                Static(tr("tui.ledger.invoice.optional", label=_field_label("situacion_inmueble")), markup=False),
+                Static(
+                    tr("tui.ledger.invoice.optional", label=field_label("situacion_inmueble", _FIELD_LOCALE_KEYS)),
+                    markup=False,
+                ),
                 "tui.ledger.invoice.optional",
-                label=_field_label("situacion_inmueble"),
+                label=field_label("situacion_inmueble", _FIELD_LOCALE_KEYS),
             )
             yield Select[str](
                 tuple((tr(key), code.value) for code, key in SITUACION_LOCALE_KEYS.items()),

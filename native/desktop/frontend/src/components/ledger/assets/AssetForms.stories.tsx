@@ -9,7 +9,7 @@ import { servedSupport } from "@/dev/servedYearAuthority";
 import { SCENARIO_TODAY } from "@/dev/assetsRegister";
 import type { LedgerShape } from "@/dev/ledgerFixture";
 import type { LedgerPort } from "../../../shell/ledger";
-import type { DisposalFacts } from "../../../shell/ledgerSetup";
+import type { ActivityAssetDisposalSnapshot } from "../../../shell/ledgerActivityAssetContract";
 import { PausedBanner, usePagePause, WritePauseContext } from "../WritePause";
 import { AssetForm, type ActProps } from "./AssetForm";
 import { BajaForm } from "./BajaForm";
@@ -559,7 +559,7 @@ const confirm = (root: Root) => pressed(root, ".ledger-asset-confirm-yes");
 const dispose = (date: string) => steps(fillBaja(date), confirm);
 
 /** The baja an element is given before its form opens, to change or remove. */
-const recorded: DisposalFacts = {
+const recorded: ActivityAssetDisposalSnapshot = {
   disposal_date: `${scenarioYear}-03-31`,
   reason: "sale",
   proceeds: { decimal: "9000.00" },

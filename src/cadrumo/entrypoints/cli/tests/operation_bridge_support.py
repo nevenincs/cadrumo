@@ -114,16 +114,18 @@ def bind_exact_profile_read(
     submitted: list[BaseModel],
     result_version: int,
     operation_id: str,
+    profile_binding: ModuleType | None = None,
 ) -> None:
     """Serve ``projection`` for one read and assert the exact profile, subject, versions and timeout it was sent with."""
     client = cast(FrontendClient, SimpleNamespace(profile_id=profile_id))
-    monkeypatch.setattr(bridge, "active_bucket_id_or_refuse", lambda: str(profile_id))
+    binding = profile_binding or bridge
+    monkeypatch.setattr(binding, "active_bucket_id_or_refuse", lambda: str(profile_id))
 
     def bound_client(_ctx: typer.Context, *, expected_profile_id: UUID) -> FrontendClient:
         assert expected_profile_id == profile_id
         return client
 
-    monkeypatch.setattr(bridge, "require_profile_client", bound_client)
+    monkeypatch.setattr(binding, "require_profile_client", bound_client)
 
     def submit(
         actual_client: FrontendClient,

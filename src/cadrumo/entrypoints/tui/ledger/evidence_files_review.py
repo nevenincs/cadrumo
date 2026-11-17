@@ -27,9 +27,10 @@ from ....domain.iva.schema import InvoiceKind
 from ..components.language import localized
 from .controller import LedgerWorkspaceController
 from .evidence_draft import draft_lines
-from .evidence_files_common import EvidenceFilesToolScreen, blank_to_none, short_identity, shown
+from .evidence_files_common import EvidenceFilesToolScreen, short_identity, shown
 from .evidence_files_doors import LedgerEvidenceFilesDoorsV1
 from .models import LedgerEvidenceDraftV1
+from .text_values import blank_to_none
 from .workspace_presentation import ledger_workspace_page
 
 _KIND_LOCALE_KEYS: Final[dict[InvoiceKind, str]] = {

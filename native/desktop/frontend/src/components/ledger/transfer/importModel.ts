@@ -24,7 +24,7 @@ import type {
   LedgerProviderID,
 } from "../../../shell/ledgerTransferContract";
 import type { EvidenceBatchResult } from "../../../shell/ledgerDocumentOperations";
-import type { InvoiceImportResult } from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceImportProjection } from "../../../shell/ledgerInvoiceContract";
 import type {
   InvoiceKind,
   LedgerTransactionProjection,
@@ -401,7 +401,7 @@ export function applyBook(
   file: PickedFile,
   kind: InvoiceKind,
   country: string | null,
-): Promise<Attempt<InvoiceImportResult>> {
+): Promise<Attempt<InvoiceImportProjection>> {
   return attempt(
     port,
     "ledger.invoice.import",

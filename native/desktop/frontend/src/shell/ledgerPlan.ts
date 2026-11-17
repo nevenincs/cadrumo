@@ -4,13 +4,13 @@
 // order of the work, what staged actions must not meet, and cutting the bulk
 // into parts the host will carry.
 
-import {
-  type LedgerAddRequest,
-  type LedgerBulkClassifyRequest,
-  type LedgerClassifyField,
-  type LedgerClassifyRequest,
-  type LedgerUpdateRequest,
-} from "./ledgerMovementOperations";
+import type {
+  LedgerAddWindowRequest,
+  LedgerBulkClassifyWindowRequest,
+  LedgerClassifyField,
+  LedgerClassifyWindowRequest,
+} from "./ledgerMovementContract";
+import type { LedgerUpdateRequest } from "./ledgerMovementOperations";
 import { type LedgerStagedBlocker } from "./ledgerMovementCheckContract";
 import type { JsonObject, LedgerDefinitionId } from "./ledger";
 import type { OutputLanguage } from "./ledgerClassificationContract";
@@ -143,14 +143,14 @@ export type PlanStep =
       part: number;
       parts: number;
       rows: BulkRow[];
-      request: LedgerBulkClassifyRequest;
+      request: LedgerBulkClassifyWindowRequest;
     }
   | {
       kind: "classify";
       transactionId: string;
       fields: StageField[];
       m210Action: string | null;
-      request: LedgerClassifyRequest;
+      request: LedgerClassifyWindowRequest;
     }
   | {
       kind: "update";
@@ -159,7 +159,7 @@ export type PlanStep =
       newIdentity: boolean;
       request: LedgerUpdateRequest;
     }
-  | { kind: "add"; draftKey: string; request: LedgerAddRequest }
+  | { kind: "add"; draftKey: string; request: LedgerAddWindowRequest }
   | {
       kind: "action";
       action: StagedAction;
@@ -263,7 +263,7 @@ export function bulkCsv(rows: readonly BulkRow[]): string {
 export function bulkRequest(
   rows: readonly BulkRow[],
   outputLanguage?: OutputLanguage,
-): LedgerBulkClassifyRequest {
+): LedgerBulkClassifyWindowRequest {
   return {
     csv_text: bulkCsv(rows),
     ...(outputLanguage ? { output_language: outputLanguage } : {}),
@@ -629,7 +629,7 @@ function checkDraft(draft: Draft, check: StagedCheck): DraftEntry {
   };
 }
 
-function addRequest(draft: Draft): LedgerAddRequest {
+function addRequest(draft: Draft): LedgerAddWindowRequest {
   const values: Partial<Record<DraftField, string>> = {};
   for (const [field, text] of Object.entries(draft.fields) as [
     DraftField,
@@ -645,11 +645,11 @@ function addRequest(draft: Draft): LedgerAddRequest {
     ...rest,
     ...(business_classification !== undefined && {
       business_classification:
-        business_classification as LedgerAddRequest["business_classification"],
+        business_classification as LedgerAddWindowRequest["business_classification"],
     }),
     booked_date: values.booked_date!,
     amount: values.amount!,
-    direction: direction as LedgerAddRequest["direction"],
+    direction: direction as LedgerAddWindowRequest["direction"],
     description: values.description!,
     idempotency_key: draft.idempotencyKey,
   };
@@ -697,7 +697,7 @@ function classifyStep(
   );
   if (!fields.length && !m210) return null;
   const changes = content.rows[entry.transactionId] ?? {};
-  const patch: LedgerClassifyRequest["patch"] = {
+  const patch: LedgerClassifyWindowRequest["patch"] = {
     business_classification: facts.business_classification!,
   };
   const selected = new Set<LedgerClassifyField>(["business_classification"]);
