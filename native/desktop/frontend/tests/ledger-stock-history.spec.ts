@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { historyRows } from "../src/components/ledger/assets/stockHistory";
 import type {
-  InventoryBook,
-  InventoryHistoryEntry,
-} from "../src/shell/ledgerSetup";
+  InventoryLedgerProjection,
+  InventoryHistoryEntryProjection,
+} from "../src/shell/ledgerInventoryContract";
 import { fixtureDay, fixtureYear } from "../src/dev/fixtureDates";
 import { movement } from "./support/stockFixtures";
 
@@ -15,9 +15,9 @@ const PRIOR = fixtureYear - 1;
 const change = (
   id: string,
   day: string,
-  kind: InventoryHistoryEntry["kind"],
-  facts: Partial<InventoryHistoryEntry> = {},
-): InventoryHistoryEntry => ({
+  kind: InventoryHistoryEntryProjection["kind"],
+  facts: Partial<InventoryHistoryEntryProjection> = {},
+): InventoryHistoryEntryProjection => ({
   correction_id: id,
   kind,
   recorded_at: `${day}T09:30:00Z`,
@@ -32,7 +32,9 @@ const change = (
   ...facts,
 });
 
-const ledgerOf = (history: InventoryHistoryEntry[]): InventoryBook => ({
+const ledgerOf = (
+  history: InventoryHistoryEntryProjection[],
+): InventoryLedgerProjection => ({
   actividad_id: "Papelería",
   year: PRIOR,
   valuation_method: "pmp",

@@ -1,4 +1,4 @@
-"""Shared pydantic model configuration constants.
+"""Shared pydantic model configuration constants and field annotations.
 
 Provides the canonical :data:`STRICT_FROZEN_CONFIG` used across domain,
 application, and adapter pydantic models that require strict-mode, frozen,
@@ -10,9 +10,10 @@ envelope records.
 
 The constant is intentionally only a config value, not a base class or a
 validation policy. Domain modules still own field validators, serializers,
-model rebuilds, and any richer invariants on their own records; this module
-only centralises the common ``strict=True``, ``frozen=True``,
-``extra="forbid"`` and ``validate_default=True`` baseline.
+model rebuilds, and any richer invariants on their own records. These constants
+centralise the common ``strict=True``, ``frozen=True``, ``extra="forbid"`` and
+``validate_default=True`` baseline. Checked field annotations describe who supplies
+a request field without changing its validation.
 
 ``validate_default=True`` belongs here rather than on each embedding module.
 Without it a default value is trusted unread, so a default that its own field
@@ -34,7 +35,9 @@ machine-output conformance.
 
 from __future__ import annotations
 
-from pydantic import ConfigDict
+from typing import Final
+
+from pydantic import ConfigDict, JsonValue
 
 #: Canonical pydantic ConfigDict for strict-mode, frozen, no-extra-fields models.
 #:
@@ -64,4 +67,24 @@ STRICT_FROZEN_HIDDEN_INPUT_CONFIG: ConfigDict = ConfigDict(
     defer_build=True,
 )
 
-__all__ = ["STRICT_FROZEN_CONFIG", "STRICT_FROZEN_HIDDEN_INPUT_CONFIG"]
+OPERATION_FILLED_BY_SCHEMA_KEY: Final = "x-cadrumo-filled-by"
+
+
+def host_filled_schema() -> dict[str, JsonValue]:
+    """Mark a request field the desktop host supplies before submission."""
+    return {OPERATION_FILLED_BY_SCHEMA_KEY: "host"}
+
+
+def require_filled_by_annotation(value: object) -> None:
+    """Refuse an unrecognised supplier rather than silently exposing its field."""
+    if value != "host":
+        raise ValueError(f"malformed {OPERATION_FILLED_BY_SCHEMA_KEY} annotation: expected 'host'")
+
+
+__all__ = [
+    "OPERATION_FILLED_BY_SCHEMA_KEY",
+    "STRICT_FROZEN_CONFIG",
+    "STRICT_FROZEN_HIDDEN_INPUT_CONFIG",
+    "host_filled_schema",
+    "require_filled_by_annotation",
+]

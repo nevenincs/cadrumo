@@ -10,11 +10,9 @@ key.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from types import MappingProxyType
-from typing import Annotated, Final, Literal, Self
+from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, Field, StringConstraints, computed_field, model_validator
 
@@ -283,16 +281,6 @@ class ServiceRefusalCode(StrEnum):
     SERVICE_STOPPING = "service_stopping"
 
 
-HOST_REFUSAL_NAMES: Final[Mapping[ServiceRefusalCode, str]] = MappingProxyType(
-    {
-        ServiceRefusalCode.SIGNED_OUT: "not_signed_in",
-        ServiceRefusalCode.SIGN_IN_UNAVAILABLE: "unsupported_flow",
-        ServiceRefusalCode.SERVICE_STOPPING: "runtime_unavailable",
-    }
-)
-"""The desktop host's word for a service code it renames; every other code reaches the window unchanged."""
-
-
 class ProviderSettingsRefusalCode(StrEnum):
     """Closed refusal codes for every provider-settings read and change."""
 
@@ -437,7 +425,6 @@ type LocalEngineResult = LocalEngineStatus | ProviderSettingsRefusal
 
 
 __all__ = [
-    "HOST_REFUSAL_NAMES",
     "CliState",
     "LocalEngineChoices",
     "LocalEngineResult",

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import type { LedgerPort } from "../../../shell/ledger";
 import type {
-  InventoryListResult,
-  InventoryInspectResult,
-  InventoryOptionsResult,
-} from "../../../shell/ledgerSetup";
+  InventoryListProjection,
+  InventoryInspectProjection,
+  InventoryOptionsProjection,
+} from "../../../shell/ledgerInventoryContract";
 import { useWritePause } from "../WritePause";
 import { setupCall, type SetupCall } from "../setup/setupModel";
 import { offersOf, NO_OFFERS, vocabularyOf } from "./stockVocabulary";
@@ -23,7 +23,9 @@ export function useBookList(
   reader: string | null,
   round: number,
 ) {
-  const [list, setList] = useState<SetupCall<InventoryListResult> | null>(null);
+  const [list, setList] = useState<SetupCall<InventoryListProjection> | null>(
+    null,
+  );
   const { round: reread } = useWritePause();
   useEffect(() => {
     setList(null);
@@ -52,7 +54,7 @@ export function useBookDetail(
 ) {
   const [detail, setDetail] = useState<{
     key: string;
-    call: SetupCall<InventoryInspectResult>;
+    call: SetupCall<InventoryInspectProjection>;
   } | null>(null);
   const { round: reread } = useWritePause();
   const name = book?.actividad_id ?? null;
@@ -89,9 +91,8 @@ export function useOffers(
   reader: string | null,
   round: number,
 ) {
-  const [read, setRead] = useState<SetupCall<InventoryOptionsResult> | null>(
-    null,
-  );
+  const [read, setRead] =
+    useState<SetupCall<InventoryOptionsProjection> | null>(null);
   useEffect(() => {
     setRead(null);
   }, [port, reader]);

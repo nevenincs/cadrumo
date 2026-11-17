@@ -7,7 +7,7 @@ from .....application.modelo.work_form_issue_lines import ModeloFormIssueLine, f
 from .....application.modelo.work_form_models import ModeloWorkForm
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language
-from .issue_scale import IssueLine, attention_level
+from .issue_scale import IssueLine
 from .sources import surface_target
 
 _NO_BOX: str = "·"
@@ -24,7 +24,7 @@ def _issue_line(line: ModeloFormIssueLine) -> IssueLine:
     surface = line.surface
     compared = line.compared_surface
     return IssueLine(
-        level=attention_level(line.level),
+        level=line.level,
         box=line.box or _NO_BOX,
         where=_where(line),
         message=line.message,

@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from cadrumo.core.logging import get_logger
 
-from ..providers.application.contracts import ServiceCause
+from ..providers.application.contracts import ProviderSettingsRefusalCode, ServiceCause, ServiceRefusalCode
 
 if TYPE_CHECKING:
     from .auth_attempt import AuthAttempt
@@ -27,7 +27,7 @@ def new_log_ref() -> str:
 
 
 def refuse(
-    code: str,
+    code: ServiceRefusalCode | ProviderSettingsRefusalCode,
     *,
     cause: ServiceCause,
     provider: str | None = None,
@@ -48,7 +48,7 @@ def refuse(
         "none" if error is None else type(error).__name__,
         log_ref,
     )
-    served = {"kind": "refused", "code": code} if base is None else base
+    served = {"kind": "refused", "code": str(code)} if base is None else base
     return {**served, "cause": cause, "log_ref": log_ref}
 
 
@@ -98,7 +98,7 @@ def sign_in_in_flight(attempt: AuthAttempt | None, abandoned: list[AuthAttempt])
     try:
         attempt.close()
     except RuntimeError:
-        refuse("busy", cause="previous_cleanup_unconfirmed", provider=attempt.lane)
+        refuse(ServiceRefusalCode.BUSY, cause="previous_cleanup_unconfirmed", provider=attempt.lane)
         abandoned.append(attempt)
         return False, None
     return False, attempt

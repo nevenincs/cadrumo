@@ -62,12 +62,12 @@ import {
   type Offers,
 } from "../src/components/ledger/assets/stockVocabulary";
 import type {
-  InventoryEvidenceAddResult,
-  InventoryBookRow,
-  InventoryHistoryEntry,
-  InventoryMovement,
-  InventoryOptionsResult,
-} from "../src/shell/ledgerSetup";
+  InventoryEvidenceAddProjection,
+  InventoryListRowProjection,
+  InventoryHistoryEntryProjection,
+  InventoryMovementProjection,
+  InventoryOptionsProjection,
+} from "../src/shell/ledgerInventoryContract";
 import {
   fixtureDay,
   fixtureInstant,
@@ -161,7 +161,7 @@ const SERVED: Record<string, string[]> = {
 const SERVED_ROLES: Record<
   string,
   NonNullable<
-    InventoryOptionsResult["families"][number]["options"][number]["role"]
+    InventoryOptionsProjection["families"][number]["options"][number]["role"]
   >
 > = {
   attributable_cost_review: "cost_check",
@@ -174,7 +174,7 @@ const ROLED_FAMILIES = [
   "closing_authority",
   "movement_kind",
 ];
-const OPTIONS: InventoryOptionsResult = {
+const OPTIONS: InventoryOptionsProjection = {
   profile_id: "synthetic",
   families: Object.entries(SERVED).map(([family, values]) => ({
     family,
@@ -751,7 +751,7 @@ const row = (
   year: number,
   movements: number,
   label: string | null = null,
-): InventoryBookRow => ({
+): InventoryListRowProjection => ({
   actividad_id: name,
   year,
   valuation_method: "fifo",
@@ -921,7 +921,7 @@ test("a corrected movement is a movement of its own under a new reference, and n
 });
 
 test("a change held in doubt landed only if the book's history now holds its reference", () => {
-  const entry = (id: string): InventoryHistoryEntry => ({
+  const entry = (id: string): InventoryHistoryEntryProjection => ({
     correction_id: id,
     kind: "retired",
     recorded_at: fixtureInstant(12, 31, "18:20:00Z", -1),
@@ -1096,7 +1096,7 @@ test("correcting a purchase starts from what the book kept of it, so only what w
     content_digest: digest,
     file_name: null,
   });
-  const bought: InventoryMovement = {
+  const bought: InventoryMovementProjection = {
     ...movement("p1", "100"),
     kind: "purchase",
     movement_date: fixtureDay(3, 4),
@@ -1283,7 +1283,7 @@ test("a count is the closing authority the options give that role", () => {
 });
 
 test("a file the book did not keep makes no proof, and one it kept makes one under the name the person saw", () => {
-  const stored: InventoryEvidenceAddResult = {
+  const stored: InventoryEvidenceAddProjection = {
     outcome: "stored",
     profile_id: "synthetic",
     reference: `document-${MARK("a")}`,
@@ -1296,7 +1296,7 @@ test("a file the book did not keep makes no proof, and one it kept makes one und
     digest: MARK("a"),
     fileName: "factura.pdf",
   });
-  const refused: InventoryEvidenceAddResult = {
+  const refused: InventoryEvidenceAddProjection = {
     outcome: "refused",
     profile_id: "synthetic",
     reference: null,
@@ -1333,7 +1333,7 @@ test("a file the book did not keep makes no proof, and one it kept makes one und
 test("a purchase's files come back named where the book knows the name, and as an opaque reference either way", () => {
   const named = MARK("a");
   const unnamed = MARK("b");
-  const bought: InventoryMovement = {
+  const bought: InventoryMovementProjection = {
     ...movement("p2", "10"),
     kind: "purchase",
     movement_date: fixtureDay(3, 4),

@@ -282,9 +282,9 @@ def _guardian_launch_command(
     # environment, independently of the user manager's inherited state.
     clean = tuple(f"{name}={value}" for name, value in sorted(environment.items()))
     script_selection = ("--worker-script", str(scope._worker_script)) if scope._worker_script is not None else ()
+    # systemd-run has no --no-pager before systemd 258; the Ubuntu 24.04 manager (255) refuses the whole launch.
     return (
         "--user",
-        "--no-pager",
         "--no-ask-password",
         "--no-block",
         "--collect",

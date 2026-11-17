@@ -3,13 +3,19 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any, cast
 
 import pytest
 
-from cadrumo.tests.log_records import delivered_text
+from cadrumo.tests.log_records import delivered_records, delivered_text
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ...adapters.agent_programs import AgentProgramRefusalError
+from ...providers.domain.record import LocalEngine
+from ...service import AgentService
 from ...service_support import service_failure
 from ..controller import AgentHostError, AgentHostRefusal
 from ..launcher_protocol import AgentLauncherRefusal
@@ -59,3 +65,105 @@ def test_an_absent_runtime_is_reported_as_typed_unavailability(caplog: pytest.Lo
         result = service_failure(RefusalError(RefusalCode.UNAVAILABLE))
     assert result == {"event": "refused", "code": "agent_runtime_unavailable"}
     assert RefusalCode.UNAVAILABLE.value in delivered_text(caplog)
+
+
+_LOGGER_NAME = "cadrumo_agent_service.service"
+
+
+def _cancelled_start_records(
+    caplog: pytest.LogCaptureFixture, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, cancel: str
+) -> tuple[list[dict[str, Any]], list[logging.LogRecord]]:
+    """Run the service's real start thread body with a start that is cancelled the way ``cancel`` cancels it."""
+    emitted: list[dict[str, Any]] = []
+    client = SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None))
+    service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
+        client=cast(InstalledServiceClient, client),
+        storage_root=tmp_path / "storage",
+        gateway_bearer=bytearray(b"synthetic-bearer"),
+        emit=emitted.append,
+    )
+
+    def cancelled_start(deadline: object, cancellation: object) -> dict[str, Any]:
+        if cancel == "sign_out":
+            client.lease = None  # the runtime withdrew the lease before the service was closed
+            service.request_close()
+        elif cancel == "close":
+            service.request_close()
+        elif cancel == "stop":
+            service._admit_stop()
+        raise AgentHostError(AgentHostRefusal.CANCELLED)
+
+    monkeypatch.setattr(service, "_start_owned", cancelled_start)
+    service._closing.clear()
+    try:
+        with caplog.at_level(logging.INFO, logger=_LOGGER_NAME):
+            service._startup_cancellation = None
+            service._background_start()
+            records = delivered_records(caplog, _LOGGER_NAME)
+    finally:
+        service.close()
+    return emitted, records
+
+
+def test_a_start_cancelled_by_a_person_sign_out_is_one_info_record_and_no_warning(
+    caplog: pytest.LogCaptureFixture, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _, records = _cancelled_start_records(caplog, tmp_path, monkeypatch, "sign_out")
+    cancelled = [record for record in records if "agent startup" in record.getMessage()]
+    assert [(record.levelno, record.getMessage()) for record in cancelled] == [
+        (logging.INFO, "agent startup cancelled: person signed out")
+    ]
+    assert not [record for record in records if record.levelno >= logging.WARNING]
+
+
+def test_a_start_cancelled_by_the_service_closing_is_logged_at_info(
+    caplog: pytest.LogCaptureFixture, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _, records = _cancelled_start_records(caplog, tmp_path, monkeypatch, "close")
+    cancelled = [record for record in records if "agent startup" in record.getMessage()]
+    assert [(record.levelno, record.getMessage()) for record in cancelled] == [
+        (logging.INFO, "agent startup cancelled: service stopping")
+    ]
+
+
+def test_a_start_cancelled_by_a_stop_request_is_logged_at_info_with_its_cause(
+    caplog: pytest.LogCaptureFixture, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _, records = _cancelled_start_records(caplog, tmp_path, monkeypatch, "stop")
+    cancelled = [record for record in records if "agent startup" in record.getMessage()]
+    assert [(record.levelno, record.getMessage()) for record in cancelled] == [
+        (logging.INFO, "agent startup cancelled: stop requested")
+    ]
+
+
+def test_a_cancelled_start_with_no_known_cause_stays_a_warning(
+    caplog: pytest.LogCaptureFixture, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    emitted, records = _cancelled_start_records(caplog, tmp_path, monkeypatch, "unknown")
+    cancelled = [record for record in records if "agent startup" in record.getMessage()]
+    assert [(record.levelno, record.getMessage()) for record in cancelled] == [
+        (logging.WARNING, "agent startup refused reason=cancelled agent_code=None")
+    ]
+    assert emitted[-1]["event"] == "refused"
+
+
+@pytest.mark.parametrize("cancel", ["sign_out", "close", "stop"])
+def test_the_published_refusal_of_a_cancelled_start_does_not_change_with_its_cause(
+    caplog: pytest.LogCaptureFixture, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, cancel: str
+) -> None:
+    emitted, _ = _cancelled_start_records(caplog, tmp_path, monkeypatch, cancel)
+    unknown, _ = _cancelled_start_records(caplog, tmp_path, monkeypatch, "unknown")
+    code = service_failure(AgentHostError(AgentHostRefusal.CANCELLED))
+    assert unknown == [code]
+    assert emitted in ([], [code])  # a closing service publishes nothing; a stop request publishes the same code
+
+
+def test_a_refusal_that_is_not_a_cancellation_still_logs_a_warning(caplog: pytest.LogCaptureFixture) -> None:
+    error = AgentHostError(AgentHostRefusal.LAUNCH_FAILED)
+    error.cancel_cause = "person signed out"
+    with caplog.at_level(logging.INFO, logger=_LOGGER_NAME):
+        service_failure(error)
+    assert [(record.levelno, record.getMessage()) for record in delivered_records(caplog, _LOGGER_NAME)] == [
+        (logging.WARNING, "agent startup refused reason=launch_failed agent_code=None")
+    ]

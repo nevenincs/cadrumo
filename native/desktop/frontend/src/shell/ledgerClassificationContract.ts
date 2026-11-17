@@ -648,3 +648,53 @@ export type LedgerClassificationContracts = {
     result: LedgerRuleListProjection;
   };
 };
+
+export type LedgerCounterpartyWindowRequest = Omit<
+  LedgerCounterpartyRequest,
+  "profile_id"
+>;
+
+export type LedgerLlmDiagnosticsWindowRequest = Omit<
+  LedgerLlmDiagnosticsRequest,
+  "profile_id"
+>;
+
+export type LedgerRatiosEligibleWindowRequest = Omit<
+  LedgerRatiosEligibleRequest,
+  "profile_id"
+>;
+
+export type LedgerRatiosListWindowRequest = Omit<
+  LedgerRatiosListRequest,
+  "profile_id"
+>;
+
+export type LedgerRatiosSetWindowRequest = Omit<
+  LedgerRatiosSetRequest,
+  "profile_id"
+>;
+
+export type LedgerRatiosUnsetWindowRequest = Omit<
+  LedgerRatiosUnsetRequest,
+  "profile_id"
+>;
+
+export type LedgerRatiosValidateWindowRequest = Omit<
+  LedgerRatiosValidateRequest,
+  "profile_id"
+>;
+
+export type LedgerRuleAddWindowRequest = Omit<
+  LedgerRuleAddRequest,
+  "profile_id"
+>;
+
+export type LedgerRuleApplyWindowRequest = Omit<
+  LedgerRuleApplyRequest,
+  "profile_id"
+>;
+
+export type LedgerRuleListWindowRequest = Omit<
+  LedgerRuleListRequest,
+  "profile_id"
+>;

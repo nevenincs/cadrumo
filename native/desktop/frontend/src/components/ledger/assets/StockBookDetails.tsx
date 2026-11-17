@@ -5,10 +5,10 @@ import { Icon } from "@/components/ui/icon";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";
 import type {
-  InventoryBook,
-  InventoryAdvisory,
-  InventoryMovement,
-} from "../../../shell/ledgerSetup";
+  InventoryLedgerProjection,
+  InventoryAdvisoryProjection,
+  InventoryMovementProjection,
+} from "../../../shell/ledgerInventoryContract";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { Panel, SetupTable } from "../setup/SetupParts";
 import { historyRows, type HistoryFact } from "./stockHistory";
@@ -70,7 +70,7 @@ export function History({
   offers,
 }: {
   offers: Offers;
-  ledger: InventoryBook;
+  ledger: InventoryLedgerProjection;
   locale: string;
   name: string;
 }) {
@@ -140,7 +140,7 @@ export function PurchaseFacts({
   locale,
   onClose,
 }: {
-  movement: InventoryMovement;
+  movement: InventoryMovementProjection;
   locale: string;
   onClose(): void;
 }) {
@@ -273,7 +273,7 @@ export function Advisories({
   advisories,
   className,
 }: {
-  advisories: readonly InventoryAdvisory[] | undefined;
+  advisories: readonly InventoryAdvisoryProjection[] | undefined;
   className: string;
 }) {
   const t = useStrings();

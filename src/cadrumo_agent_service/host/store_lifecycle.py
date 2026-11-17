@@ -97,6 +97,7 @@ class InvocationCancellation:
         """Start an uncancelled operation with no registered waiters."""
         self._lock = Lock()
         self._cancelled = False
+        self._cause: str | None = None
         self._subscribers: set[Callable[[], None]] = set()
 
     def is_set(self) -> bool:
@@ -104,10 +105,21 @@ class InvocationCancellation:
         with self._lock:
             return self._cancelled
 
-    def cancel(self) -> None:
-        """Invalidate this operation and notify its waiters; owners perform cleanup."""
+    @property
+    def cause(self) -> str | None:
+        """The bounded word the first cancelling caller gave, or ``None`` when none was given."""
+        with self._lock:
+            return self._cause
+
+    def cancel(self, cause: str | None = None) -> None:
+        """Invalidate this operation and notify its waiters; owners perform cleanup.
+
+        The first cause given is kept, so a later cancel cannot rename why the operation ended.
+        """
         with self._lock:
             self._cancelled = True
+            if self._cause is None:
+                self._cause = cause
             subscribers = tuple(self._subscribers)
         for notify in subscribers:
             notify()

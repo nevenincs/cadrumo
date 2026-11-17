@@ -57,7 +57,6 @@ from ..header import attention_chips, status_line
 from ..issue_projection import issue_lines
 from ..issue_scale import (
     ASSUMED_BOXES_BEFORE_SECTIONS,
-    IssueLevel,
     level_counts,
     levels_marked,
     title_text,
@@ -211,13 +210,13 @@ def _words(text: str) -> str:
 def test_findings_sit_on_one_scale_with_where_what_and_what_to_do() -> None:
     with override_settings(cadrumo_output_language="en"):
         lines = issue_lines(_checked())
-        assumed = unentered_boxes(_checked(), IssueLevel.CONFIRM)
+        assumed = unentered_boxes(_checked(), ModeloFormAttention.CONFIRM)
         title = title_text(level_counts(lines, unentered_levels(_checked())))
 
     assert [(line.level, line.box, line.where) for line in lines] == [
-        (IssueLevel.BLOCKS, "06", "[06] Retenciones e ingresos a cuenta"),
-        (IssueLevel.CHECK, "·", "Whole declaration"),
-        (IssueLevel.CHECK, "71", "[71]"),
+        (ModeloFormAttention.BLOCKS, "06", "[06] Retenciones e ingresos a cuenta"),
+        (ModeloFormAttention.CHECK, "·", "Whole declaration"),
+        (ModeloFormAttention.CHECK, "71", "[71]"),
     ]
     # The missing document is the finding's message, so the form names one step for it whatever its kind.
     assert [line.action for line in lines] == ["What to do: Attach the document to the entry in your records."] * 3
@@ -238,7 +237,7 @@ def test_a_finding_the_form_marks_as_an_explanation_is_for_information_and_asks_
         lines = issue_lines(form)
         title = title_text(level_counts(lines))
 
-    assert [line.level for line in lines] == [IssueLevel.INFO]
+    assert [line.level for line in lines] == [ModeloFormAttention.INFO]
     assert lines[0].action == "What to do: Nothing to do. It explains what the calculation did."
     assert lines[0].message == "2 modelos were not used, because they do not apply to you."
     assert title == "Issues to look at   i 1"
@@ -290,7 +289,7 @@ async def test_the_list_groups_by_level_wraps_every_word_and_keeps_codes_and_fac
         "◆ Worth checking (2)",
         "i For your information (1)",
     ]
-    assert title == "Issues to look at   ▲ 1   ◐ 1   ◆ 2   i 1"
+    assert title == "Issues to look at   ▲ 1   ◆ 2"
     assert verdict == "The check found something that blocks filing."
     message = "This declaration includes one-stop-shop (OSS) activity, but no supporting documents for it are saved."
     assert _words(before).count(message) == 3
@@ -408,7 +407,7 @@ async def test_the_assumed_boxes_are_listed_in_two_lines_then_counted() -> None:
 async def test_past_twenty_assumed_boxes_the_list_names_their_sections_and_enter_opens_one() -> None:
     form = _assumed_boxes(12, 15)
     with override_settings(cadrumo_output_language="en"):
-        assumed = unentered_boxes(form, IssueLevel.CONFIRM)
+        assumed = unentered_boxes(form, ModeloFormAttention.CONFIRM)
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
@@ -445,7 +444,7 @@ async def test_past_twenty_assumed_boxes_the_list_names_their_sections_and_enter
 async def test_a_declaration_recorded_as_filed_lists_no_assumed_values_and_counts_nothing_to_do() -> None:
     form = recorded_as_filed(_checked())
     with override_settings(cadrumo_output_language="en"):
-        assumed = unentered_boxes(form, IssueLevel.CONFIRM)
+        assumed = unentered_boxes(form, ModeloFormAttention.CONFIRM)
         screen = WorkbenchIssuesScreen(served_load(form))
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
@@ -455,7 +454,7 @@ async def test_a_declaration_recorded_as_filed_lists_no_assumed_values_and_count
             app.exit(None)
 
     assert assumed is None
-    assert title == "Issues to look at   ◆ 2"
+    assert title == "Issues to look at"
     assert "◐" not in listed
     assert "Assumed, please confirm" not in listed
     assert "▲ Blocks filing" in listed
@@ -538,7 +537,7 @@ def _chips(form: ModeloWorkForm) -> dict[ModeloFormAttention, int]:
 async def test_the_missing_boxes_the_header_counts_are_listed_at_their_own_level() -> None:
     form = _recounted(synthetic_form(needs_input=True))
     with override_settings(cadrumo_output_language="en"):
-        missing = unentered_boxes(form, IssueLevel.MISSING)
+        missing = unentered_boxes(form, ModeloFormAttention.MISSING)
         title = title_text(level_counts(issue_lines(form), unentered_levels(form)))
         chips = _chips(form)
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
@@ -588,7 +587,7 @@ def test_boxes_on_a_page_that_does_not_apply_are_neither_listed_nor_counted() ->
         chips_applying, chips_not_applying = _chips(both), _chips(set_aside)
 
     # The instrument sees both boxes while their page applies, so their absence below is the page's doing.
-    assert applying == {IssueLevel.MISSING: ("06",), IssueLevel.CONFIRM: ("19",)}
+    assert applying == {ModeloFormAttention.MISSING: ("06",), ModeloFormAttention.CONFIRM: ("19",)}
     assert chips_applying == {ModeloFormAttention.MISSING: 1, ModeloFormAttention.CONFIRM: 1}
     assert not_applying == ()
     assert chips_not_applying == {}
@@ -679,7 +678,7 @@ async def test_a_stale_calculation_names_c_beside_what_to_do_and_c_calculates_ag
             app.exit(None)
 
     stale_line = next(line for line in lines if line.recalculates)
-    info_line = next(line for line in lines if line.level is IssueLevel.INFO)
+    info_line = next(line for line in lines if line.level is ModeloFormAttention.INFO)
     assert f"{stale_line.action} [c]" in listed
     assert info_line.action not in listed, "nothing to do is not said for what is only for information"
     assert actions.requested == ["calculate"]

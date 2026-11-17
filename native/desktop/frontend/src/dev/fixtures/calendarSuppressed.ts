@@ -2,7 +2,7 @@ import type {
   ApplicabilityVerdict,
   OverviewSuppressedEntrySnapshot,
 } from "../../shell/calendarContract";
-import type { FilingCalendar } from "../../shell/views";
+import type { FilingCalendarServed } from "../../shell/calendarContract";
 import { fixtureDay, fixtureYear } from "@/dev/fixtureDates";
 import { EMPTY_CALENDAR, FIXTURE_CALENDAR } from "./calendar";
 
@@ -39,19 +39,19 @@ export const SUPPRESSED_ENTRIES: OverviewSuppressedEntrySnapshot[] = [
 ];
 
 /** Owed entries, and beside them the obligations the read held off. */
-export const SUPPRESSED_CALENDAR: FilingCalendar = {
+export const SUPPRESSED_CALENDAR: FilingCalendarServed = {
   ...FIXTURE_CALENDAR,
   suppressed_entries: SUPPRESSED_ENTRIES,
 };
 
 /** Nothing owed in the range, and obligations held off it. */
-export const SUPPRESSED_ONLY_CALENDAR: FilingCalendar = {
+export const SUPPRESSED_ONLY_CALENDAR: FilingCalendarServed = {
   ...EMPTY_CALENDAR,
   suppressed_entries: SUPPRESSED_ENTRIES,
 };
 
 /** A read that was asked for the held-off obligations and served none. */
-export const NONE_SUPPRESSED_CALENDAR: FilingCalendar = {
+export const NONE_SUPPRESSED_CALENDAR: FilingCalendarServed = {
   ...FIXTURE_CALENDAR,
   suppressed_entries: [],
 };

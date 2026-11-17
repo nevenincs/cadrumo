@@ -1,4 +1,4 @@
-import { readdirSync, writeFileSync } from "node:fs";
+import { readdirSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { label } from "../support/strings";
 import { openList, views, type Language } from "../support/scenarioModelo";
@@ -229,10 +229,6 @@ for (const shape of SHAPES) {
         drawnValues,
       });
     }
-    writeFileSync(
-      `../../../.tmp/2026-11-14-frontend-box0534/pages-${shape}.json`,
-      JSON.stringify(report, null, 1),
-    );
 
     for (const entry of report) {
       // A page the application serves as not applying draws its words, not

@@ -3,7 +3,7 @@ use cadrumo_application::diagnostics::{
     Event, EventKind, HostOutcome,
     helper::{HelperDecode, HelperKind, HelperOutcome},
     lifecycle::{LifecycleFact, RuntimeExit, RuntimeReason, SupervisorOutcome},
-    service::{AgentRefusal, ServiceFact},
+    service::{AgentRefusal, AgentStopCause, ServiceFact},
 };
 use cadrumo_application::process::status::ProcessRole;
 use cadrumo_application::shutdown::is_host_closing;
@@ -52,6 +52,13 @@ pub fn level(event: &Event) -> Level {
                 reason: AgentRefusal::ProviderCredentialMissing,
             } => Level::Info,
             ServiceFact::AgentRefused { .. } | ServiceFact::AgentProtocolRefused {} => Level::Error,
+            // A person's sign-out stopping the service is expected, not a fault.
+            ServiceFact::AgentStopping {
+                cause: AgentStopCause::SignedOut,
+            }
+            | ServiceFact::AgentStopped {
+                cause: AgentStopCause::SignedOut,
+            } => Level::Info,
             ServiceFact::AgentRetryScheduled { .. } => Level::Warning,
             // The window says why and offers a way on; nothing here failed.
             ServiceFact::FeatureRefused { .. } => Level::Warning,
@@ -619,6 +626,25 @@ mod tests {
                 Level::Error,
             ),
             (ServiceFact::AgentProtocolRefused {}, Level::Error),
+            // A person's sign-out stopping the service is said at INFO with its cause.
+            (
+                ServiceFact::AgentStopping {
+                    cause: AgentStopCause::SignedOut,
+                },
+                Level::Info,
+            ),
+            (
+                ServiceFact::AgentStopped {
+                    cause: AgentStopCause::SignedOut,
+                },
+                Level::Info,
+            ),
+            (
+                ServiceFact::AgentStopping {
+                    cause: AgentStopCause::SignInUnavailable,
+                },
+                Level::Debug,
+            ),
             (
                 ServiceFact::AgentRetryScheduled { delay_ms: 30000 },
                 Level::Warning,
