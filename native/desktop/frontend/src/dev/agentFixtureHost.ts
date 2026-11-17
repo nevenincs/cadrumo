@@ -22,9 +22,9 @@ import {
   type AgentDocumentReference,
   type AgentRanWith,
   type AgentToolCall,
-  type AgentToolStatus,
   type AgentViews,
 } from "../shell/agentViews";
+import type { ToolCallStatus } from "../shell/agentGatewayContract";
 import type {
   LocalEngine,
   LocalEngineStatus,
@@ -509,7 +509,7 @@ export function fixtureAgent({
     held: Reply,
     title: string,
     tool_kind: AgentToolCall["tool_kind"],
-    states: readonly AgentToolStatus[],
+    states: readonly ToolCallStatus[],
     refusal?: AgentToolRefusal,
     details?: string[],
   ) => {

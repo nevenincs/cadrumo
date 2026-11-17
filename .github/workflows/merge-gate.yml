@@ -5,8 +5,9 @@ on:
     branches: [feature/tui, main]
     types: [opened, reopened, synchronize]
   # A landing reaches feature/tui by a direct push, which no pull request
-  # event sees; this run measures the landed head over the full population,
-  # and a newer landing supersedes it.
+  # event sees; this run measures the landed head over the full population.
+  # Every landed head keeps its own run: a newer landing neither cancels nor
+  # replaces it.
   push:
     branches: [feature/tui]
   # The release proof calls this gate for its full, unscoped population.
@@ -21,8 +22,16 @@ concurrency:
   # proof is proving a branch; a later pull request event on the same branch
   # must not cancel it. Two pull request events still share a group and
   # still supersede each other.
-  group: merge-gate-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name }}
-  cancel-in-progress: true
+  #
+  # A push run's group also ends in its own commit, so no two landed heads
+  # share one. Without that suffix a group holds one running and one pending
+  # run, and a third landing replaces the pending one: trains land faster
+  # than a run finishes, so heads would still go unmeasured with nothing
+  # cancelled in progress.
+  group: merge-gate-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name }}${{ github.event_name == 'push' && format('-{0}', github.sha) || '' }}
+  # Only a pull request's newer event cancels its older run. A push run and a
+  # called run are each proving one commit and run to their verdict.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   # A cache a pull request writes is restored by that pull request's later
@@ -35,6 +44,10 @@ env:
 # variable. A pull request from a fork therefore runs here like any other, once
 # a maintainer approves its run, and never reaches a self-hosted machine. The
 # native lane (`native.yml`) holds everything that needs one.
+#
+# A job whose tests start the runtime asks the setup action for worker
+# containment: the runtime launches each profile worker as a transient systemd
+# user unit, and a hosted job's user has no user manager until one is started.
 jobs:
   plan:
     name: "Check: Change scope (Linux)"
@@ -288,6 +301,7 @@ jobs:
         with:
           authority-artifact: cadrumo-registry-authority-headless
           cache: ${{ env.CADRUMO_CI_CACHE }}
+          worker-containment: "true"
 
       - name: Committed sequence goldens
         if: needs.plan.outputs.sequence-goldens == 'true'
@@ -300,6 +314,23 @@ jobs:
           else
             just test-sequence-goldens-gate
           fi
+
+      # A documented sequence that fails keeps its sandbox's diagnostic log
+      # under .tmp/failed-sandboxes, and the transcript names a refusal only
+      # by its reason; the log names the module, function and line. The runner
+      # is discarded with the job, so a failed job publishes those logs and
+      # nothing else from the sandbox. They are redacted by the product's own
+      # log filter and come from the committed synthetic profile on a runner
+      # that holds no secret. No job reads the artifact back.
+      - name: Upload the failed sandbox logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cadrumo-failed-sandbox-logs-goldens
+          path: .tmp/failed-sandboxes/**/logs/cadrumo.log
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 3
 
   # The scoped test population, dealt over the matrix the plan printed. Four
   # workers match the hosted runner's four cores.
@@ -332,6 +363,7 @@ jobs:
         with:
           authority-artifact: cadrumo-registry-authority-headless
           cache: ${{ env.CADRUMO_CI_CACHE }}
+          worker-containment: "true"
 
       # Some tests bundle frontend sources, so the packages are installed as
       # they were in the single gate job these shards replace.
@@ -352,6 +384,17 @@ jobs:
           SHARD: ${{ matrix.shard }}
           CHANGED_FILES: ${{ needs.plan.outputs.scoped == 'true' && 'var/ci/changed-paths.txt' || '' }}
         run: just test-gate-shard "$SHARD" "$CHANGED_FILES"
+
+      # As in the goldens job: the failed sandboxes' redacted logs, nothing else.
+      - name: Upload the failed sandbox logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cadrumo-failed-sandbox-logs-tests-${{ strategy.job-index }}
+          path: .tmp/failed-sandboxes/**/logs/cadrumo.log
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 3
 
   contracts:
     name: "Test: CI contracts (Linux)"
@@ -397,10 +440,22 @@ jobs:
         with:
           authority-artifact: cadrumo-registry-authority-headless
           cache: ${{ env.CADRUMO_CI_CACHE }}
+          worker-containment: "true"
 
       - name: Verification harness
         shell: bash
         run: just test-pytest-harness
+
+      # As in the goldens job: the failed sandboxes' redacted logs, nothing else.
+      - name: Upload the failed sandbox logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cadrumo-failed-sandbox-logs-harness
+          path: .tmp/failed-sandboxes/**/logs/cadrumo.log
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 3
 
   # The one required check. `always()` runs it after a failure, a skip or a
   # cancellation alike, so it is never the skipped check GitHub would count as

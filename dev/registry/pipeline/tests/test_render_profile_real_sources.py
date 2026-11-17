@@ -58,16 +58,17 @@ _MINIMUM_M200_ELIGIBLE_FIELDS = 4000
 _MINIMUM_M200_SMALLER_FIELDS = 80
 
 
-def _load_validated_m200_profile():
-    """Load the committed Modelo 200 profile, validating it against the hash-verified source."""
+def _load_validated_m200_profile(source_ref: str = _M200_SOURCE):
+    """Load the committed Modelo 200 profile of one design, validating it against the hash-verified source."""
+    exercise = _exercise(source_ref)
     source_root = bundled_path()
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
     intermediate = load_record_design_intermediate(
         source_root,
         catalogues.sources,
-        source_ref=_M200_SOURCE,
-        filing_year=_M200_EXERCISE,
-        design_epoch=str(_M200_EXERCISE),
+        source_ref=source_ref,
+        filing_year=exercise,
+        design_epoch=str(exercise),
     )
     eligibility = project_render_profile_eligibility(field for sheet in intermediate.sheets for field in sheet.fields)
     design_identity = RenderProfileDesignIdentity(
@@ -79,11 +80,11 @@ def _load_validated_m200_profile():
     resolved = resolve_record_design_binary(
         source_root,
         catalogues.sources,
-        source_ref=_M200_SOURCE,
-        filing_year=_M200_EXERCISE,
-        design_epoch=str(_M200_EXERCISE),
+        source_ref=source_ref,
+        filing_year=exercise,
+        design_epoch=str(exercise),
     )
-    profile_directory = _M200_PROFILES / str(_M200_EXERCISE)
+    profile_directory = _M200_PROFILES / str(exercise)
     profile = load_render_profile(profile_directory)
     evidence = load_render_profile_source_evidence(resolved.path, profile)
     validate_render_profile_authority(profile, design_identity, eligibility, evidence)
@@ -156,7 +157,7 @@ def _assert_m200_rules_cover_exactly_the_eligible_anchors(intermediate, eligibil
     assert not any(field.sheet == "DP200000" for field in eligibility.all_fields)
 
 
-def _assert_m200_semantic_singleton_rules(profile) -> None:
+def _assert_m200_semantic_singleton_rules(eligibility, profile) -> None:
     checkbox_rows = {
         *(("DP200001", row) for row in (24, 27)),
         *(("DP200001", row) for row in range(29, 106)),
@@ -169,27 +170,70 @@ def _assert_m200_semantic_singleton_rules(profile) -> None:
     checkbox_rules = {rule for rule in profile.singleton_rules if rule.semantic_kind == "checkbox"}
     assert {(rule.anchor.sheet, rule.anchor.source_row) for rule in checkbox_rules} == checkbox_rows
     assert all(
-        rule.allowed_values == ("0", "1")
-        and rule.value_policy is ExportValuePolicy.SELECTED_1_UNSELECTED_0
-        and isinstance(rule.evidence, ReviewedPolicyDecision)
-        and rule.evidence.governed_anchor == rule.anchor
+        rule.allowed_values == ("0", "1") and rule.value_policy is ExportValuePolicy.SELECTED_1_UNSELECTED_0
         for rule in checkbox_rules
     )
+    _assert_m200_official_grounding(eligibility, profile)
+
+
+#: The page 1 indicator whose own design cells state no values and whose
+#: Orden anexo prints no box; the export refuses any stated value for it.
+_M200_UNSUPPORTED_INDICATOR = "solicito dar de baja la domiciliación efectuada"
+#: How a rule grounded on a sibling cell of its design states that basis.
+_SIBLING_ANALOGY = "Sibling-cell analogy, not own-cell text:"
+
+
+def _assert_m200_official_grounding(eligibility, profile) -> None:
+    """Every rule cites its own design's text except the fields the export refuses as unsupported.
+
+    A checkbox or date grounded on a sibling cell of the same design says so in
+    its justification, and a checkbox names its Orden anexo box. The two DID
+    'Año' fields and the page 1 'dar de baja la domiciliación' indicator stay
+    reviewed policy, because the export refuses any value for them rather than
+    claim a representation.
+    """
+    descriptions = {
+        RenderProfileAnchor(
+            sheet=field.sheet,
+            source_row=field.source_row,
+            source_cell=field.source_cell,
+            ordinal=field.ordinal,
+            record_identity=field.record_identity,
+        ): field.normalized_description
+        for field in eligibility.smaller_fields
+    }
+    unsupported_indicators = {
+        rule
+        for rule in profile.singleton_rules
+        if rule.semantic_kind == "checkbox" and _M200_UNSUPPORTED_INDICATOR in descriptions[rule.anchor]
+    }
     year_rules = {rule for rule in profile.singleton_rules if rule.semantic_kind == "year_last_two_digits"}
     assert {(rule.anchor.sheet, rule.anchor.source_row) for rule in year_rules} == {
         ("DP200DID", 17),
         ("DP200DID", 20),
     }
-    assert all(
-        rule.value_policy is ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS
-        and isinstance(rule.evidence, ReviewedPolicyDecision)
-        and rule.evidence.governed_anchor == rule.anchor
-        for rule in year_rules
-    )
+    assert all(rule.value_policy is ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS for rule in year_rules)
+    for rule in unsupported_indicators | year_rules:
+        assert isinstance(rule.evidence, ReviewedPolicyDecision), rule.anchor
+        assert rule.evidence.governed_anchor == rule.anchor
+        assert "unsupported producer field" in rule.evidence.justification
+    checkbox_rules = {rule for rule in profile.singleton_rules if rule.semantic_kind == "checkbox"}
+    assert checkbox_rules - unsupported_indicators
+    for rule in checkbox_rules - unsupported_indicators:
+        assert isinstance(rule.evidence, OfficialSourceEvidence), rule.anchor
+        assert rule.evidence.expected_normalized_statement == '"0" o "1"'
+        assert rule.evidence.justification.startswith(_SIBLING_ANALOGY), rule.anchor
+        assert "anexo I" in rule.evidence.justification
+        assert "BOE Pág." in rule.evidence.justification
+    for rule in profile.singleton_rules:
+        if rule.semantic_kind == "date_yyyymmdd":
+            assert isinstance(rule.evidence, OfficialSourceEvidence), rule.anchor
+            assert rule.evidence.expected_normalized_statement == "AAAAMMDD"
+            assert rule.evidence.justification.startswith(_SIBLING_ANALOGY), rule.anchor
     assert all(
         isinstance(rule.evidence, OfficialSourceEvidence)
         for rule in profile.singleton_rules
-        if rule not in checkbox_rules | year_rules
+        if rule not in unsupported_indicators | year_rules
     )
 
 
@@ -199,7 +243,28 @@ def test_real_m200_profile_exactly_covers_source_eligibility_and_excludes_variab
     _assert_m200_width_rules(profile)
     _assert_m200_eligibility_is_not_vacuous(eligibility)
     _assert_m200_rules_cover_exactly_the_eligible_anchors(intermediate, eligibility, profile)
-    _assert_m200_semantic_singleton_rules(profile)
+    _assert_m200_semantic_singleton_rules(eligibility, profile)
+
+
+def _m200_profile_sources() -> tuple[str, ...]:
+    """The design each committed Modelo 200 profile names, found by its directory rather than a year list."""
+    return tuple(
+        sorted(
+            str(load_render_profile(directory).design_identity.source_ref)
+            for directory in _M200_PROFILES.iterdir()
+            if directory.is_dir()
+        )
+    )
+
+
+@pytest.mark.parametrize("source_ref", _m200_profile_sources())
+def test_every_m200_profile_covers_its_own_design_and_cites_its_own_text(source_ref: str) -> None:
+    """Each edition's profile validates against its own hash-verified design and grounds every rule there."""
+    intermediate, eligibility, profile = _load_validated_m200_profile(source_ref)
+    _assert_m200_width_rules(profile)
+    _assert_m200_eligibility_is_not_vacuous(eligibility)
+    _assert_m200_rules_cover_exactly_the_eligible_anchors(intermediate, eligibility, profile)
+    _assert_m200_official_grounding(eligibility, profile)
 
 
 #: The pinned Modelo 390 design whose committed render profile is checked, found by

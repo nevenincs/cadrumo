@@ -435,20 +435,25 @@ def test_registered_wizard_cli_interactive_flow_emits_ledger_source_provenance(
     assert {row["key"] for row in payload["prompted_casillas"]} == set(_MANUAL_CASILLAS)
     provenance = payload["source_provenance"]
     assert provenance, "the wizard CLI JSON must retain the calculated ledger source trace"
+    ledger_contributors = ("ledger_renta_income_aggregation", "ledger_renta_gastos_pago_fraccionado_aggregation")
     ledger_rows = {
-        row["contributor_binding_source"]: row["source_ref"]
-        for row in provenance
-        if row["contributor_binding_source"]
-        in {
-            "ledger_renta_income_aggregation",
-            "ledger_renta_gastos_pago_fraccionado_aggregation",
-        }
+        contributor: [row["source_ref"] for row in provenance if row["contributor_binding_source"] == contributor]
+        for contributor in ledger_contributors
     }
-    assert set(ledger_rows) == {
-        "ledger_renta_income_aggregation",
-        "ledger_renta_gastos_pago_fraccionado_aggregation",
+    # Each ledger contributor traces its figures to the ledger rows it read.
+    assert all(any(source_ref.startswith("transaction:") for source_ref in refs) for refs in ledger_rows.values()), (
+        ledger_rows
+    )
+    # Beside them, a contributor names only the boxes it fed directly: the income resolver hands
+    # Modelo 130 box 06 the retención the issued invoices state (RIRPF art. 110), and nothing else.
+    directly_fed = {
+        contributor: sorted(ref for ref in refs if not ref.startswith("transaction:"))
+        for contributor, refs in ledger_rows.items()
     }
-    assert all(source_ref.startswith("transaction:") for source_ref in ledger_rows.values())
+    assert directly_fed == {
+        "ledger_renta_income_aggregation": ["bound_input:06"],
+        "ledger_renta_gastos_pago_fraccionado_aggregation": [],
+    }, ledger_rows
     _assert_encrypted_calculation_matches_cli(
         wizard_profile,
         operation=operation,

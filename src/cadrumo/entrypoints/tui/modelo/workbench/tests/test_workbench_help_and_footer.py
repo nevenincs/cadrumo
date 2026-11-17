@@ -241,7 +241,7 @@ def _with_unrated_row() -> ModeloWorkForm:
     rate = form_field("08", "Tipo", ModeloFormOrigin.OPTIONAL_EMPTY).model_copy(update={"data_type": "ratio"})
     row = grid.rows[0]
     cells = (row.cells[0], ModeloFormGridCell(kind=FormCellKind.CASILLA, field=rate), row.cells[2])
-    grid = grid.model_copy(update={"rows": (row.model_copy(update={"cells": cells}),)})
+    grid = grid.model_copy(update={"rows": (row.model_copy(update={"cells": cells, "rate_cell": 1}),)})
     sections = (page.sections[0], grid_section.model_copy(update={"blocks": (grid,)}))
     return form.model_copy(update={"pages": (page.model_copy(update={"sections": sections}), *form.pages[1:])})
 

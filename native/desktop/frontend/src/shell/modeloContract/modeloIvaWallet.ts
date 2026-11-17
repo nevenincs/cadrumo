@@ -89,6 +89,9 @@ export type ModeloIvaWalletCorrectionProjection = {
   provenance: IvaCompensationStateProvenance;
   register_status: null;
   reason: string;
+  words_language: OutputLanguage;
+  previous_amount_words: string;
+  amount_words: string;
 };
 
 /**
@@ -114,6 +117,8 @@ export type ModeloIvaWalletOverrideProjection = {
   evidence_locator: string;
   selected_authority: IvaCompensationAuthority;
   divergence: IvaCompensationDivergence;
+  words_language: OutputLanguage;
+  amount_words: string;
 };
 
 /**
@@ -138,6 +143,8 @@ export type ModeloIvaWalletSeedProjection = {
   amount: string;
   provenance: IvaCompensationStateProvenance;
   register_status: null;
+  words_language: OutputLanguage;
+  amount_words: string;
 };
 
 /**

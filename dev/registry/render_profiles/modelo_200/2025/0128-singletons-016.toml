@@ -71,7 +71,7 @@ record_identity = "DP200DID"
 authority_kind = "reviewed_policy"
 decision_id = "m200-2025-dp200did-r0017"
 decision_statement = "DP200DID source row 17: encode the final two digits of the four-digit year."
-justification = "Reviewed exact-anchor policy for DP200DID source row 17; it is not represented as official-source text."
+justification = "Reviewed exact-anchor policy, not official-source text, for DP200DID source row 17. No official text of the DR200e25 design states which digits this length-2 'Año' field carries: DP200DID!E17 gives only its label and its Contenido cell is empty, so the export refuses any stated value for this field as an unsupported producer field; this rule governs only the slot's zero fill when the fact is absent."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "DP200DID"
@@ -149,7 +149,7 @@ record_identity = "DP200DID"
 authority_kind = "reviewed_policy"
 decision_id = "m200-2025-dp200did-r0020"
 decision_statement = "DP200DID source row 20: encode the final two digits of the four-digit year."
-justification = "Reviewed exact-anchor policy for DP200DID source row 20; it is not represented as official-source text."
+justification = "Reviewed exact-anchor policy, not official-source text, for DP200DID source row 20. No official text of the DR200e25 design states which digits this length-2 'Año' field carries: DP200DID!E20 gives only its label and its Contenido cell is empty, so the export refuses any stated value for this field as an unsupported producer field; this rule governs only the slot's zero fill when the fact is absent."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "DP200DID"

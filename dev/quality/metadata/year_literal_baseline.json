@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "count": 11896,
+  "count": 11895,
   "occurrences": [
     "native/desktop/frontend/src/components/ledger/setup/CounterpartyFilingName.stories.tsx: date text: \"2026-11-10T09:30:00Z\"",
     "native/desktop/frontend/src/dev/fixtures/documentPage.ts: date text: \"2026-10-15\"",
@@ -11872,7 +11872,6 @@
     "src/cadrumo_runtime/host/tests/test_modelo_metadata_history.py: year bound: filing_year=2026",
     "src/cadrumo_runtime/host/tests/test_modelo_metadata_history.py: year bound: filing_year=2026",
     "src/cadrumo_runtime/host/tests/test_modelo_metadata_history.py: year bound: filing_year=2026",
-    "src/cadrumo_runtime/host/tests/test_modelo_metadata_history.py: year bound: year=1899",
     "src/cadrumo_runtime/host/tests/test_modelo_metadata_history.py: year bound: year=2026",
     "src/cadrumo_runtime/host/tests/test_modelo_metadata_history.py: year bound: year=2026",
     "src/cadrumo_runtime/host/tests/test_modelo_metadata_history.py: year date: datetime(2020, 1, 1, tzinfo=UTC)",

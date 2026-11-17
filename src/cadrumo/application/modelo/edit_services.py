@@ -22,10 +22,10 @@ from __future__ import annotations
 
 from typing import Final
 
-from ...core.hashing import CanonicalJsonValue, canonical_json_bytes_with_member, content_hash_hex, sha256_hex
+from ...core.hashing import canonical_json_bytes_with_member, content_hash_hex, sha256_hex
 from ...core.time.clock import now as clock_now
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue
-from ...domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot, registry_payload
+from ...domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot, registry_canonical_value
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from .edit_models import (
@@ -100,10 +100,10 @@ def calculation_head_digest(head: CalculationRevision | None) -> str:
     """
     if type(head) is not CalculationRevision or type(head.rendering_snapshot) is not CalculationRenderingSnapshot:
         return content_hash_hex({"calculation_head": None if head is None else head.model_dump(mode="json")})
-    # The saved registry owner preserves complete historical schema fields.
-    # Release its transient mapping before serializing fresh private/lifecycle
-    # fields, avoiding repeated traversal through the wrapping serializers.
-    registry = CanonicalJsonValue(registry_payload(head.rendering_snapshot.registry_snapshot))
+    # The saved registry owner preserves complete historical schema fields. Its
+    # canonical encoding is kept for the live snapshot object, so a head read
+    # again under the same snapshot encodes only its own fields.
+    registry = registry_canonical_value(head.rendering_snapshot.registry_snapshot)
     payload = head.model_dump(mode="json", exclude={"rendering_snapshot": {"registry_snapshot"}})
     return sha256_hex(
         canonical_json_bytes_with_member(

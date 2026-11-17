@@ -7,8 +7,9 @@ to both.
 ## Branches
 
 `feature/tui` is the development branch. Every landing goes there, and a push
-to it runs the merge gate over the full population on the landed head (a newer
-push supersedes it); it starts no release workflow. `main` is the release
+to it runs the merge gate over the full population on the landed head (every
+landed head keeps its own run; a newer push neither cancels nor replaces it);
+it starts no release workflow. `main` is the release
 branch, reached only by a promotion pull request from `feature/tui`. Release
 automation reads, proposes and tags `main` alone.
 
@@ -58,7 +59,8 @@ that requires approval before any outside contributor's run starts. The clause
 keeps an approved run of the headless lane from also starting the native one.
 
 No workflow runs on `pull_request_target`. Every checkout drops its
-credentials. A newer push to a pull request cancels the run it supersedes.
+credentials. A newer push to a pull request cancels the run it supersedes; a
+push to `feature/tui` cancels nothing (see Concurrency below).
 
 A hosted job's caches (uv downloads, npm) are restored and saved only when the
 run is not a fork's, so nothing a fork ran outlives its job. A pull request can
@@ -98,6 +100,43 @@ shard, eight shards at most, largest files first onto the lightest shard. A
 typical pull request is one shard. A promotion pull request into `main`, and a
 call from the release proof, read no change list and run the full population
 in eight shards.
+
+**Concurrency.** A pull request's runs share one group and a newer event
+cancels the older run. A push run's group ends in its own commit, so the runs
+of two landed heads never share one, and within the gate nothing but a pull
+request event cancels a run in progress; a run the release proof calls ends
+early only when that proof is itself superseded. The commit is in the group,
+not only `cancel-in-progress: false`, because a group holds one running and
+one pending run: a third landing would replace the pending run of the second,
+and trains land faster than a run finishes. The cost is that the gate applies
+no back-pressure. Runs for successive heads overlap, each starts its own
+seventeen jobs at eight shards, and when landings outpace the account's
+hosted-runner allowance the jobs wait in GitHub's queue, so a head's verdict
+can arrive well after its landing.
+
+**Worker containment.** The runtime launches every profile worker as a
+transient systemd user unit and refuses with `runtime_containment_unavailable`
+when it cannot drive the user manager. A hosted job runs as `runner` outside a
+login session, so it has no `user@<uid>.service` and no bus at
+`/run/user/<uid>/bus`. The setup action's `worker-containment` input enables
+lingering, starts the user manager, waits for the bus and runs one transient
+user unit the way the runtime does (fixed tool path, cleared environment, no
+`DBUS_SESSION_BUS_ADDRESS`); any of those failing fails the job at its first
+step. `goldens`, `tests` and `harness` start the runtime and ask for it. A
+hosted job that runs a `test-*` recipe must ask, unless the recipe is named in
+`dev/ci/tests/test_worker_containment.py` as launching no worker. No
+self-hosted job asks: lingering is a lasting change to a machine that keeps
+state, and its own session holds its user manager.
+
+**Failed sandbox logs.** A documented sequence that fails keeps its sandbox's
+diagnostic log under `.tmp/failed-sandboxes`, and its transcript names a
+refusal only by its reason; the log names the module, function and line. When
+`goldens`, a `tests` shard or `harness` fails, it uploads
+`.tmp/failed-sandboxes/**/logs/cadrumo.log` as
+`cadrumo-failed-sandbox-logs-<job>` for three days, and nothing else from the
+sandbox. That file is written through the product's redacting log filter, from
+the committed synthetic profile, on a runner that holds no secret. No job reads
+the artifact back.
 
 **Speed.** The expected critical path for a pull request is `authority`
 (toolchain, then compiling the registry) followed by the longest of `tests`,

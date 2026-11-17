@@ -21,6 +21,7 @@ from ...application.ledger.actions_common import display_decimal
 from ...application.ledger.classify_result_contracts import (
     LedgerClassifyOperationResult,
 )
+from ...application.ledger.llm_classification import transport_from_provenance
 from ...application.ledger.llm_review_contracts import (
     LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
     LedgerLlmReviewProjection,
@@ -38,7 +39,6 @@ from ...application.operations.schema_identity import OperationSchemaIdentityV1
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.operations import OperationEffect, OperationTerminalCondition
-from ...core.provenance_stamp import provenance_stamp_transport
 from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BusinessClassification
 from .common import bad, emit_envelope
@@ -290,32 +290,6 @@ def _render_settled(ctx: typer.Context, result: LedgerLlmOperationResult, *, sat
             else ()
         )
         _emit_llm_single_classify(ctx, classified, extra_lines=extra)
-
-
-def transport_from_provenance(provenance: str) -> str:
-    """Return the transport segment of an ``llm:<transport>-<reader>:<model>`` stamp.
-
-    Named for the transport rather than the reader because that is what it
-    returns and what every one of its call sites publishes: each feeds the audit
-    payload's ``provider`` key, which answers whether a document left the host.
-    The earlier name and grammar sketch described the segment before the hyphen
-    as the whole segment, which is the same conflation the slice made.
-
-    The suggestion DTOs carried a ``provider`` enum until the cloud transport was
-    retired; the payloads still publish this label, so it is derived from the
-    provenance the suggestion already carries rather than restated. Deriving it
-    keeps the field truthful if a second on-host reader is ever added, where a
-    hardcoded constant would quietly misreport.
-
-    **Delegated rather than parsed here**, for the reason the audit payload's
-    sibling is: the stamp's middle segment is ``<transport>-<reader>``, so a
-    colon split returned both glued together. Two implementations of one grammar
-    agree only while somebody maintains both.
-
-    Falls back to the whole string when the shape is unexpected, so a malformed
-    provenance surfaces in the payload instead of being silently blanked.
-    """
-    return provenance_stamp_transport(provenance) or provenance
 
 
 def split_recommendation_notice(transaction_id: str) -> Notice:

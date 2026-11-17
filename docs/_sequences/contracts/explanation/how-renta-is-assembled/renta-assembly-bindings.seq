@@ -1,3 +1,5 @@
 @step List every data source the declaration binds for the filing year.
 @result aeat --format json app modelo bindings list --modelo 100 --year 2025 --period 0A
+@expect result.modelo_filter == "100"
+@expect result.period_filter == "0A"
 @expect exit_code == 0

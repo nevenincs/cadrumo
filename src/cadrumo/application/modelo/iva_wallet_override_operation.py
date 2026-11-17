@@ -7,12 +7,13 @@ from decimal import Decimal
 from typing import Annotated, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.external_constants import OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationEffect,
@@ -26,6 +27,7 @@ from ...domain.iva_compensation.reconciliation import (
 )
 from ...domain.modelos.filing_text import OperatorReason
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.error_detail import served_words_language
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
@@ -35,6 +37,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .iva_wallet_amount_words import AmountWords, require_amount_words, worded_amount
 from .iva_wallet_mutation import (
     IvaWalletCanonicalAmount,
     IvaWalletTaxpayerNif,
@@ -90,6 +93,16 @@ class ModeloIvaWalletOverrideProjection(BaseModel):
     evidence_locator: _EvidenceLocator
     selected_authority: IvaCompensationAuthority
     divergence: IvaCompensationDivergence
+
+    #: The language the amounts are worded in.
+    words_language: OutputLanguage = Field(default_factory=served_words_language)
+    #: ``amount`` written as a box writes money, in ``words_language``.
+    amount_words: AmountWords = Field(default_factory=worded_amount("amount"))
+
+    @model_validator(mode="after")
+    def _amount_words_say_the_amounts(self) -> Self:
+        require_amount_words(self.words_language, {"amount": (self.amount, self.amount_words)})
+        return self
 
     @field_validator("amount")
     @classmethod

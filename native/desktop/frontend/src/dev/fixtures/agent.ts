@@ -1,13 +1,13 @@
 import type {
   AttachmentPolicyResponse,
   ProviderCondition,
+  ThreadStatus,
 } from "../../shell/agentGatewayContract";
 import type {
   AgentConversationRecord,
   AgentDocumentRecord,
   AgentDocumentReference,
   AgentRanWith,
-  AgentRunStatus,
   AgentToolCall,
   AgentTurnRecord,
   AgentUsage,
@@ -46,7 +46,7 @@ export type FixtureMessage = {
 /** One run as the agent keeps it. */
 export type FixtureRun = {
   id: string;
-  status: AgentRunStatus;
+  status: ThreadStatus;
   /** What its checkpoint holds, in order. A run that continues another
    * opens with the last of its predecessor's messages, under ids of their
    * own. */

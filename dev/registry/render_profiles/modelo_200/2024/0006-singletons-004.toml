@@ -26,17 +26,11 @@ ordinal = "51"
 record_identity = "DP200023"
 
 [singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m200-2024-dp200023-r0056"
-decision_statement = "DP200023 source row 56: a 8-position field renders as AAAAMMDD."
-justification = "The 2024 diseno states no format annotation for this field: AEAT introduced the AAAAMMDD column in the 2025 edition, and the token appears nowhere in the 2024 workbook, so it is not represented as official-source text here."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "DP200023"
-source_row = 56
-source_cell = "A56"
-ordinal = "51"
-record_identity = "DP200023"
+authority_kind = "official_source"
+source_sheet = "DP200002B"
+source_cell = "H161"
+expected_normalized_statement = "AAAAMMDD"
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2024 design states no format in the own cells of field DP200023 row 56. Its sibling cells DP200002B!H161, H165 and H169 of the same design state AAAAMMDD for Num date fields of length 8, and this field's description names a date of the same kind and width."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -56,17 +50,11 @@ ordinal = "52"
 record_identity = "DP200023"
 
 [singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m200-2024-dp200023-r0057"
-decision_statement = "DP200023 source row 57: a 8-position field renders as AAAAMMDD."
-justification = "The 2024 diseno states no format annotation for this field: AEAT introduced the AAAAMMDD column in the 2025 edition, and the token appears nowhere in the 2024 workbook, so it is not represented as official-source text here."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "DP200023"
-source_row = 57
-source_cell = "A57"
-ordinal = "52"
-record_identity = "DP200023"
+authority_kind = "official_source"
+source_sheet = "DP200002B"
+source_cell = "H161"
+expected_normalized_statement = "AAAAMMDD"
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2024 design states no format in the own cells of field DP200023 row 57. Its sibling cells DP200002B!H161, H165 and H169 of the same design state AAAAMMDD for Num date fields of length 8, and this field's description names a date of the same kind and width."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -233,7 +221,7 @@ record_identity = "DP200DID"
 authority_kind = "reviewed_policy"
 decision_id = "m200-2025-dp200did-r0017"
 decision_statement = "DP200DID source row 17: encode the final two digits of the four-digit year."
-justification = "Reviewed exact-anchor policy for DP200DID source row 17; it is not represented as official-source text."
+justification = "Reviewed exact-anchor policy, not official-source text, for DP200DID source row 17. No official text of the DR200-2024 design states which digits this length-2 'Año' field carries: DP200DID!E17 gives only its label and its Contenido cell is empty, so the export refuses any stated value for this field as an unsupported producer field; this rule governs only the slot's zero fill when the fact is absent."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "DP200DID"
@@ -311,7 +299,7 @@ record_identity = "DP200DID"
 authority_kind = "reviewed_policy"
 decision_id = "m200-2025-dp200did-r0020"
 decision_statement = "DP200DID source row 20: encode the final two digits of the four-digit year."
-justification = "Reviewed exact-anchor policy for DP200DID source row 20; it is not represented as official-source text."
+justification = "Reviewed exact-anchor policy, not official-source text, for DP200DID source row 20. No official text of the DR200-2024 design states which digits this length-2 'Año' field carries: DP200DID!E20 gives only its label and its Contenido cell is empty, so the export refuses any stated value for this field as an unsupported producer field; this rule governs only the slot's zero fill when the fact is absent."
 
 [singleton_rules.evidence.governed_anchor]
 sheet = "DP200DID"

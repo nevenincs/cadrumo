@@ -19,6 +19,7 @@ from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.calculations.registry.schema_form_layouts import FormCellKind, FormPageCondition, FormPageDefinition
 from .edit_value_grammar import ModeloEditRatioUnit, ratio_unit
 from .work_form_field_vocabulary import (
+    ORIGINS_WITHOUT_A_VALUE,
     ModeloFormCasillaAddressV1,
     ModeloFormOrigin,
     ModeloFormPrintedRate,
@@ -28,8 +29,11 @@ from .work_form_field_vocabulary import (
 from .work_form_models import (
     ModeloFormField,
     ModeloFormGridCell,
+    ModeloFormGridColumn,
     ModeloFormGridRow,
 )
+from .work_form_scalar_values import holds_zero
+from .work_form_wording import holds_nothing
 
 _PERCENT_LITERAL: Final[re.Pattern[str]] = re.compile(r"\s*([0-9]+(?:[.,][0-9]+)?)\s*%\s*")
 
@@ -244,6 +248,53 @@ def with_printed_row_rates(rows: tuple[ModeloFormGridRow, ...]) -> tuple[ModeloF
             field = cell.field.model_copy(update={"printed_rate": printed})
             cells.append(cell.model_copy(update={"field": field}))
         updated.append(row.model_copy(update={"cells": tuple(cells)}))
+    return tuple(updated)
+
+
+_RATE_BASE_COLUMN_KEYS: Final[frozenset[str]] = frozenset({"base_imponible", "base", "precio"})
+"""The grid column keys whose official headings name the amount a row's rate applies to.
+
+"Base imponible", "Base", "Base de retenciones e ingresos a cuenta", "Importe de las
+operaciones" and, in Modelo 308, the transport's "Precio" taxed at the row's "Tipo".
+A column such as "Tipo de prorrata" beside a percentage is no base.
+"""
+
+
+def _row_rate_cell(row: ModeloFormGridRow) -> int | None:
+    rates = [
+        index
+        for index, cell in enumerate(row.cells)
+        if cell.field is not None and cell.field.data_type == CasillaDataType.RATIO.value
+    ]
+    return rates[0] if len(rates) == 1 else None
+
+
+def _holds_an_amount(field: ModeloFormField) -> bool:
+    """Whether a box holds an amount other than zero: a figure, never nothing, a held zero or a yes-or-no."""
+    value = field.value
+    if field.origin in ORIGINS_WITHOUT_A_VALUE or holds_nothing(value) or holds_zero(value) or isinstance(value, bool):
+        return False
+    return isinstance(value, Decimal | int)
+
+
+def with_row_rate_bases(
+    columns: tuple[ModeloFormGridColumn, ...], rows: tuple[ModeloFormGridRow, ...]
+) -> tuple[ModeloFormGridRow, ...]:
+    """Name each row's one rate box and say whether the amount it applies to, in the declared base column, is empty."""
+    bases = [index for index, column in enumerate(columns) if column.key in _RATE_BASE_COLUMN_KEYS]
+    base_column = bases[0] if len(bases) == 1 else None
+    updated: list[ModeloFormGridRow] = []
+    for row in rows:
+        rate_cell = _row_rate_cell(row)
+        base = row.cells[base_column].field if rate_cell is not None and base_column is not None else None
+        updated.append(
+            row.model_copy(
+                update={
+                    "rate_cell": rate_cell,
+                    "rate_base_empty": None if base is None else not _holds_an_amount(base),
+                }
+            )
+        )
     return tuple(updated)
 
 

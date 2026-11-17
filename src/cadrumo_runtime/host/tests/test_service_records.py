@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import signal
 import sys
@@ -594,6 +595,43 @@ def test_service_record_verification_allows_profile_status_and_lock_without_stal
         assert accesses == []
         if action == "write":
             assert payload == bytearray(len(payload))
+
+
+def test_a_service_admission_logs_how_long_it_waited_for_the_profile_and_each_stage(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger="cadrumo_runtime.host.service_connection_records")
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        assert service.connected is not None
+        holder = next(
+            item for item in runtime.profiles._connections.values() if item.session_id == runtime.person_session_id
+        )
+        admission = ServiceAdmission(
+            request_id=uuid4(),
+            profile_id=runtime.profile_id,
+            session_id=runtime.person_session_id,
+            recipient_connection_id=service.connected.connection_id,
+            service_id=SERVICE_ID,
+        )
+        host = runtime.profiles._profiles[runtime.profile_id]
+        held_seconds = 0.4
+        # The profile is busy with other work while the admission is verified.
+        with host.guard:
+            reply = runtime.profiles._begin_service_admission(holder.context, admission)
+            assert isinstance(reply, ServiceAdmissionPending)
+            time.sleep(held_seconds)
+        deadline = time.monotonic() + 10
+        while not [record for record in caplog.records if record.getMessage() == "service_admission_timing"]:
+            assert time.monotonic() < deadline, "the admission logged no timing"
+            time.sleep(0.05)
+
+    (record,) = [record for record in caplog.records if record.getMessage() == "service_admission_timing"]
+    logged = vars(record)
+    assert logged["outcome"] == "admitted", logged
+    assert logged["guard_wait_ms"] >= held_seconds * 1000 * 0.9, logged
+    assert all(isinstance(logged[name], int) for name in ("queued_ms", "recheck_ms", "commit_ms", "total_ms")), logged
+    assert logged["total_ms"] >= logged["guard_wait_ms"], logged
 
 
 @pytest.mark.parametrize("retirement", ["holder_lock", "recipient_disconnect", "recipient_disconnecting"])

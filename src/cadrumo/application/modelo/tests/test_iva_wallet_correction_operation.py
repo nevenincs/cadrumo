@@ -183,6 +183,9 @@ def test_operation_keeps_request_confidential_and_public_result_closed() -> None
         "provenance",
         "register_status",
         "reason",
+        "words_language",
+        "previous_amount_words",
+        "amount_words",
     }
     with pytest.raises(ValidationError):
         ModeloIvaWalletCorrectionRequest(
