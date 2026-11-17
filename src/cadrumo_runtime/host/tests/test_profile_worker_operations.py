@@ -306,7 +306,13 @@ class BoundaryAuthority(UnavailableApprovalAuthority):
                 expires_at=now() + timedelta(seconds=20),
             )
 
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
+    def operations_advanced(
+        self,
+        operation_ids: tuple[OperationId, ...],
+        *,
+        records_changed: bool = False,
+        settled: tuple[OperationId, ...] = (),
+    ) -> None:
         with self.guard:
             self.advanced.append(operation_ids)
 
