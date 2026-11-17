@@ -143,7 +143,7 @@ def _selected(lane: str, model: str, *added: tuple[str, str]) -> MemoryLocalMode
 
 
 def _revision(settings: ProviderSettingsService, lane: str) -> str:
-    status = settings.status()
+    status = settings.status(reads_pending=lambda _lanes: False)
     assert isinstance(status, ProviderSettingsStatus)
     return next(entry.revision for entry in status.providers if entry.id == lane)
 

@@ -182,6 +182,14 @@ pub enum ServiceFact {
         admitted: bool,
         elapsed_ms: u64,
     },
+    /// How long the runtime's admission of the service's person connection
+    /// took, from the service's ready report until its administration could
+    /// answer, or until it was refused.
+    AgentAdmissionTiming {
+        generation: u64,
+        admitted: bool,
+        elapsed_ms: u64,
+    },
     AgentReady {
         generation: u64,
         gateway_port: u16,

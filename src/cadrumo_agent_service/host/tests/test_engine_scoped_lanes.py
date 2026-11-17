@@ -16,6 +16,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
+from uuid import uuid4
 
 import pytest
 
@@ -66,7 +67,11 @@ def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, engine: LocalEn
     service = AgentService(
         local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
-            InstalledServiceClient, SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None))
+            InstalledServiceClient,
+            SimpleNamespace(
+                lease=SimpleNamespace(lease_id=uuid4(), profile_id=uuid4()),
+                connection=SimpleNamespace(close=lambda: None),
+            ),
         ),
         storage_root=tmp_path,
         gateway_bearer=bytearray(b"synthetic-gateway-bearer"),
@@ -83,6 +88,10 @@ def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, engine: LocalEn
         selected_engine=service._local_models.selected_engine,
     )
     monkeypatch.setattr(service._catalog, "gui_sign_in_methods", _no_sign_in)
+    # The login reading the status waits on is bound to these generations; no sign-in is under way.
+    monkeypatch.setattr(
+        service._credentials, "current_generations", lambda **_k: SimpleNamespace(sign_in=1, provider_settings=1)
+    )
     monkeypatch.setattr(
         administration_module,
         "declared_provider_catalog_response",

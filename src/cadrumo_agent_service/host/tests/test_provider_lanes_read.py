@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
+from uuid import uuid4
 
 import pytest
 from pydantic import SecretStr
@@ -19,6 +20,7 @@ from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ...adapters.agent_programs import PACKAGE_AGENT_VARIABLE
+from ...gateway_credentials import GatewayCredentials
 from ...providers.application.contracts import CliObservation, CliState, ProviderSettingsActionAccepted
 from ...providers.application.ports import StoreRefusal, StoreRefusalCode
 from ...providers.application.service import ProviderSettingsService
@@ -49,6 +51,10 @@ class _CountingProbe:
         return CliObservation(CliState.INSTALLED_SIGNED_IN)
 
 
+def _lease() -> SimpleNamespace:
+    return SimpleNamespace(lease_id=uuid4(), profile_id=uuid4())
+
+
 def _service(
     tmp_path: Path, store: MemoryProviderSettingsStore, probe: _CountingProbe, *, lease: object | None = None
 ) -> AgentService:
@@ -56,7 +62,7 @@ def _service(
         local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient,
-            SimpleNamespace(lease=object() if lease is None else lease, connection=SimpleNamespace(close=lambda: None)),
+            SimpleNamespace(lease=_lease() if lease is None else lease, connection=SimpleNamespace(close=lambda: None)),
         ),
         storage_root=tmp_path,
         gateway_bearer=bytearray(b"synthetic-gateway-bearer"),
@@ -86,6 +92,10 @@ def _status(service: AgentService) -> dict[str, Any]:
 def _no_agent_image(monkeypatch: pytest.MonkeyPatch) -> None:
     # With no packaged agent image the sign-in capability read is unavailable, as it is outside a package.
     monkeypatch.delenv(PACKAGE_AGENT_VARIABLE, raising=False)
+    # The login reading both reads wait on is bound to these generations; no sign-in is under way.
+    monkeypatch.setattr(
+        GatewayCredentials, "current_generations", lambda *_a, **_k: SimpleNamespace(sign_in=1, provider_settings=1)
+    )
 
 
 def test_the_lanes_read_runs_no_probe_while_status_probes_every_cli_lane(tmp_path: Path) -> None:
@@ -123,7 +133,8 @@ def test_the_lanes_read_is_the_providers_part_of_status_for_the_same_state(tmp_p
     status = _status(service)
     lanes = service.admin("provider_lanes")
 
-    assert set(lanes) == {"providers"}
+    assert set(lanes) == {"providers", "reads_pending"}
+    assert isinstance(lanes["reads_pending"], bool)
     assert [lane["id"] for lane in lanes["providers"]] == [lane["id"] for lane in status["providers"]]
     unlike = []
     for from_lanes, from_status in zip(lanes["providers"], status["providers"], strict=True):

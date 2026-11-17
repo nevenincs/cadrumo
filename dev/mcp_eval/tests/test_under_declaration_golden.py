@@ -159,7 +159,7 @@ def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestR
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
-            "--casilla", "00500=140000.00",
+            "--casilla", "DP200012:00500=140000.00",
             "--binding", f"modelo-200-profile-legal-entity-form={stated['taxpayer_type.legal_entity_form']}",
             "--binding", f"modelo-200-profile-incn-prior-12-months={stated['taxpayer_type.incn_prior_12_months']}",
             "--binding", "modelo-200-profile-tributacion-estado-porcentaje=100",
