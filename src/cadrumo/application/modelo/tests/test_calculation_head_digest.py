@@ -284,23 +284,37 @@ def _sample(action: Callable[[], str]) -> tuple[str, float, float]:
     return result, time.perf_counter() - wall, time.process_time() - cpu
 
 
-def test_each_digest_prepares_its_own_fragment(saved_head: CalculationRevision) -> None:
+def _fresh_snapshot_head(head: CalculationRevision) -> CalculationRevision:
+    """``head`` under another live object holding an equal registry snapshot."""
+    rendering = head.rendering_snapshot
+    assert rendering is not None
+    copied = rendering.registry_snapshot.model_copy(deep=True)
+    assert copied is not rendering.registry_snapshot
+    return head.model_copy(update={"rendering_snapshot": rendering.model_copy(update={"registry_snapshot": copied})})
+
+
+def test_the_registry_fragment_is_encoded_once_per_live_snapshot(saved_head: CalculationRevision) -> None:
     # Observe real calls without replacing the serializers or payload owner.
-    counts = {CanonicalJsonValue.__init__.__code__: 0, registry_payload.__code__: 0}
+    head = _fresh_snapshot_head(saved_head)
+    other = _fresh_snapshot_head(saved_head)
+    encodings = {CanonicalJsonValue.__init__.__code__: 0}
 
     def observe(frame: FrameType, event: str, arg: object) -> None:
-        if event == "call" and frame.f_code in counts:
-            counts[frame.f_code] += 1
+        if event == "call" and frame.f_code in encodings:
+            encodings[frame.f_code] += 1
 
     previous = sys.getprofile()
     sys.setprofile(observe)
     try:
-        first = calculation_head_digest(saved_head)
-        second = calculation_head_digest(saved_head)
+        first = calculation_head_digest(head)
+        second = calculation_head_digest(head)
+        after_one = encodings[CanonicalJsonValue.__init__.__code__]
+        third = calculation_head_digest(other)
     finally:
         sys.setprofile(previous)
-    assert first == second
-    assert tuple(counts.values()) == (2, 2)
+    assert after_one == 1
+    assert encodings[CanonicalJsonValue.__init__.__code__] == 2
+    assert first == second == third == sha256_hex(_original_bytes(head))
 
 
 def test_cold_digest_including_fragment_preparation_reduces_full_head_cost(saved_head: CalculationRevision) -> None:
