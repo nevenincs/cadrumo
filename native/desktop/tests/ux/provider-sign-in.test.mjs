@@ -357,7 +357,45 @@ async function openAgentSettings() {
     });
   const calls = timed ? await callsSince(since) : null;
   const drawnMs = await exec(() => window.__uxDrawn ?? null);
-  return { ...last, rounds, column, calls, drawnMs };
+  const opened = { ...last, rounds, column, calls, drawnMs };
+  coldOpen ??= opened;
+  return opened;
+}
+
+// The first measured open of the provider settings in this window: the cold
+// draw, while the agent service may still be starting.
+let coldOpen = null;
+// The first draw bound, for a cold open (G4).
+const COLD_DRAW_MS = 4000;
+
+/** Close the agent column's settings, so the next open is drawn afresh. */
+async function closeAgentSettings() {
+  const name = label("desktop.agent.settings");
+  const pressed = await exec((name) => {
+    for (const old of document.querySelectorAll("[data-psi-target]"))
+      old.removeAttribute("data-psi-target");
+    const button = [
+      ...document.querySelectorAll('button[data-slot="icon-button"]'),
+    ].find(
+      (el) =>
+        el.getClientRects().length > 0 &&
+        (el.getAttribute("aria-label") ?? "").startsWith(name),
+    );
+    if (button?.getAttribute("aria-pressed") !== "true") return false;
+    button.setAttribute("data-psi-target", "1");
+    return true;
+  }, name);
+  if (pressed) await clickSelector(TARGET);
+  return waitFor(
+    () =>
+      exec(
+        () =>
+          ![...document.querySelectorAll(".provider-settings")].some(
+            (el) => el.getClientRects().length > 0,
+          ),
+      ),
+    { timeout: 10_000, what: "the provider settings to close", soft: true },
+  );
 }
 
 /** Record, from `since` (epoch ms), when each agent settings section is first
@@ -959,6 +997,39 @@ for (const provider of PROVIDERS) {
     },
   );
 }
+
+test("PSI-98 provider settings draw: a cold open within its bound, a warm reopen reported", async (t) => {
+  const line = { case: "first-draw", verdict: "fail" };
+  try {
+    if (!coldOpen)
+      assert.fail("UNMEASURED: no case opened the provider settings");
+    line.cold = {
+      reached: coldOpen.reached,
+      drawn_ms: coldOpen.drawnMs,
+      rounds: coldOpen.rounds,
+      calls: coldOpen.calls,
+    };
+    if (!(await closeAgentSettings()))
+      assert.fail("UNMEASURED: the provider settings did not close");
+    const warm = await openAgentSettings();
+    line.warm = {
+      reached: warm.reached,
+      drawn_ms: warm.drawnMs,
+      rounds: warm.rounds,
+      calls: warm.calls,
+    };
+    const cold = coldOpen.drawnMs?.providers;
+    if (!coldOpen.reached || typeof cold !== "number")
+      assert.fail("UNMEASURED: the cold open drew no provider settings");
+    assert.ok(
+      cold <= COLD_DRAW_MS,
+      `the cold open drew the provider settings in ${cold} ms (bound ${COLD_DRAW_MS})`,
+    );
+    line.verdict = "pass";
+  } finally {
+    record(t, line);
+  }
+});
 
 test("PSI-99 every test sign-in is gone: no credential-store growth", async (t) => {
   let teardownError = null;
