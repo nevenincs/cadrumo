@@ -148,7 +148,8 @@ disk, load and the four processes holding the most memory, by name and process
 id only; no command line is read, because the log of a public run is public.
 The tests remain the step's last command, so their exit status is the step's.
 A shard that fails on a runner that survives also prints the kernel's kill
-records.
+records. The shards provision Chromium (the setup action's `browser` input),
+because their population holds the tests that drive a real browser.
 
 **Speed.** The expected critical path for a pull request is `authority`
 (toolchain, then compiling the registry) followed by the longest of `tests`,
