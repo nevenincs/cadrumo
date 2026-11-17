@@ -22,6 +22,7 @@ from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from .app_ledger_command_spec_policies import POLICY_1, POLICY_4, POLICY_5
+from .ledger_command_fragments import result_schema
 
 _CLI_MODULE: Final[str] = ".m232_related_party_commands"
 _RESULT_MODULE: Final[str] = ".m232_related_party_results"
@@ -100,14 +101,6 @@ _OPERATION_ID: Final[ArgumentSpec] = ArgumentSpec(
 )
 
 
-def _result_schema(model: str, identity: str) -> ResultSchemaSpec:
-    return ResultSchemaSpec(
-        SchemaState.TARGET,
-        target=DeferredTarget(_RESULT_MODULE, model, __package__),
-        identity=identity,
-    )
-
-
 def _leaf(
     verb: str,
     *,
@@ -128,7 +121,9 @@ def _leaf(
         parameters=parameters,
         policy=POLICY_4 if writes else POLICY_5,
         handler=LazyBinding.available(DeferredTarget(_CLI_MODULE, f"m232_related_party_{token}", __package__)),
-        result_schema=_result_schema(result_model, f"ledger.operaciones_vinculadas.{token}"),
+        result_schema=result_schema(
+            result_model, f"ledger.operaciones_vinculadas.{token}", result_module=_RESULT_MODULE
+        ),
     )
 
 

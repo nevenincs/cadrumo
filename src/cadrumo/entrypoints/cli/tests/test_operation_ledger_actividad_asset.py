@@ -108,6 +108,7 @@ from ....domain.renta.actividad_asset.lifecycle import (
 from ....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ....domain.renta.actividad_asset.schedule import ScheduleAuthority, ScheduledAmortizationCharge, schedule_charge
 from .. import operation_ledger_actividad_asset as bridge
+from .. import profile_bound_clients
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -180,8 +181,8 @@ def _bind(
 ) -> list[BaseModel]:
     requests: list[BaseModel] = []
     client = SimpleNamespace(profile_id=_PROFILE)
-    monkeypatch.setattr(bridge, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
-    monkeypatch.setattr(bridge, "require_profile_client", lambda *_args, **_kwargs: client)
+    monkeypatch.setattr(profile_bound_clients, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_bound_clients, "require_profile_client", lambda *_args, **_kwargs: client)
 
     def submit(_client: object, request: BaseModel, **kwargs: object) -> RegisteredOperationCompletion[Any]:
         requests.append(request)

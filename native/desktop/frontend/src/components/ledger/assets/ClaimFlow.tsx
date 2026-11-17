@@ -6,11 +6,13 @@ import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";
 import { facts } from "../../../shell/compose";
 import type {
-  ActivityAssetForecast,
-  ActivityAssetForecastResult,
-  PlanClaim,
-  PlanRow,
-} from "../../../shell/ledgerSetup";
+  ScheduledAmortizationChargeSnapshot,
+  ActivityAssetForecastProjection,
+} from "../../../shell/ledgerActivityAssetContract";
+import type {
+  ActivityAssetPlanClaim,
+  ActivityAssetPlanRow,
+} from "../../../shell/ledgerActivityAssetReadContract";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
 import {
@@ -47,7 +49,7 @@ import { ASSET_KEYS } from "./assetsWords";
 import { nothingOpen as nothingOpenWords } from "./planWords";
 
 const NO_FIELDS = new Set<string>();
-const NO_CLAIMS: readonly PlanClaim[] = [];
+const NO_CLAIMS: readonly ActivityAssetPlanClaim[] = [];
 /**
  * Records a year's dotación in two steps: the forecast first, which works
  * out the span and records nothing, then the dotación itself. The year
@@ -114,9 +116,9 @@ export function ClaimFlow({
   const nothingOpen =
     row !== null && spans.length === 0 ? nothingOpenWords(t, row) : null;
   const form = useFieldsDraft(draftOf(fields));
-  const [forecast, setForecast] = useState<ActivityAssetForecast | null>(null);
+  const [forecast, setForecast] = useState<ScheduledAmortizationChargeSnapshot | null>(null);
   const [forecastCall, setForecastCall] =
-    useState<SetupCall<ActivityAssetForecastResult> | null>(null);
+    useState<SetupCall<ActivityAssetForecastProjection> | null>(null);
   const [reading, setReading] = useState(false);
   const name = asset.row?.name ?? t(ASSET_KEYS.list.no_name);
   const write = useSetupWrite(facts(t, [t(ASSET_KEYS.action.claim), name]));
@@ -155,7 +157,7 @@ export function ClaimFlow({
   // A different span, claim or year starts the dates over from that span as
   // the plan serves it, whatever was typed for the one before.
   const startOver = (
-    nextRow: PlanRow | null,
+    nextRow: ActivityAssetPlanRow | null,
     nextReplaces: string | null,
     index: number,
   ) => {

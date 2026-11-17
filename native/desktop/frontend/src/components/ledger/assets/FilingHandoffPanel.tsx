@@ -3,7 +3,7 @@ import { Alert } from "@/components/ui/alert";
 import { Icon } from "@/components/ui/icon";
 import type { LedgerPort, PublicDecimal } from "../../../shell/ledger";
 import type { OutputLanguage } from "../../../shell/ledgerClassificationContract";
-import type { AssetKind } from "../../../shell/ledgerSetup";
+import type { AssetKind } from "../../../shell/ledgerActivityAssetContract";
 import { useStrings } from "../../../shell/strings";
 import { formatAmount } from "../../../shared/numbers";
 import {

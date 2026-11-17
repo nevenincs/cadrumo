@@ -11,7 +11,6 @@ from uuid import UUID
 import typer
 from pydantic import BaseModel
 
-from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
@@ -79,7 +78,7 @@ from ...domain.renta.actividad_asset.claims import AmortizationClaim
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
 from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
-from .common import active_bucket_id_or_refuse
+from .profile_bound_clients import active_profile_client
 
 type _ActivityAssetProjection = (
     ActivityAssetCreateProjection
@@ -97,11 +96,6 @@ type _ActivityAssetProjection = (
     | ActivityAssetFormOptionsProjection
     | ActivityAssetAcquisitionCandidatesProjection
 )
-
-
-def _client(ctx: typer.Context) -> FrontendClient:
-    """Bind every request to the invocation's exact selected profile."""
-    return require_profile_client(ctx, expected_profile_id=UUID(active_bucket_id_or_refuse()))
 
 
 def _submit[ResultT: _ActivityAssetProjection](
@@ -199,7 +193,7 @@ def create_activity_asset(
     descriptor: ActivityAssetDescriptorFacts,
 ) -> ActivityAssetCreateProjection:
     """Create one revision through the operation bound to this profile."""
-    client = _client(ctx)
+    client = active_profile_client(ctx)
     request = ActivityAssetCreateRequest(
         profile_id=client.profile_id,
         revision=ActivityAssetRevisionSnapshot.from_domain(revision),
@@ -221,7 +215,7 @@ def create_activity_asset(
 
 def inspect_activity_asset(ctx: typer.Context, *, asset_id: str) -> ActivityAssetInspectProjection:
     """Read one asset's complete immutable revision chain."""
-    client = _client(ctx)
+    client = active_profile_client(ctx)
     request = ActivityAssetInspectRequest(profile_id=client.profile_id, asset_id=asset_id)
     completed = _submit(
         client,
@@ -242,7 +236,7 @@ def correct_activity_asset(
     superseding_claims: tuple[ActivityAssetSupersedingClaim, ...] = (),
 ) -> ActivityAssetCorrectProjection:
     """Append one correction under the repository's guarded commit."""
-    client = _client(ctx)
+    client = active_profile_client(ctx)
     request = ActivityAssetCorrectRequest(
         profile_id=client.profile_id,
         revision=ActivityAssetCorrectionRevisionSnapshot.from_domain(revision),
@@ -272,7 +266,7 @@ def forecast_activity_asset(
     supersedes_claim_id: str | None,
 ) -> ActivityAssetForecastProjection:
     """Request a non-consuming forecast from the pinned calculation authority."""
-    client = _client(ctx)
+    client = active_profile_client(ctx)
     request = ActivityAssetForecastRequest(
         profile_id=client.profile_id,
         asset_id=asset_id,
@@ -311,7 +305,7 @@ def claim_activity_asset(
     supersedes_claim_id: str | None,
 ) -> ActivityAssetClaimProjection:
     """Record or replay one exact forecast as an immutable claim."""
-    client = _client(ctx)
+    client = active_profile_client(ctx)
     request = ActivityAssetClaimRequest(
         profile_id=client.profile_id,
         forecast=ScheduledAmortizationChargeSnapshot.from_domain(forecast),
@@ -356,7 +350,7 @@ def filing_handoff_activity_asset(
     m130_period: str,
 ) -> ActivityAssetFilingHandoffProjection:
     """Read non-consuming M100/M130 claim projections for one filing frame."""
-    client = _client(ctx)
+    client = active_profile_client(ctx)
     request = ActivityAssetFilingHandoffRequest(
         profile_id=client.profile_id,
         tax_year=tax_year,
@@ -383,7 +377,7 @@ def describe_activity_asset(
     descriptor: ActivityAssetDescriptorFacts,
 ) -> ActivityAssetDescribeProjection:
     """Append one element's descriptive facts."""
-    client = _client(ctx)
+    client = active_profile_client(ctx)
     completed = _submit(
         client,
         ActivityAssetDescribeRequest(profile_id=client.profile_id, asset_id=asset_id, descriptor=descriptor),
@@ -403,7 +397,7 @@ def dispose_activity_asset(
     disposal: ActivityAssetDisposalSnapshot,
 ) -> ActivityAssetDisposeProjection:
     """Record one element's baja under the repository's guarded commit."""
-    client = _client(ctx)
+    client = active_profile_client(ctx)
     completed = _submit(
         client,
         ActivityAssetDisposeRequest(profile_id=client.profile_id, asset_id=asset_id, disposal=disposal),
@@ -423,7 +417,7 @@ def _read[ResultT: _ActivityAssetProjection](
     definition_id: str,
     result_type: type[ResultT],
 ) -> ResultT:
-    client = _client(ctx)
+    client = active_profile_client(ctx)
     completed = _submit(client, build(client.profile_id), definition_id=definition_id, result_type=result_type)
     return _finish(completed, success_effect=OperationEffect.NONE)
 

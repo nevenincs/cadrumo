@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { EvidenceListResult } from "../../src/shell/ledgerDocumentOperations";
+import type { LedgerEvidenceListProjection } from "../../src/shell/ledgerDocumentContract";
 import type { LedgerOutcome, LedgerPort } from "../../src/shell/ledger";
 
 for (const mode of ["documents", "setup"] as const) {
@@ -12,14 +12,14 @@ for (const mode of ["documents", "setup"] as const) {
       const { react, dom, client, documents, setup } =
         await window.__scenarioModules!.ledgerReads();
       const pending: {
-        resolve(value: LedgerOutcome<EvidenceListResult>): void;
+        resolve(value: LedgerOutcome<LedgerEvidenceListProjection>): void;
         reject(error: Error): void;
       }[] = [];
       // The hooks only use submit; every answer still passes their real outcome parser.
       const port = {
         submit: () =>
-          new Promise<LedgerOutcome<EvidenceListResult>>((resolve, reject) =>
-            pending.push({ resolve, reject }),
+          new Promise<LedgerOutcome<LedgerEvidenceListProjection>>(
+            (resolve, reject) => pending.push({ resolve, reject }),
           ),
       } as unknown as LedgerPort;
       type Snapshot = { phase: string; value: string | null };
@@ -91,7 +91,9 @@ for (const mode of ["documents", "setup"] as const) {
         }
         throw new Error(`Read never displayed ${value}`);
       };
-      const answer = (value: string): LedgerOutcome<EvidenceListResult> => ({
+      const answer = (
+        value: string,
+      ): LedgerOutcome<LedgerEvidenceListProjection> => ({
         kind: "settled",
         operation_id: "read",
         revision: 1,

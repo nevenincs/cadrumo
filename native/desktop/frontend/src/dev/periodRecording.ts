@@ -8,39 +8,42 @@
 import servedEntryOptions from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import { holdLedgerPeriods } from "../shell/ledgerPeriods";
 import type {
-  LedgerEntryOptionsRequest,
-  LedgerServedDay,
-  LedgerServedPeriod,
-  LedgerServedPeriods,
-} from "../shell/ledgerSetup";
+  LedgerEntryOptionsWindowRequest,
+  LedgerDayPeriodsProjection,
+  LedgerPeriodProjection,
+  LedgerPeriodsProjection,
+} from "../shell/ledgerEntryContract";
 
-type Language = NonNullable<LedgerEntryOptionsRequest["output_language"]>;
-type Query = NonNullable<LedgerEntryOptionsRequest["periods"]>;
+type Language = NonNullable<LedgerEntryOptionsWindowRequest["output_language"]>;
+type Query = NonNullable<LedgerEntryOptionsWindowRequest["periods"]>;
 
 const recording = servedEntryOptions.periods;
 const tables = recording.years as unknown as Record<
   string,
-  Record<string, LedgerServedPeriod[]>
+  Record<string, LedgerPeriodProjection[]>
 >;
-const reference = recording.containing as unknown as LedgerServedDay;
+const reference = recording.containing as unknown as LedgerDayPeriodsProjection;
 
 /** The language a read without one is answered in, as the backend's. */
 export const RECORDED_DEFAULT_LANGUAGE: Language = "es";
 /** The year a read without one lists. */
 export const RECORDED_YEAR = reference.annual.filing_year;
 
-const rowsOf = (language: Language): LedgerServedPeriod[] =>
+const rowsOf = (language: Language): LedgerPeriodProjection[] =>
   Object.values(tables[language] ?? {}).flat();
 
 /** The recorded table of `year` in `language`, or null where none is recorded. */
 function yearTable(
   language: Language,
   year: number,
-): LedgerServedPeriod[] | null {
+): LedgerPeriodProjection[] | null {
   return tables[language]?.[String(year)] ?? null;
 }
 
-function dayPeriods(language: Language, day: string): LedgerServedDay | null {
+function dayPeriods(
+  language: Language,
+  day: string,
+): LedgerDayPeriodsProjection | null {
   const holding = rowsOf(language).filter(
     (row) => row.first_day <= day && day <= row.last_day,
   );
@@ -61,7 +64,7 @@ function spanPeriod(
   language: Language,
   first: string,
   last: string,
-): { found: boolean; period: LedgerServedPeriod["period"] | null } {
+): { found: boolean; period: LedgerPeriodProjection["period"] | null } {
   const rows = rowsOf(language);
   const year = rows.find(
     (row) =>
@@ -83,17 +86,17 @@ function spanPeriod(
 export function answerPeriods(
   language: Language,
   query: Query,
-): LedgerServedPeriods | null {
+): LedgerPeriodsProjection | null {
   const year = query.year ?? RECORDED_YEAR;
   const table = yearTable(language, year);
   if (table === null) return null;
-  const days: LedgerServedDay[] = [];
+  const days: LedgerDayPeriodsProjection[] = [];
   for (const day of query.days ?? []) {
     const found = dayPeriods(language, day);
     if (found === null) return null;
     days.push(found);
   }
-  let covering: LedgerServedPeriods["covering"] = null;
+  let covering: LedgerPeriodsProjection["covering"] = null;
   if (query.covering) {
     const found = spanPeriod(
       language,

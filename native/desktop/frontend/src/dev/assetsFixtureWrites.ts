@@ -3,12 +3,14 @@
 // handoff and a baja's figures.
 
 import type {
-  AssetListRow,
-  DescriptorFacts,
-  DisposalCalculation,
-  DisposalFacts,
-  PlanClaim,
-} from "@/shell/ledgerSetup";
+  ActivityAssetDescriptorFacts,
+  ActivityAssetDisposalSnapshot,
+} from "@/shell/ledgerActivityAssetContract";
+import type {
+  ActivityAssetListRow,
+  ActivityAssetDisposalCalculationView,
+  ActivityAssetPlanClaim,
+} from "@/shell/ledgerActivityAssetReadContract";
 import type { JsonObject } from "../shell/ledger";
 import { SCENARIO_PAYMENTS, SCENARIO_TODAY } from "./assetsRegister";
 import {
@@ -92,7 +94,7 @@ export function makeWrites(register: Register) {
   const create: Handler = (request) => {
     exact(request, ["revision", "descriptor"]);
     const revision = obj(request.revision);
-    const descriptor = request.descriptor as unknown as DescriptorFacts;
+    const descriptor = request.descriptor as unknown as ActivityAssetDescriptorFacts;
     if (!revision || typeof descriptor !== "object" || descriptor === null)
       return invalid();
     const shape = { history: null };
@@ -261,7 +263,7 @@ export function makeWrites(register: Register) {
     for (const row of element.rows)
       for (const old of [...row.claims]) {
         if (!old.effective || !replaced.includes(old.claim_id)) continue;
-        const next: PlanClaim = {
+        const next: ActivityAssetPlanClaim = {
           ...old,
           claim_id: hex64(`claim:${id}:${old.claim_id}:${number}`),
           effective: true,
@@ -309,7 +311,7 @@ export function makeWrites(register: Register) {
     element.list.in_service_date = textOf(revision.in_service_date)!;
     element.list.method = textOf(
       obj(revision.amortization)!.method,
-    )! as AssetListRow["method"];
+    )! as ActivityAssetListRow["method"];
     element.list.basis = dec(fromCents(toCents(newBasis)));
     recount(element);
     return json({ ...ok, history: history(element) });
@@ -524,7 +526,7 @@ export function makeWrites(register: Register) {
   /** The backend's judgement of a stated baja: the refusal it gives, if any. */
   const judge = (
     element: Element,
-    facts: DisposalFacts,
+    facts: ActivityAssetDisposalSnapshot,
     shape: JsonObject,
   ): void => {
     const { reason, disposal_date: date } = facts;
@@ -566,14 +568,14 @@ export function makeWrites(register: Register) {
   };
 
   /** The claims an overlap meets, comma-joined in history order. */
-  const ids = (claims: readonly PlanClaim[]) =>
+  const ids = (claims: readonly ActivityAssetPlanClaim[]) =>
     claims.map((claim) => claim.claim_id).join(",");
 
-  const statedDisposal = (request: JsonObject): DisposalFacts => {
+  const statedDisposal = (request: JsonObject): ActivityAssetDisposalSnapshot => {
     const given = request.disposal;
     if (typeof given !== "object" || given === null || Array.isArray(given))
       return invalid();
-    const facts = given as unknown as DisposalFacts;
+    const facts = given as unknown as ActivityAssetDisposalSnapshot;
     if (
       typeof facts.disposal_date !== "string" ||
       !DATE.test(facts.disposal_date) ||
@@ -588,7 +590,7 @@ export function makeWrites(register: Register) {
   /** The element stands out of service after the baja's last day. The plan
    * ends the year of that day; the fixture does not work the figures of the
    * years it drops out again if the baja later moves back. */
-  const putOutOfService = (element: Element, facts: DisposalFacts) => {
+  const putOutOfService = (element: Element, facts: ActivityAssetDisposalSnapshot) => {
     element.baja = facts;
     element.outOfService = dayAfter(facts.disposal_date);
     element.list.disposal = {
@@ -706,7 +708,7 @@ export function makeWrites(register: Register) {
     );
     const costs = toCents(facts.transmission_costs.decimal);
     const result = stated - costs - net;
-    const calculation: DisposalCalculation = {
+    const calculation: ActivityAssetDisposalCalculationView = {
       ...base,
       disposal_date: facts.disposal_date,
       reason: facts.reason,
@@ -1020,7 +1022,7 @@ export function makeWrites(register: Register) {
         {},
         { claim_result: null, claim_id: null },
       );
-    const next: PlanClaim = {
+    const next: ActivityAssetPlanClaim = {
       claim_id: claimId,
       amount: dec(given.amount.decimal),
       covered_from: given.covered_from,

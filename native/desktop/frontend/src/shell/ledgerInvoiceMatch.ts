@@ -5,10 +5,10 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type {
-  LedgerInvoiceMatchRequest,
+  LedgerInvoiceMatchWindowRequest,
   LedgerInvoiceMatchResult,
-} from "./ledgerInvoiceOperations";
-import type { LedgerInvoiceMatchStagedLink } from "./ledgerInvoiceContract";
+  LedgerInvoiceMatchStagedLink,
+} from "./ledgerInvoiceContract";
 import type { LedgerPort } from "./ledger";
 import { LatestAnswerSession, type LatestAnswer } from "./ledgerLatestAnswer";
 import { readAnswer } from "./ledgerWindow";
@@ -31,8 +31,8 @@ const sameLinks = (
   );
 
 const sameQuestion = (
-  one: LedgerInvoiceMatchRequest,
-  other: LedgerInvoiceMatchRequest,
+  one: LedgerInvoiceMatchWindowRequest,
+  other: LedgerInvoiceMatchWindowRequest,
 ) =>
   (one.invoice_id ?? null) === (other.invoice_id ?? null) &&
   (one.transaction_id ?? null) === (other.transaction_id ?? null) &&
@@ -41,7 +41,7 @@ const sameQuestion = (
 
 async function askMatches(
   port: LedgerPort,
-  question: LedgerInvoiceMatchRequest,
+  question: LedgerInvoiceMatchWindowRequest,
 ): Promise<LatestAnswer<LedgerInvoiceMatchResult>> {
   const answer = readAnswer(
     await port.submit("ledger.invoice.match", question),
@@ -53,7 +53,7 @@ async function askMatches(
 
 function build(port: LedgerPort) {
   return new LatestAnswerSession<
-    LedgerInvoiceMatchRequest,
+    LedgerInvoiceMatchWindowRequest,
     LedgerInvoiceMatchResult
   >((question) => askMatches(port, question), sameQuestion, REST_MS);
 }
@@ -65,7 +65,7 @@ function build(port: LedgerPort) {
  */
 export function useInvoiceMatches(
   port: LedgerPort,
-  question: LedgerInvoiceMatchRequest | null,
+  question: LedgerInvoiceMatchWindowRequest | null,
   fresh: unknown,
 ): InvoiceMatchView {
   const [session, setSession] = useState(() => build(port));

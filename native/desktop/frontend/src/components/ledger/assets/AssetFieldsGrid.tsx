@@ -8,10 +8,10 @@ import {
 import { facts, labelled } from "../../../shell/compose";
 import type { GrammarRefusal } from "../../../shell/ledgerGrammar";
 import type {
-  AcquisitionCandidate,
-  TableGroup,
-  FormOptions,
-} from "../../../shell/ledgerSetup";
+  ActivityAssetAcquisitionCandidate,
+  ActivityAssetTableGroup,
+  ActivityAssetFormOptionsView,
+} from "../../../shell/ledgerActivityAssetReadContract";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { EditorField } from "../setup/EditorField";
 import { ChoiceField, FormGrid } from "../setup/SetupParts";
@@ -23,7 +23,7 @@ const NO_NOTES: Readonly<Record<string, string | null>> = {};
 const NO_KEYS: ReadonlySet<string> = new Set();
 /** What the registry allows a table class, as one line: the corridor of its
  * coefficient and its maximum period. */
-const corridorText = (t: Translate, locale: string, group: TableGroup) => {
+const corridorText = (t: Translate, locale: string, group: ActivityAssetTableGroup) => {
   const text = ASSET_KEYS.plan.limits;
   return facts(t, [
     labelled(
@@ -84,7 +84,7 @@ export function FieldsGrid({
   locale,
 }: {
   fields: readonly FormField[];
-  options: FormOptions | null;
+  options: ActivityAssetFormOptionsView | null;
   draft: FormDraft;
   onField(field: FormField, value: string): void;
   problems: Record<string, GrammarRefusal>;
@@ -92,7 +92,7 @@ export function FieldsGrid({
   missing: ReadonlySet<string>;
   /** The fields emptied that the record cannot do without. */
   cleared?: ReadonlySet<string>;
-  candidates: readonly AcquisitionCandidate[];
+  candidates: readonly ActivityAssetAcquisitionCandidate[];
   /** Fields the picked purchase does not know. */
   purchaseKnown: ReadonlySet<string>;
   /** What the backend says of a field's value, by field key. */

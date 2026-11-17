@@ -27,6 +27,7 @@ from ..components.theme import tokenised
 from ..operations.outcome import unknown_outcome_of
 from .controller import LedgerWorkspaceController
 from .models import LedgerRecordDoorsV1
+from .text_values import field_label
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
 from .workspace_screen import LedgerWorkspaceScreen
 
@@ -76,10 +77,6 @@ _EDIT_CONTROLS: Final = (
     *(f"#ledger-transaction-{name.replace('_', '-')}" for name in _TEXT_FIELDS),
     "#ledger-transaction-direction",
 )
-
-
-def _field_label(name: str) -> str:
-    return tr(_FIELD_LOCALE_KEYS[name])
 
 
 def _direction_label(direction: str) -> str:
@@ -151,7 +148,9 @@ class LedgerTransactionDetailScreen(LedgerWorkspaceScreen):
                 key = _FIELD_LOCALE_KEYS[name]
                 yield localized(Static(tr(key), markup=False), key)
                 yield Input(id=f"ledger-transaction-{name.replace('_', '-')}", disabled=True)
-            yield localized(Static(_field_label("direction"), markup=False), _FIELD_LOCALE_KEYS["direction"])
+            yield localized(
+                Static(field_label("direction", _FIELD_LOCALE_KEYS), markup=False), _FIELD_LOCALE_KEYS["direction"]
+            )
             yield Select[str](
                 tuple((_direction_label(item.value), item.value) for item in TransactionDirection),
                 allow_blank=False,
@@ -218,7 +217,7 @@ class LedgerTransactionDetailScreen(LedgerWorkspaceScreen):
         lines = [
             tr(
                 "tui.ledger.records.change",
-                field=_field_label(name),
+                field=field_label(name, _FIELD_LOCALE_KEYS),
                 before=(
                     _direction_label(baseline.direction) if name == "direction" else _current(baseline, name) or "-"
                 ),
@@ -296,7 +295,7 @@ class LedgerTransactionDetailScreen(LedgerWorkspaceScreen):
                 (
                     f"{transaction.booked_date} · {transaction.description}",
                     f"{_direction_label(transaction.direction)} · {transaction.amount} {transaction.currency}",
-                    f"{_field_label('counterparty')}: {transaction.counterparty or '-'}",
+                    f"{field_label('counterparty', _FIELD_LOCALE_KEYS)}: {transaction.counterparty or '-'}",
                     f"{tr('tui.ledger.records.links')}: {transaction.invoice_id or '-'}",
                     f"{tr('tui.ledger.records.identity')}: {transaction.transaction_id}",
                 )

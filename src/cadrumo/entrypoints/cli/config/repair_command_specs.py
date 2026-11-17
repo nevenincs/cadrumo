@@ -18,7 +18,6 @@ from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
     TEXT_VALUE,
     DeferredTarget,
-    LazyBinding,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -29,6 +28,8 @@ from cadrumo_client.commands.shared_contracts import (
 from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
 from cadrumo_client.commands.spec_schema import config_payload_schema
 from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from .lazy_bindings import lazy_handler
 
 # Every dynamically resolved handler module is named here as a WHOLE dotted path.
 # The path used to be built with an f-string, which meant no static reader -- grep,
@@ -41,10 +42,6 @@ _HANDLER_MODULES: Final[dict[str, str]] = {
     "_repair_cli": ".repair_commands",
     "_repair_profile": ".profile_repair_commands",
 }
-
-
-def _handler(module: str, name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name, __package__))
 
 
 def _flag(
@@ -81,7 +78,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         ),
         parameters=(),
         policy=CALCULATION_READ,
-        handler=_handler("_repair_cli", "repair"),
+        handler=lazy_handler(_HANDLER_MODULES, "_repair_cli", "repair"),
         result_schema=config_payload_schema("ConfigRepairResult", "config.repair"),
     ),
     CommandSpec(
@@ -116,7 +113,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
             ),
         ),
         policy=LOCAL_READ,
-        handler=_handler("_repair_cli", "repair_logs"),
+        handler=lazy_handler(_HANDLER_MODULES, "_repair_cli", "repair_logs"),
         result_schema=config_payload_schema("RepairLogsResult", "config.repair.logs"),
     ),
     CommandSpec(
@@ -132,7 +129,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
             _flag("dry_run", "--dry-run/--no-dry-run", "cli.config.repair.quarantine_dry_run_help"),
         ),
         policy=BOOTSTRAP_WRITE,
-        handler=_handler("_repair_cli", "repair_quarantine"),
+        handler=lazy_handler(_HANDLER_MODULES, "_repair_cli", "repair_quarantine"),
         result_schema=config_payload_schema("RepairQuarantineResult", "config.repair.quarantine"),
     ),
     CommandSpec(
@@ -148,7 +145,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
             _flag("dry_run", "--dry-run/--no-dry-run", "cli.config.repair.reset_progress_dry_run_help"),
         ),
         policy=BOOTSTRAP_DESTRUCTIVE,
-        handler=_handler("_repair_cli", "repair_reset_progress"),
+        handler=lazy_handler(_HANDLER_MODULES, "_repair_cli", "repair_reset_progress"),
         result_schema=config_payload_schema("RepairResetProgressResult", "config.repair.reset_progress"),
     ),
     CommandSpec(
@@ -169,7 +166,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
             ),
         ),
         policy=ENCRYPTED_READ,
-        handler=_handler("_repair_cli", "repair_integrity_objects"),
+        handler=lazy_handler(_HANDLER_MODULES, "_repair_cli", "repair_integrity_objects"),
         result_schema=config_payload_schema("RepairIntegrityObjectsResult", "config.repair.integrity.objects"),
     ),
     CommandSpec(
@@ -182,7 +179,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(_flag("headless", "--headless/--headed", None, default=True),),
         policy=BROWSER_CONNECTIVITY,
-        handler=_handler("_repair_cli", "repair_connectivity"),
+        handler=lazy_handler(_HANDLER_MODULES, "_repair_cli", "repair_connectivity"),
         result_schema=config_payload_schema("RepairConnectivityResult", "config.repair.connectivity"),
     ),
     CommandSpec(
@@ -205,7 +202,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
             _flag("yes", "--yes", "cli.config.repair.yes_help"),
         ),
         policy=BOOTSTRAP_WRITE,
-        handler=_handler("_repair_profile", "repair_profile"),
+        handler=lazy_handler(_HANDLER_MODULES, "_repair_profile", "repair_profile"),
         result_schema=config_payload_schema("RepairProfileResult", "config.repair.profile"),
         repairs_active_profile_pointer=True,
     ),

@@ -22,15 +22,17 @@ import { parseIsoDate, type LedgerPeriod } from "./ledgerGrammar";
 import { entryYears, holdEntryYears, useHeldEntryYears } from "./ledgerLimits";
 import type { LedgerEntryYearWindow } from "./ledgerEntryContract";
 import type {
-  LedgerEntryOptionsRequest,
-  LedgerServedDay,
-  LedgerServedPeriod,
-  LedgerServedPeriods,
-} from "./ledgerSetup";
+  LedgerEntryOptionsWindowRequest,
+  LedgerDayPeriodsProjection,
+  LedgerPeriodProjection,
+  LedgerPeriodsProjection,
+} from "./ledgerEntryContract";
 import { readAnswer } from "./ledgerWindow";
 
-type OutputLanguage = NonNullable<LedgerEntryOptionsRequest["output_language"]>;
-type Query = NonNullable<LedgerEntryOptionsRequest["periods"]>;
+type OutputLanguage = NonNullable<
+  LedgerEntryOptionsWindowRequest["output_language"]
+>;
+type Query = NonNullable<LedgerEntryOptionsWindowRequest["periods"]>;
 
 /** The most days one read may ask the periods of. */
 const DAYS_PER_READ = 64;
@@ -45,7 +47,7 @@ export type PeriodWants = {
 /** What one read serves: the periods asked for, and the years a typed year
  * takes. */
 type Served = {
-  periods: LedgerServedPeriods;
+  periods: LedgerPeriodsProjection;
   years: LedgerEntryYearWindow;
 };
 
@@ -55,9 +57,9 @@ type Ask = (query: Query) => Promise<Served | null>;
 type Held = {
   language: OutputLanguage | null;
   annualCode: string | null;
-  today: LedgerServedDay | null;
-  years: ReadonlyMap<number, readonly LedgerServedPeriod[]>;
-  days: ReadonlyMap<string, LedgerServedDay>;
+  today: LedgerDayPeriodsProjection | null;
+  years: ReadonlyMap<number, readonly LedgerPeriodProjection[]>;
+  days: ReadonlyMap<string, LedgerDayPeriodsProjection>;
   covers: ReadonlyMap<string, PublicPeriod | null>;
 };
 
@@ -89,7 +91,10 @@ function changed(next: Held): void {
 
 const spanKey = (from: string, to: string) => `${from}/${to}`;
 
-function merge(language: OutputLanguage, served: LedgerServedPeriods): void {
+function merge(
+  language: OutputLanguage,
+  served: LedgerPeriodsProjection,
+): void {
   if (held.language !== null && held.language !== language) return;
   const years = new Map(held.years);
   years.set(served.year, served.periods);
@@ -122,7 +127,7 @@ function take(language: OutputLanguage, answer: Served): void {
  * recording. Null drops everything held. */
 export function holdLedgerPeriods(
   language: OutputLanguage | null,
-  served: LedgerServedPeriods | null,
+  served: LedgerPeriodsProjection | null,
 ): void {
   if (served === null || language === null) {
     asked = new Set();
@@ -299,11 +304,13 @@ export function ledgerPeriod(period: PublicPeriod | null): LedgerPeriod | null {
 /** The periods of `year`, in the order served, or null while not served. */
 export const servedYear = (
   year: number,
-): readonly LedgerServedPeriod[] | null => held.years.get(year) ?? null;
+): readonly LedgerPeriodProjection[] | null => held.years.get(year) ?? null;
 
 /** The served row of `period`, or null while its year is not served or the
  * year holds no such period. */
-export const servedPeriod = (period: LedgerPeriod): LedgerServedPeriod | null =>
+export const servedPeriod = (
+  period: LedgerPeriod,
+): LedgerPeriodProjection | null =>
   servedYear(period.year)?.find((row) => row.period.code === period.code) ??
   null;
 
@@ -354,7 +361,9 @@ export type Holding = {
   monthly: LedgerPeriod;
 };
 
-function holding(served: LedgerServedDay | null | undefined): Holding | null {
+function holding(
+  served: LedgerDayPeriodsProjection | null | undefined,
+): Holding | null {
   if (!served) return null;
   const annual = ledgerPeriod(served.annual);
   const quarterly = ledgerPeriod(served.quarterly);

@@ -9,9 +9,9 @@ import { ReadSessionScheduler } from "./readSessionScheduler";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { LedgerPort } from "./ledger";
 import type {
-  LedgerStagedCheckRequest,
+  LedgerStagedCheckWindowRequest,
   LedgerStagedCheckResult,
-} from "./ledgerMovementOperations";
+} from "./ledgerMovementCheckContract";
 import type {
   LedgerStagedCell,
   LedgerStagedDraft,
@@ -94,7 +94,7 @@ export function stagedCheckRequest(
   content: StagedContent,
   rows: ReadonlyMap<string, LedgerTransactionReviewProjection>,
   also: { ids?: readonly string[]; categories?: readonly string[] } = {},
-): LedgerStagedCheckRequest {
+): LedgerStagedCheckWindowRequest {
   const ids = new Set<string>([
     ...Object.keys(content.rows),
     ...content.actions.flatMap((action) => actionRows(action)),
@@ -121,7 +121,7 @@ export type CheckReply =
 /** Asks the ledger once. Every way of not answering is the same failure. */
 export async function askStagedCheck(
   port: LedgerPort,
-  request: LedgerStagedCheckRequest,
+  request: LedgerStagedCheckWindowRequest,
 ): Promise<CheckReply> {
   try {
     // Asked in the language the page shows, so its sentences come in it.
@@ -143,7 +143,7 @@ export async function askStagedCheck(
 /** One asked question's answer, or null where the ledger gave none. */
 export async function checkOnce(
   port: LedgerPort,
-  request: LedgerStagedCheckRequest,
+  request: LedgerStagedCheckWindowRequest,
 ): Promise<StagedCheck | null> {
   const reply = await askStagedCheck(port, request);
   return reply.kind === "answer" ? indexCheck(reply.result) : null;
@@ -166,7 +166,7 @@ const IDLE: CheckView = {
 };
 /** How long editing rests before what is staged is asked about. */
 const PAUSE_MS = 250;
-const NOTHING_ASKED = (request: LedgerStagedCheckRequest) =>
+const NOTHING_ASKED = (request: LedgerStagedCheckWindowRequest) =>
   !request.rows?.length &&
   !request.drafts?.length &&
   !request.categories?.length;
@@ -179,14 +179,14 @@ export const NOTHING_CHECKED: StagedCheck = {
 };
 
 export class StagedCheckSession extends ReadSessionScheduler<
-  LedgerStagedCheckRequest,
+  LedgerStagedCheckWindowRequest,
   string,
   LedgerStagedCheckResult,
   StagedCheck,
   CheckView
 > {
   constructor(
-    ask: (request: LedgerStagedCheckRequest) => Promise<CheckReply>,
+    ask: (request: LedgerStagedCheckWindowRequest) => Promise<CheckReply>,
     pauseMs = PAUSE_MS,
   ) {
     super({
@@ -205,7 +205,7 @@ export class StagedCheckSession extends ReadSessionScheduler<
 /** The answer for `request`, kept current while the page holds it. */
 export function useStagedCheck(
   port: LedgerPort,
-  request: LedgerStagedCheckRequest,
+  request: LedgerStagedCheckWindowRequest,
 ) {
   const [session] = useState(
     () => new StagedCheckSession((asked) => askStagedCheck(port, asked)),
@@ -217,7 +217,7 @@ export function useStagedCheck(
     return () => session.stop();
   }, [session]);
   useEffect(() => {
-    session.want(JSON.parse(key) as LedgerStagedCheckRequest);
+    session.want(JSON.parse(key) as LedgerStagedCheckWindowRequest);
   }, [session, key]);
   return useMemo(
     () => ({ ...view, retry: () => session.retry() }),

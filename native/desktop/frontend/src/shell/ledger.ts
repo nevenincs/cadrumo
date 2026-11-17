@@ -10,88 +10,96 @@
 import type { LedgerProrrataContracts } from "./ledgerProrrataContract";
 import type { LedgerReadContracts } from "./ledgerReadContract";
 import type {
-  AttachmentQueueResult,
-  AttachmentViewRequest,
-  AttachmentViewResult,
-  EvidenceAddRequest,
-  EvidenceBatchRequest,
-  EvidenceBatchResult,
-  EvidenceConfirmRequest,
-  EvidenceConfirmResult,
-  EvidenceConsentListResult,
-  EvidenceExtractRequest,
-  EvidenceExtractResult,
-  EvidenceListResult,
-  EvidencePageRequest,
-  EvidencePageResult,
-  EvidenceRecordResult,
-  EvidenceRemoveRequest,
-  EvidenceReviewListRequest,
-  EvidenceReviewListResult,
-  EvidenceReviewViewRequest,
-  EvidenceReviewViewResult,
-  EvidenceUpdateRequest,
-  EvidenceViewRequest,
-  EvidenceViewResult,
-} from "./ledgerDocumentOperations";
+  LedgerEvidenceAttachmentQueueProjection,
+  LedgerEvidenceAttachmentViewWindowRequest,
+  LedgerEvidenceAttachmentViewProjection,
+  LedgerEvidenceAddWindowRequest,
+  LedgerEvidenceBatchWindowRequest,
+  LedgerEvidenceBatchProjection,
+  LedgerEvidenceConsentListProjection,
+  LedgerEvidenceListProjection,
+  LedgerEvidencePageWindowRequest,
+  LedgerEvidencePageProjection,
+  LedgerEvidenceAddProjection,
+  LedgerEvidenceRemoveWindowRequest,
+  LedgerEvidenceUpdateWindowRequest,
+  LedgerEvidenceViewWindowRequest,
+  LedgerEvidenceViewProjection,
+  LedgerEvidenceUpdateProjection,
+  LedgerEvidenceRemoveProjection,
+} from "./ledgerDocumentContract";
 import type {
-  InvoiceAddRequest,
+  LedgerEvidenceConfirmWindowRequest,
+  LedgerEvidenceConfirmProjection,
+  LedgerEvidenceExtractWindowRequest,
+  LedgerEvidenceExtractProjection,
+  LedgerEvidenceReviewListWindowRequest,
+  LedgerEvidenceReviewListProjection,
+  LedgerEvidenceReviewViewWindowRequest,
+  LedgerEvidenceReviewViewProjection,
+} from "./ledgerDocumentReviewContract";
+import type {
+  InvoiceAddWindowRequest,
   InvoiceAddResult,
-  InvoiceDocumentAttachRequest,
-  InvoiceDocumentAttachResult,
-  InvoiceImportRequest,
-  InvoiceImportResult,
-  InvoiceListRequest,
-  InvoiceListResult,
-  InvoicePreviewRequest,
-  InvoicePreviewResult,
-  InvoiceRemoveRequest,
+  InvoiceDocumentAttachWindowRequest,
+  InvoiceDocumentAttachProjection,
+  InvoiceImportWindowRequest,
+  InvoiceImportProjection,
+  InvoiceListWindowRequest,
+  InvoiceListProjection,
+  InvoiceFiguresPreviewWindowRequest,
+  InvoiceFiguresPreviewResult,
+  InvoiceRemoveWindowRequest,
   InvoiceRemoveResult,
-  InvoiceUpdateRequest,
+  InvoiceUpdateWindowRequest,
   InvoiceUpdateResult,
-  InvoiceViewRequest,
-  InvoiceViewResult,
-  LedgerAttachRequest,
-  LedgerAttachResult,
-  LedgerCheckRequest,
-  LedgerCheckResult,
-  LedgerDetachRequest,
-  LedgerInvoiceDuplicateRequest,
+  InvoiceViewWindowRequest,
+  InvoiceViewProjection,
+  LedgerAttachWindowRequest,
+  LedgerAttachmentOperationResult,
+  LedgerCheckWindowRequest,
+  LedgerCheckProjection,
+  LedgerDetachWindowRequest,
+  LedgerInvoiceDuplicateWindowRequest,
   LedgerInvoiceDuplicateResult,
-  LedgerInvoiceMatchRequest,
+  LedgerInvoiceMatchWindowRequest,
   LedgerInvoiceMatchResult,
-  LedgerLinkRequest,
-  LedgerLinkResult,
-} from "./ledgerInvoiceOperations";
+  LedgerLinkWindowRequest,
+  LedgerLinkOperationResult,
+} from "./ledgerInvoiceContract";
 import type {
-  LedgerAddRequest,
-  LedgerAddResult,
-  LedgerAllocateRequest,
-  LedgerAllocateResult,
-  LedgerBulkClassifyRequest,
-  LedgerBulkClassifyResult,
-  LedgerClassifyRequest,
-  LedgerClassifyResult,
-  LedgerHistoryRequest,
-  LedgerHistoryTypedResult,
-  LedgerIvaDeriveRequest,
-  LedgerIvaDeriveResult,
-  LedgerLifecycleRequest,
-  LedgerLifecycleResult,
-  LedgerLlmReviewRequest,
-  LedgerMergeRequest,
-  LedgerMergeResult,
-  LedgerRemoveRequest,
-  LedgerRemoveResult,
-  LedgerRuleTrialRequest,
+  LedgerAddWindowRequest,
+  LedgerAddOperationResult,
+  LedgerAllocateWindowRequest,
+  LedgerAllocateOperationResult,
+  LedgerBulkClassifyWindowRequest,
+  LedgerBulkClassifyProjection,
+  LedgerClassifyWindowRequest,
+  LedgerClassifyOperationResult,
+  LedgerOperatorIvaWindowRequest,
+  LedgerOperatorIvaResult,
+  LedgerLifecycleMutationWindowRequest,
+  LedgerLifecycleOperationResult,
+  LedgerMergeWindowRequest,
+  LedgerMergeOperationResult,
+  LedgerRemoveWindowRequest,
+  LedgerRemoveOperationResult,
+  LedgerSplitWindowRequest,
+  LedgerSplitOperationResult,
+} from "./ledgerMovementContract";
+import type {
+  LedgerHistoryWindowRequest,
+  LedgerHistoryTypedProjection,
+  LedgerLlmReviewWindowRequest,
+  LedgerRuleTrialWindowRequest,
   LedgerRuleTrialResult,
-  LedgerSplitCheckRequest,
+  LedgerSplitCheckWindowRequest,
   LedgerSplitCheckResult,
-  LedgerSplitRequest,
-  LedgerSplitResult,
-  LedgerStagedCheckRequest,
+  LedgerStagedCheckWindowRequest,
   LedgerStagedCheckResult,
-  LedgerTrackRequest,
+  LedgerTrackWindowRequest,
+} from "./ledgerMovementCheckContract";
+import type {
   LedgerTrackResult,
   LedgerUpdateRequest,
   LedgerUpdateResult,
@@ -121,36 +129,40 @@ import type {
   InventoryValuationOperationProjection,
 } from "./ledgerInventoryContract";
 import type {
-  ActivityAssetAcquisitionCandidatesResult,
-  ActivityAssetChangeResult,
-  ActivityAssetClaimRequest,
-  ActivityAssetClaimResult,
-  ActivityAssetCorrectRequest,
-  ActivityAssetCreateRequest,
-  ActivityAssetDescribeRequest,
-  ActivityAssetDisposalCalculateRequest,
-  ActivityAssetDisposalCalculateResult,
-  ActivityAssetDisposeRequest,
-  ActivityAssetFilingRequest,
-  ActivityAssetFilingResult,
-  ActivityAssetForecastRequest,
-  ActivityAssetForecastResult,
-  ActivityAssetFormOptionsRequest,
-  ActivityAssetFormOptionsResult,
-  ActivityAssetInspectRequest,
-  ActivityAssetInspectResult,
-  ActivityAssetListRequest,
-  ActivityAssetListResult,
-  ActivityAssetPlanRequest,
-  ActivityAssetPlanResult,
-  ActivityAssetTimelineRequest,
-  ActivityAssetTimelineResult,
-  LedgerEntryOptionsRequest,
-  LedgerEntryOptionsResult,
-  LedgerParticipationRebuildResult,
-  LedgerResetRequest,
-  LedgerResetResult,
-} from "./ledgerSetup";
+  LedgerEntryOptionsWindowRequest,
+  LedgerEntryOptionsProjection,
+  LedgerParticipationRebuildProjection,
+  LedgerResetWindowRequest,
+  LedgerResetOperationResult,
+} from "./ledgerEntryContract";
+import type {
+  ActivityAssetCreateProjection,
+  ActivityAssetClaimWindowRequest,
+  ActivityAssetClaimProjection,
+  ActivityAssetCorrectWindowRequest,
+  ActivityAssetCreateWindowRequest,
+  ActivityAssetDescribeWindowRequest,
+  ActivityAssetDisposeWindowRequest,
+  ActivityAssetForecastWindowRequest,
+  ActivityAssetForecastProjection,
+  ActivityAssetInspectWindowRequest,
+  ActivityAssetInspectProjection,
+} from "./ledgerActivityAssetContract";
+import type {
+  ActivityAssetAcquisitionCandidatesProjection,
+  ActivityAssetDisposalCalculateWindowRequest,
+  ActivityAssetDisposalCalculateProjection,
+  ActivityAssetFilingHandoffWindowRequest,
+  ActivityAssetFilingHandoffProjection,
+  ActivityAssetFormOptionsWindowRequest,
+  ActivityAssetFormOptionsProjection,
+  ActivityAssetListWindowRequest,
+  ActivityAssetListProjection,
+  ActivityAssetPlanWindowRequest,
+  ActivityAssetPlanProjection,
+  ActivityAssetTimelineWindowRequest,
+  ActivityAssetTimelineProjection,
+} from "./ledgerActivityAssetReadContract";
 import type { WithholdingRecordRequest } from "./ledgerRegisterOperations";
 import type { LedgerCapitalGoodsContracts } from "./ledgerCapitalGoodsContract";
 import type { LedgerOwnAccountContracts } from "./ledgerOwnAccountContract";
@@ -679,22 +691,22 @@ export interface LedgerRequests {
     "profile_id"
   >;
   "ledger.update": LedgerUpdateRequest;
-  "ledger.classify.single": LedgerClassifyRequest;
-  "ledger.classify.bulk": LedgerBulkClassifyRequest;
-  "ledger.classify.review": LedgerLlmReviewRequest;
-  "ledger.add": LedgerAddRequest;
-  "ledger.invoice.list": InvoiceListRequest;
-  "ledger.invoice.view": InvoiceViewRequest;
-  "ledger.invoice.add": InvoiceAddRequest;
-  "ledger.invoice.preview": InvoicePreviewRequest;
-  "ledger.rule.trial": LedgerRuleTrialRequest;
-  "ledger.invoice.duplicate": LedgerInvoiceDuplicateRequest;
-  "ledger.invoice.match": LedgerInvoiceMatchRequest;
-  "ledger.split.check": LedgerSplitCheckRequest;
-  "ledger.staged.check": LedgerStagedCheckRequest;
-  "ledger.invoice.update": InvoiceUpdateRequest;
-  "ledger.invoice.remove": InvoiceRemoveRequest;
-  "ledger.invoice.attach_document": InvoiceDocumentAttachRequest;
+  "ledger.classify.single": LedgerClassifyWindowRequest;
+  "ledger.classify.bulk": LedgerBulkClassifyWindowRequest;
+  "ledger.classify.review": LedgerLlmReviewWindowRequest;
+  "ledger.add": LedgerAddWindowRequest;
+  "ledger.invoice.list": InvoiceListWindowRequest;
+  "ledger.invoice.view": InvoiceViewWindowRequest;
+  "ledger.invoice.add": InvoiceAddWindowRequest;
+  "ledger.invoice.preview": InvoiceFiguresPreviewWindowRequest;
+  "ledger.rule.trial": LedgerRuleTrialWindowRequest;
+  "ledger.invoice.duplicate": LedgerInvoiceDuplicateWindowRequest;
+  "ledger.invoice.match": LedgerInvoiceMatchWindowRequest;
+  "ledger.split.check": LedgerSplitCheckWindowRequest;
+  "ledger.staged.check": LedgerStagedCheckWindowRequest;
+  "ledger.invoice.update": InvoiceUpdateWindowRequest;
+  "ledger.invoice.remove": InvoiceRemoveWindowRequest;
+  "ledger.invoice.attach_document": InvoiceDocumentAttachWindowRequest;
   "ledger.status": Omit<
     LedgerReadContracts["ledger.status"]["request"],
     "profile_id"
@@ -711,37 +723,37 @@ export interface LedgerRequests {
     LedgerTransferContracts["ledger.export"]["request"],
     "profile_id"
   >;
-  "ledger.invoice.import": InvoiceImportRequest;
-  "ledger.evidence.batch": EvidenceBatchRequest;
-  "ledger.evidence.add": EvidenceAddRequest;
+  "ledger.invoice.import": InvoiceImportWindowRequest;
+  "ledger.evidence.batch": LedgerEvidenceBatchWindowRequest;
+  "ledger.evidence.add": LedgerEvidenceAddWindowRequest;
   "ledger.evidence.list": Record<string, never>;
-  "ledger.evidence.view": EvidenceViewRequest;
-  "ledger.evidence.update": EvidenceUpdateRequest;
-  "ledger.evidence.remove": EvidenceRemoveRequest;
-  "ledger.evidence.review.list": EvidenceReviewListRequest;
-  "ledger.evidence.review.view": EvidenceReviewViewRequest;
-  "ledger.evidence.extract": EvidenceExtractRequest;
-  "ledger.evidence.confirm": EvidenceConfirmRequest;
+  "ledger.evidence.view": LedgerEvidenceViewWindowRequest;
+  "ledger.evidence.update": LedgerEvidenceUpdateWindowRequest;
+  "ledger.evidence.remove": LedgerEvidenceRemoveWindowRequest;
+  "ledger.evidence.review.list": LedgerEvidenceReviewListWindowRequest;
+  "ledger.evidence.review.view": LedgerEvidenceReviewViewWindowRequest;
+  "ledger.evidence.extract": LedgerEvidenceExtractWindowRequest;
+  "ledger.evidence.confirm": LedgerEvidenceConfirmWindowRequest;
   "ledger.evidence.attachment_queue": Record<string, never>;
-  "ledger.evidence.attachment_view": AttachmentViewRequest;
-  "ledger.evidence.page": EvidencePageRequest;
+  "ledger.evidence.attachment_view": LedgerEvidenceAttachmentViewWindowRequest;
+  "ledger.evidence.page": LedgerEvidencePageWindowRequest;
   "ledger.evidence.consent.list": Record<string, never>;
-  "ledger.link": LedgerLinkRequest;
-  "ledger.attach": LedgerAttachRequest;
-  "ledger.detach": LedgerDetachRequest;
-  "ledger.check": LedgerCheckRequest;
-  "ledger.split.review": LedgerLlmReviewRequest;
-  "ledger.track": LedgerTrackRequest;
-  "ledger.history.typed": LedgerHistoryRequest;
-  "ledger.remove": LedgerRemoveRequest;
-  "ledger.archive": LedgerLifecycleRequest;
-  "ledger.stash": LedgerLifecycleRequest;
-  "ledger.restore": LedgerLifecycleRequest;
-  "ledger.exclude": LedgerLifecycleRequest;
-  "ledger.split.manual": LedgerSplitRequest;
-  "ledger.merge": LedgerMergeRequest;
-  "ledger.classify.iva-derive": LedgerIvaDeriveRequest;
-  "ledger.allocate": LedgerAllocateRequest;
+  "ledger.link": LedgerLinkWindowRequest;
+  "ledger.attach": LedgerAttachWindowRequest;
+  "ledger.detach": LedgerDetachWindowRequest;
+  "ledger.check": LedgerCheckWindowRequest;
+  "ledger.split.review": LedgerLlmReviewWindowRequest;
+  "ledger.track": LedgerTrackWindowRequest;
+  "ledger.history.typed": LedgerHistoryWindowRequest;
+  "ledger.remove": LedgerRemoveWindowRequest;
+  "ledger.archive": LedgerLifecycleMutationWindowRequest;
+  "ledger.stash": LedgerLifecycleMutationWindowRequest;
+  "ledger.restore": LedgerLifecycleMutationWindowRequest;
+  "ledger.exclude": LedgerLifecycleMutationWindowRequest;
+  "ledger.split.manual": LedgerSplitWindowRequest;
+  "ledger.merge": LedgerMergeWindowRequest;
+  "ledger.classify.iva-derive": LedgerOperatorIvaWindowRequest;
+  "ledger.allocate": LedgerAllocateWindowRequest;
   "ledger.rule.list": Record<string, never>;
   "ledger.rule.add": LedgerRuleAddRequest;
   "ledger.rule.apply": LedgerRuleApplyRequest;
@@ -833,7 +845,7 @@ export interface LedgerRequests {
   "ledger.inventory.closing-value.record": InventoryClosingValueRecordWindowRequest;
   "ledger.inventory.evidence.add": InventoryEvidenceAddWindowRequest;
   "ledger.inventory.options": Record<string, never>;
-  "ledger.entry-options": LedgerEntryOptionsRequest;
+  "ledger.entry-options": LedgerEntryOptionsWindowRequest;
   "ledger.inventory.inspect": InventoryInspectWindowRequest;
   "ledger.inventory.describe": InventoryDescribeWindowRequest;
   "ledger.inventory.correct": InventoryCorrectWindowRequest;
@@ -842,22 +854,22 @@ export interface LedgerRequests {
   "ledger.inventory.movement.reverse": InventoryMovementReverseWindowRequest;
   "ledger.inventory.retire": InventoryRetireWindowRequest;
   "ledger.inventory.restore": InventoryRestoreWindowRequest;
-  "ledger.actividad-asset.create": ActivityAssetCreateRequest;
-  "ledger.actividad-asset.inspect": ActivityAssetInspectRequest;
-  "ledger.actividad-asset.correct": ActivityAssetCorrectRequest;
-  "ledger.actividad-asset.list": ActivityAssetListRequest;
-  "ledger.actividad-asset.plan": ActivityAssetPlanRequest;
-  "ledger.actividad-asset.timeline": ActivityAssetTimelineRequest;
-  "ledger.actividad-asset.form-options": ActivityAssetFormOptionsRequest;
+  "ledger.actividad-asset.create": ActivityAssetCreateWindowRequest;
+  "ledger.actividad-asset.inspect": ActivityAssetInspectWindowRequest;
+  "ledger.actividad-asset.correct": ActivityAssetCorrectWindowRequest;
+  "ledger.actividad-asset.list": ActivityAssetListWindowRequest;
+  "ledger.actividad-asset.plan": ActivityAssetPlanWindowRequest;
+  "ledger.actividad-asset.timeline": ActivityAssetTimelineWindowRequest;
+  "ledger.actividad-asset.form-options": ActivityAssetFormOptionsWindowRequest;
   "ledger.actividad-asset.acquisition-candidates": Record<string, never>;
-  "ledger.actividad-asset.describe": ActivityAssetDescribeRequest;
-  "ledger.actividad-asset.dispose": ActivityAssetDisposeRequest;
-  "ledger.actividad-asset.disposal-calculate": ActivityAssetDisposalCalculateRequest;
-  "ledger.actividad-asset.forecast": ActivityAssetForecastRequest;
-  "ledger.actividad-asset.claim": ActivityAssetClaimRequest;
-  "ledger.actividad-asset.filing-handoff": ActivityAssetFilingRequest;
+  "ledger.actividad-asset.describe": ActivityAssetDescribeWindowRequest;
+  "ledger.actividad-asset.dispose": ActivityAssetDisposeWindowRequest;
+  "ledger.actividad-asset.disposal-calculate": ActivityAssetDisposalCalculateWindowRequest;
+  "ledger.actividad-asset.forecast": ActivityAssetForecastWindowRequest;
+  "ledger.actividad-asset.claim": ActivityAssetClaimWindowRequest;
+  "ledger.actividad-asset.filing-handoff": ActivityAssetFilingHandoffWindowRequest;
   "ledger.participation.rebuild": Record<string, never>;
-  "ledger.reset": LedgerResetRequest;
+  "ledger.reset": LedgerResetWindowRequest;
 }
 
 export interface LedgerResults {
@@ -865,13 +877,13 @@ export interface LedgerResults {
   "ledger.list": LedgerReadContracts["ledger.list"]["result"];
   "ledger.view": LedgerReadContracts["ledger.view"]["result"];
   "ledger.update": LedgerUpdateResult;
-  "ledger.classify.single": LedgerClassifyResult;
-  "ledger.classify.bulk": LedgerBulkClassifyResult;
-  "ledger.add": LedgerAddResult;
-  "ledger.invoice.list": InvoiceListResult;
-  "ledger.invoice.view": InvoiceViewResult;
+  "ledger.classify.single": LedgerClassifyOperationResult;
+  "ledger.classify.bulk": LedgerBulkClassifyProjection;
+  "ledger.add": LedgerAddOperationResult;
+  "ledger.invoice.list": InvoiceListProjection;
+  "ledger.invoice.view": InvoiceViewProjection;
   "ledger.invoice.add": InvoiceAddResult;
-  "ledger.invoice.preview": InvoicePreviewResult;
+  "ledger.invoice.preview": InvoiceFiguresPreviewResult;
   "ledger.rule.trial": LedgerRuleTrialResult;
   "ledger.invoice.duplicate": LedgerInvoiceDuplicateResult;
   "ledger.invoice.match": LedgerInvoiceMatchResult;
@@ -879,41 +891,41 @@ export interface LedgerResults {
   "ledger.staged.check": LedgerStagedCheckResult;
   "ledger.invoice.update": InvoiceUpdateResult;
   "ledger.invoice.remove": InvoiceRemoveResult;
-  "ledger.invoice.attach_document": InvoiceDocumentAttachResult;
+  "ledger.invoice.attach_document": InvoiceDocumentAttachProjection;
   "ledger.status": LedgerReadContracts["ledger.status"]["result"];
   "ledger.preflight": LedgerReadContracts["ledger.preflight"]["result"];
   "ledger.import": LedgerTransferContracts["ledger.import"]["result"];
   "ledger.export": LedgerTransferContracts["ledger.export"]["result"];
-  "ledger.invoice.import": InvoiceImportResult;
-  "ledger.evidence.batch": EvidenceBatchResult;
-  "ledger.evidence.add": EvidenceRecordResult;
-  "ledger.evidence.list": EvidenceListResult;
-  "ledger.evidence.view": EvidenceViewResult;
-  "ledger.evidence.update": EvidenceRecordResult;
-  "ledger.evidence.remove": EvidenceRecordResult;
-  "ledger.evidence.review.list": EvidenceReviewListResult;
-  "ledger.evidence.review.view": EvidenceReviewViewResult;
-  "ledger.evidence.extract": EvidenceExtractResult;
-  "ledger.evidence.confirm": EvidenceConfirmResult;
-  "ledger.evidence.attachment_queue": AttachmentQueueResult;
-  "ledger.evidence.attachment_view": AttachmentViewResult;
-  "ledger.evidence.page": EvidencePageResult;
-  "ledger.evidence.consent.list": EvidenceConsentListResult;
-  "ledger.link": LedgerLinkResult;
-  "ledger.attach": LedgerAttachResult;
-  "ledger.detach": LedgerAttachResult;
-  "ledger.check": LedgerCheckResult;
+  "ledger.invoice.import": InvoiceImportProjection;
+  "ledger.evidence.batch": LedgerEvidenceBatchProjection;
+  "ledger.evidence.add": LedgerEvidenceAddProjection;
+  "ledger.evidence.list": LedgerEvidenceListProjection;
+  "ledger.evidence.view": LedgerEvidenceViewProjection;
+  "ledger.evidence.update": LedgerEvidenceUpdateProjection;
+  "ledger.evidence.remove": LedgerEvidenceRemoveProjection;
+  "ledger.evidence.review.list": LedgerEvidenceReviewListProjection;
+  "ledger.evidence.review.view": LedgerEvidenceReviewViewProjection;
+  "ledger.evidence.extract": LedgerEvidenceExtractProjection;
+  "ledger.evidence.confirm": LedgerEvidenceConfirmProjection;
+  "ledger.evidence.attachment_queue": LedgerEvidenceAttachmentQueueProjection;
+  "ledger.evidence.attachment_view": LedgerEvidenceAttachmentViewProjection;
+  "ledger.evidence.page": LedgerEvidencePageProjection;
+  "ledger.evidence.consent.list": LedgerEvidenceConsentListProjection;
+  "ledger.link": LedgerLinkOperationResult;
+  "ledger.attach": LedgerAttachmentOperationResult;
+  "ledger.detach": LedgerAttachmentOperationResult;
+  "ledger.check": LedgerCheckProjection;
   "ledger.track": LedgerTrackResult;
-  "ledger.history.typed": LedgerHistoryTypedResult;
-  "ledger.remove": LedgerRemoveResult;
-  "ledger.archive": LedgerLifecycleResult;
-  "ledger.stash": LedgerLifecycleResult;
-  "ledger.restore": LedgerLifecycleResult;
-  "ledger.exclude": LedgerLifecycleResult;
-  "ledger.split.manual": LedgerSplitResult;
-  "ledger.merge": LedgerMergeResult;
-  "ledger.classify.iva-derive": LedgerIvaDeriveResult;
-  "ledger.allocate": LedgerAllocateResult;
+  "ledger.history.typed": LedgerHistoryTypedProjection;
+  "ledger.remove": LedgerRemoveOperationResult;
+  "ledger.archive": LedgerLifecycleOperationResult;
+  "ledger.stash": LedgerLifecycleOperationResult;
+  "ledger.restore": LedgerLifecycleOperationResult;
+  "ledger.exclude": LedgerLifecycleOperationResult;
+  "ledger.split.manual": LedgerSplitOperationResult;
+  "ledger.merge": LedgerMergeOperationResult;
+  "ledger.classify.iva-derive": LedgerOperatorIvaResult;
+  "ledger.allocate": LedgerAllocateOperationResult;
   "ledger.rule.list": LedgerRuleListResult;
   "ledger.rule.add": LedgerRuleAddResult;
   "ledger.rule.apply": LedgerRuleApplyResult;
@@ -951,7 +963,7 @@ export interface LedgerResults {
   "ledger.inventory.closing-value.record": InventoryClosingAuthorityOperationProjection;
   "ledger.inventory.evidence.add": InventoryEvidenceAddProjection;
   "ledger.inventory.options": InventoryOptionsProjection;
-  "ledger.entry-options": LedgerEntryOptionsResult;
+  "ledger.entry-options": LedgerEntryOptionsProjection;
   "ledger.inventory.inspect": InventoryInspectProjection;
   "ledger.inventory.describe": InventoryLedgerChangeProjection;
   "ledger.inventory.correct": InventoryLedgerChangeProjection;
@@ -960,22 +972,22 @@ export interface LedgerResults {
   "ledger.inventory.movement.reverse": InventoryLedgerChangeProjection;
   "ledger.inventory.retire": InventoryLedgerChangeProjection;
   "ledger.inventory.restore": InventoryLedgerChangeProjection;
-  "ledger.actividad-asset.create": ActivityAssetChangeResult;
-  "ledger.actividad-asset.inspect": ActivityAssetInspectResult;
-  "ledger.actividad-asset.correct": ActivityAssetChangeResult;
-  "ledger.actividad-asset.list": ActivityAssetListResult;
-  "ledger.actividad-asset.plan": ActivityAssetPlanResult;
-  "ledger.actividad-asset.timeline": ActivityAssetTimelineResult;
-  "ledger.actividad-asset.form-options": ActivityAssetFormOptionsResult;
-  "ledger.actividad-asset.acquisition-candidates": ActivityAssetAcquisitionCandidatesResult;
-  "ledger.actividad-asset.describe": ActivityAssetChangeResult;
-  "ledger.actividad-asset.dispose": ActivityAssetChangeResult;
-  "ledger.actividad-asset.disposal-calculate": ActivityAssetDisposalCalculateResult;
-  "ledger.actividad-asset.forecast": ActivityAssetForecastResult;
-  "ledger.actividad-asset.claim": ActivityAssetClaimResult;
-  "ledger.actividad-asset.filing-handoff": ActivityAssetFilingResult;
-  "ledger.participation.rebuild": LedgerParticipationRebuildResult;
-  "ledger.reset": LedgerResetResult;
+  "ledger.actividad-asset.create": ActivityAssetCreateProjection;
+  "ledger.actividad-asset.inspect": ActivityAssetInspectProjection;
+  "ledger.actividad-asset.correct": ActivityAssetCreateProjection;
+  "ledger.actividad-asset.list": ActivityAssetListProjection;
+  "ledger.actividad-asset.plan": ActivityAssetPlanProjection;
+  "ledger.actividad-asset.timeline": ActivityAssetTimelineProjection;
+  "ledger.actividad-asset.form-options": ActivityAssetFormOptionsProjection;
+  "ledger.actividad-asset.acquisition-candidates": ActivityAssetAcquisitionCandidatesProjection;
+  "ledger.actividad-asset.describe": ActivityAssetCreateProjection;
+  "ledger.actividad-asset.dispose": ActivityAssetCreateProjection;
+  "ledger.actividad-asset.disposal-calculate": ActivityAssetDisposalCalculateProjection;
+  "ledger.actividad-asset.forecast": ActivityAssetForecastProjection;
+  "ledger.actividad-asset.claim": ActivityAssetClaimProjection;
+  "ledger.actividad-asset.filing-handoff": ActivityAssetFilingHandoffProjection;
+  "ledger.participation.rebuild": LedgerParticipationRebuildProjection;
+  "ledger.reset": LedgerResetOperationResult;
 }
 
 export type LedgerRequest<D extends LedgerDefinitionId> =

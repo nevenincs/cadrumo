@@ -4,9 +4,9 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type {
-  LedgerInvoiceDuplicateRequest,
+  LedgerInvoiceDuplicateWindowRequest,
   LedgerInvoiceDuplicateResult,
-} from "./ledgerInvoiceOperations";
+} from "./ledgerInvoiceContract";
 import type { LedgerPort } from "./ledger";
 import { LatestAnswerSession, type LatestAnswer } from "./ledgerLatestAnswer";
 import { readAnswer } from "./ledgerWindow";
@@ -17,8 +17,8 @@ export type InvoiceDuplicateView =
   LatestAnswer<LedgerInvoiceDuplicateResult> & { retry(): void };
 
 const sameQuestion = (
-  one: LedgerInvoiceDuplicateRequest,
-  other: LedgerInvoiceDuplicateRequest,
+  one: LedgerInvoiceDuplicateWindowRequest,
+  other: LedgerInvoiceDuplicateWindowRequest,
 ) =>
   one.kind === other.kind &&
   one.invoice_number === other.invoice_number &&
@@ -28,7 +28,7 @@ const sameQuestion = (
 
 async function askDuplicate(
   port: LedgerPort,
-  question: LedgerInvoiceDuplicateRequest,
+  question: LedgerInvoiceDuplicateWindowRequest,
 ): Promise<LatestAnswer<LedgerInvoiceDuplicateResult>> {
   const answer = readAnswer(
     await port.submit("ledger.invoice.duplicate", question),
@@ -41,7 +41,7 @@ async function askDuplicate(
 /** The backend's answer for what the reading now states; none until a kind is chosen. */
 export function useInvoiceDuplicate(
   port: LedgerPort,
-  question: LedgerInvoiceDuplicateRequest | null,
+  question: LedgerInvoiceDuplicateWindowRequest | null,
   /** A catalogue change can make or settle a duplicate, so it asks again. */
   catalogue: unknown,
 ): InvoiceDuplicateView {
@@ -68,7 +68,7 @@ export function useInvoiceDuplicate(
 
 function build(port: LedgerPort) {
   return new LatestAnswerSession<
-    LedgerInvoiceDuplicateRequest,
+    LedgerInvoiceDuplicateWindowRequest,
     LedgerInvoiceDuplicateResult
   >((question) => askDuplicate(port, question), sameQuestion, REST_MS);
 }

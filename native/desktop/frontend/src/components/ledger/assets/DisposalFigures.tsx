@@ -7,9 +7,9 @@ import { facts } from "../../../shell/compose";
 import type { LedgerPort } from "../../../shell/ledger";
 import { inLanguage } from "../../../shell/ledgerLanguage";
 import type {
-  ActivityAssetDisposalCalculateResult,
-  DisposalCalculation,
-} from "../../../shell/ledgerSetup";
+  ActivityAssetDisposalCalculateProjection,
+  ActivityAssetDisposalCalculationView,
+} from "../../../shell/ledgerActivityAssetReadContract";
 import { useStrings } from "../../../shell/strings";
 import { CallLine, Reading } from "../setup/SetupParts";
 import { setupCall, type SetupCall } from "../setup/setupModel";
@@ -19,7 +19,7 @@ import { disposalOf } from "./assetWrites";
 import { ASSET_KEYS, fieldWord, refusalText, tokenWord } from "./assetsWords";
 import { figureText } from "./planWords";
 
-type Calculation = ActivityAssetDisposalCalculateResult;
+type Calculation = ActivityAssetDisposalCalculateProjection;
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -37,7 +37,7 @@ function Figures({
   calculation,
 }: {
   locale: string;
-  calculation: DisposalCalculation;
+  calculation: ActivityAssetDisposalCalculationView;
 }) {
   const t = useStrings();
   const text = ASSET_KEYS.baja;

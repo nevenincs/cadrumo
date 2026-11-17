@@ -111,12 +111,6 @@ def page_label(offset: int, shown: int, total: int) -> str:
     return tr("tui.ledger.categorisation.page.window", first=offset + 1, last=offset + shown, total=total)
 
 
-def blank_to_none(value: str) -> str | None:
-    """A typed value, or ``None`` when the operator left it blank."""
-    stripped = value.strip()
-    return stripped or None
-
-
 @dataclass(frozen=True, slots=True)
 class StagedChangeV1:
     """One reviewed change: its wording, the write it stands for and whether it destroys a record."""
@@ -459,7 +453,6 @@ __all__ = [
     "Wording",
     "action",
     "action_row",
-    "blank_to_none",
     "classification_label",
     "field",
     "heading",
