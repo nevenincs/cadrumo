@@ -14457,6 +14457,36 @@ modelo:
             label: 'Transmissions lucratives i societàries: aplicació del valor de
               mercat (art. 17.4 LIS) - Disminució - Correccions de l''exercici - Temporànies
               (amb origen en l''exercici) [02927]'
+          is-correccion-uefa-europa-league-2022-aumento-permanente:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Augment - Correccions de
+              l'exercici - Permanents [01861]
+          is-correccion-uefa-europa-league-2022-aumento-saldo-final:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Augment - Saldo pendent
+              a fi d'exercici [01864]
+          is-correccion-uefa-europa-league-2022-aumento-saldo-inicial:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Augment - Saldo pendent
+              a principi d'exercici [01860]
+          is-correccion-uefa-europa-league-2022-aumento-temporaria-anteriores:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Augment - Correccions de
+              l'exercici - Temporànies (amb origen en exercicis anteriors) [01863]
+          is-correccion-uefa-europa-league-2022-aumento-temporaria-ejercicio:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Augment - Correccions de
+              l'exercici - Temporànies (amb origen en l'exercici) [01862]
+          is-correccion-uefa-europa-league-2022-disminucion-permanente:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Disminució - Correccions
+              de l'exercici - Permanents [01866]
+          is-correccion-uefa-europa-league-2022-disminucion-saldo-final:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Disminució - Saldo pendent
+              a fi d'exercici [01869]
+          is-correccion-uefa-europa-league-2022-disminucion-saldo-inicial:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Disminució - Saldo pendent
+              a principi d'exercici [01865]
+          is-correccion-uefa-europa-league-2022-disminucion-temporaria-anteriores:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Disminució - Correccions
+              de l'exercici - Temporànies (amb origen en exercicis anteriors) [01868]
+          is-correccion-uefa-europa-league-2022-disminucion-temporaria-ejercicio:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Disminució - Correccions
+              de l'exercici - Temporànies (amb origen en l'exercici) [01867]
           is-correccion-valoracion-bienes-derechos-regimen-especial-permanente-aumento:
             label: Valoració de béns i drets. Règim especial d'operacions de reestructuració
               (capítol VII del títol VII LIS) - Augment - Correccions de l'exercici
@@ -14656,6 +14686,10 @@ modelo:
               con discapacidad (CE)
             label: Deducción por creación de empleo trabaj. con discapacidad (CE).
               Deducció pendent/generada
+          is-deduccion-creacion-empleo-discapacidad-aplicado:
+            label: Deduccions per incentivar determ. activitats - {year} Deducció
+              per creació d'ocupació de treballadors amb discapacitat (CE) - Aplicat
+              en aquesta liquidació [00796]
           is-deduccion-creacion-empleo-discapacidad-pendiente-futuros:
             help: Pendent d'aplicació en períodes futurs - Deducción por creación
               de empleo trabaj. con discapacidad (CE)
@@ -14905,6 +14939,18 @@ modelo:
           is-deduccion-porta-ferrada-pendiente-generada:
             label: Deduccions per incentivar determ. activitats - 60è aniversari del
               Festival Porta Ferrada (PF) - Deducció pendent/generada [00088]
+          is-deduccion-prevision-social-empresarial-aplicado:
+            label: Deduccions per incentivar determ. activitats - {year} Contribucions
+              empresarials a sistemes de previsió social empresarial imputades a favor
+              dels treballadors (CPS) - Aplicat en aquesta liquidació [00793]
+          is-deduccion-prevision-social-empresarial-generada:
+            label: Deduccions per incentivar determ. activitats - {year} Contribucions
+              empresarials a sistemes de previsió social empresarial imputades a favor
+              dels treballadors (CPS) - Deducció pendent/generada [00792]
+          is-deduccion-prevision-social-empresarial-pendiente-futuros:
+            label: Deduccions per incentivar determ. activitats - {year} Contribucions
+              empresarials a sistemes de previsió social empresarial imputades a favor
+              dels treballadors (CPS) - Pendent d'aplicació en períodes futurs [00794]
           is-deduccion-produccion-cinematografica-espanola-financiador:
             help: 'Deducció pendent/generada - Financiador: producciones cinematográficas
               españolas (FPC)'
@@ -16309,6 +16355,496 @@ modelo:
             label: Liquidació IV - Resultat - Estat [00621]
           is-liquidacion-iv-resultado-misc:
             label: Liquidació IV - Rectificació - Estat [00866]
+          is-m200-dp200012-01015:
+            label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+              - Efectes de la valoració comptable diferent de la fiscal (art. 20 LIS)
+              - Augments [01015]
+          is-m200-dp200012-01016:
+            label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+              - Efectes de la valoració comptable diferent de la fiscal (art. 20 LIS)
+              - Disminucions [01016]
+          is-m200-dp200012-01574:
+            label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+              - Operacions de l'art. 19 LIS diferents del canvi de residència a Estats
+              membres de la Unió Europea o EEE - Augments [01574]
+          is-m200-dp200012-01575:
+            label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+              - Operacions de l'art. 19 LIS diferents del canvi de residència a Estats
+              membres de la Unió Europea o EEE - Disminucions [01575]
+          is-m200-dp200013-01009:
+            label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+              - UEFA Europa League 2022 (RDL 3/2022) - Augments [01009]
+          is-m200-dp200013-01013:
+            label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+              - UEFA Europa League 2022 (RDL 3/2022) - Disminucions [01013]
+          is-m200-dp200016-00024:
+            label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. Art. 42 RDLeg. 4/2004
+              2009 - Pendent d'aplicació en períodes futurs [00024]
+          is-m200-dp200016-00031:
+            label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. Art. 42 RDLeg. 4/2004
+              2008 - Deducció pendent/generada [00031]
+          is-m200-dp200016-00032:
+            label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. Art. 42 RDLeg. 4/2004
+              2008 - Aplicat en aquesta liquidació [00032]
+          is-m200-dp200016b-00866:
+            label: Deduccions per inversió a Canàries - Inversions Canàries 2005 -
+              Deducció pendent/generada [00866]
+          is-m200-dp200016b-00867:
+            label: Deduccions per inversió a Canàries - Inversions Canàries 2005 -
+              Aplicat en aquesta liquidació [00867]
+          is-m200-dp200016b-00941:
+            label: Deduccions per inversió a Canàries - Inversions a Canàries 2006
+              - Pendent d'aplicació en períodes futurs [00941]
+          is-m200-dp200017-00466:
+            label: Deduccions per incentivar determ. activitats - 2005 Suma deduccions
+              - Deducció pendent/generada [00466]
+          is-m200-dp200017-00467:
+            label: Deduccions per incentivar determ. activitats - 2005 Suma deduccions
+              - Aplicat en aquesta liquidació [00467]
+          is-m200-dp200017-00586:
+            label: Deduccions per incentivar determ. activitats - 2006 Suma deduccions
+              - Pendent d'aplicació en períodes futurs [00586]
+          is-m200-dp200018-00259:
+            label: Deduccions per incentivar determ. activitats - {year} Bicentenari
+              de la independència de les repúbliques iberoamericanes (BIR). - Deducció
+              pendent/generada [00259]
+          is-m200-dp200018-00260:
+            label: Deduccions per incentivar determ. activitats - {year} Bicentenari
+              de la independència de les repúbliques iberoamericanes (BIR). - Aplicat
+              en aquesta liquidació [00260]
+          is-m200-dp200018-00261:
+            label: Deduccions per incentivar determ. activitats - {year} Bicentenari
+              de la independència de les repúbliques iberoamericanes (BIR). - Pendent
+              d'aplicació en períodes futurs [00261]
+          is-m200-dp200018-00262:
+            label: Deduccions per incentivar determ. activitats - {year} 150è aniversari
+              de la creació de l'Acadèmia d'Espanya a Roma (AER) - Deducció pendent/generada
+              [00262]
+          is-m200-dp200018-00263:
+            label: Deduccions per incentivar determ. activitats - {year} 150è aniversari
+              de la creació de l'Acadèmia d'Espanya a Roma (AER) - Aplicat en aquesta
+              liquidació [00263]
+          is-m200-dp200018-00264:
+            label: Deduccions per incentivar determ. activitats - {year} 150è aniversari
+              de la creació de l'Acadèmia d'Espanya a Roma (AER) - Pendent d'aplicació
+              en períodes futurs [00264]
+          is-m200-dp200018-00268:
+            label: Deduccions per incentivar determ. activitats - {year} Celebració
+              del Summit MADBLUE (SM) - Deducció pendent/generada [00268]
+          is-m200-dp200018-00269:
+            label: Deduccions per incentivar determ. activitats - {year} Celebració
+              del Summit MADBLUE (SM) - Aplicat en aquesta liquidació [00269]
+          is-m200-dp200018-00270:
+            label: Deduccions per incentivar determ. activitats - {year} Celebració
+              del Summit MADBLUE (SM) - Pendent d'aplicació en períodes futurs [00270]
+          is-m200-dp200018-00271:
+            label: Deduccions per incentivar determ. activitats - {year} 30è aniversari
+              de l'Escuela Superior de Música Reina Sofía (RS) - Deducció pendent/generada
+              [00271]
+          is-m200-dp200018-00273:
+            label: Deduccions per incentivar determ. activitats - {year} 30è aniversari
+              de l'Escuela Superior de Música Reina Sofía (RS) - Aplicat en aquesta
+              liquidació [00273]
+          is-m200-dp200018-00274:
+            label: Deduccions per incentivar determ. activitats - {year} 30è aniversari
+              de l'Escuela Superior de Música Reina Sofía (RS) - Pendent d'aplicació
+              en períodes futurs [00274]
+          is-m200-dp200018-00294:
+            label: Deduccions per incentivar determ. activitats - {year} Torneig Davis
+              Cup Madrid (DCM) - Deducció pendent/generada [00294]
+          is-m200-dp200018-00295:
+            label: Deduccions per incentivar determ. activitats - {year} Torneig Davis
+              Cup Madrid (DCM) - Aplicat en aquesta liquidació [00295]
+          is-m200-dp200018-00296:
+            label: Deduccions per incentivar determ. activitats - {year} Torneig Davis
+              Cup Madrid (DCM) - Pendent d'aplicació en períodes futurs [00296]
+          is-m200-dp200018-00297:
+            label: Deduccions per incentivar determ. activitats - {year} Madrid Horse
+              Week 21/23 (HW21) - Deducció pendent/generada [00297]
+          is-m200-dp200018-00298:
+            label: Deduccions per incentivar determ. activitats - {year} Madrid Horse
+              Week 21/23 (HW21) - Aplicat en aquesta liquidació [00298]
+          is-m200-dp200018-00299:
+            label: Deduccions per incentivar determ. activitats - {year} Madrid Horse
+              Week 21/23 (HW21) - Pendent d'aplicació en períodes futurs [00299]
+          is-m200-dp200018-00319:
+            label: Deduccions per incentivar determ. activitats - {year} Centenari
+              del Rugby a Espanya i de la Unió Esportiva Santboiana (CRE) - Pendent
+              d'aplicació en períodes futurs [00319]
+          is-m200-dp200018-00320:
+            label: Deduccions per incentivar determ. activitats - {year} Solheim Cup
+              2023 (SC23) - Deducció pendent/generada [00320]
+          is-m200-dp200018-00349:
+            label: Deduccions per incentivar determ. activitats - {year} Solheim Cup
+              2023 (SC23) - Aplicat en aquesta liquidació [00349]
+          is-m200-dp200018-00350:
+            label: Deduccions per incentivar determ. activitats - {year} Solheim Cup
+              2023 (SC23) - Pendent d'aplicació en períodes futurs [00350]
+          is-m200-dp200018-00366:
+            label: Deduccions per incentivar determ. activitats - {year} Barcelona
+              Mobile World Capital (BMWC) - Deducció pendent/generada [00366]
+          is-m200-dp200018-00367:
+            label: Deduccions per incentivar determ. activitats - {year} Barcelona
+              Mobile World Capital (BMWC) - Aplicat en aquesta liquidació [00367]
+          is-m200-dp200018-00369:
+            label: Deduccions per incentivar determ. activitats - {year} Barcelona
+              Mobile World Capital (BMWC) - Pendent d'aplicació en períodes futurs
+              [00369]
+          is-m200-dp200018-00395:
+            label: Deduccions per incentivar determ. activitats - {year} València,
+              Capital Mundial del Disseny 2022/Valencia World Design Capital 2022
+              (VD22) - Deducció pendent/generada [00395]
+          is-m200-dp200018-00401:
+            label: Deduccions per incentivar determ. activitats - {year} València,
+              Capital Mundial del Disseny 2022/Valencia World Design Capital 2022
+              (VD22) - Aplicat en aquesta liquidació [00401]
+          is-m200-dp200018-00405:
+            label: Deduccions per incentivar determ. activitats - {year} València,
+              Capital Mundial del Disseny 2022/Valencia World Design Capital 2022
+              (VD22) - Pendent d'aplicació en períodes futurs [00405]
+          is-m200-dp200018-00422:
+            label: Deduccions per incentivar determ. activitats - {year} Centenari
+              de la Revista de Occidente (RO) - Deducció pendent/generada [00422]
+          is-m200-dp200018-00423:
+            label: Deduccions per incentivar determ. activitats - {year} Centenari
+              de la Revista de Occidente (RO) - Aplicat en aquesta liquidació [00423]
+          is-m200-dp200018-00424:
+            label: Deduccions per incentivar determ. activitats - {year} Centenari
+              de la Revista de Occidente (RO) - Pendent d'aplicació en períodes futurs
+              [00424]
+          is-m200-dp200018-00430:
+            label: Deduccions per incentivar determ. activitats - {year} V Centenari
+              de la mort d'Elio Antonio de Nebrija (FN) - Deducció pendent/generada
+              [00430]
+          is-m200-dp200018-00431:
+            label: Deduccions per incentivar determ. activitats - {year} V Centenari
+              de la mort d'Elio Antonio de Nebrija (FN) - Aplicat en aquesta liquidació
+              [00431]
+          is-m200-dp200018-00432:
+            label: Deduccions per incentivar determ. activitats - {year} V Centenari
+              de la mort d'Elio Antonio de Nebrija (FN) - Pendent d'aplicació en períodes
+              futurs [00432]
+          is-m200-dp200018-00439:
+            label: Deduccions per incentivar determ. activitats - {year} Andalusia
+              Regió Europea de l'Esport 2021 (AD21) - Deducció pendent/generada [00439]
+          is-m200-dp200018-00440:
+            label: Deduccions per incentivar determ. activitats - {year} Andalusia
+              Regió Europea de l'Esport 2021 (AD21) - Aplicat en aquesta liquidació
+              [00440]
+          is-m200-dp200018-00441:
+            label: Deduccions per incentivar determ. activitats - {year} Andalusia
+              Regió Europea de l'Esport 2021 (AD21) - Pendent d'aplicació en períodes
+              futurs [00441]
+          is-m200-dp200018-00452:
+            label: Deduccions per incentivar determ. activitats - {year} 75è aniversari
+              de l'Òpera a Oviedo (OD) - Deducció pendent/generada [00452]
+          is-m200-dp200018-00453:
+            label: Deduccions per incentivar determ. activitats - {year} 75è aniversari
+              de l'Òpera a Oviedo (OD) - Aplicat en aquesta liquidació [00453]
+          is-m200-dp200018-00454:
+            label: Deduccions per incentivar determ. activitats - {year} 75è aniversari
+              de l'Òpera a Oviedo (OD) - Pendent d'aplicació en períodes futurs [00454]
+          is-m200-dp200018-00455:
+            label: Deduccions per incentivar determ. activitats - {year} Hàbits saludables
+              per al control del risc cardiovascular «Aprendre a cuidar-nos» (HSRC)
+              - Deducció pendent/generada [00455]
+          is-m200-dp200018-00456:
+            label: Deduccions per incentivar determ. activitats - {year} Hàbits saludables
+              per al control del risc cardiovascular «Aprendre a cuidar-nos» (HSRC)
+              - Aplicat en aquesta liquidació [00456]
+          is-m200-dp200018-00463:
+            label: Deduccions per incentivar determ. activitats - {year} Hàbits saludables
+              per al control del risc cardiovascular «Aprendre a cuidar-nos» (HSRC)
+              - Pendent d'aplicació en períodes futurs [00463]
+          is-m200-dp200018-00464:
+            label: Deduccions per incentivar determ. activitats - {year} Mundials
+              de Bàdminton Espanya (MBE) - Deducció pendent/generada [00464]
+          is-m200-dp200018-00469:
+            label: Deduccions per incentivar determ. activitats - {year} Mundials
+              de Bàdminton Espanya (MBE) - Aplicat en aquesta liquidació [00469]
+          is-m200-dp200018-00470:
+            label: Deduccions per incentivar determ. activitats - {year} Mundials
+              de Bàdminton Espanya (MBE) - Pendent d'aplicació en períodes futurs
+              [00470]
+          is-m200-dp200018-00471:
+            label: Deduccions per incentivar determ. activitats - {year} Centenari
+              de la Batalla de Covadonga-Cuadonga (CBC) - Deducció pendent/generada
+              [00471]
+          is-m200-dp200018-00479:
+            label: Deduccions per incentivar determ. activitats - {year} Centenari
+              de la Batalla de Covadonga-Cuadonga (CBC) - Aplicat en aquesta liquidació
+              [00479]
+          is-m200-dp200018-00481:
+            label: Deduccions per incentivar determ. activitats - {year} Centenari
+              de la Batalla de Covadonga-Cuadonga (CBC) - Pendent d'aplicació en períodes
+              futurs [00481]
+          is-m200-dp200018-00499:
+            label: Deduccions per incentivar determ. activitats - {year} VII Centenari
+              de la Catedral de Palència 2021-2022 (CCP) - Deducció pendent/generada
+              [00499]
+          is-m200-dp200018-00502:
+            label: Deduccions per incentivar determ. activitats - {year} VII Centenari
+              de la Catedral de Palència 2021-2022 (CCP) - Aplicat en aquesta liquidació
+              [00502]
+          is-m200-dp200018-00503:
+            label: Deduccions per incentivar determ. activitats - {year} VII Centenari
+              de la Catedral de Palència 2021-2022 (CCP) - Pendent d'aplicació en
+              períodes futurs [00503]
+          is-m200-dp200018-00504:
+            label: 'Deduccions per incentivar determ. activitats - {year} FITUR especial:
+              recuperació del turisme (FE) - Deducció pendent/generada [00504]'
+          is-m200-dp200018-00511:
+            label: 'Deduccions per incentivar determ. activitats - {year} FITUR especial:
+              recuperació del turisme (FE) - Aplicat en aquesta liquidació [00511]'
+          is-m200-dp200018-00513:
+            label: 'Deduccions per incentivar determ. activitats - {year} FITUR especial:
+              recuperació del turisme (FE) - Pendent d''aplicació en períodes futurs
+              [00513]'
+          is-m200-dp200018-00812:
+            label: Deduccions per incentivar determ. activitats - {year} 50è aniversari
+              de l'Hospital Sant Joan de Déu (HSJD) - Deducció pendent/generada [00812]
+          is-m200-dp200018-00816:
+            label: Deduccions per incentivar determ. activitats - {year} 50è aniversari
+              de l'Hospital Sant Joan de Déu (HSJD) - Aplicat en aquesta liquidació
+              [00816]
+          is-m200-dp200018-00817:
+            label: Deduccions per incentivar determ. activitats - {year} 50è aniversari
+              de l'Hospital Sant Joan de Déu (HSJD) - Pendent d'aplicació en períodes
+              futurs [00817]
+          is-m200-dp200018-00878:
+            label: Deduccions per incentivar determ. activitats - {year} Centenari
+              de la Federació Aragonesa de Futbol (FAF) - Deducció pendent/generada
+              [00878]
+          is-m200-dp200018-00879:
+            label: Deduccions per incentivar determ. activitats - {year} Centenari
+              de la Federació Aragonesa de Futbol (FAF) - Aplicat en aquesta liquidació
+              [00879]
+          is-m200-dp200018-00882:
+            label: Deduccions per incentivar determ. activitats - {year} Centenari
+              de la Federació Aragonesa de Futbol (FAF) - Pendent d'aplicació en períodes
+              futurs [00882]
+          is-m200-dp200018-01626:
+            label: Deduccions per incentivar determ. activitats - {year} 4a edició
+              de la Barcelona World Race (4BWR) - Deducció pendent/generada [01626]
+          is-m200-dp200018-01627:
+            label: Deduccions per incentivar determ. activitats - {year} 4a edició
+              de la Barcelona World Race (4BWR) - Aplicat en aquesta liquidació [01627]
+          is-m200-dp200018-01628:
+            label: Deduccions per incentivar determ. activitats - {year} 4a edició
+              de la Barcelona World Race (4BWR) - Pendent d'aplicació en períodes
+              futurs [01628]
+          is-m200-dp200018-01707:
+            label: Deduccions per incentivar determ. activitats - {year} Pla Decenni
+              Milliarium Montserrat 1025-2025 (PDMM) - Deducció pendent/generada [01707]
+          is-m200-dp200018-01708:
+            label: Deduccions per incentivar determ. activitats - {year} Pla Decenni
+              Milliarium Montserrat 1025-2025 (PDMM) - Aplicat en aquesta liquidació
+              [01708]
+          is-m200-dp200018-01709:
+            label: Deduccions per incentivar determ. activitats - {year} Pla Decenni
+              Milliarium Montserrat 1025-2025 (PDMM) - Pendent d'aplicació en períodes
+              futurs [01709]
+          is-m200-dp200018-02362:
+            label: Deduccions per incentivar determ. activitats - {year} Pla Berlanga
+              (PB) - Deducció pendent/generada [02362]
+          is-m200-dp200018-02363:
+            label: Deduccions per incentivar determ. activitats - {year} Pla Berlanga
+              (PB) - Aplicat en aquesta liquidació [02363]
+          is-m200-dp200018-02364:
+            label: Deduccions per incentivar determ. activitats - {year} Pla Berlanga
+              (PB) - Pendent d'aplicació en períodes futurs [02364]
+          is-m200-dp200018-02374:
+            label: Deduccions per incentivar determ. activitats - {year} 175è aniversari
+              de la construcció del Gran Teatre del Liceu (TL) - Deducció pendent/generada
+              [02374]
+          is-m200-dp200018-02375:
+            label: Deduccions per incentivar determ. activitats - {year} 175è aniversari
+              de la construcció del Gran Teatre del Liceu (TL) - Aplicat en aquesta
+              liquidació [02375]
+          is-m200-dp200018-02376:
+            label: Deduccions per incentivar determ. activitats - {year} 175è aniversari
+              de la construcció del Gran Teatre del Liceu (TL) - Pendent d'aplicació
+              en períodes futurs [02376]
+          is-m200-dp200018-02377:
+            label: Deduccions per incentivar determ. activitats - {year} Gran Premi
+              d'Espanya de Fórmula 1 (F1) - Deducció pendent/generada [02377]
+          is-m200-dp200018-02378:
+            label: Deduccions per incentivar determ. activitats - {year} Gran Premi
+              d'Espanya de Fórmula 1 (F1) - Aplicat en aquesta liquidació [02378]
+          is-m200-dp200018-02379:
+            label: Deduccions per incentivar determ. activitats - {year} Gran Premi
+              d'Espanya de Fórmula 1 (F1) - Pendent d'aplicació en períodes futurs
+              [02379]
+          is-m200-dp200018b-01883:
+            label: Deduccions per incentivar determ. activitats - {year} Any Sant
+              Jubilar Sant Isidre Llaurador (JI) - Deducció pendent/generada [01883]
+          is-m200-dp200018b-01884:
+            label: Deduccions per incentivar determ. activitats - {year} Any Sant
+              Jubilar Sant Isidre Llaurador (JI) - Aplicat en aquesta liquidació [01884]
+          is-m200-dp200018b-01885:
+            label: Deduccions per incentivar determ. activitats - {year} Any Sant
+              Jubilar Sant Isidre Llaurador (JI) - Pendent d'aplicació en períodes
+              futurs [01885]
+          is-m200-dp200018c-00903:
+            label: Deducció donatius entitats sense fins lucratius - Donacions per
+              a activitats prioritàries de mecenatge i altres amb dret a deducció
+              incrementada - 2013 - Deducció pendent/generada [00903]
+          is-m200-dp200018c-00917:
+            label: Deducció donatius entitats sense fins lucratius - Donacions per
+              a activitats prioritàries de mecenatge i altres amb dret a deducció
+              incrementada - 2013 - Aplicat en aquesta liquidació [00917]
+          is-m200-dp200018c-00932:
+            label: Deducció donatius entitats sense fins lucratius - Donacions per
+              a activitats prioritàries de mecenatge i altres amb dret a deducció
+              incrementada - 2014 - Pendent d'aplicació en períodes futurs [00932]
+          is-m200-dp200018c-00990:
+            label: Deducció donatius entitats sense fins lucratius - Donacions de
+              caràcter general - 2013 - Deducció pendent/generada [00990]
+          is-m200-dp200018c-00991:
+            label: Deducció donatius entitats sense fins lucratius - Donacions de
+              caràcter general - 2013 - Aplicat en aquesta liquidació [00991]
+          is-m200-dp200018c-00999:
+            label: Deducció donatius entitats sense fins lucratius - Donacions de
+              caràcter general - 2014 - Pendent d'aplicació en períodes futurs [00999]
+          is-m200-dp200020-01741:
+            label: Pendent d'addició per límit de benefici operatiu no aplicat - Exercici
+              de generació 2018 - Pendent d'aplicació a principi del període [01741]
+          is-m200-dp200020-01742:
+            label: Pendent d'addició per límit de benefici operatiu no aplicat - Exercici
+              de generació 2018 - Aplicat en aquesta liquidació [01742]
+          is-m200-dp200020-01984:
+            label: Pendent d'addició per límit de benefici operatiu no aplicat - Exercici
+              de generació 2019 - Pendent d'aplicació en períodes futurs [01984]
+          is-m200-dp200020b-01108:
+            label: Reserva de capitalització - 2022(*) - Reducció de la B.I. pdt.
+              d'aplicar en períodes futurs [01108]
+          is-m200-dp200020b-01602:
+            label: Reserva de nivellació - Reducció base imposable - Exercici de generació
+              2018 - Import integrat en la declaració per incompliment de requisits
+              [01602]
+          is-m200-dp200020b-01732:
+            label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+              2018 - Import de la reserva a dotar [01732]
+          is-m200-dp200020b-01733:
+            label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+              2018 - Import de la reserva dotada [01733]
+          is-m200-dp200020b-01734:
+            label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+              2018 - Import reserva pendent dotació [01734]
+          is-m200-dp200020b-01735:
+            label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+              2018 - Reserva disposada [01735]
+          is-m200-dp200020b-01961:
+            label: Reserva de nivellació - Reducció base imposable - Exercici de generació
+              2018 - Import de minoració de la B.I. del període/pendent d'addicionar
+              a l'inici del període [01961]
+          is-m200-dp200020b-01962:
+            label: Reserva de nivellació - Reducció base imposable - Exercici de generació
+              2018 - Import addicionat base imposable en període [01962]
+          is-m200-dp200020b-02240:
+            label: Reserva de nivellació - Reducció base imposable - Exercici de generació
+              2019 - Import pendent d'afegir en períodes futurs [02240]
+          is-m200-dp200020b-02407:
+            label: Reserva de capitalització - 2021 - Dret a reduir la B.I. generat
+              en el període/pendent d'aplicar a l'inici del període [02407]
+          is-m200-dp200020b-02408:
+            label: Reserva de capitalització - 2021 - Reducció B.I. aplicada [02408]
+          is-m200-dp200020c-01138:
+            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+              - Excés quota líquida positiva - Exercici generació - 2022(*) - Excés
+              de quota líquida positiva pendent d'aplicació en períodes futurs [01138]
+          is-m200-dp200020c-02427:
+            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+              - Excés quota líquida positiva - Exercici generació - 2021 - Excés de
+              quota líquida positiva pendent a l'inici del període [02427]
+          is-m200-dp200020c-02428:
+            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+              - Excés quota líquida positiva - Exercici generació - 2021 - Excés de
+              quota líquida positiva aplicat en períodes impositius 2008 a 2015 [02428]
+          is-m200-dp200020c-02429:
+            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+              - Excés quota líquida positiva - Exercici generació - 2021 - Excés de
+              quota líquida positiva aplicat en períodes impositius iniciats a partir
+              de 2016 [02429]
+          is-m200-dp200022-00524:
+            label: Règ. especial reserva per a inversions a Canàries - RIC 2018 -
+              Pendent de materialitzar la RIC a principi de període [00524]
+          is-m200-dp200022-00525:
+            label: Règ. especial reserva per a inversions a Canàries - RIC 2018 -
+              Aplicat/materialitzat en aquesta liquidació - Inversions previstes lletres
+              A i B, art. 27.4 Llei 19/1994 [00525]
+          is-m200-dp200022-00526:
+            label: Règ. especial reserva per a inversions a Canàries - RIC 2018 -
+              Aplicat/materialitzat en aquesta liquidació - Inversions previstes lletres
+              B bis, C i D art. 27.4 Llei 19/1994 [00526]
+          is-m200-dp200022-00925:
+            label: Règ. especial reserva per a inversions a Canàries - RIC 2019 -
+              Pendent de materialitzar la RIC al final del període [00925]
+          is-m200-dp200022-01174:
+            label: Règ. especial reserva per a inversions a Canàries - RIC 2021 -
+              Aplicat/materialitzat en aquesta liquidació - Inversions anticipades
+              considerades materialització de la RIC en aquesta liquidació [01174]
+          is-m200-dp200022-01184:
+            label: Règ. especial reserva per a inversions a Canàries - Inversions
+              anticipades 2021 - Pendent de dotar la RIC al final del període [01184]
+          is-m200-dp200022-01600:
+            label: Règ. especial reserva per a inversions a Canàries - Inversions
+              anticipades 2022 - Pendent de dotar la RIC al final del període [01600]
+          is-m200-dp200022-01820:
+            label: Règ. especial reserva per a inversions a Canàries - RIC 2022 -
+              Aplicat/materialitzat en aquesta liquidació - Inversions anticipades
+              considerades materialització de la RIC en aquesta liquidació [01820]
+          is-m200-dp200022-01823:
+            label: Règ. especial reserva per a inversions a Canàries - Inversions
+              anticipades 2021 - Pendent de dotar la RIC a principi del període [01823]
+          is-m200-dp200022-02439:
+            label: Règ. especial reserva per a inversions a Canàries - RIC 2018 -
+              Aplicat/materialitzat en aquesta liquidació - Inversions anticipades
+              considerades materialització de la RIC en aquesta liquidació [02439]
+          is-m200-dp200022-02440:
+            label: Règ. especial reserva per a inversions a Canàries - RIC 2019 -
+              Aplicat/materialitzat en aquesta liquidació - Inversions anticipades
+              considerades materialització de la RIC en aquesta liquidació [02440]
+          is-m200-dp200022-02441:
+            label: Règ. especial reserva per a inversions a Canàries - RIC 2020 -
+              Aplicat/materialitzat en aquesta liquidació - Inversions anticipades
+              considerades materialització de la RIC en aquesta liquidació [02441]
+          is-m200-dp200022-02446:
+            label: Règ. especial reserva per a inversions a Canàries - Inversions
+              anticipades 2019 - Pendent de dotar la RIC a principi del període [02446]
+          is-m200-dp200022-02451:
+            label: Règ. especial reserva per a inversions a Canàries - Inversions
+              anticipades 2020 - Pendent de dotar la RIC al final del període [02451]
+          is-m200-dp200022-02810:
+            label: Règ. especial reserva per a inversions a Canàries - RIC 2023 -
+              Aplicat/materialitzat en aquesta liquidació - Inversions anticipades
+              considerades materialització de la RIC en aquesta liquidació [02810]
+          is-m200-dp200022-02823:
+            label: Règ. especial reserva per a inversions a Canàries - Inversions
+              anticipades 2022 - Pendent de dotar la RIC a principi del període [02823]
+          is-m200-dp200022-02824:
+            label: Règ. especial reserva per a inversions a Canàries - Inversions
+              anticipades 2023 - Inversions previstes lletres A i B, art. 27.4 Llei
+              19/1994 [02824]
+          is-m200-dp200022-02825:
+            label: Règ. especial reserva per a inversions a Canàries - Inversions
+              anticipades 2023 - Inversions previstes lletres B bis, C i D art. 27.4
+              Llei 19/1994 [02825]
+          is-m200-dp200022-02826:
+            label: Règ. especial reserva per a inversions a Canàries - Inversions
+              anticipades 2023 - Pendent de dotar la RIC al final del període [02826]
+          is-m200-dp200022b-02916:
+            label: Règ. especial reserva per a inversions a les Illes Balears - RIIB
+              2023 - Aplicat/materialitzat en aquesta liquidació - Inversions anticipades
+              considerades materialització de la RIIB en aquesta liquidació [02916]
+          is-m200-dp200022b-02919:
+            label: Règ. especial reserva per a inversions a les Illes Balears - Inversions
+              anticipades 2023 - Inversions previstes lletres A i B, DA 70.4 Llei
+              31/2022 [02919]
+          is-m200-dp200022b-02920:
+            label: Règ. especial reserva per a inversions a les Illes Balears - Inversions
+              anticipades 2023 - Inversions previstes lletra C DA 70.4 Llei 31/2022
+              [02920]
           is-mineria-hidrocarburos-factor-agotamiento-aumento:
             label: 'Mineria i hidrocarburs: factor esgotament (arts. 91 i 95 LIS)
               - Augment - Correccions de l''exercici - Temporànies (amb origen en
