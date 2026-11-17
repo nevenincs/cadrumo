@@ -667,8 +667,9 @@ async fn prepare_start(
     let diagnostics = shared.diagnostics.clone();
     let secret = bearer.clone();
     let gateway_secret = gateway_bearer.clone();
-    let supervised = tauri::async_runtime::spawn_blocking(move || {
-        runner::start_child(
+    let (entered, supervised) = tauri::async_runtime::spawn_blocking(move || {
+        let entered = Instant::now();
+        let supervised = runner::start_child(
             command,
             Some(Startup {
                 bearer: secret.as_str(),
@@ -679,11 +680,14 @@ async fn prepare_start(
                 let _ = sender.send((generation, signal));
             },
             diagnostics,
-        )
+        );
+        (entered, supervised)
     })
     .await
-    .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
+    .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))?;
+    let supervised = supervised?;
     let spawned_at = Instant::now();
+    let phases = supervised.phases();
     let acquired = acquiring
         .await
         .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))
@@ -701,6 +705,10 @@ async fn prepare_start(
             generation,
             command_ms: millis(prepared_at.duration_since(preparation_started)),
             spawn_ms: millis(spawned_at.duration_since(prepared_at)),
+            queue_ms: millis(entered.duration_since(prepared_at)),
+            creation_lock_ms: millis(phases.creation_lock),
+            create_ms: millis(phases.create),
+            contain_ms: millis(phases.contain),
             person_ms: millis(person_wait),
         },
     );
