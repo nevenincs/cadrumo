@@ -202,6 +202,7 @@ export function readingEntries(port: ModeloPort): ModeloPort {
         findings: [],
         operator_entries_unknown: false,
         refusal_words: null,
+        refusal_door: null,
         rebase: [],
       };
       return {

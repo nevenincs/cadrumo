@@ -39,7 +39,7 @@ import {
   servedRefusalWords,
   type LedgerPort,
 } from "../../../shell/ledger";
-import type { EvidenceConfirmResult } from "../../../shell/ledgerDocumentOperations";
+import type { LedgerEvidenceConfirmProjection } from "../../../shell/ledgerDocumentReviewContract";
 import type { InvoiceDraftProjectionV1 } from "../../../shell/ledgerDocumentReviewContract";
 import type { LedgerEvidenceRecordProjection } from "../../../shell/ledgerDocumentContract";
 import type {
@@ -177,9 +177,8 @@ export function DraftReview({
     "reading" | "confirming" | "checking" | null
   >(null);
   const [notice, setNotice] = useState<ReviewNotice | null>(null);
-  const [confirmed, setConfirmed] = useState<EvidenceConfirmResult | null>(
-    null,
-  );
+  const [confirmed, setConfirmed] =
+    useState<LedgerEvidenceConfirmProjection | null>(null);
   const [offHost, setOffHost] = useState(false);
   // Corrections and answers not yet confirmed are asked about before a
   // navigation takes the section down; a read or confirmation in flight

@@ -9,7 +9,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { facts } from "../../../shell/compose";
-import type { EvidenceUpdateRequest } from "../../../shell/ledgerDocumentOperations";
+import type { LedgerEvidenceUpdateWindowRequest } from "../../../shell/ledgerDocumentContract";
 import type { LedgerEvidenceRecordProjection } from "../../../shell/ledgerDocumentContract";
 import {
   servedNextStep,
@@ -104,7 +104,9 @@ function RecordDetail({
   );
   const [removing, setRemoving] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
-  const [asked, setAsked] = useState<EvidenceUpdateRequest | null>(null);
+  const [asked, setAsked] = useState<LedgerEvidenceUpdateWindowRequest | null>(
+    null,
+  );
   const planned = recordUpdate(record, typed);
   const pause = useWritePause();
   const name = fileName(record.source_path);

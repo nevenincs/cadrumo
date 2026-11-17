@@ -72,6 +72,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ..workbench_capture_memory import WorkbenchCaptureMemoryOwner
 from .carry_family_selection import prior_carry_binding_ids
@@ -100,6 +101,7 @@ from .edit_prerequisite_wording import read_prerequisite_words
 from .edit_refusal_projection import ModeloEditCalculationPrerequisiteV1, ModeloEditRefusalProjectionStore
 from .edit_review_wording import (
     ModeloEditReviewFindingV1,
+    edit_refusal_door,
     edit_refusal_words,
     entry_read_back,
     grammar_data_type,
@@ -320,6 +322,10 @@ class ModeloEditPreflightProjectionV1(BaseModel):
     findings: tuple[ModeloEditReviewFindingV1, ...] = ()
     operator_entries_unknown: bool = False
     refusal_words: str | None = None
+    #: The way out of the refusal, as the refused Apply would serve it: the action with its words and the
+    #: operations it submits, or the closed outcome with its sentence; ``None`` when it was not refused or
+    #: offers neither.
+    refusal_door: PreconditionVerdictSnapshot | None = None
     rebase: tuple[ModeloFormRebaseEntryV1, ...] = ()
 
 
@@ -736,6 +742,7 @@ class ModeloEditPreflightExecutor:
                 findings=review_findings(found, language),
                 operator_entries_unknown=operator_entries_unknown(found),
                 refusal_words=None if refused is None else edit_refusal_words(refused, language),
+                refusal_door=None if refused is None else edit_refusal_door(refused, language),
                 # Only a preflight that evaluated the submission against its baseline judges held changes:
                 # a refused one, a stale baseline above all, is about to be replaced by a fresh read.
                 rebase=()

@@ -33,6 +33,7 @@ const line = (
   answer_lead_words: null,
   answer_lead_words_language: null,
   invoice_id: null,
+  door: null,
 });
 
 const BOTH = "Synthetic finding with two doors.";

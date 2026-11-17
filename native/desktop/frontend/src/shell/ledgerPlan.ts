@@ -11,7 +11,10 @@ import type {
   LedgerClassifyWindowRequest,
 } from "./ledgerMovementContract";
 import type { LedgerUpdateRequest } from "./ledgerMovementOperations";
-import { type LedgerStagedBlocker } from "./ledgerMovementCheckContract";
+import type {
+  LedgerStagedBlocker,
+  LedgerWriteRoute,
+} from "./ledgerMovementCheckContract";
 import type { JsonObject, LedgerDefinitionId } from "./ledger";
 import type { OutputLanguage } from "./ledgerClassificationContract";
 import {
@@ -37,7 +40,6 @@ import {
 } from "./ledgerStage";
 import type { LedgerTransactionReviewProjection } from "./ledgerReadContract";
 
-export type LedgerWriteRoute = "bulk" | "classify" | "update";
 const DECIMAL_FIELDS: ReadonlySet<StageField> = new Set([
   "amount",
   "business_pct",

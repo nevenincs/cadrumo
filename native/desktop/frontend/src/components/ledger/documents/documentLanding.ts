@@ -3,7 +3,7 @@
 // not saved, repeatable or untold. Null means the read did not answer, so
 // the write stays held.
 
-import type { EvidenceUpdateRequest } from "../../../shell/ledgerDocumentOperations";
+import type { LedgerEvidenceUpdateWindowRequest } from "../../../shell/ledgerDocumentContract";
 import type { InvoiceKind } from "../../../shell/ledgerInvoiceContract";
 import type { LedgerPort } from "../../../shell/ledger";
 import { readAnswer } from "../../../shell/ledgerWindow";
@@ -83,7 +83,7 @@ export function confirmationLanding(
 export function recordLanding(
   port: LedgerPort,
   evidenceId: string,
-  request: EvidenceUpdateRequest | null,
+  request: LedgerEvidenceUpdateWindowRequest | null,
 ): LandingCheck {
   return async () => {
     try {
