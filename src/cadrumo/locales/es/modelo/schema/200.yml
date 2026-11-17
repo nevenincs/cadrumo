@@ -1666,6 +1666,17 @@ modelo:
           '01042':
             label: Liquidación IV - Resultado de la autoliquidación - Abono deducciones
               por producciones cinematográficas extranjeras - Estado [01042]
+          '01043':
+            label: Conversión de activos por impuesto diferido en crédito exigible
+              frente a la Administración tributaria (art. 130 LIS) - Abono por conversión
+              de activos por impuesto diferido en crédito exigible frente a la admón.tribut.
+              (art. 130 LIS) - D. Forales/Navarra (Totales) [01043]
+          '01044':
+            label: Conversión de activos por impuesto diferido en crédito exigible
+              frente a la Administración tributaria (art. 130 LIS) - Compensación
+              por conversión de activos por impuesto diferido en crédito exigible
+              frente a la admón.tribut. (art. 130 LIS) - D. Forales/Navarra (Totales)
+              [01044]
           '01045':
             label: Detalle compensación bases imponibles negativas - 2015 - Pendiente
               aplicación a principio del período/generada en el período [01045]
@@ -2766,7 +2777,7 @@ modelo:
               ganancias - Ajustes por rentas derivadas de operaciones con quita o
               espera (art.11.13 LIS) - Aumentos [01514]
           '01515':
-            label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2024
+            label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023
               - Deducción pendiente/generada [01515]
           '01516':
             label: Rég. cooperativas - Detalle compensación cuotas. 2022 Pendiente
@@ -2787,7 +2798,7 @@ modelo:
             label: Detalle compensación bases imponibles negativas - 2016 - Pendiente
               aplicación en períodos futuros [01521]
           '01522':
-            label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2024
+            label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023
               - Aplicado en esta liquidación [01522]
           '01523':
             help: 'Importes imputados: Importe de la deducción generada por activos
@@ -2827,7 +2838,7 @@ modelo:
               - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación
               - Total - AID aplicados en el periodo [01566]
           '01571':
-            label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2024
+            label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023
               - Pendiente aplicación en periodos futuros [01571]
           '01572':
             label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
@@ -2904,13 +2915,13 @@ modelo:
               anteriores o liquidaciones administrativas correspondientes al periodo
               impositivo {year} - Navarra [01610]'
           '01614':
-            label: Deducciones inversión Canarias - Activos fijos 2024 - Deducción
+            label: Deducciones inversión Canarias - Activos fijos 2023 - Deducción
               pendiente/generada [01614]
           '01615':
-            label: Deducciones inversión Canarias - Activos fijos 2024 - Aplicado
+            label: Deducciones inversión Canarias - Activos fijos 2023 - Aplicado
               en esta liquidación [01615]
           '01616':
-            label: Deducciones inversión Canarias - Activos fijos 2024 - Pendiente
+            label: Deducciones inversión Canarias - Activos fijos 2023 - Pendiente
               de aplicación en periodos futuros [01616]
           '01617':
             label: Deducc. para incentivar determ.actividades - 2016 Investigación
@@ -3197,7 +3208,7 @@ modelo:
               - 2018 - Cuota líquida positiva [01755]
           '01763':
             label: Deducciones inversión Canarias - Activos fijos en La Palma, La
-              Gomera y el Hierro 2024 - Deducción pendiente/generada [01763]
+              Gomera y el Hierro 2023 - Deducción pendiente/generada [01763]
           '01764':
             label: Liquidación II - Detalle correcciones resultado cta. pérdidas y
               ganancias - Exención sobre dividendos o participaciones en beneficios
@@ -3311,19 +3322,19 @@ modelo:
               - Imputados por AIEs y UTEs [01799]
           01800:
             label: Deducciones inversión Canarias - Activos fijos en La Palma, La
-              Gomera y el Hierro 2024 - Aplicado en esta liquidación [01800]
+              Gomera y el Hierro 2023 - Aplicado en esta liquidación [01800]
           01802:
-            label: Deducciones inversión Canarias - Inversiones Canarias 2024 - Deducción
+            label: Deducciones inversión Canarias - Inversiones Canarias 2023 - Deducción
               pendiente/generada [01802]
           01803:
-            label: Deducciones inversión Canarias - Inversiones Canarias 2024 - Aplicado
+            label: Deducciones inversión Canarias - Inversiones Canarias 2023 - Aplicado
               en esta liquidación [01803]
           01804:
-            label: Deducciones inversión Canarias - Inversiones Canarias 2024 - Pendiente
+            label: Deducciones inversión Canarias - Inversiones Canarias 2023 - Pendiente
               de aplicación en periodos futuros [01804]
           01805:
             label: Deducciones inversión Canarias - Inversiones en La Palma, La Gomera
-              y El Hierro 2024 - Deducción pendiente/generada [01805]
+              y El Hierro 2023 - Deducción pendiente/generada [01805]
           01807:
             label: Liquidación I - Detalle correcciones resultado cta. pérdidas y
               ganancias - Pérdidas por deterioro de valores repr. de partic. en el
@@ -3444,7 +3455,7 @@ modelo:
               ejercicio [01846]'
           01847:
             label: Deducciones inversión Canarias - Inversiones en La Palma, La Gomera
-              y El Hierro 2024 - Pendiente de aplicación en periodos futuros [01847]
+              y El Hierro 2023 - Pendiente de aplicación en periodos futuros [01847]
           01848:
             label: Deducc. para incentivar determ.actividades - 2022 Suma deducciones
               Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP)
@@ -4565,12 +4576,10 @@ modelo:
               - Deducción pendiente/generada [02300]
           '02312':
             label: Deducción por inversiones y gastos realizados por las autoridades
-              portuarias (art. 38 bis LIS) - 2024(*) - Deducción pendiente/generada
-              [02312]
+              portuarias (art. 38 bis LIS) - 2023 - Deducción pendiente/generada [02312]
           '02313':
             label: Deducción por inversiones y gastos realizados por las autoridades
-              portuarias (art. 38 bis LIS) - 2024(*) - Aplicado en esta liquidación
-              [02313]
+              portuarias (art. 38 bis LIS) - 2023 - Aplicado en esta liquidación [02313]
           '02314':
             label: Liquidación IV - Otras deducciones - Deducciones por producciones
               cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley
@@ -4689,14 +4698,14 @@ modelo:
               y El Hierro 2021 - Pendiente de aplicación en periodos futuros [02352]
           '02353':
             label: Deducción por inversiones y gastos realizados por las autoridades
-              portuarias (art. 38 bis LIS) - 2024(*) - Pendiente de aplicación en
-              períodos futuros [02353]
+              portuarias (art. 38 bis LIS) - 2023 - Pendiente de aplicación en períodos
+              futuros [02353]
           '02354':
             label: Deducciones por producciones cinematográficas extranjeras (art.
-              36.2 LIS) - 2024 - Deducción pendiente/generada [02354]
+              36.2 LIS) - 2023 - Deducción pendiente/generada [02354]
           '02355':
             label: Deducciones por producciones cinematográficas extranjeras (art.
-              36.2 LIS) - 2024 - Aplicado en esta liquidación [02355]
+              36.2 LIS) - 2023 - Aplicado en esta liquidación [02355]
           '02356':
             label: Deducc. para incentivar determ.actividades - 2019 Investigación
               y desarrollo (CT) - Deducción pendiente/generada [02356]
@@ -4905,7 +4914,7 @@ modelo:
               han cumplido condiciones deducibilidad fiscal [02436]
           '02437':
             label: Deducciones por producciones cinematográficas extranjeras (art.
-              36.2 LIS) - 2024 - Importe abonado por insuficiencia de cuota [02437]
+              36.2 LIS) - 2023 - Importe abonado por insuficiencia de cuota [02437]
           02438:
             label: Limitación deducibilidad gastos financieros. gastos financieros
               pendientes deducir - Ejercicio generación {year} - Aplicado en esta
@@ -4916,7 +4925,7 @@ modelo:
               en períodos futuros - Por límite [02442]
           '02443':
             label: Deducciones por producciones cinematográficas extranjeras (art.
-              36.2 LIS) - 2024 - Pendiente de aplicación en períodos futuros [02443]
+              36.2 LIS) - 2023 - Pendiente de aplicación en períodos futuros [02443]
           '02444':
             label: Limitación deducibilidad gastos financieros. gastos financieros
               pendientes deducir - Ejercicio generación {year} - Pendiente aplicación
@@ -5187,28 +5196,28 @@ modelo:
               - Permanentes [02699]
           '02701':
             label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)
-              - 2024 - Base deducción [02701]
+              - 2023 - Base deducción [02701]
           '02702':
             label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)
-              - 2024 - Importe generado/pendiente principio periodo [02702]
+              - 2023 - Importe generado/pendiente principio periodo [02702]
           '02703':
             label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)
-              - 2024 - Importe aplicado [02703]
+              - 2023 - Importe aplicado [02703]
           '02704':
             label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)
-              - 2024 - Importe pendiente [02704]
+              - 2023 - Importe pendiente [02704]
           '02705':
             label: Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS)
-              - 2024 - Base deducción [02705]
+              - 2023 - Base deducción [02705]
           '02706':
             label: Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS)
-              - 2024 - Importe generado/pendiente principio periodo [02706]
+              - 2023 - Importe generado/pendiente principio periodo [02706]
           '02707':
             label: Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS)
-              - 2024 - Importe aplicado [02707]
+              - 2023 - Importe aplicado [02707]
           02708:
             label: Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS)
-              - 2024 - Importe pendiente [02708]
+              - 2023 - Importe pendiente [02708]
           02709:
             label: Deducciones I+D+i excluidas de límite - 2023 Investigación y desarrollo
               - Deducción pendiente/generada [02709]
@@ -5302,12 +5311,12 @@ modelo:
             label: Pendiente adición por límite beneficio operativo no aplicado -
               Ejercicio generación 2024 - Pendiente aplicación períodos futuros [02772]
           '02773':
-            label: Reserva Capitalización - 2024(*) - Derecho reducir B.I. generado
-              periodo/pendiente aplicar inicio periodo [02773]
+            label: Reserva Capitalización - 2023 - Derecho reducir B.I. generado periodo/pendiente
+              aplicar inicio periodo [02773]
           '02774':
-            label: Reserva Capitalización - 2024(*) - Reducción B.I. aplicada [02774]
+            label: Reserva Capitalización - 2023 - Reducción B.I. aplicada [02774]
           '02775':
-            label: Reserva Capitalización - 2024(*) - Reducción B.I. pdte. De aplicar
+            label: Reserva Capitalización - 2023 - Reducción B.I. pdte. De aplicar
               en períodos futuros [02775]
           '02776':
             label: Reserva de nivelación - Reducción base imponible - Ejercicio generación
@@ -5325,16 +5334,16 @@ modelo:
               2023 - Importe pendiente adicionar en periodos futuros [02779]
           02780:
             label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
-              2024 - Importe reserva a dotar [02780]
+              2023 - Importe reserva a dotar [02780]
           02782:
             label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
-              2024 - Importe reserva dotada [02782]
+              2023 - Importe reserva dotada [02782]
           02783:
             label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
-              2024 - Importe reserva pendiente dotación [02783]
+              2023 - Importe reserva pendiente dotación [02783]
           02784:
             label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
-              2024 - Reserva dispuesta [02784]
+              2023 - Reserva dispuesta [02784]
           02785:
             label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
               - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación
@@ -5342,7 +5351,7 @@ modelo:
           02787:
             label: Conversión activos impuesto diferido crédito exigible frente Admón.tributaria
               - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación
-              - 2024 - Cuota líquida positiva [02787]
+              - 2023 - Cuota líquida positiva [02787]
           02800:
             label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
               - 2023 - Dotaciones pendientes integración a principio periodo - Que
@@ -5356,14 +5365,14 @@ modelo:
               cumplido condiciones deducibilidad fiscal [02803]
           02804:
             label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
-              - 2024 - Dotaciones pendientes integración a principio periodo - Que
+              - 2023 - Dotaciones pendientes integración a principio periodo - Que
               no han cumplido condiciones deducibilidad fiscal [02804]
           02805:
             label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
-              - 2024 - Dotaciones aplicadas conversión activos imp. diferido [02805]
+              - 2023 - Dotaciones aplicadas conversión activos imp. diferido [02805]
           02806:
             label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
-              - 2024 - Dotaciones pendientes integración periodos futuros - Que no
+              - 2023 - Dotaciones pendientes integración periodos futuros - Que no
               han cumplido condiciones deducibilidad fiscal [02806]
           02807:
             label: Rég. especial reserva inversiones Canarias - RIC 2022 - Pendiente
@@ -14955,13 +14964,13 @@ modelo:
               [00296]
           is-deduccion-inversion-canarias-islas-menores-aplicado:
             label: Deducciones inversión Canarias - Inversiones en La Palma, La Gomera
-              y El Hierro 2024 - Aplicado en esta liquidación [01806]
+              y El Hierro 2023 - Aplicado en esta liquidación [01806]
           is-deduccion-inversion-canarias-islas-menores-generado:
             label: Deducciones inversión Canarias - Activos fijos en La Palma, La
               Gomera y el Hierro 2019 - Deducción pendiente/generada [02338]
           is-deduccion-inversion-canarias-islas-menores-pendiente:
             label: Deducciones inversión Canarias - Activos fijos en La Palma, La
-              Gomera y el Hierro 2024 - Pendiente de aplicación en periodos futuros
+              Gomera y el Hierro 2023 - Pendiente de aplicación en periodos futuros
               [01801]
           is-deduccion-inversion-canarias-pendiente:
             label: Deducciones inversión Canarias - Activos fijos 2011 - Pendiente
@@ -18094,32 +18103,32 @@ modelo:
               general - Subtotal donaciones 2014 - Deducción pendiente/generada [01689]
           ordinary-nonrecurrent-donation-2024-subperiod-applied:
             label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
-              general - 2024(*) Sin reiteración de donaciones a una misma entidad
-              - Aplicado en esta liquidación [02576]
+              general - 2023 Sin reiteración de donaciones a una misma entidad - Aplicado
+              en esta liquidación [02576]
           ordinary-nonrecurrent-donation-2024-subperiod-generated:
             label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
-              general - 2024(*) Sin reiteración de donaciones a una misma entidad-
-              Deducción pendiente/generada [02471]
+              general - 2023 Sin reiteración de donaciones a una misma entidad- Deducción
+              pendiente/generada [02471]
           ordinary-nonrecurrent-donation-2024-subperiod-remaining:
             label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
-              general - 2024(*) Sin reiteración de donaciones a una misma entidad
-              - Pendiente de aplicación en periodos futuros [02577]
+              general - 2023 Sin reiteración de donaciones a una misma entidad - Pendiente
+              de aplicación en periodos futuros [02577]
           ordinary-recurrent-donation-2015-remaining:
             label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
               general - 2015 - Con reiteración de donaciones a una misma entidad -Pendiente
               de aplicación en periodos futuros [00820]
           ordinary-recurrent-donation-2024-subperiod-applied:
             label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
-              general - 2024(*) - Con reiteración de donaciones a una misma entidad
-              - Aplicado en esta liquidación [02692]
+              general - 2023 - Con reiteración de donaciones a una misma entidad -
+              Aplicado en esta liquidación [02692]
           ordinary-recurrent-donation-2024-subperiod-generated:
             label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
-              general - 2024(*) - Con reiteración de donaciones a una misma entidad-
+              general - 2023 - Con reiteración de donaciones a una misma entidad-
               Deducción pendiente/generada [02691]
           ordinary-recurrent-donation-2024-subperiod-remaining:
             label: Deducción donativos entidades sin fines lucro - Donaciones de carácter
-              general - 2024(*) - Con reiteración de donaciones a una misma entidad
-              - Pendiente de aplicación en periodos futuros [02693]
+              general - 2023 - Con reiteración de donaciones a una misma entidad -
+              Pendiente de aplicación en periodos futuros [02693]
           priority-donation-2014-applied:
             label: Deducción donativos entidades sin fines lucro - Donaciones para
               actividades prioritarias de mecenazgo y otras con derecho a deducción
@@ -18166,17 +18175,17 @@ modelo:
           priority-recurrent-donation-2024-subperiod-applied:
             label: Deducción donativos entidades sin fines lucro - Donaciones para
               actividades prioritarias de mecenazgo y otras con derecho a deducción
-              incrementada - 2024(*) - Con reiteración de donaciones a una misma entidad
+              incrementada - 2023 - Con reiteración de donaciones a una misma entidad
               - Aplicado en esta liquidación [02698]
           priority-recurrent-donation-2024-subperiod-generated:
             label: Deducción donativos entidades sin fines lucro - Donaciones para
               actividades prioritarias de mecenazgo y otras con derecho a deducción
-              incrementada - 2024(*) - Con reiteración de donaciones a una misma entidad
+              incrementada - 2023 - Con reiteración de donaciones a una misma entidad
               - Deducción pendiente/generada [02697]
           priority-recurrent-donation-2024-subperiod-remaining:
             label: Deducción donativos entidades sin fines lucro - Donaciones para
               actividades prioritarias de mecenazgo y otras con derecho a deducción
-              incrementada - 2024(*) - Con reiteración de donaciones a una misma entidad
+              incrementada - 2023 - Con reiteración de donaciones a una misma entidad
               - Pendiente de aplicación en periodos futuros [02700]
           public-interest-alicante-sailing-departure-credit-2024-applied:
             label: Deducc. para incentivar determ.actividades - {year} Alicante 2021.
@@ -19677,6 +19686,18 @@ modelo:
               label: Liquidación III - Base Imponible - Entidades Reducida dimensión
                 - Base imponible después de la reserva de nivelación - Disminuciones
                 [01330]
+            x-8h834c1g60oj8ghq60o32c1k6c:
+              label: Liquidación IV - Conversión de activos por impuesto diferido
+                en crédito exigible frente a la Administración tributaria (art. 130
+                LIS) - Abono por conversión de activos por impuesto diferido en crédito
+                exigible frente a la admón.tribut. (art. 130 LIS) - D. Forales/Navarra
+                (Totales) [01043]
+            x-8h834c1g60oj8ghq60o32c1k6g:
+              label: Liquidación IV - Conversión de activos por impuesto diferido
+                en crédito exigible frente a la Administración tributaria (art. 130
+                LIS) - Compensación por conversión de activos por impuesto diferido
+                en crédito exigible frente a la admón.tribut. (art. 130 LIS) - D.
+                Forales/Navarra (Totales) [01044]
             x-8h834c1g60oj8ghq60p38e1m:
               label: Liquidación IV - Opción de fraccionamiento en supuestos de cambios
                 de residencia (art. 19.1 LIS) - Resultado de la autoliquidación incluido
@@ -20002,6 +20023,67 @@ modelo:
                 y ganancias - Exención sobre la renta obtenida en la transmisión de
                 valores entidades no residentes (art. 21.3, 21.10 y DT 40ª LIS) -
                 Disminuciones [02185]
+            02786:
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2023 - Importe total AID (art. 130.6 a) pendiente
+                aplicación a principio periodo [02786]
+            02788:
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2023 - AID pendientes aplicación a principio
+                periodo - Con derecho conversión crédito exigible [02788]
+            02789:
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2023 - AID pendientes aplicación a principio
+                periodo - Con derecho conversión crédito exigible por exceso cuota
+                [02789]
+            02790:
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2023 - AID pendientes aplicación a principio
+                periodo - Sin derecho conversión crédito exigible [02790]
+            02792:
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2023 - AID convertidos en crédito exigible
+                periodo [02792]
+            02793:
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2023 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible [02793]
+            02794:
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2023 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible exceso cuota [02794]
+            02795:
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2023 - AID pendientes aplicación periodos futuros
+                - Sin derecho conversión crédito exigible [02795]
+            02796:
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
+                - 2023 - Exceso cuota líquida positiva pendiente a principio periodo
+                [02796]
+            02797:
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
+                - 2023 - Exceso cuota líquida positiva aplicado periodos impositivos
+                2008 a 2015 [02797]
+            02798:
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
+                - 2023 - Exceso cuota líquida positiva aplicado periodos impositivos
+                iniciados a partir 2016 [02798]
+            02799:
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
+                - 2023 - Exceso cuota líquida positiva pendiente aplicación periodos
+                futuros [02799]
             x-8h834c1g60oj4ehg60pj0e8:
               label: Liquidación I - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Otros supuestos de libertad de amortización (art. 12.3
@@ -20295,6 +20377,12 @@ modelo:
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
                 incrementada - 2023 - Sin reiteración de donaciones a una misma entidad
                 - Pendiente de aplicación en periodos futuros [01373]
+            '01515':
+              label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2024
+                - Deducción pendiente/generada [01515]
+            '01571':
+              label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2024
+                - Pendiente aplicación en periodos futuros [01571]
             '01575':
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Operaciones del art. 19 LIS distintas del cambio de
@@ -20335,6 +20423,15 @@ modelo:
                 acordada por la Agencia Tributaria como consecuencia de la tramitación
                 de autoliquidaciones anteriores o liquidaciones administrativas correspondientes
                 al periodo impositivo {year} - Bizkaia [01613]'
+            '01614':
+              label: Deducciones inversión Canarias - Activos fijos 2024 - Deducción
+                pendiente/generada [01614]
+            '01615':
+              label: Deducciones inversión Canarias - Activos fijos 2024 - Aplicado
+                en esta liquidación [01615]
+            '01616':
+              label: Deducciones inversión Canarias - Activos fijos 2024 - Pendiente
+                de aplicación en periodos futuros [01616]
             '01623':
               label: 'Tributación conjunta Estado y Adm.Forales - Rectificativa: Devolución
                 acordada por la Agencia Tributaria como consecuencia de la tramitación
@@ -20471,11 +20568,40 @@ modelo:
               label: Libertad de amortización de determinados vehículos y de nuevas
                 infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Aumento - Correcciones
                 del ejercicio - Temporarias (con origen en el ejercicio) [01742]
+            '01763':
+              label: Deducciones inversión Canarias - Activos fijos en La Palma, La
+                Gomera y el Hierro 2024 - Deducción pendiente/generada [01763]
+            01800:
+              label: Deducciones inversión Canarias - Activos fijos en La Palma, La
+                Gomera y el Hierro 2024 - Aplicado en esta liquidación [01800]
+            01801:
+              label: Deducciones inversión Canarias - Activos fijos en La Palma, La
+                Gomera y el Hierro 2024 - Pendiente de aplicación en periodos futuros
+                [01801]
+            01802:
+              label: Deducciones inversión Canarias - Inversiones Canarias 2024 -
+                Deducción pendiente/generada [01802]
+            01803:
+              label: Deducciones inversión Canarias - Inversiones Canarias 2024 -
+                Aplicado en esta liquidación [01803]
+            01804:
+              label: Deducciones inversión Canarias - Inversiones Canarias 2024 -
+                Pendiente de aplicación en periodos futuros [01804]
+            01805:
+              label: Deducciones inversión Canarias - Inversiones en La Palma, La
+                Gomera y El Hierro 2024 - Deducción pendiente/generada [01805]
+            01806:
+              label: Deducciones inversión Canarias - Inversiones en La Palma, La
+                Gomera y El Hierro 2024 - Aplicado en esta liquidación [01806]
             01820:
               label: Libertad de amortización de determinados vehículos y de nuevas
                 infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Aumento - Correcciones
                 del ejercicio - Temporarias (con origen en ejercicios anteriores)
                 [01820]
+            01847:
+              label: Deducciones inversión Canarias - Inversiones en La Palma, La
+                Gomera y El Hierro 2024 - Pendiente de aplicación en periodos futuros
+                [01847]
             01877:
               label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
                 producciones extranjeras en Canarias - Araba/Álava [01877]
@@ -20502,6 +20628,24 @@ modelo:
             '02031':
               label: Open Barcelona-Trofeo Conde de Godó (OB). Pendiente de aplicación
                 en periodos futuros
+            '02312':
+              label: Deducción por inversiones y gastos realizados por las autoridades
+                portuarias (art. 38 bis LIS) - 2024(*) - Deducción pendiente/generada
+                [02312]
+            '02313':
+              label: Deducción por inversiones y gastos realizados por las autoridades
+                portuarias (art. 38 bis LIS) - 2024(*) - Aplicado en esta liquidación
+                [02313]
+            '02353':
+              label: Deducción por inversiones y gastos realizados por las autoridades
+                portuarias (art. 38 bis LIS) - 2024(*) - Pendiente de aplicación en
+                períodos futuros [02353]
+            '02354':
+              label: Deducciones por producciones cinematográficas extranjeras (art.
+                36.2 LIS) - 2024 - Deducción pendiente/generada [02354]
+            '02355':
+              label: Deducciones por producciones cinematográficas extranjeras (art.
+                36.2 LIS) - 2024 - Aplicado en esta liquidación [02355]
             02369:
               label: Limitación deducibilidad gastos financieros - Límite art. 16.1
                 y 16.2 LIS - k) Límite total a la deducción de gastos financieros
@@ -20516,16 +20660,109 @@ modelo:
               label: Tributación conjunta Estado y Adm.Forales - Discrepancia de criterio
                 administrativo para determinados supuestos de autoliquidación rectificativa
                 que no deban incluirse en otras casillas - Gipuzkoa [02379]
+            '02437':
+              label: Deducciones por producciones cinematográficas extranjeras (art.
+                36.2 LIS) - 2024 - Importe abonado por insuficiencia de cuota [02437]
+            '02443':
+              label: Deducciones por producciones cinematográficas extranjeras (art.
+                36.2 LIS) - 2024 - Pendiente de aplicación en períodos futuros [02443]
+            '02471':
+              label: Deducción donativos entidades sin fines lucro - Donaciones de
+                carácter general - 2024(*) Sin reiteración de donaciones a una misma
+                entidad- Deducción pendiente/generada [02471]
             02492:
               label: 'Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
                 - Resultado de conversión de AID tras regularización: A ingresar -
                 Total [02492]'
+            '02576':
+              label: Deducción donativos entidades sin fines lucro - Donaciones de
+                carácter general - 2024(*) Sin reiteración de donaciones a una misma
+                entidad - Aplicado en esta liquidación [02576]
+            '02577':
+              label: Deducción donativos entidades sin fines lucro - Donaciones de
+                carácter general - 2024(*) Sin reiteración de donaciones a una misma
+                entidad - Pendiente de aplicación en periodos futuros [02577]
+            02691:
+              label: Deducción donativos entidades sin fines lucro - Donaciones de
+                carácter general - 2024(*) - Con reiteración de donaciones a una misma
+                entidad- Deducción pendiente/generada [02691]
+            02692:
+              label: Deducción donativos entidades sin fines lucro - Donaciones de
+                carácter general - 2024(*) - Con reiteración de donaciones a una misma
+                entidad - Aplicado en esta liquidación [02692]
+            02693:
+              label: Deducción donativos entidades sin fines lucro - Donaciones de
+                carácter general - 2024(*) - Con reiteración de donaciones a una misma
+                entidad - Pendiente de aplicación en periodos futuros [02693]
+            02697:
+              label: Deducción donativos entidades sin fines lucro - Donaciones para
+                actividades prioritarias de mecenazgo y otras con derecho a deducción
+                incrementada - 2024(*) - Con reiteración de donaciones a una misma
+                entidad - Deducción pendiente/generada [02697]
+            02698:
+              label: Deducción donativos entidades sin fines lucro - Donaciones para
+                actividades prioritarias de mecenazgo y otras con derecho a deducción
+                incrementada - 2024(*) - Con reiteración de donaciones a una misma
+                entidad - Aplicado en esta liquidación [02698]
+            '02700':
+              label: Deducción donativos entidades sin fines lucro - Donaciones para
+                actividades prioritarias de mecenazgo y otras con derecho a deducción
+                incrementada - 2024(*) - Con reiteración de donaciones a una misma
+                entidad - Pendiente de aplicación en periodos futuros [02700]
+            '02701':
+              label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)
+                - 2024 - Base deducción [02701]
+            '02702':
+              label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)
+                - 2024 - Importe generado/pendiente principio periodo [02702]
+            '02703':
+              label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)
+                - 2024 - Importe aplicado [02703]
+            '02704':
+              label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)
+                - 2024 - Importe pendiente [02704]
+            '02705':
+              label: Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS)
+                - 2024 - Base deducción [02705]
+            '02706':
+              label: Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS)
+                - 2024 - Importe generado/pendiente principio periodo [02706]
+            '02707':
+              label: Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS)
+                - 2024 - Importe aplicado [02707]
+            02708:
+              label: Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS)
+                - 2024 - Importe pendiente [02708]
+            '02773':
+              label: Reserva Capitalización - 2024(*) - Derecho reducir B.I. generado
+                periodo/pendiente aplicar inicio periodo [02773]
+            '02774':
+              label: Reserva Capitalización - 2024(*) - Reducción B.I. aplicada [02774]
+            '02775':
+              label: Reserva Capitalización - 2024(*) - Reducción B.I. pdte. De aplicar
+                en períodos futuros [02775]
+            02780:
+              label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
+                2024 - Importe reserva a dotar [02780]
+            02782:
+              label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
+                2024 - Importe reserva dotada [02782]
+            02783:
+              label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
+                2024 - Importe reserva pendiente dotación [02783]
+            02784:
+              label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
+                2024 - Reserva dispuesta [02784]
             02786:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2024 - Importe total AID (art. 130.6 a) pendiente
                 aplicación a principio periodo [02786]
+            02787:
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2024 - Cuota líquida positiva [02787]
             02788:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
@@ -20582,6 +20819,17 @@ modelo:
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
                 - 2024 - Exceso cuota líquida positiva pendiente aplicación periodos
                 futuros [02799]
+            02804:
+              label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
+                - 2024 - Dotaciones pendientes integración a principio periodo - Que
+                no han cumplido condiciones deducibilidad fiscal [02804]
+            02805:
+              label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
+                - 2024 - Dotaciones aplicadas conversión activos imp. diferido [02805]
+            02806:
+              label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
+                - 2024 - Dotaciones pendientes integración periodos futuros - Que
+                no han cumplido condiciones deducibilidad fiscal [02806]
             '03317':
               label: 'Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
@@ -20632,17 +20880,6 @@ modelo:
                 desglose de la compensación de bases imponibles negativas - Compensación
                 de base imponible resto actividades año 2024 - Pendiente aplicación
                 a principio del período/generada en el período [00092]'
-            x-8h834c1g60ojaehg64o38co:
-              label: Conversión de activos por impuesto diferido en crédito exigible
-                frente a la Administración tributaria (art. 130 LIS) - Abono por conversión
-                de activos por impuesto diferido en crédito exigible frente a la admón.tribut.
-                (art. 130 LIS) - D. Forales/Navarra (Totales) [01043]
-            x-8h834c1g60ojaehg64o38d0:
-              label: Conversión de activos por impuesto diferido en crédito exigible
-                frente a la Administración tributaria (art. 130 LIS) - Compensación
-                por conversión de activos por impuesto diferido en crédito exigible
-                frente a la admón.tribut. (art. 130 LIS) - D. Forales/Navarra (Totales)
-                [01044]
             x-8h834c1g60ojaehg68q3ic0:
               label: 'Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
@@ -20678,6 +20915,9 @@ modelo:
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
                 - Resultado de conversión de AID tras regularización: Abono - D. Forales/Navarra
                 (Totales) [03319]'
+            x-8h834c1g60ojcehg64qj4cg:
+              label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2024
+                - Aplicado en esta liquidación [01522]
             x-8h834c1g60p30ghq60p36c1h:
               label: Detalle correcciones resultado pérdidas y ganancias - Correcciones
                 al resultado de la cuenta de pérdidas y ganancias del ejercicio -
@@ -21265,6 +21505,9 @@ modelo:
               label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
                 - 2007 y anteriores - Dotaciones pendientes integración periodos futuros
                 - Que no han cumplido condiciones deducibilidad fiscal
+            '01515':
+              label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2024
+                - Deducción pendiente/generada [01515]
             '01524':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
@@ -21460,6 +21703,9 @@ modelo:
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - Total - AID pendientes aplicación periodos
                 futuros - Sin derecho conversión crédito exigible
+            '01571':
+              label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2024
+                - Pendiente aplicación en periodos futuros [01571]
             '01575':
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Operaciones del art. 19 LIS distintas del cambio de
@@ -21531,6 +21777,15 @@ modelo:
                 acordada por la Agencia Tributaria como consecuencia de la tramitación
                 de autoliquidaciones anteriores o liquidaciones administrativas correspondientes
                 al periodo impositivo 2025 - Bizkaia'
+            '01614':
+              label: Deducciones inversión Canarias - Activos fijos 2024 - Deducción
+                pendiente/generada [01614]
+            '01615':
+              label: Deducciones inversión Canarias - Activos fijos 2024 - Aplicado
+                en esta liquidación [01615]
+            '01616':
+              label: Deducciones inversión Canarias - Activos fijos 2024 - Pendiente
+                de aplicación en periodos futuros [01616]
             '01623':
               label: 'Tributación conjunta Estado y Adm.Forales - Rectificativa: Devolución
                 acordada por la Agencia Tributaria como consecuencia de la tramitación
@@ -21768,6 +22023,9 @@ modelo:
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2018 - AID pendientes aplicación periodos futuros
                 - Sin derecho conversión crédito exigible
+            '01763':
+              label: Deducciones inversión Canarias - Activos fijos en La Palma, La
+                Gomera y el Hierro 2024 - Deducción pendiente/generada [01763]
             01793:
               label: Liquidación IV - Cuota del ejercicio a ingresar o a devolver
                 - Retenciones por otros conceptos diferentes a los rendimientos del
@@ -21778,6 +22036,28 @@ modelo:
                 - Retenciones por otros conceptos diferentes a los rendimientos del
                 capital mobiliario o a los arrendamientos de inmuebles urbanos atribuidas
                 por entidades en atribución de rentas - Imputados por AIEs y UTEs
+            01800:
+              label: Deducciones inversión Canarias - Activos fijos en La Palma, La
+                Gomera y el Hierro 2024 - Aplicado en esta liquidación [01800]
+            01801:
+              label: Deducciones inversión Canarias - Activos fijos en La Palma, La
+                Gomera y el Hierro 2024 - Pendiente de aplicación en periodos futuros
+                [01801]
+            01802:
+              label: Deducciones inversión Canarias - Inversiones Canarias 2024 -
+                Deducción pendiente/generada [01802]
+            01803:
+              label: Deducciones inversión Canarias - Inversiones Canarias 2024 -
+                Aplicado en esta liquidación [01803]
+            01804:
+              label: Deducciones inversión Canarias - Inversiones Canarias 2024 -
+                Pendiente de aplicación en periodos futuros [01804]
+            01805:
+              label: Deducciones inversión Canarias - Inversiones en La Palma, La
+                Gomera y El Hierro 2024 - Deducción pendiente/generada [01805]
+            01806:
+              label: Deducciones inversión Canarias - Inversiones en La Palma, La
+                Gomera y El Hierro 2024 - Aplicado en esta liquidación [01806]
             01820:
               label: Libertad de amortización de determinados vehículos y de nuevas
                 infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Aumento - Correcciones
@@ -21786,6 +22066,10 @@ modelo:
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Rentas procedentes de transmisión de inmovilizado obtenidas
                 por las Autoridades Portuarias (DA 68ª Ley 6/2018) - Disminuciones
+            01847:
+              label: Deducciones inversión Canarias - Inversiones en La Palma, La
+                Gomera y El Hierro 2024 - Pendiente de aplicación en periodos futuros
+                [01847]
             01877:
               label: Tributación conjunta Estado y Adm.Forales - Abono deducciones
                 producciones extranjeras en Canarias - Araba/Álava [01877]
@@ -22015,6 +22299,24 @@ modelo:
               label: Liquidación I - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Gastos que sean objeto de la deducción por inversiones
                 realizadas por las autoridades portuarias (art. 15 n) LIS) - Aumentos
+            '02312':
+              label: Deducción por inversiones y gastos realizados por las autoridades
+                portuarias (art. 38 bis LIS) - 2024(*) - Deducción pendiente/generada
+                [02312]
+            '02313':
+              label: Deducción por inversiones y gastos realizados por las autoridades
+                portuarias (art. 38 bis LIS) - 2024(*) - Aplicado en esta liquidación
+                [02313]
+            '02353':
+              label: Deducción por inversiones y gastos realizados por las autoridades
+                portuarias (art. 38 bis LIS) - 2024(*) - Pendiente de aplicación en
+                períodos futuros [02353]
+            '02354':
+              label: Deducciones por producciones cinematográficas extranjeras (art.
+                36.2 LIS) - 2024 - Deducción pendiente/generada [02354]
+            '02355':
+              label: Deducciones por producciones cinematográficas extranjeras (art.
+                36.2 LIS) - 2024 - Aplicado en esta liquidación [02355]
             02369:
               label: Limitación deducibilidad gastos financieros - Límite art. 16.1
                 y 16.2 LIS - k) Límite total a la deducción de gastos financieros
@@ -22069,6 +22371,12 @@ modelo:
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2021 - AID pendientes aplicación periodos futuros
                 - Sin derecho conversión crédito exigible
+            '02437':
+              label: Deducciones por producciones cinematográficas extranjeras (art.
+                36.2 LIS) - 2024 - Importe abonado por insuficiencia de cuota [02437]
+            '02443':
+              label: Deducciones por producciones cinematográficas extranjeras (art.
+                36.2 LIS) - 2024 - Pendiente de aplicación en períodos futuros [02443]
             '02472':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
@@ -22183,6 +22491,30 @@ modelo:
                 de la participación en el capital o fondos propios (art. 13.2 b) LIS)
                 - Disminución - Correcciones del ejercicio - Temporarias (con origen
                 en ejercicios anteriores)
+            '02701':
+              label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)
+                - 2024 - Base deducción [02701]
+            '02702':
+              label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)
+                - 2024 - Importe generado/pendiente principio periodo [02702]
+            '02703':
+              label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)
+                - 2024 - Importe aplicado [02703]
+            '02704':
+              label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)
+                - 2024 - Importe pendiente [02704]
+            '02705':
+              label: Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS)
+                - 2024 - Base deducción [02705]
+            '02706':
+              label: Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS)
+                - 2024 - Importe generado/pendiente principio periodo [02706]
+            '02707':
+              label: Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS)
+                - 2024 - Importe aplicado [02707]
+            02708:
+              label: Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS)
+                - 2024 - Importe pendiente [02708]
             '02722':
               label: Aplicación del límite del art. 11.12 LIS a las pérdidas por deterioro
                 del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) -
@@ -22203,11 +22535,35 @@ modelo:
                 del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) -
                 Disminución - Correcciones del ejercicio - Temporarias (con origen
                 en ejercicios anteriores)
+            '02773':
+              label: Reserva Capitalización - 2024(*) - Derecho reducir B.I. generado
+                periodo/pendiente aplicar inicio periodo [02773]
+            '02774':
+              label: Reserva Capitalización - 2024(*) - Reducción B.I. aplicada [02774]
+            '02775':
+              label: Reserva Capitalización - 2024(*) - Reducción B.I. pdte. De aplicar
+                en períodos futuros [02775]
+            02780:
+              label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
+                2024 - Importe reserva a dotar [02780]
+            02782:
+              label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
+                2024 - Importe reserva dotada [02782]
+            02783:
+              label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
+                2024 - Importe reserva pendiente dotación [02783]
+            02784:
+              label: Reserva de nivelación - Dotación de la reserva - Ejercicio generación
+                2024 - Reserva dispuesta [02784]
             02786:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2024 - Importe total AID (art. 130.6 a) pendiente
                 aplicación a principio periodo
+            02787:
+              label: Conversión activos impuesto diferido crédito exigible frente
+                Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
+                Ejercicio generación - 2024 - Cuota líquida positiva [02787]
             02788:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
@@ -22262,6 +22618,17 @@ modelo:
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
                 - 2024 - Exceso cuota líquida positiva pendiente aplicación periodos
                 futuros
+            02804:
+              label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
+                - 2024 - Dotaciones pendientes integración a principio periodo - Que
+                no han cumplido condiciones deducibilidad fiscal [02804]
+            02805:
+              label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
+                - 2024 - Dotaciones aplicadas conversión activos imp. diferido [02805]
+            02806:
+              label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
+                - 2024 - Dotaciones pendientes integración periodos futuros - Que
+                no han cumplido condiciones deducibilidad fiscal [02806]
             02855:
               label: Pérdidas por deterioro de valores repr. de partic. en el capital
                 o fondos propios (art. 15 k) LIS) - Aumento - Saldo pendiente a fin
@@ -23600,6 +23967,9 @@ modelo:
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
                 - Resultado de conversión de AID tras regularización: Abono - D. Forales/Navarra
                 (Totales)'
+            x-8h834c1g60ojcehg64qj4cg:
+              label: Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2024
+                - Aplicado en esta liquidación [01522]
             x-8h834c1g60ojgghq60o36c9l:
               label: Deducciones por producciones cinematográficas extranjeras (art.
                 36.2 LIS) - 2025(*) - Deducción pendiente/generada [00315]

@@ -5459,3 +5459,689 @@ section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2
 semantic_role = "is_deduccion_di_internacional_detalle"
 rotating_year_offset = 0
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# Generation boxes the 2023 record design prints without the (*) mark next to the generation it
+# marks (*); the 2024 design prints another generation on each of them.
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2009 DP200016 112|1688|17|Num
+[[revisions."2023".casillas]]
+id = "01515"
+continuidad_id = "01515"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2009 (DP200016 field 112): 'Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023 - Deducción pendiente/generada [01515]'. The same design prints 'Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023(*) - Deducción pendiente/generada [00696]' on box [00696] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2006 (DP200016 field 109). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [01515] on DP200016; the cell is new on the 2023 design."
+number = "01515"
+section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2023"]
+semantic_role = "is_deduccion_reinversion_beneficios_dt24a7_periodo"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2010 DP200016 113|1705|17|Num
+[[revisions."2023".casillas]]
+id = "DP200016:01522"
+continuidad_id = "01522"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2010 (DP200016 field 113): 'Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023 - Aplicado en esta liquidación [01522]'. The same design prints 'Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023(*) - Aplicado en esta liquidación [00697]' on box [00697] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2007 (DP200016 field 110). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [01522] on DP200016; the cell is new on the 2023 design."
+number = "01522"
+segmento = "DP200016"
+section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2023"]
+semantic_role = "is_deduccion_reinversion_beneficios_dt24a7_periodo"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2011 DP200016 114|1722|17|Num
+[[revisions."2023".casillas]]
+id = "01571"
+continuidad_id = "01571"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2011 (DP200016 field 114): 'Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023 - Pendiente aplicación en periodos futuros [01571]'. The same design prints 'Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023(*) - Pendiente aplicación en periodos futuros [00710]' on box [00710] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2008 (DP200016 field 111). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [01571] on DP200016; the cell is new on the 2023 design."
+number = "01571"
+section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2023"]
+semantic_role = "is_deduccion_reinversion_beneficios_dt24a7_periodo"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2095 DP200016B 48|727|17|Num
+[[revisions."2023".casillas]]
+id = "01614"
+continuidad_id = "01614"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2095 (DP200016B field 48): 'Deducciones inversión Canarias - Activos fijos 2023 - Deducción pendiente/generada [01614]'. The same design prints 'Deducciones inversión Canarias - Activos fijos 2023(*) - Deducción pendiente/generada [00711]' on box [00711] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2092 (DP200016B field 45). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [01614] on DP200016B; the cell is new on the 2023 design."
+number = "01614"
+section = ["deducciones_inversion_canarias", "activos_fijos_2023"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2096 DP200016B 49|744|17|Num
+[[revisions."2023".casillas]]
+id = "01615"
+continuidad_id = "01615"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2096 (DP200016B field 49): 'Deducciones inversión Canarias - Activos fijos 2023 - Aplicado en esta liquidación [01615]'. The same design prints 'Deducciones inversión Canarias - Activos fijos 2023(*) - Aplicado en esta liquidación [00712]' on box [00712] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2093 (DP200016B field 46). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [01615] on DP200016B; the cell is new on the 2023 design."
+number = "01615"
+section = ["deducciones_inversion_canarias", "activos_fijos_2023"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2097 DP200016B 50|761|17|Num
+[[revisions."2023".casillas]]
+id = "01616"
+continuidad_id = "01616"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2097 (DP200016B field 50): 'Deducciones inversión Canarias - Activos fijos 2023 - Pendiente de aplicación en periodos futuros [01616]'. The same design prints 'Deducciones inversión Canarias - Activos fijos 2023(*) - Pendiente de aplicación en periodos futuros [02077]' on box [02077] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2094 (DP200016B field 47). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [01616] on DP200016B; the cell is new on the 2023 design."
+number = "01616"
+section = ["deducciones_inversion_canarias", "activos_fijos_2023"]
+semantic_role = "is_deduccion_inversion_canarias_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2116 DP200016B 69|1084|17|Num
+[[revisions."2023".casillas]]
+id = "01763"
+continuidad_id = "01763"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2116 (DP200016B field 69): 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2023 - Deducción pendiente/generada [01763]'. The same design prints 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2023(*) - Deducción pendiente/generada [02078]' on box [02078] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2113 (DP200016B field 66). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [01763] on DP200016B; the cell is new on the 2023 design."
+number = "01763"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2117 DP200016B 70|1101|17|Num
+[[revisions."2023".casillas]]
+id = "01800"
+continuidad_id = "01800"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2117 (DP200016B field 70): 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2023 - Aplicado en esta liquidación [01800]'. The same design prints 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2023(*) - Aplicado en esta liquidación [01913]' on box [01913] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2114 (DP200016B field 67). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [01800] on DP200016B; the cell is new on the 2023 design."
+number = "01800"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2118 DP200016B 71|1118|17|Num
+[[revisions."2023".casillas]]
+id = "01801"
+continuidad_id = "is-deduccion-inversion-canarias-islas-menores-pendiente"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2118 (DP200016B field 71): 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2023 - Pendiente de aplicación en periodos futuros [01801]'. The same design prints 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2023(*) - Pendiente de aplicación en periodos futuros [00766]' on box [00766] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2115 (DP200016B field 68). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [01801] on DP200016B; the cell is new on the 2023 design."
+number = "01801"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2175 DP200016B 128|2087|17|Num
+[[revisions."2023".casillas]]
+id = "01802"
+continuidad_id = "01802"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2175 (DP200016B field 128): 'Deducciones inversión Canarias - Inversiones Canarias 2023 - Deducción pendiente/generada [01802]'. The same design prints 'Deducciones inversión Canarias - Inversiones Canarias 2023(*) - Deducción pendiente/generada [00767]' on box [00767] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2172 (DP200016B field 125). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [01802] on DP200016B; the cell is new on the 2023 design."
+number = "01802"
+section = ["deducciones_inversion_canarias", "inversiones_canarias_2023"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2176 DP200016B 129|2104|17|Num
+[[revisions."2023".casillas]]
+id = "01803"
+continuidad_id = "01803"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2176 (DP200016B field 129): 'Deducciones inversión Canarias - Inversiones Canarias 2023 - Aplicado en esta liquidación [01803]'. The same design prints 'Deducciones inversión Canarias - Inversiones Canarias 2023(*) - Aplicado en esta liquidación [00768]' on box [00768] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2173 (DP200016B field 126). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [01803] on DP200016B; the cell is new on the 2023 design."
+number = "01803"
+section = ["deducciones_inversion_canarias", "inversiones_canarias_2023"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2177 DP200016B 130|2121|17|Num
+[[revisions."2023".casillas]]
+id = "01804"
+continuidad_id = "01804"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2177 (DP200016B field 130): 'Deducciones inversión Canarias - Inversiones Canarias 2023 - Pendiente de aplicación en periodos futuros [01804]'. The same design prints 'Deducciones inversión Canarias - Inversiones Canarias 2023(*) - Pendiente de aplicación en periodos futuros [00769]' on box [00769] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2174 (DP200016B field 127). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [01804] on DP200016B; the cell is new on the 2023 design."
+number = "01804"
+section = ["deducciones_inversion_canarias", "inversiones_canarias_2023"]
+semantic_role = "is_deduccion_inversion_canarias_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2196 DP200016B 149|2444|17|Num
+[[revisions."2023".casillas]]
+id = "01805"
+continuidad_id = "01805"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2196 (DP200016B field 149): 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023 - Deducción pendiente/generada [01805]'. The same design prints 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023(*) - Deducción pendiente/generada [00770]' on box [00770] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2193 (DP200016B field 146). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [01805] on DP200016B; the cell is new on the 2023 design."
+number = "01805"
+section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2023"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2197 DP200016B 150|2461|17|Num
+[[revisions."2023".casillas]]
+id = "01806"
+continuidad_id = "is-deduccion-inversion-canarias-islas-menores-aplicado"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2197 (DP200016B field 150): 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023 - Aplicado en esta liquidación [01806]'. The same design prints 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023(*) - Aplicado en esta liquidación [00771]' on box [00771] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2194 (DP200016B field 147). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [01806] on DP200016B; the cell is new on the 2023 design."
+number = "01806"
+section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2023"]
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_aplicado"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2198 DP200016B 151|2478|17|Num
+[[revisions."2023".casillas]]
+id = "01847"
+continuidad_id = "01847"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2198 (DP200016B field 151): 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023 - Pendiente de aplicación en periodos futuros [01847]'. The same design prints 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023(*) - Pendiente de aplicación en periodos futuros [00774]' on box [00774] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2195 (DP200016B field 148). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [01847] on DP200016B; the cell is new on the 2023 design."
+number = "01847"
+section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2023"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2687 DP200018B 78|1237|17|Num
+[[revisions."2023".casillas]]
+id = "02312"
+continuidad_id = "02312"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2687 (DP200018B field 78): 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2023 - Deducción pendiente/generada [02312]'. The same design prints 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2023(*) - Deducción pendiente/generada [01295]' on box [01295] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2684 (DP200018B field 75). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02312] on DP200018B; the cell is new on the 2023 design."
+number = "02312"
+section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2024"]
+semantic_role = "is_deduccion_autoridades_portuarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2688 DP200018B 79|1254|17|Num
+[[revisions."2023".casillas]]
+id = "02313"
+continuidad_id = "02313"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2688 (DP200018B field 79): 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2023 - Aplicado en esta liquidación [02313]'. The same design prints 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2023(*) - Aplicado en esta liquidación [01296]' on box [01296] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2685 (DP200018B field 76). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02313] on DP200018B; the cell is new on the 2023 design."
+number = "02313"
+section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2024"]
+semantic_role = "is_deduccion_autoridades_portuarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2689 DP200018B 80|1271|17|Num
+[[revisions."2023".casillas]]
+id = "02353"
+continuidad_id = "02353"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2689 (DP200018B field 80): 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2023 - Pendiente de aplicación en períodos futuros [02353]'. The same design prints 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2023(*) - Pendiente de aplicación en períodos futuros [01297]' on box [01297] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2686 (DP200018B field 77). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02353] on DP200018B; the cell is new on the 2023 design."
+number = "02353"
+section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2024"]
+semantic_role = "is_deduccion_autoridades_portuarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2729 DP200018B 120|1951|17|Num
+[[revisions."2023".casillas]]
+id = "02354"
+continuidad_id = "02354"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2729 (DP200018B field 120): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023 - Deducción pendiente/generada [02354]'. The same design prints 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023(*) - Deducción pendiente/generada [02140]' on box [02140] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2725 (DP200018B field 116). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02354] on DP200018B; the cell is new on the 2023 design."
+number = "02354"
+section = ["deducciones_por_producciones_cinematograficas_extr", "2024"]
+semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2730 DP200018B 121|1968|17|Num
+[[revisions."2023".casillas]]
+id = "02355"
+continuidad_id = "02355"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2730 (DP200018B field 121): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023 - Aplicado en esta liquidación [02355]'. The same design prints 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023(*) - Aplicado en esta liquidación [02141]' on box [02141] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2726 (DP200018B field 117). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02355] on DP200018B; the cell is new on the 2023 design."
+number = "02355"
+section = ["deducciones_por_producciones_cinematograficas_extr", "2024"]
+semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2731 DP200018B 122|1985|17|Num
+[[revisions."2023".casillas]]
+id = "02437"
+continuidad_id = "02437"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2731 (DP200018B field 122): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023 - Importe abonado por insuficiencia de cuota [02437]'. The same design prints 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023(*) - Importe abonado por insuficiencia de cuota [02142]' on box [02142] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2727 (DP200018B field 118). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02437] on DP200018B; the cell is new on the 2023 design."
+number = "02437"
+section = ["deducciones_por_producciones_cinematograficas_extr", "2024"]
+semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2732 DP200018B 123|2002|17|Num
+[[revisions."2023".casillas]]
+id = "02443"
+continuidad_id = "02443"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2732 (DP200018B field 123): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023 - Pendiente de aplicación en períodos futuros [02443]'. The same design prints 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023(*) - Pendiente de aplicación en períodos futuros [02143]' on box [02143] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2728 (DP200018B field 119). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02443] on DP200018B; the cell is new on the 2023 design."
+number = "02443"
+section = ["deducciones_por_producciones_cinematograficas_extr", "2024"]
+semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2855 DP200018C 65|1016|17|Num
+[[revisions."2023".casillas]]
+id = "02471"
+continuidad_id = "ordinary-nonrecurrent-donation-2024-subperiod-generated"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2855 (DP200018C field 65): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023 Sin reiteración de donaciones a una misma entidad- Deducción pendiente/generada [02471]'. The same design prints 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) Sin reiteración de donaciones a una misma entidad- Deducción pendiente/generada [01323]' on box [01323] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2849 (DP200018C field 59). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02471] on DP200018C; the cell is new on the 2023 design."
+number = "02471"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2856 DP200018C 66|1033|17|Num
+[[revisions."2023".casillas]]
+id = "02576"
+continuidad_id = "ordinary-nonrecurrent-donation-2024-subperiod-applied"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2856 (DP200018C field 66): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023 Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [02576]'. The same design prints 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01324]' on box [01324] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2850 (DP200018C field 60). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02576] on DP200018C; the cell is new on the 2023 design."
+number = "02576"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2857 DP200018C 67|1050|17|Num
+[[revisions."2023".casillas]]
+id = "02577"
+continuidad_id = "ordinary-nonrecurrent-donation-2024-subperiod-remaining"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2857 (DP200018C field 67): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023 Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [02577]'. The same design prints 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01325]' on box [01325] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2851 (DP200018C field 61). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02577] on DP200018C; the cell is new on the 2023 design."
+number = "02577"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2858 DP200018C 68|1067|17|Num
+[[revisions."2023".casillas]]
+id = "02691"
+continuidad_id = "ordinary-recurrent-donation-2024-subperiod-generated"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2858 (DP200018C field 68): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023 - Con reiteración de donaciones a una misma entidad- Deducción pendiente/generada [02691]'. The same design prints 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) - Con reiteración de donaciones a una misma entidad- Deducción pendiente/generada [01326]' on box [01326] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2852 (DP200018C field 62). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02691] on DP200018C; the cell is new on the 2023 design."
+number = "02691"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2859 DP200018C 69|1084|17|Num
+[[revisions."2023".casillas]]
+id = "02692"
+continuidad_id = "ordinary-recurrent-donation-2024-subperiod-applied"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2859 (DP200018C field 69): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023 - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [02692]'. The same design prints 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01327]' on box [01327] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2853 (DP200018C field 63). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02692] on DP200018C; the cell is new on the 2023 design."
+number = "02692"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2860 DP200018C 70|1101|17|Num
+[[revisions."2023".casillas]]
+id = "02693"
+continuidad_id = "ordinary-recurrent-donation-2024-subperiod-remaining"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2860 (DP200018C field 70): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023 - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [02693]'. The same design prints 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01328]' on box [01328] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2854 (DP200018C field 64). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02693] on DP200018C; the cell is new on the 2023 design."
+number = "02693"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2935 DP200018C 145|2376|17|Num
+[[revisions."2023".casillas]]
+id = "02697"
+continuidad_id = "priority-recurrent-donation-2024-subperiod-generated"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2935 (DP200018C field 145): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023 - Con reiteración de donaciones a una misma entidad - Deducción pendiente/generada [02697]'. The same design prints 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) - Con reiteración de donaciones a una misma entidad - Deducción pendiente/generada [01374]' on box [01374] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2929 (DP200018C field 139). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02697] on DP200018C; the cell is new on the 2023 design."
+number = "02697"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2936 DP200018C 146|2393|17|Num
+[[revisions."2023".casillas]]
+id = "02698"
+continuidad_id = "priority-recurrent-donation-2024-subperiod-applied"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2936 (DP200018C field 146): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023 - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [02698]'. The same design prints 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01375]' on box [01375] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2930 (DP200018C field 140). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02698] on DP200018C; the cell is new on the 2023 design."
+number = "02698"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2937 DP200018C 147|2410|17|Num
+[[revisions."2023".casillas]]
+id = "02700"
+continuidad_id = "priority-recurrent-donation-2024-subperiod-remaining"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2937 (DP200018C field 147): 'Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023 - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [02700]'. The same design prints 'Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01376]' on box [01376] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2931 (DP200018C field 141). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02700] on DP200018C; the cell is new on the 2023 design."
+number = "02700"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3005 DP200019 42|625|17|Num
+[[revisions."2023".casillas]]
+id = "02701"
+continuidad_id = "02701"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3005 (DP200019 field 42): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023 - Base deducción [02701]'. The same design prints 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023(*) - Base deducción [01377]' on box [01377] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3001 (DP200019 field 38). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02701] on DP200019; the cell is new on the 2023 design."
+number = "02701"
+section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2024"]
+semantic_role = "is_deduccion_reversion_medidas_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3006 DP200019 43|642|17|Num
+[[revisions."2023".casillas]]
+id = "02702"
+continuidad_id = "02702"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3006 (DP200019 field 43): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023 - Importe generado/pendiente principio periodo [02702]'. The same design prints 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023(*) - Importe generado/pendiente principio periodo [01378]' on box [01378] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3002 (DP200019 field 39). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02702] on DP200019; the cell is new on the 2023 design."
+number = "02702"
+section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2024"]
+semantic_role = "is_deduccion_reversion_medidas_dt37_1_generado"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3007 DP200019 44|659|17|Num
+[[revisions."2023".casillas]]
+id = "02703"
+continuidad_id = "02703"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3007 (DP200019 field 44): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023 - Importe aplicado [02703]'. The same design prints 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023(*) - Importe aplicado [01379]' on box [01379] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3003 (DP200019 field 40). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02703] on DP200019; the cell is new on the 2023 design."
+number = "02703"
+section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2024"]
+semantic_role = "is_deduccion_reversion_medidas_dt1_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3008 DP200019 45|676|17|Num
+[[revisions."2023".casillas]]
+id = "02704"
+continuidad_id = "02704"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3008 (DP200019 field 45): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023 - Importe pendiente [02704]'. The same design prints 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023(*) - Importe pendiente [01380]' on box [01380] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3004 (DP200019 field 41). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02704] on DP200019; the cell is new on the 2023 design."
+number = "02704"
+section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2024"]
+semantic_role = "is_deduccion_reversion_medidas_dt1_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3049 DP200019 86|1373|17|Num
+[[revisions."2023".casillas]]
+id = "02705"
+continuidad_id = "02705"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3049 (DP200019 field 86): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023 - Base deducción [02705]'. The same design prints 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023(*) - Base deducción [01381]' on box [01381] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3045 (DP200019 field 82). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02705] on DP200019; the cell is new on the 2023 design."
+number = "02705"
+section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2024"]
+semantic_role = "is_deduccion_reversion_medidas_dt2_base"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3050 DP200019 87|1390|17|Num
+[[revisions."2023".casillas]]
+id = "02706"
+continuidad_id = "02706"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3050 (DP200019 field 87): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023 - Importe generado/pendiente principio periodo [02706]'. The same design prints 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023(*) - Importe generado/pendiente principio periodo [01382]' on box [01382] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3046 (DP200019 field 83). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02706] on DP200019; the cell is new on the 2023 design."
+number = "02706"
+section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2024"]
+semantic_role = "is_deduccion_reversion_medidas_dt2_generado_pendiente_apertura"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3051 DP200019 88|1407|17|Num
+[[revisions."2023".casillas]]
+id = "02707"
+continuidad_id = "02707"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3051 (DP200019 field 88): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023 - Importe aplicado [02707]'. The same design prints 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023(*) - Importe aplicado [01383]' on box [01383] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3047 (DP200019 field 84). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02707] on DP200019; the cell is new on the 2023 design."
+number = "02707"
+section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2024"]
+semantic_role = "is_deduccion_reversion_medidas_dt2_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3052 DP200019 89|1424|17|Num
+[[revisions."2023".casillas]]
+id = "02708"
+continuidad_id = "02708"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3052 (DP200019 field 89): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023 - Importe pendiente [02708]'. The same design prints 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023(*) - Importe pendiente [01384]' on box [01384] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3048 (DP200019 field 85). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02708] on DP200019; the cell is new on the 2023 design."
+number = "02708"
+section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2024"]
+semantic_role = "is_deduccion_reversion_medidas_dt2_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3332 DP200020B 26|353|17|Num
+[[revisions."2023".casillas]]
+id = "02773"
+continuidad_id = "02773"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3332 (DP200020B field 26): 'Reserva Capitalización - 2023 - Derecho reducir B.I. generado periodo/pendiente aplicar inicio periodo [02773]'. The same design prints 'Reserva Capitalización - 2023(*) - Derecho reducir B.I. generado periodo/pendiente aplicar inicio periodo [01401]' on box [01401] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3329 (DP200020B field 23). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02773] on DP200020B; the cell is new on the 2023 design."
+number = "02773"
+section = ["reserva_capitalizacion", "2024"]
+semantic_role = "is_reserva_capitalizacion_derecho_generado"
+legal_refs = ["ley-27-2014:art-25"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3333 DP200020B 27|370|17|Num
+[[revisions."2023".casillas]]
+id = "02774"
+continuidad_id = "02774"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3333 (DP200020B field 27): 'Reserva Capitalización - 2023 - Reducción B.I. aplicada [02774]'. The same design prints 'Reserva Capitalización - 2023(*) - Reducción B.I. aplicada [01402]' on box [01402] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3330 (DP200020B field 24). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02774] on DP200020B; the cell is new on the 2023 design."
+number = "02774"
+section = ["reserva_capitalizacion", "2024"]
+semantic_role = "is_reserva_capitalizacion_importe"
+legal_refs = ["ley-27-2014:art-25"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3334 DP200020B 28|387|17|Num
+[[revisions."2023".casillas]]
+id = "02775"
+continuidad_id = "02775"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3334 (DP200020B field 28): 'Reserva Capitalización - 2023 - Reducción B.I. pdte. De aplicar en períodos futuros [02775]'. The same design prints 'Reserva Capitalización - 2023(*) - Reducción B.I. pdte. De aplicar en períodos futuros [01403]' on box [01403] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3331 (DP200020B field 25). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02775] on DP200020B; the cell is new on the 2023 design."
+number = "02775"
+section = ["reserva_capitalizacion", "2024"]
+semantic_role = "is_reserva_capitalizacion_pendiente_futuros"
+legal_refs = ["ley-27-2014:art-25"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3392 DP200020B 86|1373|17|Num
+[[revisions."2023".casillas]]
+id = "02780"
+continuidad_id = "02780"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3392 (DP200020B field 86): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023 - Importe reserva a dotar [02780]'. The same design prints 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023(*) - Importe reserva a dotar [01872]' on box [01872] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3388 (DP200020B field 82). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02780] on DP200020B; the cell is new on the 2023 design."
+number = "02780"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+semantic_role = "is_reserva_nivelacion_dotacion"
+legal_refs = ["ley-27-2014:art-105"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3393 DP200020B 87|1390|17|Num
+[[revisions."2023".casillas]]
+id = "02782"
+continuidad_id = "02782"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3393 (DP200020B field 87): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023 - Importe reserva dotada [02782]'. The same design prints 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023(*) - Importe reserva dotada [01410]' on box [01410] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3389 (DP200020B field 83). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02782] on DP200020B; the cell is new on the 2023 design."
+number = "02782"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+semantic_role = "is_reserva_nivelacion_dotacion"
+legal_refs = ["ley-27-2014:art-105"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3394 DP200020B 88|1407|17|Num
+[[revisions."2023".casillas]]
+id = "02783"
+continuidad_id = "02783"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3394 (DP200020B field 88): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023 - Importe reserva pendiente dotación [02783]'. The same design prints 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023(*) - Importe reserva pendiente dotación [01411]' on box [01411] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3390 (DP200020B field 84). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02783] on DP200020B; the cell is new on the 2023 design."
+number = "02783"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+semantic_role = "is_reserva_nivelacion_dotacion_pendiente"
+legal_refs = ["ley-27-2014:art-105"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3395 DP200020B 89|1424|17|Num
+[[revisions."2023".casillas]]
+id = "02784"
+continuidad_id = "02784"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3395 (DP200020B field 89): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023 - Reserva dispuesta [02784]'. The same design prints 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023(*) - Reserva dispuesta [01412]' on box [01412] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3391 (DP200020B field 85). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02784] on DP200020B; the cell is new on the 2023 design."
+number = "02784"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+semantic_role = "is_reserva_nivelacion_dotacion_dispuesta"
+legal_refs = ["ley-27-2014:art-105"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3515 DP200020C 106|1713|17|Num
+[[revisions."2023".casillas]]
+id = "02786"
+continuidad_id = "02786"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3515 (DP200020C field 106): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023 - Importe total AID (art. 130.6 a) pendiente aplicación a principio periodo [02786]'. The same design prints 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023(*) - Importe total AID (art. 130.6 a) pendiente aplicación a principio periodo [01414]' on box [01414] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3505 (DP200020C field 96). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02786] on DP200020C; the cell is new on the 2023 design."
+number = "02786"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3516 DP200020C 107|1730|17|Num
+[[revisions."2023".casillas]]
+id = "02787"
+continuidad_id = "02787"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3516 (DP200020C field 107): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023 - Cuota líquida positiva [02787]'. The same design prints 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023(*) - Cuota líquida positiva [01415]' on box [01415] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3506 (DP200020C field 97). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02787] on DP200020C; the cell is new on the 2023 design."
+number = "02787"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3517 DP200020C 108|1747|17|Num
+[[revisions."2023".casillas]]
+id = "02788"
+continuidad_id = "02788"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3517 (DP200020C field 108): 'Ejercicio generación - 2023 - AID pendientes aplicación a principio periodo - Con derecho conversión crédito exigible [02788]'. The same design prints 'Ejercicio generación - 2023(*) - AID pendientes aplicación a principio periodo - Con derecho conversión crédito exigible [01416]' on box [01416] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3507 (DP200020C field 98). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02788] on DP200020C; the cell is new on the 2023 design."
+number = "02788"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3518 DP200020C 109|1764|17|Num
+[[revisions."2023".casillas]]
+id = "02789"
+continuidad_id = "02789"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3518 (DP200020C field 109): 'Ejercicio generación - 2023 - AID pendientes aplicación a principio periodo - Con derecho conversión crédito exigible por exceso cuota [02789]'. The same design prints 'Ejercicio generación - 2023(*) - AID pendientes aplicación a principio periodo - Con derecho conversión crédito exigible por exceso cuota [01417]' on box [01417] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3508 (DP200020C field 99). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02789] on DP200020C; the cell is new on the 2023 design."
+number = "02789"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3519 DP200020C 110|1781|17|Num
+[[revisions."2023".casillas]]
+id = "02790"
+continuidad_id = "02790"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3519 (DP200020C field 110): 'Ejercicio generación - 2023 - AID pendientes aplicación a principio periodo - Sin derecho conversión crédito exigible [02790]'. The same design prints 'Ejercicio generación - 2023(*) - AID pendientes aplicación a principio periodo - Sin derecho conversión crédito exigible [01418]' on box [01418] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3509 (DP200020C field 100). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02790] on DP200020C; the cell is new on the 2023 design."
+number = "02790"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3520 DP200020C 111|1798|17|Num
+[[revisions."2023".casillas]]
+id = "02792"
+continuidad_id = "02792"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3520 (DP200020C field 111): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023 - AID convertidos en crédito exigible periodo [02792]'. The same design prints 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023(*) - AID convertidos en crédito exigible periodo [01419]' on box [01419] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3511 (DP200020C field 102). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02792] on DP200020C; the cell is new on the 2023 design."
+number = "02792"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3521 DP200020C 112|1815|17|Num
+[[revisions."2023".casillas]]
+id = "02793"
+continuidad_id = "02793"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3521 (DP200020C field 112): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023 - AID pendientes aplicación periodos futuros - Con derecho conversión crédito exigible [02793]'. The same design prints 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023(*) - AID pendientes aplicación periodos futuros - Con derecho conversión crédito exigible [01420]' on box [01420] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3512 (DP200020C field 103). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02793] on DP200020C; the cell is new on the 2023 design."
+number = "02793"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3522 DP200020C 113|1832|17|Num
+[[revisions."2023".casillas]]
+id = "02794"
+continuidad_id = "02794"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3522 (DP200020C field 113): 'Ejercicio generación - 2023 - AID pendientes aplicación periodos futuros - Con derecho conversión crédito exigible exceso cuota [02794]'. The same design prints 'Ejercicio generación - 2023(*) - AID pendientes aplicación periodos futuros - Con derecho conversión crédito exigible exceso cuota [01421]' on box [01421] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3513 (DP200020C field 104). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02794] on DP200020C; the cell is new on the 2023 design."
+number = "02794"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3523 DP200020C 114|1849|17|Num
+[[revisions."2023".casillas]]
+id = "02795"
+continuidad_id = "02795"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3523 (DP200020C field 114): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023 - AID pendientes aplicación periodos futuros - Sin derecho conversión crédito exigible [02795]'. The same design prints 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023(*) - AID pendientes aplicación periodos futuros - Sin derecho conversión crédito exigible [01422]' on box [01422] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3514 (DP200020C field 105). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02795] on DP200020C; the cell is new on the 2023 design."
+number = "02795"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3548 DP200020C 139|2274|17|Num
+[[revisions."2023".casillas]]
+id = "02796"
+continuidad_id = "02796"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3548 (DP200020C field 139): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023 - Exceso cuota líquida positiva pendiente a principio periodo [02796]'. The same design prints 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023(*)- Exceso cuota líquida positiva pendiente a principio periodo [01423]' on box [01423] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3544 (DP200020C field 135). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02796] on DP200020C; the cell is new on the 2023 design."
+number = "02796"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
+semantic_role = "is_conversion_aid_exceso_cuota_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3549 DP200020C 140|2291|17|Num
+[[revisions."2023".casillas]]
+id = "02797"
+continuidad_id = "02797"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3549 (DP200020C field 140): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023 - Exceso cuota líquida positiva aplicado periodos impositivos 2008 a 2015 [02797]'. The same design prints 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023(*) - Exceso cuota líquida positiva aplicado periodos impositivos 2008 a 2015 [01424]' on box [01424] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3545 (DP200020C field 136). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02797] on DP200020C; the cell is new on the 2023 design."
+number = "02797"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
+semantic_role = "is_conversion_aid_exceso_cuota_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3550 DP200020C 141|2308|17|Num
+[[revisions."2023".casillas]]
+id = "02798"
+continuidad_id = "02798"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3550 (DP200020C field 141): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023 - Exceso cuota líquida positiva aplicado periodos impositivos iniciados a partir 2016 [02798]'. The same design prints 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023(*) - Exceso cuota líquida positiva aplicado periodos impositivos iniciados a partir 2016 [01425]' on box [01425] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3546 (DP200020C field 137). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02798] on DP200020C; the cell is new on the 2023 design."
+number = "02798"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
+semantic_role = "is_conversion_aid_exceso_cuota_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3551 DP200020C 142|2325|17|Num
+[[revisions."2023".casillas]]
+id = "02799"
+continuidad_id = "02799"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3551 (DP200020C field 142): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023 - Exceso cuota líquida positiva pendiente aplicación periodos futuros [02799]'. The same design prints 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023(*) - Exceso cuota líquida positiva pendiente aplicación periodos futuros [01469]' on box [01469] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3547 (DP200020C field 138). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02799] on DP200020C; the cell is new on the 2023 design."
+number = "02799"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
+semantic_role = "is_conversion_aid_exceso_cuota_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3649 DP200020D 84|1339|17|Num
+[[revisions."2023".casillas]]
+id = "02804"
+continuidad_id = "02804"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3649 (DP200020D field 84): 'Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2023 - Dotaciones pendientes integración a principio periodo - Que no han cumplido condiciones deducibilidad fiscal [02804]'. The same design prints 'Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2023(*) - Dotaciones pendientes integración a principio periodo - Que no han cumplido condiciones deducibilidad fiscal [01479]' on box [01479] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3643 (DP200020D field 78). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02804] on DP200020D; the cell is new on the 2023 design."
+number = "02804"
+section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
+semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_inicial_no_cumplido_condiciones"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3650 DP200020D 85|1356|17|Num
+[[revisions."2023".casillas]]
+id = "02805"
+continuidad_id = "02805"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3650 (DP200020D field 85): 'Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2023 - Dotaciones aplicadas conversión activos imp. diferido [02805]'. The same design prints 'Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2023(*) - Dotaciones aplicadas conversión activos imp. diferido [01480]' on box [01480] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3646 (DP200020D field 81). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02805] on DP200020D; the cell is new on the 2023 design."
+number = "02805"
+section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
+semantic_role = "is_dotaciones_deterioro_creditos_aplicadas_conversion_aid"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3651 DP200020D 86|1373|17|Num
+[[revisions."2023".casillas]]
+id = "02806"
+continuidad_id = "02806"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3651 (DP200020D field 86): 'Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2023 - Dotaciones pendientes integración periodos futuros - Que no han cumplido condiciones deducibilidad fiscal [02806]'. The same design prints 'Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2023(*) - Dotaciones pendientes integración periodos futuros - Que no han cumplido condiciones deducibilidad fiscal [01500]' on box [01500] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3647 (DP200020D field 82). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02806] on DP200020D; the cell is new on the 2023 design."
+number = "02806"
+section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
+semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_final_no_cumplido_condiciones"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
