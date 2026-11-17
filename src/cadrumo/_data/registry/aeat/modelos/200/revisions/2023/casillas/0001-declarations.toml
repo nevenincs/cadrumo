@@ -65,11 +65,12 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:86 DP200001 56|195|1|Num
 [[revisions."2023".casillas]]
-id = "00047"
+id = "DP200001:00047"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:86 (DP200001 field 56): Entidades sometidas a normativa foral [00047]. aeat-dr-200-2022 prints the identical field at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:86 (DP200001 field 56), but the 2022 edition does not declare the row (its unsheeted box number is also printed as a reserve cohort box, which one unsheeted row cannot stand for)."
 continuidad_id = "is-entidades-sometidas-a-normativa-foral"
 number = "00047"
+segmento = "DP200001"
 section = ["entidades_sometidas_a_normativa_foral"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

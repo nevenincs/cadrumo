@@ -36,7 +36,7 @@ target_casilla_id = "DP200013:00552"
 expression = { op = "subtract", args = [
     { op = "subtract", args = [
         { casilla_id = "DP200013:00550" },
-        { casilla_id = "01032" },
+        { casilla_id = "DP200013:01032" },
     ] },
     { casilla_id = "DP200013:00547" },
 ] }
@@ -245,15 +245,15 @@ expression = { op = "max", args = [
                 { casilla_id = "DP200014:00585" },
                 { casilla_id = "DP200014:00584" },
                 { casilla_id = "DP200014:00588" },
-                { casilla_id = "01039" },
-                { casilla_id = "02314" },
-                { casilla_id = "02315" },
+                { casilla_id = "DP200014:01039" },
+                { casilla_id = "DP200014:02314" },
+                { casilla_id = "DP200014:02315" },
                 { casilla_id = "DP200014:00565" },
                 { casilla_id = "DP200014:00590" },
                 { casilla_id = "DP200014:00399" },
                 { casilla_id = "DP200014:00082" },
-                { casilla_id = "01040" },
-                { casilla_id = "01041" },
+                { casilla_id = "DP200014:01040" },
+                { casilla_id = "DP200014:01041" },
             ] },
         ] },
         { literal = "0" },
@@ -414,10 +414,10 @@ required_text = [
 id = "modelo-200-bin-aplicada-maxima"
 target_casilla_id = "DP200013:bin-aplicada-maxima"
 expression = { op = "if_then_else", args = [
-    { op = "greater_than", args = [{ casilla_id = "00072" }, { literal = "0" }] },
+    { op = "greater_than", args = [{ casilla_id = "DP200001:00072" }, { literal = "0" }] },
     { op = "unresolved_outcome", args = [{ text_literal = "m200-extincion-entidad-unsupported" }, { casilla_id = "DP200013:00547" }] },
     { op = "if_then_else", args = [
-        { op = "greater_than", args = [{ casilla_id = "00070" }, { literal = "0" }] },
+        { op = "greater_than", args = [{ casilla_id = "DP200001:00070" }, { literal = "0" }] },
         { casilla_id = "00670" },
         { op = "min", args = [
             { casilla_id = "00670" },

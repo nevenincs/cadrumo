@@ -126,9 +126,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:102 DP200001 72|211|1|Num
 [[revisions."2022".casillas]]
-id = "00010"
+id = "DP200001:00010"
 continuidad_id = "is-entidad-dependiente-de-grupo-fiscal"
 number = "00010"
+segmento = "DP200001"
 section = ["entidad_dependiente_de_grupo_fiscal"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -147,9 +148,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:95 DP200001 65|204|1|Num
 [[revisions."2022".casillas]]
-id = "00012"
+id = "DP200001:00012"
 continuidad_id = "is-socimi"
 number = "00012"
+segmento = "DP200001"
 section = ["socimi"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -212,9 +214,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:99 DP200001 69|208|1|Num
 [[revisions."2022".casillas]]
-id = "00020"
+id = "DP200001:00020"
 continuidad_id = "is-otros-regimenes-especiales"
 number = "00020"
+segmento = "DP200001"
 section = ["otros_regimenes_especiales"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -222,9 +225,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:67 DP200001 37|176|1|Num
 [[revisions."2022".casillas]]
-id = "00021"
+id = "DP200001:00021"
 continuidad_id = "is-establecimiento-permanente"
 number = "00021"
+segmento = "DP200001"
 section = ["establecimiento_permanente"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -254,9 +258,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:69 DP200001 39|178|1|Num
 [[revisions."2022".casillas]]
-id = "00024"
+id = "DP200001:00024"
 continuidad_id = "is-entidad-de-credito"
 number = "00024"
+segmento = "DP200001"
 section = ["entidad_de_credito"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -353,9 +358,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:91 DP200001 61|200|1|Num
 [[revisions."2022".casillas]]
-id = "00033"
+id = "DP200001:00033"
 continuidad_id = "is-regimen-especial-mineria"
 number = "00033"
+segmento = "DP200001"
 section = ["regimen_especial_mineria"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -363,9 +369,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:92 DP200001 62|201|1|Num
 [[revisions."2022".casillas]]
-id = "00034"
+id = "DP200001:00034"
 continuidad_id = "is-regimen-especial-hidrocarburos"
 number = "00034"
+segmento = "DP200001"
 section = ["regimen_especial_hidrocarburos"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -373,9 +380,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:73 DP200001 43|182|1|Num
 [[revisions."2022".casillas]]
-id = "00036"
+id = "DP200001:00036"
 continuidad_id = "is-sociedad-de-garantia-reciproca-o-de-reafianzamiento"
 number = "00036"
+segmento = "DP200001"
 section = ["sociedad_de_garantia_reciproca_o_de_reafianzamient"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -449,9 +457,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:110 DP200001 80|219|1|Num
 [[revisions."2022".casillas]]
-id = "00043"
+id = "DP200001:00043"
 continuidad_id = "is-obligacion-informacion-dt-5a-ris"
 number = "00043"
+segmento = "DP200001"
 section = ["obligacion_informacion_dt_5a_ris"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -481,9 +490,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:74 DP200001 44|183|1|Num
 [[revisions."2022".casillas]]
-id = "00048"
+id = "DP200001:00048"
 continuidad_id = "is-fondo-de-pensiones-real-decreto-legislativo-1-2002-de-29-de-noviembre"
 number = "00048"
+segmento = "DP200001"
 section = ["fondo_de_pensiones_real_decreto_legislativo_1_2002"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -491,9 +501,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:87 DP200001 57|196|1|Num
 [[revisions."2022".casillas]]
-id = "00049"
+id = "DP200001:00049"
 continuidad_id = "is-regimenes-especiales-de-normativa-foral"
 number = "00049"
+segmento = "DP200001"
 section = ["regimenes_especiales_de_normativa_foral"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -588,9 +599,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:97 DP200001 67|206|1|Num
 [[revisions."2022".casillas]]
-id = "00057"
+id = "DP200001:00057"
 continuidad_id = "is-regimen-fiscal-salida-socimi"
 number = "00057"
+segmento = "DP200001"
 section = ["regimen_fiscal_salida_socimi"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -598,9 +610,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:75 DP200001 45|184|1|Num
 [[revisions."2022".casillas]]
-id = "00058"
+id = "DP200001:00058"
 continuidad_id = "is-mutua-de-seguros-o-mutualidad-de-prevision-social"
 number = "00058"
+segmento = "DP200001"
 section = ["mutua_de_seguros_o_mutualidad_de_prevision_social"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -641,9 +654,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:112 DP200001 82|221|1|Num
 [[revisions."2022".casillas]]
-id = "00063"
+id = "DP200001:00063"
 continuidad_id = "is-tipo-de-gravamen-reducido-para-entidades-de-nueva-creacion-dt-22a-lis"
 number = "00063"
+segmento = "DP200001"
 section = ["tipo_de_gravamen_reducido_para_entidades_de_nueva"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -651,9 +665,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:96 DP200001 66|205|1|Num
 [[revisions."2022".casillas]]
-id = "00064"
+id = "DP200001:00064"
 continuidad_id = "is-regimen-fiscal-entrada-socimi"
 number = "00064"
+segmento = "DP200001"
 section = ["regimen_fiscal_entrada_socimi"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -661,9 +676,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:116 DP200001 86|225|1|Num
 [[revisions."2022".casillas]]
-id = "00065"
+id = "DP200001:00065"
 continuidad_id = "is-bonificacion-personal-investigador-rd-475-2014"
 number = "00065"
+segmento = "DP200001"
 section = ["bonificacion_personal_investigador_rd_475_2014"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -671,9 +687,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:77 DP200001 47|186|1|Num
 [[revisions."2022".casillas]]
-id = "00066"
+id = "DP200001:00066"
 continuidad_id = "is-entidad-patrimonial"
 number = "00066"
+segmento = "DP200001"
 section = ["entidad_patrimonial"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -681,9 +698,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:127 DP200001 97|236|1|Num
 [[revisions."2022".casillas]]
-id = "00068"
+id = "DP200001:00068"
 continuidad_id = "00068"
 number = "00068"
+segmento = "DP200001"
 section = ["estados_de_cuentas_de_entidades_de_credito", "entidades_que_sin_ser_entidades_de_credito_utilice"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -691,9 +709,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:90 DP200001 60|199|1|Num
 [[revisions."2022".casillas]]
-id = "00069"
+id = "DP200001:00069"
 continuidad_id = "is-naviera-regimen-flag"
 number = "00069"
+segmento = "DP200001"
 section = ["regimen_especial_de_buques_y_empresas_navieras_en"]
 data_type = "decimal"
 semantic_role = "is_naviera_regimen_flag"
@@ -701,9 +720,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:114 DP200001 84|223|1|Num
 [[revisions."2022".casillas]]
-id = "00070"
+id = "DP200001:00070"
 continuidad_id = "is-compensacion-bases-imponibles-negativas-para-entidades-de-nueva-creacion-art-26-3-lis"
 number = "00070"
+segmento = "DP200001"
 section = ["compensacion_bases_imponibles_negativas_para_entid"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -722,9 +742,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:118 DP200001 88|227|1|Num
 [[revisions."2022".casillas]]
-id = "00072"
+id = "DP200001:00072"
 continuidad_id = "is-extincion-de-entidad"
 number = "00072"
+segmento = "DP200001"
 section = ["extincion_de_entidad"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -732,9 +753,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:119 DP200001 89|228|1|Num
 [[revisions."2022".casillas]]
-id = "00073"
+id = "DP200001:00073"
 continuidad_id = "is-opcion-del-0-7-de-la-cuota-integra-para-fines-sociales"
 number = "00073"
+segmento = "DP200001"
 section = ["opcion_del_0_7_de_la_cuota_integra_para_fines_soci"]
 data_type = "decimal"
 semantic_role = "is_identificacion_opcion_flag"
@@ -742,9 +764,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:122 DP200001 92|231|1|Num
 [[revisions."2022".casillas]]
-id = "00074"
+id = "DP200001:00074"
 continuidad_id = "is-contribuyente-que-financia-producciones-con-derecho-a-la-deduccion-del-art-36-1-y-36-3-lis"
 number = "00074"
+segmento = "DP200001"
 section = ["contribuyente_que_financia_producciones_con_derech"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -752,9 +775,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:78 DP200001 48|187|1|Num
 [[revisions."2022".casillas]]
-id = "00078"
+id = "DP200001:00078"
 continuidad_id = "is-diocesis-provincia-religiosa-o-entidad-eclesiastica-que-integra-entidades-menores-de-ellas-dependientes"
 number = "00078"
+segmento = "DP200001"
 section = ["diocesis_provincia_religiosa_o_entidad_eclesiastic"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -762,9 +786,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:83 DP200001 53|192|1|Num
 [[revisions."2022".casillas]]
-id = "00079"
+id = "DP200001:00079"
 continuidad_id = "is-entidad-zec-en-consolidacion-fiscal"
 number = "00079"
+segmento = "DP200001"
 section = ["entidad_zec_en_consolidacion_fiscal"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -772,9 +797,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:56 DP200001 26|165|1|Num
 [[revisions."2022".casillas]]
-id = "00080"
+id = "DP200001:00080"
 continuidad_id = "is-uniones-federaciones-y-confederaciones-de-cooperativas"
 number = "00080"
+segmento = "DP200001"
 section = ["uniones_federaciones_y_confederaciones_de_cooperat"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -804,9 +830,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:117 DP200001 87|226|1|Num
 [[revisions."2022".casillas]]
-id = "00084"
+id = "DP200001:00084"
 continuidad_id = "is-regimen-especial-de-disolucion-y-liquidacion-de-sicav-dt-41a-lis"
 number = "00084"
+segmento = "DP200001"
 section = ["regimen_especial_de_disolucion_y_liquidacion_de_si"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"
@@ -34296,7 +34323,7 @@ formula = "modelo-200-base-imponible-previa"
 legal_refs = ["ley-27-2014:art-10", "ley-27-2014:art-11", "ley-27-2014:art-15", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1382 DP200013 95|1526|17|N
 [[revisions."2022".casillas]]
-id = "01032"
+id = "DP200013:01032"
 continuidad_id = "is-reserva-capitalizacion-importe"
 number = "01032"
 segmento = "DP200013"
@@ -34479,7 +34506,7 @@ semantic_role = "is_liquidacion_iv_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1453 DP200014 52|782|17|Num
 [[revisions."2022".casillas]]
-id = "01039"
+id = "DP200014:01039"
 continuidad_id = "01039"
 number = "01039"
 segmento = "DP200014"
@@ -34488,7 +34515,7 @@ semantic_role = "is_liquidacion_iv_resultado_misc"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1454 DP200014 53|799|17|Num
 [[revisions."2022".casillas]]
-id = "02314"
+id = "DP200014:02314"
 continuidad_id = "02314"
 number = "02314"
 segmento = "DP200014"
@@ -34497,7 +34524,7 @@ semantic_role = "is_liquidacion_iv_resultado_misc"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1455 DP200014 54|816|17|Num
 [[revisions."2022".casillas]]
-id = "02315"
+id = "DP200014:02315"
 continuidad_id = "is-deduccion-inversion-autoridades-portuarias"
 number = "02315"
 segmento = "DP200014"
@@ -34542,7 +34569,7 @@ semantic_role = "is_liquidacion_iv_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1460 DP200014 59|901|17|Num
 [[revisions."2022".casillas]]
-id = "01040"
+id = "DP200014:01040"
 continuidad_id = "is-liquidacion-iv-importe"
 number = "01040"
 segmento = "DP200014"
@@ -34551,7 +34578,7 @@ semantic_role = "is_liquidacion_iv_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1461 DP200014 60|918|17|Num
 [[revisions."2022".casillas]]
-id = "01041"
+id = "DP200014:01041"
 continuidad_id = "01041"
 number = "01041"
 segmento = "DP200014"

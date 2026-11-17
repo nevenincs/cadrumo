@@ -4519,22 +4519,6 @@ continuidad_origin = "grounded"
 continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2641 (DP200018B field 32): Deducc. para incentivar determ.actividades - 2023: Open Barceona-Trofeo Conde de Godó (OB) - Pendiente de aplicación en periodos futuros [02031]. aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2632 (DP200018 field 140): Deducc. para incentivar determ.actividades - 2024: Open Barcelona-Trofeo Conde de Godó (OB) - Pendiente de aplicación en periodos futuros [02031]. Both print the same box for the same event column; the 2024 design moves it to another sheet and rotates the event year, as it does for every event row."
 
 [[revisions."2024".casilla_overrides]]
-selector = { revision = "2023", id = "00010" }
-fields = { id = "DP200001:00010", segmento = "DP200001" }
-
-[[revisions."2024".casilla_overrides]]
-selector = { revision = "2023", id = "00020" }
-fields = { id = "DP200001:00020", segmento = "DP200001" }
-
-[[revisions."2024".casilla_overrides]]
-selector = { revision = "2023", id = "00024" }
-fields = { id = "DP200001:00024", segmento = "DP200001" }
-
-[[revisions."2024".casilla_overrides]]
-selector = { revision = "2023", id = "00033" }
-fields = { id = "DP200001:00033", segmento = "DP200001" }
-
-[[revisions."2024".casilla_overrides]]
 selector = { revision = "2023", id = "DP200001:00040" }
 fields = { id = "DP200001B:00040", segmento = "DP200001B" }
 
@@ -4545,10 +4529,6 @@ fields = { id = "DP200001B:00041", segmento = "DP200001B" }
 [[revisions."2024".casilla_overrides]]
 selector = { revision = "2023", id = "DP200001:00042" }
 fields = { id = "DP200001B:00042", segmento = "DP200001B" }
-
-[[revisions."2024".casilla_overrides]]
-selector = { revision = "2023", id = "00047" }
-fields = { id = "DP200001:00047", segmento = "DP200001" }
 
 [[revisions."2024".casilla_overrides]]
 selector = { revision = "2023", id = "DP200001:00061" }
