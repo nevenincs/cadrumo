@@ -603,6 +603,11 @@ class ModeloFormGridRow(ModeloFormBase):
     key: str
     heading: ModeloFormText
     cells: tuple[ModeloFormGridCell, ...]
+    #: The position in :attr:`cells` of the one rate box the row prints; ``None`` when it prints none or several.
+    rate_cell: int | None = None
+    #: Whether the amount the row's rate applies to, the box in the grid's declared base column, holds no
+    #: amount; ``None`` when the row prints no single rate or the grid declares no base column.
+    rate_base_empty: bool | None = None
 
 
 class ModeloFormGridBlock(ModeloFormBase):

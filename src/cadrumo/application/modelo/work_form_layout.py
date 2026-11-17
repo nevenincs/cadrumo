@@ -62,7 +62,7 @@ from .work_form_models import (
     ModeloFormSection,
     section_fields,
 )
-from .work_form_rates import with_grounded_grid_rates, with_printed_row_rates
+from .work_form_rates import with_grounded_grid_rates, with_printed_row_rates, with_row_rate_bases
 from .work_form_wording import context_value_text
 
 
@@ -254,7 +254,9 @@ class LayoutWalker:
             )
             for row in block.rows
         )
-        return ModeloFormGridBlock(id=block.id, columns=columns, rows=with_printed_row_rates(rows))
+        return ModeloFormGridBlock(
+            id=block.id, columns=columns, rows=with_row_rate_bases(columns, with_printed_row_rates(rows))
+        )
 
     def alias(self, block: FormFieldBlock) -> ModeloFormContextFieldBlock:
         """Show a declared repeat of a box shown elsewhere, with its label and value and no address of its own."""

@@ -229,6 +229,8 @@ def test_seed_and_override_definitions_keep_confidential_inputs_and_closed_resul
         "amount",
         "provenance",
         "register_status",
+        "words_language",
+        "amount_words",
     }
     assert set(ModeloIvaWalletOverrideProjection.model_json_schema()["properties"]) == {
         "result_version",
@@ -240,6 +242,8 @@ def test_seed_and_override_definitions_keep_confidential_inputs_and_closed_resul
         "evidence_locator",
         "selected_authority",
         "divergence",
+        "words_language",
+        "amount_words",
     }
     with pytest.raises(ValidationError):
         ModeloIvaWalletSeedRequest(profile_id=_PROFILE, period=_PERIOD, amount="1e3")
