@@ -1,3 +1,4 @@
+import type { DraftFieldName } from "./ledgerMovementCheckContract";
 import { ReadSessionScheduler } from "./readSessionScheduler";
 // The backend's answer for what is staged. Which write takes a cell, what a
 // row's staged state would refuse and what would give it a new id are the
@@ -23,7 +24,6 @@ import { readAnswer } from "./ledgerWindow";
 import {
   actionRows,
   STAGE_FIELDS,
-  type DraftField,
   type StagedAction,
   type StagedContent,
   type StagedRowChanges,
@@ -103,7 +103,9 @@ export function stagedCheckRequest(
   const asked = [...ids].filter((id) => rows.has(id)).sort();
   const drafts: LedgerStagedDraft[] = content.drafts.map((draft) => ({
     key: draft.key,
-    fields: (Object.entries(draft.fields) as [DraftField, string | undefined][])
+    fields: (
+      Object.entries(draft.fields) as [DraftFieldName, string | undefined][]
+    )
       .filter(([, value]) => typeof value === "string")
       .map(([field, value]) => ({ field, value: value as string }))
       .sort((a, b) => (a.field < b.field ? -1 : 1)),

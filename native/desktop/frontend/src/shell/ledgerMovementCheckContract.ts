@@ -937,6 +937,17 @@ export type LedgerStagedCheckWindowRequest = Omit<
 
 export type LedgerTrackWindowRequest = Omit<LedgerTrackRequest, "profile_id">;
 
+export type StageFieldName = NonNullable<
+  NonNullable<LedgerStagedCheckRequest["rows"]>[number]["cells"]
+>[number]["field"];
+
+export type DraftFieldName = NonNullable<
+  NonNullable<LedgerStagedCheckRequest["drafts"]>[number]["fields"]
+>[number]["field"];
+
+export type LifecycleAction =
+  LedgerStagedCheckResult["rows"][number]["lifecycle_actions"][number];
+
 export type LedgerLlmReviewMode = LedgerLlmReviewRequest["mode"];
 
 export type LedgerWriteRoute = NonNullable<

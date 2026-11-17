@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, override
 
 from textual import events
 
-from ...application.overview.home import HomeSessionPosture
 from ...core.time.clock import now
 from .account import (
     AccountRecomposeReasonV1,
@@ -127,9 +126,6 @@ class AccountSessionApp(LanguageSessionApp):
             return
         finally:
             self._account_session_polling = False
-        if self._session_expired(session):
-            self._expire_if_reader_current(reader)
-            return
         self._renew_account_session(reader, session)
         if self._read_account_session is reader:
             self._arm_session_lapse()
@@ -154,18 +150,6 @@ class AccountSessionApp(LanguageSessionApp):
             if isinstance(error, AccountSessionUnavailableError)
             else AccountRecomposeReasonV1.EXPIRED
         )
-
-    @staticmethod
-    def _session_expired(session: HomeAccountSession) -> bool:
-        return (
-            session.posture is not HomeSessionPosture.ACTIVE
-            or session.expires_at is None
-            or session.expires_at <= now()
-        )
-
-    def _expire_if_reader_current(self, reader: AccountSessionReaderV1) -> None:
-        if self._read_account_session is reader:
-            self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
 
     def _renew_account_session(self, reader: AccountSessionReaderV1, session: HomeAccountSession) -> None:
         if (

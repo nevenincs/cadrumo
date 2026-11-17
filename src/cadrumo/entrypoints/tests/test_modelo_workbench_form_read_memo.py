@@ -312,6 +312,23 @@ def test_each_read_logs_whether_it_was_served_and_which_key_parts_moved(
         assert built or not {"form_ms", "projection_ms"} & read.keys(), read
 
 
+def test_a_rebuilt_read_logs_whether_the_projection_kept_for_its_form_served_it(
+    reader: _Reader, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger=_OPERATIONS_LOGGER)
+    reader.read()
+    # The form memo forgets its form while the projection kept for that same form stays.
+    reader.recorder.clear()
+    reader.read()
+    reader.read()
+    applied = reader.work.apply(scalar=(_SET_06,))
+    assert applied.refusal is None
+    reader.read()
+
+    reused = [(read.get("outcome"), read.get("projection_pair_reused")) for read in _memo_reads(caplog)]
+    assert reused == [("empty", False), ("empty", True), ("hit", None), ("miss", False)], reused
+
+
 def test_another_language_is_read_afresh(reader: _Reader) -> None:
     reader.read(OutputLanguage.EN)
     reader.read(OutputLanguage.ES)

@@ -15,8 +15,8 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaContinuidadEvolutionDefinition,
-    CasillaEvolutionKind,
 )
+from dev.registry.compiler.cross_revision_divergence import covered_fields
 
 from .casilla_catalogue_models import (
     Coordinate,
@@ -35,10 +35,7 @@ def add_declared_casilla_label_link(
     links: dict[str | None, set[str | None]],
 ) -> None:
     """Add declared casilla label link."""
-    if evolution.evolution_kind not in (
-        CasillaEvolutionKind.LABEL_EVOLVED,
-        CasillaEvolutionKind.LABEL_AND_LEGAL_REFS_EVOLVED,
-    ) or not (evolution.legal_refs and evolution.source_refs):
+    if "label" not in covered_fields(evolution.evolution_kind) or not (evolution.legal_refs and evolution.source_refs):
         return
     start = occurrences.get(str(evolution.from_revision))
     end = occurrences.get(str(evolution.to_revision))

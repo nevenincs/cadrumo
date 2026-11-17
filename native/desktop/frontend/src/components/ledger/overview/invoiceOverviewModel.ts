@@ -3,7 +3,7 @@
 // up here.
 
 import { facts } from "../../../shell/compose";
-import type { PublicDecimal } from "../../../shell/ledger";
+import type { PublicDecimal } from "../../../shell/ledgerInvoiceContract";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";

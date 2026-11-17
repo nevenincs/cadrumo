@@ -1,3 +1,4 @@
+import type { StageFieldName } from "../../../shell/ledgerMovementCheckContract";
 // How one stored movement's field becomes an inspector field: what it
 // shows, the stored value a staged change replaces, why it cannot change,
 // how it is edited, and the cells a new value stages. The values are read
@@ -13,7 +14,6 @@ import {
   effectiveFacts,
   storedFieldValue,
   type StageEvent,
-  type StageField,
   type StagedRowChanges,
 } from "../../../shell/ledgerStage";
 import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
@@ -64,7 +64,7 @@ const CONTROL_OF: Partial<Record<FieldKind, FieldControl>> = {
 };
 /** What the page's records offer as a field is typed in. A group label is a
  * short list, so it opens before anything is typed. */
-const OFFERED: Partial<Record<StageField, FieldSuggest>> = {
+const OFFERED: Partial<Record<StageFieldName, FieldSuggest>> = {
   description: { kind: "description" },
   counterparty: { kind: "counterparty" },
   counterparty_country: { kind: "country" },
@@ -88,7 +88,7 @@ function heldAs(kind: FieldKind, stored: string): string {
  * fraction the product stores, so it is read as one. */
 function parseEntry(
   kind: EditKind,
-  field: StageField,
+  field: StageFieldName,
   raw: string,
   labels: Parameters<typeof parseCell>[3],
 ): CellParse {
@@ -126,7 +126,10 @@ export type InspectorFieldProps = {
 };
 
 /** Why `field` cannot change on the movement, or null. */
-export function fieldLock(scope: FieldScope, field: StageField): string | null {
+export function fieldLock(
+  scope: FieldScope,
+  field: StageFieldName,
+): string | null {
   const { t, row, sealed, transferLocked } = scope;
   const state = row.transaction.lifecycle_state;
   if (!takesChanges(state))
@@ -139,7 +142,7 @@ export function fieldLock(scope: FieldScope, field: StageField): string | null {
 
 function shownValue(
   scope: FieldScope,
-  field: StageField,
+  field: StageFieldName,
   value: string | null | undefined,
 ): string {
   const { t, locale, accounts } = scope;
@@ -162,7 +165,7 @@ function shownValue(
  * A stored value outside the list stays on offer, so it is never lost. */
 export function servedChoiceField(
   scope: FieldScope,
-  field: StageField,
+  field: StageFieldName,
   options: readonly { value: string; label: string }[] | null,
 ): InspectorFieldProps {
   const base = stagedField(scope, field, "token");
@@ -200,7 +203,7 @@ export function servedChoiceField(
  * suggestion is chosen, to fill the fields beside it. */
 export function stagedField(
   scope: FieldScope,
-  field: StageField,
+  field: StageFieldName,
   kind: FieldKind,
   onPick?: (picked: Suggestion) => void,
 ): InspectorFieldProps {

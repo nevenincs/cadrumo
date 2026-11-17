@@ -1,3 +1,7 @@
+import type {
+  StageFieldName,
+  DraftFieldName,
+} from "../../../shell/ledgerMovementCheckContract";
 import {
   useCallback,
   useEffect,
@@ -32,9 +36,7 @@ import {
   reduceStage,
   storedFieldValue,
   type Draft,
-  type DraftField,
   type StageEvent,
-  type StageField,
   type StagedContent,
   type StageState,
 } from "../../../shell/ledgerStage";
@@ -113,8 +115,8 @@ const CELL_OFFERS: Partial<Record<ColumnId, SuggestionKind>> = {
 function changedFields(
   now: StagedContent,
   before: StagedContent,
-): StageField[] {
-  const found = new Set<StageField>();
+): StageFieldName[] {
+  const found = new Set<StageFieldName>();
   for (const id of new Set([
     ...Object.keys(now.rows),
     ...Object.keys(before.rows),
@@ -124,7 +126,7 @@ function changedFields(
     for (const field of new Set([
       ...Object.keys(a),
       ...Object.keys(b),
-    ]) as Set<StageField>)
+    ]) as Set<StageFieldName>)
       if (JSON.stringify(a[field]) !== JSON.stringify(b[field]))
         found.add(field);
   }
@@ -672,7 +674,7 @@ export function useMovementEditing(input: MovementEditingInput) {
     if (!field || !backendOwnsRefusal(field, refusal)) return;
     const typed = refusal.raw.trim();
     if (subject.kind === "draft") {
-      applyDrafts([{ key, field: field as DraftField, value: typed }]);
+      applyDrafts([{ key, field: field as DraftFieldName, value: typed }]);
       return;
     }
     onStage({
@@ -681,9 +683,9 @@ export function useMovementEditing(input: MovementEditingInput) {
       cells: [
         {
           id: key,
-          field: field as StageField,
+          field: field as StageFieldName,
           value: { kind: "set", value: typed },
-          stored: storedFieldValue(subject.row, field as StageField),
+          stored: storedFieldValue(subject.row, field as StageFieldName),
         },
       ],
     });

@@ -507,7 +507,12 @@ class ModeloWorkbenchFormExecutor:
                     language=payload.output_language,
                 )
             projected = project_modelo_workbench_form(
-                payload.profile_id, payload.work_unit_id, form, memory=memory, context=projection_context
+                payload.profile_id,
+                payload.work_unit_id,
+                form,
+                memory=memory,
+                context=projection_context,
+                spent=spent,
             )
             if spent is not None:
                 spent["projection_ms"] = _elapsed_ms(began)

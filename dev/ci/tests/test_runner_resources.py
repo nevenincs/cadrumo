@@ -49,6 +49,10 @@ _LONGEST_INTERVAL: Final = 60
 #: 3 to 4 GB (one reached 5.5 GB). Four of them used the hosted runner's 16 GB
 #: and 3 GB swap whatever the shard size, and the runner was lost mid-test.
 _MOST_SHARD_WORKERS: Final = 3
+#: Tests in the population bundle frontend sources whose ``@fixtures`` imports
+#: resolve only into a build tree, which a hosted runner holds only once the
+#: window projections are produced.
+_WINDOW_PROJECTIONS: Final = "just fixtures-seed-window"
 
 _MEMINFO: Final = (
     "MemTotal:       16384000 kB\n"
@@ -207,6 +211,9 @@ def _shard_violations(document: Mapping[str, Any]) -> list[str]:
             violations.append(
                 f"{job_name} runs its shard with {workers or 'no'} test workers, not 1 to {_MOST_SHARD_WORKERS}"
             )
+        seeds = [index for index, step in enumerate(steps) if str(step.get("run") or "").strip() == _WINDOW_PROJECTIONS]
+        if not seeds or seeds[0] > shard_steps[0]:
+            violations.append(f"{job_name} runs the shard population before producing the window projections")
         setups = [step for step in steps if step.get("uses") == _SETUP_ACTION]
         if not any((step.get("with") or {}).get("browser") in (True, "true") for step in setups):
             violations.append(f"{job_name} runs the shard population without provisioning Chromium")
@@ -309,3 +316,18 @@ def test_the_shard_rule_reports_more_workers_than_the_runner_holds(workers: str)
     assert _shard_violations(document) == [
         f"tests runs its shard with {workers or 'no'} test workers, not 1 to {_MOST_SHARD_WORKERS}"
     ]
+
+
+def test_the_shard_rule_reports_window_projections_missing_or_produced_after_the_tests() -> None:
+    def seed_index(steps: list[dict[str, Any]]) -> int:
+        return next(index for index, step in enumerate(steps) if step.get("run", "").strip() == _WINDOW_PROJECTIONS)
+
+    removed = _live()
+    steps = removed["jobs"]["tests"]["steps"]
+    del steps[seed_index(steps)]
+    assert _shard_violations(removed) == ["tests runs the shard population before producing the window projections"]
+
+    late = _live()
+    steps = late["jobs"]["tests"]["steps"]
+    steps.append(steps.pop(seed_index(steps)))
+    assert _shard_violations(late) == ["tests runs the shard population before producing the window projections"]
