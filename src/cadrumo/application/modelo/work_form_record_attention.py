@@ -62,7 +62,7 @@ def record_attention(
         and (applies or issue.attention in _UNASKED_LEVELS)
     )
     return tuple(
-        ModeloFormRecordAttention(level=level, count=counted[level]) for level in _COUNTED_LEVELS if counted[level]
+        ModeloFormRecordAttention.counted(level, counted[level]) for level in _COUNTED_LEVELS if counted[level]
     )
 
 
