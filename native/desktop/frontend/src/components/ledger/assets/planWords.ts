@@ -3,7 +3,10 @@ import { formatAmount, formatPercent } from "../../../shared/numbers";
 import { facts } from "../../../shell/compose";
 import type { PublicDecimal } from "../../../shell/ledger";
 import { canonicalDecimal } from "../../../shell/ledgerGrammar";
-import type { PlanRow, TimelineChange } from "../../../shell/ledgerSetup";
+import type {
+  ActivityAssetPlanRow,
+  ActivityAssetTimelineChange,
+} from "../../../shell/ledgerActivityAssetReadContract";
 import type { Translate } from "../../../shell/strings";
 import { ASSET_KEYS, tokenWord, unindexed, wordOfKey } from "./assetsWords";
 
@@ -45,7 +48,7 @@ export const stateTone = (token: string) =>
 /** The mark of a year's missing recorded figure: a year that applies has
  * nothing recorded; one that does not apply says so. The plan states which. */
 export const recordedMark = (
-  row: Pick<PlanRow, "applies">,
+  row: Pick<ActivityAssetPlanRow, "applies">,
 ): "nothing_recorded" | "not_applicable" =>
   row.applies ? "nothing_recorded" : "not_applicable";
 
@@ -55,7 +58,7 @@ export const recordedMark = (
 export function nothingOpen(
   t: Translate,
   row: Pick<
-    PlanRow,
+    ActivityAssetPlanRow,
     | "claimable_intervals"
     | "claimable_refusal_words"
     | "claimable_refusal_remedy_words"
@@ -151,7 +154,7 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 export function changeValueText(
   t: Translate,
   locale: string,
-  change: TimelineChange,
+  change: ActivityAssetTimelineChange,
   side: "before" | "after",
 ): string {
   const value = change[side];
@@ -193,7 +196,7 @@ export function changeValueText(
 
 /** Why a year has no planned figure: the typed absence and the reason the
  * backend gives for it where it gives one. */
-export function absentText(t: Translate, planned: PlanRow): string | null {
+export function absentText(t: Translate, planned: ActivityAssetPlanRow): string | null {
   if (planned.absence === null) return null;
   const word = tokenWord(t, "plan_absence", planned.absence);
   return facts(t, [word, planned.absence_reason_words ?? null]);

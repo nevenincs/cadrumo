@@ -7,12 +7,10 @@ from uuid import UUID
 import typer
 from pydantic import BaseModel
 
-from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ...application.review.read_contracts import (
     REVIEW_QUEUE_OPERATION_DEFINITION_ID,
@@ -25,12 +23,7 @@ from ...application.review.read_projections import (
     ReviewViewReadProjection,
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .common import active_bucket_id_or_refuse
-
-
-def _client(ctx: typer.Context) -> FrontendClient:
-    """Return only the invocation client bound to the immutable active profile."""
-    return require_profile_client(ctx, expected_profile_id=UUID(active_bucket_id_or_refuse()))
+from .profile_bound_clients import active_profile_client
 
 
 def _submit[ProjectionT: BaseModel](
@@ -44,7 +37,7 @@ def _submit[ProjectionT: BaseModel](
     profile_id = getattr(request, "profile_id", None)
     if not isinstance(profile_id, UUID):
         raise RefusalError(RefusalCode.INVALID_FRAME)
-    client = _client(ctx)
+    client = active_profile_client(ctx)
     if client.profile_id != profile_id:
         raise RefusalError(RefusalCode.INVALID_FRAME)
     return run_registered_operation(

@@ -40,12 +40,13 @@ from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.transactions.own_accounts import OwnAccountId
-from .common import active_bucket_id_or_refuse, bad, emit_envelope
+from .common import bad, emit_envelope
 from .modelo_m360_results import (
     Modelo360SolicitudChangeResult,
     Modelo360SolicitudListResult,
     Modelo360SolicitudPayload,
 )
+from .profile_bound_clients import active_profile_id
 
 
 class Modelo360SolicitudSecrets(MachineSecretPayload):
@@ -103,10 +104,6 @@ def _run(ctx: typer.Context, request: Modelo360SolicitudRequest) -> Modelo360Sol
     return result
 
 
-def _profile_id() -> UUID:
-    return UUID(active_bucket_id_or_refuse())
-
-
 def _line(solicitud: Modelo360SolicitudProjection) -> str:
     account = solicitud.own_account_id or solicitud.masked_iban or "-"
     return (
@@ -140,7 +137,7 @@ def m360_declare(
     secrets_fd: int | None = None,
 ) -> None:
     """Declare the solicitud for a filing year; its document arrives only through the secret channel."""
-    profile_id = _profile_id()
+    profile_id = active_profile_id()
     selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     if selection is None:
         raise bad(tr("cli.modelo.m360.errors.secret_channel_required"))
@@ -164,7 +161,7 @@ def m360_declare(
 
 def m360_list(ctx: typer.Context) -> None:
     """List every declared solicitud by year, destination, holder and masked account."""
-    result = _run(ctx, Modelo360SolicitudRequest(profile_id=_profile_id(), action="list"))
+    result = _run(ctx, Modelo360SolicitudRequest(profile_id=active_profile_id(), action="list"))
     lines = [_line(item) for item in result.solicitudes]
     if not result.solicitudes:
         lines.append(tr("cli.modelo.m360.none"))
@@ -180,7 +177,7 @@ def m360_remove(ctx: typer.Context, filing_year: int) -> None:
     """Remove the solicitud declared for a filing year."""
     result = _run(
         ctx,
-        Modelo360SolicitudRequest(profile_id=_profile_id(), action="remove", filing_year=filing_year),
+        Modelo360SolicitudRequest(profile_id=active_profile_id(), action="remove", filing_year=filing_year),
     )
     _emit_change(ctx, "modelo.m360.remove", filing_year, result)
 

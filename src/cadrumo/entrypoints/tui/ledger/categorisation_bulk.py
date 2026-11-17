@@ -34,7 +34,6 @@ from .categorisation_common import (
     StagedChangeV1,
     action,
     action_row,
-    blank_to_none,
     classification_label,
     field,
     heading,
@@ -44,6 +43,7 @@ from .categorisation_common import (
 )
 from .categorisation_doors import LedgerBulkClassifyDoorV1, LedgerSelectionDoorV1
 from .controller import LedgerWorkspaceController
+from .text_values import blank_to_none
 
 BULK_PAGE_SIZE: Final = 200
 """The most entries the screen reads and renders at once."""

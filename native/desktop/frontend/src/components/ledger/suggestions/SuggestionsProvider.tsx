@@ -24,7 +24,7 @@ import type { LedgerPort } from "../../../shell/ledger";
 import type { OutputLanguage } from "../../../shell/ledgerClassificationContract";
 import type { ProrrataListedEntryProjection } from "../../../shell/ledgerProrrataContract";
 import type { BienInversionRecordProjection } from "../../../shell/ledgerCapitalGoodsContract";
-import type { LedgerEntryOptionsResult } from "../../../shell/ledgerSetup";
+import type { LedgerEntryOptionsProjection } from "../../../shell/ledgerEntryContract";
 import {
   NO_VOCABULARY,
   servedVocabulary,
@@ -199,7 +199,8 @@ function useRowsSeen(
   }, [rows]);
 }
 
-type ServedOptions = LedgerEntryOptionsResult["families"][number]["options"];
+type ServedOptions =
+  LedgerEntryOptionsProjection["families"][number]["options"];
 
 /** The families of words the entry vocabularies are served with; their words
  * ship with the window, so a key outside them has none. */

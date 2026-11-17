@@ -8,7 +8,7 @@
 
 import type { FieldSpec } from "../../../shared/fieldKind";
 import { heldDecimal } from "../../../shared/numbers";
-import type { LedgerInvoiceDuplicateRequest } from "../../../shell/ledgerInvoiceOperations";
+import type { LedgerInvoiceDuplicateWindowRequest } from "../../../shell/ledgerInvoiceContract";
 import type {
   CatalogueInvoiceSnapshot,
   InvoiceKind,
@@ -520,7 +520,7 @@ export function duplicateQuestion(
   draft: InvoiceDraftProjectionV1,
   kind: InvoiceKind | null,
   corrections: Corrections,
-): LedgerInvoiceDuplicateRequest | null {
+): LedgerInvoiceDuplicateWindowRequest | null {
   if (kind === null) return null;
   const corrected = correctionValues(draft, kind, corrections);
   const values = corrected.kind === "ok" ? corrected.values : {};

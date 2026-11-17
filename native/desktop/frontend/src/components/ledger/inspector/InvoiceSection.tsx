@@ -6,7 +6,7 @@ import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Icon } from "@/components/ui/icon";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { facts } from "@/shell/compose";
-import type { InvoiceListResult } from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceListProjection } from "../../../shell/ledgerInvoiceContract";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { LedgerPort } from "../../../shell/ledger";
 import type { LedgerStagedRowAnswer } from "../../../shell/ledgerMovementCheckContract";
@@ -57,7 +57,7 @@ export function InvoiceSection({
   answer: LedgerStagedRowAnswer | undefined;
   /** The window's movements, for suggestions one to one. */
   rows: readonly LedgerTransactionReviewProjection[];
-  invoices: InspectorRead<InvoiceListResult> | null;
+  invoices: InspectorRead<InvoiceListProjection> | null;
   /** What is staged on this movement. */
   actions: readonly StagedAction[];
   /** What is staged on every movement. */

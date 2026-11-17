@@ -12,7 +12,7 @@ import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import { facts } from "../../../shell/compose";
 import type { LedgerPort, PickedFile } from "../../../shell/ledger";
 import type { LedgerImportResultProjection } from "../../../shell/ledgerTransferContract";
-import type { InvoiceImportResult } from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceImportProjection } from "../../../shell/ledgerInvoiceContract";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";
@@ -31,7 +31,7 @@ import type { LedgerTransactionProjection } from "../../../shell/ledgerInvoiceCo
 /** What an import's apply answered, by the kind of import. */
 export type ImportOutcome =
   | { kind: "bank"; applied: BankApplied[] }
-  | { kind: "book"; file: PickedFile; answer: Attempt<InvoiceImportResult> }
+  | { kind: "book"; file: PickedFile; answer: Attempt<InvoiceImportProjection> }
   | { kind: "documents"; applied: DocumentsApplied };
 
 /** A likely duplicate as imported, beside what it was flagged against. */
@@ -132,7 +132,7 @@ function DuplicateCompare({
   );
 }
 
-type RefusedRow = InvoiceImportResult["refused"][number];
+type RefusedRow = InvoiceImportProjection["refused"][number];
 
 /** The rows an import refused, each with its reason; the
  * columns can be sorted and dragged to a width. */

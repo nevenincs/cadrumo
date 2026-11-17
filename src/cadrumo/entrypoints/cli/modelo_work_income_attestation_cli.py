@@ -22,9 +22,8 @@ from cadrumo_client.commands.profile_binding import require_profile_client
 from ...application.modelo.absence_statement_submission import absence_statement_submission
 from ...application.modelo.action_errors import ModeloEditRefusedError, modelo_edit_refusal_error
 from ...application.modelo.edit_apply_contracts import ModeloEditApplyPublicResultV1
-from ...application.modelo.edit_models import ModeloEditRefusedV1, ModeloEditSubmissionV1
+from ...application.modelo.edit_models import ModeloEditSubmissionV1
 from ...application.modelo.work_form_models import ModeloFormCarryAttestation
-from ...application.modelo.workbench_operations import ModeloEditPreflightProjectionV1
 from ...core.absence_attestation_family import AbsenceAttestationFamily
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language as active_output_language
@@ -32,6 +31,7 @@ from ...core.i18n.render import tr
 from .common import emit_envelope
 from .modelo_cli_support import resolve_explicit_or_active_bucket_id
 from .modelo_work_income_attestation_payloads import WorkAttestWorkIncomeResult, WorkIncomeStatementPayload
+from .modelo_work_preflight_findings import checked
 from .operation_modelo_carry_attestation import (
     apply_modelo_edit_for_cli,
     preflight_modelo_edit_for_cli,
@@ -50,13 +50,6 @@ def _statement(attestation: ModeloFormCarryAttestation) -> WorkIncomeStatementPa
         effect_words=attestation.effect_words,
         binding_ids=list(attestation.binding_ids),
     )
-
-
-def _checked(review: ModeloEditPreflightProjectionV1) -> list[str]:
-    """The check's findings in words, refusing the staged change the check refused."""
-    if isinstance(review.outcome, ModeloEditRefusedV1):
-        raise modelo_edit_refusal_error(review.outcome.refusal)
-    return [finding.words for finding in review.findings]
 
 
 def _lines(result: WorkAttestWorkIncomeResult, work_unit_id: str) -> list[str]:
@@ -112,7 +105,7 @@ def work_attest_work_income(
     )
     submission = absence_statement_submission(form.admitted_baseline.to_baseline(), attestations, family=_FAMILY)
     review = preflight_modelo_edit_for_cli(client, submission, language=language)
-    findings = _checked(review)
+    findings = checked(review)
     applied: ModeloEditApplyPublicResultV1 | None = None
     if confirmed:
         if any(finding.blocking for finding in review.findings):

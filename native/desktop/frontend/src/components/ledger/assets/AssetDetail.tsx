@@ -10,7 +10,7 @@ import { AmortizationPlan } from "./AmortizationPlan";
 import { AssetTimeline } from "./AssetTimeline";
 import { NotApplicable, NotKnown, NothingRecorded } from "./AssetList";
 import { figureText } from "./planWords";
-import type { AssetListRow } from "../../../shell/ledgerSetup";
+import type { ActivityAssetListRow } from "../../../shell/ledgerActivityAssetReadContract";
 import type { FormKind } from "./assetFields";
 import {
   ASSET_KEYS,
@@ -64,7 +64,7 @@ export function AssetDetail({
   port: LedgerPort;
   reader: string | null;
   locale: string;
-  row: AssetListRow;
+  row: ActivityAssetListRow;
   year: number | null;
   /** Counts the list's reads, so a view reads again after each one. */
   version: number;

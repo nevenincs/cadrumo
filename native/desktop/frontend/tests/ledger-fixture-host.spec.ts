@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { fixtureLedger } from "../src/dev/fixtures/ledger";
 import type { FileToken } from "../src/shell/ledger";
-import type { LedgerServedPeriod } from "../src/shell/ledgerSetup";
+import type { LedgerPeriodProjection } from "../src/shell/ledgerEntryContract";
 import recorded from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import {
   RELAY_PAYLOAD_LIMIT,
@@ -94,7 +94,7 @@ test("the scenario's readiness check asks what the product's does: a usage ratio
   const quarter = Object.values(
     recorded.periods.years.en as unknown as Record<
       string,
-      LedgerServedPeriod[]
+      LedgerPeriodProjection[]
     >,
   )
     .flat()

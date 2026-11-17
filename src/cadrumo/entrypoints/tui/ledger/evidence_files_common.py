@@ -34,12 +34,6 @@ EVIDENCE_FILES_CSS = tokenised(
 )
 
 
-def blank_to_none(value: str) -> str | None:
-    """Read a field left blank as absent rather than as an empty value."""
-    stripped = value.strip()
-    return stripped or None
-
-
 def short_identity(value: str) -> str:
     """The leading characters of an identifier, enough to tell rows apart."""
     return value[:12]
@@ -218,7 +212,6 @@ __all__ = [
     "EvidenceFilesPager",
     "EvidenceFilesPaging",
     "EvidenceFilesToolScreen",
-    "blank_to_none",
     "paging_controls",
     "paint_paging",
     "short_identity",
