@@ -19,6 +19,7 @@ from ..errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
 from ..kdf_codec import close_fd
 from ..kdf_lease_worker import KDF_LEASE_WAITING
 from ..kdf_process import launch_lease_worker, terminate_process_tree
+from ..process_pidfd import open_process_pidfd
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -244,7 +245,7 @@ def test_killed_posix_owner_cannot_strand_a_blocked_helper_or_later_lease(tmp_pa
         try:
             assert owner.stdout is not None
             helper_pid = int(await asyncio.wait_for(owner.stdout.readline(), timeout=30))
-            helper_pidfd = os.pidfd_open(helper_pid)
+            helper_pidfd = open_process_pidfd(helper_pid)
             owner.kill()
             assert await asyncio.wait_for(owner.wait(), timeout=5) != 0
             assert select.select([helper_pidfd], [], [], 5)[0], "blocked helper survived its exact owner's death"
