@@ -44,7 +44,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect
-from ...core.time.clock import now
+from ...core.time.clock import now, today_madrid
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ..operations.access_port import OperationAccessResolver
@@ -77,6 +77,7 @@ from .edit_apply_scalar_contracts import ModeloEditWireScalar, wire_scalar_value
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_carry_withdrawal import calculation_refusing_carry_bindings
 from .edit_models import (
+    ModeloEditAdmissionResultV1,
     ModeloEditAdmittedV1,
     ModeloEditCorrectionAddressV1,
     ModeloEditNormalisation,
@@ -109,6 +110,7 @@ from .work_form_scalar_values import comparable_entry
 from .work_form_service import modelo_form_snapshot
 from .work_lifecycle import get_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
+from .workbench_form_read_memo import WorkbenchFormReadKey, admission_identity, with_fresh_admission
 from .workbench_projection import (
     ModeloWorkbenchFormProjectionV1,
     ModeloWorkFilingStateProjectionV1,
@@ -119,6 +121,7 @@ from .workbench_projection_memory import FormProjectionContext
 from .workbench_read import (
     ModeloWorkbenchReadPorts,
     ModeloWorkbenchReadPortsFactory,
+    admit_workbench_form_edit,
     modelo_edit_prerequisite_source_boxes,
     read_modelo_casilla_help,
     read_modelo_workbench_filing_state,
@@ -392,21 +395,51 @@ class ModeloWorkbenchFormExecutor:
             request.definition_id, request.subject_ref, MODELO_WORK_FORM_OPERATION_DEFINITION_ID, payload.work_unit_id
         )
         operation = context.authority_operation
-        memory = (
-            self._capture_memory.for_profile(str(payload.profile_id)).form_projection
-            if self._capture_memory is not None
-            else None
-        )
+        held = self._capture_memory.for_profile(str(payload.profile_id)) if self._capture_memory is not None else None
+        memory = held.form_projection if held is not None else None
 
         def read() -> ModeloWorkbenchFormProjectionV1:
             bucket_id = _bucket_id(payload.profile_id)
+            ports = self._ports_factory(bucket_id, operation)
+            contracts = self._contracts()
+            if held is None or ports.store_epoch is None:
+                return fresh(bucket_id, ports, contracts, None)
+            # The epoch is read before anything it covers, so a write during the read only moves it on.
+            epoch = ports.store_epoch()
+            admission = admit_workbench_form_edit(
+                payload.work_unit_id,
+                bucket_id=bucket_id,
+                ports=ports,
+                operation=operation,
+                operation_contracts=contracts,
+            )
+            key = WorkbenchFormReadKey(
+                profile_id=payload.profile_id,
+                work_unit_id=payload.work_unit_id,
+                store_epoch=epoch,
+                logical_generation=operation.generation.logical_generation,
+                contract_set_digest=contracts.contract_set_digest,
+                language=payload.output_language,
+                as_of=today_madrid(),
+                admission=admission_identity(admission),
+            )
+            served = held.form_read.reuse(key, lambda: fresh(bucket_id, ports, contracts, admission))
+            return with_fresh_admission(served, admission)
+
+        def fresh(
+            bucket_id: str,
+            ports: ModeloWorkbenchReadPorts,
+            contracts: OperationPublicContractSetV1,
+            admission: ModeloEditAdmissionResultV1 | None,
+        ) -> ModeloWorkbenchFormProjectionV1:
             form = read_modelo_workbench_form(
                 payload.work_unit_id,
                 bucket_id=bucket_id,
-                ports=self._ports_factory(bucket_id, operation),
+                ports=ports,
                 operation=operation,
-                operation_contracts=self._contracts(),
+                operation_contracts=contracts,
                 language=payload.output_language,
+                admission=admission,
             )
             admission = form.admission
             projection_context = None

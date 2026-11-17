@@ -728,23 +728,28 @@ export function scenarioHost(
   const afterReads = async () => {
     if (readsHeld) await readsHeld;
   };
+  // The window calls the served session through this one, looking each method
+  // up when it is called: a spec that replaces a method of the served session
+  // (window.__fixtureAgentSession) is then the one the window calls.
   const heldSession = <Args extends unknown[], Result>(
-    read: ((...args: Args) => Promise<Result>) | undefined,
+    read: () => ((...args: Args) => Promise<Result>) | undefined,
   ) =>
-    read &&
+    read() &&
     (async (...args: Args) => {
       await afterReads();
-      return read(...args);
+      return read()!(...args);
     });
-  const agentSession: typeof servedSession = {
-    ...servedSession,
-    status: heldSession(servedSession.status)!,
-    observeStatus: heldSession(servedSession.observeStatus)!,
-    providerCatalog: heldSession(servedSession.providerCatalog)!,
-    localModels: heldSession(servedSession.localModels),
-    localEngine: heldSession(servedSession.localEngine),
-    skills: heldSession(servedSession.skills),
-  };
+  const agentSession: typeof servedSession = Object.assign(
+    Object.create(servedSession) as typeof servedSession,
+    {
+      status: heldSession(() => servedSession.status)!,
+      observeStatus: heldSession(() => servedSession.observeStatus)!,
+      providerCatalog: heldSession(() => servedSession.providerCatalog)!,
+      localModels: heldSession(() => servedSession.localModels),
+      localEngine: heldSession(() => servedSession.localEngine),
+      skills: heldSession(() => servedSession.skills),
+    },
+  );
   const agentAccess = agentAccessFixture({
     say,
     wait: async () => {

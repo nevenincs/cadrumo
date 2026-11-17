@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import type {
-  AgentSession,
-  AgentAttachmentGrants,
-} from "../../shell/agentSession";
+import type { AgentSession } from "../../shell/agentSession";
+import type { AttachmentGrantsAnswer } from "../../shell/attachmentAdminContract";
 import { useStrings } from "../../shell/strings";
 import { AgentTextAction } from "./AgentAction";
 
@@ -17,7 +15,7 @@ export function AttachmentGrants({
   session: Pick<AgentSession, "attachmentGrants" | "attachmentGrantRevoke">;
 }) {
   const t = useStrings();
-  const [listed, setListed] = useState<AgentAttachmentGrants | null>(null);
+  const [listed, setListed] = useState<AttachmentGrantsAnswer | null>(null);
   const refresh = useCallback(() => {
     session.attachmentGrants().then(setListed, () => setListed(null));
   }, [session]);

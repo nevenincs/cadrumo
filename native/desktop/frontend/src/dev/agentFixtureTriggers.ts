@@ -8,6 +8,9 @@ import type { AgentToolRefusal } from "../shell/agentSession";
 export const FAILS_FIRST = /falla antes de escribir/i;
 export const AUTHENTICATION_REQUIRED = /requiere iniciar sesión/i;
 export const UNEXPECTED_PROVIDER_CONDITION = /condición desconocida/i;
+/** A message whose run fails because its model ran out of room while it ran,
+ * after the send was admitted. */
+export const RUN_OUTGROWS_MODEL = /se queda sin memoria/i;
 export const TOOL_FAILS = /herramienta falla/i;
 // A reply that thinks aloud, records what its tool call took and gave, and
 // answers in the Markdown a real agent writes.

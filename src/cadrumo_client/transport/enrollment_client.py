@@ -14,7 +14,7 @@ from cadrumo.adapters.persistence.storage.custody.automation_client_credentials 
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentProposal
 
@@ -80,7 +80,7 @@ class NativeEnrollmentClient:
         return self._receipt
 
     def _live(self) -> None:
-        if now() >= self.prepared.expires_at:
+        if wall_now() >= self.prepared.expires_at:
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
 
     def _checked[ReplyT: EnrollmentRecorded | EnrollmentIdle | EnrollmentDelivery](

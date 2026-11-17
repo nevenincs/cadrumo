@@ -4,9 +4,12 @@
 // what makes the run load them.
 
 import type {
+  SkillDetailRecord,
   SkillFileRecord,
+  SkillFindingRecord,
   SkillListResponse,
   SkillRecord,
+  SkillVerificationRecord,
 } from "./agentGatewayContract";
 
 /** A bundled skill's name: `cadrumo-` and a lowercase, hyphenated rest. */
@@ -14,25 +17,6 @@ export const SKILL_NAME = /^cadrumo-[a-z0-9][a-z0-9-]{0,118}$/;
 
 /** The most skills one message may load. */
 export const MAX_SKILLS_PER_MESSAGE = 8;
-
-/** One skill in full: its summary and its SKILL.md, frontmatter included. */
-export type AgentSkillDetail = SkillRecord & { content: string };
-
-export type AgentSkillFinding = {
-  severity: "error" | "warning";
-  code: string;
-  message: string;
-  path: string | null;
-};
-
-/** The agent's checks of one skill. It is valid when no finding is an
- * error. */
-export type AgentSkillVerification = {
-  name: string;
-  digest: string;
-  valid: boolean;
-  findings: AgentSkillFinding[];
-};
 
 /** What the composer does on its own rather than send. */
 export type SkillCommandKind = "review" | "verify";
@@ -161,39 +145,35 @@ export function readSkillInventory(value: unknown): SkillListResponse | null {
   return { revision, skills: skills as SkillRecord[] };
 }
 
-export function readSkillDetail(value: unknown): AgentSkillDetail | null {
+/** One skill with its SKILL.md, or null when the agent answered something
+ * else. */
+export function readSkillDetail(value: unknown): SkillDetailRecord | null {
   const summary = readSummary(value);
   if (!summary || !isRecord(value) || typeof value.content !== "string")
     return null;
   return { ...summary, content: value.content };
 }
 
-function readFinding(value: unknown): AgentSkillFinding | null {
+function readFinding(value: unknown): SkillFindingRecord | null {
   if (!isRecord(value)) return null;
   const { severity, code, message, path } = value;
   if (severity !== "error" && severity !== "warning") return null;
   if (typeof code !== "string" || typeof message !== "string") return null;
-  return {
-    severity,
-    code,
-    message,
-    path: typeof path === "string" ? path : null,
-  };
+  if (path !== null && typeof path !== "string") return null;
+  return { severity, code, message, path };
 }
 
+/** The agent's checks of one skill, or null when it answered something
+ * else. A finding it cannot read makes the whole answer unreadable. */
 export function readSkillVerification(
   value: unknown,
-): AgentSkillVerification | null {
+): SkillVerificationRecord | null {
   if (!isRecord(value)) return null;
   const { name, digest, valid, findings } = value;
-  if (typeof name !== "string" || typeof valid !== "boolean") return null;
-  if (!Array.isArray(findings)) return null;
+  if (typeof name !== "string" || !SKILL_NAME.test(name)) return null;
+  if (typeof digest !== "string" || !DIGEST.test(digest)) return null;
+  if (typeof valid !== "boolean" || !Array.isArray(findings)) return null;
   const read = findings.map(readFinding);
   if (read.some((finding) => finding === null)) return null;
-  return {
-    name,
-    digest: typeof digest === "string" ? digest : "",
-    valid,
-    findings: read as AgentSkillFinding[],
-  };
+  return { name, digest, valid, findings: read as SkillFindingRecord[] };
 }
