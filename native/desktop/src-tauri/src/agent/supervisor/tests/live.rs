@@ -5,7 +5,7 @@ use super::{every, observed};
 use crate::agent::{launcher::Event, runner::Signal};
 use cadrumo_application::diagnostics::Diagnostics;
 use cadrumo_application::diagnostics::service::AgentRefusal as Refusal;
-use cadrumo_application::diagnostics::service::ServiceFact;
+use cadrumo_application::diagnostics::service::{AgentStopCause, ServiceFact};
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -565,6 +565,21 @@ async fn a_shared_person_failure_retires_a_ready_service_and_allows_a_fresh_star
     rig.supervisor.close().await.unwrap();
 }
 
+/// The causes of each service stop the rig recorded, stopping and stopped, in order.
+fn stop_causes(rig: &Rig) -> Vec<AgentStopCause> {
+    rig.diagnostics
+        .snapshot(u64::MAX)
+        .events
+        .iter()
+        .filter_map(|event| match event.service {
+            Some(ServiceFact::AgentStopping { cause } | ServiceFact::AgentStopped { cause }) => {
+                Some(cause)
+            }
+            _ => None,
+        })
+        .collect()
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn a_retired_person_stops_the_service_without_a_service_failure_retry() {
     let rig = rig(false, false);
@@ -583,6 +598,11 @@ async fn a_retired_person_stops_the_service_without_a_service_failure_retry() {
     assert!(!retry);
     let refused = until(&rig, from, "refused").await;
     assert_eq!(refused["code"], "agent_signed_out");
+    assert_eq!(
+        stop_causes(&rig),
+        [AgentStopCause::SignedOut, AgentStopCause::SignedOut]
+    );
+    assert!(rig.supervisor.signed_out());
     assert!(rig.supervisor.gateway().is_none());
     assert!(lock(&rig.supervisor.shared.running).is_none());
     assert!(
@@ -595,6 +615,12 @@ async fn a_retired_person_stops_the_service_without_a_service_failure_retry() {
                     || matches!(event.service, Some(ServiceFact::AgentRetryScheduled { .. }))
             })
     );
+    // Signing in again starts a service whose calls are no longer the sign-out's.
+    *rig.observation.lock().unwrap() = observed(true, true, Some("A"));
+    let from = lock(&rig.statuses).len();
+    rig.supervisor.retry();
+    serving(&rig, from).await;
+    assert!(!rig.supervisor.signed_out());
     rig.supervisor.close().await.unwrap();
 }
 
@@ -666,15 +692,28 @@ async fn each_sign_in_trigger_stops_the_launcher_and_its_tree() {
                 "{states:?}"
             );
         } else if published == "refused" {
+            let signed_out = trigger.starts_with("sign-out");
             assert_eq!(
                 after["code"],
-                if trigger.starts_with("sign-out") {
+                if signed_out {
                     "agent_signed_out"
                 } else {
                     "agent_runtime_unavailable"
                 },
                 "{trigger}"
             );
+            // A sign-out stops the service with its own cause, never a missing sign-in.
+            let cause = if signed_out {
+                AgentStopCause::SignedOut
+            } else {
+                AgentStopCause::RuntimeUnavailable
+            };
+            assert_eq!(
+                stop_causes(&rig),
+                [cause, cause],
+                "{trigger}: stopping and stopped"
+            );
+            assert_eq!(rig.supervisor.signed_out(), signed_out, "{trigger}");
         }
         rig.supervisor.close().await.unwrap();
         assert!(lock(&rig.supervisor.shared.running).is_none());
