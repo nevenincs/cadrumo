@@ -61,38 +61,36 @@ def test_unknown_linux_containment_refuses_before_private_worker_launch(
     assert scope._guardian is None and scope._worker_pid == 0
 
 
-# Every long option systemd-run accepted in systemd 255, the user manager of the Ubuntu 24.04 hosted runner
-# (systemd-run(1), v255). An option added later, such as --no-pager in v258, makes that manager refuse the launch.
+# Every long option systemd-run accepts in systemd 255, the user manager of the Ubuntu 24.04 hosted runner:
+# the getopt table `options[]` in src/run/run.c at tag v255. An option added later, such as --no-pager in
+# v258, makes that manager refuse the launch.
 _SYSTEMD_RUN_255_OPTIONS = frozenset(
     {
+        "--help",
+        "--version",
         "--user",
         "--system",
         "--scope",
         "--unit",
-        "--property",
         "--description",
         "--slice",
         "--slice-inherit",
-        "--expand-environment",
         "--remain-after-exit",
+        "--expand-environment",
         "--send-sighup",
+        "--host",
+        "--machine",
         "--service-type",
+        "--wait",
         "--uid",
         "--gid",
         "--nice",
-        "--working-directory",
-        "--same-dir",
         "--setenv",
+        "--property",
+        "--tty",
         "--pty",
         "--pipe",
-        "--shell",
         "--quiet",
-        "--wait",
-        "--collect",
-        "--no-block",
-        "--no-ask-password",
-        "--machine",
-        "--host",
         "--on-active",
         "--on-boot",
         "--on-startup",
@@ -104,9 +102,12 @@ _SYSTEMD_RUN_255_OPTIONS = frozenset(
         "--timer-property",
         "--path-property",
         "--socket-property",
-        "--ignore-failure",
-        "--background",
-        "--json",
+        "--no-block",
+        "--no-ask-password",
+        "--collect",
+        "--working-directory",
+        "--same-dir",
+        "--shell",
     }
 )
 
