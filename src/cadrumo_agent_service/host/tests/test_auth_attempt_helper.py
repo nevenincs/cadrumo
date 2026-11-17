@@ -79,10 +79,20 @@ def _attempt(tmp_path: Path, mode: str, *, confirm: Callable[[], tuple[bool, str
     )
 
 
-def _settled(attempt: AuthAttempt) -> dict[str, JsonValue]:
+def _await_end(attempt: AuthAttempt) -> None:
+    """Watch the attempt as a live sign-in dialog does, observing it until it ends.
+
+    The attempt treats fifteen seconds without an observation as a host that
+    disconnected; a helper slowed past that by a loaded machine must not read as one.
+    """
     deadline = time.monotonic() + HANG_GUARD_SECONDS
     while attempt.active and time.monotonic() < deadline:
+        attempt.observe()
         time.sleep(0.05)
+
+
+def _settled(attempt: AuthAttempt) -> dict[str, JsonValue]:
+    _await_end(attempt)
     attempt.close()
     return attempt.observe()
 
@@ -273,6 +283,8 @@ def _withdrawing_attempt(
 def _settlement(attempt: AuthAttempt, caplog: pytest.LogCaptureFixture) -> dict[str, str]:
     """Read the settled outcome from its log line; a withdrawn attempt's observe() answers only a cancellation."""
     with caplog.at_level(logging.DEBUG, logger=_LOGGER):
+        # No observation here: an observe() could itself cancel the withdrawn attempt
+        # before the published event this settlement is meant to exercise.
         deadline = time.monotonic() + HANG_GUARD_SECONDS
         while attempt.active and time.monotonic() < deadline:
             time.sleep(0.05)
