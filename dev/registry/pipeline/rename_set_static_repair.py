@@ -12,7 +12,9 @@ member's export and generated form together or none of them.
 
 from __future__ import annotations
 
+import re
 import shutil
+import tomllib
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
@@ -66,28 +68,69 @@ class _RenameRepairSet:
     members: tuple[_RenameRepairMember, ...]
 
 
+_SHA256_HEX = re.compile(r"[0-9a-f]{64}")
+_REVIEWED_RENAME_SETS_PATH = Path(__file__).with_name("reviewed_rename_sets.toml")
+
+
+def _text(value: object, where: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise RegistryValidationError(f"reviewed rename sets: {where} must be a non-empty string")
+    return value
+
+
+def _sha256(value: object, where: str) -> str:
+    text = _text(value, where)
+    if _SHA256_HEX.fullmatch(text) is None:
+        raise RegistryValidationError(f"reviewed rename sets: {where} must be a lowercase sha256 hex digest")
+    return text
+
+
+def _reviewed_member(raw: object, where: str) -> _RenameRepairMember:
+    if not isinstance(raw, dict) or set(raw) != {"source_ref", "source_sha256", "manifest_sha256"}:
+        raise RegistryValidationError(f"reviewed rename sets: {where} must hold exactly its source and manifest pins")
+    return _RenameRepairMember(
+        _text(raw["source_ref"], f"{where}.source_ref"),
+        _sha256(raw["source_sha256"], f"{where}.source_sha256"),
+        _sha256(raw["manifest_sha256"], f"{where}.manifest_sha256"),
+    )
+
+
+def _reviewed_set(raw: object, where: str) -> _RenameRepairSet:
+    if not isinstance(raw, dict) or set(raw) != {"modelo", "renamed_casilla_ids", "members"}:
+        raise RegistryValidationError(f"reviewed rename sets: {where} must hold its modelo, renamed ids and members")
+    ids = raw["renamed_casilla_ids"]
+    members = raw["members"]
+    if not isinstance(ids, list) or not ids:
+        raise RegistryValidationError(f"reviewed rename sets: {where}.renamed_casilla_ids must be a non-empty list")
+    renamed = [_text(item, f"{where}.renamed_casilla_ids") for item in ids]
+    if len(set(renamed)) != len(renamed):
+        raise RegistryValidationError(f"reviewed rename sets: {where}.renamed_casilla_ids repeats an id")
+    if not isinstance(members, list) or not members:
+        raise RegistryValidationError(f"reviewed rename sets: {where}.members must be a non-empty list")
+    return _RenameRepairSet(
+        _text(raw["modelo"], f"{where}.modelo"),
+        frozenset(renamed),
+        tuple(_reviewed_member(member, f"{where}.members[{index}]") for index, member in enumerate(members)),
+    )
+
+
+def load_reviewed_rename_sets(path: Path = _REVIEWED_RENAME_SETS_PATH) -> tuple[_RenameRepairSet, ...]:
+    """Read and validate the reviewed rename sets the data file next to this module declares."""
+    try:
+        document = tomllib.loads(path.read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        raise RegistryValidationError(f"reviewed rename sets: cannot read {path.name}: {exc}") from exc
+    sets = document.get("sets")
+    if set(document) != {"sets"} or not isinstance(sets, list) or not sets:
+        raise RegistryValidationError(f"reviewed rename sets: {path.name} must hold a non-empty [[sets]] array only")
+    return tuple(_reviewed_set(raw, f"sets[{index}]") for index, raw in enumerate(sets))
+
+
 #: Reviewed rename repairs. Each member pins its official design and the exact
 #: manifest of its committed export; the revision is the one whose committed
 #: export carries that manifest, so no revision is written here. Members are
 #: rendered and published in the listed order.
-REVIEWED_RENAME_SETS: tuple[_RenameRepairSet, ...] = (
-    _RenameRepairSet(
-        "200",
-        frozenset({"00524", "00525", "00526"}),
-        (
-            _RenameRepairMember(
-                "aeat-dr-200-2024",
-                "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218",
-                "68dc1db25f84924598fd805df2ebc7bd5d0160630382dbb8fdb20998aa1a92a4",
-            ),
-            _RenameRepairMember(
-                "aeat-dr-200-2025",
-                "92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509",
-                "013186aa4d2780d5ef75dd878f2ed98344f5b032cde3b9de8fc1fbe1ac570642",
-            ),
-        ),
-    ),
-)
+REVIEWED_RENAME_SETS: tuple[_RenameRepairSet, ...] = load_reviewed_rename_sets()
 
 
 @dataclass(frozen=True, slots=True)

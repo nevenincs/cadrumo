@@ -577,13 +577,13 @@ def test_modelo_200_carries_manual_handoff_under_declaration_advisory_predicates
     stages where a positive upstream value can silently produce a zero downstream
     one (`no-silent-under-declaration`):
 
-    - ``00500`` (resultado contable, after-tax) → ``00501`` (resultado antes de IS)
+    - ``DP200012:00500`` (resultado contable, after-tax) → ``00501`` (resultado antes de IS)
     - ``00501`` (resultado antes de IS) → ``DP200014:00552`` (base imponible)
 
     Each remaining manual transition is guarded by an ADVISORY
     ``implies_nonzero`` predicate so a positive accounting profit cannot silently
     grant VERIFICADO_COMPLETO with a zero fiscal base. The earliest guard
-    (00500→00501) is what catches the
+    (DP200012:00500→00501) is what catches the
     operator who declares a profit but leaves the fiscal-base starting point at
     zero — a case the 00501→00552 advisory cannot catch because 00501 is *its*
     antecedent. The cuota stage is now formula-owned, so a stale advisory there
@@ -602,7 +602,7 @@ def test_modelo_200_carries_manual_handoff_under_declaration_advisory_predicates
     predicates = {p.predicate_id: p.expression for p in snapshot.revision.verification_predicates}
     expected = {
         "modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo": (
-            'implies_nonzero(["00500", "DP200012:00501"])'
+            'implies_nonzero(["DP200012:00500", "DP200012:00501"])'
         ),
         "modelo-200-base-imponible-determinada-cuando-resultado-positivo": (
             'implies_nonzero(["DP200012:00501", "DP200014:00552"])'

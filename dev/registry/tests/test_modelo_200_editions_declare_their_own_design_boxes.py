@@ -49,7 +49,7 @@ def _design_boxes(revision_id: str) -> frozenset[tuple[str, str]]:
     assert len(designs) == 1, f"edition {revision.id} cites record designs {designs}"
     extraction = extract_record_design(bundled_path() / sources[designs[0]].corpus_path)
     return frozenset(
-        (sheet.name.strip(), str(number))
+        (sheet.name.strip(), _box_number(number))
         for sheet in extraction.require_complete()
         for field in sheet.fields
         for number in _PRINTED_BOX.findall(field.description)
@@ -67,8 +67,13 @@ def _design_captions(revision_id: str) -> dict[str, frozenset[str]]:
     for sheet in extraction.require_complete():
         for field in sheet.fields:
             for number in _PRINTED_BOX.findall(field.description):
-                captions.setdefault(number, set()).add(_plain(field.description))
+                captions.setdefault(_box_number(number), set()).add(_plain(field.description))
     return {number: frozenset(texts) for number, texts in captions.items()}
+
+
+def _box_number(printed: str) -> str:
+    """Return a box number in five digits; designs and declarations both write some without leading zeros."""
+    return printed.zfill(5)
 
 
 def _plain(text: str) -> str:
@@ -95,7 +100,7 @@ def unexplained_late_rows(
         if origin is CasillaLineageOrigin.PREDECESSOR_EDITION_SILENT:
             continue
         if origin is CasillaLineageOrigin.NEW_ON_FORM and _plain(casilla.label) not in earlier_captions.get(
-            str(casilla.number), frozenset()
+            _box_number(str(casilla.number)), frozenset()
         ):
             continue
         unexplained.append(str(casilla.id))
@@ -104,7 +109,7 @@ def unexplained_late_rows(
 
 def _declared_boxes(revision: ModeloRevision) -> frozenset[Box]:
     return frozenset(
-        (casilla.segmento, str(casilla.number))
+        (casilla.segmento, _box_number(str(casilla.number)))
         for casilla in revision.casillas
         if _NUMBERED.fullmatch(str(casilla.number))
     )
@@ -184,9 +189,10 @@ def test_the_checks_detect_a_late_row_that_does_not_say_why() -> None:
     row = next(
         casilla
         for casilla in earlier.casillas
-        if _NUMBERED.fullmatch(str(casilla.number)) and _plain(casilla.label) in captions.get(str(casilla.number), ())
+        if _NUMBERED.fullmatch(str(casilla.number))
+        and _plain(casilla.label) in captions.get(_box_number(str(casilla.number)), ())
     )
-    box = {(row.segmento, str(row.number))}
+    box = {(row.segmento, _box_number(str(row.number)))}
     silent = row.model_copy(update={"continuidad_origin": None})
     refuted = row.model_copy(update={"continuidad_origin": CasillaLineageOrigin.NEW_ON_FORM})
     recorded = row.model_copy(update={"continuidad_origin": CasillaLineageOrigin.PREDECESSOR_EDITION_SILENT})
@@ -221,7 +227,7 @@ def _chain(revision: ModeloRevision, casilla_id: str) -> str | None:
     return next(casilla.continuidad_id for casilla in revision.casillas if str(casilla.id) == casilla_id)
 
 
-_WIDENED_GROUP_KEYS = ("00081", "DP200001:00082")
+_WIDENED_GROUP_KEYS = ("DP200001:00081", "DP200001:00082")
 """The two 'otros caracteres' keys the later design widens to the grupo nacional de gran magnitud."""
 
 _WIDENING_PROVISION = "ley-7-2024:art-6"

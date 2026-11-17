@@ -77,7 +77,7 @@ def test_200_withdrawals_preserve_surviving_detail_total() -> None:
     }
     # The AIE/UTE amount column disappears, but its base remains; the
     # donation subperiod disappears, but its pre-existing annual row remains.
-    for withdrawn, surviving in (("00067", "00066"), ("02471", "00369")):
+    for withdrawn, surviving in (("00067", "DP200024:00066"), ("02471", "DP200018C:00369")):
         assert before[withdrawn].continuidad_id in retired
         assert withdrawn not in after
         assert surviving in after

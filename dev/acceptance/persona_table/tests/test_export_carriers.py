@@ -31,25 +31,26 @@ def test_each_listed_field_carrying_the_named_casilla_is_reported_with_its_owner
     parsed = [_field(item.cell, item.casilla) for item in KNOWN_FOREIGN_CARRIERS]
     found = foreign_carrier_mismatches("200", parsed)
     assert found == [
-        "DP200032 f92 carries casilla 00524 of DP200010 f80",
-        "DP200043 f54 carries casilla 00524 of DP200010 f80",
-        "DP200043 f55 carries casilla 00525 of DP200010 f81",
-        "DP200043 f56 carries casilla 00526 of DP200010 f82",
+        "DP200032 f92 carries casilla DP200010:00524 of DP200010 f80",
+        "DP200043 f54 carries casilla DP200010:00524 of DP200010 f80",
+        "DP200043 f55 carries casilla DP200010:00525 of DP200010 f81",
+        "DP200043 f56 carries casilla DP200010:00526 of DP200010 f82",
     ]
 
 
 def test_the_owner_cell_and_a_listed_cell_with_its_own_identity_are_not_reported() -> None:
     parsed = [
-        _field("dp200010.f0080", "00524"),
-        _field("dp200032.f0092", "00999"),
+        _field("dp200010.f0080", "DP200010:00524"),
+        _field("dp200032.f0092", "DP200032:00524"),
         _field("dp200043.f0054", None),
-        _field("dp200043.f0055", "00524"),
+        _field("dp200043.f0055", "DP200010:00524"),
+        _field("dp200043.f0056", "DP200043:00526"),
     ]
     assert foreign_carrier_mismatches("200", parsed) == []
 
 
 def test_another_modelo_is_not_held_to_the_listed_cells() -> None:
-    parsed = [_field("dp200032.f0092", "00524")]
+    parsed = [_field("dp200032.f0092", "DP200010:00524")]
     assert foreign_carrier_mismatches("303", parsed) == []
 
 
