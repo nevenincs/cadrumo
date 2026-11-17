@@ -25,7 +25,7 @@ from ...application.modelo.action_errors import ModeloEditRefusedError, modelo_e
 from ...application.modelo.carry_amount_statement import prior_carry_statement_submission, resolve_prior_carry_amounts
 from ...application.modelo.carry_family_selection import select_prior_carry_attestations
 from ...application.modelo.edit_apply_contracts import ModeloEditApplyPublicResultV1
-from ...application.modelo.edit_models import ModeloEditRefusedV1, ModeloEditSubmissionV1
+from ...application.modelo.edit_models import ModeloEditSubmissionV1
 from ...application.modelo.work_form_models import ModeloFormCarryAttestation
 from ...application.modelo.workbench_operations import ModeloEditPreflightProjectionV1
 from ...core.absence_attestation_family import AbsenceAttestationFamily
@@ -40,6 +40,7 @@ from .modelo_work_carry_attestation_payloads import (
     PriorCarryStatementPayload,
     WorkAttestPriorCarriesResult,
 )
+from .modelo_work_preflight_findings import checked
 from .operation_modelo_carry_attestation import (
     apply_modelo_edit_for_cli,
     preflight_modelo_edit_for_cli,
@@ -69,13 +70,6 @@ def _statement(
         effect_words=attestation.effect_words,
         binding_ids=list(attestation.binding_ids),
     )
-
-
-def _checked(review: ModeloEditPreflightProjectionV1) -> list[str]:
-    """The check's findings in words, refusing the staged change the check refused."""
-    if isinstance(review.outcome, ModeloEditRefusedV1):
-        raise modelo_edit_refusal_error(review.outcome.refusal)
-    return [finding.words for finding in review.findings]
 
 
 def attest_prior_carries_lines(result: WorkAttestPriorCarriesResult, work_unit_id: str, selection: str) -> list[str]:
@@ -143,7 +137,7 @@ def work_attest_prior_carries(
     submission = prior_carry_statement_submission(baseline, attestations, amounts)
     review = preflight_modelo_edit_for_cli(client, submission, language=language)
     applied = _applied(client, submission, review, language=language) if confirmed else None
-    result = attest_prior_carries_result(submission, attestations, _checked(review), amounts, applied)
+    result = attest_prior_carries_result(submission, attestations, checked(review), amounts, applied)
     emit_envelope(
         ctx,
         command=_COMMAND,

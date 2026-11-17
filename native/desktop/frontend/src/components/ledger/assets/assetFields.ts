@@ -1,12 +1,14 @@
 import type {
-  ActivityAssetRevision,
-  AssetListRow,
-  DescriptorFacts,
-  FormOptions,
-  MethodFact,
-  PlanClaim,
-  PlanRow,
-} from "../../../shell/ledgerSetup";
+  ActivityAssetRevisionSnapshot,
+  ActivityAssetDescriptorFacts,
+} from "../../../shell/ledgerActivityAssetContract";
+import type {
+  ActivityAssetListRow,
+  ActivityAssetFormOptionsView,
+  ActivityAssetMethodFact,
+  ActivityAssetPlanClaim,
+  ActivityAssetPlanRow,
+} from "../../../shell/ledgerActivityAssetReadContract";
 import {
   draftOf,
   seedDraft,
@@ -74,9 +76,9 @@ const decimalOf = (found: { decimal: string } | null | undefined) =>
  * activities and the facts of each offered method. */
 /** The facts the options serve for a method; none for one they do not list. */
 export const factsOf = (
-  options: FormOptions | null,
+  options: ActivityAssetFormOptionsView | null,
   method: string,
-): readonly MethodFact[] =>
+): readonly ActivityAssetMethodFact[] =>
   options?.method_facts.find((found) => found.method === method)?.facts ?? [];
 
 /** The label of each fact an election can state, by its path from the
@@ -128,7 +130,7 @@ const FACT_LABEL: Record<string, string> = {
 
 /** The paths of the facts of an election that have no word yet. */
 export const unlabelledFacts = (
-  options: FormOptions | null,
+  options: ActivityAssetFormOptionsView | null,
 ): readonly string[] => [
   ...new Set(
     (options?.method_facts ?? []).flatMap((entry) =>
@@ -144,7 +146,7 @@ export const unlabelledFacts = (
 ];
 
 /** Whether the form can state every fact the method requires. */
-const methodDrawable = (options: FormOptions | null, method: string) =>
+const methodDrawable = (options: ActivityAssetFormOptionsView | null, method: string) =>
   factsOf(options, method).every(
     (fact) =>
       !fact.required ||
@@ -180,15 +182,15 @@ const SHAPE_WORD: Record<string, string> = {
 export type FieldContext = {
   kind: FieldKind;
   /** The element acted on, as the register lists it now. */
-  row: AssetListRow | null;
+  row: ActivityAssetListRow | null;
   /** The element's descriptor as it stands, for a description. */
-  descriptor: DescriptorFacts | null;
+  descriptor: ActivityAssetDescriptorFacts | null;
   /** The revision a correction supersedes, as the register holds it. */
-  revision: ActivityAssetRevision | null;
+  revision: ActivityAssetRevisionSnapshot | null;
   /** The tokens of a family the backend serves, from the generated words. */
   tokens: (family: AssetFamily) => readonly string[];
   /** What the registry admits for the chosen kind and year; null until read. */
-  options: FormOptions | null;
+  options: ActivityAssetFormOptionsView | null;
 };
 
 const tokenChoices = (
@@ -202,13 +204,13 @@ const isFamily = (name: string | null): name is AssetFamily =>
 
 /** The choices a fact of the election offers, worded by its token family; a
  * family the shell has no words for reads as the generic word. */
-const factChoices = (fact: MethodFact): FieldChoice[] =>
+const factChoices = (fact: ActivityAssetMethodFact): FieldChoice[] =>
   fact.tokens.map((token): FieldChoice => ({
     token,
     family: isFamily(fact.token_family) ? fact.token_family : null,
   }));
 
-const fromOptions = (options: FormOptions | null) => ({
+const fromOptions = (options: ActivityAssetFormOptionsView | null) => ({
   methods: (options?.methods ?? []).map((token): FieldChoice => ({
     token,
     family: "method",
@@ -284,15 +286,15 @@ const FLAGS = new Set(["vehicle_in_books"]);
 /** What the options say of whether a class is charged only on a vehicle
  * declaration: true or false for a class they list, null for any other. */
 export const requiresVehicle = (
-  options: FormOptions | null,
+  options: ActivityAssetFormOptionsView | null,
   classKey: string,
 ): boolean | null =>
   options?.table_groups.find((found) => found.class_key === classKey)
     ?.requires_vehicle_declaration ?? null;
 
 const kindOf = (
-  revision: ActivityAssetRevision,
-  options: FormOptions | null,
+  revision: ActivityAssetRevisionSnapshot,
+  options: ActivityAssetFormOptionsView | null,
   path: readonly string[],
 ) => {
   const method = String(
@@ -304,7 +306,7 @@ const kindOf = (
 };
 
 /** What a revision states at a path, as the text a form field starts from. */
-function stated(revision: ActivityAssetRevision, path: readonly string[]) {
+function stated(revision: ActivityAssetRevisionSnapshot, path: readonly string[]) {
   let at: unknown = revision;
   for (const step of path) {
     if (typeof at !== "object" || at === null) return null;
@@ -337,8 +339,8 @@ function electionLeaves(
 /** The text a correction's fields start from: what the revision it supersedes
  * states. */
 export function revisionDraft(
-  revision: ActivityAssetRevision,
-  options: FormOptions | null = null,
+  revision: ActivityAssetRevisionSnapshot,
+  options: ActivityAssetFormOptionsView | null = null,
 ): FormDraft {
   const draft: FormDraft = {};
   for (const [key, path] of Object.entries(REVISION_PATHS)) {
@@ -360,7 +362,7 @@ export function revisionDraft(
 }
 
 /** The text a change of a baja starts from: the baja the revision records. */
-export function disposalDraft(revision: ActivityAssetRevision): FormDraft {
+export function disposalDraft(revision: ActivityAssetRevisionSnapshot): FormDraft {
   const found = revision.disposal;
   if (typeof found !== "object" || found === null) return {};
   const baja = found as Record<string, unknown>;
@@ -396,8 +398,8 @@ export type ClaimSpan = {
 };
 
 export function claimSpans(
-  row: PlanRow | null,
-  replaced: PlanClaim | null,
+  row: ActivityAssetPlanRow | null,
+  replaced: ActivityAssetPlanClaim | null,
 ): ClaimSpan[] {
   if (replaced !== null)
     return [
@@ -416,8 +418,8 @@ export function claimSpans(
  * the span chosen, and the amount where the plan says the year's figure is
  * the person's to elect. */
 export function claimFields(
-  row: PlanRow | null,
-  replaced: PlanClaim | null,
+  row: ActivityAssetPlanRow | null,
+  replaced: ActivityAssetPlanClaim | null,
   span: ClaimSpan | null = claimSpans(row, replaced)[0] ?? null,
 ): FormField[] {
   return [
@@ -445,7 +447,7 @@ export function claimFields(
  * some condition carries, less those of the chosen one. Without options, or
  * with a condition the options do not list, none is judged. */
 export const factsOfOtherConditions = (
-  options: FormOptions | null,
+  options: ActivityAssetFormOptionsView | null,
   condition: string,
 ): ReadonlySet<string> => {
   const conditions = options?.acquired_conditions ?? [];
@@ -633,7 +635,7 @@ const OPENING_FACT: Record<
 
 /** The names of the basis and opening facts the options serve that the form
  * has no control for. */
-export const undrawableFacts = (options: FormOptions | null): string[] => [
+export const undrawableFacts = (options: ActivityAssetFormOptionsView | null): string[] => [
   ...new Set([
     ...(options?.basis_stages ?? [])
       .flatMap((stage) => stage.facts)

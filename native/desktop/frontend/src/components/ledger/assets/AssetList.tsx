@@ -15,11 +15,11 @@ import { formatDay } from "../../../shared/dateFormats";
 import { WriteHold } from "../WritePause";
 import { rankDecimal, SetupTable, type Column } from "../setup/SetupParts";
 import type { SetupCall } from "../setup/setupModel";
+import type { ActivityAssetRefusal } from "../../../shell/ledgerActivityAssetContract";
 import type {
-  ActivityAssetRefusal,
-  AssetCounts,
-  AssetListRow,
-} from "../../../shell/ledgerSetup";
+  ActivityAssetFindingCounts,
+  ActivityAssetListRow,
+} from "../../../shell/ledgerActivityAssetReadContract";
 import {
   ASSET_KEYS,
   bajaText,
@@ -47,7 +47,7 @@ export function callRefusal(
 
 /** How serious each kind of count reads; colour only reinforces the glyph
  * and the words. */
-const COUNT_LEVEL: Record<keyof AssetCounts, ModeloFormAttention> = {
+const COUNT_LEVEL: Record<keyof ActivityAssetFindingCounts, ModeloFormAttention> = {
   missing: "missing",
   incomplete: "confirm",
   conflict: "blocks",
@@ -154,7 +154,7 @@ export function CountPill({
   kind,
   count,
 }: {
-  kind: keyof AssetCounts;
+  kind: keyof ActivityAssetFindingCounts;
   count: number;
 }) {
   const t = useStrings();
@@ -175,7 +175,7 @@ export function CountPill({
 }
 
 /** The kinds of count that are above none, in the order they are shown. */
-export function CountPills({ counts }: { counts: AssetCounts }) {
+export function CountPills({ counts }: { counts: ActivityAssetFindingCounts }) {
   return (
     <span className="flex flex-wrap items-center gap-1">
       {COUNT_KINDS.filter((kind) => counts[kind] > 0).map((kind) => (
@@ -198,13 +198,13 @@ export function AssetList({
   onSelect,
   locale,
 }: {
-  rows: readonly AssetListRow[];
+  rows: readonly ActivityAssetListRow[];
   selected: string | null;
   onSelect: (assetId: string) => void;
   locale: string;
 }) {
   const t = useStrings();
-  const columns = useMemo<Column<AssetListRow>[]>(
+  const columns = useMemo<Column<ActivityAssetListRow>[]>(
     () => [
       {
         key: "name",

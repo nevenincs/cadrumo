@@ -394,6 +394,16 @@ def module_of(family: str) -> str:
     return f"./ledger{family[:1].upper()}{family[1:]}Contract"
 
 
+FIELD_EXPORTS: dict[str, tuple[tuple[str, str, str, str], ...]] = {
+    "movement": (
+        ("LedgerAddValidation", "ledger.add", "result", 'NonNullable<{model}["validation_code"]>'),
+        ("LedgerClassifyField", "ledger.classify.single", "request", '{model}["patch_fields"][number]'),
+        ("LedgerClassifyValidation", "ledger.classify.single", "result", '{model}["validation_kind"]'),
+    ),
+    "movementCheck": (("LedgerLlmReviewMode", "ledger.classify.review", "request", '{model}["mode"]'),),
+}
+
+
 def render(family: str) -> str:
     """The generated module of one family, before the frontend's formatter writes it."""
     contracts_name, definitions = FAMILIES[family]
@@ -407,7 +417,8 @@ def render(family: str) -> str:
         field_types=FIELD_TYPES.get(family),
         earlier=[EarlierModule(module_of(each), FAMILIES[each][1]) for each in EARLIER.get(family, ())],
     )
-    requests = {model for _, role, model in contract_roots(registry, definitions) if role == "request"}
+    roots = contract_roots(registry, definitions)
+    requests = {model for _, role, model in roots if role == "request"}
     blocks: list[str] = []
     for model in sorted(requests, key=lambda model: model.__name__):
         schema = model.model_json_schema(mode="validation")
@@ -418,6 +429,10 @@ def render(family: str) -> str:
         name = ts_name(model.__name__)
         window_name = name.removesuffix("Request") + "WindowRequest"
         blocks.append(f"export type {window_name} = Omit<{name}, {' | '.join(map(literal, sorted(omitted)))}>;")
+    models = {(definition, role): model for definition, role, model in roots}
+    for name, definition, role, expression in FIELD_EXPORTS.get(family, ()):
+        model = models[definition, role]
+        blocks.append(f"export type {name} = {expression.format(model=ts_name(model.__name__))};")
     return source + "\n" + "\n\n".join(blocks) + "\n"
 
 

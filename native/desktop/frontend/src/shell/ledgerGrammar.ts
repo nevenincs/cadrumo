@@ -9,7 +9,7 @@
 import type { PublicPeriod } from "./ledgerInvoiceContract";
 import type { LedgerEntryYearWindow } from "./ledgerEntryContract";
 import { ledgerLimits } from "./ledgerLimits";
-import type { LedgerEntryLimits } from "./ledgerSetup";
+import type { LedgerEntryLimitsProjection } from "./ledgerEntryContract";
 
 /** The canonical stored-movement handle grammar, including valid prefixes. */
 export function isTransactionPrefix(id: string): boolean {
@@ -139,7 +139,7 @@ export function shiftDecimal(text: string, places: number): string | null {
 /** A kind of figure the backend serves a rule for, or a rule served by a field
  * itself: how many fraction digits it takes and whether zero is a value. */
 export type DecimalRule =
-  | LedgerEntryLimits["decimal_rules"][number]["rule"]
+  | LedgerEntryLimitsProjection["decimal_rules"][number]["rule"]
   | typeof PERCENT_POINTS_RULE
   | { decimals: number; zero: boolean };
 /** A movement's amount. */
@@ -155,7 +155,7 @@ export const PERCENT_POINTS_RULE = "percent_points";
 
 function ruleOf(
   rule: DecimalRule,
-  limits: LedgerEntryLimits,
+  limits: LedgerEntryLimitsProjection,
 ): { decimals: number; zero: boolean } | null {
   if (typeof rule !== "string") return rule;
   if (rule === PERCENT_POINTS_RULE)
@@ -164,7 +164,7 @@ function ruleOf(
 }
 
 /** Whether plain text has the shape the backend reads two ways. */
-const twoWay = (limits: LedgerEntryLimits, text: string) =>
+const twoWay = (limits: LedgerEntryLimitsProjection, text: string) =>
   new RegExp(limits.two_way_decimal).test(text);
 
 /** Why text that is not a plain decimal was refused, and what it most

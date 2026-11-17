@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { answerSplitCheck } from "../src/dev/ledgerSplitCheckFixture";
-import type { LedgerSplitCheckRequest } from "../src/shell/ledgerMovementOperations";
+import type { LedgerSplitCheckWindowRequest } from "../src/shell/ledgerMovementCheckContract";
 import recorded from "@fixtures/ledger-recordings/ledgerSplitCheck.json" with { type: "json" };
 
 // The stand-in stories use for `ledger.split.check`, held to what the real
@@ -12,7 +12,7 @@ for (const { parent_amount, parts, answer } of recorded.answers) {
     expect(
       answerSplitCheck(
         parent_amount,
-        parts as LedgerSplitCheckRequest["parts"],
+        parts as LedgerSplitCheckWindowRequest["parts"],
         "profile",
       ),
     ).toEqual({ profile_id: "profile", ...answer });

@@ -1,5 +1,5 @@
 import type { ComboboxOption } from "@/components/ui/combobox";
-import type { LedgerParticipation } from "../../../shell/ledgerMovementOperations";
+import type { LedgerParticipationProjection } from "../../../shell/ledgerMovementCheckContract";
 import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
 import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
 import { DIRECTIONS, sealsMovements } from "../../../shell/ledgerContract";
@@ -57,7 +57,7 @@ export function skipName(t: Translate, reason: SkipReason): string {
   }
 }
 
-export const seals = (participation: LedgerParticipation) =>
+export const seals = (participation: LedgerParticipationProjection) =>
   sealsMovements(participation.revision_state);
 
 /** A declaration revision's state in its real words: a local filing is
@@ -65,7 +65,7 @@ export const seals = (participation: LedgerParticipation) =>
 export function revisionStateLabel(
   t: Translate,
   participation: Pick<
-    LedgerParticipation,
+    LedgerParticipationProjection,
     "revision_state" | "justificante_reference"
   >,
 ): string {

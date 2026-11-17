@@ -5,7 +5,7 @@ import {
 } from "../../src/components/ledger/assets/assetWrites";
 import { exampleInvoices } from "../../src/dev/fixtures/ledgerInvoices";
 import type { CatalogueInvoiceSnapshot } from "../../src/shell/ledgerInvoiceContract";
-import type { ActivityAssetRevision } from "../../src/shell/ledgerSetup";
+import type { ActivityAssetRevisionSnapshot } from "../../src/shell/ledgerActivityAssetContract";
 import { label } from "../support/strings";
 
 // Suggestions in the Assets tab over the scenario's ledger: picking a
@@ -207,7 +207,7 @@ test("a revision names its purchase by the movement it observed", () => {
       asset_id: "a",
       revision_number: 1,
       acquisition,
-    }) as ActivityAssetRevision;
+    }) as ActivityAssetRevisionSnapshot;
   expect(purchaseOf(revision({ observed_transaction_id: MOVEMENT }))).toBe(
     MOVEMENT,
   );

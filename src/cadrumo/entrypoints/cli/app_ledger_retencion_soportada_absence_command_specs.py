@@ -10,10 +10,7 @@ from cadrumo_client.commands.shared_contracts import (
     WHOLE_NUMBER_VALUE,
     DeferredTarget,
     LazyBinding,
-    ParameterConstraint,
     ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
     TranslationKey,
     ValueContract,
 )
@@ -21,6 +18,7 @@ from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from .app_ledger_command_spec_policies import POLICY_4, POLICY_5
+from .ledger_command_fragments import option, result_schema
 
 _CLI_MODULE: Final[str] = ".retencion_soportada_absence_commands"
 _RESULT_MODULE: Final[str] = ".retencion_soportada_absence_results"
@@ -38,50 +36,20 @@ _LEAF_INVOCATION: Final[InvocationSpec] = InvocationSpec(
 )
 
 
-def _option(
-    *, name: str, declaration: str, value: ValueContract, default: ParameterDefault, help_key: str
-) -> OptionSpec:
-    """Build one ordinary non-flag option."""
-    return OptionSpec(
-        name=name,
-        declarations=(declaration,),
-        value=value,
-        default=default,
-        help_key=TranslationKey(help_key),
-        metavar=None,
-        is_flag=False,
-        flag_value=None,
-        multiple=False,
-        count=False,
-        eager=False,
-        constraint=ParameterConstraint(),
-        show_default=True,
-        hidden=False,
-    )
-
-
-_EJERCICIO_OPTION: Final[OptionSpec] = _option(
+_EJERCICIO_OPTION: Final[OptionSpec] = option(
     name="ejercicio",
     declaration="--ejercicio",
     value=WHOLE_NUMBER_VALUE,
     default=_REQUIRED,
     help_key="cli.app.ledger.retencion_soportada.ejercicio_help",
 )
-_INCOME_CLASS_OPTION: Final[OptionSpec] = _option(
+_INCOME_CLASS_OPTION: Final[OptionSpec] = option(
     name="income_class",
     declaration="--income-class",
     value=_CLASS_VALUE,
     default=_REQUIRED,
     help_key="cli.app.ledger.retencion_soportada.income_class_help",
 )
-
-
-def _result_schema(model: str, identity: str) -> ResultSchemaSpec:
-    return ResultSchemaSpec(
-        SchemaState.TARGET,
-        target=DeferredTarget(_RESULT_MODULE, model, __package__),
-        identity=identity,
-    )
 
 
 LEDGER_RETENCION_SOPORTADA_ABSENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
@@ -96,14 +64,14 @@ LEDGER_RETENCION_SOPORTADA_ABSENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(
             _EJERCICIO_OPTION,
             _INCOME_CLASS_OPTION,
-            _option(
+            option(
                 name="note",
                 declaration="--note",
                 value=TEXT_VALUE,
                 default=_REQUIRED,
                 help_key="cli.app.ledger.retencion_soportada.absence_note_help",
             ),
-            _option(
+            option(
                 name="expected_revision",
                 declaration="--expected-revision",
                 value=TEXT_VALUE,
@@ -113,8 +81,10 @@ LEDGER_RETENCION_SOPORTADA_ABSENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=POLICY_4,
         handler=LazyBinding.available(DeferredTarget(_CLI_MODULE, "retencion_soportada_attest_absence", __package__)),
-        result_schema=_result_schema(
-            "RetencionSoportadaAttestAbsenceResult", "ledger.retencion_soportada.attest_absence"
+        result_schema=result_schema(
+            "RetencionSoportadaAttestAbsenceResult",
+            "ledger.retencion_soportada.attest_absence",
+            result_module=_RESULT_MODULE,
         ),
     ),
     CommandSpec(
@@ -128,8 +98,10 @@ LEDGER_RETENCION_SOPORTADA_ABSENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(_EJERCICIO_OPTION,),
         policy=POLICY_5,
         handler=LazyBinding.available(DeferredTarget(_CLI_MODULE, "retencion_soportada_list_absences", __package__)),
-        result_schema=_result_schema(
-            "RetencionSoportadaListAbsencesResult", "ledger.retencion_soportada.list_absences"
+        result_schema=result_schema(
+            "RetencionSoportadaListAbsencesResult",
+            "ledger.retencion_soportada.list_absences",
+            result_module=_RESULT_MODULE,
         ),
     ),
     CommandSpec(
@@ -143,7 +115,7 @@ LEDGER_RETENCION_SOPORTADA_ABSENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(
             _EJERCICIO_OPTION,
             _INCOME_CLASS_OPTION,
-            _option(
+            option(
                 name="expected_revision",
                 declaration="--expected-revision",
                 value=TEXT_VALUE,
@@ -153,8 +125,10 @@ LEDGER_RETENCION_SOPORTADA_ABSENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=POLICY_4,
         handler=LazyBinding.available(DeferredTarget(_CLI_MODULE, "retencion_soportada_withdraw_absence", __package__)),
-        result_schema=_result_schema(
-            "RetencionSoportadaWithdrawAbsenceResult", "ledger.retencion_soportada.withdraw_absence"
+        result_schema=result_schema(
+            "RetencionSoportadaWithdrawAbsenceResult",
+            "ledger.retencion_soportada.withdraw_absence",
+            result_module=_RESULT_MODULE,
         ),
     ),
 )

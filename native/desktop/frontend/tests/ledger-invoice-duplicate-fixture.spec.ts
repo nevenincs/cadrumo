@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { answerInvoiceDuplicate } from "../src/dev/ledgerDuplicateFixture";
-import type { LedgerInvoiceDuplicateRequest } from "../src/shell/ledgerInvoiceOperations";
+import type { LedgerInvoiceDuplicateWindowRequest } from "../src/shell/ledgerInvoiceContract";
 import type { CatalogueInvoiceSnapshot } from "../src/shell/ledgerInvoiceContract";
 import recorded from "@fixtures/ledger-recordings/ledgerInvoiceDuplicate.json" with { type: "json" };
 
@@ -18,7 +18,7 @@ for (const { name, question, answer } of recorded.answers) {
   test(`the stand-in answers as the backend did: ${name}`, () => {
     expect(
       answerInvoiceDuplicate(
-        question as LedgerInvoiceDuplicateRequest,
+        question as LedgerInvoiceDuplicateWindowRequest,
         stored,
         "profile",
       ),

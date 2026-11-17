@@ -7,9 +7,9 @@ import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { readLocaleDecimal } from "../src/shared/numbers";
 import type {
-  InvoicePreviewRequest,
-  InvoicePreviewResult,
-} from "../src/shell/ledgerInvoiceOperations";
+  InvoiceFiguresPreviewWindowRequest,
+  InvoiceFiguresPreviewResult,
+} from "../src/shell/ledgerInvoiceContract";
 import type { CatalogueInvoiceSnapshot } from "../src/shell/ledgerInvoiceContract";
 import {
   InvoicePreviewSession,
@@ -44,8 +44,8 @@ const CORRECTIVE = SERVED.correctiveClass;
 // and every figure asserted is one that backend served.
 
 type Recording = {
-  request: InvoicePreviewRequest;
-  result: InvoicePreviewResult;
+  request: InvoiceFiguresPreviewWindowRequest;
+  result: InvoiceFiguresPreviewResult;
 };
 const recorded = (
   JSON.parse(
@@ -159,7 +159,7 @@ const checked = (draft: InvoiceDraft, name: string | null) =>
 /** A ledger whose answers the test gives one at a time. */
 function ledger() {
   const asked: {
-    request: InvoicePreviewRequest;
+    request: InvoiceFiguresPreviewWindowRequest;
     reply(reply: PreviewReply): Promise<void>;
   }[] = [];
   const session = new InvoicePreviewSession(
@@ -179,8 +179,12 @@ function ledger() {
   );
   return { asked, session };
 }
-const draftA: InvoicePreviewRequest = { issued_at: fixtureDay(10, 23) };
-const draftB: InvoicePreviewRequest = { issued_at: fixtureDay(3, 1, -3) };
+const draftA: InvoiceFiguresPreviewWindowRequest = {
+  issued_at: fixtureDay(10, 23),
+};
+const draftB: InvoiceFiguresPreviewWindowRequest = {
+  issued_at: fixtureDay(3, 1, -3),
+};
 const said = (name: string): PreviewReply => ({
   kind: "answer",
   result: answer(name),
@@ -233,7 +237,7 @@ test("one request is in flight, the latest wins, and a stale answer is dropped",
 });
 
 test("typing rests before anything is asked", async () => {
-  const asked: InvoicePreviewRequest[] = [];
+  const asked: InvoiceFiguresPreviewWindowRequest[] = [];
   const session = new InvoicePreviewSession(async (request) => {
     asked.push(request);
     return said("bare_2026");

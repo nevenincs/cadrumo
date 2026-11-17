@@ -936,3 +936,5 @@ export type LedgerStagedCheckWindowRequest = Omit<
 >;
 
 export type LedgerTrackWindowRequest = Omit<LedgerTrackRequest, "profile_id">;
+
+export type LedgerLlmReviewMode = LedgerLlmReviewRequest["mode"];

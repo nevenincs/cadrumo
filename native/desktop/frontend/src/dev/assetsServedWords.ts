@@ -9,12 +9,12 @@
 // questions the fixtures could not answer.
 
 import type { OutputLanguage } from "../shell/ledgerClassificationContract";
-import type { ReasonFact } from "../shell/ledgerSetup";
+import type { ActivityAssetReasonFact } from "../shell/ledgerActivityAssetContract";
 import recorded from "@fixtures/assets-served-words/assetsServedWords.json" with { type: "json" };
 
 /** What the register is asked to say. */
 export type WordsQuestion =
-  | { kind: "reason"; key: string; facts: ReasonFact[] }
+  | { kind: "reason"; key: string; facts: ActivityAssetReasonFact[] }
   | { kind: "remedy"; field_key: string }
   | {
       kind: "gap";

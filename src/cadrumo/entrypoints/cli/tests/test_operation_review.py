@@ -28,6 +28,7 @@ from ....application.review.read_projections import (
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from .. import operation_review as bridge
+from .. import profile_bound_clients
 from .operation_bridge_support import bind_exact_profile_read
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -112,6 +113,7 @@ def _bind(
         submitted=submitted,
         result_version=1,
         operation_id=_OPERATION_ID,
+        profile_binding=profile_bound_clients,
     )
 
 

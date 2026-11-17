@@ -4,8 +4,8 @@
 import "./servedClassifications";
 import recorded from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import { holdLedgerLimits } from "../../src/shell/ledgerLimits";
-import type { LedgerEntryLimits } from "../../src/shell/ledgerSetup";
+import type { LedgerEntryLimitsProjection } from "../../src/shell/ledgerEntryContract";
 
-export const servedLimits = recorded.limits as LedgerEntryLimits;
+export const servedLimits = recorded.limits as LedgerEntryLimitsProjection;
 
 holdLedgerLimits(servedLimits);

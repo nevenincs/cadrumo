@@ -4,7 +4,7 @@ import { Icon } from "@/components/ui/icon";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount, formatPercent } from "../../../shared/numbers";
 import { facts, labelGap } from "../../../shell/compose";
-import type { InvoiceAddRequest } from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceAddWindowRequest } from "../../../shell/ledgerInvoiceContract";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import type { InvoiceUpdateField } from "../../../shell/ledgerContract";
 import { useStrings } from "../../../shell/strings";
@@ -45,7 +45,7 @@ export function Confirmation({
   locale,
 }: {
   isNew: boolean;
-  draftRequest: InvoiceAddRequest | null;
+  draftRequest: InvoiceAddWindowRequest | null;
   total: string;
   stored: CatalogueInvoiceSnapshot | null;
   correction: CorrectionDraft | null;

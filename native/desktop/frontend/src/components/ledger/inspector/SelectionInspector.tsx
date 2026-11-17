@@ -24,7 +24,7 @@ import {
   type LedgerPort,
   type LedgerReview,
 } from "../../../shell/ledger";
-import type { LedgerLlmSuggestion } from "../../../shell/ledgerMovementOperations";
+import type { LedgerLlmReviewProjection } from "../../../shell/ledgerMovementCheckContract";
 import {
   CLASSIFY_KINDS,
   type ClassifyKind,
@@ -131,7 +131,7 @@ type Held = {
 };
 type Asked = {
   id: string;
-  review: LedgerReview<LedgerLlmSuggestion> | null;
+  review: LedgerReview<LedgerLlmReviewProjection> | null;
   /** The runtime's code, or `no_review` or `refused` where it gave none. */
   failed: string | null;
 };
@@ -502,7 +502,7 @@ export function SelectionInspector({
         else
           entry = {
             id,
-            review: await port.review<LedgerLlmSuggestion>(
+            review: await port.review<LedgerLlmReviewProjection>(
               outcome.operation_id,
             ),
             failed: null,
