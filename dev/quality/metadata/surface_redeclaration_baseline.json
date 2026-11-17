@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "counts": {
-    "wire-type": 1163,
+    "wire-type": 1159,
     "tui-date-decision": 1,
     "tui-precedence": 7,
     "duplicated-helper": 97
@@ -643,9 +643,6 @@
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentToolRefusal",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentUploadEvent",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentUploadPick",
-      "wire-type:native/desktop/frontend/src/shell/agentSkills.ts:AgentSkillDetail",
-      "wire-type:native/desktop/frontend/src/shell/agentSkills.ts:AgentSkillFinding",
-      "wire-type:native/desktop/frontend/src/shell/agentSkills.ts:AgentSkillVerification",
       "wire-type:native/desktop/frontend/src/shell/agentSkills.ts:SkillCommand",
       "wire-type:native/desktop/frontend/src/shell/agentSkills.ts:SkillCommandKind",
       "wire-type:native/desktop/frontend/src/shell/agentStaging.ts:StagedDocuments",
@@ -654,7 +651,6 @@
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentDocumentRecord",
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentDocumentReference",
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentDocumentsQuery",
-      "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentProviderCondition",
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentRanWith",
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentRead",
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentReplyRecord",

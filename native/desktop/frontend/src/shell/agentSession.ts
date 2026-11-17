@@ -11,7 +11,10 @@ import type {
   AttachmentPolicyResponse,
   ModelLicenceResponse,
   Provider,
+  ProviderCondition,
+  SkillDetailRecord,
   SkillListResponse,
+  SkillVerificationRecord,
 } from "./agentGatewayContract";
 import type { CallPlan } from "./hostCall";
 import type {
@@ -20,11 +23,9 @@ import type {
   LocalModelListStatus,
   LocalPlacement,
 } from "./localModelsContract";
-import type { AgentSkillDetail, AgentSkillVerification } from "./agentSkills";
 import type {
   AgentConversationRecord,
   AgentDocumentRecord,
-  AgentProviderCondition,
   AgentToolCall,
 } from "./agentViews";
 
@@ -416,7 +417,7 @@ export type AgentStreamEvent =
       type: "settled";
       reply_id: string;
       status: "completed" | "failed" | "cancelled";
-      provider_condition?: AgentProviderCondition | null;
+      provider_condition?: ProviderCondition | null;
       failure_reason?: string | null;
     }
   /** The host resumed the stream after its last frame and the agent could not
@@ -485,9 +486,9 @@ export interface AgentSession {
   skills?(): Promise<SkillListResponse>;
   /** One skill in full, for the person to review. An unknown name is
    * refused with `agent_gateway_skill_not_found`. */
-  skill?(name: string): Promise<AgentSkillDetail>;
+  skill?(name: string): Promise<SkillDetailRecord>;
   /** The agent's checks of one skill. */
-  verifySkill?(name: string): Promise<AgentSkillVerification>;
+  verifySkill?(name: string): Promise<SkillVerificationRecord>;
   /** A new conversation of the signed-in profile: the id its first run will
    * have, reserved by the host. No run exists behind it until the first
    * message is sent. */
