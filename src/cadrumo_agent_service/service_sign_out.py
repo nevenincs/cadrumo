@@ -15,7 +15,7 @@ from typing import Any
 
 from .adapters.agent_provider_auth_status import AgentProviderAuthStatusProbe
 from .host.sign_in_refusal import refuse
-from .providers.application.contracts import ProviderSettingsRefusal
+from .providers.application.contracts import ProviderSettingsRefusal, ServiceRefusalCode
 from .providers.application.ports import ProviderCatalogSource
 from .providers.application.service import ProviderSettingsService
 from .providers.domain.catalog import ProviderCatalogEntry
@@ -28,7 +28,7 @@ class ProviderSignOutError(Exception):
 def signed_out_refusal(action: str) -> dict[str, Any]:
     """Refuse ``action`` for a signed-out profile; a refused sign-out reaches the person, so it is logged."""
     if action == "sign_out":
-        return refuse("signed_out", cause="profile_signed_out")
+        return refuse(ServiceRefusalCode.SIGNED_OUT, cause="profile_signed_out")
     return {"kind": "refused", "code": "signed_out"}
 
 
@@ -52,12 +52,12 @@ def answer_sign_out(
     try:
         entry = catalog.catalog().entry(lane)
     except Exception as error:
-        return refuse("service_failed", cause="settings_change_failed", provider=lane, error=error)
+        return refuse(ServiceRefusalCode.SERVICE_FAILED, cause="settings_change_failed", provider=lane, error=error)
     if entry is None or not entry.logout:
-        return refuse("sign_in_unavailable", cause="lane_not_signable", provider=lane)
+        return refuse(ServiceRefusalCode.SIGN_IN_UNAVAILABLE, cause="lane_not_signable", provider=lane)
     context = login_context()
     if context is None:
-        return refuse("signed_out", cause="profile_signed_out", provider=lane)
+        return refuse(ServiceRefusalCode.SIGNED_OUT, cause="profile_signed_out", provider=lane)
     root = context[0]
 
     def signed_out(target: ProviderCatalogEntry) -> None:
@@ -69,7 +69,7 @@ def answer_sign_out(
     try:
         result = providers.sign_out(lane, expected_revision=expected_revision, log_out=signed_out)
     except Exception as error:
-        return refuse("service_failed", cause="settings_change_failed", provider=lane, error=error)
+        return refuse(ServiceRefusalCode.SERVICE_FAILED, cause="settings_change_failed", provider=lane, error=error)
     if isinstance(result, ProviderSettingsRefusal):
         dumped = result.model_dump(mode="json")
         return refuse(dumped["code"], cause="settings_refused", provider=lane, base=dumped)
