@@ -2475,6 +2475,11 @@ modelo:
               the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS - Generation
               year - 2023 - DTAs pending application in future periods - Without a
               right of conversion into a claimable credit [01422]
+          '01423':
+            label: Conversion of deferred tax assets into enforceable credit against
+              the Tax Administration - Excess positive net tax liability - Generation
+              year - 2023 - Excess positive net tax due outstanding at the start of
+              the period [01423]
           '01424':
             label: Conversion of deferred tax assets into enforceable credit against
               the Tax Administration - Excess positive net tax liability - Generation
@@ -14568,6 +14573,36 @@ modelo:
             label: 'Gratuitous and corporate transfers: application of market value
               (art. 17.4 LIS) - Decrease - Adjustments for the tax year - Temporary
               (originating in this tax year) [02927]'
+          is-correccion-uefa-europa-league-2022-aumento-permanente:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Increase - Adjustments for
+              the tax year - Permanent [01861]
+          is-correccion-uefa-europa-league-2022-aumento-saldo-final:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Increase - Balance carried
+              forward at year-end [01864]
+          is-correccion-uefa-europa-league-2022-aumento-saldo-inicial:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Increase - Balance carried
+              forward at start of year [01860]
+          is-correccion-uefa-europa-league-2022-aumento-temporaria-anteriores:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Increase - Adjustments for
+              the tax year - Temporary (originating in prior tax years) [01863]
+          is-correccion-uefa-europa-league-2022-aumento-temporaria-ejercicio:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Increase - Adjustments for
+              the tax year - Temporary (originating in this tax year) [01862]
+          is-correccion-uefa-europa-league-2022-disminucion-permanente:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Decrease - Adjustments for
+              the tax year - Permanent [01866]
+          is-correccion-uefa-europa-league-2022-disminucion-saldo-final:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Decrease - Balance carried
+              forward at year-end [01869]
+          is-correccion-uefa-europa-league-2022-disminucion-saldo-inicial:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Decrease - Balance carried
+              forward at start of year [01865]
+          is-correccion-uefa-europa-league-2022-disminucion-temporaria-anteriores:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Decrease - Adjustments for
+              the tax year - Temporary (originating in prior tax years) [01868]
+          is-correccion-uefa-europa-league-2022-disminucion-temporaria-ejercicio:
+            label: UEFA Europa League 2022 (RDL 3/2022) - Decrease - Adjustments for
+              the tax year - Temporary (originating in this tax year) [01867]
           is-correccion-valoracion-bienes-derechos-regimen-especial-permanente-aumento:
             label: Valuation of assets and rights. Special regime for restructuring
               transactions (chapter VII of title VII LIS) - Increase - Adjustments
@@ -14770,6 +14805,10 @@ modelo:
               for workers with disabilities (CE)
             label: Deduction for creating employment for workers with disabilities
               (CE). Deduction pending or generated
+          is-deduccion-creacion-empleo-discapacidad-aplicado:
+            label: Deductions to incentivise certain activities - {year} Deduction
+              for job creation for workers with disabilities (CE) - Applied in this
+              settlement [00796]
           is-deduccion-creacion-empleo-discapacidad-pendiente-futuros:
             help: Pending application in future periods - Deduction for creating employment
               for workers with disabilities (CE)
@@ -15018,6 +15057,18 @@ modelo:
             label: Deductions to incentivise certain activities - 60th anniversary
               of the Festival Porta Ferrada (PF) - Deduction carried forward/generated
               [00088]
+          is-deduccion-prevision-social-empresarial-aplicado:
+            label: Deductions to incentivise certain activities - {year} Employer
+              contributions to occupational social welfare schemes attributed to workers
+              (CPS) - Applied in this settlement [00793]
+          is-deduccion-prevision-social-empresarial-generada:
+            label: Deductions to incentivise certain activities - {year} Employer
+              contributions to occupational social welfare schemes attributed to workers
+              (CPS) - Deduction carried forward/generated [00792]
+          is-deduccion-prevision-social-empresarial-pendiente-futuros:
+            label: Deductions to incentivise certain activities - {year} Employer
+              contributions to occupational social welfare schemes attributed to workers
+              (CPS) - Carried forward for application in future periods [00794]
           is-deduccion-produccion-cinematografica-espanola-financiador:
             help: 'Deduction pending or generated - Financier: Spanish film productions
               (FPC)'
@@ -16443,6 +16494,539 @@ modelo:
             label: Settlement IV - Result - State [00621]
           is-liquidacion-iv-resultado-misc:
             label: Settlement IV - Rectification - State [00866]
+          is-m200-dp200012-01015:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Effects of an accounting valuation different from the tax valuation
+              (art. 20 LIS) - Increases [01015]
+          is-m200-dp200012-01016:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Effects of an accounting valuation different from the tax valuation
+              (art. 20 LIS) - Decreases [01016]
+          is-m200-dp200012-01574:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Transactions under art. 19 LIS other than change of residence
+              to European Union or EEA Member States - Increases [01574]
+          is-m200-dp200012-01575:
+            label: Settlement I - Detail of adjustments to the profit and loss account
+              result - Transactions under art. 19 LIS other than change of residence
+              to European Union or EEA Member States - Decreases [01575]
+          is-m200-dp200013-01009:
+            label: Settlement II - Detail of adjustments to the profit and loss account
+              result - UEFA Europa League 2022 (RDL 3/2022) - Increases [01009]
+          is-m200-dp200013-01013:
+            label: Settlement II - Detail of adjustments to the profit and loss account
+              result - UEFA Europa League 2022 (RDL 3/2022) - Decreases [01013]
+          is-m200-dp200016-00024:
+            label: Deductions under Transitional Provision 24.7 LIS - Deduction art.
+              42 RDLeg. 4/2004 2009 - Pending application in future periods [00024]
+          is-m200-dp200016-00031:
+            label: Deductions under Transitional Provision 24.7 LIS - Deduction art.
+              42 RDLeg. 4/2004 2008 - Deduction carried forward/generated [00031]
+          is-m200-dp200016-00032:
+            label: Deductions under Transitional Provision 24.7 LIS - Deduction art.
+              42 RDLeg. 4/2004 2008 - Applied in this settlement [00032]
+          is-m200-dp200016b-00866:
+            label: Deductions for investment in the Canary Islands - Canary Islands
+              investments 2005 - Deduction carried forward/generated [00866]
+          is-m200-dp200016b-00867:
+            label: Deductions for investment in the Canary Islands - Canary Islands
+              investments 2005 - Applied in this settlement [00867]
+          is-m200-dp200016b-00941:
+            label: Deductions for investment in the Canary Islands - Canary Islands
+              investments 2006 - Carried forward for application in future periods
+              [00941]
+          is-m200-dp200017-00466:
+            label: Deductions to incentivise certain activities - 2005 Sum of deductions
+              - Deduction carried forward/generated [00466]
+          is-m200-dp200017-00467:
+            label: Deductions to incentivise certain activities - 2005 Sum of deductions
+              - Applied in this settlement [00467]
+          is-m200-dp200017-00586:
+            label: Deductions to incentivise certain activities - 2006 Sum of deductions
+              - Carried forward for application in future periods [00586]
+          is-m200-dp200018-00259:
+            label: Deductions to incentivise certain activities - {year} Bicentenary
+              of the independence of the Ibero-American republics (BIR). - Deduction
+              carried forward/generated [00259]
+          is-m200-dp200018-00260:
+            label: Deductions to incentivise certain activities - {year} Bicentenary
+              of the independence of the Ibero-American republics (BIR). - Applied
+              in this settlement [00260]
+          is-m200-dp200018-00261:
+            label: Deductions to incentivise certain activities - {year} Bicentenary
+              of the independence of the Ibero-American republics (BIR). - Pending
+              application in future periods [00261]
+          is-m200-dp200018-00262:
+            label: Deductions to incentivise certain activities - {year} 150th anniversary
+              of the founding of the Spanish Academy in Rome (AER) - Deduction carried
+              forward/generated [00262]
+          is-m200-dp200018-00263:
+            label: Deductions to incentivise certain activities - {year} 150th anniversary
+              of the founding of the Spanish Academy in Rome (AER) - Applied in this
+              settlement [00263]
+          is-m200-dp200018-00264:
+            label: Deductions to incentivise certain activities - {year} 150th anniversary
+              of the founding of the Spanish Academy in Rome (AER) - Carried forward
+              for application in future periods [00264]
+          is-m200-dp200018-00268:
+            label: Deductions to incentivise certain activities - {year} MADBLUE Summit
+              (SM) - Deduction carried forward/generated [00268]
+          is-m200-dp200018-00269:
+            label: Deductions to incentivise certain activities - {year} MADBLUE Summit
+              (SM) - Applied in this settlement [00269]
+          is-m200-dp200018-00270:
+            label: Deductions to incentivise certain activities - {year} MADBLUE Summit
+              (SM) - Carried forward for application in future periods [00270]
+          is-m200-dp200018-00271:
+            label: Deductions to incentivise certain activities - {year} 30th anniversary
+              of the Escuela Superior de Música Reina Sofía (RS) - Deduction carried
+              forward/generated [00271]
+          is-m200-dp200018-00273:
+            label: Deductions to incentivise certain activities - {year} 30th anniversary
+              of the Escuela Superior de Música Reina Sofía (RS) - Applied in this
+              settlement [00273]
+          is-m200-dp200018-00274:
+            label: Deductions to incentivise certain activities - {year} 30th anniversary
+              of the Escuela Superior de Música Reina Sofía (RS) - Carried forward
+              for application in future periods [00274]
+          is-m200-dp200018-00294:
+            label: Deductions to incentivise certain activities - {year} Davis Cup
+              Madrid tournament (DCM) - Deduction carried forward/generated [00294]
+          is-m200-dp200018-00295:
+            label: Deductions to incentivise certain activities - {year} Davis Cup
+              Madrid tournament (DCM) - Applied in this settlement [00295]
+          is-m200-dp200018-00296:
+            label: Deductions to incentivise certain activities - {year} Davis Cup
+              Madrid tournament (DCM) - Pending application in future periods [00296]
+          is-m200-dp200018-00297:
+            label: Deductions to incentivise certain activities - {year} Madrid Horse
+              Week 21/23 (HW21) - Deduction carried forward/generated [00297]
+          is-m200-dp200018-00298:
+            label: Deductions to incentivise certain activities - {year} Madrid Horse
+              Week 21/23 (HW21) - Applied in this settlement [00298]
+          is-m200-dp200018-00299:
+            label: Deductions to incentivise certain activities - {year} Madrid Horse
+              Week 21/23 (HW21) - Carried forward for application in future periods
+              [00299]
+          is-m200-dp200018-00319:
+            label: Deductions to incentivise certain activities - {year} Centenary
+              of Rugby in Spain and of the Unió Esportiva Santboiana (CRE) - Carried
+              forward for application in future periods [00319]
+          is-m200-dp200018-00320:
+            label: Deductions to incentivise certain activities - {year} Solheim Cup
+              2023 (SC23) - Deduction carried forward/generated [00320]
+          is-m200-dp200018-00349:
+            label: Deductions to incentivise certain activities - {year} Solheim Cup
+              2023 (SC23) - Applied in this settlement [00349]
+          is-m200-dp200018-00350:
+            label: Deductions to incentivise certain activities - {year} Solheim Cup
+              2023 (SC23) - Carried forward for application in future periods [00350]
+          is-m200-dp200018-00366:
+            label: Deductions to incentivise certain activities - {year} Barcelona
+              Mobile World Capital (BMWC) - Deduction carried forward/generated [00366]
+          is-m200-dp200018-00367:
+            label: Deductions to incentivise certain activities - {year} Barcelona
+              Mobile World Capital (BMWC) - Applied in this settlement [00367]
+          is-m200-dp200018-00369:
+            label: Deductions to incentivise certain activities - {year} Barcelona
+              Mobile World Capital (BMWC) - Carried forward for application in future
+              periods [00369]
+          is-m200-dp200018-00395:
+            label: Deductions to incentivise certain activities - {year} Valencia,
+              World Design Capital 2022/Valencia World Design Capital 2022 (VD22)
+              - Deduction carried forward/generated [00395]
+          is-m200-dp200018-00401:
+            label: Deductions to incentivise certain activities - {year} Valencia,
+              World Design Capital 2022/Valencia World Design Capital 2022 (VD22)
+              - Applied in this settlement [00401]
+          is-m200-dp200018-00405:
+            label: Deductions to incentivise certain activities - {year} Valencia,
+              World Design Capital 2022/Valencia World Design Capital 2022 (VD22)
+              - Carried forward for application in future periods [00405]
+          is-m200-dp200018-00422:
+            label: Deductions to incentivise certain activities - {year} Centenary
+              of the Revista de Occidente (RO) - Deduction carried forward/generated
+              [00422]
+          is-m200-dp200018-00423:
+            label: Deductions to incentivise certain activities - {year} Centenary
+              of the Revista de Occidente (RO) - Applied in this settlement [00423]
+          is-m200-dp200018-00424:
+            label: Deductions to incentivise certain activities - {year} Centenary
+              of the Revista de Occidente (RO) - Carried forward for application in
+              future periods [00424]
+          is-m200-dp200018-00430:
+            label: Deductions to incentivise certain activities - {year} 5th centenary
+              of the death of Elio Antonio de Nebrija (FN) - Deduction carried forward/generated
+              [00430]
+          is-m200-dp200018-00431:
+            label: Deductions to incentivise certain activities - {year} 5th centenary
+              of the death of Elio Antonio de Nebrija (FN) - Applied in this settlement
+              [00431]
+          is-m200-dp200018-00432:
+            label: Deductions to incentivise certain activities - {year} 5th centenary
+              of the death of Elio Antonio de Nebrija (FN) - Carried forward for application
+              in future periods [00432]
+          is-m200-dp200018-00439:
+            label: Deductions to incentivise certain activities - {year} Andalusia
+              European Region of Sport 2021 (AD21) - Deduction carried forward/generated
+              [00439]
+          is-m200-dp200018-00440:
+            label: Deductions to incentivise certain activities - {year} Andalusia
+              European Region of Sport 2021 (AD21) - Applied in this settlement [00440]
+          is-m200-dp200018-00441:
+            label: Deductions to incentivise certain activities - {year} Andalusia
+              European Region of Sport 2021 (AD21) - Carried forward for application
+              in future periods [00441]
+          is-m200-dp200018-00452:
+            label: Deductions to incentivise certain activities - {year} 75th anniversary
+              of opera in Oviedo (OD) - Deduction carried forward/generated [00452]
+          is-m200-dp200018-00453:
+            label: Deductions to incentivise certain activities - {year} 75th anniversary
+              of opera in Oviedo (OD) - Applied in this settlement [00453]
+          is-m200-dp200018-00454:
+            label: Deductions to incentivise certain activities - {year} 75th anniversary
+              of opera in Oviedo (OD) - Carried forward for application in future
+              periods [00454]
+          is-m200-dp200018-00455:
+            label: Deductions to incentivise certain activities - {year} Healthy habits
+              for cardiovascular risk control «Learning to look after ourselves» (HSRC)
+              - Deduction carried forward/generated [00455]
+          is-m200-dp200018-00456:
+            label: Deductions to incentivise certain activities - {year} Healthy habits
+              for cardiovascular risk control «Learning to look after ourselves» (HSRC)
+              - Applied in this settlement [00456]
+          is-m200-dp200018-00463:
+            label: Deductions to incentivise certain activities - {year} Healthy habits
+              for cardiovascular risk control «Learning to look after ourselves» (HSRC)
+              - Carried forward for application in future periods [00463]
+          is-m200-dp200018-00464:
+            label: Deductions to incentivise certain activities - {year} Badminton
+              World Championships Spain (MBE) - Deduction carried forward/generated
+              [00464]
+          is-m200-dp200018-00469:
+            label: Deductions to incentivise certain activities - {year} Badminton
+              World Championships Spain (MBE) - Applied in this settlement [00469]
+          is-m200-dp200018-00470:
+            label: Deductions to incentivise certain activities - {year} Badminton
+              World Championships Spain (MBE) - Carried forward for application in
+              future periods [00470]
+          is-m200-dp200018-00471:
+            label: Deductions to incentivise certain activities - {year} Centenary
+              of the Battle of Covadonga-Cuadonga (CBC) - Deduction carried forward/generated
+              [00471]
+          is-m200-dp200018-00479:
+            label: Deductions to incentivise certain activities - {year} Centenary
+              of the Battle of Covadonga-Cuadonga (CBC) - Applied in this settlement
+              [00479]
+          is-m200-dp200018-00481:
+            label: Deductions to incentivise certain activities - {year} Centenary
+              of the Battle of Covadonga-Cuadonga (CBC) - Carried forward for application
+              in future periods [00481]
+          is-m200-dp200018-00499:
+            label: Deductions to incentivise certain activities - {year} 7th centenary
+              of Palencia Cathedral 2021-2022 (CCP) - Deduction carried forward/generated
+              [00499]
+          is-m200-dp200018-00502:
+            label: Deductions to incentivise certain activities - {year} 7th centenary
+              of Palencia Cathedral 2021-2022 (CCP) - Applied in this settlement [00502]
+          is-m200-dp200018-00503:
+            label: Deductions to incentivise certain activities - {year} 7th centenary
+              of Palencia Cathedral 2021-2022 (CCP) - Carried forward for application
+              in future periods [00503]
+          is-m200-dp200018-00504:
+            label: 'Deductions to incentivise certain activities - {year} Special
+              FITUR: tourism recovery (FE) - Deduction carried forward/generated [00504]'
+          is-m200-dp200018-00511:
+            label: 'Deductions to incentivise certain activities - {year} Special
+              FITUR: tourism recovery (FE) - Applied in this settlement [00511]'
+          is-m200-dp200018-00513:
+            label: 'Deductions to incentivise certain activities - {year} Special
+              FITUR: tourism recovery (FE) - Carried forward for application in future
+              periods [00513]'
+          is-m200-dp200018-00812:
+            label: Deductions to incentivise certain activities - {year} 50th anniversary
+              of the Hospital Sant Joan de Déu (HSJD) - Deduction carried forward/generated
+              [00812]
+          is-m200-dp200018-00816:
+            label: Deductions to incentivise certain activities - {year} 50th anniversary
+              of the Hospital Sant Joan de Déu (HSJD) - Applied in this settlement
+              [00816]
+          is-m200-dp200018-00817:
+            label: Deductions to incentivise certain activities - {year} 50th anniversary
+              of the Hospital Sant Joan de Déu (HSJD) - Carried forward for application
+              in future periods [00817]
+          is-m200-dp200018-00878:
+            label: Deductions to incentivise certain activities - {year} Centenary
+              of the Aragonese Football Federation (FAF) - Deduction carried forward/generated
+              [00878]
+          is-m200-dp200018-00879:
+            label: Deductions to incentivise certain activities - {year} Centenary
+              of the Aragonese Football Federation (FAF) - Applied in this settlement
+              [00879]
+          is-m200-dp200018-00882:
+            label: Deductions to incentivise certain activities - {year} Centenary
+              of the Aragonese Football Federation (FAF) - Carried forward for application
+              in future periods [00882]
+          is-m200-dp200018-01626:
+            label: Deductions to incentivise certain activities - {year} 4th edition
+              of the Barcelona World Race (4BWR) - Deduction carried forward/generated
+              [01626]
+          is-m200-dp200018-01627:
+            label: Deductions to incentivise certain activities - {year} 4th edition
+              of the Barcelona World Race (4BWR) - Applied in this settlement [01627]
+          is-m200-dp200018-01628:
+            label: Deductions to incentivise certain activities - {year} 4th edition
+              of the Barcelona World Race (4BWR) - Carried forward for application
+              in future periods [01628]
+          is-m200-dp200018-01707:
+            label: Deductions to incentivise certain activities - {year} Milliarium
+              Montserrat Decade Plan 1025-2025 (PDMM) - Deduction carried forward/generated
+              [01707]
+          is-m200-dp200018-01708:
+            label: Deductions to incentivise certain activities - {year} Milliarium
+              Montserrat Decade Plan 1025-2025 (PDMM) - Applied in this settlement
+              [01708]
+          is-m200-dp200018-01709:
+            label: Deductions to incentivise certain activities - {year} Milliarium
+              Montserrat Decade Plan 1025-2025 (PDMM) - Carried forward for application
+              in future periods [01709]
+          is-m200-dp200018-02362:
+            label: Deductions to incentivise certain activities - {year} Berlanga
+              Plan (PB) - Deduction carried forward/generated [02362]
+          is-m200-dp200018-02363:
+            label: Deductions to incentivise certain activities - {year} Berlanga
+              Plan (PB) - Applied in this settlement [02363]
+          is-m200-dp200018-02364:
+            label: Deductions to incentivise certain activities - {year} Berlanga
+              Plan (PB) - Carried forward for application in future periods [02364]
+          is-m200-dp200018-02374:
+            label: Deductions to incentivise certain activities - {year} 175th anniversary
+              of the construction of the Gran Teatre del Liceu (TL) - Deduction carried
+              forward/generated [02374]
+          is-m200-dp200018-02375:
+            label: Deductions to incentivise certain activities - {year} 175th anniversary
+              of the construction of the Gran Teatre del Liceu (TL) - Applied in this
+              settlement [02375]
+          is-m200-dp200018-02376:
+            label: Deductions to incentivise certain activities - {year} 175th anniversary
+              of the construction of the Gran Teatre del Liceu (TL) - Carried forward
+              for application in future periods [02376]
+          is-m200-dp200018-02377:
+            label: Deductions to incentivise certain activities - {year} Formula 1
+              Spanish Grand Prix (F1) - Deduction carried forward/generated [02377]
+          is-m200-dp200018-02378:
+            label: Deductions to incentivise certain activities - {year} Formula 1
+              Spanish Grand Prix (F1) - Applied in this settlement [02378]
+          is-m200-dp200018-02379:
+            label: Deductions to incentivise certain activities - {year} Formula 1
+              Spanish Grand Prix (F1) - Carried forward for application in future
+              periods [02379]
+          is-m200-dp200018b-01217:
+            label: Deductions to incentivise certain activities - {year} Volunteer
+              World 2030/35th anniversary of the Spanish Volunteering Platform (V30)
+              - Deduction carried forward/generated [01217]
+          is-m200-dp200018b-01218:
+            label: Deductions to incentivise certain activities - {year} Volunteer
+              World 2030/35th anniversary of the Spanish Volunteering Platform (V30)
+              - Applied in this settlement [01218]
+          is-m200-dp200018b-01219:
+            label: Deductions to incentivise certain activities - {year} Volunteer
+              World 2030/35th anniversary of the Spanish Volunteering Platform (V30)
+              - Carried forward for application in future periods [01219]
+          is-m200-dp200018b-01883:
+            label: Deductions to incentivise certain activities - {year} Holy Jubilee
+              Year of Saint Isidore the Labourer (JI) - Deduction carried forward/generated
+              [01883]
+          is-m200-dp200018b-01884:
+            label: Deductions to incentivise certain activities - {year} Holy Jubilee
+              Year of Saint Isidore the Labourer (JI) - Applied in this settlement
+              [01884]
+          is-m200-dp200018b-01885:
+            label: Deductions to incentivise certain activities - {year} Holy Jubilee
+              Year of Saint Isidore the Labourer (JI) - Carried forward for application
+              in future periods [01885]
+          is-m200-dp200018c-00903:
+            label: Deduction for donations to non-profit entities - Donations for
+              priority patronage activities and others entitled to increased deduction
+              - 2013 - Deduction carried forward/generated [00903]
+          is-m200-dp200018c-00917:
+            label: Deduction for donations to non-profit entities - Donations for
+              priority patronage activities and others entitled to increased deduction
+              - 2013 - Applied in this settlement [00917]
+          is-m200-dp200018c-00932:
+            label: Deduction for donations to non-profit entities - Donations for
+              priority patronage activities and others entitled to increased deduction
+              - 2014 - Carried forward for application in future periods [00932]
+          is-m200-dp200018c-00990:
+            label: Deduction for donations to non-profit entities - General donations
+              - 2013 - Deduction carried forward/generated [00990]
+          is-m200-dp200018c-00991:
+            label: Deduction for donations to non-profit entities - General donations
+              - 2013 - Applied in this settlement [00991]
+          is-m200-dp200018c-00999:
+            label: Deduction for donations to non-profit entities - General donations
+              - 2014 - Carried forward for application in future periods [00999]
+          is-m200-dp200020-01741:
+            label: Carried forward for addition due to unapplied operating-profit
+              limit - Year of generation 2018 - Pending application at the start of
+              the period [01741]
+          is-m200-dp200020-01742:
+            label: Carried forward for addition due to unapplied operating-profit
+              limit - Year of generation 2018 - Applied in this settlement [01742]
+          is-m200-dp200020-01984:
+            label: Carried forward for addition due to unapplied operating-profit
+              limit - Year of generation 2019 - Carried forward for application in
+              future periods [01984]
+          is-m200-dp200020b-01108:
+            label: Capitalisation reserve - 2022(*) - Taxable-base reduction carried
+              forward for application in future periods [01108]
+          is-m200-dp200020b-01602:
+            label: Levelling reserve - Reduction of the taxable base - Year of generation
+              2018 - Amount included in the return due to non-compliance with requirements
+              [01602]
+          is-m200-dp200020b-01732:
+            label: Levelling reserve - Reserve allocation - Year of generation 2018
+              - Amount of reserve to be allocated [01732]
+          is-m200-dp200020b-01733:
+            label: Levelling reserve - Reserve allocation - Year of generation 2018
+              - Amount of reserve allocated [01733]
+          is-m200-dp200020b-01734:
+            label: Levelling reserve - Reserve allocation - Year of generation 2018
+              - Reserve amount pending allocation [01734]
+          is-m200-dp200020b-01735:
+            label: Levelling reserve - Reserve allocation - Year of generation 2018
+              - Reserve used [01735]
+          is-m200-dp200020b-01961:
+            label: Levelling reserve - Reduction of the taxable base - Year of generation
+              2018 - Amount reducing the taxable base for the period/carried forward
+              for addition at start of period [01961]
+          is-m200-dp200020b-01962:
+            label: Levelling reserve - Reduction of the taxable base - Year of generation
+              2018 - Amount added to tax base in the period [01962]
+          is-m200-dp200020b-02240:
+            label: Levelling reserve - Reduction of the taxable base - Year of generation
+              2019 - Amount pending addition in future periods [02240]
+          is-m200-dp200020b-02407:
+            label: Capitalisation reserve - 2021 - Right to reduce the taxable base
+              generated in the period/carried forward at start of period [02407]
+          is-m200-dp200020b-02408:
+            label: Capitalisation reserve - 2021 - Tax base reduction applied [02408]
+          is-m200-dp200020c-01138:
+            label: Conversion of deferred tax assets into enforceable credit against
+              the Tax Administration - Excess positive net tax liability - Generation
+              year - 2022(*) - Excess positive net tax due pending application in
+              future periods [01138]
+          is-m200-dp200020c-02427:
+            label: Conversion of deferred tax assets into enforceable credit against
+              the Tax Administration - Excess positive net tax liability - Generation
+              year - 2021 - Excess positive net tax due outstanding at the start of
+              the period [02427]
+          is-m200-dp200020c-02428:
+            label: Conversion of deferred tax assets into enforceable credit against
+              the Tax Administration - Excess positive net tax liability - Generation
+              year - 2021 - Excess positive net tax due applied in tax periods 2008
+              to 2015 [02428]
+          is-m200-dp200020c-02429:
+            label: Conversion of deferred tax assets into enforceable credit against
+              the Tax Administration - Excess positive net tax liability - Generation
+              year - 2021 - Excess positive net tax due applied in tax periods beginning
+              from 2016 [02429]
+          is-m200-dp200022-00524:
+            label: Special regime for the Canary Islands investment reserve - Canary
+              Islands investment reserve 2018 - Canary Islands investment reserve
+              pending materialisation at start of period [00524]
+          is-m200-dp200022-00525:
+            label: Special regime for the Canary Islands investment reserve - Canary
+              Islands investment reserve 2018 - Applied/materialised in this settlement
+              - Investments provided for in letters A and B, art. 27.4, Law 19/1994
+              [00525]
+          is-m200-dp200022-00526:
+            label: Special regime for the Canary Islands investment reserve - Canary
+              Islands investment reserve 2018 - Applied/materialised in this settlement
+              - Investments provided for in letters B bis, C and D, art. 27.4, Law
+              19/1994 [00526]
+          is-m200-dp200022-00925:
+            label: Special regime for the Canary Islands investment reserve - RIC
+              2019 - Canary Islands investment reserve pending materialisation at
+              period-end [00925]
+          is-m200-dp200022-01174:
+            label: Special regime for the Canary Islands investment reserve - Canary
+              Islands investment reserve 2021 - Applied/materialised in this settlement
+              - Advance investments treated as materialising the RIC in this settlement
+              [01174]
+          is-m200-dp200022-01184:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2021 - Canary Islands investment reserve pending allocation
+              at period-end [01184]
+          is-m200-dp200022-01600:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2022 - Canary Islands investment reserve pending allocation
+              at period-end [01600]
+          is-m200-dp200022-01820:
+            label: Special regime for the Canary Islands investment reserve - Canary
+              Islands investment reserve 2022 - Applied/materialised in this settlement
+              - Advance investments treated as materialising the RIC in this settlement
+              [01820]
+          is-m200-dp200022-01823:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2021 - Canary Islands investment reserve pending allocation
+              at start of period [01823]
+          is-m200-dp200022-02439:
+            label: Special regime for the Canary Islands investment reserve - Canary
+              Islands investment reserve 2018 - Applied/materialised in this settlement
+              - Advance investments treated as materialising the RIC in this settlement
+              [02439]
+          is-m200-dp200022-02440:
+            label: Special regime for the Canary Islands investment reserve - RIC
+              2019 - Applied/materialised in this settlement - Advance investments
+              treated as materialising the RIC in this settlement [02440]
+          is-m200-dp200022-02441:
+            label: Special regime for the Canary Islands investment reserve - Canary
+              Islands investment reserve 2020 - Applied/materialised in this settlement
+              - Advance investments treated as materialising the RIC in this settlement
+              [02441]
+          is-m200-dp200022-02446:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2019 - Canary Islands investment reserve pending allocation
+              at start of period [02446]
+          is-m200-dp200022-02451:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2020 - Canary Islands investment reserve pending allocation
+              at period-end [02451]
+          is-m200-dp200022-02810:
+            label: Special regime for the Canary Islands investment reserve - Canary
+              Islands investment reserve 2023 - Applied/materialised in this settlement
+              - Advance investments treated as materialising the RIC in this settlement
+              [02810]
+          is-m200-dp200022-02823:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2022 - Canary Islands investment reserve pending allocation
+              at start of period [02823]
+          is-m200-dp200022-02824:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2023 - Investments provided for in letters A and B, art.
+              27.4, Law 19/1994 [02824]
+          is-m200-dp200022-02825:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2023 - Investments provided for in letters B bis, C and
+              D, art. 27.4, Law 19/1994 [02825]
+          is-m200-dp200022-02826:
+            label: Special regime for the Canary Islands investment reserve - Advance
+              investments 2023 - Canary Islands investment reserve pending allocation
+              at period-end [02826]
+          is-m200-dp200022b-02916:
+            label: Special regime for the Balearic Islands investment reserve - Balearic
+              Islands investment reserve 2023 - Applied/materialised in this settlement
+              - Advance investments treated as materialising the RIIB in this settlement
+              [02916]
+          is-m200-dp200022b-02919:
+            label: Special regime for the Balearic Islands investment reserve - Advance
+              investments 2023 - Investments provided for in letters A and B, Additional
+              Provision 70.4, Law 31/2022 [02919]
+          is-m200-dp200022b-02920:
+            label: Special regime for the Balearic Islands investment reserve - Advance
+              investments 2023 - Investments provided for in letter C, Additional
+              Provision 70.4, Law 31/2022 [02920]
           is-mineria-hidrocarburos-factor-agotamiento-aumento:
             label: 'Mining and hydrocarbons: depletion allowance (arts. 91 and 95
               LIS) - Increase - Adjustments for the tax year - Temporary (originating
@@ -19831,11 +20415,6 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2023 - Without repeated donations to the same entity - Carried forward
                 for application in future periods [01373]
-            '01423':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Excess positive net tax liability - Generation
-                year - 2023 - Excess positive net tax due outstanding at the start
-                of the period [01423]
             '01575':
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Transactions under art. 19 LIS other than change

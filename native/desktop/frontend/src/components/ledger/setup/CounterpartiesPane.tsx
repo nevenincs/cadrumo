@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { facts, labelled } from "@/shell/compose";
 import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
-import type { LedgerCounterpartyResult } from "../../../shell/ledgerClassificationSetup";
+import type { LedgerCounterpartyResult } from "../../../shell/ledgerClassificationContract";
 import type { CounterpartyAsk } from "../../../shell/counterpartyAsk";
 import { useTextLimit } from "../../../shell/ledgerLimits";
 import { useStrings } from "../../../shell/strings";

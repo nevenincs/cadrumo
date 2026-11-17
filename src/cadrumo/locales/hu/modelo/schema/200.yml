@@ -2509,6 +2509,11 @@ modelo:
               érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS 130.
               cikk - Keletkezés éve - 2023 - Jövőbeli időszakokban alkalmazásra váró
               AID - Érvényesíthető követeléssé alakítás joga nélkül [01422]
+          '01423':
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
+              - Keletkezés éve - 2023 - Az időszak elején fennálló pozitív nettó adótöbblet
+              [01423]
           '01424':
             label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
               érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
@@ -14609,6 +14614,36 @@ modelo:
             label: 'Ingyenes és társasági átruházások: piaci érték alkalmazása (LIS
               17.4. cikk) - Csökkenés - Évi korrekciók - Időleges (az évben keletkezett)
               [02927]'
+          is-correccion-uefa-europa-league-2022-aumento-permanente:
+            label: UEFA Európa-liga 2022 (RDL 3/2022) - Növekedés - Évi korrekciók
+              - Végleges [01861]
+          is-correccion-uefa-europa-league-2022-aumento-saldo-final:
+            label: UEFA Európa-liga 2022 (RDL 3/2022) - Növekedés - Év végén függőben
+              lévő egyenleg [01864]
+          is-correccion-uefa-europa-league-2022-aumento-saldo-inicial:
+            label: UEFA Európa-liga 2022 (RDL 3/2022) - Növekedés - Az időszak elején
+              fennálló egyenleg [01860]
+          is-correccion-uefa-europa-league-2022-aumento-temporaria-anteriores:
+            label: UEFA Európa-liga 2022 (RDL 3/2022) - Növekedés - Évi korrekciók
+              - Átmeneti (korábbi időszakokból eredő) [01863]
+          is-correccion-uefa-europa-league-2022-aumento-temporaria-ejercicio:
+            label: UEFA Európa-liga 2022 (RDL 3/2022) - Növekedés - Évi korrekciók
+              - Időleges (az évben keletkezett) [01862]
+          is-correccion-uefa-europa-league-2022-disminucion-permanente:
+            label: UEFA Európa-liga 2022 (RDL 3/2022) - Csökkenés - Évi korrekciók
+              - Végleges [01866]
+          is-correccion-uefa-europa-league-2022-disminucion-saldo-final:
+            label: UEFA Európa-liga 2022 (RDL 3/2022) - Csökkenés - Év végén függőben
+              lévő egyenleg [01869]
+          is-correccion-uefa-europa-league-2022-disminucion-saldo-inicial:
+            label: UEFA Európa-liga 2022 (RDL 3/2022) - Csökkenés - Az időszak elején
+              fennálló egyenleg [01865]
+          is-correccion-uefa-europa-league-2022-disminucion-temporaria-anteriores:
+            label: UEFA Európa-liga 2022 (RDL 3/2022) - Csökkenés - Évi korrekciók
+              - Átmeneti (korábbi időszakokból eredő) [01868]
+          is-correccion-uefa-europa-league-2022-disminucion-temporaria-ejercicio:
+            label: UEFA Európa-liga 2022 (RDL 3/2022) - Csökkenés - Évi korrekciók
+              - Időleges (az évben keletkezett) [01867]
           is-correccion-valoracion-bienes-derechos-regimen-especial-permanente-aumento:
             label: Javak és jogok értékelése. Átszervezési műveletek különleges szabályozása
               (LIS VII. cím VII. fejezet) - Növekedés - Évi korrekciók - Végleges
@@ -14812,6 +14847,10 @@ modelo:
               foglalkoztatása utáni levonás (CE)
             label: Fogyatékossággal élő munkavállalók foglalkoztatása utáni levonás
               (CE). Függőben lévő vagy keletkezett levonás
+          is-deduccion-creacion-empleo-discapacidad-aplicado:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Levonás
+              fogyatékossággal élő munkavállalók foglalkoztatásának létrehozásáért
+              (CE) - Ebben az elszámolásban alkalmazva [00796]
           is-deduccion-creacion-empleo-discapacidad-pendiente-futuros:
             help: Jövőbeli időszakokban alkalmazandó - Fogyatékossággal élő munkavállalók
               foglalkoztatása utáni levonás (CE)
@@ -15066,6 +15105,18 @@ modelo:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - A Festival
               Porta Ferrada 60. évfordulója (PF) - Függőben lévő/keletkezett levonás
               [00088]
+          is-deduccion-prevision-social-empresarial-aplicado:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Vállalati
+              hozzájárulások a munkavállalók javára tulajdonított vállalati társadalombiztosítási
+              rendszerekhez (CPS) - Ebben az elszámolásban alkalmazva [00793]
+          is-deduccion-prevision-social-empresarial-generada:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Vállalati
+              hozzájárulások a munkavállalók javára tulajdonított vállalati társadalombiztosítási
+              rendszerekhez (CPS) - Függőben lévő/keletkezett levonás [00792]
+          is-deduccion-prevision-social-empresarial-pendiente-futuros:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Vállalati
+              hozzájárulások a munkavállalók javára tulajdonított vállalati társadalombiztosítási
+              rendszerekhez (CPS) - Jövőbeli időszakokban alkalmazandó [00794]
           is-deduccion-produccion-cinematografica-espanola-financiador:
             help: 'Függőben lévő vagy keletkezett levonás - Finanszírozó: spanyol
               filmgyártások (FPC)'
@@ -16486,6 +16537,529 @@ modelo:
             label: Elszámolás IV - Eredmény - Állam [00621]
           is-liquidacion-iv-resultado-misc:
             label: Elszámolás IV - Helyesbítés - Állam [00866]
+          is-m200-dp200012-01015:
+            label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - A számviteli értékelés adózási értékeléstől való eltérésének
+              hatásai (LIS 20. cikk) - Növelések [01015]
+          is-m200-dp200012-01016:
+            label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - A számviteli értékelés adózási értékeléstől való eltérésének
+              hatásai (LIS 20. cikk) - Csökkentések [01016]
+          is-m200-dp200012-01574:
+            label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - A LIS 19. cikke szerinti, az Európai Unió vagy az EGT
+              tagállamaiba történő székhelyáthelyezéstől eltérő ügyletek - Növelések
+              [01574]
+          is-m200-dp200012-01575:
+            label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - A LIS 19. cikke szerinti, az Európai Unió vagy az EGT
+              tagállamaiba történő székhelyáthelyezéstől eltérő ügyletek - Csökkentések
+              [01575]
+          is-m200-dp200013-01009:
+            label: Elszámolás II - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - UEFA Európa-liga 2022 (RDL 3/2022) - Növelések [01009]
+          is-m200-dp200013-01013:
+            label: Elszámolás II - Az eredménykimutatás eredményét érintő korrekciók
+              részletezése - UEFA Európa-liga 2022 (RDL 3/2022) - Csökkentések [01013]
+          is-m200-dp200016-00024:
+            label: LIS 24.7. átmeneti rendelkezés szerinti levonások - RDLeg. 4/2004
+              42. cikk szerinti levonás 2009 - Jövőbeli időszakokban alkalmazandó
+              [00024]
+          is-m200-dp200016-00031:
+            label: LIS 24.7. átmeneti rendelkezés szerinti levonások - RDLeg. 4/2004
+              42. cikk szerinti levonás 2008 - Függőben lévő/keletkezett levonás [00031]
+          is-m200-dp200016-00032:
+            label: LIS 24.7. átmeneti rendelkezés szerinti levonások - RDLeg. 4/2004
+              42. cikk szerinti levonás 2008 - Ebben az elszámolásban alkalmazva [00032]
+          is-m200-dp200016b-00866:
+            label: Kanári-szigeteki beruházási levonások - Kanári-szigeteki beruházások
+              2005 - Függőben lévő/keletkezett levonás [00866]
+          is-m200-dp200016b-00867:
+            label: Kanári-szigeteki beruházási levonások - Kanári-szigeteki beruházások
+              2005 - Ebben az elszámolásban alkalmazva [00867]
+          is-m200-dp200016b-00941:
+            label: Kanári-szigeteki beruházási levonások - Kanári-szigeteki beruházások
+              2006 - Jövőbeli időszakokban alkalmazandó [00941]
+          is-m200-dp200017-00466:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2005 Levonások
+              összege - Függőben lévő/keletkezett levonás [00466]
+          is-m200-dp200017-00467:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2005 Levonások
+              összege - Ebben az elszámolásban alkalmazva [00467]
+          is-m200-dp200017-00586:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2006 Levonások
+              összege - Jövőbeli időszakokban alkalmazandó [00586]
+          is-m200-dp200018-00259:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Az
+              iberoamerikai köztársaságok függetlenségének bicentenáriuma (BIR). -
+              Függőben lévő/keletkezett levonás [00259]
+          is-m200-dp200018-00260:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Az
+              iberoamerikai köztársaságok függetlenségének bicentenáriuma (BIR). -
+              Ebben az elszámolásban alkalmazva [00260]
+          is-m200-dp200018-00261:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Az
+              iberoamerikai köztársaságok függetlenségének bicentenáriuma (BIR). -
+              Jövőbeli időszakokban alkalmazásra vár [00261]
+          is-m200-dp200018-00262:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              római Spanyol Akadémia alapításának 150. évfordulója (AER) - Függőben
+              lévő/keletkezett levonás [00262]
+          is-m200-dp200018-00263:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              római Spanyol Akadémia alapításának 150. évfordulója (AER) - Ebben az
+              elszámolásban alkalmazva [00263]
+          is-m200-dp200018-00264:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              római Spanyol Akadémia alapításának 150. évfordulója (AER) - Jövőbeli
+              időszakokban alkalmazandó [00264]
+          is-m200-dp200018-00268:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              MADBLUE csúcstalálkozó megrendezése (SM) - Függőben lévő/keletkezett
+              levonás [00268]
+          is-m200-dp200018-00269:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              MADBLUE csúcstalálkozó megrendezése (SM) - Ebben az elszámolásban alkalmazva
+              [00269]
+          is-m200-dp200018-00270:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              MADBLUE csúcstalálkozó megrendezése (SM) - Jövőbeli időszakokban alkalmazandó
+              [00270]
+          is-m200-dp200018-00271:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Az
+              Escuela Superior de Música Reina Sofía 30. évfordulója (RS) - Függőben
+              lévő/keletkezett levonás [00271]
+          is-m200-dp200018-00273:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Az
+              Escuela Superior de Música Reina Sofía 30. évfordulója (RS) - Ebben
+              az elszámolásban alkalmazva [00273]
+          is-m200-dp200018-00274:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Az
+              Escuela Superior de Música Reina Sofía 30. évfordulója (RS) - Jövőbeli
+              időszakokban alkalmazandó [00274]
+          is-m200-dp200018-00294:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Davis-kupa
+              madridi torna (DCM) - Függőben lévő/keletkezett levonás [00294]
+          is-m200-dp200018-00295:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Davis-kupa
+              madridi torna (DCM) - Ebben az elszámolásban alkalmazva [00295]
+          is-m200-dp200018-00296:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Davis-kupa
+              madridi torna (DCM) - Jövőbeli időszakokban alkalmazandó [00296]
+          is-m200-dp200018-00297:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Madrid
+              Horse Week 21/23 (HW21) - Függőben lévő/keletkezett levonás [00297]
+          is-m200-dp200018-00298:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Madrid
+              Horse Week 21/23 (HW21) - Ebben az elszámolásban alkalmazva [00298]
+          is-m200-dp200018-00299:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Madrid
+              Horse Week 21/23 (HW21) - Jövőbeli időszakokban alkalmazandó [00299]
+          is-m200-dp200018-00319:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              spanyol rögbi és az Unió Esportiva Santboiana centenáriuma (CRE) - Jövőbeli
+              időszakokban alkalmazandó [00319]
+          is-m200-dp200018-00320:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Solheim
+              Cup 2023 (SC23) - Függőben lévő/keletkezett levonás [00320]
+          is-m200-dp200018-00349:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Solheim
+              Cup 2023 (SC23) - Ebben az elszámolásban alkalmazva [00349]
+          is-m200-dp200018-00350:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Solheim
+              Cup 2023 (SC23) - Jövőbeli időszakokban alkalmazandó [00350]
+          is-m200-dp200018-00366:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Barcelona
+              Mobile World Capital (BMWC) - Függőben lévő/keletkezett levonás [00366]
+          is-m200-dp200018-00367:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Barcelona
+              Mobile World Capital (BMWC) - Ebben az elszámolásban alkalmazva [00367]
+          is-m200-dp200018-00369:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Barcelona
+              Mobile World Capital (BMWC) - Jövőbeli időszakokban alkalmazandó [00369]
+          is-m200-dp200018-00395:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Valencia,
+              a design világfővárosa 2022/Valencia World Design Capital 2022 (VD22)
+              - Függőben lévő/keletkezett levonás [00395]
+          is-m200-dp200018-00401:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Valencia,
+              a design világfővárosa 2022/Valencia World Design Capital 2022 (VD22)
+              - Ebben az elszámolásban alkalmazva [00401]
+          is-m200-dp200018-00405:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Valencia,
+              a design világfővárosa 2022/Valencia World Design Capital 2022 (VD22)
+              - Jövőbeli időszakokban alkalmazandó [00405]
+          is-m200-dp200018-00422:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              Revista de Occidente centenáriuma (RO) - Függőben lévő/keletkezett levonás
+              [00422]
+          is-m200-dp200018-00423:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              Revista de Occidente centenáriuma (RO) - Ebben az elszámolásban alkalmazva
+              [00423]
+          is-m200-dp200018-00424:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              Revista de Occidente centenáriuma (RO) - Jövőbeli időszakokban alkalmazandó
+              [00424]
+          is-m200-dp200018-00430:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Elio
+              Antonio de Nebrija halálának 500. évfordulója (FN) - Függőben lévő/keletkezett
+              levonás [00430]
+          is-m200-dp200018-00431:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Elio
+              Antonio de Nebrija halálának 500. évfordulója (FN) - Ebben az elszámolásban
+              alkalmazva [00431]
+          is-m200-dp200018-00432:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Elio
+              Antonio de Nebrija halálának 500. évfordulója (FN) - Jövőbeli időszakokban
+              alkalmazandó [00432]
+          is-m200-dp200018-00439:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Andalúzia,
+              a sport európai régiója 2021 (AD21) - Függőben lévő/keletkezett levonás
+              [00439]
+          is-m200-dp200018-00440:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Andalúzia,
+              a sport európai régiója 2021 (AD21) - Ebben az elszámolásban alkalmazva
+              [00440]
+          is-m200-dp200018-00441:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Andalúzia,
+              a sport európai régiója 2021 (AD21) - Jövőbeli időszakokban alkalmazandó
+              [00441]
+          is-m200-dp200018-00452:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Az
+              oviedói opera 75. évfordulója (OD) - Függőben lévő/keletkezett levonás
+              [00452]
+          is-m200-dp200018-00453:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Az
+              oviedói opera 75. évfordulója (OD) - Ebben az elszámolásban alkalmazva
+              [00453]
+          is-m200-dp200018-00454:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Az
+              oviedói opera 75. évfordulója (OD) - Jövőbeli időszakokban alkalmazandó
+              [00454]
+          is-m200-dp200018-00455:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Egészséges
+              szokások a szív- és érrendszeri kockázat kezelésére «Tanuljunk vigyázni
+              magunkra» (HSRC) - Függőben lévő/keletkezett levonás [00455]
+          is-m200-dp200018-00456:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Egészséges
+              szokások a szív- és érrendszeri kockázat kezelésére «Tanuljunk vigyázni
+              magunkra» (HSRC) - Ebben az elszámolásban alkalmazva [00456]
+          is-m200-dp200018-00463:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Egészséges
+              szokások a szív- és érrendszeri kockázat kezelésére «Tanuljunk vigyázni
+              magunkra» (HSRC) - Jövőbeli időszakokban alkalmazandó [00463]
+          is-m200-dp200018-00464:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Tollaslabda-világbajnokság
+              Spanyolország (MBE) - Függőben lévő/keletkezett levonás [00464]
+          is-m200-dp200018-00469:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Tollaslabda-világbajnokság
+              Spanyolország (MBE) - Ebben az elszámolásban alkalmazva [00469]
+          is-m200-dp200018-00470:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Tollaslabda-világbajnokság
+              Spanyolország (MBE) - Jövőbeli időszakokban alkalmazandó [00470]
+          is-m200-dp200018-00471:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              Covadonga-Cuadonga-i csata centenáriuma (CBC) - Függőben lévő/keletkezett
+              levonás [00471]
+          is-m200-dp200018-00479:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              Covadonga-Cuadonga-i csata centenáriuma (CBC) - Ebben az elszámolásban
+              alkalmazva [00479]
+          is-m200-dp200018-00481:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              Covadonga-Cuadonga-i csata centenáriuma (CBC) - Jövőbeli időszakokban
+              alkalmazandó [00481]
+          is-m200-dp200018-00499:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              palenciai székesegyház 700. évfordulója 2021-2022 (CCP) - Függőben lévő/keletkezett
+              levonás [00499]
+          is-m200-dp200018-00502:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              palenciai székesegyház 700. évfordulója 2021-2022 (CCP) - Ebben az elszámolásban
+              alkalmazva [00502]
+          is-m200-dp200018-00503:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              palenciai székesegyház 700. évfordulója 2021-2022 (CCP) - Jövőbeli időszakokban
+              alkalmazandó [00503]
+          is-m200-dp200018-00504:
+            label: 'Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Különleges
+              FITUR: a turizmus helyreállítása (FE) - Függőben lévő/keletkezett levonás
+              [00504]'
+          is-m200-dp200018-00511:
+            label: 'Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Különleges
+              FITUR: a turizmus helyreállítása (FE) - Ebben az elszámolásban alkalmazva
+              [00511]'
+          is-m200-dp200018-00513:
+            label: 'Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Különleges
+              FITUR: a turizmus helyreállítása (FE) - Jövőbeli időszakokban alkalmazandó
+              [00513]'
+          is-m200-dp200018-00812:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              Hospital Sant Joan de Déu 50. évfordulója (HSJD) - Függőben lévő/keletkezett
+              levonás [00812]
+          is-m200-dp200018-00816:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              Hospital Sant Joan de Déu 50. évfordulója (HSJD) - Ebben az elszámolásban
+              alkalmazva [00816]
+          is-m200-dp200018-00817:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              Hospital Sant Joan de Déu 50. évfordulója (HSJD) - Jövőbeli időszakokban
+              alkalmazandó [00817]
+          is-m200-dp200018-00878:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Az
+              Aragóniai Labdarúgó-szövetség centenáriuma (FAF) - Függőben lévő/keletkezett
+              levonás [00878]
+          is-m200-dp200018-00879:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Az
+              Aragóniai Labdarúgó-szövetség centenáriuma (FAF) - Ebben az elszámolásban
+              alkalmazva [00879]
+          is-m200-dp200018-00882:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Az
+              Aragóniai Labdarúgó-szövetség centenáriuma (FAF) - Jövőbeli időszakokban
+              alkalmazandó [00882]
+          is-m200-dp200018-01626:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              Barcelona World Race 4. kiadása (4BWR) - Függőben lévő/keletkezett levonás
+              [01626]
+          is-m200-dp200018-01627:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              Barcelona World Race 4. kiadása (4BWR) - Ebben az elszámolásban alkalmazva
+              [01627]
+          is-m200-dp200018-01628:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              Barcelona World Race 4. kiadása (4BWR) - Jövőbeli időszakokban alkalmazandó
+              [01628]
+          is-m200-dp200018-01707:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Milliarium
+              Montserrat évtizedterv 1025-2025 (PDMM) - Függőben lévő/keletkezett
+              levonás [01707]
+          is-m200-dp200018-01708:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Milliarium
+              Montserrat évtizedterv 1025-2025 (PDMM) - Ebben az elszámolásban alkalmazva
+              [01708]
+          is-m200-dp200018-01709:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Milliarium
+              Montserrat évtizedterv 1025-2025 (PDMM) - Jövőbeli időszakokban alkalmazandó
+              [01709]
+          is-m200-dp200018-02362:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Berlanga-terv
+              (PB) - Függőben lévő/keletkezett levonás [02362]
+          is-m200-dp200018-02363:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Berlanga-terv
+              (PB) - Ebben az elszámolásban alkalmazva [02363]
+          is-m200-dp200018-02364:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Berlanga-terv
+              (PB) - Jövőbeli időszakokban alkalmazandó [02364]
+          is-m200-dp200018-02374:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              Gran Teatre del Liceu felépítésének 175. évfordulója (TL) - Függőben
+              lévő/keletkezett levonás [02374]
+          is-m200-dp200018-02375:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              Gran Teatre del Liceu felépítésének 175. évfordulója (TL) - Ebben az
+              elszámolásban alkalmazva [02375]
+          is-m200-dp200018-02376:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
+              Gran Teatre del Liceu felépítésének 175. évfordulója (TL) - Jövőbeli
+              időszakokban alkalmazandó [02376]
+          is-m200-dp200018-02377:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Forma–1
+              Spanyol Nagydíj (F1) - Függőben lévő/keletkezett levonás [02377]
+          is-m200-dp200018-02378:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Forma–1
+              Spanyol Nagydíj (F1) - Ebben az elszámolásban alkalmazva [02378]
+          is-m200-dp200018-02379:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Forma–1
+              Spanyol Nagydíj (F1) - Jövőbeli időszakokban alkalmazandó [02379]
+          is-m200-dp200018b-01217:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Önkéntes
+              Világ 2030/A Spanyol Önkéntes Platform 35. évfordulója (V30) - Függőben
+              lévő/keletkezett levonás [01217]
+          is-m200-dp200018b-01218:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Önkéntes
+              Világ 2030/A Spanyol Önkéntes Platform 35. évfordulója (V30) - Ebben
+              az elszámolásban alkalmazva [01218]
+          is-m200-dp200018b-01219:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Önkéntes
+              Világ 2030/A Spanyol Önkéntes Platform 35. évfordulója (V30) - Jövőbeli
+              időszakokban alkalmazandó [01219]
+          is-m200-dp200018b-01883:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Szent
+              Izidor földműves szent jubileumi éve (JI) - Függőben lévő/keletkezett
+              levonás [01883]
+          is-m200-dp200018b-01884:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Szent
+              Izidor földműves szent jubileumi éve (JI) - Ebben az elszámolásban alkalmazva
+              [01884]
+          is-m200-dp200018b-01885:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Szent
+              Izidor földműves szent jubileumi éve (JI) - Jövőbeli időszakokban alkalmazandó
+              [01885]
+          is-m200-dp200018c-00903:
+            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+              és más, növelt levonásra jogosító célokra adott adományok - 2013 - Függőben
+              lévő/keletkezett levonás [00903]
+          is-m200-dp200018c-00917:
+            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+              és más, növelt levonásra jogosító célokra adott adományok - 2013 - Ebben
+              az elszámolásban alkalmazva [00917]
+          is-m200-dp200018c-00932:
+            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+              és más, növelt levonásra jogosító célokra adott adományok - 2014 - Jövőbeli
+              időszakokban alkalmazandó [00932]
+          is-m200-dp200018c-00990:
+            label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
+              - 2013 - Függőben lévő/keletkezett levonás [00990]
+          is-m200-dp200018c-00991:
+            label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
+              - 2013 - Ebben az elszámolásban alkalmazva [00991]
+          is-m200-dp200018c-00999:
+            label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
+              - 2014 - Jövőbeli időszakokban alkalmazandó [00999]
+          is-m200-dp200020-01741:
+            label: Alkalmazatlan üzemi eredménykorlát miatti hozzáadás függőben -
+              Keletkezés éve 2018 - Időszak elején alkalmazásra váró [01741]
+          is-m200-dp200020-01742:
+            label: Alkalmazatlan üzemi eredménykorlát miatti hozzáadás függőben -
+              Keletkezés éve 2018 - Ebben az elszámolásban alkalmazva [01742]
+          is-m200-dp200020-01984:
+            label: Alkalmazatlan üzemi eredménykorlát miatti hozzáadás függőben -
+              Keletkezés éve 2019 - Jövőbeli időszakokban alkalmazandó [01984]
+          is-m200-dp200020b-01108:
+            label: Tőkésítési tartalék - 2022(*) - Jövőbeli időszakokban alkalmazandó,
+              alkalmazásra váró adóalap-csökkentés [01108]
+          is-m200-dp200020b-01602:
+            label: Kiegyenlítési tartalék - Adóalap-csökkentés - Keletkezés éve 2018
+              - Követelmények megsértése miatt a bevallásba beépített összeg [01602]
+          is-m200-dp200020b-01732:
+            label: Kiegyenlítési tartalék - Tartalékképzés - Keletkezés éve 2018 -
+              Képzendő tartalék összege [01732]
+          is-m200-dp200020b-01733:
+            label: Kiegyenlítési tartalék - Tartalékképzés - Keletkezés éve 2018 -
+              Képzett tartalék összege [01733]
+          is-m200-dp200020b-01734:
+            label: Kiegyenlítési tartalék - Tartalékképzés - Keletkezés éve 2018 -
+              Képzésre váró tartalék összege [01734]
+          is-m200-dp200020b-01735:
+            label: Kiegyenlítési tartalék - Tartalékképzés - Keletkezés éve 2018 -
+              Felhasznált tartalék [01735]
+          is-m200-dp200020b-01961:
+            label: Kiegyenlítési tartalék - Adóalap-csökkentés - Keletkezés éve 2018
+              - Időszaki adóalap-csökkentés összege/időszak elején hozzáadásra váró
+              [01961]
+          is-m200-dp200020b-01962:
+            label: Kiegyenlítési tartalék - Adóalap-csökkentés - Keletkezés éve 2018
+              - Az időszakban az adóalaphoz hozzáadott összeg [01962]
+          is-m200-dp200020b-02240:
+            label: Kiegyenlítési tartalék - Adóalap-csökkentés - Keletkezés éve 2019
+              - Jövőbeli időszakokban hozzáadásra váró összeg [02240]
+          is-m200-dp200020b-02407:
+            label: Tőkésítési tartalék - 2021 - Időszakban keletkezett/időszak elején
+              alkalmazásra váró adóalap-csökkentési jog [02407]
+          is-m200-dp200020b-02408:
+            label: Tőkésítési tartalék - 2021 - Alkalmazott adóalap-csökkentés [02408]
+          is-m200-dp200020c-01138:
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
+              - Keletkezés éve - 2022(*) - Jövőbeli időszakokban felhasználandó pozitív
+              nettó adótöbblet [01138]
+          is-m200-dp200020c-02427:
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
+              - Keletkezés éve - 2021 - Az időszak elején fennálló pozitív nettó adótöbblet
+              [02427]
+          is-m200-dp200020c-02428:
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
+              - Keletkezés éve - 2021 - A 2008-2015 adómegállapítási időszakokban
+              felhasznált pozitív nettó adótöbblet [02428]
+          is-m200-dp200020c-02429:
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
+              - Keletkezés éve - 2021 - A 2016-tól kezdődő adómegállapítási időszakokban
+              felhasznált pozitív nettó adótöbblet [02429]
+          is-m200-dp200022-00524:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - RIC 2018
+              - Időszak elején materializálásra váró RIC [00524]
+          is-m200-dp200022-00525:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - RIC 2018
+              - Ebben az elszámolásban alkalmazva/materializálva - 19/1994. törvény
+              27.4 cikk A és B pont szerinti beruházások [00525]
+          is-m200-dp200022-00526:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - RIC 2018
+              - Ebben az elszámolásban alkalmazva/materializálva - 19/1994. törvény
+              27.4 cikk B bis, C és D pont szerinti beruházások [00526]
+          is-m200-dp200022-00925:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - RIC 2019
+              - Időszak végén materializálásra váró RIC [00925]
+          is-m200-dp200022-01174:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - RIC 2021
+              - Ebben az elszámolásban alkalmazva/materializálva - Az ebben az elszámolásban
+              a RIC megvalósításának tekintett előrehozott beruházások [01174]
+          is-m200-dp200022-01184:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - Előzetes
+              beruházások 2021 - Az időszak végén képzésre váró RIC [01184]
+          is-m200-dp200022-01600:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - Előzetes
+              beruházások 2022 - Az időszak végén képzésre váró RIC [01600]
+          is-m200-dp200022-01820:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - RIC 2022
+              - Ebben az elszámolásban alkalmazva/materializálva - Az ebben az elszámolásban
+              a RIC megvalósításának tekintett előrehozott beruházások [01820]
+          is-m200-dp200022-01823:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - Előzetes
+              beruházások 2021 - Az időszak elején képzésre váró RIC [01823]
+          is-m200-dp200022-02439:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - RIC 2018
+              - Ebben az elszámolásban alkalmazva/materializálva - Az ebben az elszámolásban
+              a RIC megvalósításának tekintett előrehozott beruházások [02439]
+          is-m200-dp200022-02440:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - RIC 2019
+              - Ebben az elszámolásban alkalmazva/materializálva - Az ebben az elszámolásban
+              a RIC megvalósításának tekintett előrehozott beruházások [02440]
+          is-m200-dp200022-02441:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - RIC 2020
+              - Ebben az elszámolásban alkalmazva/materializálva - Az ebben az elszámolásban
+              a RIC megvalósításának tekintett előrehozott beruházások [02441]
+          is-m200-dp200022-02446:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - Előzetes
+              beruházások 2019 - Az időszak elején képzésre váró RIC [02446]
+          is-m200-dp200022-02451:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - Előzetes
+              beruházások 2020 - Az időszak végén képzésre váró RIC [02451]
+          is-m200-dp200022-02810:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - Kanári-szigeteki
+              beruházási tartalék (RIC) 2023 - Ebben az elszámolásban alkalmazva/materializálva
+              - Az ebben az elszámolásban a RIC megvalósításának tekintett előrehozott
+              beruházások [02810]
+          is-m200-dp200022-02823:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - Előzetes
+              beruházások 2022 - Az időszak elején képzésre váró RIC [02823]
+          is-m200-dp200022-02824:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - Előzetes
+              beruházások 2023 - 19/1994. törvény 27.4 cikk A és B pont szerinti beruházások
+              [02824]
+          is-m200-dp200022-02825:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - Előzetes
+              beruházások 2023 - 19/1994. törvény 27.4 cikk B bis, C és D pont szerinti
+              beruházások [02825]
+          is-m200-dp200022-02826:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - Előzetes
+              beruházások 2023 - Az időszak végén képzésre váró RIC [02826]
+          is-m200-dp200022b-02916:
+            label: Baleár-szigeteki beruházási tartalék különleges rendszere - RIIB
+              2023 - Ebben az elszámolásban alkalmazva/materializálva - Az ebben az
+              elszámolásban a RIIB megvalósításának tekintett előrehozott beruházások
+              [02916]
+          is-m200-dp200022b-02919:
+            label: Baleár-szigeteki beruházási tartalék különleges rendszere - Előzetes
+              beruházások 2023 - A 31/2022. törvény DA 70.4. cikkének a) és b) pontjában
+              előírt beruházások [02919]
+          is-m200-dp200022b-02920:
+            label: Baleár-szigeteki beruházási tartalék különleges rendszere - Előzetes
+              beruházások 2023 - A 31/2022. törvény DA 70.4. cikkének c) pontjában
+              előírt beruházások [02920]
           is-mineria-hidrocarburos-factor-agotamiento-aumento:
             label: 'Bányászat és szénhidrogének: kimerülési tényező (LIS 91. és 95.
               cikk) - Növekedés - Évi korrekciók - Időleges (az évben keletkezett)
@@ -19884,11 +20458,6 @@ modelo:
                 és más, növelt levonásra jogosító célokra adott adományok - 2023 -
                 Ugyanazon szervezetnek ismételten nem nyújtott adományok - Jövőbeli
                 időszakokban alkalmazandó [01373]
-            '01423':
-              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
-                érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
-                - Keletkezés éve - 2023 - Az időszak elején fennálló pozitív nettó
-                adótöbblet [01423]
             '01575':
               label: Elszámolás II - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - A LIS 19. cikke szerinti, az Európai Unió vagy az EGT

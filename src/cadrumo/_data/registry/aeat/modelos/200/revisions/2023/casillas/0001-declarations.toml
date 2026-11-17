@@ -5260,3 +5260,202 @@ continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07
 number = "00596"
 section = ["reserva_para_inversiones_en_illes_balears_da_70a_l", "disminucion"]
 semantic_role = "is_reserva_inversiones_illes_balears_importe"
+
+# Boxes the 2023 record design prints for the first time that no edition declared.
+# The 2024 design prints none of them, so the 2024 edition removes each one and
+# records its retirement.
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3773 DP200022 37|540|17|Num
+[[revisions."2023".casillas]]
+id = "DP200022:02810"
+continuidad_id = "is-m200-dp200022-02810"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3773 (DP200022 field 37): Rég. especial reserva inversiones Canarias - RIC 2023 - Aplicado/materializado en esta liquidación - Inversiones anticipadas consideradas materialización de la RIC en esta liquidación [02810]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02810]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "02810"
+segmento = "DP200022"
+section = ["reg_especial_reserva_inversiones_canarias", "ric_2023"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+legal_refs = ["ley-19-1994:art-27"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3781 DP200022 45|676|17|Num
+[[revisions."2023".casillas]]
+id = "02823"
+continuidad_id = "is-m200-dp200022-02823"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3781 (DP200022 field 45): Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2022 - Pendiente de dotar RIC a principio del período [02823]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02823]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "02823"
+section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2022"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+legal_refs = ["ley-19-1994:art-27"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3783 DP200022 47|710|17|Num
+[[revisions."2023".casillas]]
+id = "02824"
+continuidad_id = "is-m200-dp200022-02824"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3783 (DP200022 field 47): Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2023 - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [02824]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02824]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "02824"
+section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2023"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+legal_refs = ["ley-19-1994:art-27"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3784 DP200022 48|727|17|Num
+[[revisions."2023".casillas]]
+id = "02825"
+continuidad_id = "is-m200-dp200022-02825"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3784 (DP200022 field 48): Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2023 - Inversiones previstas letras B bis, C y D art. 27.4 Ley 19/1994 [02825]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02825]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "02825"
+section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2023"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+legal_refs = ["ley-19-1994:art-27"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3785 DP200022 49|744|17|Num
+[[revisions."2023".casillas]]
+id = "02826"
+continuidad_id = "is-m200-dp200022-02826"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3785 (DP200022 field 49): Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2023 - Pendiente de dotar RIC al final del período [02826]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02826]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "02826"
+section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2023"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+legal_refs = ["ley-19-1994:art-27"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3905 DP200022B 8|47|17|Num
+[[revisions."2023".casillas]]
+id = "02916"
+continuidad_id = "is-m200-dp200022b-02916"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3905 (DP200022B field 8): Rég. especial reserva inversiones Illes Balears - RIIB 2023 - Aplicado/materializado en esta liquidación - Inversiones anticipadas consideradas materialización de la RIIB en esta liquidación [02916]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02916]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "02916"
+section = ["reg_especial_reserva_inversiones_illes_balears", "riib_2023"]
+semantic_role = "is_reserva_inversiones_illes_balears_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3908 DP200022B 11|98|17|Num
+[[revisions."2023".casillas]]
+id = "DP200022B:02919"
+continuidad_id = "is-m200-dp200022b-02919"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3908 (DP200022B field 11): Rég. especial reserva inversiones Illes Balears - Inversiones anticipadas 2023 - Inversiones previstas letras A y B, DA 70.4 Ley 31/2022 [02919]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02919]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "02919"
+segmento = "DP200022B"
+section = ["reg_especial_reserva_inversiones_illes_balears", "inversiones_anticipadas_2023"]
+semantic_role = "is_reserva_inversiones_illes_balears_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3909 DP200022B 12|115|17|Num
+[[revisions."2023".casillas]]
+id = "DP200022B:02920"
+continuidad_id = "is-m200-dp200022b-02920"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3909 (DP200022B field 12): Rég. especial reserva inversiones Illes Balears - Inversiones anticipadas 2023 - Inversiones previstas letra C DA 70.4 Ley 31/2022 [02920]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02920]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "02920"
+segmento = "DP200022B"
+section = ["reg_especial_reserva_inversiones_illes_balears", "inversiones_anticipadas_2023"]
+semantic_role = "is_reserva_inversiones_illes_balears_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# Generation boxes the 2023 record design prints with the (*) current-ejercicio mark, which the
+# 2024 edition declared from its own design; declared here, where the generation is first printed.
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2115 DP200016B 68|1067|17|Num
+[[revisions."2023".casillas]]
+id = "DP200016B:00766"
+continuidad_id = "is-deducciones-inversion-canarias-activos-fijos-en-la-palma-la-gomera-y-el-pendiente-de-aplicacion-en-periodos-futuros-00766"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2115 (DP200016B field 68): Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2023(*) - Pendiente de aplicación en periodos futuros [00766]. aeat-dr-200-2024 prints the same generation on the same box at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2202 (DP200016B field 71) without the (*), which marks the generation of the ejercicio the 2023 return is filed for. aeat-dr-200-2022 prints box [00766] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2076 (DP200016B field 65) for the generation of its own ejercicio, a different field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00766"
+segmento = "DP200016B"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+semantic_role = "is_deducciones_inversion_canarias_activos_fijos_en_la_palma_la_gomera_y_el_pendiente_de_aplicacion_en_periodos_futuros_00766"
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2172 DP200016B 125|2036|17|Num
+[[revisions."2023".casillas]]
+id = "DP200016B:00767"
+continuidad_id = "dp200016b-00767"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2172 (DP200016B field 125): Deducciones inversión Canarias - Inversiones Canarias 2023(*) - Deducción pendiente/generada [00767]. aeat-dr-200-2024 prints the same generation on the same box at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2259 (DP200016B field 128) without the (*), which marks the generation of the ejercicio the 2023 return is filed for. aeat-dr-200-2022 prints box [00767] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2133 (DP200016B field 122) for the generation of its own ejercicio, a different field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00767"
+segmento = "DP200016B"
+section = ["deducciones_inversion_canarias", "inversiones_canarias_2023"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2173 DP200016B 126|2053|17|Num
+[[revisions."2023".casillas]]
+id = "DP200016B:00768"
+continuidad_id = "dp200016b-00768"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2173 (DP200016B field 126): Deducciones inversión Canarias - Inversiones Canarias 2023(*) - Aplicado en esta liquidación [00768]. aeat-dr-200-2024 prints the same generation on the same box at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2260 (DP200016B field 129) without the (*), which marks the generation of the ejercicio the 2023 return is filed for. aeat-dr-200-2022 prints box [00768] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2134 (DP200016B field 123) for the generation of its own ejercicio, a different field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00768"
+segmento = "DP200016B"
+section = ["deducciones_inversion_canarias", "inversiones_canarias_2023"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2174 DP200016B 127|2070|17|Num
+[[revisions."2023".casillas]]
+id = "DP200016B:00769"
+continuidad_id = "is-deducciones-inversion-canarias-inversiones-canarias-y-pendiente-de-aplicacion-en-periodos-futuros-00769"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2174 (DP200016B field 127): Deducciones inversión Canarias - Inversiones Canarias 2023(*) - Pendiente de aplicación en periodos futuros [00769]. aeat-dr-200-2024 prints the same generation on the same box at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2261 (DP200016B field 130) without the (*), which marks the generation of the ejercicio the 2023 return is filed for. aeat-dr-200-2022 prints box [00769] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2135 (DP200016B field 124) for the generation of its own ejercicio, a different field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00769"
+segmento = "DP200016B"
+section = ["deducciones_inversion_canarias", "inversiones_canarias_2023"]
+semantic_role = "is_deducciones_inversion_canarias_inversiones_canarias_y_pendiente_de_aplicacion_en_periodos_futuros_00769"
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2193 DP200016B 146|2393|17|Num
+[[revisions."2023".casillas]]
+id = "DP200016B:00770"
+continuidad_id = "dp200016b-00770"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2193 (DP200016B field 146): Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023(*) - Deducción pendiente/generada [00770]. aeat-dr-200-2024 prints the same generation on the same box at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2283 (DP200016B field 152) without the (*), which marks the generation of the ejercicio the 2023 return is filed for. aeat-dr-200-2022 prints box [00770] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2151 (DP200016B field 140) for the generation of its own ejercicio, a different field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00770"
+segmento = "DP200016B"
+section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2023"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2194 DP200016B 147|2410|17|Num
+[[revisions."2023".casillas]]
+id = "DP200016B:00771"
+continuidad_id = "dp200016b-00771"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2194 (DP200016B field 147): Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023(*) - Aplicado en esta liquidación [00771]. aeat-dr-200-2024 prints the same generation on the same box at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2284 (DP200016B field 153) without the (*), which marks the generation of the ejercicio the 2023 return is filed for. aeat-dr-200-2022 prints box [00771] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2152 (DP200016B field 141) for the generation of its own ejercicio, a different field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "00771"
+segmento = "DP200016B"
+section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2023"]
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_aplicado"
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3544 DP200020C 135|2206|17|Num
+[[revisions."2023".casillas]]
+id = "01423"
+continuidad_id = "01423"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3544 (DP200020C field 135): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023(*)- Exceso cuota líquida positiva pendiente a principio periodo [01423]. aeat-dr-200-2024 prints the same generation on the same box at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3596 (DP200020C field 141) without the (*), which marks the generation of the ejercicio the 2023 return is filed for. aeat-dr-200-2022 prints box [01423] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3432 (DP200020C field 129) for the generation of its own ejercicio, a different field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "01423"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
+semantic_role = "is_conversion_aid_exceso_cuota_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1819 DP200015B 88|1189|17|Num
+[[revisions."2023".casillas]]
+id = "01299"
+continuidad_id = "01299"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1819 (DP200015B field 88): Deducciones doble imposición interna (DT 23.1 LIS) - DI interna 2023(*) - 2023 - Deducción pendiente [01299]. aeat-dr-200-2024 prints the same generation on the same box at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1891 (DP200015B field 88) without the (*), which marks the generation of the ejercicio the 2023 return is filed for. The second year each design names is the ejercicio the return is filed for. aeat-dr-200-2022 prints no box [01299] on DP200015B. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "01299"
+section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2023"]
+semantic_role = "is_deduccion_di_interna_dt231_detalle"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:dt-23"]
+
+# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1945 DP200016 48|610|17|Num
+[[revisions."2023".casillas]]
+id = "01457"
+continuidad_id = "01457"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1945 (DP200016 field 48): Deducciones doble imposición internacional LIS - DI internacional 2023(*) - 2023 Deducción pendiente [01457]. aeat-dr-200-2024 prints the same generation on the same box at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2023 (DP200016 field 48) without the (*), which marks the generation of the ejercicio the 2023 return is filed for. The second year each design names is the ejercicio the return is filed for. aeat-dr-200-2022 prints no box [01457] on DP200016. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+number = "01457"
+section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2023"]
+semantic_role = "is_deduccion_di_internacional_detalle"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]

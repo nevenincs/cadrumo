@@ -374,7 +374,7 @@ def test_an_authored_removal_falls_back_and_an_edition_split_is_refused(tmp_path
         (CasillaEvolutionKind.LABEL_EVOLVED, "base", "later", True),
         (CasillaEvolutionKind.LABEL_AND_LEGAL_REFS_EVOLVED, "base", "later", True),
         (CasillaEvolutionKind.LEGAL_REFS_EVOLVED, "base", "later", False),
-        (CasillaEvolutionKind.REPURPOSED, "base", "later", False),
+        (CasillaEvolutionKind.REPURPOSED, "base", "later", True),
         (CasillaEvolutionKind.LABEL_EVOLVED, "another-base", "later", False),
         (CasillaEvolutionKind.LABEL_EVOLVED, "base", "unrelated", False),
     ],
@@ -409,6 +409,39 @@ def test_authoring_requires_the_matching_typed_label_evolution(
             catalogue.author(manifest, locales, pending)
         assert load_casilla_values(locales) == before
     assert not pending.exists()
+
+
+def test_collapse_keeps_each_caption_across_a_repurposed_box(tmp_path: Path) -> None:
+    """A later edition reading the declaring edition's key keeps its own caption after collapse."""
+    locales, pending = tmp_path / "locales", tmp_path / "pending"
+    _write_catalogue(locales, {"es": {_LINEAGE: "Deducción generada 2024"}, "en": {}})
+    rows = tuple(replace(row, revision=revision) for row, revision in zip(_chains(), ("floor", "later"), strict=True))
+    floor_key = "modelo.schema.999.revision.floor.casilla.01.label"
+    later_key = "modelo.schema.999.revision.later.casilla.01.label"
+    rows = (
+        replace(rows[0], label_chain=(floor_key, _LINEAGE)),
+        replace(rows[1], label_chain=(later_key, floor_key, _LINEAGE), inherited_from="floor"),
+    )
+    evolution = CasillaContinuidadEvolutionDefinition(
+        id="cohort-repurposed",
+        continuidad_id="base",
+        from_revision="floor",
+        to_revision="later",
+        evolution_kind=CasillaEvolutionKind.REPURPOSED,
+        legal_refs=("ley-27-2014:art-10",),
+        source_refs=("aeat-test-design",),
+    )
+    evolutions = {"999": (evolution,)}
+    catalogue = ModeloCasillaCatalogue(rows, load_casilla_values(locales), label_evolutions=evolutions)
+    manifest = {"es": {floor_key: "Deducción generada 2023", later_key: "Deducción generada 2024"}}
+    catalogue.author(manifest, locales, pending)
+
+    installed = ModeloCasillaCatalogue(rows, load_casilla_values(locales), label_evolutions=evolutions)
+    working = installed.collapse_plan().working
+
+    assert installed.resolve(0, "label", "es", working) == "Deducción generada 2023"
+    assert installed.resolve(1, "label", "es", working) == "Deducción generada 2024"
+    assert working["es"].get(_LINEAGE) != "Deducción generada 2023"
 
 
 def test_a_label_evolution_covers_inherited_text_but_not_a_further_split(tmp_path: Path) -> None:

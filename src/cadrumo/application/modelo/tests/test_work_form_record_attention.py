@@ -14,12 +14,11 @@ from ....domain.modelos.verification_report import (
 )
 from ..work_form_findings import EXPLANATORY_FINDING_MESSAGE_KEYS, ModeloFormAttention
 from ..work_form_models import (
-    ModeloFormRecordAttention,
     ModeloFormRepeatingBlock,
     ModeloFormSection,
     ModeloWorkForm,
 )
-from ..work_form_record_attention import record_attention
+from ..work_form_record_attention import record_attention, record_attention_count
 from .work_form_fixture import built_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -72,8 +71,8 @@ def test_a_section_counts_the_findings_about_its_record_columns_by_level(
     form = _form_349(authority_operation, (_missing(_COUNTRY), _missing(_NIF_COMUNITARIO), _warning(_COUNTRY)))
 
     assert _records_section(form).record_attention == (
-        ModeloFormRecordAttention(level=ModeloFormAttention.MISSING, count=2),
-        ModeloFormRecordAttention(level=ModeloFormAttention.CHECK, count=1),
+        record_attention_count(ModeloFormAttention.MISSING, 2),
+        record_attention_count(ModeloFormAttention.CHECK, 1),
     )
     holding = {
         section.id: section.record_attention
@@ -115,7 +114,7 @@ def test_a_section_on_a_page_that_does_not_apply_counts_only_what_is_worth_check
     form = _form_349(authority_operation, (_missing(_COUNTRY), _warning(_NIF_COMUNITARIO)))
 
     assert record_attention(_records_section(form), form.issues, recorded=False, applies=False) == (
-        ModeloFormRecordAttention(level=ModeloFormAttention.CHECK, count=1),
+        record_attention_count(ModeloFormAttention.CHECK, 1),
     )
 
 
@@ -132,6 +131,36 @@ def test_a_limitation_keeps_its_own_level_and_an_explanation_counts_nowhere(
     form = _form_349(authority_operation, (limitation, explanation))
 
     assert [issue.attention for issue in form.issues] == [ModeloFormAttention.LIMITATION, ModeloFormAttention.INFO]
-    assert _records_section(form).record_attention == (
-        ModeloFormRecordAttention(level=ModeloFormAttention.LIMITATION, count=1),
+    assert _records_section(form).record_attention == (record_attention_count(ModeloFormAttention.LIMITATION, 1),)
+
+
+@pytest.mark.parametrize(
+    ("level", "counts_as", "asks_filer"),
+    [
+        (ModeloFormAttention.BLOCKS, ModeloFormAttention.BLOCKS, True),
+        (ModeloFormAttention.MISSING, ModeloFormAttention.MISSING, True),
+        (ModeloFormAttention.CONFIRM, ModeloFormAttention.CONFIRM, True),
+        (ModeloFormAttention.CHECK, ModeloFormAttention.CHECK, False),
+        (ModeloFormAttention.LIMITATION, ModeloFormAttention.CHECK, False),
+    ],
+)
+def test_each_count_is_served_with_its_place_on_the_section_scale(
+    level: ModeloFormAttention, counts_as: ModeloFormAttention, asks_filer: bool
+) -> None:
+    served = record_attention_count(level, 3)
+
+    assert (served.counts_as, served.asks_filer, served.count) == (counts_as, asks_filer, 3)
+
+
+def test_a_limitation_on_a_records_table_is_served_as_worth_checking_and_asks_nothing(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    limitation = _warning(_COUNTRY).model_copy(update={"disclosed_limitation": True})
+    form = _form_349(authority_operation, (limitation,))
+
+    (served,) = _records_section(form).record_attention
+    assert (served.level, served.counts_as, served.asks_filer) == (
+        ModeloFormAttention.LIMITATION,
+        ModeloFormAttention.CHECK,
+        False,
     )
