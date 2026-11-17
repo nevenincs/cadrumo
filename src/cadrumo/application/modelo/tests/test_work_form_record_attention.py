@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _LEGAL_REF: Final[str] = "ley-37-1992:art-99"
 _COUNTRY: Final[str] = "op.codigo-pais"
-_VAT_NUMBER: Final[str] = "op.nif-comunitario"
+_NIF_COMUNITARIO: Final[str] = "op.nif-comunitario"
 
 
 def _missing(casilla_id: str) -> ModeloVerificationFinding:
@@ -69,7 +69,7 @@ def _records_section(form: ModeloWorkForm) -> ModeloFormSection:
 def test_a_section_counts_the_findings_about_its_record_columns_by_level(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    form = _form_349(authority_operation, (_missing(_COUNTRY), _missing(_VAT_NUMBER), _warning(_COUNTRY)))
+    form = _form_349(authority_operation, (_missing(_COUNTRY), _missing(_NIF_COMUNITARIO), _warning(_COUNTRY)))
 
     assert _records_section(form).record_attention == (
         ModeloFormRecordAttention(level=ModeloFormAttention.MISSING, count=2),
@@ -112,7 +112,7 @@ def test_nothing_is_counted_once_the_declaration_is_recorded_as_filed(
 def test_a_section_on_a_page_that_does_not_apply_counts_only_what_is_worth_checking(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    form = _form_349(authority_operation, (_missing(_COUNTRY), _warning(_VAT_NUMBER)))
+    form = _form_349(authority_operation, (_missing(_COUNTRY), _warning(_NIF_COMUNITARIO)))
 
     assert record_attention(_records_section(form), form.issues, recorded=False, applies=False) == (
         ModeloFormRecordAttention(level=ModeloFormAttention.CHECK, count=1),

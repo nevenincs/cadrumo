@@ -1,7 +1,9 @@
 """Every sheet that prints a reused Modelo 200 box number gets its own value at its own official position.
 
-The record design prints boxes [00524]-[00526] on several sheets with different
-meanings. Each printed field must be bound to a casilla of its own, so a value
+The record design prints boxes such as [00524]-[00526] on several sheets with
+different meanings. Besides the first reviewed rename, a sample of the later
+reviewed rename covers every sheet family that prints a renamed amount box.
+Each printed field must be bound to a casilla of its own, so a value
 supplied for one sheet's box reaches that sheet's field and no other. The
 expected positions are read here from the official design text itself (field
 number, offset, length and type under the sheet's heading), not from the
@@ -53,7 +55,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _M200 = "200"
 _PROVENANCE = "_generation.provenance.json"
 _FIELD = re.compile(r"^(\d+) \| (\d+) \| (\d+) \| (\w+) \| .*\[(\d{5})\]\s*$")
-(_RENAMED,) = (reviewed.renamed_casilla_ids for reviewed in REVIEWED_RENAME_SETS if reviewed.modelo == _M200)
+_M200_RENAMES = tuple(reviewed.renamed_casilla_ids for reviewed in REVIEWED_RENAME_SETS if reviewed.modelo == _M200)
+#: One renamed amount box per sheet family that prints such a box: each is printed
+#: on several sheets as a 17-position amount and carries no formula or binding.
+_LATER_RENAME_SAMPLE = frozenset(
+    {
+        "00101",
+        "00150",
+        "00153",
+        "00185",
+        "00195",
+        "00231",
+        "00263",
+        "00297",
+        "00336",
+        "00387",
+        "00466",
+        "00515",
+        "00579",
+        "00866",
+    }
+)
+_RENAMED = _M200_RENAMES[0] | _LATER_RENAME_SAMPLE
 
 
 @dataclass(frozen=True, slots=True)
@@ -238,3 +261,8 @@ def test_a_value_supplied_for_each_sheet_box_reads_back_only_at_its_own_field(ed
         line = _sheet_line(payload, exported, design.sheet)
         slot = line[design.offset - 1 : design.offset - 1 + design.length]
         assert slot == str(int(expected * 100)).rjust(design.length, "0").encode("ascii"), (design, slot)
+
+
+def test_the_sample_is_drawn_from_a_later_reviewed_rename() -> None:
+    later = frozenset().union(*_M200_RENAMES[1:])
+    assert later >= _LATER_RENAME_SAMPLE, sorted(_LATER_RENAME_SAMPLE - later)

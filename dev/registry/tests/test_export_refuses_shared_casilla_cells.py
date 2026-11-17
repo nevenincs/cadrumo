@@ -42,8 +42,10 @@ from cadrumo.domain.calculations.registry.export_shared_owner import (
     unadjudicated_shared_owners,
     written_unadjudicated_shared_owners,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+from cadrumo.domain.calculations.registry.tests.planted_shared_owner import PlantedSharedOwner, plant_shared_owner
 from cadrumo.domain.filing.errors import FilingExportValidationError
 from cadrumo.domain.filing.protocols import ModeloInputs
 from cadrumo.domain.submission.models import ModeloDraftStatus
@@ -57,7 +59,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _M200 = "200"
 _REFUSAL = "application.filing.export.errors.shared_casilla_cells_unadjudicated"
-_TRIBUTOS_SHEETS = {"DP200007", "DP200022", "DP200031", "DP200038", "DP200047", "DP200053"}
 
 # Repeats in revisions declaring no segment, each read against the official
 # design: Modelo 390's section 8 reprints section 7's boxes [658], [84] and [659],
@@ -136,6 +137,17 @@ def _export_schema_provider(operation: PinnedAuthorityOperation, modelo: str, pe
     )
 
 
+def _planted_provider(snapshot: RegistrySnapshot) -> RegistrySchemaAccessor:
+    """Serve one isolated snapshot copy through the runtime's own collection and subview projections."""
+    modelo = str(snapshot.modelo.id)
+    return RegistrySchemaAccessor(
+        collections={modelo: collection_from_snapshot(snapshot)},
+        subviews={modelo: subview_from_snapshot(snapshot)},
+        snapshots={modelo: snapshot},
+        sources=snapshot.sources,
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class _Rendering:
     payload: bytes
@@ -149,11 +161,12 @@ def _export(
     *,
     output_path: Path | None = None,
     sink: _PayloadSink | None = None,
+    planted: RegistrySnapshot | None = None,
 ) -> _Rendering:
-    """Run the real path, raising whatever the export refuses with."""
+    """Run the real path, raising whatever the export refuses with; ``planted`` replaces the edition's snapshot."""
     period = scenario.period
     with bundled_indexed_authority().operation() as operation:
-        provider = _export_schema_provider(operation, modelo, period)
+        provider = _export_schema_provider(operation, modelo, period) if planted is None else _planted_provider(planted)
         revision = provider.get_snapshot(modelo).revision
         draft = build_draft(
             modelo=modelo,
@@ -230,27 +243,61 @@ def _slot(payload: bytes, revision: ModeloRevision, cell: ExportFieldDefinition)
     return line[start : start + cell.length]
 
 
-def _refusal(year: int, supplied: ModeloInputs) -> FilingExportValidationError:
+@dataclass(frozen=True, slots=True)
+class _Plant:
+    owner_cell_kind: str
+    target_cell_kind: str | None = None
+    owner_value_policy: object = None
+
+
+_MONEY = _Plant("money")
+_DECIMAL = _Plant("decimal")
+_FLAG = _Plant("integer", owner_value_policy=ExportValuePolicy.SELECTED_1_UNSELECTED_0)
+_ONTO_TEXT = _Plant("decimal", target_cell_kind="text")
+
+
+def _planted(year: int, *plants: _Plant) -> tuple[RegistrySnapshot, list[PlantedSharedOwner]]:
+    """Plant each requested owner into one isolated copy of the edition's snapshot."""
+    period = Period.from_year_and_code(year, "0A")
+    with bundled_indexed_authority().operation() as operation:
+        snapshot = _export_schema_provider(operation, _M200, period).get_snapshot(_M200)
+    owners: list[PlantedSharedOwner] = []
+    for plant in plants:
+        owner = plant_shared_owner(
+            snapshot,
+            owner_cell_kind=plant.owner_cell_kind,
+            target_cell_kind=plant.target_cell_kind,
+            owner_value_policy=plant.owner_value_policy,
+            avoid=[str(item.casilla_id) for item in owners],
+        )
+        owners.append(owner)
+        snapshot = owner.snapshot
+    return snapshot, owners
+
+
+def _refusal(year: int, snapshot: RegistrySnapshot, supplied: ModeloInputs) -> FilingExportValidationError:
     with pytest.raises(FilingExportValidationError) as caught:
-        _export(_M200, _m200_scenario(year), supplied)
+        _export(_M200, _m200_scenario(year), supplied, planted=snapshot)
     assert caught.value.translated_message == _REFUSAL
     return caught.value
 
 
 @pytest.mark.parametrize("year", _m200_newest_edition_years())
-def test_tributos_is_refused_naming_its_six_sheets_and_nothing_is_delivered(year: int) -> None:
+def test_a_planted_shared_box_is_refused_naming_its_cells_and_nothing_is_delivered(year: int) -> None:
+    snapshot, (owner,) = _planted(year, _MONEY)
     sink = _PayloadSink()
     with pytest.raises(FilingExportValidationError) as caught:
-        _export(_M200, _m200_scenario(year), {"00281": Decimal("123.45")}, sink=sink)
+        _export(_M200, _m200_scenario(year), {str(owner.casilla_id): Decimal("123.45")}, sink=sink, planted=snapshot)
 
     assert sink.payload is None
     assert caught.value.translated_message == _REFUSAL
     context = caught.value.context
     assert context is not None
-    assert context["casilla_ids"] == "00281"
+    assert context["casilla_ids"] == str(owner.casilla_id)
     target_cells = context["target_cells"]
     assert isinstance(target_cells, dict)
-    assert {_sheet(cell) for cell in target_cells["00281"]} == _TRIBUTOS_SHEETS
+    assert set(target_cells[str(owner.casilla_id)]) == set(owner.target_cell_ids)
+    assert len({_sheet(cell) for cell in owner.target_cell_ids}) == 2
     assert context["modelo"] == _M200
 
 
@@ -259,16 +306,16 @@ def test_a_dictionary_layout_holding_a_shared_box_is_refused_like_a_fixed_width_
     year = _m200_newest_edition_years()[-1]
     period = Period.from_year_and_code(year, "0A")
     scenario = _m200_scenario(year)
-    with bundled_indexed_authority().operation() as operation:
-        provider = _export_schema_provider(operation, _M200, period)
-        registry_snapshot = provider.get_snapshot(_M200)
-        planted = canonical_export_layout(registry_snapshot.revision.export_layouts)
+    snapshot, (owner,) = _planted(year, _MONEY)
+    with bundled_indexed_authority().operation():
+        provider = _planted_provider(snapshot)
+        planted = canonical_export_layout(snapshot.revision.export_layouts)
         assert planted is not None
         draft = build_draft(
             modelo=_M200,
             period=period,
             profile=ModeloOperatorProfile(tax_id=SYNTHETIC_TAX_ID, display_name="Shared cells"),
-            inputs={**scenario.inputs, "00281": Decimal("123.45")},
+            inputs={**scenario.inputs, str(owner.casilla_id): Decimal("123.45")},
             schema_provider=provider,
         )
         with pytest.raises(FilingExportValidationError) as caught:
@@ -282,11 +329,11 @@ def test_a_dictionary_layout_holding_a_shared_box_is_refused_like_a_fixed_width_
                 product_software_identity=None,
                 xml_aux_version="planted",
                 schema_provider=provider,
-                registry_snapshot=registry_snapshot,
+                registry_snapshot=snapshot,
             )
 
     assert caught.value.translated_message == _REFUSAL
-    assert (caught.value.context or {})["casilla_ids"] == "00281"
+    assert (caught.value.context or {})["casilla_ids"] == str(owner.casilla_id)
 
 
 def test_the_newest_edition_governs_a_supported_year() -> None:
@@ -314,33 +361,42 @@ def test_the_filing_provider_refuses_an_edition_held_below_filing_grade(year: in
 
 @pytest.mark.parametrize("year", _m200_newest_edition_years())
 def test_a_refused_export_leaves_no_file(year: int, tmp_path: Path) -> None:
+    snapshot, (owner,) = _planted(year, _MONEY)
     output = tmp_path / "refused.boe"
     with pytest.raises(FilingExportValidationError) as caught:
-        _export(_M200, _m200_scenario(year), {"00281": Decimal("123.45")}, output_path=output)
+        _export(
+            _M200,
+            _m200_scenario(year),
+            {str(owner.casilla_id): Decimal("123.45")},
+            output_path=output,
+            planted=snapshot,
+        )
     assert caught.value.translated_message == _REFUSAL
     assert list(tmp_path.iterdir()) == []
 
 
 @pytest.mark.parametrize("year", _m200_newest_edition_years())
-def test_the_socimi_flag_is_refused_naming_the_reserve_deduction_cell(year: int) -> None:
-    refusal = _refusal(year, {"00012": Decimal("1")})
+def test_a_selected_flag_is_refused_naming_both_its_cells(year: int) -> None:
+    snapshot, (owner,) = _planted(year, _FLAG)
+    refusal = _refusal(year, snapshot, {str(owner.casilla_id): Decimal("1")})
 
     context = refusal.context
     assert context is not None
     target_cells = context["target_cells"]
     assert isinstance(target_cells, dict)
-    assert {"DP200001", "DP200022"} <= {_sheet(cell) for cell in target_cells["00012"]}
+    assert set(target_cells[str(owner.casilla_id)]) == set(owner.target_cell_ids)
 
 
 @pytest.mark.parametrize("year", _m200_newest_edition_years())
 def test_every_written_box_is_named_at_once(year: int) -> None:
-    refusal = _refusal(year, {"00281": Decimal("123.45"), "00012": Decimal("1")})
+    snapshot, (money, flag) = _planted(year, _MONEY, _FLAG)
+    refusal = _refusal(year, snapshot, {str(money.casilla_id): Decimal("123.45"), str(flag.casilla_id): Decimal("1")})
 
     context = refusal.context
     assert context is not None
     target_cells = context["target_cells"]
     assert isinstance(target_cells, dict)
-    assert set(target_cells) == {"00281", "00012"}
+    assert set(target_cells) == {str(money.casilla_id), str(flag.casilla_id)}
 
 
 @pytest.mark.parametrize("year", _m200_newest_edition_years())
@@ -366,28 +422,26 @@ def test_a_box_with_one_cell_exports_its_value(year: int) -> None:
 
 @pytest.mark.parametrize("year", _m200_newest_edition_years())
 @pytest.mark.parametrize(
-    ("casilla_id", "zero"),
+    ("plant", "zero"),
     [
-        pytest.param("00281", Decimal("0"), id="money-zero"),
-        pytest.param("00281", Decimal("0.00"), id="money-zero-scale"),
-        pytest.param("00012", Decimal("0"), id="flag-unselected"),
+        pytest.param(_MONEY, Decimal("0"), id="money-zero"),
+        pytest.param(_MONEY, Decimal("0.00"), id="money-zero-scale"),
+        pytest.param(_FLAG, Decimal("0"), id="flag-unselected"),
     ],
 )
-def test_a_zero_is_byte_identical_to_the_box_never_being_supplied(year: int, casilla_id: str, zero: Decimal) -> None:
-    absent = _export(_M200, _m200_scenario(year), {})
-    supplied = _export(_M200, _m200_scenario(year), {casilla_id: zero})
+def test_a_zero_is_byte_identical_to_the_box_never_being_supplied(year: int, plant: _Plant, zero: Decimal) -> None:
+    snapshot, (owner,) = _planted(year, plant)
+    absent = _export(_M200, _m200_scenario(year), {}, planted=snapshot)
+    supplied = _export(_M200, _m200_scenario(year), {str(owner.casilla_id): zero}, planted=snapshot)
 
     assert supplied.payload == absent.payload
 
 
 @pytest.mark.parametrize("year", _m200_newest_edition_years())
 def test_a_zero_in_every_rate_and_flag_owner_matches_absence_in_every_cell(year: int) -> None:
-    """The zero rule is proved over the shared owners' real cell shapes, not assumed per kind."""
-    revision = (
-        compiled_bundled_authority()
-        .snapshot(_M200, filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
-        .revision
-    )
+    """The zero rule is proved over real cell shapes of every numeric kind, not assumed per kind."""
+    snapshot, _owners = _planted(year, _MONEY, _DECIMAL, _FLAG)
+    revision = snapshot.revision
     layout = canonical_export_layout(revision.export_layouts)
     assert layout is not None
     owners = unadjudicated_shared_owners(layout, revision.casillas)
@@ -406,19 +460,17 @@ def test_a_zero_in_every_rate_and_flag_owner_matches_absence_in_every_cell(year:
 
 @pytest.mark.parametrize("year", _m200_newest_edition_years())
 def test_a_zero_or_digit_in_a_text_cell_is_a_written_value_and_refuses(year: int) -> None:
-    """Box 00040 reaches a text cell, where a zero prints instead of leaving the design's blank."""
-    revision = (
-        compiled_bundled_authority()
-        .snapshot(_M200, filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
-        .revision
-    )
+    """A box reaching a text cell prints a zero there instead of leaving the design's blank."""
+    snapshot, (owner,) = _planted(year, _ONTO_TEXT)
+    revision = snapshot.revision
     layout = canonical_export_layout(revision.export_layouts)
     assert layout is not None
-    (owner,) = [
-        owner
-        for owner in unadjudicated_shared_owners(layout, revision.casillas)
-        if any(str(getattr(cell.data_type, "value", cell.data_type)) == "text" for cell in owner.target_cells)
-    ]
+    assert any(
+        str(getattr(cell.data_type, "value", cell.data_type)) == "text"
+        for found in unadjudicated_shared_owners(layout, revision.casillas)
+        if found.casilla_id == owner.casilla_id
+        for cell in found.target_cells
+    )
     for value in (Decimal("0"), "0"):
         written = written_unadjudicated_shared_owners(layout, revision.casillas, {owner.casilla_id: value})
         assert [item.casilla_id for item in written] == [owner.casilla_id]
@@ -429,7 +481,8 @@ def test_a_zero_or_digit_in_a_text_cell_is_a_written_value_and_refuses(year: int
 @pytest.mark.parametrize("year", _m200_newest_edition_years())
 @pytest.mark.parametrize("amount", [Decimal("0.01"), Decimal("-0.01")], ids=["smallest-positive", "smallest-negative"])
 def test_the_smallest_amount_either_side_of_zero_refuses(year: int, amount: Decimal) -> None:
-    assert _refusal(year, {"00281": amount}).translated_message == _REFUSAL
+    snapshot, (owner,) = _planted(year, _MONEY)
+    assert _refusal(year, snapshot, {str(owner.casilla_id): amount}).translated_message == _REFUSAL
 
 
 def _all_layouts():
@@ -440,23 +493,35 @@ def _all_layouts():
                 yield str(modelo.id), revision, layout
 
 
-def test_only_modelo_200_has_unadjudicated_owners_across_every_revision() -> None:
+def test_no_modelo_has_an_unadjudicated_shared_owner_across_every_revision() -> None:
     affected = {
-        modelo for modelo, revision, layout in _all_layouts() if unadjudicated_shared_owners(layout, revision.casillas)
+        (modelo, str(revision.id))
+        for modelo, revision, layout in _all_layouts()
+        if unadjudicated_shared_owners(layout, revision.casillas)
     }
-    assert affected == {_M200}
+    assert affected == set()
 
 
 def test_the_rule_agrees_with_the_identity_worklist_on_modelo_200() -> None:
-    """Two routes to one set: the layout rule and the worklist reading the map and the design."""
+    """Two routes to one verdict: no box reaches a second sheet by the layout rule or by the worklist.
+
+    The worklist, reading the map and the design, still lists a sheet's own box
+    printed more than once on that sheet; the rule admits it through its declared
+    segment, so the two agree only that nothing crosses a sheet.
+    """
     worklists = load_bundled_m200_target_identity_worklists()
     assert worklists, "no worklist, so this check proves nothing"
     revisions = {str(revision.id): (revision, layout) for modelo, revision, layout in _all_layouts() if modelo == _M200}
     for worklist in worklists:
         revision, layout = revisions[worklist.revision]
-        owners = unadjudicated_shared_owners(layout, revision.casillas)
-        assert {str(owner.casilla_id) for owner in owners} == {row.casilla_id for row in worklist.shared_owners}
-        assert sum(len(owner.target_cells) for owner in owners) == sum(len(row.cells) for row in worklist.shared_owners)
+        assert unadjudicated_shared_owners(layout, revision.casillas) == ()
+        declared = {str(casilla.id): casilla.segmento for casilla in revision.casillas}
+        crossing = [
+            row.casilla_id
+            for row in worklist.shared_owners
+            if {cell.sheet for cell in row.cells} != {declared.get(row.casilla_id)}
+        ]
+        assert crossing == [], (worklist.revision, crossing)
 
 
 def test_every_repeat_in_a_single_segment_revision_has_been_read_against_its_design() -> None:
