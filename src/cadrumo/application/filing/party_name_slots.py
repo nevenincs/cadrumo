@@ -54,6 +54,8 @@ def require_declared_party_names(
 ) -> None:
     """Refuse when a party-name slot of this record occurrence has no fitting declared name.
 
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+
     Raises:
         FilingExportDeclaredPartyNameMissingError: The slot's row carries no name.
         FilingExportDeclaredPartyNameTooWideError: The carried name is wider than the slot.

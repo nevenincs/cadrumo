@@ -66,7 +66,10 @@ _EXPENSE_LIMITS: Final[tuple[tuple[str, str, str], ...]] = (
 
 
 def trabajo_recorded(target: CalculationRevision) -> bool:
-    """Return whether the calculation rests on a payer record of work income, not on an attestation or absence."""
+    """Return whether the calculation rests on a payer record of work income, not on an attestation or absence.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     return RetencionSoportadaClase.TRABAJO in recorded_income_classes(
         ref.source_ref for ref in target.source_provenance
     )
@@ -244,6 +247,9 @@ def trabajo_income_findings(
     states its box; the served limitation is a warning and carries none.
     ``profile_values`` are the path-keyed profile facts in force at the end of the ejercicio.
     A revision that declares none of the roles earns nothing here.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`),
+    ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     findings: list[TrabajoIncomeFinding] = []
     recorded = trabajo_recorded(target)

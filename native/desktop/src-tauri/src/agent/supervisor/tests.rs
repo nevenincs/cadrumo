@@ -650,7 +650,7 @@ fn provider_settings_status_asked_while_starting_answers_busy_at_once_then_reads
         let _bearer = frame();
         let request: serde_json::Value = serde_json::from_slice(&frame()).unwrap();
         assert_eq!(request["action"], "status");
-        let reply = serde_json::to_vec(&serde_json::json!({"version":1,"request_id":request["request_id"],"result":{"providers":[]}})).unwrap();
+        let reply = serde_json::to_vec(&serde_json::json!({"version":1,"request_id":request["request_id"],"result":{"providers":[],"reads_pending":false}})).unwrap();
         stream
             .write_all(&(reply.len() as u32).to_be_bytes())
             .unwrap();

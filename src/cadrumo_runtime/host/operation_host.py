@@ -15,6 +15,7 @@ Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import AsyncGenerator
 from contextlib import AbstractContextManager, ExitStack, asynccontextmanager
 from datetime import datetime, timedelta
@@ -312,14 +313,19 @@ class ProfileWorkerOperationHost:
             # that next needs the index walks it again and reports any failure.
             diagnostic_event(_log, "profile_grounding_warmup_failed", fields=diagnostic_error_fields(error))
             return
-        diagnostic_event(
-            _log,
-            "profile_grounding_warmup_finished",
-            fields={"computed": computed, "elapsed_seconds": round(monotonic() - started, 3)},
-        )
         # A host closing meanwhile joins this walk before it releases the freeze.
         if self._warm_heap is not None and freeze_epoch is not None:
             self._warm_heap.freeze(freeze_epoch)
+        diagnostic_event(
+            _log,
+            "profile_grounding_warmup_finished",
+            fields={
+                "computed": computed,
+                "elapsed_seconds": round(monotonic() - started, 3),
+                "heap_frozen": self._warm_heap is not None and self._warm_heap.frozen,
+            },
+            level=logging.INFO,
+        )
 
     async def _join_profile_grounding_warmup(self) -> None:
         """Wait for a walk under way, which stops at its next revision once the host is closed."""

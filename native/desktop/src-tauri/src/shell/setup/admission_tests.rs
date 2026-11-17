@@ -94,6 +94,7 @@ fn lane(id: &str, provider: &str, auth_kind: &str, mode: &str, saved: bool) -> V
 pub fn status() -> Value {
     json!({
         "development": false,
+        "reads_pending": false,
         "providers": [
             lane(LOCAL, "synthetic_local", "none", "unset", false),
             lane(HOSTED, "synthetic_hosted", "api_key", "key", true),

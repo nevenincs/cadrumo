@@ -12,9 +12,9 @@ from __future__ import annotations
 
 import pytest
 
+from ....core.absence_attestation_family import AbsenceAttestationFamily
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation, tr
-from ....domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

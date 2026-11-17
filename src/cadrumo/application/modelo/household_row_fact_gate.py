@@ -97,6 +97,8 @@ def household_row_fact_refusal(
     gated verb (``verify``, ``file`` or ``export``). A note whose group has no
     declared door, or an action this gate does not stand at, is left to the
     calculation-note gate's own refusal, which still blocks.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     leaf = _STAGE_LEAVES.get(action)
     unstated = household_row_fact_unstated_issues(issues)
@@ -147,6 +149,8 @@ def household_row_fact_unstated_failure(
     """Build the declared verdict that sends the filer to the profile door that states the fact.
 
     With ``row``, the door is the edit of that 0-based row, and the fact to state is left to the filer.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     return build_modelo_precondition_failure_for_scenario(
         subject_leaf_key=leaf,

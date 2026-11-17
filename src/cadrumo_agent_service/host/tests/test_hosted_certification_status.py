@@ -50,11 +50,12 @@ def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AgentService:
     # This credential-only fact is deliberately insufficient to prove hosted readiness.
     credential_status = {
         "providers": [{"mode": "provider_sign_in", "cli_state": "installed_signed_in"}],
+        "reads_pending": False,
     }
     monkeypatch.setattr(
         service._providers,
         "status",
-        lambda: SimpleNamespace(model_dump=lambda *, mode: credential_status),
+        lambda **_reads: SimpleNamespace(model_dump=lambda *, mode: credential_status),
     )
     return service
 
@@ -98,6 +99,7 @@ def test_status_projects_only_valid_certification_from_the_current_served_catalo
     assert catalog["api_version"] == "v1"
     assert result == {
         "providers": [{"mode": "provider_sign_in", "cli_state": "installed_signed_in"}],
+        "reads_pending": False,
         "sign_in_providers": [],
         "sign_in_methods": {},
         "console_sign_in_command": CONSOLE_SIGN_IN_COMMAND,
@@ -215,7 +217,7 @@ def test_live_certification_does_not_hide_provider_status_catalog_refusal(
     monkeypatch.setattr(
         service._providers,
         "status",
-        lambda: SimpleNamespace(model_dump=lambda *, mode: {"code": "catalog_unavailable"}),
+        lambda **_reads: SimpleNamespace(model_dump=lambda *, mode: {"code": "catalog_unavailable"}),
     )
     monkeypatch.setattr(
         service,

@@ -102,7 +102,9 @@ def _open_ended_edition_period(modelo_id: str) -> Period:
     modelo, catalogues = committed_modelo(modelo_id)
     revision = modelo.revisions[open_ended_revision(modelo_id).id]
     selector = revision.period_selector
-    year = next(year for year in catalogues.supported_filing_years.years if selector.includes_year(year))
+    supported = catalogues.supported_filing_years
+    assert supported is not None, "the committed catalogues declare the supported filing years"
+    year = next(year for year in supported.years if selector.includes_year(year))
     token = next(iter(selector.periods_for_year(year)))
     return Period.from_year_and_code(year, str(token))
 

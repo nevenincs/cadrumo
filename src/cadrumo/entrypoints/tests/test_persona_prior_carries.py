@@ -29,7 +29,7 @@ from ...application.modelo.work_create_operation import (
 )
 from ...application.operations.public_period import PublicPeriod
 from ...application.operations.public_scalar import restore_scalar
-from ...domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
+from ...core.absence_attestation_family import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ...tests.personas import GENERAL_BASES_CARRY_FAMILY, PRIOR_CARRY_BOXES, Persona, PriorCarries, YearToken
 from .persona_materialisation import (
     PERSONA_ACTOR,

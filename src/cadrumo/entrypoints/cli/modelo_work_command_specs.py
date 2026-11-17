@@ -43,9 +43,7 @@ _VERIFY_SELECTOR = ValueContract(
     DeferredTarget("...application.modelo.verify_selector", "ModeloVerifySelector", __package__)
 )
 _ABSENCE_FAMILY = ValueContract(
-    DeferredTarget(
-        "...domain.calculations.registry.binding_absence_attestation", "AbsenceAttestationFamily", __package__
-    )
+    DeferredTarget("...core.absence_attestation_family", "AbsenceAttestationFamily", __package__)
 )
 _REFUND = ValueContract(DeferredTarget("...core.refund_election", "RefundElection", __package__))
 _PAYMENT = ValueContract(DeferredTarget("...core.payment_election", "PaymentElection", __package__))

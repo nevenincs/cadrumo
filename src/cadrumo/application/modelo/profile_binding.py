@@ -794,6 +794,8 @@ def current_profile_read_fingerprint(
     revision read it, so a recorded read of a derived selector is digested over
     the selector as the current inputs derive it.
 
+    Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
+
     Raises:
         ProfileBindingResolutionError: The current profile cannot be derived,
             for example a stored date that no longer parses.

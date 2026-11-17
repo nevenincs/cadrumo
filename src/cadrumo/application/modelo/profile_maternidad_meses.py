@@ -239,6 +239,9 @@ def descendant_rows_lacking_cotizaciones(
     A binding that consumes a cotizaciones-limited derived fact stays unresolved while a
     child that needs the figure has none on its row. Empty when the binding consumes
     neither derived fact, or when its value is unresolved for another reason.
+
+    Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`),
+    ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
     """
     binding = next((candidate for candidate in snapshot.revision.bindings if candidate.id == binding_id), None)
     if binding is None:

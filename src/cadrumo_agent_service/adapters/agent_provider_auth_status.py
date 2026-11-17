@@ -141,6 +141,24 @@ class AgentProviderAuthStatusProbe:
             or monotonic() - cached[1] >= _FRESH_SECONDS
         )
 
+    def reading_mark(self) -> object | None:
+        """Mark the reading kept now, for :meth:`settled` to compare later; never asks for the context."""
+        with self._epoch_lock:
+            return self._cached
+
+    def settled(self, mark: object | None) -> bool:
+        """Say whether the reading ``mark`` saw, failed or not, is still the one kept for the current context.
+
+        No context has no reading to wait for. A reading that replaced the marked one says nothing
+        of what was served under the mark, so it is not settled until a later mark sees it.
+        """
+        context = self._context()
+        if context is None:
+            return True
+        with self._epoch_lock:
+            cached = self._cached
+        return mark is not None and mark is cached and cached[0] == context
+
     def refresh(self) -> None:
         """Read every provider's status within the confirmation bound and keep it for the context it was read under.
 

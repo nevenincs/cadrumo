@@ -9,6 +9,8 @@ on the instalment's own work unit stands for it. The instalment's own
 calculation is read from that work unit's current revision, and counts as
 current only while its registry stamp carries and its ledger anchor has not
 moved against the live transaction catalogue.
+
+The calculation is a :class:`CalculationRevision` and the catalogue a :class:`TransactionCatalogue`.
 """
 
 from __future__ import annotations

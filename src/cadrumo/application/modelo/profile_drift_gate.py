@@ -88,6 +88,8 @@ def profile_read_drift(
     ``profile_record`` is the loaded current record; ``None`` loads it from the
     work unit's bucket. A profile that can no longer be derived (a stored fact
     that stopped parsing) is a change, since the calculation read it parsed.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     recorded = target.profile_read_fingerprint
     if recorded is None:
@@ -126,6 +128,8 @@ def require_profile_reads_current_for_export(
 
     A filed revision is exported as filed, and a revision whose reads are unknown
     is disclosed at verify rather than refused here.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
 
     Raises:
         ModeloExportEvidenceMissingError: The revision's profile basis is no
@@ -187,6 +191,8 @@ def filed_profile_superseded_findings(
     warning, and correcting a filed declaration is an amendment (LGT art. 120.3),
     which the form serves as the finding's door. A filing whose reads were not
     recorded, or that a later filing superseded, says nothing.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     if target.state is not CalculationRevisionState.PRESENTADO:
         return ()
@@ -217,6 +223,8 @@ def profile_drift_findings(
 
     A drifted draft is a blocking stale calculation, recovered by calculating
     again. Only a draft is compared, as the ledger and invoice gates compare one.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     if target.state is not CalculationRevisionState.BORRADOR:
         return []

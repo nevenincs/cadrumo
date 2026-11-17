@@ -15,12 +15,12 @@ from decimal import Decimal
 from types import MappingProxyType
 from typing import Final
 
+from ...core.absence_attestation_family import AbsenceAttestationFamily
 from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation, output_language, tr
 from ...core.period import Period, PeriodKind
-from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 from .edit_models import ModeloEditNonWritableReason
 from .edit_value_grammar import ModeloEditRatioUnit, ratio_unit

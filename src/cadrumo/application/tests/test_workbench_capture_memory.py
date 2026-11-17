@@ -211,6 +211,17 @@ def test_a_slot_builds_once_per_unchanged_key() -> None:
     assert builds == [today, tomorrow, today]
 
 
+def test_a_slot_names_the_key_of_the_result_it_keeps() -> None:
+    slot: WorkbenchMemoSlot[str, str] = WorkbenchMemoSlot()
+    assert slot.kept_key() is None
+    slot.reuse("first", lambda: "a")
+    assert slot.kept_key() == "first"
+    slot.reuse("second", lambda: "b")
+    assert slot.kept_key() == "second"
+    slot.clear()
+    assert slot.kept_key() is None
+
+
 def _kept(memory: WorkbenchCaptureMemory) -> bool:
     """Whether the memory still stores and serves work: a second reuse of one key builds nothing."""
     key = cast(Any, object())
