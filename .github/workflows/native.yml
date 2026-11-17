@@ -127,6 +127,10 @@ jobs:
     if: ${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'COLLABORATOR' || github.event.pull_request.user.login == 'nevenincs-release[bot]'))) && github.event_name != 'pull_request' }}
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 106
+    # The agent-service contracts start the real cadrumo-agent from the
+    # runner's synced checkout, the one the package job bundles.
+    env:
+      CADRUMO_DEV_AGENT_CHECKOUT: ${{ vars.CADRUMO_PACKAGE_AGENT_SOURCE_DIR_WINDOWS }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -138,7 +142,19 @@ jobs:
         with:
           authority-artifact: ${{ inputs.authority-artifact }}
 
+      - name: Require the repository agent-source variable
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:CADRUMO_DEV_AGENT_CHECKOUT)) {
+            throw 'Repository variable CADRUMO_PACKAGE_AGENT_SOURCE_DIR_WINDOWS must name the cadrumo-agent project directory on the Windows runner.'
+          }
+
+      # The agent refuses a root with a Git checkout at or above it, so its
+      # test roots sit under the runner's temporary directory, which lies
+      # beside the workspace and not inside it.
       - name: Windows-only contracts
+        env:
+          CADRUMO_DEV_AGENT_HOSTED_ROOT: ${{ runner.temp }}/cadrumo-agent-hosted
         run: just test-windows
 
       - name: PowerShell action literals
