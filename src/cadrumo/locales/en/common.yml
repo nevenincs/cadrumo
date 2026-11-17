@@ -3580,8 +3580,6 @@ desktop:
       problem:
         choose_kind: Say whether you issued or received it.
         choose_rate: Choose a rate.
-        country_letters: Two letters, e.g. ES.
-        currency_letters: Three letters, e.g. EUR.
         missing: Required.
         no_line: Add at least one line.
         payment_id_shape: 64 hexadecimal characters.
