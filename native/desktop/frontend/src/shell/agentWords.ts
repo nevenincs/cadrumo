@@ -1,5 +1,6 @@
 import type { AgentToolKind } from "./agentSession";
-import type { AgentProviderCondition, AgentRunStatus } from "./agentViews";
+import type { ProviderCondition } from "./agentGatewayContract";
+import type { AgentRunStatus } from "./agentViews";
 import type { Translate } from "./strings";
 
 // The words for the closed values cadrumo-agent serves, and for nothing else:
@@ -34,14 +35,15 @@ const CONDITIONS = {
   credits_exhausted: "desktop.agent.condition_credits_exhausted",
   budget_exhausted: "desktop.agent.condition_budget_exhausted",
   invalid_request: "desktop.agent.condition_invalid_request",
+  model_does_not_fit: "desktop.agent.condition_model_does_not_fit",
   no_answer: "desktop.agent.condition_no_answer",
   unknown: "desktop.agent.condition_unknown",
-} as const satisfies Record<AgentProviderCondition, string>;
+} as const satisfies Record<ProviderCondition, string>;
 
-/** Why a provider failed a run: one of cadrumo-agent's ten conditions. */
+/** Why a provider failed a run: one of cadrumo-agent's conditions. */
 export function conditionWords(
   t: Translate,
-  condition: AgentProviderCondition,
+  condition: ProviderCondition,
 ): string {
   const key = (CONDITIONS as Readonly<Record<string, string>>)[
     condition as string
