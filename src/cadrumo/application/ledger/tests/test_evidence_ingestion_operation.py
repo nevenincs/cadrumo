@@ -27,13 +27,17 @@ from ....domain.iva.schema import InvoiceKind
 from ...modelo.tests.m036_operation_support import PROFILE_ID as POLICY_PROFILE_ID
 from ...modelo.tests.m036_operation_support import policy_decision
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...operations.error_detail import served_words_language
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.operation_definition import OperationDefinition
 from ...operations.registry import OperationRegistry
+from ...operator_actions.models import PreconditionVerdict
+from ...operator_actions.served_actions import serve_precondition_verdict
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..batch_ingest import (
     BatchItemResult,
     BatchItemStatus,
+    BatchRunResult,
     InferencePause,
     UnresolvedBatchSource,
     batch_item_identity,
@@ -93,6 +97,17 @@ def test_batch_snapshot_restores_all_rows_and_canonical_precondition_facts() -> 
         LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
         facts={"reader_available": False, "count": 0, "reader": "synthetic"},
     )
+    run = _batch_run(verdict)
+    snapshot = LedgerEvidenceBatchSnapshot.from_run(run)
+    restored = LedgerEvidenceBatchSnapshot.model_validate_json(snapshot.model_dump_json()).to_run()
+    served = _batch_run(serve_precondition_verdict(verdict, served_words_language()))
+    assert restored.model_dump(mode="json") == served.model_dump(mode="json")
+    assert restored.items[1].label_reading_fallback == run.items[1].label_reading_fallback
+    assert restored.summary == run.summary and restored.any_failed and restored.any_deferred
+
+
+def _batch_run(verdict: PreconditionVerdict) -> BatchRunResult:
+    """One run holding every row status, an unresolved source and a pause, each refusal carrying ``verdict``."""
     cases: tuple[tuple[str, BatchItemStatus], ...] = (
         ("a", "ingested"),
         ("b", "no_op"),
@@ -123,7 +138,7 @@ def test_batch_snapshot_restores_all_rows_and_canonical_precondition_facts() -> 
         )
         for letter, status in cases
     )
-    run = summarise_batch(
+    return summarise_batch(
         rows,
         (
             UnresolvedBatchSource(
@@ -132,11 +147,6 @@ def test_batch_snapshot_restores_all_rows_and_canonical_precondition_facts() -> 
         ),
         InferencePause(facts={"reader_available": False, "count": 0}, precondition_verdict=verdict),
     )
-    snapshot = LedgerEvidenceBatchSnapshot.from_run(run)
-    restored = LedgerEvidenceBatchSnapshot.model_validate_json(snapshot.model_dump_json()).to_run()
-    assert restored.model_dump(mode="json") == run.model_dump(mode="json")
-    assert restored.items[1].label_reading_fallback == rows[1].label_reading_fallback
-    assert restored.summary == run.summary and restored.any_failed and restored.any_deferred
 
 
 def test_batch_unreadable_source_preserves_none_and_complete_refusal(subject: Subject, tmp_path: Path) -> None:

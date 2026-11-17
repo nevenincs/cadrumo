@@ -4513,6 +4513,7 @@ application:
         profile_archive_reconcile: Concilia l'arxiu del perfil
         profile_arrendamiento: Revisa els teus arrendaments
         profile_ascendiente: Revisa els teus ascendents
+        profile_ascendiente_edit: Completa les dades del teu ascendent
         profile_complete_setup: Completa la configuració del teu perfil
         profile_create: Crea un perfil
         profile_descendiente: Revisa els teus descendents
