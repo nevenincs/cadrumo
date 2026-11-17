@@ -24,9 +24,9 @@ from cadrumo.application.filing.export_xml_dictionary_xsd import (
 from cadrumo.application.filing.export_xml_input_dictionary import declared_and_admitted_dictionary_entries
 from cadrumo.application.filing.export_xml_row_columns import nearest_repeating_element_path
 from cadrumo.application.filing.runtime import build_runtime_schema_provider
+from cadrumo.core.absence_attestation_family import AbsenceAttestationFamily
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from cadrumo.domain.calculations.registry.capital_mobiliario_position_bindings import (
     capital_mobiliario_position_bindings,
 )

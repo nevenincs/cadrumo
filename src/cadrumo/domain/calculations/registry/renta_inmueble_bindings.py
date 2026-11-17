@@ -35,11 +35,11 @@ from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
 
 from pydantic import AfterValidator, BaseModel, BeforeValidator, Field, model_validator
 
+from ....core.absence_attestation_family import AbsenceAttestationFamily
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
-from .binding_absence_attestation import AbsenceAttestationFamily
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import provider_member
 from .binding_temporal import RelativeToFilingYear

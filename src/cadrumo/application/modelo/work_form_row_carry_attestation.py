@@ -20,7 +20,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Final
 
-from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
+from ...core.absence_attestation_family import AbsenceAttestationFamily
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.modelos.calculation_revision import CalculationRevision
 from .edit_models import ModeloEditBindingIntentKind, ModeloEditWritableBindingOverrideSurfaceEntryV1

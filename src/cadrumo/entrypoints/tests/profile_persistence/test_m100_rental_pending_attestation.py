@@ -48,9 +48,9 @@ from ....application.modelo.edit_models import (
 )
 from ....application.modelo.work_form_models import ModeloFormCarryAttestation
 from ....application.modelo.work_form_service import load_modelo_work_form
+from ....core.absence_attestation_family import AbsenceAttestationFamily
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.external_constants import OutputLanguage
-from ....domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.renta_inmueble_bindings import (

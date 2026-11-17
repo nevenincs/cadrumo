@@ -43,10 +43,10 @@ from ....application.modelo.edit_models import (
 from ....application.modelo.edit_preflight import CARRY_LEFT_OPEN, preflight_modelo_edit
 from ....application.modelo.work_form_models import ModeloFormCarryAttestation
 from ....application.operations.next_step import OperationOpenWorkStepV1, error_next_step
+from ....core.absence_attestation_family import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code, resolve_error_message
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
-from ....domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...adapter_composition import profile_adapter_composition
 from ..modelo_operator_work_storage import SeededOperatorWork, seeded_operator_work

@@ -46,10 +46,10 @@ from ...application.modelo.workbench_operations import (
 )
 from ...application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1
 from ...application.operations.public_period import PublicPeriod
+from ...core.absence_attestation_family import AbsenceAttestationFamily
 from ...core.external_constants import OutputLanguage
 from ...core.modelo_export_artefact import ModeloExportArtefact
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...tests.personas import YearToken, read_persona
 from .persona_materialisation import (
     PERSONA_ACTOR,
