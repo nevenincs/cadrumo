@@ -1,3 +1,7 @@
+import type {
+  StageFieldName,
+  DraftFieldName,
+} from "../../../shell/ledgerMovementCheckContract";
 import { useMemo, useState } from "react";
 import { CurrencyEditor } from "@/components/editors/CurrencyEditor";
 import { PercentEditor } from "@/components/editors/PercentEditor";
@@ -16,9 +20,7 @@ import {
 import type { LedgerPlan, PlanBlocker } from "../../../shell/ledgerPlan";
 import {
   storedFieldValue,
-  type DraftField,
   type StageEvent,
-  type StageField,
   type StagedContent,
 } from "../../../shell/ledgerStage";
 import { useStrings, type Translate } from "../../../shell/strings";
@@ -96,7 +98,7 @@ function BlockerFixes({
   const dropEdits = (keepActions: boolean) => () => {
     for (const id of ids) onStage({ type: "revert_movement", id, keepActions });
   };
-  const revertFields = (fields: (entry: Held) => StageField[]) => () => {
+  const revertFields = (fields: (entry: Held) => StageFieldName[]) => () => {
     for (const entry of held)
       for (const field of fields(entry))
         if (content.rows[entry.id]?.[field])
@@ -276,7 +278,7 @@ function BlockerFixes({
           entry.blocker.kind === "cannot_clear"
             ? (entry.blocker.fields.filter(
                 (field) => field !== "m210_income_classification",
-              ) as StageField[])
+              ) as StageFieldName[])
             : [],
         ),
         "keep-stored",
@@ -431,7 +433,7 @@ const servedFix = (blocker: PlanBlocker): string | null =>
 function blockerFields(t: Translate, blocker: PlanBlocker): string | null {
   const fields =
     "fields" in blocker
-      ? (blocker.fields as (StageField | DraftField | string)[])
+      ? (blocker.fields as (StageFieldName | DraftFieldName | string)[])
       : null;
   if (!fields?.length) return null;
   return listed(
@@ -439,7 +441,7 @@ function blockerFields(t: Translate, blocker: PlanBlocker): string | null {
     fields.map((field) =>
       field === "m210_income_classification"
         ? t("desktop.ledger.field.m210_income_classification")
-        : fieldName(t, field as StageField),
+        : fieldName(t, field as StageFieldName),
     ),
   );
 }

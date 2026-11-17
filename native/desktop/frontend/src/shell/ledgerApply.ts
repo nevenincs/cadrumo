@@ -1,3 +1,4 @@
+import type { StageFieldName } from "./ledgerMovementCheckContract";
 // Runs a planned apply over the ledger port, one step at a time and in the
 // plan's order. Nothing is ever sent twice: a refusal stays staged with its
 // reason, and a write whose outcome was not observed pauses every later
@@ -30,7 +31,6 @@ import {
   storedFieldValue,
   unchangedBy,
   type StageEvent,
-  type StageField,
   type StageKeep,
   type StagedContent,
 } from "./ledgerStage";
@@ -355,7 +355,7 @@ export function followUps(step: PlanStep, result: JsonObject): PlanStep[] {
       const patch: LedgerClassifyWindowRequest["patch"] = {
         business_classification: wanted.classification,
       };
-      const fields: StageField[] = ["business_classification"];
+      const fields: StageFieldName[] = ["business_classification"];
       if (wanted.category_id) {
         patch.category_id = wanted.category_id;
         fields.push("category_id");
@@ -573,15 +573,15 @@ export function keepAfterApply(
   content: StagedContent,
   report: ApplyReport,
 ): StageKeep {
-  const rows = new Map<string, Set<StageField>>(
+  const rows = new Map<string, Set<StageFieldName>>(
     Object.entries(content.rows).map(([id, changes]) => [
       id,
-      new Set(Object.keys(changes) as StageField[]),
+      new Set(Object.keys(changes) as StageFieldName[]),
     ]),
   );
   const drafts = new Set(content.drafts.map((draft) => draft.key));
   const actions = new Set(content.actions.map((action) => action.id));
-  const drop = (id: string, fields: StageField[]) =>
+  const drop = (id: string, fields: StageFieldName[]) =>
     fields.forEach((field) => rows.get(id)?.delete(field));
   for (const { step, outcome, rows: results, follows } of report.steps) {
     // A document's attach that did not save keeps its add staged: sent
@@ -800,7 +800,10 @@ export function resolveUnknown(
   fresh: ReadonlyMap<string, LedgerTransactionReviewProjection>,
 ): Map<string, UnknownResolution> {
   const found = new Map<string, UnknownResolution>();
-  const fieldsSaved = (id: string, fields: StageField[]): UnknownResolution => {
+  const fieldsSaved = (
+    id: string,
+    fields: StageFieldName[],
+  ): UnknownResolution => {
     const row = fresh.get(id);
     if (!row) return "undetermined";
     const changes = content.rows[id] ?? {};

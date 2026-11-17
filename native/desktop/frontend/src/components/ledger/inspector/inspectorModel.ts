@@ -1,3 +1,4 @@
+import type { StageFieldName } from "../../../shell/ledgerMovementCheckContract";
 // What the movement inspector works out without drawing: where its jump
 // index stands and how much of it fits, what a selection has in common,
 // which selected movements a field set for all reaches and which it skips,
@@ -16,7 +17,6 @@ import {
   effectiveFacts,
   storedFieldValue,
   type StageCell,
-  type StageField,
   type StagedAction,
 } from "../../../shell/ledgerStage";
 import { statusWord, type StatusWord } from "../movements/movementWords";
@@ -273,7 +273,7 @@ export function completeCohort(
 // ---- The model's suggestion ----------------------------------------------------
 
 export type SuggestionWrite = {
-  field: StageField;
+  field: StageFieldName;
   value: string | null;
   derived?: true;
 };

@@ -2,10 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { formatAmount, formatDecimal } from "../../../shared/numbers";
 import {
   isWorkStep,
-  type LedgerNextStep,
   type LedgerOutcome,
   type LedgerWorkStep,
 } from "../../../shell/ledger";
+import type { OperationNextStepV1 } from "../../../shell/ledgerDocumentContract";
 import {
   calculateWorkRequest,
   createWorkRequest,
@@ -56,7 +56,7 @@ function afterStep<Result>(
  * declaration needs the shell to open it, and a step naming a profile detail
  * is not this surface's to offer. */
 function runnable(
-  step: LedgerNextStep | null,
+  step: OperationNextStepV1 | null,
   open: ((workUnitId: string) => void) | undefined,
 ): LedgerWorkStep | null {
   if (step === null || !isWorkStep(step)) return null;

@@ -4,7 +4,7 @@
 // this stand-in states it for them, and a test holds it to the backend's
 // recorded answers.
 
-import type { PublicDecimal } from "../shell/ledger";
+import type { PublicDecimal } from "../shell/ledgerInvoiceContract";
 
 const fraction = (text: string) => text.split(".")[1]?.length ?? 0;
 
