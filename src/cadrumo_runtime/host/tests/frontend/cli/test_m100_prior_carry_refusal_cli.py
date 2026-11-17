@@ -23,6 +23,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from cadrumo.core.absence_attestation_family import AbsenceAttestationFamily
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.config import load_settings
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -43,15 +44,29 @@ pytestmark = [
 ]
 
 _PROFILE_LABEL = "Prior carry refusal test profile"
-#: The carries the registry declares the statement of absence for.
+#: The carries of the negative general base pending from the four previous ejercicios.
 _PENDING_CARRIES = (
     "renta-base-liquidable-negativa-general-anterior",
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
 )
-#: The boxes the form prints for those carries.
-_CARRY_BOXES = ("1380", "1382", "1385", "1388")
+#: Each statement family's carries, as the registry declares them, and the opening boxes the form
+#: prints for them (Anexo C.3 for the savings balances, by origin year em1..em4).
+_FAMILY_CARRIES: dict[AbsenceAttestationFamily, tuple[tuple[str, ...], tuple[str, ...]]] = {
+    AbsenceAttestationFamily.RENTA_NEGATIVE_GENERAL_BASES_PENDING: (_PENDING_CARRIES, ("1380", "1382", "1385", "1388")),
+    AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_CAPITAL_INCOME_PENDING: (
+        tuple(f"renta-saldo-negativo-rcm-ahorro-{origin}-pendiente-inicio" for origin in ("em1", "em2", "em3", "em4")),
+        ("1272", "1274", "1277", "1280"),
+    ),
+    AbsenceAttestationFamily.RENTA_NEGATIVE_SAVINGS_GAINS_LOSSES_PENDING: (
+        tuple(f"renta-saldo-negativo-gyp-ahorro-{origin}-pendiente-inicio" for origin in ("em1", "em2", "em3", "em4")),
+        ("1259", "1261", "1264", "1267"),
+    ),
+}
+_EVERY_CARRY = tuple(sorted(carry for carries, _ in _FAMILY_CARRIES.values() for carry in carries))
+#: Every open family named, each by its own ``--family``, as the command's family door prints them.
+_EVERY_FAMILY = tuple(arg for family in sorted(_FAMILY_CARRIES) for arg in ("--family", family.value))
 
 
 def _renta_years(operation: PinnedAuthorityOperation) -> tuple[int, ...]:
@@ -121,11 +136,15 @@ def test_calculate_without_the_statement_is_a_refusal_naming_every_open_carry_fo
         context = error["context"]
         assert context["terminal_condition"] == "refused"
         assert context["effect"] == "none"
+        # The refusal names one open family at a time: its boxes, from the carries it names.
+        (evidence,) = error["action"]["evidence"]
+        open_carries = tuple(evidence["values"]["open_carries"].split(","))
+        (boxes,) = [boxes for carries, boxes in _FAMILY_CARRIES.values() if tuple(sorted(carries)) == open_carries]
         message = error["message"]
         assert str(year) in message
-        assert all(box in message for box in _CARRY_BOXES), message
+        assert all(box in message for box in boxes), message
         # The filer reads boxes, never the registry's binding identifiers.
-        assert not any(binding_id in message for binding_id in _PENDING_CARRIES), message
+        assert not any(binding_id in message for binding_id in _EVERY_CARRY), message
         assert "binding_id" not in context
         action = error["action"]
         assert action["failed_condition_id"] == "modelo.work.calculate.prior_carries.stated"
@@ -134,8 +153,6 @@ def test_calculate_without_the_statement_is_a_refusal_naming_every_open_carry_fo
         assert action["action"]["cli_path"] == ["aeat", "app", "modelo", "work", "attest-prior-carries"]
         bound = {item["argument_name"]: item["value"] for item in action["argument_bindings"]}
         assert bound == {"work_unit_id": work_unit_id}
-        (evidence,) = action["evidence"]
-        assert evidence["values"]["open_carries"] == ",".join(_PENDING_CARRIES)
         assert evidence["values"]["work_unit_id"] == work_unit_id
 
 
@@ -154,18 +171,25 @@ def test_the_statement_the_refusal_names_lets_the_declaration_calculate_for_ever
         assert _invoke(("app", "modelo", "work", "calculate", work_unit_id)).exit_code == 2
 
         # Unconfirmed, the command shows the served statement and its check, and states nothing.
-        shown = _invoke(("app", "modelo", "work", "attest-prior-carries", work_unit_id))
+        # Several families are open, so the statement must name each of them.
+        unnamed = _invoke(("app", "modelo", "work", "attest-prior-carries", work_unit_id))
+        assert unnamed.exit_code == 2, (year, unnamed.output)
+        unnamed_code = require_error_document(unnamed.output)["error"]["code"]
+        assert unnamed_code == "REFUSED_MODELO_PRIOR_CARRY_FAMILY_CHOICE_REQUIRED", unnamed.output
+        shown = _invoke(("app", "modelo", "work", "attest-prior-carries", work_unit_id, *_EVERY_FAMILY))
         assert shown.exit_code == 0, (year, shown.output)
         preview = require_schema_envelope(shown.output)
         assert preview["applied"] is False
-        (statement,) = preview["statements"]
-        assert statement["family"] == "renta_negative_general_bases_pending"
-        assert statement["binding_ids"] == sorted(_PENDING_CARRIES)
-        assert statement["statement_words"] and statement["effect_words"]
+        statements = {statement["family"]: statement for statement in preview["statements"]}
+        assert set(statements) == {family.value for family in _FAMILY_CARRIES}
+        for family, (carries, _) in _FAMILY_CARRIES.items():
+            statement = statements[family.value]
+            assert statement["binding_ids"] == sorted(carries)
+            assert statement["statement_words"] and statement["effect_words"]
         still_refused = _invoke(("app", "modelo", "work", "calculate", work_unit_id))
         assert still_refused.exit_code == 2, still_refused.output
 
-        stated = _invoke(("app", "modelo", "work", "attest-prior-carries", work_unit_id, "--yes"))
+        stated = _invoke(("app", "modelo", "work", "attest-prior-carries", work_unit_id, *_EVERY_FAMILY, "--yes"))
         assert stated.exit_code == 0, (year, stated.output)
         applied = require_schema_envelope(stated.output)
         assert applied["applied"] is True
@@ -178,8 +202,8 @@ def test_the_statement_the_refusal_names_lets_the_declaration_calculate_for_ever
         revision = require_schema_envelope(stored.output)
         assert revision["work_unit_id"] == work_unit_id
         assert Decimal(revision["casilla_values"]["1380"]) == 0
-        assert {binding_id: Decimal(revision["binding_overrides"][binding_id]) for binding_id in _PENDING_CARRIES} == {
-            binding_id: Decimal(0) for binding_id in _PENDING_CARRIES
+        assert {binding_id: Decimal(revision["binding_overrides"][binding_id]) for binding_id in _EVERY_CARRY} == {
+            binding_id: Decimal(0) for binding_id in _EVERY_CARRY
         }
 
         # Stating it again has nothing left to answer.

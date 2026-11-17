@@ -25,7 +25,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.profile.aeat_auth_setup import AeatAuthSetupScreen
-from cadrumo.entrypoints.tui.profile.edit_screens import FieldEditScreen
+from cadrumo.entrypoints.tui.profile.edit_screens import FieldEditScreen, RepeatableRowAddScreen
 from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
 from cadrumo.entrypoints.tui.profile.setup_journey import ProfileSetupStage
 from cadrumo.entrypoints.tui.secret.registration import (
@@ -191,6 +191,23 @@ async def _read_back_protected_credentials(pilot: Pilot[object], screen: Profile
     await _until(pilot, lambda: pilot.app.screen is screen, "return to wizard after credential readback")
 
 
+async def _answer_row_form(pilot: Pilot[object], dialog: RepeatableRowAddScreen) -> None:
+    """A required fact of an empty repeatable section is asked on that section's new-row form."""
+    owed = [(index, field) for index, field in enumerate(dialog._fields) if field.required]
+    assert owed, "A row form opened by the setup walk must owe at least one answer"
+    for index, field in owed:
+        assert field.path in _ANSWERS, f"No verified answer supplied for wizard field {field.path}"
+        answer = _ANSWERS[field.path]
+        if field.choices:
+            values = [choice.value for choice in field.choices]
+            assert answer in values, f"Wizard field {field.path} has different choices: {values}"
+            dialog.query_one(f"#row-option-{index}", OptionList).highlighted = values.index(answer)
+        else:
+            dialog.query_one(f"#row-input-{index}", Input).value = answer
+    await _click(pilot, "#btn-row-save")
+    await settle(pilot, workers=False)
+
+
 async def _answer_required_fields_and_finish(pilot: Pilot[object], screen: ProfileManagerScreen) -> None:
     """Answer each required field with its verified answer, review, and complete setup."""
     await _click(pilot, "#onboarding-continue")
@@ -205,10 +222,17 @@ async def _answer_required_fields_and_finish(pilot: Pilot[object], screen: Profi
                     isinstance(pilot.app.screen, FieldEditScreen)
                     and bool(pilot.app.screen.query("#edit-options, #edit-input"))
                 )
+                or (
+                    isinstance(pilot.app.screen, RepeatableRowAddScreen)
+                    and bool(pilot.app.screen.query("#btn-row-save"))
+                )
                 or (screen._pending_write is None and not screen.overview.missing_required)
             ),
             "next required answer",
         )
+        if isinstance(pilot.app.screen, RepeatableRowAddScreen):
+            await _answer_row_form(pilot, pilot.app.screen)
+            continue
         if not isinstance(pilot.app.screen, FieldEditScreen):
             break
         dialog = pilot.app.screen
