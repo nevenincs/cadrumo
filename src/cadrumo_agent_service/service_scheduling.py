@@ -16,6 +16,7 @@ from .host.store_lifecycle import (
 )
 from .service_startup import AgentServiceStartup
 from .service_support import (
+    CANCEL_STOP_REQUESTED,
     service_failure,
 )
 
@@ -57,7 +58,7 @@ class AgentServiceScheduling(AgentServiceStartup):
             self._auth_attempt.cancel()
         cancellation = self._startup_cancellation
         if cancellation is not None:
-            cancellation.cancel()
+            cancellation.cancel(CANCEL_STOP_REQUESTED)
         controller = self._controller
         if controller is not None:
             controller.cancel_start()

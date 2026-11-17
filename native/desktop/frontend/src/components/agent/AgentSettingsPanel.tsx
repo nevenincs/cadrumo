@@ -164,6 +164,7 @@ export function AgentSettingsPanel({
                 signInMethods={settings.read.value.signInMethods}
                 consoleSignInCommand={settings.read.value.consoleSignInCommand}
                 revisions={settings.read.value.revisions}
+                readsPending={settings.read.value.readsPending}
                 identity={reader}
                 busyId={settings.busyId}
                 outcomes={settings.outcomes}

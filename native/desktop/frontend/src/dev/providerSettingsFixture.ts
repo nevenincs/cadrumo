@@ -191,6 +191,10 @@ export type ProviderSignInFixtureControls = {
   /** The next `times` status reads answer while the service still reads the
    * sign-in routes behind them: `reads_pending`, with none offered. */
   pendSignInReads: (times?: number) => void;
+  /** Every settings status read answers `busy`, as the host does before it
+   * has admitted the service, until `releaseSettingsBusy`. */
+  holdSettingsBusy: () => void;
+  releaseSettingsBusy: () => void;
   /** A browser sign-in asks for an authorization code to be pasted back. */
   askForCode: () => void;
   /** The sign-in calls asked so far, with the attempt each named. */
@@ -247,6 +251,7 @@ let rejectNextStart: {
 } | null = null;
 let fixtureSignInProviders: readonly string[] = FIXTURE_SIGN_IN_PROVIDERS;
 let pendingSignInReads = 0;
+let settingsBusy = false;
 let askForCode = false;
 let fixtureSignInCalls: ProviderSignInFixtureCall[] = [];
 let failNextStatus: {
@@ -372,6 +377,7 @@ export function providerSettingsFixture({
   failNextStatus = null;
   fixtureSignInCalls = [];
   pendingSignInReads = 0;
+  settingsBusy = false;
   let changes = 0;
   const records = new Map<string, ProviderSettingsRecord>(
     SEEDS.map((seed) => [
@@ -440,6 +446,12 @@ export function providerSettingsFixture({
     },
     pendSignInReads(times = 1) {
       pendingSignInReads = times;
+    },
+    holdSettingsBusy() {
+      settingsBusy = true;
+    },
+    releaseSettingsBusy() {
+      settingsBusy = false;
     },
     askForCode() {
       askForCode = true;
@@ -709,6 +721,10 @@ export function providerSettingsFixture({
         const detail = rejectNextSettingsRead;
         rejectNextSettingsRead = null;
         throw coded(detail.code ?? "read_failed", detail);
+      }
+      if (settingsBusy) {
+        say("providerStatusBusy");
+        throw coded("busy");
       }
       if (deferNextStatus) {
         deferNextStatus = false;

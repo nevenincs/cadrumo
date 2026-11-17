@@ -10,8 +10,9 @@ from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.deadline_budget import OrchestrationTimeoutError, TimeoutPolicy
 
 from .adapters.agent_programs import AgentProgramRefusalError
-from .host.controller import AgentHostController, AgentHostError, AgentHostState
+from .host.controller import AgentHostController, AgentHostError, AgentHostRefusal, AgentHostState
 from .host.launcher_protocol import launcher_refusal_for, runtime_launcher_refusal_for
+from .host.store_lifecycle import InvocationCancellation
 from .providers.application.local_model_list import serves_engine_lane
 from .providers.application.served_catalog import ModelDownload
 from .providers.domain.record import LocalEngine
@@ -46,17 +47,32 @@ service is busy, so it is bounded at that exchange rather than at the
 last-resort orchestration budget."""
 
 
+CANCEL_PERSON_SIGNED_OUT = "person signed out"
+CANCEL_SERVICE_STOPPING = "service stopping"
+CANCEL_STOP_REQUESTED = "stop requested"
+
+
+def name_cancel_cause(error: BaseException, cancellation: InvocationCancellation) -> None:
+    """Record on a cancelled start's refusal why its cancellation was raised, when the canceller said."""
+    if isinstance(error, AgentHostError) and error.reason is AgentHostRefusal.CANCELLED:
+        error.cancel_cause = cancellation.cause
+
+
 def service_failure(error: Exception) -> dict[str, Any]:
     """Keep typed launch refusals and log only bounded operational metadata."""
     if isinstance(error, OrchestrationTimeoutError):
         return {"event": "refused", "code": "agent_timeout"}
     if isinstance(error, AgentHostError):
         code = launcher_refusal_for(error).value
-        _LOGGER.warning(
-            "agent startup refused reason=%s agent_code=%s",
-            error.reason.value,
-            error.agent_code,
-        )
+        if error.reason is AgentHostRefusal.CANCELLED and error.cancel_cause is not None:
+            # A cancellation with a known cause is expected behaviour, not a refusal to investigate.
+            _LOGGER.info("agent startup cancelled: %s", error.cancel_cause)
+        else:
+            _LOGGER.warning(
+                "agent startup refused reason=%s agent_code=%s",
+                error.reason.value,
+                error.agent_code,
+            )
     elif isinstance(error, AgentProgramRefusalError):
         code = error.code.value
         _LOGGER.warning("agent program unavailable code=%s", code)
