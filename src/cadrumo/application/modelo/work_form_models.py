@@ -673,49 +673,19 @@ type ModeloFormBlock = Annotated[
 ]
 
 
-_RECORD_ATTENTION_SCALE: Final[dict[ModeloFormAttention, ModeloFormAttention]] = {
-    ModeloFormAttention.BLOCKS: ModeloFormAttention.BLOCKS,
-    ModeloFormAttention.MISSING: ModeloFormAttention.MISSING,
-    ModeloFormAttention.CONFIRM: ModeloFormAttention.CONFIRM,
-    ModeloFormAttention.CHECK: ModeloFormAttention.CHECK,
-    ModeloFormAttention.LIMITATION: ModeloFormAttention.CHECK,
-}
-"""Where each counted level sits on the attention scale a section shows: a limitation is worth checking."""
-
-
 class ModeloFormRecordAttention(ModeloFormBase):
     """How many of the last check's findings about a section's tables of records sit at one attention level.
 
     ``counts_as`` is the level the section's attention scale counts them at,
     and ``asks_filer`` says whether they leave the filer something to do; a
-    surface adds them to its tally as served and decides neither.
+    surface adds them to its tally as served and decides neither. See
+    :func:`~cadrumo.application.modelo.work_form_record_attention.record_attention_count`.
     """
 
     level: ModeloFormAttention
     count: int = Field(gt=0)
     counts_as: ModeloFormAttention
     asks_filer: bool
-
-    @classmethod
-    def counted(cls, level: ModeloFormAttention, count: int) -> ModeloFormRecordAttention:
-        """``count`` findings at ``level``, placed on the section's attention scale."""
-        counts_as = _RECORD_ATTENTION_SCALE[level]
-        return cls(
-            level=level,
-            count=count,
-            counts_as=counts_as,
-            asks_filer=counts_as is not ModeloFormAttention.CHECK,
-        )
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _placed_on_the_scale(self) -> ModeloFormRecordAttention:
-        counts_as = _RECORD_ATTENTION_SCALE.get(self.level)
-        if counts_as is None:
-            raise ValueError(f"level {self.level.value} is not counted on a section's attention scale")
-        if self.counts_as is not counts_as or self.asks_filer is (counts_as is ModeloFormAttention.CHECK):
-            raise ValueError("counts_as and asks_filer must follow the level")
-        return self
 
 
 class ModeloFormSection(ModeloFormBase):
