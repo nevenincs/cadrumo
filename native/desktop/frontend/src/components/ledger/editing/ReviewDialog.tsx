@@ -1,3 +1,4 @@
+import type { DraftFieldName } from "../../../shell/ledgerMovementCheckContract";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +37,6 @@ import { planApply, type LedgerPlan } from "../../../shell/ledgerPlan";
 import {
   actionRows,
   storedFieldValue,
-  type DraftField,
   type StageEvent,
   type StagedAction,
   type StagedContent,
@@ -553,7 +553,7 @@ function entriesOf(
       lines: [
         facts(
           t,
-          (Object.entries(draft.fields) as [DraftField, string][])
+          (Object.entries(draft.fields) as [DraftFieldName, string][])
             .filter(([field]) => field !== "description")
             .map(([field, value]) => valueText(t, locale, field, value)),
         ),

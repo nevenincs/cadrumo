@@ -6,11 +6,8 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { facts } from "@/shell/compose";
-import {
-  servedRefusalWords,
-  type PickedFile,
-  type PublicDecimal,
-} from "../../../shell/ledger";
+import { servedRefusalWords, type PickedFile } from "../../../shell/ledger";
+import type { PublicDecimal } from "../../../shell/ledgerInvoiceContract";
 import {
   WITHHOLDING_INCOME_CLASSES,
   WITHHOLDING_ORIGINS,
