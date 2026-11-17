@@ -8,6 +8,8 @@ itself read by the gate it proves.
 
 from __future__ import annotations
 
+import json
+from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -16,7 +18,7 @@ import pytest
 from dev.quality.typescript_text_blanking import blank_text
 from dev.quality.year_literal_python import python_findings
 from dev.quality.year_literal_typescript import typescript_findings
-from dev.quality.year_literals import governed_sources, main, scan
+from dev.quality.year_literals import BASELINE, governed_sources, main, recorded, scan
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -395,3 +397,38 @@ def test_the_gate_fails_on_a_finding_and_passes_a_clean_tree(
 
 def test_a_walk_that_reads_nothing_is_refused(tmp_path: Path) -> None:
     assert main([], tmp_path) == 1
+
+
+def _record(root: Path, *occurrences: str) -> None:
+    baseline = root / BASELINE
+    baseline.parent.mkdir(parents=True, exist_ok=True)
+    baseline.write_text(json.dumps({"schema_version": 1, "occurrences": list(occurrences)}), encoding="utf-8")
+
+
+def test_a_recorded_year_passes_and_a_year_beyond_the_record_fails(tmp_path: Path) -> None:
+    _tree(tmp_path, {"dev/tool.py": "TAX_YEAR = 2025\n"})
+    _record(tmp_path, "dev/tool.py: year bound: TAX_YEAR=2025")
+    assert main([], tmp_path) == 0
+
+    _tree(tmp_path, {"dev/tool.py": "\n\nTAX_YEAR = 2025\n"})
+    assert main([], tmp_path) == 0, "a recorded year moved down by an edit above it is the same year"
+
+    _tree(tmp_path, {"dev/tool.py": "TAX_YEAR = 2025\nOTHER_YEAR = 2025\n"})
+    assert main([], tmp_path) == 1
+
+
+def test_a_recorded_year_that_no_longer_stands_fails_until_the_baseline_shrinks(tmp_path: Path) -> None:
+    _tree(tmp_path, {"dev/tool.py": "TAX_YEAR = 2025\nOTHER_YEAR = 2025\n"})
+    _record(tmp_path, "dev/tool.py: year bound: TAX_YEAR=2025", "dev/tool.py: year bound: OTHER_YEAR=2025")
+    _tree(tmp_path, {"dev/tool.py": "TAX_YEAR = 2025\n"})
+    assert main([], tmp_path) == 1
+
+    assert main(["--shrink-baseline"], tmp_path) == 0
+    assert recorded(tmp_path) == Counter({"dev/tool.py: year bound: TAX_YEAR=2025": 1})
+
+
+def test_shrinking_the_baseline_never_records_a_new_year(tmp_path: Path) -> None:
+    _tree(tmp_path, {"dev/tool.py": "TAX_YEAR = 2025\n"})
+    _record(tmp_path)
+    assert main(["--shrink-baseline"], tmp_path) == 1
+    assert recorded(tmp_path) == Counter()
