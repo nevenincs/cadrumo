@@ -281,37 +281,72 @@ export async function openLedgerSection(id, setup) {
         };
   }
   // The setup menu is a Radix dropdown: it opens on pointerdown, which the
-  // WebDriver click does not send, and selects an item on click.
-  const opened = await exec(() => {
-    const button = [...document.querySelectorAll("button.ledger-setup")].find(
-      (b) => b.getClientRects().length,
-    );
-    if (!button) return false;
-    if (button.getAttribute("aria-expanded") !== "true")
-      button.dispatchEvent(
-        new PointerEvent("pointerdown", {
-          bubbles: true,
-          cancelable: true,
-          button: 0,
-          pointerType: "mouse",
-        }),
+  // WebDriver click does not send, and selects an item on click. A menu still
+  // closing from the last pick swallows the press, so the open is judged by the
+  // expanded button and a shown menu, and tried once more when the item is not
+  // there.
+  const open = () =>
+    exec(() => {
+      const button = [...document.querySelectorAll("button.ledger-setup")].find(
+        (b) => b.getClientRects().length,
       );
-    return true;
-  });
-  if (!opened) return { reached: false, reason: "no setup menu button" };
-  await sleep(500);
-  const picked = await exec((name) => {
-    const item = [
-      ...document.querySelectorAll('[role="menu"] [role="menuitem"]'),
-    ].find(
-      (e) =>
-        e.getClientRects().length &&
-        (e.textContent ?? "").replace(/\s+/g, " ").trim().startsWith(name),
+      if (!button) return false;
+      if (button.getAttribute("aria-expanded") !== "true")
+        button.dispatchEvent(
+          new PointerEvent("pointerdown", {
+            bubbles: true,
+            cancelable: true,
+            button: 0,
+            pointerType: "mouse",
+          }),
+        );
+      return true;
+    });
+  const shown = () =>
+    waitFor(
+      () =>
+        exec(
+          () =>
+            [...document.querySelectorAll("button.ledger-setup")].some(
+              (b) =>
+                b.getClientRects().length &&
+                b.getAttribute("aria-expanded") === "true",
+            ) &&
+            [...document.querySelectorAll('[role="menu"]')].some(
+              (m) => m.getClientRects().length,
+            ),
+        ),
+      {
+        timeout: 3000,
+        what: "the setup menu to open",
+        soft: true,
+        interval: 100,
+      },
     );
-    if (!item) return false;
-    item.click();
-    return true;
-  }, name);
+  const pick = () =>
+    exec((name) => {
+      const item = [
+        ...document.querySelectorAll('[role="menu"] [role="menuitem"]'),
+      ].find(
+        (e) =>
+          e.getClientRects().length &&
+          (e.textContent ?? "").replace(/\s+/g, " ").trim().startsWith(name),
+      );
+      if (!item) return false;
+      item.click();
+      return true;
+    }, name);
+  let picked = false;
+  for (let attempt = 0; attempt < 2 && !picked; attempt += 1) {
+    if (attempt > 0) {
+      await win.browser.keys("Escape");
+      await sleep(300);
+    }
+    if (!(await open()))
+      return { reached: false, reason: "no setup menu button" };
+    if (!(await shown())) continue;
+    picked = await pick();
+  }
   if (!picked) {
     await win.browser.keys("Escape");
     return { reached: false, reason: `no setup menu item "${name}"` };

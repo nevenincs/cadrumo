@@ -67,14 +67,7 @@ test("a ready runtime is observed again after the profile is locked and unlocked
   page: target,
 }) => {
   scenarioOnly("The scenario host controls these status and catalog reads.");
-  await target.goto("/scenarios.html?scenario=signed-in&latency=2000&bar=off");
-  await expect
-    .poll(
-      async () =>
-        (await calls(target)).filter((call) => call === "agentProviderCatalog")
-          .length,
-    )
-    .toBe(1);
+  await open(target);
   await expect
     .poll(
       async () =>
@@ -83,7 +76,14 @@ test("a ready runtime is observed again after the profile is locked and unlocked
         ).length,
     )
     .toBe(1);
+  expect(
+    (await calls(target)).filter((call) => call === "agentProviderCatalog"),
+  ).toHaveLength(1);
 
+  // The status the unlocked profile asks for waits on the host until the
+  // check below has run; the ready one from before sign-out is the only
+  // ready the window has heard.
+  await target.evaluate(() => window.__scenarioAgentStatusHold?.hold());
   await accountMenuButton(target).click();
   await accountMenu(target)
     .getByRole("menuitem", {
@@ -110,14 +110,16 @@ test("a ready runtime is observed again after the profile is locked and unlocked
   await expect
     .poll(
       async () =>
-        (await calls(target)).filter((call) => call === "agentStatus").length,
+        (await calls(target)).filter((call) => call === "agentStatusHeld")
+          .length,
     )
-    .toBeGreaterThanOrEqual(2);
-  // The second read is still waiting on the host. A ready value from before
+    .toBeGreaterThanOrEqual(1);
+  // The new read is still waiting on the host. A ready value from before
   // sign-out must not trigger a catalog read for the newly unlocked profile.
   expect(
     (await calls(target)).filter((call) => call === "agentProviderCatalog"),
   ).toHaveLength(1);
+  await target.evaluate(() => window.__scenarioAgentStatusHold?.release());
   await expect
     .poll(
       async () =>
