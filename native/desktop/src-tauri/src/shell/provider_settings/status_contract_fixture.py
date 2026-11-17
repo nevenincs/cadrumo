@@ -68,7 +68,10 @@ def document() -> dict[str, object]:
             revision="0" * 64,
         )
 
-    status = ProviderSettingsStatus(providers=(entry("local", keyless=True), entry("alpha"), entry("beta", cli=True)))
+    status = ProviderSettingsStatus(
+        providers=(entry("local", keyless=True), entry("alpha"), entry("beta", cli=True)),
+        reads_pending=False,
+    )
     refusal = ProviderSettingsRefusal(code=ProviderSettingsRefusalCode.PROFILE_LOCKED)
     return {"status": status.model_dump(mode="json"), "refusal": refusal.model_dump(mode="json")}
 

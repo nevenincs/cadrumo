@@ -76,7 +76,7 @@ def _resolve(store: MemoryProviderSettingsStore) -> ProviderCredentialResolution
 
 
 def _entry(service: ProviderSettingsService) -> ProviderStatusEntry:
-    status = service.status()
+    status = service.status(reads_pending=lambda _lanes: False)
     assert isinstance(status, ProviderSettingsStatus)
     return next(entry for entry in status.providers if entry.id == KEYLESS_LANE)
 

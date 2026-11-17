@@ -92,6 +92,8 @@ export type ProviderSettingsAnswer = {
   sign_in_methods?: Record<string, readonly ProviderSignInMethod[]>;
   /** The console command that signs a provider in by hand, with a ``{provider}`` slot; absent when not served. */
   console_sign_in_command?: string | null;
+  /** Whether something this answer could not yet serve is still under way: the agent's start, the sign-in methods before the agent named them, or a command-line lane's login reading. ``False`` once all have settled, a failed read or start included; while ``True`` a later read serves what they keep. */
+  reads_pending: boolean;
 };
 
 /** Transient progress for a person-started provider sign-in attempt; never carries a secret. */

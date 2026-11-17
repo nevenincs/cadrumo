@@ -158,6 +158,9 @@ export type ProviderSettingsView = {
  * starting the agent) is read again after a pause, growing to a ceiling,
  * for as long as they are open: the settings follow their own read, not the
  * agent's other reads or the ready it publishes, which can come much later.
+ * An answer the service says it is still completing (`reads_pending`: the
+ * sign-in routes and the apps' states are read behind it) is read again on
+ * the same pauses while they are open, until an answer says it is complete.
  */
 export function useProviderSettings(
   host: ProviderSettings | undefined,
@@ -216,21 +219,26 @@ export function useProviderSettings(
     readStatus !== null &&
     answer.kind === "failed" &&
     answer.code === "busy";
+  const pending =
+    open &&
+    readStatus !== null &&
+    answer.kind === "ready" &&
+    answer.value.reads_pending;
   const pauses = useRef(0);
   useEffect(() => {
-    if (!busy) {
-      following.current = null;
+    if (!busy) following.current = null;
+    if (!busy && !pending) {
       pauses.current = 0;
       return;
     }
-    following.current ??= { since: performance.now() };
+    if (busy) following.current ??= { since: performance.now() };
     const again = window.setTimeout(
       () => setState((held) => ({ ...held, again: held.again + 1 })),
       catalogBusyPause(pauses.current),
     );
     pauses.current += 1;
     return () => window.clearTimeout(again);
-  }, [answer, busy]);
+  }, [answer, busy, pending]);
   const read = useMemo(
     (): ProviderSettingsView["read"] =>
       answer.kind === "ready"

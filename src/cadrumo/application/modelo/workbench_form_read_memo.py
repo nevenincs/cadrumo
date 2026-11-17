@@ -15,7 +15,7 @@ identity and lifetime, which a fresh read also issues anew.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from datetime import date
 from typing import Final
 from uuid import UUID
@@ -25,7 +25,7 @@ from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
 from .workbench_projection import ModeloWorkbenchFormProjectionV1
 
-__all__ = ["WorkbenchFormReadKey", "admission_identity", "with_fresh_admission"]
+__all__ = ["WorkbenchFormReadKey", "admission_identity", "changed_key_parts", "with_fresh_admission"]
 
 _BASELINE_LIFETIME: Final[frozenset[str]] = frozenset({"baseline_id", "issued_at", "expires_at"})
 """What every admission issues anew, even for an unchanged declaration."""
@@ -43,6 +43,13 @@ class WorkbenchFormReadKey:
     language: OutputLanguage
     as_of: date
     admission: str
+
+
+def changed_key_parts(kept: WorkbenchFormReadKey, key: WorkbenchFormReadKey) -> tuple[str, ...]:
+    """The names of the key parts in which ``key`` differs from the ``kept`` one, in declaration order."""
+    return tuple(
+        part.name for part in fields(WorkbenchFormReadKey) if getattr(kept, part.name) != getattr(key, part.name)
+    )
 
 
 def admission_identity(admission: ModeloEditAdmissionResultV1) -> str:

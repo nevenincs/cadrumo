@@ -51,7 +51,7 @@ def _resolve(store: MemoryProviderSettingsStore, lane: str) -> object:
 
 
 def _entry(service: ProviderSettingsService, lane: str) -> ProviderStatusEntry:
-    status = service.status()
+    status = service.status(reads_pending=lambda _lanes: False)
     assert isinstance(status, ProviderSettingsStatus)
     return next(entry for entry in status.providers if entry.id == lane)
 

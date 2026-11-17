@@ -236,6 +236,10 @@ pub struct Status {
     /// `{provider}` slot for the window to fill.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub console_sign_in_command: Option<String>,
+    /// Whether the service is still reading what its agent can sign in and
+    /// each app's state, so an empty `sign_in_methods` or an unknown
+    /// `cli_state` is not yet its answer; required, relayed unchanged.
+    pub reads_pending: bool,
 }
 
 impl Status {
@@ -641,6 +645,7 @@ pub fn status(outcome: Outcome) -> Result<Status, CommandFailure> {
         sign_in_providers: status.sign_in_providers,
         sign_in_methods: status.sign_in_methods,
         console_sign_in_command: status.console_sign_in_command,
+        reads_pending: status.reads_pending,
     })
 }
 
@@ -748,7 +753,7 @@ mod tests {
     }
 
     fn envelope(entries: &[Value]) -> Value {
-        json!({"providers": entries})
+        json!({"providers": entries, "reads_pending": false})
     }
 
     fn failed(result: Result<impl std::fmt::Debug, CommandFailure>) -> Value {
@@ -1075,7 +1080,7 @@ mod tests {
     fn environment_credentials_are_refused_and_ids_are_unique() {
         let mut from_environment = api();
         from_environment["source"] = json!("environment");
-        let read = json!({"development": true, "providers": [from_environment.clone()]});
+        let read = json!({"development": true, "providers": [from_environment.clone()], "reads_pending": false});
         assert!(status(success(read)).is_err());
         assert!(status(success(envelope(&[from_environment]))).is_err());
         assert!(status(success(envelope(&[api(), api()]))).is_err());
@@ -1482,6 +1487,34 @@ mod tests {
                 failed(status(success(envelope(std::slice::from_ref(&entry)))))["code"],
                 "read_failed",
                 "{entry}"
+            );
+        }
+    }
+
+    #[test]
+    fn reads_pending_is_required_and_relayed_unchanged() {
+        // While the service still reads sign-in methods and app states, its
+        // empty answer is not final: the window re-reads only if told so.
+        for pending in [true, false] {
+            let mut answer = envelope(&[cli()]);
+            answer["reads_pending"] = json!(pending);
+            let read = status(success(answer)).unwrap();
+            assert_eq!(read.reads_pending, pending);
+            assert_eq!(
+                serde_json::to_value(&read).unwrap()["reads_pending"],
+                pending
+            );
+        }
+        let mut absent = envelope(&[cli()]);
+        absent.as_object_mut().unwrap().remove("reads_pending");
+        assert_eq!(failed(status(success(absent)))["code"], "read_failed");
+        for refused in [json!(null), json!("true"), json!(1), json!([])] {
+            let mut answer = envelope(&[cli()]);
+            answer["reads_pending"] = refused.clone();
+            assert_eq!(
+                failed(status(success(answer)))["code"],
+                "read_failed",
+                "{refused}"
             );
         }
     }
