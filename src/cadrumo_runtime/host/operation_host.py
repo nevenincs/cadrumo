@@ -174,10 +174,10 @@ class ProfileWorkerOperationHost:
         # The background profile grounding walk a person's admission starts.
         self._grounding_warmup: asyncio.Task[None] | None = None
 
-    def _report_progress(self, operation_ids: tuple[OperationId, ...]) -> None:
+    def _report_progress(self, operation_ids: tuple[OperationId, ...], settled: tuple[OperationId, ...]) -> None:
         with self._record_effects_guard:
             affected = self._record_effects.intersection(operation_ids)
-        self._client.operations_advanced(operation_ids, records_changed=bool(affected))
+        self._client.operations_advanced(operation_ids, records_changed=bool(affected), settled=settled)
         with self._record_effects_guard:
             self._record_effects.difference_update(affected)
 
@@ -186,7 +186,7 @@ class ProfileWorkerOperationHost:
         if snapshot.lifecycle is OperationLifecycle.TERMINAL and snapshot.effect is not OperationEffect.NONE:
             with self._record_effects_guard:
                 self._record_effects.add(snapshot.operation_id)
-        self._progress.committed(snapshot.operation_id)
+        self._progress.committed(snapshot.operation_id, settled=snapshot.lifecycle is OperationLifecycle.TERMINAL)
 
     def _bind_execution(self, registry: OperationRegistry) -> ProfileWorkerOperationAuthority:
         from .operation_authority import ProfileWorkerOperationAuthority

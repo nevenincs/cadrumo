@@ -118,7 +118,7 @@ class RuntimeProfileHost:
         worker_script: Path | None = None,
         wall_clock: Callable[[], datetime] = wall_now,
         retired: Callable[[SessionEvent, SessionKind], None] | None = None,
-        operations_advanced: Callable[[tuple[OperationId, ...], bool], None] | None = None,
+        operations_advanced: Callable[[tuple[OperationId, ...], bool, tuple[OperationId, ...]], None] | None = None,
         model_runs: Callable[[WorkerModelRun, bytearray], tuple[ModelRunOutcome, bytearray]] | None = None,
         suspended: Callable[[tuple[AccessSession, ...]], None] | None = None,
         rebound: Callable[[tuple[AccessSession, ...]], None] | None = None,
@@ -267,10 +267,16 @@ class RuntimeProfileHost:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         return self._recipient(requester)
 
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
+    def operations_advanced(
+        self,
+        operation_ids: tuple[OperationId, ...],
+        *,
+        records_changed: bool = False,
+        settled: tuple[OperationId, ...] = (),
+    ) -> None:
         """Hand the worker's report of committed operations to whoever cues their observers."""
         if self._operations_advanced is not None:
-            self._operations_advanced(operation_ids, records_changed)
+            self._operations_advanced(operation_ids, records_changed, settled)
 
     def approval_preflight(self, request: WorkerApprovalRequest) -> None:
         """Validate the exact worker and current human before any password frame."""

@@ -345,7 +345,13 @@ class _Authorization(WorkerAuthorizationClient):
             return allowed.inventory
 
     @override
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
+    def operations_advanced(
+        self,
+        operation_ids: tuple[OperationId, ...],
+        *,
+        records_changed: bool = False,
+        settled: tuple[OperationId, ...] = (),
+    ) -> None:
         # The runtime owner receives the worker's report as its endpoint would hand it on.
         self.owner.operations_advanced(operation_ids, records_changed=records_changed)
 
