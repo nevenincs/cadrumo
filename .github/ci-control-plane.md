@@ -7,8 +7,9 @@ to both.
 ## Branches
 
 `feature/tui` is the development branch. Every landing goes there, and a push
-to it runs the merge gate over the full population on the landed head (a newer
-push supersedes it); it starts no release workflow. `main` is the release
+to it runs the merge gate over the full population on the landed head (every
+landed head keeps its own run; a newer push neither cancels nor replaces it);
+it starts no release workflow. `main` is the release
 branch, reached only by a promotion pull request from `feature/tui`. Release
 automation reads, proposes and tags `main` alone.
 
@@ -58,7 +59,8 @@ that requires approval before any outside contributor's run starts. The clause
 keeps an approved run of the headless lane from also starting the native one.
 
 No workflow runs on `pull_request_target`. Every checkout drops its
-credentials. A newer push to a pull request cancels the run it supersedes.
+credentials. A newer push to a pull request cancels the run it supersedes; a
+push to `feature/tui` cancels nothing (see Concurrency below).
 
 A hosted job's caches (uv downloads, npm) are restored and saved only when the
 run is not a fork's, so nothing a fork ran outlives its job. A pull request can
@@ -98,6 +100,19 @@ shard, eight shards at most, largest files first onto the lightest shard. A
 typical pull request is one shard. A promotion pull request into `main`, and a
 call from the release proof, read no change list and run the full population
 in eight shards.
+
+**Concurrency.** A pull request's runs share one group and a newer event
+cancels the older run. A push run's group ends in its own commit, so the runs
+of two landed heads never share one, and within the gate nothing but a pull
+request event cancels a run in progress; a run the release proof calls ends
+early only when that proof is itself superseded. The commit is in the group,
+not only `cancel-in-progress: false`, because a group holds one running and
+one pending run: a third landing would replace the pending run of the second,
+and trains land faster than a run finishes. The cost is that the gate applies
+no back-pressure. Runs for successive heads overlap, each starts its own
+seventeen jobs at eight shards, and when landings outpace the account's
+hosted-runner allowance the jobs wait in GitHub's queue, so a head's verdict
+can arrive well after its landing.
 
 **Speed.** The expected critical path for a pull request is `authority`
 (toolchain, then compiling the registry) followed by the longest of `tests`,
