@@ -555,7 +555,8 @@ export type ModeloFormRateUnit = "fraction";
  *
  * `counts_as` is the level the section's attention scale counts them at, and
  * `asks_filer` says whether they leave the filer something to do; a surface
- * adds them to its tally as served and decides neither.
+ * adds them to its tally as served and decides neither. See
+ * `record_attention_count`.
  */
 export type ModeloFormRecordAttention = {
   level: ModeloFormAttention;
