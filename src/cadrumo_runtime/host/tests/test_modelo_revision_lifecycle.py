@@ -280,8 +280,8 @@ def _calculate_twice(client: VerifiedConnection, profile_id: UUID, session_id: U
     )
     assert repeated.calculation_revision_id == revision_id
     assert not repeated.revision_published
-    # The revision witness does not cover incidental writers.
-    assert repeat_effect is OperationEffect.UNKNOWN
+    # Every calculation commit passes the first-write witness, so a repeat that writes nothing settles with none.
+    assert repeat_effect is OperationEffect.NONE
     return revision_id
 
 
