@@ -96,6 +96,14 @@ _INVOCATIONS = [
         "agent-auth",
         [*_literals(*_MODULE, "auth", "login", "--provider"), {"slot": "provider", "kind": "identifier", "minimum": 0}],
     ),
+    (
+        "agent-auth",
+        [
+            *_literals(*_MODULE, "auth", "login", "--provider"),
+            {"slot": "provider", "kind": "identifier", "minimum": 0},
+            *_literals("--device"),
+        ],
+    ),
     ("agent-providers", _literals(*_MODULE, "auth", "providers", "--json")),
     ("agent-providers", _literals(*_MODULE, "auth", "providers", "--interface", "gui", "--json")),
     *[
