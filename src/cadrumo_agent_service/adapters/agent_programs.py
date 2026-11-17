@@ -167,6 +167,11 @@ def profile_agent_root(storage_root: Path, profile_id: UUID) -> Path:
     return root
 
 
+def provider_login_notice(agent_root: Path) -> Path:
+    """The change notice for this opaque root, outside the provider's home."""
+    return agent_root.parent / "login-notices" / agent_root.name
+
+
 def existing_profile_agent_root(storage_root: Path, profile_id: UUID) -> Path | None:
     """Return the profile's agent directory when the service already made it, else ``None``; creates nothing."""
     base = storage_root / AGENT_DIRECTORY

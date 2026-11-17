@@ -46,9 +46,10 @@ _ONLY_WHEN_FAILED: Final = "${{ failure() }}"
 _SHELL_OPERATORS: Final = ("|", "&", ";")
 _LONGEST_INTERVAL: Final = 60
 #: Each test worker holds 1 to 1.7 GB before its first test and levels off at
-#: 3 to 4 GB (one reached 5.5 GB). Four of them used the hosted runner's 16 GB
-#: and 3 GB swap whatever the shard size, and the runner was lost mid-test.
-_MOST_SHARD_WORKERS: Final = 3
+#: 3 to 5 GB (one reached 6.8 GB). Four of them, and then three, used the hosted
+#: runner's 16 GB and 3 GB swap whatever the shard size, and the runner was lost
+#: mid-test.
+_MOST_SHARD_WORKERS: Final = 2
 #: Tests in the population bundle frontend sources whose ``@fixtures`` imports
 #: resolve only into a build tree, which a hosted runner holds only once the
 #: window projections are produced.
@@ -305,7 +306,7 @@ def test_the_shard_rule_reports_a_shard_job_without_chromium() -> None:
     assert _shard_violations(document) == ["tests runs the shard population without provisioning Chromium"]
 
 
-@pytest.mark.parametrize("workers", ["4", "auto", ""])
+@pytest.mark.parametrize("workers", ["3", "4", "auto", ""])
 def test_the_shard_rule_reports_more_workers_than_the_runner_holds(workers: str) -> None:
     document = _live()
     env = document["jobs"]["tests"]["env"]
