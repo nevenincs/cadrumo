@@ -56,6 +56,7 @@ from .modelo_200_casilla_ids import (
     M200_CUOTA_INTEGRA_CASILLA,
     M200_RESERVA_CAPITALIZACION_CASILLA,
     M200_RESULTADO_CONTABLE_CASILLA,
+    edition_casilla_id,
 )
 from .modelo_200_turnover import turnover_binding_values
 from .published_authority import published_snapshot, published_source_reference
@@ -153,9 +154,10 @@ def _calculate(
         M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("0"),
         M200_BIN_APLICADA_CASILLA: Decimal("0"),
     }
-    casilla_inputs.update({_casilla(raw): _MARKED for raw in marked})
-    casilla_inputs.update(inputs or {})
     snapshot = published_snapshot(_M200, filing_year=exercise, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+    declared = {casilla.id for casilla in snapshot.revision.casillas}
+    casilla_inputs.update({edition_casilla_id(declared, raw): _MARKED for raw in marked})
+    casilla_inputs.update(inputs or {})
     return calculate_registry_snapshot(
         snapshot,
         inputs=casilla_inputs,
@@ -243,7 +245,7 @@ def test_nueva_creacion_takes_fifteen(exercise: int) -> None:
 def test_entidad_patrimonial_takes_the_general_rate_whatever_its_size_or_age(exercise: int) -> None:
     """Casilla 00066 marked, new and below 1 millón: still 25, 25.000 (L14671-14675, L14682-14683)."""
     values = _calculate(
-        exercise, resultado=Decimal("100000"), incn=_INCN_MICRO, new_entity=_MARKED, marked=("00066",)
+        exercise, resultado=Decimal("100000"), incn=_INCN_MICRO, new_entity=_MARKED, marked=("DP200001:00066",)
     ).values
 
     assert values[_TIPO_GRAVAMEN] == _tipo(exercise, "25")
@@ -253,7 +255,9 @@ def test_entidad_patrimonial_takes_the_general_rate_whatever_its_size_or_age(exe
 @pytest.mark.parametrize("exercise", _EXERCISES)
 def test_ley_49_2002_entity_takes_ten(exercise: int) -> None:
     """Casilla 00001 marked: 10, 100.000 x 10 / 100 = 10.000 (L14724)."""
-    values = _calculate(exercise, resultado=Decimal("100000"), form="sin_fines_lucrativos", marked=("00001",)).values
+    values = _calculate(
+        exercise, resultado=Decimal("100000"), form="sin_fines_lucrativos", marked=("DP200001:00001",)
+    ).values
 
     assert values[_TIPO_GRAVAMEN] == _tipo(exercise, "10")
     assert values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("10000.00")
@@ -290,19 +294,19 @@ def test_cooperativa_stating_no_protection_is_refused(exercise: int) -> None:
 @pytest.mark.parametrize(
     "flag",
     [
-        "00024",
-        "00034",
-        "00063",
+        "DP200001:00024",
+        "DP200001:00034",
+        "DP200001:00063",
         "DP200001:00083",
-        "00015",
-        "00079",
-        "00003",
+        "DP200001:00015",
+        "DP200001:00079",
+        "DP200001:00003",
         "DP200001:00004",
         "00008",
-        "00012",
-        "00048",
-        "00002",
-        "00080",
+        "DP200001:00012",
+        "DP200001:00048",
+        "DP200001:00002",
+        "DP200001:00080",
     ],
 )
 def test_a_regime_with_its_own_rate_is_refused_not_given_the_general_one(exercise: int, flag: str) -> None:
@@ -395,6 +399,8 @@ def test_bin_ceiling_rises_by_the_rentas_outside_the_limit(exercise: int) -> Non
 @pytest.mark.parametrize("exercise", _EXERCISES)
 def test_bin_ceiling_of_a_nueva_creacion_marking_00070_is_the_stock(exercise: int) -> None:
     """Art. 26.3 LIS: no límite, so the whole 9.000.000 stock may be compensated (L3183-3192)."""
-    values = _calculate(exercise, resultado=_BIN_BASE_PREVIA, bin_stock=_BIN_STOCK_HELD, marked=("00070",)).values
+    values = _calculate(
+        exercise, resultado=_BIN_BASE_PREVIA, bin_stock=_BIN_STOCK_HELD, marked=("DP200001:00070",)
+    ).values
 
     assert values[_BIN_MAXIMA] == Decimal("9000000.00")
