@@ -31,7 +31,7 @@ from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ...core.logging import get_logger
 from ...core.paths import effective_storage_root
 from ...core.profile_session import ProfileSessionRefusalReason
-from ...core.time.clock import now as clock_now
+from ...core.time.clock import wall_now
 from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileError
 from .authentication import ProfilePasswordProofOperation
 from .capsule_record import ProfileRecordSession
@@ -267,11 +267,12 @@ def publish_created_profile_session(
         dek: The unlocked data-encryption key the create span established.
             Copied into the session's own buffer; the caller keeps ownership
             of the bytes it passed.
-        now: UTC evaluation instant; the canonical clock when omitted.
+        now: UTC evaluation instant; the wall clock when omitted, so a
+            frozen document clock never dates the session's deadlines.
         profile_decode_context: Decode context of the pinned authority
             operation the registration ran under.
     """
-    instant = clock_now() if now is None else now
+    instant = wall_now() if now is None else now
     storage_root = effective_storage_root()
     idle_minutes, absolute_minutes = _bucket_session_windows()
     absolute_deadline = instant + timedelta(minutes=absolute_minutes)
@@ -383,7 +384,7 @@ def authenticate_profile_candidate(
     """
     if cancellation is not None:
         cancellation.raise_if_cancelled()
-    instant = clock_now() if now is None else now
+    instant = wall_now() if now is None else now
     storage_root = effective_storage_root()
     target = resolve_login_target(str(bucket_id))
     if target.bucket_id != str(bucket_id):
@@ -426,7 +427,7 @@ def authenticate_profile_candidate(
 
 def _require_live_receipt_candidate(session: ProfileBucketSessionPort) -> None:
     """Refuse retired or expired proof, including time spent acquiring custody."""
-    instant = clock_now()
+    instant = wall_now()
     if session.sealed or instant < session.opened_at:
         raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.CUSTODY_CHANGED)
     if instant >= session.absolute_deadline:
@@ -485,7 +486,7 @@ def authenticate_profile_for_invocation(
     It closes a displaced local session because this process holds one profile's
     custody at a time. The returned outcome is always process-scoped.
     """
-    instant = clock_now() if now is None else now
+    instant = wall_now() if now is None else now
     storage_root = effective_storage_root()
     target = resolve_login_target(name)
     candidate = _authenticate_unthrottled_candidate(

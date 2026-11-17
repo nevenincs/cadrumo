@@ -99,12 +99,7 @@ export type Problem =
       quiet?: boolean;
     };
 export type RuleProblem =
-  | "choose_kind"
-  | "country_letters"
-  | "currency_letters"
-  | "choose_rate"
-  | "no_line"
-  | "payment_id_shape";
+  "choose_kind" | "choose_rate" | "no_line" | "payment_id_shape";
 
 const grammar = (refusal: GrammarRefusal): Problem => ({
   kind: "grammar",
@@ -340,9 +335,6 @@ export const CREATION_INVARIANTS = [
 ] as const;
 export type CreationInvariant = (typeof CREATION_INVARIANTS)[number];
 
-const COUNTRY = /^[A-Za-z]{2}$/;
-const CURRENCY = /^[A-Za-z]{3}$/;
-
 /** The retención rate a draft holds, read as points: the draft takes `15`,
  * `0.5` or `0.5%` as percentages, so a bare number is never taken for a
  * fraction. The value is the fraction the wire carries. */
@@ -396,12 +388,6 @@ export function readDraft(
     textLimit("invoice_counterparty_name"),
   );
   note("counterparty_name", name.problem);
-  const country = draft.country.trim();
-  if (country !== "" && !COUNTRY.test(country))
-    problems.counterparty_country = { kind: "rule", rule: "country_letters" };
-  const currency = draft.currency.trim();
-  if (currency !== "" && !CURRENCY.test(currency))
-    problems.currency = { kind: "rule", rule: "currency_letters" };
   const number = textField(draft.number);
   note("invoice_number", number.problem);
   const issued = parseIsoDate(draft.issuedAt);
@@ -429,10 +415,9 @@ export function readDraft(
       operation_date: operation.kind === "value" ? operation.value : null,
       counterparty_name: name.value,
       counterparty_tax_id: taxId.value,
-      counterparty_country: COUNTRY.test(country)
-        ? country.toUpperCase()
-        : null,
-      currency: CURRENCY.test(currency) ? currency.toUpperCase() : null,
+      // The codes go as held: the ledger's answer is what refuses one.
+      counterparty_country: blankOr(draft.country.trim()),
+      currency: blankOr(draft.currency.trim()),
       iva_category: blankOr(draft.ivaCategory),
       operation_type: operationKey(draft.operationType),
       rectifies_invoice_number:
@@ -589,7 +574,8 @@ export function checkDraft(
     invariants: {
       counterparty:
         preview.counterparty_name != null && !typed.counterparty_name,
-      country: preview.counterparty_country != null,
+      country:
+        preview.counterparty_country != null && !problems.counterparty_country,
       line: lines,
       totals:
         lines &&
@@ -744,7 +730,6 @@ export function correctionPreview(
 ): InvoicePreviewRequest {
   const operation = parseIsoDate(draft.operationDate);
   const retention = correctionRetention(invoice, draft);
-  const country = draft.country.trim().toUpperCase();
   return {
     kind: invoice.kind,
     invoice_class: draft.invoiceClass,
@@ -754,7 +739,7 @@ export function correctionPreview(
         ? textField(draft.rectifies).value
         : null,
     counterparty_tax_id: invoice.counterparty_tax_id,
-    counterparty_country: COUNTRY.test(country) ? country : null,
+    counterparty_country: blankOr(draft.country.trim()),
     iva_category: blankOr(draft.ivaCategory),
     issued_at: invoice.issued_at,
     operation_date: operation.kind === "value" ? operation.value : null,
@@ -815,12 +800,8 @@ export function checkCorrection(
     problems.counterparty_name = { kind: "missing" };
   else if (name.value !== invoice.counterparty_name)
     set("counterparty_name", name.value);
-  const country = draft.country.trim().toUpperCase();
-  if (!COUNTRY.test(country))
-    problems.counterparty_country =
-      country === ""
-        ? { kind: "missing" }
-        : { kind: "rule", rule: "country_letters" };
+  const country = draft.country.trim();
+  if (country === "") problems.counterparty_country = { kind: "missing" };
   else if (country !== invoice.counterparty_country)
     set("counterparty_country", country);
   // Notes are never cleared to nothing: an empty note is the empty text.

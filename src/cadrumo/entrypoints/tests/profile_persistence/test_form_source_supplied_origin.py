@@ -17,6 +17,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -48,7 +49,6 @@ from .test_e2e_ledger_m130_retenciones import (
     _persist_ledger,
     _seed_taxpayer_profile,
     _work_unit,
-    secure_objects,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

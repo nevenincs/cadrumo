@@ -83,12 +83,16 @@ def record_leaf(
     family: str,
     token: str,
     *,
+    handlers: str,
     payloads: str,
     result: str,
     policy: ExecutionPolicySpec,
     parameters: tuple[ArgumentSpec | OptionSpec, ...] = (),
 ) -> CommandSpec:
-    """Return one leaf of a family, bound to its handler and its result schema in ``payloads``."""
+    """Return one leaf of a family, bound to its handler in ``handlers`` and its result schema in ``payloads``.
+
+    Each module is named whole by the caller, so the import gate can close the set of targets it declares.
+    """
     parent = f"{_PARENT}_{family}"
     return CommandSpec(
         f"{parent}_{token}",
@@ -100,7 +104,7 @@ def record_leaf(
         InvocationSpec(context_parameter="ctx"),
         (*parameters, _LANGUAGE),
         policy,
-        LazyBinding.available(DeferredTarget(f".{family}", f"{family}_{token}", __package__)),
+        LazyBinding.available(DeferredTarget(handlers, f"{family}_{token}", __package__)),
         ResultSchemaSpec(
             SchemaState.TARGET,
             DeferredTarget(payloads, result, __package__),
@@ -110,25 +114,50 @@ def record_leaf(
 
 
 def record_family_specs(
-    family: str, noun: str, *, payloads: str, extra: tuple[CommandSpec, ...] = ()
+    family: str, noun: str, *, handlers: str, payloads: str, extra: tuple[CommandSpec, ...] = ()
 ) -> tuple[CommandSpec, ...]:
     """Return the group and the four row leaves of one record family, then ``extra``."""
     value = _option("value", "--value", f"cli.config.profile.{family}.value_help")
     clear = _option("clear", "--clear", f"cli.config.profile.{family}.clear_help")
     row = record_row_argument(family)
 
-    def leaf(
-        token: str, policy: ExecutionPolicySpec, parameters: tuple[ArgumentSpec | OptionSpec, ...] = ()
-    ) -> CommandSpec:
-        result = f"ConfigProfile{noun}{token.capitalize()}Result"
-        return record_leaf(family, token, payloads=payloads, result=result, policy=policy, parameters=parameters)
-
     return (
         _group(family),
-        leaf("add", ENCRYPTED_WRITE, (value,)),
-        leaf("edit", ENCRYPTED_WRITE, (row, value, clear)),
-        leaf("list", ENCRYPTED_READ),
-        leaf("remove", ENCRYPTED_DESTRUCTIVE, (row,)),
+        record_leaf(
+            family,
+            "add",
+            handlers=handlers,
+            payloads=payloads,
+            result=f"ConfigProfile{noun}AddResult",
+            policy=ENCRYPTED_WRITE,
+            parameters=(value,),
+        ),
+        record_leaf(
+            family,
+            "edit",
+            handlers=handlers,
+            payloads=payloads,
+            result=f"ConfigProfile{noun}EditResult",
+            policy=ENCRYPTED_WRITE,
+            parameters=(row, value, clear),
+        ),
+        record_leaf(
+            family,
+            "list",
+            handlers=handlers,
+            payloads=payloads,
+            result=f"ConfigProfile{noun}ListResult",
+            policy=ENCRYPTED_READ,
+        ),
+        record_leaf(
+            family,
+            "remove",
+            handlers=handlers,
+            payloads=payloads,
+            result=f"ConfigProfile{noun}RemoveResult",
+            policy=ENCRYPTED_DESTRUCTIVE,
+            parameters=(row,),
+        ),
         *extra,
     )
 

@@ -19,7 +19,7 @@ from cadrumo.core.config import load_settings
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.paths import effective_storage_root
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
-from cadrumo.core.time.clock import now as current_time
+from cadrumo.core.time.clock import wall_now
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome, ProfileReceiptRefusedError
 
 if TYPE_CHECKING:
@@ -49,7 +49,7 @@ def resume_profile_candidate(
     the OS keyring for a key, renews human life, or changes the active
     frontend context.
     """
-    instant = current_time() if now is None else now
+    instant = wall_now() if now is None else now
     storage_root = effective_storage_root()
     material = load_profile_custody_password_material(bucket_id, root=storage_root)
     outcome, dek = profile_login_session_port().resume_acceleration_receipt_with_key(
