@@ -4525,6 +4525,7 @@ application:
         profile_archive_reconcile: Concilia el archivo del perfil
         profile_arrendamiento: Revisa tus arrendamientos
         profile_ascendiente: Revisa tus ascendientes
+        profile_ascendiente_edit: Completa los datos de tu ascendiente
         profile_complete_setup: Completa la configuración de tu perfil
         profile_create: Crea un perfil
         profile_descendiente: Revisa tus descendientes
