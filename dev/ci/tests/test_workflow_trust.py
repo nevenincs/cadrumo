@@ -4,7 +4,8 @@ The live workflows must satisfy every rule in :mod:`dev.ci.workflow_trust`,
 and each rule is paired with a planted defect, built in isolation, that it
 must report. The two lanes are also pinned to their sides of the split: the
 merge gate runs on hosted runners only, the native lane on self-hosted
-runners only.
+runners only. The merge gate's concurrency is pinned in both directions: a
+pull request's superseded run is cancelled, and no landed head's run is.
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ from ..workflow_trust import (
     admission_violations,
     checkout_credential_violations,
     is_hosted,
+    landed_head_violations,
     pull_request_reachable,
     pull_request_target_violations,
     superseded_run_violations,
@@ -101,6 +103,17 @@ def test_every_checkout_drops_its_credentials() -> None:
 
 def test_a_superseded_pull_request_run_is_cancelled() -> None:
     assert superseded_run_violations(_live()) == []
+
+
+def test_every_landed_head_keeps_its_own_run() -> None:
+    """A push to the development branch neither cancels nor replaces an earlier head's run."""
+    documents = _live()
+    assert landed_head_violations(documents) == []
+    # Anchor: the merge gate is the workflow the rule judges, and it still
+    # runs on a push to the development branch alone.
+    assert triggers(_workflow(_MERGE_GATE))["push"] == {"branches": ["feature/tui"]}
+    judged = [name for name, document in documents if (triggers(document).get("push") or {}).get("branches")]
+    assert _MERGE_GATE in judged
 
 
 def test_the_merge_gate_runs_on_hosted_runners_only() -> None:
@@ -273,3 +286,78 @@ def test_the_superseded_run_rule_reports_a_missing_group_and_a_run_left_going() 
         "planted.yml does not group runs by pull request",
         "planted.yml does not cancel a superseded run",
     ]
+
+
+_PUSH_SUFFIX: Final = "${{ github.event_name == 'push' && format('-{0}', github.sha) || '' }}"
+_PULL_REQUESTS_ONLY: Final = "${{ github.event_name == 'pull_request' }}"
+
+
+def _landing_workflow(*, group: str, cancel: str, job: str = "", branch: str = "feature/tui") -> str:
+    return (
+        f"name: Cadrumo Planted\nconcurrency:\n  group: {group}\n  cancel-in-progress: {cancel}\n"
+        f"on:\n  pull_request:\n  push:\n    branches: [{branch}]\njobs:\n" + (job or _job())
+    )
+
+
+_PER_REQUEST_GROUP: Final = "gate-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name }}"
+
+
+@pytest.mark.parametrize(
+    ("group", "cancel", "expected"),
+    [
+        # The gate as it stood: every landing cancelled the run before it.
+        (
+            _PER_REQUEST_GROUP,
+            "true",
+            [
+                "planted.yml lets the runs of two landed heads share a concurrency group",
+                "planted.yml lets a push cancel the run of an earlier landed head",
+            ],
+        ),
+        # Nothing is cancelled in progress, yet a third landing still replaces
+        # the pending run of the second.
+        (
+            _PER_REQUEST_GROUP,
+            _PULL_REQUESTS_ONLY,
+            ["planted.yml lets the runs of two landed heads share a concurrency group"],
+        ),
+        # A commit in every group would isolate the pushes and is refused all
+        # the same: the suffix must be the push-only one.
+        (
+            _PER_REQUEST_GROUP + "-${{ github.sha }}",
+            _PULL_REQUESTS_ONLY,
+            ["planted.yml lets the runs of two landed heads share a concurrency group"],
+        ),
+        (
+            _PER_REQUEST_GROUP + _PUSH_SUFFIX,
+            "${{ github.event_name != 'workflow_call' }}",
+            ["planted.yml lets a push cancel the run of an earlier landed head"],
+        ),
+    ],
+)
+def test_the_landed_head_rule_reports_each_way_a_landing_ends_an_earlier_run(
+    group: str, cancel: str, expected: list[str]
+) -> None:
+    assert landed_head_violations(_planted(_landing_workflow(group=group, cancel=cancel))) == expected
+
+
+def test_the_landed_head_rule_reports_a_job_level_group() -> None:
+    """A job's own group is shared by every run, whatever the workflow's group ends in."""
+    job = _job(body="    concurrency:\n      group: deploy\n      cancel-in-progress: false\n")
+    planted = _planted(_landing_workflow(group=_PER_REQUEST_GROUP + _PUSH_SUFFIX, cancel=_PULL_REQUESTS_ONLY, job=job))
+    assert landed_head_violations(planted) == [
+        "planted.yml: probe holds a concurrency group a later landed head's run would contend for"
+    ]
+
+
+def test_the_landed_head_rule_accepts_the_isolated_gate_and_leaves_the_release_branch_to_its_own_contract() -> None:
+    """The positive control, and the boundary with the release-branch rule."""
+    isolated = _landing_workflow(group=_PER_REQUEST_GROUP + _PUSH_SUFFIX, cancel=_PULL_REQUESTS_ONLY)
+    assert landed_head_violations(_planted(isolated)) == []
+    # The isolated gate still cancels a pull request's superseded run.
+    assert superseded_run_violations(_planted(isolated)) == []
+    assert landed_head_violations(_planted(_landing_workflow(group=_PER_REQUEST_GROUP, cancel="false"))) == [
+        "planted.yml lets the runs of two landed heads share a concurrency group"
+    ]
+    release = _landing_workflow(group=_PER_REQUEST_GROUP, cancel="true", branch="main")
+    assert landed_head_violations(_planted(release)) == []

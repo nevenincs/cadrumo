@@ -1,5 +1,5 @@
 name: Setup
-description: Provision uv, just, and the repository worktree; optionally provision the registry authority and the browser toolchain.
+description: Provision uv, just, and the repository worktree; optionally provision the registry authority, the browser toolchain and worker containment.
 
 inputs:
   python-version:
@@ -31,10 +31,51 @@ inputs:
       hosted runners, which start empty; a self-hosted runner keeps its own.
     required: false
     default: "false"
+  worker-containment:
+    description: >-
+      When true, start the job user's systemd user manager and prove that a
+      transient user unit runs, which the runtime needs before it will launch
+      a profile worker. For hosted Linux runners, whose job runs outside a
+      login session; a self-hosted runner's own session holds its manager, and
+      lingering would change that machine for good.
+    required: false
+    default: "false"
 
 runs:
   using: composite
   steps:
+    # The runtime launches every profile worker as a transient systemd user
+    # service and refuses with `runtime_containment_unavailable` when it
+    # cannot drive the user manager. A hosted job runs as `runner` outside a
+    # login session, so no `user@<uid>.service` and no bus at
+    # `/run/user/<uid>/bus` exist until lingering starts them. The probe is
+    # the runtime's own launch reduced to a unit that does nothing: the fixed
+    # tool path, a cleared environment and no DBUS_SESSION_BUS_ADDRESS, which
+    # the runtime ignores by design. First, because a job that cannot contain
+    # a worker should say so in a second rather than after the toolchain.
+    - name: Prove worker containment
+      if: inputs.worker-containment == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        refuse() {
+          echo "::error title=Worker containment unavailable::$1; the runtime would refuse every profile worker with runtime_containment_unavailable"
+          exit 1
+        }
+        [ "$RUNNER_OS" = "Linux" ] || refuse "worker-containment starts a systemd user manager and $RUNNER_OS has none"
+        user="$(id -un)"
+        uid="$(id -u)"
+        bus="/run/user/${uid}/bus"
+        sudo loginctl enable-linger "$user" || refuse "loginctl enable-linger ${user} failed"
+        sudo systemctl start "user@${uid}.service" || refuse "user@${uid}.service did not start"
+        for _ in $(seq 1 300); do
+          [ -S "$bus" ] && break
+          sleep 0.1
+        done
+        [ -S "$bus" ] || refuse "no systemd user bus at ${bus} thirty seconds after user@${uid}.service started"
+        env -i PATH=/usr/bin:/bin XDG_RUNTIME_DIR="/run/user/${uid}" /usr/bin/systemd-run --user --collect --wait --property=KillMode=control-group /bin/true || refuse "a transient user unit did not run to exit 0 under user@${uid}.service"
+        echo "worker containment: a transient user unit ran to exit 0 under user@${uid}.service"
+
     # Restored before `just setup-checkout`: the editable build compiles the
     # authority as a side effect unless a current one is already published, so
     # a restore after it would arrive too late to save that compilation.
