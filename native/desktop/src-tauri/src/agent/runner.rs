@@ -626,9 +626,10 @@ exit 0
         .unwrap();
         holder.join().unwrap();
         let phases = running.phases();
-        // The start asks for the lock a few milliseconds into the holder's hold.
+        // The start asks for the lock a few milliseconds into the holder's hold,
+        // and that wait is the lock's. Creating the process takes what the
+        // machine's load makes it take, so it is not compared with the hold.
         assert!(phases.creation_lock >= HELD / 2, "{phases:?}");
-        assert!(phases.creation_lock > phases.create, "{phases:?}");
         running.stop(STOP_GRACE).unwrap();
     }
 

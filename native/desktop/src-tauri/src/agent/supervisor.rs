@@ -774,6 +774,8 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
     let mut early = Vec::new();
     let mut retries = RetryBudget::default();
     let mut serving: Option<String> = None;
+    // Since when the runtime has not read as available, while it has not.
+    let mut runtime_awaited: Option<Instant> = None;
     'supervision: while !shared.closed.load(Ordering::Acquire) {
         if shared.retry_requested.swap(false, Ordering::AcqRel) {
             retries = RetryBudget::default();
@@ -879,6 +881,16 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
         if shared.closed.load(Ordering::Acquire) {
             break;
         }
+        if matches!(allowed, Allowed::Refuse(Refusal::RuntimeUnavailable)) {
+            runtime_awaited.get_or_insert_with(Instant::now);
+        } else {
+            runtime_awaited = None;
+        }
+        // A runtime still starting, or briefly away, is waited for until its
+        // readiness bound: only a runtime that stays unavailable past it is
+        // refused.
+        let awaiting_runtime =
+            runtime_awaited.is_some_and(|since| since.elapsed() < shared.startup_timeout);
         if let Some(preparing) = lock(&shared.preparing).as_ref()
             && !matches!(&allowed, Allowed::Serve(profile) if *profile == preparing.profile)
         {
@@ -1033,6 +1045,7 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                 let _ = stop_running(&shared, None, cause).await;
                 match &allowed {
                     Allowed::Pending => publish(&shared, State::Stopped),
+                    Allowed::Refuse(_) if awaiting_runtime => await_runtime(&shared),
                     Allowed::Refuse(code) => {
                         if *code == Refusal::SignedOut {
                             retries = RetryBudget::default();
@@ -1049,6 +1062,7 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                 }
             }
             (None, Allowed::Pending) => publish(&shared, State::Stopped),
+            (None, Allowed::Refuse(_)) if awaiting_runtime => await_runtime(&shared),
             (None, Allowed::Refuse(code)) => {
                 // A failed observation is not evidence of a new sign-in. Keep
                 // the same profile's budget through transient runtime failures.
@@ -1078,7 +1092,14 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
         // Nothing is read on a timer: the next round starts at a new sign-in
         // observation, an explicit wake, a launcher failure, or the one
         // deadline this round set (a retry, or a start that must have finished).
-        let due = next_due(&shared, &retries);
+        let due = next_due(&shared, &retries)
+            .into_iter()
+            .chain(
+                runtime_awaited
+                    .map(|since| since + shared.startup_timeout)
+                    .filter(|at| *at > Instant::now()),
+            )
+            .min();
         // Starting this round may have installed a different held session.
         let failed_person = person_failed(&shared);
         tokio::pin!(failed_person);
@@ -1092,7 +1113,15 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
         loop {
             tokio::select! {
                 _ = &mut wake => break,
-                () = &mut changed => break,
+                () = &mut changed => {
+                    // A sign-in change awaits its fresh observation as
+                    // Stopped: a read made meanwhile waits for the start
+                    // rather than being told the person is signed out.
+                    if lock(&shared.status).state == (State::Refused { code: Refusal::SignedOut }) {
+                        publish(&shared, State::Stopped);
+                    }
+                    break;
+                }
                 () = &mut deadline => break,
                 (generation, error) = &mut failed_person => {
                     if retire_failed_person(&shared, generation, error).await {
@@ -1177,6 +1206,15 @@ async fn retire_failed_person(
 
 /// The one moment this round must look again without a new observation: when
 /// a refused start may be retried, or when a starting launcher has had its time.
+/// Waits for a runtime that does not read as available yet, as Stopped: a
+/// start follows once it does, and a read made meanwhile waits for it.
+fn await_runtime(shared: &Shared) {
+    if lock(&shared.status).state != State::Stopped {
+        log::info!("agent waits for the runtime to read as available");
+    }
+    publish(shared, State::Stopped);
+}
+
 fn next_due(shared: &Shared, retries: &RetryBudget) -> Option<Instant> {
     let retry = retries.after.filter(|at| *at > Instant::now());
     retry.into_iter().chain(startup_due(shared)).min()
