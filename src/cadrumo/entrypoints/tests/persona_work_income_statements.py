@@ -24,8 +24,8 @@ from ...application.modelo.workbench_operations import (
     ModeloWorkbenchFormRequest,
 )
 from ...application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1
+from ...core.absence_attestation_family import AbsenceAttestationFamily
 from ...core.external_constants import OutputLanguage
-from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...tests.personas import WorkIncomeNoneStatement, YearEnvelope
 from .persona_prior_values import PriorValueAttestationError, SettleOperation
 

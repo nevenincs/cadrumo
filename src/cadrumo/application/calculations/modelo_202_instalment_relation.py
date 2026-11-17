@@ -39,7 +39,7 @@ def modelo_202_modality_for_bucket(
 
 
 def reads_modelo_202_instalment(snapshot: RegistrySnapshot, *, operation: PinnedAuthorityOperation) -> bool:
-    """Return whether the snapshot carries a binding credited from a single Modelo 202 instalment."""
+    """Return whether the :class:`RegistrySnapshot` carries a binding credited from a single Modelo 202 instalment."""
     return any(
         settled_instalment(provider, filing_year=snapshot.filing_year, operation=operation) is not None
         for _, provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)

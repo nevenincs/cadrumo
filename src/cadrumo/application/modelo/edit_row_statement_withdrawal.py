@@ -20,7 +20,10 @@ type RowAttestations = MutableMapping[tuple[BindingId, str], RowCarryAttestation
 
 
 def is_row_stated(revision: ModeloRevision, binding_id: BindingId) -> bool:
-    """Whether the carry of ``binding_id`` is stated row by row."""
+    """Whether the carry of ``binding_id`` is stated row by row.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+    """
     family = next((item.absence_attestation for item in revision.bindings if item.id == binding_id), None)
     return family is not None and family.row_grain
 
@@ -31,6 +34,9 @@ def calculated_row_indexes(
     """The row index of each row ``head`` holds from the source that fills ``binding_id``, by its source identity.
 
     A row statement may speak only of these rows, so a statement never names a row the declaration does not hold.
+
+    Parameter types: ``head`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     binding = next((item for item in revision.bindings if item.id == binding_id), None)
     if head is None or binding is None:
@@ -51,6 +57,8 @@ def withdraw_superseded_row_statements(
     column that now takes the statement, so it is restated there as absence
     where the row states nothing yet; an amount cannot be split, so it is
     withdrawn and those columns stay unstated.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     bindings = {binding.id: binding for binding in revision.bindings}
     stated = bindings[address.binding_id]

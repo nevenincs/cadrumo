@@ -465,6 +465,8 @@ def derived_selector_for_snapshot(
 
     ``declared_selectors`` defaults to the selectors the revision's profile
     bindings name. See :func:`derived_selector_name` for the choice.
+
+    Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
     """
     declared = declared_profile_selectors(snapshot.revision) if declared_selectors is None else declared_selectors
     return derived_selector_name(stem, authored_year=snapshot_authored_year(snapshot), declared_selectors=declared)
@@ -633,6 +635,8 @@ def resolved_minimo_descendientes_thresholds(
     Returns ``None`` when the revision declares neither parameter, which leaves
     the caller to skip the derivation rather than evaluate eligibility against
     a fabricated ceiling.
+
+    Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
     """
     # A projected year reuses the authored edition's dated parameter values.
     date_context = {"filing_period": date(snapshot_authored_year(snapshot), 12, 31)}
@@ -1025,6 +1029,8 @@ def incremento_guarderia_rows_lacking_cotizaciones(
 
     Empty when the cap or the eligibility ceilings are unresolvable: the increment is then
     unresolved for that reason, not for a missing row fact.
+
+    Parameter types: ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
     """
     cap_anual = guarderia_cap_anual(snapshot)
     thresholds = resolved_minimo_descendientes_thresholds(snapshot)

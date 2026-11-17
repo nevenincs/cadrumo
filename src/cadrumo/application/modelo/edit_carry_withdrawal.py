@@ -46,7 +46,10 @@ from .work_missing_input import CALCULATION_REFUSING_ABSENCE_FAMILIES
 
 
 def calculation_refusing_carry_bindings(revision: ModeloRevision) -> frozenset[BindingId]:
-    """The bindings of ``revision`` whose carry, while unstated, refuses the calculation."""
+    """The bindings of ``revision`` whose carry, while unstated, refuses the calculation.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+    """
     return frozenset(
         binding.id
         for binding in revision.bindings
@@ -73,7 +76,10 @@ def stated_carry_binding_ids(layer: CalculationOperatorLayer) -> frozenset[Bindi
 
 
 def holds_carry_statement(head: CalculationRevision, carry_bindings: frozenset[BindingId]) -> bool:
-    """Whether ``head`` holds a statement on one of ``carry_bindings``."""
+    """Whether ``head`` holds a statement on one of ``carry_bindings``.
+
+    Parameter types: ``head`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     layer = head.operator_layer
     return layer is not None and bool(stated_carry_binding_ids(layer) & carry_bindings)
 
@@ -85,6 +91,8 @@ def holds_only_carry_statements(head: CalculationRevision, carry_bindings: froze
     earlier return the application does not hold. An unknown operator layer, a
     typed figure, a clear, a detail row or any other caller input is something
     the filer would lose.
+
+    Parameter types: ``head`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     context = caller_context_of(head)
     layer = context.operator_layer
@@ -118,7 +126,10 @@ def _holds_other_caller_input(context: CalculationCallerContext) -> bool:
 
 
 def recorded_as_filed(head: CalculationRevision, work_unit: WorkUnit) -> bool:
-    """Whether the declaration, or the head the edit starts from, is recorded as filed."""
+    """Whether the declaration, or the head the edit starts from, is recorded as filed.
+
+    Parameter types: ``head`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     return (
         head.state in FILED_REVISION_STATES
         or work_unit.filed_calculation_revision_id is not None
@@ -129,7 +140,10 @@ def recorded_as_filed(head: CalculationRevision, work_unit: WorkUnit) -> bool:
 def carry_withdrawal_block(
     head: CalculationRevision, work_unit: WorkUnit, carry_bindings: frozenset[BindingId]
 ) -> ModeloEditCarryWithdrawalBlock | None:
-    """Why the withdrawal cannot return the work unit to no calculation, or ``None`` when it can."""
+    """Why the withdrawal cannot return the work unit to no calculation, or ``None`` when it can.
+
+    Parameter types: ``head`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     if recorded_as_filed(head, work_unit):
         return ModeloEditCarryWithdrawalBlock.FILED
     if not holds_only_carry_statements(head, carry_bindings):

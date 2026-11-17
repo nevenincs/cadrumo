@@ -10,9 +10,9 @@ from typing import Final, Self
 
 from pydantic import TypeAdapter, ValidationError
 
+from ...core.absence_attestation_family import AbsenceAttestationFamily
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
-from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...domain.calculations.registry.binding_targets import sole_bound_casilla
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements

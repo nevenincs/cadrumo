@@ -4,6 +4,8 @@ A row projects the facts the profile stores for it, keyed by their schema leaf a
 rendered in the one canonical text form. A leaf the row does not state is absent,
 never a default. ``row`` is the stable key a lease and a ledger row name: the
 position of the row in its profile section, which is never reused.
+
+The schemas are declared as an :class:`OutputSchema`.
 """
 
 from __future__ import annotations

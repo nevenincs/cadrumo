@@ -33,10 +33,10 @@ from ....application.modelo.edit_models import (
 from ....application.modelo.trabajo_income_findings import TrabajoIncomeFinding, trabajo_income_findings
 from ....application.modelo.work_form_models import ModeloWorkForm
 from ....application.modelo.work_form_service import load_modelo_work_form
+from ....core.absence_attestation_family import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.external_constants import OutputLanguage
 from ....core.retencion_soportada import RetencionSoportadaClase
-from ....domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.modelos.calculation_revision import CalculationRevision

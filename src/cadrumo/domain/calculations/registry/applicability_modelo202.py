@@ -438,6 +438,8 @@ def modelo_202_bindings_outside_method(
     binding counts only when at least one casilla carries it, every such
     casilla lies in the other method's section, and no formula reads it
     directly.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     other_section = modelo_202_method_section(
         art_40_3=not art_40_3, effective_date=date(filing_year, 12, 31), authority=authority
@@ -476,6 +478,8 @@ def modelo_202_filing_obligation(
     calendar decides each instalment through
     :func:`modelo_202_instalment_applicability`. Any verdict other than
     applicable passes through unchanged.
+
+    Parameter types: ``profile`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
     """
     if entity_applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
         return entity_applicability

@@ -16,6 +16,8 @@ from another state and income in kind all leave the affected boxes open.
 The resolver never names a payer by its tax identifier: a note names the payer
 by the name the position states, and provenance names a payer record by its
 keyed ``payer_ref``.
+
+The bindings and row columns it resolves are those of the pinned :class:`ModeloRevision`.
 """
 
 from __future__ import annotations

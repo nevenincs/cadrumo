@@ -327,6 +327,9 @@ def observe_renta_inmueble_rows(
     so a statement made since the calculation moves nothing. A refused cohort
     observes no row. Returns ``None`` when a store cannot be read: an unread
     store is never proof that nothing moved.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     context = CalculationSourceContext(
         bucket_id=work_unit.bucket_id,

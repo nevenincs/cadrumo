@@ -108,7 +108,10 @@ def prorrata_seed_verification_findings(
     observation_repository: CalculationObservationRepositoryProtocol,
     operation: PinnedAuthorityOperation,
 ) -> tuple[ProrrataSeedVerificationFinding, ...]:
-    """Return the prorrata seed findings for a Modelo 303 draft, or none where the gate does not apply."""
+    """Return the prorrata seed findings for a Modelo 303 draft, or none where the gate does not apply.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     if target.state is not CalculationRevisionState.BORRADOR or not _gate_applies(work_unit):
         return ()
     register = require_prorrata_register_coordinates_current(prorrata_register_repository.load(), operation=operation)
@@ -233,7 +236,10 @@ def require_filed_prorrata_seed_current(
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Refuse re-verifying a filed Modelo 303 whose provisional prorrata the register has since replaced."""
+    """Refuse re-verifying a filed Modelo 303 whose provisional prorrata the register has since replaced.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     if target.state is not CalculationRevisionState.PRESENTADO or not _gate_applies(work_unit):
         return
     register = require_prorrata_register_coordinates_current(prorrata_register_repository.load(), operation=operation)

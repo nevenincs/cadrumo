@@ -22,6 +22,8 @@ What the boxes say beyond the records:
 
 Nothing here names an issuer or a plan by its tax identifier; provenance names a
 record by its keyed references.
+
+The placement rows are those of the pinned :class:`ModeloRevision`.
 """
 
 from __future__ import annotations

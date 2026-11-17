@@ -313,6 +313,8 @@ def raise_iva_wallet_precondition(
     reason and the evidence to the taxpayer, and the amount too where the decision
     records none. A refusal for either kind of reason that does not name the
     period is an invariant breach. Nothing is written either way.
+
+    Parameter types: ``carry_revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     action_id, action_argument_values, missing_action_arguments, next_step = _wallet_action(
         reason_code, carry_period=carry_period, carry_revision=carry_revision, local_amount=local_amount

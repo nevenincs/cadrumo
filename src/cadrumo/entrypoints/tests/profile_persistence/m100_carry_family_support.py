@@ -15,10 +15,10 @@ from ....application.modelo.operation_shared import MODELO_EDIT_APPLY_OPERATION_
 from ....application.modelo.work_form_models import ModeloFormCarryAttestation, ModeloWorkForm
 from ....application.modelo.work_form_service import load_modelo_work_form
 from ....application.operations.models import OperationRequest
+from ....core.absence_attestation_family import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import OutputLanguage
-from ....domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS

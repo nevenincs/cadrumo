@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from ...domain.calculations.registry.binding_absence_attestation import PRIOR_CARRY_FAMILIES
+from ...core.absence_attestation_family import PRIOR_CARRY_FAMILIES
 from ..operator_actions.models import ActionReference
 from ..operator_surface.models import ManifestActionProfile
 

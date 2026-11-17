@@ -69,6 +69,8 @@ def values_with_operator_stated_figures(target: CalculationRevision) -> Mapping[
     is the value the checks bounding the open box read, since it is the
     operator's to give and nothing else can bound it. A box not yet stated
     keeps no value.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     values = dict(target.casilla_values)
     for outcome in target.unresolved_outcomes:
@@ -87,7 +89,10 @@ def append_operator_stated_outcome_findings(
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> None:
-    """Block the verification for each open box whose operator box is not stated, with the door that states it."""
+    """Block the verification for each open box whose operator box is not stated, with the door that states it.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+    """
     for outcome in target.unresolved_outcomes:
         box = _operator_box(outcome)
         if box is None or _stated_figure(target, box) is not None:

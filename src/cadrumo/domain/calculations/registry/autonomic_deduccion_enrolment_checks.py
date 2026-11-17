@@ -41,7 +41,10 @@ __all__ = ["autonomic_deduccion_enrolments", "check_autonomic_deduccion_enrolmen
 def autonomic_deduccion_enrolments(
     revision: ModeloRevision,
 ) -> Iterator[tuple[FormulaDefinition, AutonomicDeduccionEnrolment]]:
-    """Each formula of ``revision`` that enrols a comunidad deducción, with its enrolment, in declared order."""
+    """Each formula of ``revision`` that enrols a comunidad deducción, with its enrolment, in declared order.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+    """
     for formula in revision.formulas:
         if formula.autonomic_deduccion is not None:
             yield formula, formula.autonomic_deduccion
@@ -161,7 +164,10 @@ def _check_income_base(
 
 
 def check_autonomic_deduccion_enrolments(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
-    """Record a failure on ``checker`` for each enrolment reference the hydrated ``revision`` does not resolve."""
+    """Record a failure on ``checker`` for each enrolment reference the hydrated ``revision`` does not resolve.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+    """
     enrolled_roles: dict[str, str] = {}
     for formula, enrolment in autonomic_deduccion_enrolments(revision):
         owner = f"formula {formula.id} autonomic_deduccion"

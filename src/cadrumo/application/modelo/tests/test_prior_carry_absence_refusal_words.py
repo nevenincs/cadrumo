@@ -20,12 +20,12 @@ from datetime import UTC, datetime
 
 import pytest
 
+from ....core.absence_attestation_family import AbsenceAttestationFamily
 from ....core.aggregation import BindingSourceKind
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.calculations.registry.schema import RegistrySnapshot

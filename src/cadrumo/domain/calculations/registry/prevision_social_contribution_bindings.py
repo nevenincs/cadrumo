@@ -123,6 +123,8 @@ def prevision_social_contribution_revision_failures(revision: ModeloRevision) ->
     row names must be bound to exactly one family binding, and every family binding
     fills exactly one box. A placed box the edition does not declare is refused by
     the placement rows' own check, so it is not reported here a second time.
+
+    Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
     """
     failures: list[str] = []
     placed = _placed_declared_casillas(revision)

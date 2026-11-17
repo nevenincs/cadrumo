@@ -19,6 +19,8 @@ The write refuses, before anything is stored:
 * an overwrite or removal under a revision that is no longer the stored row's;
 * a record whose evidence fingerprint names bytes the profile's attachment
   custody does not hold, or holds in a state that no longer hashes to it.
+
+The placement check reads the pinned :class:`ModeloRevision`.
 """
 
 from __future__ import annotations
