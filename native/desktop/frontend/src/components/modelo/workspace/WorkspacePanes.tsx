@@ -219,14 +219,61 @@ function formLeast(element: HTMLElement, bandKeep: number): FormLeast {
   };
 }
 
+/** The width the form column has with the details under it: its own track
+ * and the details' track beside it, which is empty when they are under the
+ * form. Null where the area's tracks cannot be read. */
+function stackedWidth(column: HTMLElement): number | null {
+  const area = column.parentElement;
+  if (!area) return null;
+  const tracks = getComputedStyle(area)
+    .gridTemplateColumns.split(" ")
+    .map(parseFloat);
+  const [, form, beside] = tracks;
+  if (
+    tracks.length !== 3 ||
+    form === undefined ||
+    beside === undefined ||
+    !Number.isFinite(form) ||
+    !Number.isFinite(beside)
+  )
+    return null;
+  return form + beside;
+}
+
+/** `formLeast` with the column laid out `width` wide. A band above the form
+ * wraps onto more lines in the narrower column beside the details, so what
+ * stacking leaves the form is measured at the width stacking draws it, and
+ * the column is put back before anything is painted. */
+function formLeastAt(
+  column: HTMLElement,
+  width: number | null,
+  bandKeep: number,
+): FormLeast {
+  if (width === null || Math.abs(column.offsetWidth - width) < 1)
+    return formLeast(column, bandKeep);
+  const drawn = column.style.width;
+  column.style.width = `${width}px`;
+  try {
+    return formLeast(column, bandKeep);
+  } finally {
+    column.style.width = drawn;
+  }
+}
+
+/** What the form column holds as drawn, and as it would hold with the
+ * details under it, which decides whether they can go there. */
+type FormRoom = { drawn: FormLeast; stacked: FormLeast };
+
 /** The form column's least room, with what is drawn under the details
  * counted as fixed, as the window, the form and the staged bar change. */
 function useFormLeast(
   column: RefObject<HTMLDivElement | null>,
   below: RefObject<HTMLDivElement | null>,
-): FormLeast {
-  const [fixed, setFixed] = useState(0);
-  const [band, setBand] = useState(0);
+): FormRoom {
+  const [room, setRoom] = useState<FormRoom>({
+    drawn: { fixed: 0, band: 0 },
+    stacked: { fixed: 0, band: 0 },
+  });
   useLayoutEffect(() => {
     const form = column.current;
     const under = below.current;
@@ -239,9 +286,21 @@ function useFormLeast(
         if (scroller) observer.observe(scroller);
         watched = scroller;
       }
-      const least = formLeast(form, BAND_KEEP_REM * remPx());
-      setFixed(Math.ceil(least.fixed + under.offsetHeight));
-      setBand(Math.ceil(least.band));
+      const keep = BAND_KEEP_REM * remPx();
+      const rounded = (least: FormLeast): FormLeast => ({
+        fixed: Math.ceil(least.fixed + under.offsetHeight),
+        band: Math.ceil(least.band),
+      });
+      const drawn = rounded(formLeast(form, keep));
+      const stacked = rounded(formLeastAt(form, stackedWidth(form), keep));
+      setRoom((now) =>
+        now.drawn.fixed === drawn.fixed &&
+        now.drawn.band === drawn.band &&
+        now.stacked.fixed === stacked.fixed &&
+        now.stacked.band === stacked.band
+          ? now
+          : { drawn, stacked },
+      );
     };
     const observer = new ResizeObserver(measure);
     observer.observe(form);
@@ -249,7 +308,7 @@ function useFormLeast(
     measure();
     return () => observer.disconnect();
   }, [column, below]);
-  return { fixed, band };
+  return room;
 }
 
 /** `roomy` as first measured, kept while the area stays drawn; null until
@@ -388,9 +447,14 @@ function chosenOrAutomatic(
 function useArrangement(
   panes: WorkspacePanes,
   room: { width: number; height: number } | null,
-  least: FormLeast,
+  formRoom: FormRoom,
   hasDetails: boolean,
 ) {
+  // Whether and how the details go under the form is judged on the column as
+  // stacking draws it, whichever arrangement is drawn now: judged beside the
+  // details, a band wrapped by the narrower column would hold the details
+  // beside a form that has room for them under it.
+  const least = formRoom.stacked;
   const rem = remPx();
   const { width, height } = room ?? {
     width: window.innerWidth,
@@ -431,7 +495,7 @@ function useArrangement(
     }),
     // Only the form's own least: the details are stacked only where the
     // area holds them, so the area is never drawn taller for them.
-    areaLeast: least.fixed > 0 ? least.fixed : 0,
+    areaLeast: formRoom.drawn.fixed > 0 ? formRoom.drawn.fixed : 0,
   };
 }
 
