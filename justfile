@@ -427,6 +427,11 @@ check-operation-contract-manifest:
 fixtures-seed FAMILY="":
     @uv run --no-sync python -m dev.fixture_projections seed {{FAMILY}}
 
+[doc('Produce the window projections the desktop frontend imports, into the build tree of the host preset, for a runner with no native build.')]
+[group('generate')]
+fixtures-seed-window:
+    @uv run --no-sync python -m dev.fixture_projections seed --window
+
 [doc('Produce every fixture projection, or FAMILY, whatever its stamp says.')]
 [group('generate')]
 fixtures-seed-force FAMILY="":
