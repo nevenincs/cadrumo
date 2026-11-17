@@ -30,7 +30,13 @@
 // printed.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, readdirSync, statSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
@@ -724,6 +730,64 @@ test("PSI-00 the run records the live bundle and the host executable", (t) => {
       "the window ran another executable than the freshly staged host",
     );
 });
+
+/** The host's structured log records of this run, oldest first. */
+function hostRecords() {
+  const path = join(runDir, "storage", "logs", "cadrumo-native.jsonl");
+  if (!existsSync(path)) return [];
+  return readFileSync(path, "utf8")
+    .split(/\r?\n/)
+    .filter((line) => line.trim())
+    .map((line) => JSON.parse(line));
+}
+
+/** Refusals a person can act on, which the host says below error. */
+const ACTIONABLE_REFUSALS = new Set([
+  "agent_signed_out",
+  "agent_provider_credential_missing",
+]);
+
+test(
+  "PSI-01 a cold start serves the agent and leaves no session error",
+  { timeout: 240_000 },
+  async (t) => {
+    const line = { case: "cold-start-errors", verdict: "fail" };
+    try {
+      // The agent is ready once the host says so; a cold start may wait for
+      // the runtime, but within its bound and without refusing.
+      await waitFor(
+        () => hostRecords().some((r) => r.service?.event === "agent_ready"),
+        { timeout: 180_000, what: "the agent ready after a cold start" },
+      );
+      // Errors raised while the start settles still reach the count.
+      await sleep(2_000);
+      const refused = hostRecords()
+        .map((r) => r.service)
+        .filter((s) => s?.event === "agent_refused")
+        .map((s) => s.reason)
+        .filter((reason) => !ACTIONABLE_REFUSALS.has(reason));
+      line.refused = refused;
+      const badge = await exec(() => {
+        const mark = document.querySelector(
+          '[data-rail="panel"] [data-slot="badge"]',
+        );
+        return mark
+          ? mark.textContent || mark.getAttribute("data-capped")
+          : null;
+      });
+      line.error_badge = badge;
+      assert.deepEqual(
+        refused,
+        [],
+        "the host refused the agent on a cold start",
+      );
+      assert.equal(badge, null, `the window counts session errors: ${badge}`);
+      line.verdict = "pass";
+    } finally {
+      record(t, line);
+    }
+  },
+);
 
 for (const provider of PROVIDERS) {
   signInCase(
