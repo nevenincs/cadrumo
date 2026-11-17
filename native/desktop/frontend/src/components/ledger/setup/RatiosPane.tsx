@@ -15,10 +15,10 @@ import {
 } from "../../../shell/ledgerGrammar";
 import type { OutputLanguage } from "../../../shell/ledgerClassificationContract";
 import type {
-  LedgerRatiosEligibleResult,
-  LedgerRatiosListResult,
-  LedgerRatiosValidateResult,
-} from "../../../shell/ledgerClassificationSetup";
+  LedgerRatiosEligibleProjection,
+  LedgerRatiosListProjection,
+  LedgerRatiosValidateProjection,
+} from "../../../shell/ledgerClassificationContract";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold, type Landing } from "../WritePause";
 import { formatPercent, heldDecimal } from "../../../shared/numbers";
@@ -39,7 +39,7 @@ import type { SetupProps } from "./setupProps";
 import { setupCall, type SetupCall } from "./setupModel";
 import { grammarText, tokenText } from "./setupWords";
 
-type Eligible = LedgerRatiosEligibleResult["rows"][number];
+type Eligible = LedgerRatiosEligibleProjection["rows"][number];
 
 /**
  * The share of a category used for the activity, set per year: the
@@ -73,7 +73,7 @@ export function RatiosPane({
   const [editing, setEditing] = useState<Record<string, string>>({});
   const [refused, setRefused] = useState<Record<string, string>>({});
   const [validation, setValidation] =
-    useState<SetupCall<LedgerRatiosValidateResult> | null>(null);
+    useState<SetupCall<LedgerRatiosValidateProjection> | null>(null);
   const reload = () => {
     list.reload();
     eligible.reload();
@@ -139,7 +139,7 @@ export function RatiosPane({
   /** How a ratio write landed, on the year's ratios listed again; a list
    * the censo withholds tells nothing. */
   const ratioLanding = (
-    judge: (rows: LedgerRatiosListResult["rows"]) => Landing,
+    judge: (rows: LedgerRatiosListProjection["rows"]) => Landing,
   ) =>
     readLanding(port, "ledger.ratios.list", { year }, (result) =>
       result.outcome === "available" ? judge(result.rows) : "untold",
