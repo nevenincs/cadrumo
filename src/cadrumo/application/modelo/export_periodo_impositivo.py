@@ -88,15 +88,6 @@ def resolve_periodo_impositivo_start(
     )
 
 
-def periodo_impositivo_start_from_facts(*, modelo: str, on: date, profile_values: Mapping[str, str]) -> date:
-    """Return the first day of the período impositivo in progress on ``on`` from the stated facts.
-
-    Raises:
-        FilingProducerSnapshotError: As :func:`periodo_impositivo_from_facts`.
-    """
-    return periodo_impositivo_from_facts(modelo=modelo, on=on, profile_values=profile_values).start
-
-
 def periodo_impositivo_from_facts(*, modelo: str, on: date, profile_values: Mapping[str, str]) -> PeriodoImpositivo:
     """Return the período impositivo in progress on ``on``, and its predecessor's start, from the stated facts.
 
@@ -183,6 +174,5 @@ __all__ = [
     "FECHA_CONSTITUCION_PATH",
     "PeriodoImpositivo",
     "periodo_impositivo_from_facts",
-    "periodo_impositivo_start_from_facts",
     "resolve_periodo_impositivo_start",
 ]

@@ -86,22 +86,6 @@ _REFUSAL_LOCALE_KEYS: Mapping[M200Page002Refusal, str] = {
 
 
 @dataclass(frozen=True, slots=True)
-class M200Page002FamilyAnswer:
-    """One page 002 family as the profile in force answers it, with the fact that decides it.
-
-    ``deciding_fact`` and ``deciding_value`` name the stored fact that made the family
-    not applicable, or that a stated answer was read from; they are absent for a family
-    answered by its rows or left unanswered.
-    """
-
-    projection_kind: str
-    section: str
-    state: M200Page002FamilyState
-    deciding_fact: str | None = None
-    deciding_value: str | None = None
-
-
-@dataclass(frozen=True, slots=True)
 class _Coordinates:
     """What every refusal states about the return it refuses."""
 
@@ -111,52 +95,24 @@ class _Coordinates:
     as_of: date
 
 
-def m200_page_002_family_answers(
-    record: UserProfileRecord | None,
-    *,
-    rules: M200Page002Rules,
-    as_of: date,
-) -> tuple[M200Page002FamilyAnswer, ...]:
-    """Serve how the profile in force on ``as_of`` answers each page 002 family.
+def _family_answer(
+    rule: M200Page002FamilyRule, values: Mapping[str, str], *, rules: M200Page002Rules
+) -> M200Page002FamilyState:
+    """Return how the profile answers one page 002 family.
 
     A family a stored entity form rules out is not applicable whatever else the
     profile holds; otherwise its rows answer it, then its stated answer, and with
     neither it is unanswered.
-
-    Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
     """
-    values = record_to_path_values(record, as_of=as_of)
-    return tuple(_family_answer(rule, values, rules=rules) for rule in rules.families)
-
-
-def _family_answer(
-    rule: M200Page002FamilyRule, values: Mapping[str, str], *, rules: M200Page002Rules
-) -> M200Page002FamilyAnswer:
     form = values.get(rules.entity_form_fact)
     if form is not None and form in rule.not_applicable_forms:
-        return M200Page002FamilyAnswer(
-            projection_kind=rule.projection_kind,
-            section=rule.section,
-            state=M200Page002FamilyState.NOT_APPLICABLE,
-            deciding_fact=rules.entity_form_fact,
-            deciding_value=form,
-        )
+        return M200Page002FamilyState.NOT_APPLICABLE
     if _section_rows(values, rule.section):
-        return M200Page002FamilyAnswer(
-            projection_kind=rule.projection_kind, section=rule.section, state=M200Page002FamilyState.ROWS
-        )
+        return M200Page002FamilyState.ROWS
     stated = None if rule.stated_answer is None else values.get(rule.stated_answer)
     if stated == _STATED_NO:
-        return M200Page002FamilyAnswer(
-            projection_kind=rule.projection_kind,
-            section=rule.section,
-            state=M200Page002FamilyState.STATED_NONE,
-            deciding_fact=rule.stated_answer,
-            deciding_value=stated,
-        )
-    return M200Page002FamilyAnswer(
-        projection_kind=rule.projection_kind, section=rule.section, state=M200Page002FamilyState.UNANSWERED
-    )
+        return M200Page002FamilyState.STATED_NONE
+    return M200Page002FamilyState.UNANSWERED
 
 
 def modelo_200_profile_facts(
@@ -232,7 +188,7 @@ def _family_rows(
     rows = _section_rows(values, rule.section)
     form = values.get(rules.entity_form_fact)
     stated = None if rule.stated_answer is None else values.get(rule.stated_answer)
-    if answer.state is M200Page002FamilyState.NOT_APPLICABLE:
+    if answer is M200Page002FamilyState.NOT_APPLICABLE:
         if rows:
             raise _refusal(
                 M200Page002Refusal.ROWS_CONTRADICT_ANSWER,
@@ -438,9 +394,7 @@ def _refusal(
 
 
 __all__ = [
-    "M200Page002FamilyAnswer",
     "M200Page002FamilyState",
     "M200Page002Refusal",
-    "m200_page_002_family_answers",
     "modelo_200_profile_facts",
 ]

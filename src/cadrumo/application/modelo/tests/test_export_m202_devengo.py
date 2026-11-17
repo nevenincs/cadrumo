@@ -68,7 +68,6 @@ from ..export_periodo_impositivo import (
     CIERRE_EJERCICIO_MES_PATH,
     FECHA_CONSTITUCION_PATH,
     periodo_impositivo_from_facts,
-    periodo_impositivo_start_from_facts,
 )
 from .incn_periodo_anterior_support import nothing_held
 
@@ -162,7 +161,7 @@ def _snapshot(start: date | None) -> FilingProducerSnapshot:
 def _rendered_devengo(records: tuple[ExportRecordDefinition, ...], period: Period, values: Mapping[str, str]) -> str:
     on = instalment_period_in_progress_date(period)
     assert on is not None
-    start = periodo_impositivo_start_from_facts(modelo="202", on=on, profile_values=values)
+    start = periodo_impositivo_from_facts(modelo="202", on=on, profile_values=values).start
     record, field = _devengo_slot(records)
     assert field.draft_attribute is not None
     value = DRAFT_VALUE_PRODUCERS[field.draft_attribute](_draft(period), _snapshot(start))
@@ -177,7 +176,7 @@ def _refusal(period: Period, values: Mapping[str, str]) -> Exception:
     on = instalment_period_in_progress_date(period)
     assert on is not None
     with pytest.raises(FilingProducerSnapshotError) as refused:
-        periodo_impositivo_start_from_facts(modelo="202", on=on, profile_values=values)
+        periodo_impositivo_from_facts(modelo="202", on=on, profile_values=values)
     return _producer_facts_refusal(
         ModeloExportCommand(calculation_revision_id="a" * 64, output_path=Path("unused.txt"), actor="operator"),
         refused.value,
