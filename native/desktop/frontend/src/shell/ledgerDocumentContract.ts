@@ -707,3 +707,53 @@ export type LedgerDocumentContracts = {
     result: LedgerEvidenceViewProjection;
   };
 };
+
+export type LedgerEvidenceAddWindowRequest = Omit<
+  LedgerEvidenceAddRequest,
+  "profile_id" | "source_directory"
+>;
+
+export type LedgerEvidenceAttachmentQueueWindowRequest = Omit<
+  LedgerEvidenceAttachmentQueueRequest,
+  "profile_id"
+>;
+
+export type LedgerEvidenceAttachmentViewWindowRequest = Omit<
+  LedgerEvidenceAttachmentViewRequest,
+  "profile_id"
+>;
+
+export type LedgerEvidenceBatchWindowRequest = Omit<
+  LedgerEvidenceBatchRequest,
+  "profile_id" | "source_directory"
+>;
+
+export type LedgerEvidenceConsentListWindowRequest = Omit<
+  LedgerEvidenceConsentListRequest,
+  "profile_id"
+>;
+
+export type LedgerEvidenceListWindowRequest = Omit<
+  LedgerEvidenceListRequest,
+  "profile_id"
+>;
+
+export type LedgerEvidencePageWindowRequest = Omit<
+  LedgerEvidencePageRequest,
+  "profile_id"
+>;
+
+export type LedgerEvidenceRemoveWindowRequest = Omit<
+  LedgerEvidenceRemoveRequest,
+  "profile_id"
+>;
+
+export type LedgerEvidenceUpdateWindowRequest = Omit<
+  LedgerEvidenceUpdateRequest,
+  "profile_id"
+>;
+
+export type LedgerEvidenceViewWindowRequest = Omit<
+  LedgerEvidenceViewRequest,
+  "profile_id"
+>;

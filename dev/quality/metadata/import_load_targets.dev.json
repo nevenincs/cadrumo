@@ -310,6 +310,7 @@
         "dev.ci.python_runtime_compatibility",
         "dev.ci.python_runtime_matrix",
         "dev.ci.python_runtime_sweep",
+        "dev.ci.runner_resources",
         "dev.ci.runtime_file_access",
         "dev.ci.runtime_journal_benchmark",
         "dev.ci.runtime_probe_artifacts",

@@ -176,9 +176,10 @@ def _assert_m200_semantic_singleton_rules(eligibility, profile) -> None:
     _assert_m200_official_grounding(eligibility, profile)
 
 
-#: The page 1 indicator whose own design cells state no values and whose
-#: Orden anexo prints no box; the export refuses any stated value for it.
-_M200_UNSUPPORTED_INDICATOR = "solicito dar de baja la domiciliación efectuada"
+#: The page 1 indicator the Orden anexo prints no box for: its value is stated
+#: by the design's own note naming it, on the sheet that depends on it.
+_M200_NOTED_INDICATOR = "solicito dar de baja la domiciliación efectuada"
+_M200_NOTED_INDICATOR_VALUE = "tiene valor 1 (opción SÍ)"
 #: How a rule grounded on a sibling cell of its design states that basis.
 _SIBLING_ANALOGY = "Sibling-cell analogy, not own-cell text:"
 
@@ -187,10 +188,10 @@ def _assert_m200_official_grounding(eligibility, profile) -> None:
     """Every rule cites its own design's text except the fields the export refuses as unsupported.
 
     A checkbox or date grounded on a sibling cell of the same design says so in
-    its justification, and a checkbox names its Orden anexo box. The two DID
-    'Año' fields and the page 1 'dar de baja la domiciliación' indicator stay
-    reviewed policy, because the export refuses any value for them rather than
-    claim a representation.
+    its justification, and a checkbox names its Orden anexo box. The page 1
+    'dar de baja la domiciliación' indicator cites the design note that states
+    its value. The two DID 'Año' fields stay reviewed policy, because the export
+    refuses any value for them rather than claim a representation.
     """
     descriptions = {
         RenderProfileAnchor(
@@ -202,24 +203,28 @@ def _assert_m200_official_grounding(eligibility, profile) -> None:
         ): field.normalized_description
         for field in eligibility.smaller_fields
     }
-    unsupported_indicators = {
+    noted_indicators = {
         rule
         for rule in profile.singleton_rules
-        if rule.semantic_kind == "checkbox" and _M200_UNSUPPORTED_INDICATOR in descriptions[rule.anchor]
+        if rule.semantic_kind == "checkbox" and _M200_NOTED_INDICATOR in descriptions[rule.anchor]
     }
+    for rule in noted_indicators:
+        assert isinstance(rule.evidence, OfficialSourceEvidence), rule.anchor
+        assert _M200_NOTED_INDICATOR in rule.evidence.expected_normalized_statement
+        assert _M200_NOTED_INDICATOR_VALUE in rule.evidence.expected_normalized_statement
     year_rules = {rule for rule in profile.singleton_rules if rule.semantic_kind == "year_last_two_digits"}
     assert {(rule.anchor.sheet, rule.anchor.source_row) for rule in year_rules} == {
         ("DP200DID", 17),
         ("DP200DID", 20),
     }
     assert all(rule.value_policy is ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS for rule in year_rules)
-    for rule in unsupported_indicators | year_rules:
+    for rule in year_rules:
         assert isinstance(rule.evidence, ReviewedPolicyDecision), rule.anchor
         assert rule.evidence.governed_anchor == rule.anchor
         assert "unsupported producer field" in rule.evidence.justification
     checkbox_rules = {rule for rule in profile.singleton_rules if rule.semantic_kind == "checkbox"}
-    assert checkbox_rules - unsupported_indicators
-    for rule in checkbox_rules - unsupported_indicators:
+    assert checkbox_rules - noted_indicators
+    for rule in checkbox_rules - noted_indicators:
         assert isinstance(rule.evidence, OfficialSourceEvidence), rule.anchor
         assert rule.evidence.expected_normalized_statement == '"0" o "1"'
         assert rule.evidence.justification.startswith(_SIBLING_ANALOGY), rule.anchor
@@ -231,9 +236,7 @@ def _assert_m200_official_grounding(eligibility, profile) -> None:
             assert rule.evidence.expected_normalized_statement == "AAAAMMDD"
             assert rule.evidence.justification.startswith(_SIBLING_ANALOGY), rule.anchor
     assert all(
-        isinstance(rule.evidence, OfficialSourceEvidence)
-        for rule in profile.singleton_rules
-        if rule not in unsupported_indicators | year_rules
+        isinstance(rule.evidence, OfficialSourceEvidence) for rule in profile.singleton_rules if rule not in year_rules
     )
 
 

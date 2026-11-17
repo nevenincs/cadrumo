@@ -12,7 +12,8 @@ import { failureCode } from "../errors";
 import type { OverviewCalendarSupport } from "./calendarContract";
 import { facts } from "./compose";
 import type { Translate } from "./strings";
-import type { FilingCalendar, ProfileViews } from "./views";
+import type { FilingCalendarServed } from "./calendarContract";
+import type { ProfileViews } from "./views";
 
 /** What the calendar page has to show: the read in flight, that the account
  * withholds it, why it failed, or the calendar. A failed read is never drawn
@@ -21,7 +22,7 @@ export type CalendarState =
   | { kind: "loading" }
   | { kind: "withheld" }
   | { kind: "failed"; code: string }
-  | { kind: "ready"; calendar: FilingCalendar };
+  | { kind: "ready"; calendar: FilingCalendarServed };
 
 type Read = Exclude<CalendarState, { kind: "withheld" }>;
 
@@ -68,7 +69,7 @@ export function yearSteps(
  * whole read, the latest that any of its entries names. Null where no entry
  * says.
  */
-export function evaluatedDay(calendar: FilingCalendar): string | null {
+export function evaluatedDay(calendar: FilingCalendarServed): string | null {
   let latest: string | null = null;
   for (const entry of calendar.entries)
     if (latest === null || entry.evaluated_on > latest)

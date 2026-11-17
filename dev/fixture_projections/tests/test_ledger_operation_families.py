@@ -73,3 +73,33 @@ def test_the_module_a_family_is_imported_by_is_the_one_the_driver_writes(produce
     for family in producer.FAMILIES:
         stem = producer.module_of(family).removeprefix("./")
         assert f'{family}: "src/shell/{stem}.ts"' in text
+
+
+def test_inventory_window_requests_omit_only_the_profile_and_marked_host_fields(producer: ModuleType) -> None:
+    source = producer.render("inventory")
+    assert (
+        "export type InventoryEvidenceAddWindowRequest = Omit<"
+        'InventoryEvidenceAddRequest, "profile_id" | "source_directory">;'
+    ) in source
+    assert 'export type InventoryInspectWindowRequest = Omit<InventoryInspectRequest, "profile_id">;' in source
+    assert 'export type InventoryCreateWindowRequest = Omit<InventoryCreateRequest, "profile_id">;' in source
+
+
+def test_other_host_filled_request_fields_are_excluded_from_window_requests(producer: ModuleType) -> None:
+    invoice = producer.render("invoice")
+    document = producer.render("document")
+    assert (
+        "export type InvoiceDocumentAttachWindowRequest = Omit<"
+        'InvoiceDocumentAttachRequest, "profile_id" | "source_directory">;'
+    ) in invoice
+    assert (
+        "export type LedgerEvidenceAddWindowRequest = Omit<"
+        'LedgerEvidenceAddRequest, "profile_id" | "source_directory">;'
+    ) in document
+    assert (
+        "export type LedgerEvidenceBatchWindowRequest = Omit<"
+        'LedgerEvidenceBatchRequest, "profile_id" | "source_directory">;'
+    ) in document
+    assert (
+        'export type LedgerEvidenceUpdateWindowRequest = Omit<LedgerEvidenceUpdateRequest, "profile_id">;'
+    ) in document

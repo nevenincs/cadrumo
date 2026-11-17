@@ -13,10 +13,10 @@ import { facts } from "@/shell/compose";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount, formatDecimal } from "../../../shared/numbers";
 import type {
-  InventoryBookRow,
-  InventoryMovement,
-  InventoryValuationResult,
-} from "../../../shell/ledgerSetup";
+  InventoryListRowProjection,
+  InventoryMovementProjection,
+  InventoryValuationOperationProjection,
+} from "../../../shell/ledgerInventoryContract";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
 import {
@@ -53,7 +53,7 @@ import {
 import { plays, servedWord, wordOf } from "./stockVocabulary";
 import { refusalOf, refusalWords } from "./stockWords";
 
-const NO_BOOKS: readonly InventoryBookRow[] = [];
+const NO_BOOKS: readonly InventoryListRowProjection[] = [];
 
 // ---- Book table decorations -------------------------------------------------------
 
@@ -111,7 +111,7 @@ type Task =
         | "movement_claim"
         | "purchase_facts";
       book: BookKey;
-      target: InventoryMovement;
+      target: InventoryMovementProjection;
     };
 
 /**
@@ -136,7 +136,7 @@ export function StockPane({
   const [task, setTask] = useState<Task | null>(null);
   const [preview, setPreview] = useState<{
     key: string;
-    call: SetupCall<InventoryValuationResult>;
+    call: SetupCall<InventoryValuationOperationProjection>;
   } | null>(null);
 
   const year = chosenYear ?? fallbackYear;
@@ -167,7 +167,7 @@ export function StockPane({
     setTask(null);
     reload();
   };
-  const runPreview = async (row: InventoryBookRow) => {
+  const runPreview = async (row: InventoryListRowProjection) => {
     choose(row);
     setPreview({
       key: keyOf(row),
@@ -185,7 +185,7 @@ export function StockPane({
       ? detail.result.ledger
       : null;
 
-  const columns: Column<InventoryBookRow>[] = [
+  const columns: Column<InventoryListRowProjection>[] = [
     {
       key: "name",
       label: t("desktop.ledger.stock.column.name"),
@@ -550,7 +550,7 @@ export function StockPane({
             )}
           </p>
         ) : (
-          <SetupTable<InventoryMovement>
+          <SetupTable<InventoryMovementProjection>
             label={t("desktop.ledger.stock.movements_of", {
               name: bookName(book),
             })}

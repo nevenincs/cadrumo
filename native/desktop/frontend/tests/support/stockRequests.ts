@@ -38,11 +38,11 @@ import {
 import type { FileToken } from "../../src/shell/ledger";
 import { holdLedgerLimits } from "../../src/shell/ledgerLimits";
 import type {
-  InventoryEvidenceAddResult,
-  InventoryMovement,
-  InventoryOptionsResult,
-  LedgerEntryLimits,
-} from "../../src/shell/ledgerSetup";
+  InventoryEvidenceAddProjection,
+  InventoryMovementProjection,
+  InventoryOptionsProjection,
+} from "../../src/shell/ledgerInventoryContract";
+import type { LedgerEntryLimits } from "../../src/shell/ledgerSetup";
 
 /** A file the backend kept: what it named it by, and the mark it answered. */
 type Proof = { kind?: string; reference: string; digest: string };
@@ -91,13 +91,13 @@ type Scenario =
   | {
       id: string;
       kind: "kept_names";
-      movement: InventoryMovement;
+      movement: InventoryMovementProjection;
     }
   | {
       id: string;
       kind: "evidence_result";
       /** What the backend answered to keeping a file. */
-      result: InventoryEvidenceAddResult;
+      result: InventoryEvidenceAddProjection;
       fileName: string;
     }
   | {
@@ -107,7 +107,7 @@ type Scenario =
       target: string;
       reason: string;
       /** The movement as the inspect read serves it. */
-      movement: InventoryMovement;
+      movement: InventoryMovementProjection;
     }
   | {
       id: string;
@@ -262,7 +262,7 @@ process.stdin.on("data", (chunk: string) => chunks.push(chunk));
 process.stdin.on("end", () => {
   const given = JSON.parse(chunks.join("")) as {
     /** What the options read serves: every choice, with its role. */
-    options: InventoryOptionsResult;
+    options: InventoryOptionsProjection;
     /** What the entry options serve: the limits typed text is held to. */
     limits: LedgerEntryLimits;
     scenarios: Scenario[];

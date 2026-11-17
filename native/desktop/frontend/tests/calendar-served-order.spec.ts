@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { calendarMonths } from "../src/shell/calendarGrid";
 import { listedMonths } from "../src/shell/calendarEntries";
-import type { CalendarEntry } from "../src/shell/views";
+import type { FilingCalendarServed } from "../src/shell/calendarContract";
 import { calendarEntry } from "../src/dev/fixtures/calendar";
 import { fixtureDay, fixtureYear } from "../src/dev/fixtureDates";
 
@@ -15,7 +15,7 @@ const title = (iso: string) => iso.slice(0, 7);
 
 /** The list's months as keys of their rows, with how many of each month's
  * rows stand behind the mark for the evaluated day and how many ahead. */
-const listed = (entries: CalendarEntry[]) =>
+const listed = (entries: FilingCalendarServed["entries"][number][]) =>
   listedMonths({ entries, events: [] }, title).map(([key, month]) => ({
     key,
     rows: month.entries.map((entry) => entry.modelo),

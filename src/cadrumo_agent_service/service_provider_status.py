@@ -22,7 +22,11 @@ from cadrumo.core.logging import get_logger
 from .adapters.agent_provider_auth_status import AgentProviderAuthStatusProbe
 from .adapters.agent_provider_catalog import AgentProviderCatalogSource
 from .host.background_refresh import BackgroundRefresh
-from .providers.application.contracts import ProviderSettingsRefusal, ProviderStatusEntry
+from .providers.application.contracts import (
+    ProviderSettingsAnswer,
+    ProviderSettingsRefusal,
+    ProviderStatusEntry,
+)
 from .providers.application.next_steps import CONSOLE_SIGN_IN_COMMAND
 from .providers.application.ports import ProviderCatalogUnavailableError
 from .providers.application.service import ProviderSettingsService, ReadsPending
@@ -67,14 +71,17 @@ class ProviderStatusRead:
         observed = self._providers().status(reads_pending=self.reads_pending())
         if isinstance(observed, ProviderSettingsRefusal):
             return observed.model_dump(mode="json")
-        status = observed.model_dump(mode="json")
-        status["hosted_certifications"] = self._hosted_certifications()
-        status["console_sign_in_command"] = CONSOLE_SIGN_IN_COMMAND
         # Before the methods are read, and while the agent cannot name them,
         # login is offered nowhere; existing key management is unaffected.
         methods = self._catalog().kept_gui_sign_in_methods() or {}
-        status["sign_in_providers"] = list(methods)
-        status["sign_in_methods"] = {provider: list(choices) for provider, choices in methods.items()}
+        status = ProviderSettingsAnswer(
+            providers=observed.providers,
+            sign_in_providers=tuple(methods),
+            sign_in_methods={provider: tuple(choices) for provider, choices in methods.items()},
+            console_sign_in_command=CONSOLE_SIGN_IN_COMMAND,
+            reads_pending=observed.reads_pending,
+        ).model_dump(mode="json")
+        status["hosted_certifications"] = self._hosted_certifications()
         if self._closing.is_set():
             return {"kind": "refused", "code": "service_stopping"}
         if self._lease() != lease:

@@ -7,23 +7,6 @@
 
 import type { FilingCalendarServed } from "./calendarContract";
 
-/** The filing calendar of one profile over a range of dates, from local
- * records only. Reading it never asks the tax agency anything. */
-export type FilingCalendar = FilingCalendarServed;
-
-/** One obligation of the calendar: a Modelo and its period, with its filing
- * evidence as the product keeps it. */
-export type CalendarEntry = FilingCalendar["entries"][number];
-
-/** Something observed beside the legal calendar: a filing that was made, or
- * a message from the agency. It is a record of what was seen and when, and
- * never by itself a statement that an obligation is met. */
-export type CalendarEvent = FilingCalendar["events"][number];
-
-/** A profile detail the calendar had to assume, with the product's own
- * sentence about it in the output language (`text`). */
-export type CalendarWarning = FilingCalendar["warnings"][number];
-
 /** What the last capture of the tax agency's notifications held, as counts.
  * The rows carry names and tax numbers, and the window has no use for them:
  * the host counts and passes on only this. */
@@ -47,5 +30,5 @@ export interface ProfileViews {
   filingCalendar(
     range: { from: string; to: string },
     language: string,
-  ): Promise<FilingCalendar>;
+  ): Promise<FilingCalendarServed>;
 }
