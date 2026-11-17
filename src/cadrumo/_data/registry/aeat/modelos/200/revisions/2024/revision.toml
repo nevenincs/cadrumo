@@ -5309,3 +5309,389 @@ id = "DP200018:01218"
 [revisions."2024".casilla_removals.selector]
 revision = "2023"
 id = "DP200018:01219"
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "01515" }
+fields = { section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2024"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2009 (DP200016 field 112): 'Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023 - Deducción pendiente/generada [01515]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2090 (DP200016 field 115): 'Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2024(*) - Deducción pendiente/generada [01515]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [00696] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2087 (DP200016 field 112), continuing box [00696] of the 2023 design, so box [01515] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "DP200016:01522" }
+fields = { section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2024"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2010 (DP200016 field 113): 'Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023 - Aplicado en esta liquidación [01522]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2091 (DP200016 field 116): 'Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2024(*) - Aplicado en esta liquidación [01522]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [00697] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2088 (DP200016 field 113), continuing box [00697] of the 2023 design, so box [01522] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "01571" }
+fields = { section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2024"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2011 (DP200016 field 114): 'Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023 - Pendiente aplicación en periodos futuros [01571]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2092 (DP200016 field 117): 'Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2024(*) - Pendiente aplicación en periodos futuros [01571]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [00710] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2089 (DP200016 field 114), continuing box [00710] of the 2023 design, so box [01571] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "01614" }
+fields = { section = ["deducciones_inversion_canarias", "activos_fijos_2024"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2095 (DP200016B field 48): 'Deducciones inversión Canarias - Activos fijos 2023 - Deducción pendiente/generada [01614]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2179 (DP200016B field 48): 'Deducciones inversión Canarias - Activos fijos 2024(*) - Deducción pendiente/generada [01614]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [00711] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2176 (DP200016B field 45), continuing box [00711] of the 2023 design, so box [01614] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "01615" }
+fields = { section = ["deducciones_inversion_canarias", "activos_fijos_2024"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2096 (DP200016B field 49): 'Deducciones inversión Canarias - Activos fijos 2023 - Aplicado en esta liquidación [01615]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2180 (DP200016B field 49): 'Deducciones inversión Canarias - Activos fijos 2024(*) - Aplicado en esta liquidación [01615]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [00712] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2177 (DP200016B field 46), continuing box [00712] of the 2023 design, so box [01615] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "01616" }
+fields = { section = ["deducciones_inversion_canarias", "activos_fijos_2024"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2097 (DP200016B field 50): 'Deducciones inversión Canarias - Activos fijos 2023 - Pendiente de aplicación en periodos futuros [01616]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2181 (DP200016B field 50): 'Deducciones inversión Canarias - Activos fijos 2024(*) - Pendiente de aplicación en periodos futuros [01616]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [02077] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2178 (DP200016B field 47), continuing box [02077] of the 2023 design, so box [01616] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "01763" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2116 (DP200016B field 69): 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2023 - Deducción pendiente/generada [01763]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2203 (DP200016B field 72): 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2024(*) - Deducción pendiente/generada [01763]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [02078] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2200 (DP200016B field 69), continuing box [02078] of the 2023 design, so box [01763] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "01800" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2117 (DP200016B field 70): 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2023 - Aplicado en esta liquidación [01800]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2204 (DP200016B field 73): 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2024(*) - Aplicado en esta liquidación [01800]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01913] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2201 (DP200016B field 70), continuing box [01913] of the 2023 design, so box [01800] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "01801" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2118 (DP200016B field 71): 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2023 - Pendiente de aplicación en periodos futuros [01801]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2205 (DP200016B field 74): 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2024(*) - Pendiente de aplicación en periodos futuros [01801]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [00766] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2202 (DP200016B field 71), continuing box [00766] of the 2023 design, so box [01801] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "01802" }
+fields = { section = ["deducciones_inversion_canarias", "inversiones_canarias_2024"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2175 (DP200016B field 128): 'Deducciones inversión Canarias - Inversiones Canarias 2023 - Deducción pendiente/generada [01802]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2262 (DP200016B field 131): 'Deducciones inversión Canarias - Inversiones Canarias 2024(*) - Deducción pendiente/generada [01802]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [00767] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2259 (DP200016B field 128), continuing box [00767] of the 2023 design, so box [01802] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "01803" }
+fields = { section = ["deducciones_inversion_canarias", "inversiones_canarias_2024"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2176 (DP200016B field 129): 'Deducciones inversión Canarias - Inversiones Canarias 2023 - Aplicado en esta liquidación [01803]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2263 (DP200016B field 132): 'Deducciones inversión Canarias - Inversiones Canarias 2024(*) - Aplicado en esta liquidación [01803]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [00768] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2260 (DP200016B field 129), continuing box [00768] of the 2023 design, so box [01803] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "01804" }
+fields = { section = ["deducciones_inversion_canarias", "inversiones_canarias_2024"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2177 (DP200016B field 130): 'Deducciones inversión Canarias - Inversiones Canarias 2023 - Pendiente de aplicación en periodos futuros [01804]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2264 (DP200016B field 133): 'Deducciones inversión Canarias - Inversiones Canarias 2024(*) - Pendiente de aplicación en periodos futuros [01804]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [00769] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2261 (DP200016B field 130), continuing box [00769] of the 2023 design, so box [01804] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "01805" }
+fields = { section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2024"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2196 (DP200016B field 149): 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023 - Deducción pendiente/generada [01805]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2286 (DP200016B field 155): 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2024(*) - Deducción pendiente/generada [01805]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [00770] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2283 (DP200016B field 152), continuing box [00770] of the 2023 design, so box [01805] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "01806" }
+fields = { section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2024"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2197 (DP200016B field 150): 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023 - Aplicado en esta liquidación [01806]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2287 (DP200016B field 156): 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2024(*) - Aplicado en esta liquidación [01806]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [00771] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2284 (DP200016B field 153), continuing box [00771] of the 2023 design, so box [01806] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "01847" }
+fields = { section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2024"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2198 (DP200016B field 151): 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023 - Pendiente de aplicación en periodos futuros [01847]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2288 (DP200016B field 157): 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2024(*) - Pendiente de aplicación en periodos futuros [01847]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [00774] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2285 (DP200016B field 154), continuing box [00774] of the 2023 design, so box [01847] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02312" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2687 (DP200018B field 78): 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2023 - Deducción pendiente/generada [02312]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2693 (DP200018B field 18): 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2024(*) - Deducción pendiente/generada [02312]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01295] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2690 (DP200018B field 15), continuing box [01295] of the 2023 design, so box [02312] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02313" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2688 (DP200018B field 79): 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2023 - Aplicado en esta liquidación [02313]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2694 (DP200018B field 19): 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2024(*) - Aplicado en esta liquidación [02313]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01296] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2691 (DP200018B field 16), continuing box [01296] of the 2023 design, so box [02313] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02353" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2689 (DP200018B field 80): 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2023 - Pendiente de aplicación en períodos futuros [02353]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2695 (DP200018B field 20): 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2024(*) - Pendiente de aplicación en períodos futuros [02353]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01297] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2692 (DP200018B field 17), continuing box [01297] of the 2023 design, so box [02353] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02354" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2729 (DP200018B field 120): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023 - Deducción pendiente/generada [02354]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2738 (DP200018B field 63): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2024(*) - Deducción pendiente/generada [02354]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [02140] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2734 (DP200018B field 59), continuing box [02140] of the 2023 design, so box [02354] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02355" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2730 (DP200018B field 121): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023 - Aplicado en esta liquidación [02355]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2739 (DP200018B field 64): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2024(*) - Aplicado en esta liquidación [02355]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [02141] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2735 (DP200018B field 60), continuing box [02141] of the 2023 design, so box [02355] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02437" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2731 (DP200018B field 122): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023 - Importe abonado por insuficiencia de cuota [02437]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2740 (DP200018B field 65): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2024(*) - Importe abonado por insuficiencia de cuota [02437]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [02142] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2736 (DP200018B field 61), continuing box [02142] of the 2023 design, so box [02437] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02443" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2732 (DP200018B field 123): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023 - Pendiente de aplicación en períodos futuros [02443]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2741 (DP200018B field 66): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2024(*) - Pendiente de aplicación en períodos futuros [02443]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [02143] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2737 (DP200018B field 62), continuing box [02143] of the 2023 design, so box [02443] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02471" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2855 (DP200018C field 65): 'Donaciones de carácter general - 2023 Sin reiteración de donaciones a una misma entidad- Deducción pendiente/generada [02471]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2869 (DP200018C field 62): 'Donaciones de carácter general - 2024(*) Sin reiteración de donaciones a una misma entidad- Deducción pendiente/generada [02471]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01323] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2863 (DP200018C field 56), continuing box [01323] of the 2023 design, so box [02471] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02576" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2856 (DP200018C field 66): 'Donaciones de carácter general - 2023 Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [02576]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2870 (DP200018C field 63): 'Donaciones de carácter general - 2024(*) Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [02576]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01324] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2864 (DP200018C field 57), continuing box [01324] of the 2023 design, so box [02576] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02577" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2857 (DP200018C field 67): 'Donaciones de carácter general - 2023 Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [02577]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2871 (DP200018C field 64): 'Donaciones de carácter general - 2024(*) Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [02577]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01325] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2865 (DP200018C field 58), continuing box [01325] of the 2023 design, so box [02577] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02691" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2858 (DP200018C field 68): 'Donaciones de carácter general - 2023 - Con reiteración de donaciones a una misma entidad- Deducción pendiente/generada [02691]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2872 (DP200018C field 65): 'Donaciones de carácter general - 2024(*) - Con reiteración de donaciones a una misma entidad- Deducción pendiente/generada [02691]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01326] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2866 (DP200018C field 59), continuing box [01326] of the 2023 design, so box [02691] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02692" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2859 (DP200018C field 69): 'Donaciones de carácter general - 2023 - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [02692]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2873 (DP200018C field 66): 'Donaciones de carácter general - 2024(*) - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [02692]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01327] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2867 (DP200018C field 60), continuing box [01327] of the 2023 design, so box [02692] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02693" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2860 (DP200018C field 70): 'Donaciones de carácter general - 2023 - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [02693]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2874 (DP200018C field 67): 'Donaciones de carácter general - 2024(*) - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [02693]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01328] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2868 (DP200018C field 61), continuing box [01328] of the 2023 design, so box [02693] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02697" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2935 (DP200018C field 145): '2023 - Con reiteración de donaciones a una misma entidad - Deducción pendiente/generada [02697]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2951 (DP200018C field 144): '2024(*) - Con reiteración de donaciones a una misma entidad - Deducción pendiente/generada [02697]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01374] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2945 (DP200018C field 138), continuing box [01374] of the 2023 design, so box [02697] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02698" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2936 (DP200018C field 146): '2023 - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [02698]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2952 (DP200018C field 145): '2024(*) - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [02698]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01375] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2946 (DP200018C field 139), continuing box [01375] of the 2023 design, so box [02698] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02700" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2937 (DP200018C field 147): '2023 - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [02700]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2953 (DP200018C field 146): '2024(*) - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [02700]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01376] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2947 (DP200018C field 140), continuing box [01376] of the 2023 design, so box [02700] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02701" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3005 (DP200019 field 42): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023 - Base deducción [02701]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3026 (DP200019 field 42): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2024(*) - Base deducción [02701]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01377] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3022 (DP200019 field 38), continuing box [01377] of the 2023 design, so box [02701] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02702" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3006 (DP200019 field 43): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023 - Importe generado/pendiente principio periodo [02702]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3027 (DP200019 field 43): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2024(*) - Importe generado/pendiente principio periodo [02702]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01378] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3023 (DP200019 field 39), continuing box [01378] of the 2023 design, so box [02702] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02703" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3007 (DP200019 field 44): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023 - Importe aplicado [02703]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3028 (DP200019 field 44): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2024(*) - Importe aplicado [02703]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01379] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3024 (DP200019 field 40), continuing box [01379] of the 2023 design, so box [02703] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02704" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3008 (DP200019 field 45): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023 - Importe pendiente [02704]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3029 (DP200019 field 45): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2024(*) - Importe pendiente [02704]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01380] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3025 (DP200019 field 41), continuing box [01380] of the 2023 design, so box [02704] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02705" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3049 (DP200019 field 86): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023 - Base deducción [02705]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3074 (DP200019 field 90): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2024(*) - Base deducción [02705]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01381] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3070 (DP200019 field 86), continuing box [01381] of the 2023 design, so box [02705] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02706" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3050 (DP200019 field 87): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023 - Importe generado/pendiente principio periodo [02706]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3075 (DP200019 field 91): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2024(*) - Importe generado/pendiente principio periodo [02706]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01382] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3071 (DP200019 field 87), continuing box [01382] of the 2023 design, so box [02706] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02707" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3051 (DP200019 field 88): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023 - Importe aplicado [02707]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3076 (DP200019 field 92): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2024(*) - Importe aplicado [02707]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01383] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3072 (DP200019 field 88), continuing box [01383] of the 2023 design, so box [02707] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02708" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3052 (DP200019 field 89): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023 - Importe pendiente [02708]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3077 (DP200019 field 93): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2024(*) - Importe pendiente [02708]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01384] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3073 (DP200019 field 89), continuing box [01384] of the 2023 design, so box [02708] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02773" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3332 (DP200020B field 26): 'Reserva Capitalización - 2023 - Derecho reducir B.I. generado periodo/pendiente aplicar inicio periodo [02773]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3375 (DP200020B field 23): 'Reserva Capitalización - 2024(*) - Derecho reducir B.I. generado periodo/pendiente aplicar inicio periodo [02773]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01401] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3372 (DP200020B field 20), continuing box [01401] of the 2023 design, so box [02773] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02774" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3333 (DP200020B field 27): 'Reserva Capitalización - 2023 - Reducción B.I. aplicada [02774]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3376 (DP200020B field 24): 'Reserva Capitalización - 2024(*) - Reducción B.I. aplicada [02774]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01402] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3373 (DP200020B field 21), continuing box [01402] of the 2023 design, so box [02774] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02775" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3334 (DP200020B field 28): 'Reserva Capitalización - 2023 - Reducción B.I. pdte. De aplicar en períodos futuros [02775]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3377 (DP200020B field 25): 'Reserva Capitalización - 2024(*) - Reducción B.I. pdte. De aplicar en períodos futuros [02775]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01403] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3374 (DP200020B field 22), continuing box [01403] of the 2023 design, so box [02775] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02780" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3392 (DP200020B field 86): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023 - Importe reserva a dotar [02780]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3434 (DP200020B field 82): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2024(*) - Importe reserva a dotar [02780]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01872] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3430 (DP200020B field 78), continuing box [01872] of the 2023 design, so box [02780] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02782" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3393 (DP200020B field 87): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023 - Importe reserva dotada [02782]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3435 (DP200020B field 83): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2024(*) - Importe reserva dotada [02782]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01410] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3431 (DP200020B field 79), continuing box [01410] of the 2023 design, so box [02782] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02783" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3394 (DP200020B field 88): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023 - Importe reserva pendiente dotación [02783]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3436 (DP200020B field 84): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2024(*) - Importe reserva pendiente dotación [02783]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01411] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3432 (DP200020B field 80), continuing box [01411] of the 2023 design, so box [02783] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02784" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3395 (DP200020B field 89): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023 - Reserva dispuesta [02784]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3437 (DP200020B field 85): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2024(*) - Reserva dispuesta [02784]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01412] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3433 (DP200020B field 81), continuing box [01412] of the 2023 design, so box [02784] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02786" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3515 (DP200020C field 106): 'Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023 - Importe total AID (art. 130.6 a) pendiente aplicación a principio periodo [02786]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3561 (DP200020C field 106): 'Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2024(*) - Importe total AID (art. 130.6 a) pendiente aplicación a principio periodo [02786]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01414] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3551 (DP200020C field 96), continuing box [01414] of the 2023 design, so box [02786] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02787" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3516 (DP200020C field 107): 'Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023 - Cuota líquida positiva [02787]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3562 (DP200020C field 107): 'Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2024(*) - Cuota líquida positiva [02787]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01415] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3552 (DP200020C field 97), continuing box [01415] of the 2023 design, so box [02787] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02788" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3517 (DP200020C field 108): 'Ejercicio generación - 2023 - AID pendientes aplicación a principio periodo - Con derecho conversión crédito exigible [02788]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3563 (DP200020C field 108): 'Ejercicio generación - 2024(*) - AID pendientes aplicación a principio periodo - Con derecho conversión crédito exigible [02788]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01416] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3553 (DP200020C field 98), continuing box [01416] of the 2023 design, so box [02788] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02789" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3518 (DP200020C field 109): 'Ejercicio generación - 2023 - AID pendientes aplicación a principio periodo - Con derecho conversión crédito exigible por exceso cuota [02789]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3564 (DP200020C field 109): 'Ejercicio generación - 2024(*) - AID pendientes aplicación a principio periodo - Con derecho conversión crédito exigible por exceso cuota [02789]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01417] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3554 (DP200020C field 99), continuing box [01417] of the 2023 design, so box [02789] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02790" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3519 (DP200020C field 110): 'Ejercicio generación - 2023 - AID pendientes aplicación a principio periodo - Sin derecho conversión crédito exigible [02790]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3565 (DP200020C field 110): 'Ejercicio generación - 2024(*) - AID pendientes aplicación a principio periodo - Sin derecho conversión crédito exigible [02790]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01418] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3555 (DP200020C field 100), continuing box [01418] of the 2023 design, so box [02790] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02792" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3520 (DP200020C field 111): 'Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023 - AID convertidos en crédito exigible periodo [02792]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3567 (DP200020C field 112): 'Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2024(*) - AID convertidos en crédito exigible periodo [02792]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01419] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3557 (DP200020C field 102), continuing box [01419] of the 2023 design, so box [02792] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02793" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3521 (DP200020C field 112): 'Ejercicio generación - 2023 - AID pendientes aplicación periodos futuros - Con derecho conversión crédito exigible [02793]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3568 (DP200020C field 113): 'Ejercicio generación - 2024(*) - AID pendientes aplicación periodos futuros - Con derecho conversión crédito exigible [02793]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01420] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3558 (DP200020C field 103), continuing box [01420] of the 2023 design, so box [02793] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02794" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3522 (DP200020C field 113): 'Ejercicio generación - 2023 - AID pendientes aplicación periodos futuros - Con derecho conversión crédito exigible exceso cuota [02794]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3569 (DP200020C field 114): 'Ejercicio generación - 2024(*) - AID pendientes aplicación periodos futuros - Con derecho conversión crédito exigible exceso cuota [02794]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01421] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3559 (DP200020C field 104), continuing box [01421] of the 2023 design, so box [02794] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02795" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3523 (DP200020C field 114): 'Ejercicio generación - 2023 - AID pendientes aplicación periodos futuros - Sin derecho conversión crédito exigible [02795]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3570 (DP200020C field 115): 'Ejercicio generación - 2024(*) - AID pendientes aplicación periodos futuros - Sin derecho conversión crédito exigible [02795]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01422] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3560 (DP200020C field 105), continuing box [01422] of the 2023 design, so box [02795] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02796" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3548 (DP200020C field 139): 'Exceso cuota líquida positiva - Ejercicio generación - 2023 - Exceso cuota líquida positiva pendiente a principio periodo [02796]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3600 (DP200020C field 145): 'Exceso cuota líquida positiva - Ejercicio generación - 2024(*) - Exceso cuota líquida positiva pendiente a principio periodo [02796]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01423] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3596 (DP200020C field 141), continuing box [01423] of the 2023 design, so box [02796] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02797" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3549 (DP200020C field 140): 'Exceso cuota líquida positiva - Ejercicio generación - 2023 - Exceso cuota líquida positiva aplicado periodos impositivos 2008 a 2015 [02797]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3601 (DP200020C field 146): 'Exceso cuota líquida positiva - Ejercicio generación - 2024(*) - Exceso cuota líquida positiva aplicado periodos impositivos 2008 a 2015 [02797]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01424] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3597 (DP200020C field 142), continuing box [01424] of the 2023 design, so box [02797] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02798" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3550 (DP200020C field 141): 'Exceso cuota líquida positiva - Ejercicio generación - 2023 - Exceso cuota líquida positiva aplicado periodos impositivos iniciados a partir 2016 [02798]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3602 (DP200020C field 147): 'Exceso cuota líquida positiva - Ejercicio generación - 2024(*) - Exceso cuota líquida positiva aplicado periodos impositivos iniciados a partir 2016 [02798]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01425] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3598 (DP200020C field 143), continuing box [01425] of the 2023 design, so box [02798] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02799" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3551 (DP200020C field 142): 'Exceso cuota líquida positiva - Ejercicio generación - 2023 - Exceso cuota líquida positiva pendiente aplicación periodos futuros [02799]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3603 (DP200020C field 148): 'Exceso cuota líquida positiva - Ejercicio generación - 2024(*) - Exceso cuota líquida positiva pendiente aplicación periodos futuros [02799]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01469] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3599 (DP200020C field 144), continuing box [01469] of the 2023 design, so box [02799] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02804" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3649 (DP200020D field 84): 'Ejercicio generación - 2023 - Dotaciones pendientes integración a principio periodo - Que no han cumplido condiciones deducibilidad fiscal [02804]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3705 (DP200020D field 84): 'Ejercicio generación - 2024(*) - Dotaciones pendientes integración a principio periodo - Que no han cumplido condiciones deducibilidad fiscal [02804]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01479] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3699 (DP200020D field 78), continuing box [01479] of the 2023 design, so box [02804] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02805" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3650 (DP200020D field 85): 'Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2023 - Dotaciones aplicadas conversión activos imp. diferido [02805]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3708 (DP200020D field 87): 'Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2024(*) - Dotaciones aplicadas conversión activos imp. diferido [02805]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01480] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3702 (DP200020D field 81), continuing box [01480] of the 2023 design, so box [02805] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "02806" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3651 (DP200020D field 86): 'Ejercicio generación - 2023 - Dotaciones pendientes integración periodos futuros - Que no han cumplido condiciones deducibilidad fiscal [02806]'; aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3709 (DP200020D field 88): 'Ejercicio generación - 2024(*) - Dotaciones pendientes integración periodos futuros - Que no han cumplido condiciones deducibilidad fiscal [02806]'. Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2024 design prints the 2023 generation on box [01500] at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3703 (DP200020D field 82), continuing box [01500] of the 2023 design, so box [02806] is repurposed and carries no value from the 2023 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "DP200018B:00588" }
+fields = { id = "DP200018:00588", segmento = "DP200018" }
+
+# aeat-dr-200-2023 prints this DP200015 field as box [001043]; aeat-dr-200-2024 prints the same field as box [01043].
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "DP200015:001043" }
+fields = { id = "DP200015:01043", number = "01043" }
+
+# aeat-dr-200-2023 prints this DP200015 field as box [001044]; aeat-dr-200-2024 prints the same field as box [01044].
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "DP200015:001044" }
+fields = { id = "DP200015:01044", number = "01044" }
