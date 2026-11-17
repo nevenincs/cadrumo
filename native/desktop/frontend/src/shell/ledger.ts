@@ -97,6 +97,30 @@ import type {
   LedgerUpdateResult,
 } from "./ledgerMovementOperations";
 import type {
+  InventoryInspectWindowRequest,
+  InventoryLedgerChangeProjection,
+  InventoryClosingAuthorityRecordWindowRequest,
+  InventoryClosingAuthorityOperationProjection,
+  InventoryClosingValueRecordWindowRequest,
+  InventoryCorrectWindowRequest,
+  InventoryCreateWindowRequest,
+  InventoryCreateProjection,
+  InventoryDescribeWindowRequest,
+  InventoryEvidenceAddWindowRequest,
+  InventoryEvidenceAddProjection,
+  InventoryInspectProjection,
+  InventoryListProjection,
+  InventoryMovementAddWindowRequest,
+  InventoryMovementAddProjection,
+  InventoryMovementClaimWindowRequest,
+  InventoryMovementCorrectWindowRequest,
+  InventoryMovementReverseWindowRequest,
+  InventoryOptionsProjection,
+  InventoryRestoreWindowRequest,
+  InventoryRetireWindowRequest,
+  InventoryValuationOperationProjection,
+} from "./ledgerInventoryContract";
+import type {
   ActivityAssetAcquisitionCandidatesResult,
   ActivityAssetChangeResult,
   ActivityAssetClaimRequest,
@@ -121,28 +145,6 @@ import type {
   ActivityAssetPlanResult,
   ActivityAssetTimelineRequest,
   ActivityAssetTimelineResult,
-  InventoryBookRequest,
-  InventoryChangeResult,
-  InventoryClosingAuthorityRequest,
-  InventoryClosingAuthorityResult,
-  InventoryClosingValueRequest,
-  InventoryCorrectRequest,
-  InventoryCreateRequest,
-  InventoryCreateResult,
-  InventoryDescribeRequest,
-  InventoryEvidenceAddRequest,
-  InventoryEvidenceAddResult,
-  InventoryInspectResult,
-  InventoryListResult,
-  InventoryMovementAddRequest,
-  InventoryMovementAddResult,
-  InventoryMovementClaimRequest,
-  InventoryMovementCorrectRequest,
-  InventoryMovementReverseRequest,
-  InventoryOptionsResult,
-  InventoryRestoreRequest,
-  InventoryRetireRequest,
-  InventoryValuationResult,
   LedgerEntryOptionsRequest,
   LedgerEntryOptionsResult,
   LedgerParticipationRebuildResult,
@@ -824,22 +826,22 @@ export interface LedgerRequests {
     "profile_id"
   >;
   "ledger.inventory.list": Record<string, never>;
-  "ledger.inventory.create": InventoryCreateRequest;
-  "ledger.inventory.movement.add": InventoryMovementAddRequest;
-  "ledger.inventory.valuation.preview": InventoryBookRequest;
-  "ledger.inventory.closing-authority.record": InventoryClosingAuthorityRequest;
-  "ledger.inventory.closing-value.record": InventoryClosingValueRequest;
-  "ledger.inventory.evidence.add": InventoryEvidenceAddRequest;
+  "ledger.inventory.create": InventoryCreateWindowRequest;
+  "ledger.inventory.movement.add": InventoryMovementAddWindowRequest;
+  "ledger.inventory.valuation.preview": InventoryInspectWindowRequest;
+  "ledger.inventory.closing-authority.record": InventoryClosingAuthorityRecordWindowRequest;
+  "ledger.inventory.closing-value.record": InventoryClosingValueRecordWindowRequest;
+  "ledger.inventory.evidence.add": InventoryEvidenceAddWindowRequest;
   "ledger.inventory.options": Record<string, never>;
   "ledger.entry-options": LedgerEntryOptionsRequest;
-  "ledger.inventory.inspect": InventoryBookRequest;
-  "ledger.inventory.describe": InventoryDescribeRequest;
-  "ledger.inventory.correct": InventoryCorrectRequest;
-  "ledger.inventory.movement.claim": InventoryMovementClaimRequest;
-  "ledger.inventory.movement.correct": InventoryMovementCorrectRequest;
-  "ledger.inventory.movement.reverse": InventoryMovementReverseRequest;
-  "ledger.inventory.retire": InventoryRetireRequest;
-  "ledger.inventory.restore": InventoryRestoreRequest;
+  "ledger.inventory.inspect": InventoryInspectWindowRequest;
+  "ledger.inventory.describe": InventoryDescribeWindowRequest;
+  "ledger.inventory.correct": InventoryCorrectWindowRequest;
+  "ledger.inventory.movement.claim": InventoryMovementClaimWindowRequest;
+  "ledger.inventory.movement.correct": InventoryMovementCorrectWindowRequest;
+  "ledger.inventory.movement.reverse": InventoryMovementReverseWindowRequest;
+  "ledger.inventory.retire": InventoryRetireWindowRequest;
+  "ledger.inventory.restore": InventoryRestoreWindowRequest;
   "ledger.actividad-asset.create": ActivityAssetCreateRequest;
   "ledger.actividad-asset.inspect": ActivityAssetInspectRequest;
   "ledger.actividad-asset.correct": ActivityAssetCorrectRequest;
@@ -941,23 +943,23 @@ export interface LedgerResults {
   "ledger.retencion_soportada.withdraw_absence": LedgerWithholdingContracts["ledger.retencion_soportada.withdraw_absence"]["result"];
   "ledger.bienes_inversion.list": LedgerCapitalGoodsContracts["ledger.bienes_inversion.list"]["result"];
   "ledger.bienes_inversion.declare": LedgerCapitalGoodsContracts["ledger.bienes_inversion.declare"]["result"];
-  "ledger.inventory.list": InventoryListResult;
-  "ledger.inventory.create": InventoryCreateResult;
-  "ledger.inventory.movement.add": InventoryMovementAddResult;
-  "ledger.inventory.valuation.preview": InventoryValuationResult;
-  "ledger.inventory.closing-authority.record": InventoryClosingAuthorityResult;
-  "ledger.inventory.closing-value.record": InventoryClosingAuthorityResult;
-  "ledger.inventory.evidence.add": InventoryEvidenceAddResult;
-  "ledger.inventory.options": InventoryOptionsResult;
+  "ledger.inventory.list": InventoryListProjection;
+  "ledger.inventory.create": InventoryCreateProjection;
+  "ledger.inventory.movement.add": InventoryMovementAddProjection;
+  "ledger.inventory.valuation.preview": InventoryValuationOperationProjection;
+  "ledger.inventory.closing-authority.record": InventoryClosingAuthorityOperationProjection;
+  "ledger.inventory.closing-value.record": InventoryClosingAuthorityOperationProjection;
+  "ledger.inventory.evidence.add": InventoryEvidenceAddProjection;
+  "ledger.inventory.options": InventoryOptionsProjection;
   "ledger.entry-options": LedgerEntryOptionsResult;
-  "ledger.inventory.inspect": InventoryInspectResult;
-  "ledger.inventory.describe": InventoryChangeResult;
-  "ledger.inventory.correct": InventoryChangeResult;
-  "ledger.inventory.movement.claim": InventoryChangeResult;
-  "ledger.inventory.movement.correct": InventoryChangeResult;
-  "ledger.inventory.movement.reverse": InventoryChangeResult;
-  "ledger.inventory.retire": InventoryChangeResult;
-  "ledger.inventory.restore": InventoryChangeResult;
+  "ledger.inventory.inspect": InventoryInspectProjection;
+  "ledger.inventory.describe": InventoryLedgerChangeProjection;
+  "ledger.inventory.correct": InventoryLedgerChangeProjection;
+  "ledger.inventory.movement.claim": InventoryLedgerChangeProjection;
+  "ledger.inventory.movement.correct": InventoryLedgerChangeProjection;
+  "ledger.inventory.movement.reverse": InventoryLedgerChangeProjection;
+  "ledger.inventory.retire": InventoryLedgerChangeProjection;
+  "ledger.inventory.restore": InventoryLedgerChangeProjection;
   "ledger.actividad-asset.create": ActivityAssetChangeResult;
   "ledger.actividad-asset.inspect": ActivityAssetInspectResult;
   "ledger.actividad-asset.correct": ActivityAssetChangeResult;

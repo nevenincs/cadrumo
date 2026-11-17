@@ -138,6 +138,18 @@ sandbox. That file is written through the product's redacting log filter, from
 the committed synthetic profile, on a runner that holds no secret. No job reads
 the artifact back.
 
+**Runner resources.** A hosted runner that runs out of memory or disk is
+stopped and fails no test: the job ends with "the runner has received a
+shutdown signal", "lost communication with the server" or its time limit, and
+the log holds no reason. A `tests` shard therefore runs
+`dev.ci.runner_resources` in the background of its test step. Every 30 seconds
+it prints one line with the machine's used and available memory, swap, free
+disk, load and the four processes holding the most memory, by name and process
+id only; no command line is read, because the log of a public run is public.
+The tests remain the step's last command, so their exit status is the step's.
+A shard that fails on a runner that survives also prints the kernel's kill
+records.
+
 **Speed.** The expected critical path for a pull request is `authority`
 (toolchain, then compiling the registry) followed by the longest of `tests`,
 `goldens`, `checks`, `fixtures`, `contracts` and `harness`, then `verdict`:
@@ -224,3 +236,8 @@ change that produced it.
   `CADRUMO_PACKAGE_AGENT_SOURCE_DIR_WINDOWS` name the cadrumo-agent checkout on
   the Linux and the Windows self-hosted runner; one path cannot serve both
   machines. Each job passes its own as `CADRUMO_PACKAGE_AGENT_SOURCE_DIR`.
+  `windows-contracts` also passes the Windows one as
+  `CADRUMO_DEV_AGENT_CHECKOUT`, because the agent-service tests that
+  `just test-windows` selects start the real agent from a synced checkout, and
+  sets `CADRUMO_DEV_AGENT_HOSTED_ROOT` under the runner's temporary directory,
+  because the agent refuses a root that a Git checkout contains.

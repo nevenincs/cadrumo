@@ -48,6 +48,7 @@ from .providers.application.attachment_releases import (
 from .providers.application.contracts import (
     LocalEngineStatus,
     LocalModelListResult,
+    ServiceRefusalCode,
     SignInMethod,
 )
 from .providers.application.local_model_list import LocalModelListService
@@ -312,7 +313,7 @@ class AgentServiceAdministration(ABC):
             if action in {"sign_in", "connect", "sign_out"}:
                 # A sign-in or sign-out refused while another attempt or a tree change holds the
                 # lifecycle is shown to the person, so it carries its cause and log line.
-                return refuse("busy", cause="agent_tree_running", provider=arguments.get("provider"))
+                return refuse(ServiceRefusalCode.BUSY, cause="agent_tree_running", provider=arguments.get("provider"))
             return {"kind": "refused", "code": "busy"}
         try:
             return self._admin(action, **arguments)
@@ -426,7 +427,7 @@ class AgentServiceAdministration(ABC):
         if self.client.lease is None:
             return signed_out_refusal(action)
         blocks, self._auth_attempt = sign_in_in_flight(self._auth_attempt, self._abandoned_attempts)
-        return refuse("busy", cause="sign_in_in_progress") if blocks else None
+        return refuse(ServiceRefusalCode.BUSY, cause="sign_in_in_progress") if blocks else None
 
     def _admin(
         self,

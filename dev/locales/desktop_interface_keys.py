@@ -1038,6 +1038,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.providers.sign_in_cause.status_unreadable",
         "desktop.providers.sign_in_cause.timed_out",
         "desktop.providers.sign_in_cause.unsupported_method",
+        "desktop.providers.sign_in_checking",
         "desktop.providers.sign_in_cleanup_failed",
         "desktop.providers.sign_in_close",
         "desktop.providers.sign_in_done",

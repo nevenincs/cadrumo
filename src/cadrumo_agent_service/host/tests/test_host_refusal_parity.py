@@ -14,7 +14,6 @@ from pathlib import Path
 import pytest
 
 from ...providers.application.contracts import (
-    HOST_REFUSAL_NAMES,
     ProviderSettingsRefusalCode,
     ServiceRefusalCode,
 )
@@ -49,6 +48,9 @@ def _served_codes() -> set[str]:
     for module in ("service_administration.py", "service_startup.py"):
         source = (_SERVICE / module).read_text(encoding="utf-8")
         codes |= set(re.findall(r'refuse\(\s*"(\w+)"', source))
+        codes |= {
+            ServiceRefusalCode[name].value for name in re.findall(r"refuse\(\s*ServiceRefusalCode\.(\w+)", source)
+        }
         codes |= set(re.findall(r'"kind": "refused", "code": "(\w+)"', source))
     return codes
 
@@ -67,11 +69,11 @@ def test_the_service_codes_are_declared_and_their_host_names_are_the_hosts_own()
     declared = {code.value for code in ServiceRefusalCode}
     served = _served_codes() - {code.value for code in ProviderSettingsRefusalCode}
     assert served <= declared, sorted(served - declared)
-    assert {code.value: name for code, name in HOST_REFUSAL_NAMES.items()} == renames
+    assert set(renames) <= declared, sorted(set(renames) - declared)
 
 
 def test_every_code_the_host_admits_is_a_declared_settings_or_service_code() -> None:
     relayed = {code.value for code in ProviderSettingsRefusalCode} | {
-        HOST_REFUSAL_NAMES.get(code, code.value) for code in ServiceRefusalCode
+        _host_renames().get(code.value, code.value) for code in ServiceRefusalCode
     }
     assert relayed == _host_refusals()

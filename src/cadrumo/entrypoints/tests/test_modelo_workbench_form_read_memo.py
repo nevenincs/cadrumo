@@ -15,6 +15,7 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 import inspect
+import json
 import logging
 from collections.abc import Callable, Hashable, Iterator
 from dataclasses import dataclass, field
@@ -51,8 +52,10 @@ from ...application.operations.owner import OperationExecutorContext
 from ...application.workbench_capture_memory import WorkbenchCaptureMemoryOwner, WorkbenchMemoSlot
 from ...core.casilla_id import validated_casilla_id
 from ...core.classification.policies import SensitivityClass
+from ...core.diagnostic_log import DiagnosticFormatter
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import content_hash_hex
+from ...core.logging import LOG_FILE_FORMAT
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..operation_composition_inputs import build_modelo_workbench_read_ports
 from .executor_context_stand_ins import RecordedEvents, RecordedOperands, UninterruptedCancellation
@@ -277,12 +280,15 @@ def test_a_write_to_the_profile_moves_the_epoch_and_the_next_read_is_fresh(reade
     assert after.calculation_revision_id != before.calculation_revision_id
 
 
-def _memo_reads(caplog: pytest.LogCaptureFixture) -> list[tuple[str, str]]:
-    return [
-        (str(vars(record)["outcome"]), str(vars(record)["changed"]))
-        for record in caplog.records
-        if record.getMessage() == "workbench_form_memo_read"
-    ]
+def _logged_fields(record: logging.LogRecord) -> dict[str, object]:
+    """The fields as the diagnostic log file writes them, after its field allowlist."""
+    fields: object = json.loads(DiagnosticFormatter(LOG_FILE_FORMAT).format(record).split(" | ", 1)[1])
+    assert isinstance(fields, dict), fields
+    return cast("dict[str, object]", fields)
+
+
+def _memo_reads(caplog: pytest.LogCaptureFixture) -> list[dict[str, object]]:
+    return [_logged_fields(record) for record in caplog.records if record.getMessage() == "workbench_form_memo_read"]
 
 
 def test_each_read_logs_whether_it_was_served_and_which_key_parts_moved(
@@ -297,7 +303,13 @@ def test_each_read_logs_whether_it_was_served_and_which_key_parts_moved(
     reader.read(OutputLanguage.ES)
 
     reads = _memo_reads(caplog)
-    assert reads == [("empty", ""), ("hit", ""), ("miss", "store_epoch,admission"), ("miss", "language")], reads
+    served = [(read.get("outcome"), read.get("changed_key_parts")) for read in reads]
+    assert served == [("empty", ""), ("hit", ""), ("miss", "store_epoch,admission"), ("miss", "language")], reads
+    for read in reads:
+        built = read["outcome"] != "hit"
+        timed = {"epoch_ms", "admission_ms", *(("form_ms", "projection_ms") if built else ())}
+        assert all(isinstance(read.get(name), int) for name in timed), read
+        assert built or not {"form_ms", "projection_ms"} & read.keys(), read
 
 
 def test_another_language_is_read_afresh(reader: _Reader) -> None:

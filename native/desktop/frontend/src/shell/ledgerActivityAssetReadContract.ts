@@ -766,3 +766,38 @@ export type LedgerActivityAssetReadContracts = {
     result: ActivityAssetTimelineProjection;
   };
 };
+
+export type ActivityAssetAcquisitionCandidatesWindowRequest = Omit<
+  ActivityAssetAcquisitionCandidatesRequest,
+  "profile_id"
+>;
+
+export type ActivityAssetDisposalCalculateWindowRequest = Omit<
+  ActivityAssetDisposalCalculateRequest,
+  "profile_id"
+>;
+
+export type ActivityAssetFilingHandoffWindowRequest = Omit<
+  ActivityAssetFilingHandoffRequest,
+  "profile_id"
+>;
+
+export type ActivityAssetFormOptionsWindowRequest = Omit<
+  ActivityAssetFormOptionsRequest,
+  "profile_id"
+>;
+
+export type ActivityAssetListWindowRequest = Omit<
+  ActivityAssetListRequest,
+  "profile_id"
+>;
+
+export type ActivityAssetPlanWindowRequest = Omit<
+  ActivityAssetPlanRequest,
+  "profile_id"
+>;
+
+export type ActivityAssetTimelineWindowRequest = Omit<
+  ActivityAssetTimelineRequest,
+  "profile_id"
+>;

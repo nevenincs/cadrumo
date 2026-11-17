@@ -473,6 +473,7 @@ desktop:
       timed_out: A bejelentkezés túl sokáig tartott.
       unsupported_method: A szolgáltató alkalmazása nem támogatja ezt a bejelentkezési
         módot.
+    sign_in_checking: Bejelentkezés ellenőrzése…
     sign_in_cleanup_failed: Indítsd újra a Cadrumót, mielőtt ismét bejelentkezel.
     sign_in_close: Bejelentkezés bezárása
     sign_in_code_checking: Az engedélyezési kód ellenőrzése…

@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
-from enum import StrEnum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
@@ -44,59 +43,38 @@ if TYPE_CHECKING:
     pass
 
 
-class IssueLevel(StrEnum):
-    """The one scale everything the filer should notice is placed on, most urgent first."""
-
-    BLOCKS = "blocks"
-    MISSING = "missing"
-    CONFIRM = "confirm"
-    CHECK = "check"
-    LIMITATION = "limitation"
-    INFO = "info"
-
-
-LEVEL_MARKS: Final[Mapping[IssueLevel, WorkbenchMark]] = MappingProxyType(
+LEVEL_MARKS: Final[Mapping[ModeloFormAttention, WorkbenchMark]] = MappingProxyType(
     {
-        IssueLevel.BLOCKS: BLOCKS_MARK,
-        IssueLevel.MISSING: MISSING_MARK,
-        IssueLevel.CONFIRM: CONFIRM_MARK,
-        IssueLevel.CHECK: CHECK_MARK,
-        IssueLevel.LIMITATION: LIMITATION_MARK,
-        IssueLevel.INFO: INFO_MARK,
+        ModeloFormAttention.BLOCKS: BLOCKS_MARK,
+        ModeloFormAttention.MISSING: MISSING_MARK,
+        ModeloFormAttention.CONFIRM: CONFIRM_MARK,
+        ModeloFormAttention.CHECK: CHECK_MARK,
+        ModeloFormAttention.LIMITATION: LIMITATION_MARK,
+        ModeloFormAttention.INFO: INFO_MARK,
     }
 )
 
 """One mark per level, with its words, from the workbench's one vocabulary of marks."""
 
-TO_DO_LEVELS: Final[frozenset[IssueLevel]] = frozenset({IssueLevel.BLOCKS, IssueLevel.MISSING, IssueLevel.CONFIRM})
-
-_ATTENTION_LEVELS: Final[Mapping[ModeloFormAttention, IssueLevel]] = MappingProxyType(
-    {
-        ModeloFormAttention.BLOCKS: IssueLevel.BLOCKS,
-        ModeloFormAttention.MISSING: IssueLevel.MISSING,
-        ModeloFormAttention.CONFIRM: IssueLevel.CONFIRM,
-        ModeloFormAttention.CHECK: IssueLevel.CHECK,
-        ModeloFormAttention.LIMITATION: IssueLevel.LIMITATION,
-        ModeloFormAttention.INFO: IssueLevel.INFO,
-    }
-)
-
 ASSUMED_BOXES_BEFORE_SECTIONS: Final[int] = 20
 
-_UNENTERED_ORIGINS: Final[Mapping[IssueLevel, ModeloFormOrigin]] = MappingProxyType(
-    {IssueLevel.MISSING: ModeloFormOrigin.NEEDS_INPUT, IssueLevel.CONFIRM: ModeloFormOrigin.DEFAULT_TO_CONFIRM}
+_UNENTERED_ORIGINS: Final[Mapping[ModeloFormAttention, ModeloFormOrigin]] = MappingProxyType(
+    {
+        ModeloFormAttention.MISSING: ModeloFormOrigin.NEEDS_INPUT,
+        ModeloFormAttention.CONFIRM: ModeloFormOrigin.DEFAULT_TO_CONFIRM,
+    }
 )
 
 """The levels that list boxes nobody has entered, and the origin that places a box at each."""
 
-UNENTERED_LOCALE_KEYS: Final[Mapping[IssueLevel, tuple[str, str, str]]] = MappingProxyType(
+UNENTERED_LOCALE_KEYS: Final[Mapping[ModeloFormAttention, tuple[str, str, str]]] = MappingProxyType(
     {
-        IssueLevel.MISSING: (
+        ModeloFormAttention.MISSING: (
             "workspace.modelo.issues.missing",
             "workspace.modelo.issues.action.fill",
             "workspace.modelo.issues.action.fill_by_section",
         ),
-        IssueLevel.CONFIRM: (
+        ModeloFormAttention.CONFIRM: (
             "workspace.modelo.issues.assumed",
             "workspace.modelo.issues.action.confirm",
             "workspace.modelo.issues.action.confirm_by_section",
@@ -119,7 +97,7 @@ class IssueLine:
     there; ``box`` is the official box number, or ``"·"`` when there is none.
     """
 
-    level: IssueLevel
+    level: ModeloFormAttention
     box: str
     where: str
     message: str
@@ -143,7 +121,7 @@ class IssueLine:
     @property
     def blocking(self) -> bool:
         """Whether this finding stops the declaration from being filed."""
-        return self.level is IssueLevel.BLOCKS
+        return self.level is ModeloFormAttention.BLOCKS
 
 
 @dataclass(frozen=True, slots=True)
@@ -185,7 +163,7 @@ class UnenteredBoxes:
     in form order, the first being where Enter goes.
     """
 
-    level: IssueLevel
+    level: ModeloFormAttention
     boxes: tuple[str, ...]
     unnumbered: int
     keys: tuple[AddressKey, ...]
@@ -228,11 +206,6 @@ def blocks_marked(text: str) -> Content:
     return Content(text).highlight_regex(re.escape(BLOCKS_MARK.glyph), style=_BLOCKS_STYLE)
 
 
-def attention_level(attention: ModeloFormAttention) -> IssueLevel:
-    """Place one attention the read model states on the scale."""
-    return _ATTENTION_LEVELS[attention]
-
-
 def _unentered_sections(form: ModeloWorkForm, wanted: frozenset[AddressKey]) -> tuple[UnenteredSection, ...]:
     """The sections holding the wanted boxes, under the words the navigator shows them with."""
     sections: list[UnenteredSection] = []
@@ -247,7 +220,7 @@ def _unentered_sections(form: ModeloWorkForm, wanted: frozenset[AddressKey]) -> 
     return tuple(sections)
 
 
-def unentered_boxes(form: ModeloWorkForm, level: IssueLevel) -> UnenteredBoxes | None:
+def unentered_boxes(form: ModeloWorkForm, level: ModeloFormAttention) -> UnenteredBoxes | None:
     """The missing or assumed boxes the header counts, or ``None`` when none waits for the filer.
 
     A box on a page that does not apply this period is not asked for, and a
@@ -274,9 +247,11 @@ def unentered_levels(form: ModeloWorkForm) -> tuple[UnenteredBoxes, ...]:
     return tuple(boxes for level in _UNENTERED_ORIGINS if (boxes := unentered_boxes(form, level)) is not None)
 
 
-def level_counts(lines: tuple[IssueLine, ...], unentered: tuple[UnenteredBoxes, ...] = ()) -> Mapping[IssueLevel, int]:
+def level_counts(
+    lines: tuple[IssueLine, ...], unentered: tuple[UnenteredBoxes, ...] = ()
+) -> Mapping[ModeloFormAttention, int]:
     """How many things sit at each level; missing and assumed values count one per box."""
-    counts = dict.fromkeys(IssueLevel, 0)
+    counts = dict.fromkeys(ModeloFormAttention, 0)
     for line in lines:
         counts[line.level] += 1
     for boxes in unentered:
@@ -284,23 +259,15 @@ def level_counts(lines: tuple[IssueLine, ...], unentered: tuple[UnenteredBoxes, 
     return MappingProxyType(counts)
 
 
-def level_words(level: IssueLevel) -> str:
+def level_words(level: ModeloFormAttention) -> str:
     """One level's glyph and words, as every surface shows it."""
     mark = LEVEL_MARKS[level]
     return f"{mark.glyph} {tr(mark.translation_key)}"
 
 
-def title_text(counts: Mapping[IssueLevel, int], *, recorded: bool = False) -> str:
-    """The list's name followed by a count for each level that has anything in it.
-
-    A declaration recorded as filed has nothing left to do, so its title counts
-    only what is worth checking and what is for information.
-    """
-    chips = "   ".join(
-        f"{LEVEL_MARKS[level].glyph} {count}"
-        for level, count in counts.items()
-        if count and not (recorded and level in TO_DO_LEVELS)
-    )
+def title_text(counts: Mapping[ModeloFormAttention, int]) -> str:
+    """The list's name followed by the supplied counts in their served order."""
+    chips = "   ".join(f"{LEVEL_MARKS[level].glyph} {count}" for level, count in counts.items() if count)
     title = tr("workspace.modelo.issues.title")
     return f"{title}   {chips}" if chips else title
 
@@ -318,10 +285,8 @@ def verdict_text(verdict: ModeloFormVerdict, *, changes_unapplied: bool = False)
 
 def _require_total_tables() -> None:
     """Refuse a scale or a finding kind that has no mark, level or sentence."""
-    if set(LEVEL_MARKS) != set(IssueLevel):
+    if set(LEVEL_MARKS) != set(ModeloFormAttention):
         raise ValueError("every issue level needs one mark")
-    if set(_ATTENTION_LEVELS) != set(ModeloFormAttention):
-        raise ValueError("every attention the form gives a finding needs a level")
     if set(UNENTERED_LOCALE_KEYS) != set(_UNENTERED_ORIGINS):
         raise ValueError("every level that lists boxes nobody entered needs its sentences")
 
@@ -331,15 +296,12 @@ _require_total_tables()
 __all__ = (
     "ASSUMED_BOXES_BEFORE_SECTIONS",
     "LEVEL_MARKS",
-    "TO_DO_LEVELS",
     "CalculateAgain",
     "ConfirmAssumedValues",
-    "IssueLevel",
     "IssueLine",
     "IssuesChoice",
     "UnenteredBoxes",
     "UnenteredSection",
-    "attention_level",
     "blocks_marked",
     "level_counts",
     "level_words",

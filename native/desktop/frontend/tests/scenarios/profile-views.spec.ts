@@ -1,9 +1,6 @@
 import { expect, test } from "@playwright/test";
-import type {
-  FilingCalendar,
-  NotificationsSummary,
-  ProfileViews,
-} from "../../src/shell/views";
+import type { FilingCalendarServed } from "../../src/shell/calendarContract";
+import type { NotificationsSummary, ProfileViews } from "../../src/shell/views";
 
 test("profile reads hide previous snapshots on the first commit and ignore late replies", async ({
   page,
@@ -14,7 +11,7 @@ test("profile reads hide previous snapshots on the first commit and ignore late 
     const { react, dom, client, calendar, messages } =
       await window.__scenarioModules!.profileViews();
     const calendarRequests: {
-      resolve(value: FilingCalendar): void;
+      resolve(value: FilingCalendarServed): void;
       reject(error: Error): void;
     }[] = [];
     const messageRequests: {
@@ -33,7 +30,7 @@ test("profile reads hide previous snapshots on the first commit and ignore late 
     };
     const range = { from_date: "2026-01-01", to_date: "2026-12-31" };
     const year = Number(range.from_date.slice(0, 4));
-    const snapshot: FilingCalendar = {
+    const snapshot: FilingCalendarServed = {
       range,
       support: {
         floor: year - 4,

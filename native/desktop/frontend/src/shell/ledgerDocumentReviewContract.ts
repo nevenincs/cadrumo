@@ -773,3 +773,23 @@ export type LedgerDocumentReviewContracts = {
     result: LedgerEvidenceReviewViewProjection;
   };
 };
+
+export type LedgerEvidenceConfirmWindowRequest = Omit<
+  LedgerEvidenceConfirmRequest,
+  "profile_id"
+>;
+
+export type LedgerEvidenceExtractWindowRequest = Omit<
+  LedgerEvidenceExtractRequest,
+  "profile_id"
+>;
+
+export type LedgerEvidenceReviewListWindowRequest = Omit<
+  LedgerEvidenceReviewListRequest,
+  "profile_id"
+>;
+
+export type LedgerEvidenceReviewViewWindowRequest = Omit<
+  LedgerEvidenceReviewViewRequest,
+  "profile_id"
+>;
