@@ -128,6 +128,16 @@ hosted job that runs a `test-*` recipe must ask, unless the recipe is named in
 self-hosted job asks: lingering is a lasting change to a machine that keeps
 state, and its own session holds its user manager.
 
+**Failed sandbox logs.** A documented sequence that fails keeps its sandbox's
+diagnostic log under `.tmp/failed-sandboxes`, and its transcript names a
+refusal only by its reason; the log names the module, function and line. When
+`goldens`, a `tests` shard or `harness` fails, it uploads
+`.tmp/failed-sandboxes/**/logs/cadrumo.log` as
+`cadrumo-failed-sandbox-logs-<job>` for three days, and nothing else from the
+sandbox. That file is written through the product's redacting log filter, from
+the committed synthetic profile, on a runner that holds no secret. No job reads
+the artifact back.
+
 **Speed.** The expected critical path for a pull request is `authority`
 (toolchain, then compiling the registry) followed by the longest of `tests`,
 `goldens`, `checks`, `fixtures`, `contracts` and `harness`, then `verdict`:
