@@ -485,11 +485,6 @@ def is_ue_eee_country_code(country_code: str | None, *, effective_date: date) ->
     return is_ue_eea_country_code(country_code, effective_date=effective_date)
 
 
-def irnr_representante_fiscal_required(country_code: str | None, *, effective_date: date) -> bool:
-    """Return True when an IRNR fiscal residence country requires representante fiscal on ``effective_date``."""
-    return country_code is not None and not is_ue_eea_country_code(country_code, effective_date=effective_date)
-
-
 def irnr_representante_fiscal_required_on_every_date(country_code: str | None) -> bool | None:
     """Return the representante fiscal requirement when the registry gives one answer for every date.
 

@@ -15,7 +15,6 @@ from ..inmueble_facts import (
     arrendamiento_from_row,
     arrendamiento_row_values,
     arrendamientos_from_facts,
-    facts_for_row,
     inmueble_from_row,
     inmueble_row_values,
     inmuebles_from_facts,
@@ -32,6 +31,7 @@ from ..inmueble_record import (
     TitularidadRegimen,
     UsoInmuebleTipo,
 )
+from .profile_row_facts import facts_for_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

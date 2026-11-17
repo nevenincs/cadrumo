@@ -315,6 +315,23 @@ jobs:
             just test-sequence-goldens-gate
           fi
 
+      # A documented sequence that fails keeps its sandbox's diagnostic log
+      # under .tmp/failed-sandboxes, and the transcript names a refusal only
+      # by its reason; the log names the module, function and line. The runner
+      # is discarded with the job, so a failed job publishes those logs and
+      # nothing else from the sandbox. They are redacted by the product's own
+      # log filter and come from the committed synthetic profile on a runner
+      # that holds no secret. No job reads the artifact back.
+      - name: Upload the failed sandbox logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cadrumo-failed-sandbox-logs-goldens
+          path: .tmp/failed-sandboxes/**/logs/cadrumo.log
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 3
+
   # The scoped test population, dealt over the matrix the plan printed. Four
   # workers match the hosted runner's four cores.
   tests:
@@ -368,6 +385,17 @@ jobs:
           CHANGED_FILES: ${{ needs.plan.outputs.scoped == 'true' && 'var/ci/changed-paths.txt' || '' }}
         run: just test-gate-shard "$SHARD" "$CHANGED_FILES"
 
+      # As in the goldens job: the failed sandboxes' redacted logs, nothing else.
+      - name: Upload the failed sandbox logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cadrumo-failed-sandbox-logs-tests-${{ strategy.job-index }}
+          path: .tmp/failed-sandboxes/**/logs/cadrumo.log
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 3
+
   contracts:
     name: "Test: CI contracts (Linux)"
     needs: [plan, authority]
@@ -417,6 +445,17 @@ jobs:
       - name: Verification harness
         shell: bash
         run: just test-pytest-harness
+
+      # As in the goldens job: the failed sandboxes' redacted logs, nothing else.
+      - name: Upload the failed sandbox logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cadrumo-failed-sandbox-logs-harness
+          path: .tmp/failed-sandboxes/**/logs/cadrumo.log
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 3
 
   # The one required check. `always()` runs it after a failure, a skip or a
   # cancellation alike, so it is never the skipped check GitHub would count as

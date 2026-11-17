@@ -471,11 +471,6 @@ def arrendamientos_from_facts(path_values: Mapping[str, object]) -> tuple[Arrend
     )
 
 
-def facts_for_row(section: str, clave: int, values: RowValues) -> dict[str, str]:
-    """Address a row's leaves as profile fact paths."""
-    return {f"{section}.{clave}.{leaf}": value for leaf, value in values.items()}
-
-
 __all__ = [
     "ARRENDAMIENTO_SECTION",
     "ENTRY_SEPARATOR",
@@ -483,7 +478,6 @@ __all__ = [
     "arrendamiento_from_row",
     "arrendamiento_row_values",
     "arrendamientos_from_facts",
-    "facts_for_row",
     "inmueble_from_row",
     "inmueble_row_values",
     "inmuebles_from_facts",
