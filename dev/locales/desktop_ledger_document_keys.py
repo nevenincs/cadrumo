@@ -623,8 +623,6 @@ DESKTOP_LEDGER_DOCUMENT_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.invoices.payment_section",
         "desktop.ledger.invoices.problem.missing",
         "desktop.ledger.invoices.problem.choose_kind",
-        "desktop.ledger.invoices.problem.country_letters",
-        "desktop.ledger.invoices.problem.currency_letters",
         "desktop.ledger.invoices.problem.choose_rate",
         "desktop.ledger.invoices.problem.no_line",
         "desktop.ledger.invoices.problem.payment_id_shape",

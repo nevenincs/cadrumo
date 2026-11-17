@@ -14,7 +14,7 @@ from textual.app import App
 
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.operations import OperationFrontendProjection
-from cadrumo.core.time.clock import frozen_clock, now
+from cadrumo.core.time.clock import frozen_clock, now, wall_now
 from cadrumo.entrypoints.tui.tests.settling import settle
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability, EffectiveScopeSummary
@@ -107,6 +107,22 @@ def test_lifetime_ends_only_when_a_known_expiry_has_passed() -> None:
     assert not BoundSession(client).lifetime_ended()
     assert not BoundSession(client, known_expires_at=now() + timedelta(minutes=1)).lifetime_ended()
     assert BoundSession(client, known_expires_at=now() - timedelta(seconds=1)).lifetime_ended()
+
+
+@pytest.mark.asyncio
+async def test_a_frozen_document_clock_neither_ends_nor_extends_a_wall_minted_session() -> None:
+    """The runtime mints session expiry on real time, so the TUI judges it on real time too."""
+    client = _Client()
+    live = wall_now() + timedelta(minutes=5)
+    lapsed = wall_now() - timedelta(seconds=1)
+    for document_instant in (live + timedelta(days=400), lapsed - timedelta(days=400)):
+        with frozen_clock(document_instant):
+            assert not BoundSession(client, known_expires_at=live).lifetime_ended()
+            assert BoundSession(client, known_expires_at=lapsed).lifetime_ended()
+            client.expires_at = live
+            assert await BoundSession(client).confirm_with_runtime(task_name=_TASK)
+            client.expires_at = lapsed
+            assert not await BoundSession(client).confirm_with_runtime(task_name=_TASK)
 
 
 @pytest.mark.asyncio

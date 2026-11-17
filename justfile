@@ -1527,7 +1527,7 @@ test-native-host-facilities:
 [doc('Run the OS-credential-store custody tests (interactive desktop session only).')]
 [group('test')]
 test-os-keychain:
-    uv run --no-sync pytest -v -n0 -m "os_keychain and not native_package" src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/entrypoints/cli/config/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests dev/mcp_eval/tests src/cadrumo_runtime/host/tests/frontend/cli dev/runtime_lifecycle/tests
+    uv run --no-sync pytest -v -n0 -m "os_keychain and not native_package" src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/entrypoints/cli/config/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests dev/mcp_eval/tests src/cadrumo_runtime/host/tests/frontend/cli src/cadrumo_runtime/host/tests/test_credential_prune.py dev/runtime_lifecycle/tests
 
 [doc('Test current-source password login and logout against the real runtime (signed-in Windows desktop).')]
 [group('test')]
