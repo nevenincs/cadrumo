@@ -1428,11 +1428,13 @@ test-gate-shard shard changed_files="":
     mapfile -t targets < var/ci/shard-files.txt
     parallel_status=0
     uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' {{harness_exclusions}} "${targets[@]}" || parallel_status=$?
+    # The serial pass runs whatever the parallel pass returned, so a failed
+    # shard still reports every test it holds.
+    serial_status=0
+    uv run --no-sync pytest -v -n0 -m '(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' {{harness_exclusions}} "${targets[@]}" || serial_status=$?
     if [ "$parallel_status" -ne 0 ] && [ "$parallel_status" -ne 5 ]; then
         exit "$parallel_status"
     fi
-    serial_status=0
-    uv run --no-sync pytest -v -n0 -m '(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' {{harness_exclusions}} "${targets[@]}" || serial_status=$?
     if [ "$serial_status" -ne 0 ] && [ "$serial_status" -ne 5 ]; then
         exit "$serial_status"
     fi
