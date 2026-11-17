@@ -53,6 +53,10 @@ import type {
   PublicModeloFormExportOffer,
   SourceSurface,
 } from "./modeloWork";
+import type {
+  SourcePolicyV1,
+  TemporalProjectionDirection,
+} from "./modeloWorkFormPart2";
 
 /**
  * The closed families of earlier-filing carries a filer may state hold
@@ -403,6 +407,17 @@ export type ModeloFormInspectionReason =
   "layout_absent" | "layout_for_another_revision";
 
 /**
+ * The served operator action that resolves one listed finding, with the words
+ * and operations to offer it by.
+ */
+export type ModeloFormIssueDoorV1 = {
+  action_words?: string | null;
+  action_words_language?: OutputLanguage | null;
+  target_operation_ids?: string[];
+  action_id: string;
+};
+
+/**
  * One finding or calculation note as the check view lists it, in the form's
  * language.
  *
@@ -433,6 +448,7 @@ export type ModeloFormIssueLine = {
   answer_lead_words: string | null;
   answer_lead_words_language: OutputLanguage | null;
   invoice_id: InvoiceId | null;
+  door: ModeloFormIssueDoorV1 | null;
 };
 
 /**
@@ -1300,18 +1316,3 @@ export type SourceOverridePolicy =
   | "enter"
   | "fixed"
   | "undecided";
-
-/**
- * The family, policy and owning surface of one binding source kind.
- */
-export type SourcePolicyV1 = {
-  source_kind: BindingSourceKind;
-  family: SourceFamily;
-  override_policy: SourceOverridePolicy;
-  surface: SourceSurface;
-};
-
-/**
- * How a resolved coordinate relates to the declaration supplying it.
- */
-export type TemporalProjectionDirection = "authored" | "backward" | "forward";

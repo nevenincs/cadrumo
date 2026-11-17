@@ -20,6 +20,8 @@ from ....application.modelo.calculation_bucket_actions import (
 )
 from ....application.modelo.profile_drift_gate import PROFILE_SUPERSEDED_FILED_KEY
 from ....application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
+from ....application.modelo.work_form_issue_lines import form_issue_lines
+from ....application.modelo.work_form_models import ModeloWorkForm
 from ....application.modelo.work_form_service import load_modelo_work_form
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import bundled_indexed_authority
@@ -102,10 +104,10 @@ def _record_paths(revision: CalculationRevision) -> frozenset[str]:
     )
 
 
-def _superseded(repos: Repos, work_unit: WorkUnit) -> list[ModeloFormIssue]:
+def _form(repos: Repos, work_unit: WorkUnit) -> ModeloWorkForm:
     wu_repo, cr_repo, _fr_repo, vr_repo, _bv_repo = repos
     with bundled_indexed_authority().operation() as operation:
-        form = load_modelo_work_form(
+        return load_modelo_work_form(
             work_unit.bucket_id,
             work_unit.modelo,
             work_unit.filing_year,
@@ -117,6 +119,10 @@ def _superseded(repos: Repos, work_unit: WorkUnit) -> list[ModeloFormIssue]:
             admission=None,
             language=OutputLanguage.EN,
         ).form
+
+
+def _superseded(repos: Repos, work_unit: WorkUnit) -> list[ModeloFormIssue]:
+    form = _form(repos, work_unit)
     return [issue for issue in form.issues if issue.finding.message_locale_key == PROFILE_SUPERSEDED_FILED_KEY]
 
 
@@ -133,6 +139,19 @@ def test_an_edited_read_fact_serves_the_amendment_door_on_the_filed_form(repos: 
     # The filed bytes stand: the finding asks for a check, it does not block.
     assert issue.finding.severity is ModeloVerificationFindingSeverity.WARNING
     assert issue.attention is ModeloFormAttention.CHECK
+
+
+def test_the_amendment_door_is_served_on_its_own_line_with_its_words_and_operations(repos: Repos) -> None:
+    work_unit, _filed_revision = _filed(repos)
+    upsert_test_profile_facts(work_unit.bucket_id, (UserProfileFact(path=_READ, value=Decimal("95")),))
+
+    doors = [line.door for line in form_issue_lines(_form(repos, work_unit), OutputLanguage.EN) if line.door]
+
+    (door,) = doors
+    assert door.action_id == "operator.modelo.work.amend"
+    assert door.action_words is not None
+    assert door.action_words_language is OutputLanguage.EN
+    assert door.target_operation_ids
 
 
 def test_an_edit_to_a_fact_the_filing_did_not_read_serves_nothing(repos: Repos) -> None:
