@@ -91,7 +91,7 @@ _INVOCATIONS = [
         ],
     ),
     ("agent-providers", _literals(*_MODULE, "providers", "--declared", "--json")),
-    ("agent-auth", _literals(*_MODULE, "auth", "status", "--json")),
+    ("agent-auth", _literals(*_MODULE, "auth", "status", "--json", "--causes")),
     (
         "agent-auth",
         [*_literals(*_MODULE, "auth", "login", "--provider"), {"slot": "provider", "kind": "identifier", "minimum": 0}],
@@ -104,7 +104,7 @@ _INVOCATIONS = [
             [
                 *_literals(*_MODULE, "auth", "connect", "--provider"),
                 {"slot": "provider", "kind": "identifier", "minimum": 0},
-                *_literals("--method", method, "--timeout", "300"),
+                *_literals("--method", method, "--timeout", "300", "--causes"),
             ],
         )
         for method in ("browser", "device", "browser-code")
