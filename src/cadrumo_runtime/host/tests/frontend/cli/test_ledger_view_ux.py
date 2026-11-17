@@ -289,11 +289,12 @@ def test_classify_can_correct_and_view_iva_category(tmp_path: Path) -> None:
         "date",
         "amount",
         "description",
+        "Statement reference",
         "IVA category",
         "review_status",
     ]
     listed_row = next(line for line in listed.output.splitlines() if txn in line)
-    assert listed_row.split("\t")[5] == "domestic_general"
+    assert listed_row.split("\t")[6] == "domestic_general"
 
     listed_es = invoke(["--language", "es", "app", "ledger", "list"])
     assert listed_es.exit_code == 0, listed_es.output
@@ -304,11 +305,12 @@ def test_classify_can_correct_and_view_iva_category(tmp_path: Path) -> None:
         "fecha",
         "importe",
         "descripción",
+        "Referencia del extracto",
         "Categoría de IVA",
         "estado_revisión",
     ]
     listed_es_row = next(line for line in listed_es.output.splitlines() if txn in line)
-    assert listed_es_row.split("\t")[5] == "domestic_general"
+    assert listed_es_row.split("\t")[6] == "domestic_general"
 
 
 def test_ledger_view_surfaces_manual_decision_provenance(tmp_path: Path) -> None:

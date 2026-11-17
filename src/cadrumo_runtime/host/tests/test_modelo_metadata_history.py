@@ -35,6 +35,7 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.public_period import PublicPeriod
+from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.repository import upsert_work_unit
@@ -353,7 +354,7 @@ def _refuse_ambiguous_and_invalid_reads(api: VerifiedConnection, profile_id: UUI
             {
                 "profile_id": str(profile_id),
                 "modelo": "130",
-                "year": 1899,
+                "year": FOUR_DIGIT_YEAR_FIRST - 1,
                 "period": {"filing_year": 2026, "code": "1T"},
             }
         ),

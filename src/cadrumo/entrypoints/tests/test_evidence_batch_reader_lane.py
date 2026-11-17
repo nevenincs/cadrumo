@@ -24,6 +24,8 @@ from ...application.ledger.evidence_ingestion_contracts import (
     LedgerEvidenceBatchProjection,
     LedgerEvidenceBatchRequest,
 )
+from ...application.operations.error_detail import served_words_language
+from ...application.operator_actions.served_actions import serve_precondition_verdict
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationTerminalCondition
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -72,8 +74,11 @@ def test_a_role_with_no_selection_refuses_its_first_document_and_pauses_the_rest
     first, second = projection.run.items
     assert first.status == "refused"
     assert first.refusal_verdict is not None
-    assert first.refusal_verdict.to_verdict() == model_run_refusal_verdict(
-        ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION), role=ModelRole.TEXT_EXTRACTION
+    assert first.refusal_verdict.to_verdict() == serve_precondition_verdict(
+        model_run_refusal_verdict(
+            ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION), role=ModelRole.TEXT_EXTRACTION
+        ),
+        served_words_language(),
     )
     assert second.status == "paused", "a role the service cannot serve is not asked again in the same run"
     assert projection.run.inference_pause is not None
