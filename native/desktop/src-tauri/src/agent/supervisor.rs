@@ -1207,6 +1207,7 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
                 gate: Default::default(),
             };
             let task = tauri::async_runtime::spawn(async move {
+                let began = Instant::now();
                 let result = admit_person(AdmissionWork {
                     person,
                     boot: runtime_boot_id,
@@ -1219,6 +1220,16 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
                 })
                 .await
                 .map(|()| endpoint);
+                // The status the window waits on answers only once this
+                // admission completes, so its cost is kept beside startup's.
+                owner.diagnostics.service(
+                    None,
+                    ServiceFact::AgentAdmissionTiming {
+                        generation,
+                        admitted: result.is_ok(),
+                        elapsed_ms: began.elapsed().as_millis().try_into().unwrap_or(u64::MAX),
+                    },
+                );
                 let _ = owner
                     .completions
                     .send(Completion::Admitted(generation, result));
