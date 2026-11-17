@@ -28,6 +28,8 @@ from .providers.domain.catalog import MAX_CATALOG_LANES
 from .providers.domain.record import LocalEngine
 from .service_scheduling import AgentServiceScheduling
 from .service_support import (
+    CANCEL_PERSON_SIGNED_OUT,
+    CANCEL_SERVICE_STOPPING,
     HOSTED_CERTIFICATION_CACHE_SECONDS,
     SERVED_CATALOG_READ_POLICY,
     controller_is_ready,
@@ -322,10 +324,12 @@ class AgentService(AgentServiceScheduling):
 
     def request_close(self) -> None:
         """Invalidate startup publication immediately without waiting on lifecycle work."""
+        # A lease the runtime already withdrew is a person's sign-out; otherwise the service itself is ending.
+        cause = CANCEL_PERSON_SIGNED_OUT if self.client.lease is None else CANCEL_SERVICE_STOPPING
         self._closing.set()
         cancellation = self._startup_cancellation
         if cancellation is not None:
-            cancellation.cancel()
+            cancellation.cancel(cause)
         self._catalog.request_close()
         self._read_cancellation.cancel()
         controller = self._controller
