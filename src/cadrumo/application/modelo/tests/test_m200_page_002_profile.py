@@ -12,7 +12,6 @@ from ....core.external_constants import OutputLanguage
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.form_codes import form_for_role
-from ....domain.calculations.registry.m200_page_002_rules import resolve_m200_page_002_rules
 from ....domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ....domain.calculations.registry.tests.authored_editions import open_ended_revision, revision_first_exercise
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
@@ -32,9 +31,7 @@ from ...filing.m200_projection import (
 from ...operations.next_step import OperationOpenProfileFieldStepV1
 from ..action_errors import ModeloProfileReadinessError
 from ..m200_page_002_profile import (
-    M200Page002FamilyState,
     M200Page002Refusal,
-    m200_page_002_family_answers,
     modelo_200_profile_facts,
 )
 
@@ -280,21 +277,25 @@ def test_an_incomplete_row_names_its_missing_field(operation: PinnedAuthorityOpe
 def test_the_entidades_menores_family_is_served_as_not_applicable_to_a_sociedad_limitada(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    work_unit, _ = _work_unit()
-    as_of = work_unit.period.end_date
-    rules = resolve_m200_page_002_rules(operation, effective_date=as_of)
+    work_unit, layout = _work_unit()
+    families = m200_projection_families(work_unit.period.end_date, authority=operation)
 
-    answers = {
-        answer.section: answer
-        for answer in m200_page_002_family_answers(_record(operation, _sociedad_limitada()), rules=rules, as_of=as_of)
-    }
+    facts = modelo_200_profile_facts(
+        work_unit=work_unit,
+        operation=operation,
+        export_layout=layout,
+        profile_record=_record(operation, _sociedad_limitada()),
+    )
 
-    entidad_menor = answers["m200_entidad_menor_dependiente"]
-    assert entidad_menor.state is M200Page002FamilyState.NOT_APPLICABLE
-    assert entidad_menor.deciding_fact == "taxpayer_type.legal_entity_form"
-    assert entidad_menor.deciding_value == "sl"
-    assert answers["m200_administrador"].state is M200Page002FamilyState.ROWS
-    assert answers["m200_secretario_consejo"].state is M200Page002FamilyState.STATED_NONE
+    assert getattr(facts.projection_rows, families["m200_entidad_menor_dependiente"]) == ()
+    assert len(getattr(facts.projection_rows, families["m200_administrador"])) == 1
+    assert getattr(facts.projection_rows, families["m200_secretario_consejo"]) == ()
+
+    refusal = _refusal(operation, _sociedad_limitada(**{"m200_entidad_menor_dependiente.0.nif": _SOCIO_NIF}))
+
+    assert refusal.context is not None
+    assert refusal.context["reason"] == M200Page002Refusal.ROWS_CONTRADICT_ANSWER.value
+    assert refusal.context["deciding_fact"] == "taxpayer_type.legal_entity_form"
 
 
 def test_rows_beyond_the_design_places_refuse(operation: PinnedAuthorityOperation) -> None:
