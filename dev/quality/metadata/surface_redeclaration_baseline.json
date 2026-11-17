@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "counts": {
-    "wire-type": 1149,
+    "wire-type": 1145,
     "tui-date-decision": 1,
     "tui-precedence": 7,
     "duplicated-helper": 97
@@ -619,7 +619,6 @@
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentDocumentRef",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentDropSignal",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentEngineHealth",
-      "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentQuestion",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentQuestionnaire",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentQuestionnaireAnswer",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentSelectionRecord",
@@ -629,7 +628,6 @@
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentServiceStatus",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentSession",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentStreamEvent",
-      "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentToolKind",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentToolRefusal",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentUploadEvent",
       "wire-type:native/desktop/frontend/src/shell/agentSession.ts:AgentUploadPick",
@@ -644,10 +642,8 @@
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentRanWith",
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentRead",
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentReplyRecord",
-      "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentRunStatus",
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentSnapshot",
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentToolCall",
-      "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentToolStatus",
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentTurnRecord",
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentUsage",
       "wire-type:native/desktop/frontend/src/shell/agentViews.ts:AgentViews",

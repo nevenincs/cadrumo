@@ -1,6 +1,8 @@
-import type { AgentToolKind } from "./agentSession";
-import type { ProviderCondition } from "./agentGatewayContract";
-import type { AgentRunStatus } from "./agentViews";
+import type {
+  ProviderCondition,
+  ThreadStatus,
+  ToolKind,
+} from "./agentGatewayContract";
 import type { Translate } from "./strings";
 
 // The words for the closed values cadrumo-agent serves, and for nothing else:
@@ -19,10 +21,10 @@ const TOOL_KINDS = {
   fetch: "desktop.agent.tool_kind_fetch",
   switch_mode: "desktop.agent.tool_kind_switch_mode",
   other: "desktop.agent.tool_kind_other",
-} as const satisfies Record<AgentToolKind, string>;
+} as const satisfies Record<ToolKind, string>;
 
 /** What kind of tool a call or a request is: one of cadrumo-agent's ten. */
-export function toolKindWords(t: Translate, kind: AgentToolKind): string {
+export function toolKindWords(t: Translate, kind: ToolKind): string {
   return t(TOOL_KINDS[kind]);
 }
 
@@ -55,7 +57,7 @@ export function conditionWords(
  * transcript draws no indicator for. Null for every other state. */
 export function runStateWords(
   t: Translate,
-  status: AgentRunStatus,
+  status: ThreadStatus,
 ): string | null {
   switch (status) {
     case "cancelling":

@@ -25,6 +25,32 @@ export type AttachmentPolicyResponse = {
 };
 
 /**
+ * How one question is answered.
+ *
+ * `choice` offers a bounded set of declared options and admits exactly one of
+ * them verbatim as its answer; `text` admits free prose up to
+ * `MAX_ANSWER_CHARS`. The two exhaust the vocabulary: a kind the renderer does
+ * not know is a question it cannot render, so the set is closed.
+ */
+export type ClarificationKind = "choice" | "text";
+
+/**
+ * One bounded question inside a clarification request.
+ *
+ * `options` belongs to `choice` and only to `choice`: a text question carrying
+ * options would advertise a constraint the answer path does not enforce, and a
+ * choice without options would offer nothing to choose. Both are refused at
+ * construction rather than tolerated and interpreted downstream.
+ */
+export type ClarificationQuestion = {
+  id: string;
+  prompt: string;
+  kind: ClarificationKind;
+  options?: string[] | null;
+  required?: boolean;
+};
+
+/**
  * One model's licence, as its lane's catalog states it, with the text.
  *
  * `spdx`, `name` and `digest` are the catalog entry's `licence`; `digest` is
@@ -168,3 +194,39 @@ export type SkillVerificationRecord = {
   valid: boolean;
   findings: SkillFindingRecord[];
 };
+
+/**
+ * Durable lifecycle states for a run.
+ */
+export type ThreadStatus =
+  | "submitted"
+  | "running"
+  | "input_required"
+  | "cancelling"
+  | "cancelled"
+  | "completed"
+  | "failed"
+  | "archived"
+  | "repair_needed"
+  | "reconciling"
+  | "deleting";
+
+/**
+ * Lifecycle states for a single tool invocation.
+ */
+export type ToolCallStatus = "pending" | "in_progress" | "completed" | "failed";
+
+/**
+ * ACP tool categories (mirrors agentclientprotocol.com schema).
+ */
+export type ToolKind =
+  | "read"
+  | "edit"
+  | "delete"
+  | "move"
+  | "search"
+  | "execute"
+  | "think"
+  | "fetch"
+  | "switch_mode"
+  | "other";

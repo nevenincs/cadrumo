@@ -10,7 +10,7 @@ import {
   MAX_ANSWER_CHARS,
   type AnswerFault,
 } from "../../shell/agentClarification";
-import type { AgentQuestion } from "../../shell/agentSession";
+import type { ClarificationQuestion } from "../../shell/agentGatewayContract";
 import { useStrings, type Translate } from "../../shell/strings";
 import { AgentTextAction } from "./AgentAction";
 
@@ -51,7 +51,7 @@ export function QuestionsPrompt({
   onAnswer,
   onDecline,
 }: {
-  questions: readonly AgentQuestion[];
+  questions: readonly ClarificationQuestion[];
   /** The answers by question id, empty ones left out. Without it, Answer
    * says it is not available. */
   onAnswer?: (answers: Record<string, string>) => void;
@@ -130,7 +130,7 @@ function QuestionField({
   fault,
   onChange,
 }: {
-  question: AgentQuestion;
+  question: ClarificationQuestion;
   value: string;
   fault: AnswerFault | undefined;
   onChange: (answer: string) => void;

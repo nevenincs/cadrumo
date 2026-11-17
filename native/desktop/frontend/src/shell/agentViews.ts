@@ -14,12 +14,13 @@ import { formatCount } from "../shared/numbers";
 import { effortWords } from "./agentCatalog";
 import { sentFiles } from "./agentDocuments";
 import type { Effort, ProviderTransport } from "./agentCatalogContract";
-import type { ProviderCondition } from "./agentGatewayContract";
 import type {
-  AgentApproval,
-  AgentQuestionnaire,
-  AgentToolKind,
-} from "./agentSession";
+  ProviderCondition,
+  ThreadStatus,
+  ToolCallStatus,
+  ToolKind,
+} from "./agentGatewayContract";
+import type { AgentApproval, AgentQuestionnaire } from "./agentSession";
 import { conditionWords, toolKindWords } from "./agentWords";
 import { listed } from "./compose";
 import { logRef } from "./providerSignInWords";
@@ -38,32 +39,14 @@ import type { Translate } from "./strings";
 // message id that tells two identical messages apart, no place for a tool call
 // among a reply's text.
 
-/** A run's lifecycle: cadrumo-agent's `ThreadStatus`, as it is served. */
-export type AgentRunStatus =
-  | "submitted"
-  | "running"
-  | "input_required"
-  | "cancelling"
-  | "cancelled"
-  | "completed"
-  | "failed"
-  | "archived"
-  | "repair_needed"
-  | "reconciling"
-  | "deleting";
-
-/** Where a tool call is: cadrumo-agent's `ToolCallStatus`. */
-export type AgentToolStatus =
-  "pending" | "in_progress" | "completed" | "failed";
-
 /** A tool call as the agent reports it: its `tool_call_id`, its `title` (the
  * tool's name), its `kind` and its `status`. The stream carries nothing of
  * its input or result; the history may say more in `details`. */
 export type AgentToolCall = {
   id: string;
   title: string;
-  tool_kind: AgentToolKind;
-  status: AgentToolStatus;
+  tool_kind: ToolKind;
+  status: ToolCallStatus;
   /** What the history says of the call, as the agent worded it and the
    * host cut it: its input, its result and the places it touched. Absent
    * while the call is only streamed. */
@@ -148,7 +131,7 @@ export type AgentReplyRecord = {
   kind: "reply";
   /** The run's id: the reply's handle. */
   id: string;
-  status: AgentRunStatus;
+  status: ThreadStatus;
   /** For a failed run, why its provider failed. */
   provider_condition?: ProviderCondition | null;
   /** For a failed run, the agent's one line about it. */
@@ -369,7 +352,7 @@ export function useCachedRead<T>(
 }
 
 /** Whether a run is still going: neither settled nor past help. */
-export const isLiveStatus = (status: AgentRunStatus): boolean =>
+export const isLiveStatus = (status: ThreadStatus): boolean =>
   status === "submitted" ||
   status === "running" ||
   status === "input_required" ||
@@ -379,7 +362,7 @@ export const isLiveStatus = (status: AgentRunStatus): boolean =>
  * repair or is being reconciled is neither being written nor finished: the
  * column says so beside the conversation, and the transcript draws no
  * indicator for it. */
-function replyState(status: AgentRunStatus): AgentReplyState {
+function replyState(status: ThreadStatus): AgentReplyState {
   switch (status) {
     case "submitted":
     case "running":
