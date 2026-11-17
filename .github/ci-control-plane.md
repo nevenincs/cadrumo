@@ -236,3 +236,8 @@ change that produced it.
   `CADRUMO_PACKAGE_AGENT_SOURCE_DIR_WINDOWS` name the cadrumo-agent checkout on
   the Linux and the Windows self-hosted runner; one path cannot serve both
   machines. Each job passes its own as `CADRUMO_PACKAGE_AGENT_SOURCE_DIR`.
+  `windows-contracts` also passes the Windows one as
+  `CADRUMO_DEV_AGENT_CHECKOUT`, because the agent-service tests that
+  `just test-windows` selects start the real agent from a synced checkout, and
+  sets `CADRUMO_DEV_AGENT_HOSTED_ROOT` under the runner's temporary directory,
+  because the agent refuses a root that a Git checkout contains.
