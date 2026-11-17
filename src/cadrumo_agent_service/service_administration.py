@@ -187,6 +187,7 @@ class AgentServiceAdministration(ABC):
             closing=self._closing,
             lease=lambda: self.client.lease,
             hosted_certifications=self._hosted_certifications,
+            agent_starting=self._agent_starting,
         )
         self._ownership = ExitStack()
         # Plain reads that never wait on the agent tree, by their admin action.
@@ -457,18 +458,28 @@ class AgentServiceAdministration(ABC):
             return {"kind": "refused", "code": "invalid_request"}
         return self._provider_admin(action, provider, expected_revision, base_url, choice, method, secret)
 
+    def _agent_starting(self) -> bool:
+        """Say whether an agent start is under way, until it is ready, refused or cancelled."""
+        start = self._start_thread
+        controller = self._controller
+        return (start is not None and start.is_alive()) or (
+            controller is not None and controller.state is AgentHostState.STARTING
+        )
+
     def _provider_lanes(self) -> dict[str, Any]:
         """Read the lanes without the supplier check; a plain store read that never waits on the agent tree.
 
         It answers the ``providers`` part of ``status`` and runs no command-line probe, so a cli
-        lane's program state is ``unknown``.
+        lane's program state is ``unknown``; its ``reads_pending`` is the status's, from the same
+        kept reads.
         """
         if self._closing.is_set():
             return {"kind": "refused", "code": "service_stopping"}
         lease = self.client.lease
         if lease is None:
             return {"kind": "refused", "code": "signed_out"}
-        observed = self._providers.lanes().model_dump(mode="json")
+        # The same reads the status waits on: a setup read that finds the lanes asks for them as well.
+        observed = self._providers.lanes(reads_pending=self._provider_status.reads_pending()).model_dump(mode="json")
         if self.client.lease != lease:
             return {"kind": "refused", "code": "signed_out"}
         return observed

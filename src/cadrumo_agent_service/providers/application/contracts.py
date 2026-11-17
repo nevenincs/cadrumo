@@ -227,6 +227,10 @@ class ProviderSettingsStatus(OutputSchema):
     """Masked status of every catalogued provider, in catalog order."""
 
     providers: tuple[ProviderStatusEntry, ...] = Field(min_length=1)
+    reads_pending: bool
+    """Whether something this answer could not yet serve is still under way: the agent's start, the sign-in
+    methods before the agent named them, or a command-line lane's login reading. ``False`` once all have
+    settled, a failed read or start included; while ``True`` a later read serves what they keep."""
 
 
 class ProviderSettingsAnswer(OutputSchema):
@@ -239,6 +243,10 @@ class ProviderSettingsAnswer(OutputSchema):
     """GUI sign-in methods supported per canonical provider slug."""
     console_sign_in_command: str | None = None
     """The console command that signs a provider in by hand, with a ``{provider}`` slot; absent when not served."""
+    reads_pending: bool
+    """Whether something this answer could not yet serve is still under way: the agent's start, the sign-in
+    methods before the agent named them, or a command-line lane's login reading. ``False`` once all have
+    settled, a failed read or start included; while ``True`` a later read serves what they keep."""
 
 
 class ProviderSignInSnapshot(OutputSchema):

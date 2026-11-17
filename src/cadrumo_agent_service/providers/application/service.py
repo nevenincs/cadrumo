@@ -66,6 +66,9 @@ from .ports import (
 )
 from .resolution import lane_mode, read_revision, status_entry
 
+type ReadsPending = Callable[[tuple[ProviderStatusEntry, ...]], bool]
+"""Asked with the lanes as read: whether a background read that keeps what they show is still under way."""
+
 
 class AssistantAuthChoice(StrEnum):
     """The assistant-authentication choices a person can make."""
@@ -105,19 +108,25 @@ class ProviderSettingsService:
         self._clock = clock
         self._cli_state_probe = cli_state_probe
 
-    def status(self) -> ProviderSettingsStatus | ProviderSettingsRefusal:
-        """Return masked status of every catalogued provider the selected engine is served, or a typed refusal."""
-        return self._status(observe_cli=True)
+    def status(self, *, reads_pending: ReadsPending) -> ProviderSettingsStatus | ProviderSettingsRefusal:
+        """Return masked status of every catalogued provider the selected engine is served, or a typed refusal.
 
-    def lanes(self) -> ProviderSettingsStatus | ProviderSettingsRefusal:
+        ``reads_pending`` is asked, with the lanes as read, whether the reads that keep what they
+        show are still under way; this service runs none of them.
+        """
+        return self._status(observe_cli=True, reads_pending=reads_pending)
+
+    def lanes(self, *, reads_pending: ReadsPending) -> ProviderSettingsStatus | ProviderSettingsRefusal:
         """Return every lane as ``status`` does, without probing a provider's command-line app.
 
         A cli lane's program state is ``unknown``, as it is where no probe is supplied; every
         other fact is the one ``status`` reports.
         """
-        return self._status(observe_cli=False)
+        return self._status(observe_cli=False, reads_pending=reads_pending)
 
-    def _status(self, *, observe_cli: bool) -> ProviderSettingsStatus | ProviderSettingsRefusal:
+    def _status(
+        self, *, observe_cli: bool, reads_pending: ReadsPending
+    ) -> ProviderSettingsStatus | ProviderSettingsRefusal:
         try:
             catalog = self._catalog_source.catalog()
         except ProviderCatalogUnavailableError:
@@ -126,12 +135,10 @@ class ProviderSettingsService:
         reads = self._store.read(tuple(entry.id for entry in entries))
         if isinstance(reads, StoreRefusal):
             return _refusal_for_store(reads.code)
-        return ProviderSettingsStatus(
-            providers=tuple(
-                self._status_entry(entry, read, observe_cli=observe_cli)
-                for entry, read in zip(entries, reads, strict=True)
-            ),
+        lanes = tuple(
+            self._status_entry(entry, read, observe_cli=observe_cli) for entry, read in zip(entries, reads, strict=True)
         )
+        return ProviderSettingsStatus(providers=lanes, reads_pending=reads_pending(lanes))
 
     def set_credential(
         self,
@@ -460,4 +467,5 @@ __all__ = [
     "AssistantAuthChoice",
     "BaseUrlChange",
     "ProviderSettingsService",
+    "ReadsPending",
 ]

@@ -47,7 +47,7 @@ for (const transition of ["profile", "sign-out", "host"] as const)
               pending.push({ resolve, reject }),
             );
           const host: ProviderSettings = {
-            status: async () => ({ providers: [record] }),
+            status: async () => ({ providers: [record], reads_pending: false }),
             set: change,
             turnOff: change,
             turnOn: change,
@@ -535,7 +535,7 @@ async function localAiProbe(
                       ? reject({ code: "busy" })
                       : resolve();
               });
-              return { providers: [] };
+              return { providers: [], reads_pending: false };
             }
             if (options.settingsMode && !succeed) {
               if (options.settingsMode === "inflight" && settings === 1)

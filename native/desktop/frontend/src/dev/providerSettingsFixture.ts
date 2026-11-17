@@ -188,6 +188,9 @@ export type ProviderSignInFixtureControls = {
   ) => void;
   /** Which providers the service declares GUI sign-in for. */
   offerSignIn: (providers: readonly string[]) => void;
+  /** The next `times` status reads answer while the service still reads the
+   * sign-in routes behind them: `reads_pending`, with none offered. */
+  pendSignInReads: (times?: number) => void;
   /** A browser sign-in asks for an authorization code to be pasted back. */
   askForCode: () => void;
   /** The sign-in calls asked so far, with the attempt each named. */
@@ -243,6 +246,7 @@ let rejectNextStart: {
   detail: ProviderSignInFixtureRefusal;
 } | null = null;
 let fixtureSignInProviders: readonly string[] = FIXTURE_SIGN_IN_PROVIDERS;
+let pendingSignInReads = 0;
 let askForCode = false;
 let fixtureSignInCalls: ProviderSignInFixtureCall[] = [];
 let failNextStatus: {
@@ -367,6 +371,7 @@ export function providerSettingsFixture({
   rejectNextSignOut = null;
   failNextStatus = null;
   fixtureSignInCalls = [];
+  pendingSignInReads = 0;
   let changes = 0;
   const records = new Map<string, ProviderSettingsRecord>(
     SEEDS.map((seed) => [
@@ -432,6 +437,9 @@ export function providerSettingsFixture({
     },
     offerSignIn(providers) {
       fixtureSignInProviders = [...providers];
+    },
+    pendSignInReads(times = 1) {
+      pendingSignInReads = times;
     },
     askForCode() {
       askForCode = true;
@@ -714,18 +722,21 @@ export function providerSettingsFixture({
       const listed = new Set(
         settingsLanesUnderEngine(selectedEngine()).map((seed) => seed.id),
       );
+      // While the service still reads the sign-in routes it offers none and
+      // says the answer is pending.
+      const readsPending = pendingSignInReads > 0;
+      if (readsPending) pendingSignInReads -= 1;
+      const offered = readsPending ? [] : fixtureSignInProviders;
       return {
         providers: [...records.values()]
           .filter((record) => listed.has(record.id))
           .map(served),
-        sign_in_providers: [...fixtureSignInProviders],
+        sign_in_providers: [...offered],
         sign_in_methods: Object.fromEntries(
-          fixtureSignInProviders.map((provider) => [
-            provider,
-            [...fixtureSignInMethods],
-          ]),
+          offered.map((provider) => [provider, [...fixtureSignInMethods]]),
         ),
         console_sign_in_command: CONSOLE_SIGN_IN_COMMAND,
+        reads_pending: readsPending,
       };
     },
     signIn: signInControlsSettings,

@@ -71,7 +71,7 @@ def _local_lanes(models: LocalModelListService) -> tuple[str, ...]:
 
 
 def _settings_lanes(settings: ProviderSettingsService) -> tuple[str, ...]:
-    status = settings.status()
+    status = settings.status(reads_pending=lambda _lanes: False)
     assert isinstance(status, ProviderSettingsStatus), status
     return tuple(entry.id for entry in status.providers)
 

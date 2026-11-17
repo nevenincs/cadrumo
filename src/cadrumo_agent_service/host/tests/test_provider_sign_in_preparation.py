@@ -248,7 +248,7 @@ def test_status_preserves_refusal_without_adding_success_metadata(
         gateway_bearer=bytearray(),
         emit=lambda _event: None,
     )
-    monkeypatch.setattr(service._providers, "status", lambda: ProviderSettingsRefusal(code=code))
+    monkeypatch.setattr(service._providers, "status", lambda **_reads: ProviderSettingsRefusal(code=code))
 
     assert service.admin("status") == {"code": code.value}
 
@@ -280,7 +280,13 @@ def test_status_answer_serves_the_console_command_template_once(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     service = _service(tmp_path)
-    monkeypatch.setattr(service._providers, "status", lambda: ProviderSettingsStatus(providers=(_entry(),)))
+    monkeypatch.setattr(
+        service._providers,
+        "status",
+        lambda *, reads_pending: ProviderSettingsStatus(
+            providers=(_entry(),), reads_pending=reads_pending((_entry(),))
+        ),
+    )
     monkeypatch.setattr(service._catalog, "gui_sign_in_methods", lambda: {})
     answer = service.admin("status")
     assert answer["console_sign_in_command"] == "cadrumo-agent-service provider-login --provider {provider}"

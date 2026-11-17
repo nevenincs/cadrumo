@@ -237,6 +237,9 @@ declare global {
      * each logged as held when it is asked, as a service slow to answer only
      * where it is would. */
     __scenarioAgentStatusHold?: { hold(): void; release(): void };
+    /** Holds the agent's catalog reads until released, each logged as held
+     * when it is asked, as a service slow to answer only its catalog would. */
+    __scenarioAgentCatalogHold?: { hold(): void; release(): void };
     /** Commits a change to the fixture agent's local model list elsewhere. */
     __scenarioLocalModelsChangeElsewhere?: () => void;
     /** Which models the made-up computer holds, changed behind the window's
@@ -757,6 +760,19 @@ export function scenarioHost(
       }
       return read(...args);
     };
+  let catalogHeld: Promise<void> | null = null;
+  let releaseCatalog = () => {};
+  window.__scenarioAgentCatalogHold = {
+    hold() {
+      catalogHeld = new Promise((release) => {
+        releaseCatalog = release;
+      });
+    },
+    release() {
+      catalogHeld = null;
+      releaseCatalog();
+    },
+  };
   // The window calls the served session through this one, looking each method
   // up when it is called: a spec that replaces a method of the served session
   // (window.__fixtureAgentSession) is then the one the window calls.
@@ -768,6 +784,17 @@ export function scenarioHost(
       await afterReads();
       return read()!(...args);
     });
+  const catalogRead =
+    <Args extends unknown[], Result>(
+      read: (...args: Args) => Promise<Result>,
+    ) =>
+    async (...args: Args) => {
+      if (catalogHeld) {
+        say("agentProviderCatalogHeld");
+        await catalogHeld;
+      }
+      return read(...args);
+    };
   const agentSession: typeof servedSession = Object.assign(
     Object.create(servedSession) as typeof servedSession,
     {
@@ -779,7 +806,9 @@ export function scenarioHost(
         "agentObserveStatus",
         heldSession(() => servedSession.observeStatus)!,
       ),
-      providerCatalog: heldSession(() => servedSession.providerCatalog)!,
+      providerCatalog: catalogRead(
+        heldSession(() => servedSession.providerCatalog)!,
+      ),
       localModels: heldSession(() => servedSession.localModels),
       localEngine: heldSession(() => servedSession.localEngine),
       skills: heldSession(() => servedSession.skills),
