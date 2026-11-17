@@ -1092,11 +1092,499 @@ for (const provider of PROVIDERS) {
               : "no outcome before the person's time ran out",
         );
       }
+      // The lane's transport names its entry in the composer's provider list.
+      const transport = await exec(
+        (id) =>
+          document
+            .querySelector(`li[data-lane="${id}"]`)
+            ?.getAttribute("data-transport") ?? null,
+        found.lane.id,
+      );
+      stateOf(provider).signedIn = { laneId: found.lane.id, transport };
       // The window offers no provider sign-out for an app connection; the
       // credential the app stored lives under this run's copy of the profile.
       line.teardown = "no-window-sign-out";
     },
   );
+
+  if (provider === "claude")
+    signInCase(
+      "PSI-50 a signed-in Claude lane answers a message with no session error",
+      provider,
+      "agent-answer",
+      async (t, line) => {
+        if (!INTERACTIVE) {
+          line.reason =
+            "CADRUMO_SIGN_IN_INTERACTIVE is not 1: no person completes the browser flow";
+          t.skip(line.reason);
+          return "skipped";
+        }
+        const signedIn = stateOf(provider).signedIn;
+        if (!signedIn) {
+          line.reason =
+            "the attended Claude success case did not reach signed in: no signed-in Claude lane to send from";
+          t.skip(line.reason);
+          return "skipped";
+        }
+        line.lane = signedIn.laneId;
+        await askAgent(line, provider, signedIn);
+      },
+    );
+}
+
+// ---------------------------------------------------------------------------
+// A message to the agent and its reply (PSI-50)
+// ---------------------------------------------------------------------------
+
+const AGENT_MESSAGE = "Responde solo con la palabra: listo";
+const REPLY_MS = 180_000;
+
+/** The agent column's words a reader of the transcript and composer needs. */
+const agentWords = () => ({
+  transcript: label("desktop.agent.transcript"),
+  youSaid: label("desktop.agent.you_said"),
+  replied: label("desktop.agent.agent_replied"),
+  working: label("desktop.agent.working"),
+  waiting: label("desktop.agent.waiting_on_you"),
+  stopped: label("desktop.agent.stopped"),
+  message: label("desktop.agent.message_label"),
+  send: label("desktop.agent.send"),
+  stop: label("desktop.agent.stop"),
+});
+
+/** Mark a part of the composer as the click target: its message field, its
+ * agent settings button (named by `settings`, a whole-name pattern), or its
+ * send or stop button. Answers "marked", "held" or "absent". */
+function pageMarkComposer(part, words, settings) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const shown = (el) => !!el && el.getClientRects().length > 0;
+  for (const old of document.querySelectorAll("[data-psi-target]"))
+    old.removeAttribute("data-psi-target");
+  const field = [
+    ...document.querySelectorAll('textarea[data-slot="textarea"]'),
+  ].find((el) => shown(el) && el.getAttribute("aria-label") === words.message);
+  if (!field) return "absent";
+  let target = null;
+  if (part === "field") target = field;
+  else {
+    // The composer is the nearest ancestor of the field that holds its send
+    // or stop button.
+    const named = (el, name) =>
+      (el.getAttribute("aria-label") ?? "").startsWith(name);
+    let card = field.parentElement;
+    for (let depth = 0; card && depth < 8; depth += 1) {
+      const buttons = [...card.querySelectorAll("button")].filter(shown);
+      if (
+        buttons.some((el) => named(el, words.send) || named(el, words.stop))
+      ) {
+        const pattern = new RegExp(settings);
+        target =
+          part === "settings"
+            ? buttons.find((el) =>
+                pattern.test(norm(el.getAttribute("aria-label"))),
+              )
+            : buttons.find(
+                (el) =>
+                  el.getAttribute("data-slot") === "icon-button" &&
+                  named(el, part === "send" ? words.send : words.stop),
+              );
+        break;
+      }
+      card = card.parentElement;
+    }
+  }
+  if (!target) return "absent";
+  if (target.getAttribute("aria-disabled") === "true" || target.disabled)
+    return "held";
+  target.setAttribute("data-psi-target", "1");
+  return "marked";
+}
+
+/** Mark the first shown icon button whose name starts with `name`. */
+function pageMarkIconButton(name) {
+  for (const old of document.querySelectorAll("[data-psi-target]"))
+    old.removeAttribute("data-psi-target");
+  const button = [
+    ...document.querySelectorAll('button[data-slot="icon-button"]'),
+  ].find(
+    (el) =>
+      el.getClientRects().length > 0 &&
+      (el.getAttribute("aria-label") ?? "").startsWith(name),
+  );
+  if (!button) return "absent";
+  if (button.getAttribute("aria-disabled") === "true") return "held";
+  button.setAttribute("data-psi-target", "1");
+  return "marked";
+}
+
+/** The shown transcript: how many turns it lists, and the agent's reply to
+ * the person's `message` (the agent turns after it) as lengths and states;
+ * never its text. `running` is whether the composer offers Stop. */
+function pageReply(message, words) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const shown = (el) => !!el && el.getClientRects().length > 0;
+  const log = [...document.querySelectorAll('[role="log"]')].find(
+    (el) => shown(el) && el.getAttribute("aria-label") === words.transcript,
+  );
+  if (!log) return { found: false };
+  const running = [
+    ...document.querySelectorAll('button[data-slot="icon-button"]'),
+  ].some(
+    (el) =>
+      shown(el) && (el.getAttribute("aria-label") ?? "").startsWith(words.stop),
+  );
+  const items = [...log.querySelectorAll("ol > li")];
+  const asked =
+    message === null
+      ? -1
+      : items.findLastIndex((li) =>
+          [...li.querySelectorAll("[aria-label]")].some(
+            (el) =>
+              el.getAttribute("aria-label") === words.youSaid &&
+              [...el.querySelectorAll("p")].some(
+                (p) => norm(p.textContent) === message,
+              ),
+          ),
+        );
+  const replies =
+    asked < 0
+      ? []
+      : items
+          .slice(asked + 1)
+          .map((li) => li.querySelector(":scope > article"))
+          .filter(
+            (article) =>
+              article && article.getAttribute("aria-label") === words.replied,
+          )
+          .map((article) => {
+            const text = [...article.children]
+              .filter(
+                (el) =>
+                  el.tagName === "DIV" &&
+                  el.classList.contains("text-foreground"),
+              )
+              .map((el) => norm(el.textContent))
+              .join(" ");
+            const says = (word) =>
+              [...article.querySelectorAll("p, button, [aria-expanded]")].some(
+                (el) => norm(el.textContent) === word,
+              );
+            return {
+              length: text.length,
+              state: article.querySelector(".text-destructive")
+                ? "failed"
+                : says(words.working)
+                  ? "working"
+                  : says(words.waiting)
+                    ? "waiting"
+                    : says(words.stopped)
+                      ? "stopped"
+                      : "done",
+            };
+          });
+  return {
+    found: true,
+    items: items.length,
+    asked: asked >= 0,
+    replies,
+    running,
+  };
+}
+
+/** Record, from now, every host call the window makes that the host does not
+ * answer as ok: its command and the refusal's closed code and reason tokens
+ * (free text is never kept). Layered over the timed fetch and removed by
+ * pageStopWatchingAnswers, which answers what was recorded. */
+function pageWatchAnswers() {
+  if (window.__psiAnswers) return true;
+  const previous = window.fetch;
+  if (typeof previous !== "function") return false;
+  const answers = [];
+  const token = (value) =>
+    typeof value === "string" &&
+    value.length <= 96 &&
+    /^[a-z][a-z0-9_.:-]*$/.test(value)
+      ? value
+      : null;
+  window.__psiPreviousFetch = previous;
+  window.__psiAnswers = answers;
+  window.fetch = function (input, init) {
+    const url = typeof input === "string" ? input : (input?.url ?? "");
+    const answer = previous.call(this, input, init);
+    if (!/^ipc:|\/\/ipc\.localhost\//.test(url)) return answer;
+    const cmd = decodeURIComponent(url.split("?")[0].split("/").pop() ?? "");
+    answer.then(
+      (response) => {
+        if (response.headers.get("Tauri-Response") === "ok") return;
+        const entry = { cmd, code: null, reason: null, failed: false };
+        answers.push(entry);
+        if (
+          (response.headers.get("content-type") ?? "").startsWith(
+            "application/json",
+          )
+        )
+          response
+            .clone()
+            .json()
+            .then(
+              (body) => {
+                entry.code = token(body?.code);
+                entry.reason = token(body?.reason);
+              },
+              () => {},
+            );
+      },
+      () => answers.push({ cmd, code: null, reason: null, failed: true }),
+    );
+    return answer;
+  };
+  return true;
+}
+
+function pageStopWatchingAnswers() {
+  const answers = window.__psiAnswers ?? [];
+  if (window.__psiPreviousFetch) window.fetch = window.__psiPreviousFetch;
+  delete window.__psiPreviousFetch;
+  delete window.__psiAnswers;
+  return answers;
+}
+
+/** The count the session-error badge on the panel rail shows, or null. */
+function pageErrorBadge() {
+  const mark = document.querySelector(
+    '[data-rail="panel"] [data-slot="badge"]',
+  );
+  if (!mark) return null;
+  return mark.textContent || mark.getAttribute("data-capped") || "shown";
+}
+
+/** Choose the signed-in lane in the composer's agent settings, as a person
+ * would: open the settings, open the provider list, pick the lane's entry. */
+async function chooseAgentLane(line, provider, signedIn, words) {
+  const settings = templatePattern(
+    label("desktop.agent.settings_label"),
+  ).source;
+  const opened = await waitFor(
+    async () =>
+      (await exec(pageMarkComposer, "settings", words, settings)) === "marked",
+    { timeout: 30_000, what: "the composer's agent settings", soft: true },
+  );
+  if (!opened)
+    assert.fail("UNMEASURED: the composer offers no agent settings button");
+  await clickSelector(TARGET);
+  await waitFor(
+    () =>
+      exec(() =>
+        [...document.querySelectorAll('[data-slot="provider-select"]')].some(
+          (el) => el.getClientRects().length > 0,
+        ),
+      ),
+    { timeout: 15_000, what: "the provider picker" },
+  );
+  await clickSelector('[data-slot="provider-select"]');
+  const way = `${provider}/${signedIn.transport}`;
+  const entry = await waitFor(
+    () =>
+      exec((way) => {
+        for (const old of document.querySelectorAll("[data-psi-target]"))
+          old.removeAttribute("data-psi-target");
+        const items = [
+          ...document.querySelectorAll('[data-slot="command-item"][data-way]'),
+        ].filter((el) => el.getClientRects().length > 0);
+        if (items.length === 0) return null;
+        const item = items.find((el) => el.getAttribute("data-way") === way);
+        const offered = items.map((el) => ({
+          way: el.getAttribute("data-way"),
+          selectable: el.getAttribute("data-disabled") !== "true",
+        }));
+        if (!item) return { found: false, offered };
+        if (item.getAttribute("data-disabled") === "true")
+          return { found: true, selectable: false, offered };
+        item.setAttribute("data-psi-target", "1");
+        return {
+          found: true,
+          selectable: true,
+          name: (item.querySelector(".font-medium")?.textContent ?? "").trim(),
+          offered,
+        };
+      }, way),
+    { timeout: 30_000, what: "the provider list's entries", soft: true },
+  );
+  line.way = way;
+  if (!entry?.found || !entry.selectable)
+    assert.fail(
+      `the composer's provider list offers no selectable "${way}" (entries: ${JSON.stringify(entry?.offered ?? [])})`,
+    );
+  await clickSelector(TARGET);
+  const chosen = await waitFor(
+    () =>
+      exec(
+        (name) =>
+          [...document.querySelectorAll('[data-slot="provider-select"]')].some(
+            (el) =>
+              el.getClientRects().length > 0 &&
+              (el.textContent ?? "").includes(name),
+          ),
+        entry.name,
+      ),
+    { timeout: 15_000, what: `the chosen ${provider} lane`, soft: true },
+  );
+  assert(chosen, `the provider picker does not show ${entry.name} as chosen`);
+  // Escape closes the agent settings, as a person leaves them.
+  await win.browser.keys(["Escape"]);
+  await waitFor(
+    () =>
+      exec(
+        () =>
+          ![...document.querySelectorAll('[data-slot="provider-select"]')].some(
+            (el) => el.getClientRects().length > 0,
+          ),
+      ),
+    { timeout: 10_000, what: "the agent settings to close", soft: true },
+  );
+}
+
+/** Open a new conversation on the signed-in lane, send AGENT_MESSAGE and
+ * judge the reply and every host answer from the send to the settled reply. */
+async function askAgent(line, provider, signedIn) {
+  const words = agentWords();
+  // The provider settings fill the agent column; the composer is behind them.
+  await closeAgentSettings();
+  const agentShown = await exec(
+    () =>
+      document
+        .querySelector('[data-rail="agent"]')
+        ?.getAttribute("aria-pressed") === "true",
+  );
+  if (!agentShown) await clickSelector('[data-rail="agent"]');
+  const fresh = await waitFor(
+    async () => {
+      const marked = await exec(
+        pageMarkIconButton,
+        label("desktop.agent.new_conversation"),
+      );
+      return marked === "absent" ? null : marked;
+    },
+    { timeout: 30_000, what: "the new conversation button", soft: true },
+  );
+  if (!fresh)
+    assert.fail("UNMEASURED: the agent column offers no new conversation");
+  if (fresh === "marked") await clickSelector(TARGET);
+  const empty = await waitFor(
+    async () => {
+      const read = await exec(pageReply, null, words);
+      return read.found && read.items === 0 ? read : null;
+    },
+    { timeout: 15_000, what: "an empty new conversation", soft: true },
+  );
+  line.new_conversation = fresh === "marked" ? "opened" : "already-new";
+  assert(empty, "the new conversation's transcript is not empty");
+
+  await chooseAgentLane(line, provider, signedIn, words);
+
+  const field = await waitFor(
+    async () => (await exec(pageMarkComposer, "field", words, "")) === "marked",
+    { timeout: 30_000, what: "the composer's message field", soft: true },
+  );
+  if (!field) assert.fail("UNMEASURED: the composer offers no message field");
+  await (await win.browser.$(TARGET)).setValue(AGENT_MESSAGE);
+  const sendable = await waitFor(
+    async () => (await exec(pageMarkComposer, "send", words, "")) === "marked",
+    {
+      timeout: 15_000,
+      what: "the send button to take the message",
+      soft: true,
+    },
+  );
+  assert(sendable, "the composer does not offer Send for the typed message");
+
+  const hostBefore = hostRecords().length;
+  const badgeBefore = await exec(pageErrorBadge);
+  assert(
+    await exec(pageWatchAnswers),
+    "the window's host calls are not watched",
+  );
+  let last = null;
+  let firstText = null;
+  const sent = Date.now();
+  try {
+    await clickSelector(TARGET);
+    last = await waitFor(
+      async () => {
+        const read = await exec(pageReply, AGENT_MESSAGE, words);
+        if (!read.found || !read.asked) return null;
+        const length = read.replies.reduce((sum, item) => sum + item.length, 0);
+        if (firstText === null && length > 0) firstText = Date.now() - sent;
+        const states = read.replies.map((item) => item.state);
+        const failed = states.includes("failed");
+        const settled =
+          !read.running &&
+          read.replies.length > 0 &&
+          states.every((state) => state === "done") &&
+          length > 0;
+        return failed || settled ? { ...read, length, states } : null;
+      },
+      { timeout: REPLY_MS, what: "the agent's settled reply", soft: true },
+    );
+    line.durations_ms.to_first_text = firstText;
+    line.durations_ms.to_settled = last ? Date.now() - sent : null;
+  } finally {
+    const answers = await exec(pageStopWatchingAnswers);
+    const refusals = answers
+      .filter((item) => item.code)
+      .map((item) =>
+        item.code === "refused" && item.reason ? item.reason : item.code,
+      );
+    line.refusal_codes = refusals;
+    line.refused = refusals.filter((code) => !ACTIONABLE_REFUSALS.has(code));
+    line.invoke_errors = answers
+      .filter((item) => !item.code)
+      .map((item) => item.cmd);
+    line.host_refused = hostRecords()
+      .slice(hostBefore)
+      .map((r) => r.service)
+      .filter((s) => s?.event === "agent_refused")
+      .map((s) => s.reason)
+      .filter((reason) => !ACTIONABLE_REFUSALS.has(reason));
+    line.error_badge_before = badgeBefore;
+    line.error_badge = await exec(pageErrorBadge);
+    // Leave the conversation as it is, with no run still in flight.
+    if ((await exec(pageMarkComposer, "stop", words, "")) === "marked") {
+      line.left_running = true;
+      await clickSelector(TARGET);
+    }
+  }
+  const read = last ?? (await exec(pageReply, AGENT_MESSAGE, words));
+  line.reply_length =
+    last?.length ??
+    (read.replies ?? []).reduce((sum, item) => sum + item.length, 0);
+  line.reply_states = last?.states ?? (read.replies ?? []).map((i) => i.state);
+  assert.deepEqual(
+    line.refused,
+    [],
+    "the host refused a call during the reply",
+  );
+  assert.deepEqual(
+    line.invoke_errors,
+    [],
+    "host calls failed during the reply",
+  );
+  assert.deepEqual(
+    line.host_refused,
+    [],
+    "the host refused the agent during the reply",
+  );
+  assert.equal(
+    line.error_badge,
+    badgeBefore,
+    `the window counts new session errors during the reply: ${line.error_badge}`,
+  );
+  assert(
+    !line.reply_states.includes("failed"),
+    "the agent's reply was drawn failed",
+  );
+  assert(last, `no settled agent reply within ${REPLY_MS / 1000} s`);
+  assert(line.reply_length > 0, "the agent's reply has no text");
 }
 
 function consoleLoginPaths() {
