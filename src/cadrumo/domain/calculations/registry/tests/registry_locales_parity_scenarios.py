@@ -51,7 +51,7 @@ def check_complete_registry_tree_locales_compile_and_validate_cleanly(
 
     # Verify Modelo 200 (newest revision)
     rev200 = _newest_revision(modelos_by_id, "200")
-    casilla_200_01 = next(c for c in rev200.casillas if c.id == "00001")
+    casilla_200_01 = next(c for c in rev200.casillas if c.id == "DP200001:00001")
     assert casilla_200_01.get_label("en") == "Non-profit entity under special tax regime Title II Law 49/2002 [00001]"
     assert casilla_200_01.get_label("ca") == (
         "Entitat sense ànim de lucre acollida al règim fiscal Títol II Llei 49/2002 [00001]"

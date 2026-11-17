@@ -137,7 +137,7 @@ segmento = "DP200014"
 number = "00550"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "01032"
+casilla_id = "DP200014:01032"
 segmento = "DP200014"
 number = "01032"
 
@@ -192,37 +192,37 @@ segmento = "DP200014"
 number = "01038"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "01039"
+casilla_id = "DP200014B:01039"
 segmento = "DP200014B"
 number = "01039"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "01040"
+casilla_id = "DP200014B:01040"
 segmento = "DP200014B"
 number = "01040"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "01041"
+casilla_id = "DP200014B:01041"
 segmento = "DP200014B"
 number = "01041"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "01280"
+casilla_id = "DP200014:01280"
 segmento = "DP200014"
 number = "01280"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "01344"
+casilla_id = "DP200014:01344"
 segmento = "DP200014"
 number = "01344"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "02314"
+casilla_id = "DP200014B:02314"
 segmento = "DP200014B"
 number = "02314"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "02315"
+casilla_id = "DP200014B:02315"
 segmento = "DP200014B"
 number = "02315"
 
@@ -342,15 +342,18 @@ segmento = "DP200026"
 number = "00625"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00001"
+casilla_id = "DP200001:00001"
+segmento = "DP200001"
 number = "00001"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00002"
+casilla_id = "DP200001:00002"
+segmento = "DP200001"
 number = "00002"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00003"
+casilla_id = "DP200001:00003"
+segmento = "DP200001"
 number = "00003"
 
 [[revisions."2023".completeness_manifest.casillas]]
@@ -358,11 +361,13 @@ casilla_id = "00008"
 number = "00008"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00012"
+casilla_id = "DP200001:00012"
+segmento = "DP200001"
 number = "00012"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00015"
+casilla_id = "DP200001:00015"
+segmento = "DP200001"
 number = "00015"
 
 [[revisions."2023".completeness_manifest.casillas]]
@@ -371,39 +376,48 @@ segmento = "DP200001"
 number = "00017"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00018"
+casilla_id = "DP200001:00018"
+segmento = "DP200001"
 number = "00018"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00019"
+casilla_id = "DP200001:00019"
+segmento = "DP200001"
 number = "00019"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00024"
+casilla_id = "DP200001:00024"
+segmento = "DP200001"
 number = "00024"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00034"
+casilla_id = "DP200001:00034"
+segmento = "DP200001"
 number = "00034"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00048"
+casilla_id = "DP200001:00048"
+segmento = "DP200001"
 number = "00048"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00063"
+casilla_id = "DP200001:00063"
+segmento = "DP200001"
 number = "00063"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00066"
+casilla_id = "DP200001:00066"
+segmento = "DP200001"
 number = "00066"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00070"
+casilla_id = "DP200001:00070"
+segmento = "DP200001"
 number = "00070"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00072"
+casilla_id = "DP200001:00072"
+segmento = "DP200001"
 number = "00072"
 
 [[revisions."2023".completeness_manifest.casillas]]
@@ -416,11 +430,13 @@ casilla_id = "01509"
 number = "01509"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00079"
+casilla_id = "DP200001:00079"
+segmento = "DP200001"
 number = "00079"
 
 [[revisions."2023".completeness_manifest.casillas]]
-casilla_id = "00080"
+casilla_id = "DP200001:00080"
+segmento = "DP200001"
 number = "00080"
 
 [[revisions."2023".completeness_manifest.casillas]]

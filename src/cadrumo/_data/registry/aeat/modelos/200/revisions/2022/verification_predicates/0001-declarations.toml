@@ -36,7 +36,7 @@ legal_refs = ["ley-27-2014:art-30"]
 [[revisions."2022".verification_predicates]]
 id = "implies-nonzero:resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo"
 predicate_id = "modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo"
-expression = 'implies_nonzero(["00500", "DP200012:00501"])'
+expression = 'implies_nonzero(["DP200012:00500", "DP200012:00501"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-27-2014:art-10", "ley-27-2014:art-30"]
 

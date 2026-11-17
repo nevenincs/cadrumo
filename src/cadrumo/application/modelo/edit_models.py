@@ -52,8 +52,8 @@ from .edit_value_grammar import ModeloEditValueGrammarV1
 
 _MAX_FINDINGS = 500
 _MAX_INTENTS = 500
-MAX_MODELO_EDIT_SURFACE_ENTRIES = 4096
-"""Bound the edit surface above the published 2025 Modelo 100's 2,320 entries."""
+MAX_MODELO_EDIT_SURFACE_ENTRIES = 8192
+"""Bound the edit surface above the largest published one: Modelo 200 2025's 5,522 entries."""
 _MAX_MESSAGE_ARGUMENTS = 16
 _MAX_EVIDENCE_REFERENCES = 64
 
