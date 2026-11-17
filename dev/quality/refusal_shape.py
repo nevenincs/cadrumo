@@ -51,6 +51,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, TypeIs
 
+from cadrumo.tests.module_target_inventory import load_all_target_sets
 from dev.paths import REPO_ROOT, UTF_8
 
 if TYPE_CHECKING:
@@ -91,6 +92,8 @@ _DOOR_KEYWORDS: Final[frozenset[str]] = frozenset(
     }
 )
 _SRC_ROOT: Final[Path] = REPO_ROOT / "src"
+_MODULE_CENSUS: Final = "dev/quality/metadata/import_load_targets.cadrumo.json"
+"""The declared inventory of every importable product module; the scan imports only modules it names."""
 
 
 @dataclass(frozen=True)
@@ -133,16 +136,28 @@ def _import_map(tree: ast.AST, module: str, *, is_package: bool) -> dict[str, tu
     return imports
 
 
+def _imported(module: str) -> object | None:
+    """``module`` as loaded, importing it only when the declared product census names it."""
+    loaded = sys.modules.get(module)
+    if loaded is not None:
+        return loaded
+    census = load_all_target_sets(_MODULE_CENSUS)
+    for target in census:
+        if target == module:
+            return importlib.import_module(target)
+    return None
+
+
 def _resolve(expr: ast.expr, module_object: object | None, imports: Mapping[str, tuple[str, str]]) -> object | None:
     if isinstance(expr, ast.Name):
         if module_object is not None and hasattr(module_object, expr.id):
             return getattr(module_object, expr.id)
         if expr.id in imports:
             target, name = imports[expr.id]
-            imported = importlib.import_module(target)
-            if hasattr(imported, name):
+            imported = _imported(target)
+            if imported is not None and hasattr(imported, name):
                 return getattr(imported, name)
-            return importlib.import_module(f"{target}.{name}")
+            return _imported(f"{target}.{name}")
         return None
     if isinstance(expr, ast.Attribute):
         base = _resolve(expr.value, module_object, imports)
@@ -416,14 +431,16 @@ def _module_name(path: Path) -> tuple[str, bool]:
 
 
 def scan_repository(root: Path = REPO_ROOT, trees: Sequence[str] = GOVERNED_TREES) -> list[Site]:
-    """Scan the governed trees under ``root``; an unimportable module raises."""
+    """Scan the governed trees under ``root``; a module the census does not declare, or cannot import, raises."""
     sites: list[Site] = []
     for tree in trees:
         for path in sorted((root / tree).rglob("*.py")):
             if "tests" in path.relative_to(root / tree).parts:
                 continue
             module, _ = _module_name(path)
-            module_object = importlib.import_module(module)
+            module_object = _imported(module)
+            if module_object is None:
+                raise LookupError(f"{module} is not declared in {_MODULE_CENSUS}; regenerate the census")
             sites.extend(
                 scan_source(
                     path.read_text(encoding=UTF_8),
