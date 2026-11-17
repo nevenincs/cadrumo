@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 import signal
@@ -22,6 +23,8 @@ from cadrumo.adapters.persistence.storage.custody.tests.automation_support impor
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import EXTENSION_SETTINGS_NAMESPACE
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.async_cleanup import close_async_resources
+from cadrumo.core.diagnostic_log import DiagnosticFormatter
+from cadrumo.core.logging import LOG_FILE_FORMAT
 from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
@@ -627,7 +630,8 @@ def test_a_service_admission_logs_how_long_it_waited_for_the_profile_and_each_st
             time.sleep(0.05)
 
     (record,) = [record for record in caplog.records if record.getMessage() == "service_admission_timing"]
-    logged = vars(record)
+    # Read the fields as the diagnostic log file writes them, after its field allowlist.
+    logged = json.loads(DiagnosticFormatter(LOG_FILE_FORMAT).format(record).split(" | ", 1)[1])
     assert logged["outcome"] == "admitted", logged
     assert logged["guard_wait_ms"] >= held_seconds * 1000 * 0.9, logged
     assert all(isinstance(logged[name], int) for name in ("queued_ms", "recheck_ms", "commit_ms", "total_ms")), logged

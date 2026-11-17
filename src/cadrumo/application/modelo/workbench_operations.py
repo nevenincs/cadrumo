@@ -23,6 +23,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Callable, Mapping
+from time import perf_counter
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
 from uuid import UUID
@@ -352,10 +353,14 @@ class ModeloEditApplyPrerequisiteProjectionV1(BaseModel):
 _log = get_logger(__name__)
 
 
-def _log_form_memo_read(kept: WorkbenchFormReadKey | None, key: WorkbenchFormReadKey) -> None:
-    """Say whether a form read was served from the session memo and, when not, which key parts moved.
+def _elapsed_ms(since: float) -> int:
+    return round((perf_counter() - since) * 1000)
 
-    Only the parts' names are logged, never their values.
+
+def _log_form_memo_read(kept: WorkbenchFormReadKey | None, key: WorkbenchFormReadKey, spent: dict[str, int]) -> None:
+    """Say whether a form read was served from the session memo, which key parts moved, and where it spent its time.
+
+    Only the parts' names and durations are logged, never their values.
     """
     if kept is None:
         outcome, changed = "empty", ""
@@ -363,7 +368,10 @@ def _log_form_memo_read(kept: WorkbenchFormReadKey | None, key: WorkbenchFormRea
         parts = changed_key_parts(kept, key)
         outcome, changed = ("miss", ",".join(parts)) if parts else ("hit", "")
     diagnostic_event(
-        _log, "workbench_form_memo_read", fields={"outcome": outcome, "changed": changed}, level=logging.INFO
+        _log,
+        "workbench_form_memo_read",
+        fields={"outcome": outcome, "changed_key_parts": changed, **spent},
+        level=logging.INFO,
     )
 
 
@@ -431,7 +439,11 @@ class ModeloWorkbenchFormExecutor:
             if held is None or ports.store_epoch is None:
                 return fresh(bucket_id, ports, contracts, None)
             # The epoch is read before anything it covers, so a write during the read only moves it on.
+            spent: dict[str, int] = {}
+            began = perf_counter()
             epoch = ports.store_epoch()
+            spent["epoch_ms"] = _elapsed_ms(began)
+            began = perf_counter()
             admission = admit_workbench_form_edit(
                 payload.work_unit_id,
                 bucket_id=bucket_id,
@@ -439,6 +451,7 @@ class ModeloWorkbenchFormExecutor:
                 operation=operation,
                 operation_contracts=contracts,
             )
+            spent["admission_ms"] = _elapsed_ms(began)
             key = WorkbenchFormReadKey(
                 profile_id=payload.profile_id,
                 work_unit_id=payload.work_unit_id,
@@ -450,8 +463,8 @@ class ModeloWorkbenchFormExecutor:
                 admission=admission_identity(admission),
             )
             kept = held.form_read.kept_key()
-            served = held.form_read.reuse(key, lambda: fresh(bucket_id, ports, contracts, admission))
-            _log_form_memo_read(kept, key)
+            served = held.form_read.reuse(key, lambda: fresh(bucket_id, ports, contracts, admission, spent))
+            _log_form_memo_read(kept, key, spent)
             return with_fresh_admission(served, admission)
 
         def fresh(
@@ -459,7 +472,9 @@ class ModeloWorkbenchFormExecutor:
             ports: ModeloWorkbenchReadPorts,
             contracts: OperationPublicContractSetV1,
             admission: ModeloEditAdmissionResultV1 | None,
+            spent: dict[str, int] | None = None,
         ) -> ModeloWorkbenchFormProjectionV1:
+            began = perf_counter()
             form = read_modelo_workbench_form(
                 payload.work_unit_id,
                 bucket_id=bucket_id,
@@ -469,6 +484,9 @@ class ModeloWorkbenchFormExecutor:
                 language=payload.output_language,
                 admission=admission,
             )
+            if spent is not None:
+                spent["form_ms"] = _elapsed_ms(began)
+            began = perf_counter()
             admission = form.admission
             projection_context = None
             if isinstance(admission, ModeloEditAdmittedV1):
@@ -482,9 +500,12 @@ class ModeloWorkbenchFormExecutor:
                     logical_generation=operation.generation.logical_generation,
                     language=payload.output_language,
                 )
-            return project_modelo_workbench_form(
+            projected = project_modelo_workbench_form(
                 payload.profile_id, payload.work_unit_id, form, memory=memory, context=projection_context
             )
+            if spent is not None:
+                spent["projection_ms"] = _elapsed_ms(began)
+            return projected
 
         return await _read(
             context, phase=MODELO_WORK_FORM_OPERATION_DEFINITION_ID, task_name="modelo-work-form-read", read=read
