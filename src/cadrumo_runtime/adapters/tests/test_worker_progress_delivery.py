@@ -77,7 +77,13 @@ class _CueOwner(UnavailableApprovalAuthority):
     def model_run(self, authority: WorkerAuthorizationRequest, command: WorkerModelRun, body: bytearray) -> NoReturn:
         raise AssertionError("progress must not run a model")
 
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
+    def operations_advanced(
+        self,
+        operation_ids: tuple[OperationId, ...],
+        *,
+        records_changed: bool = False,
+        settled: tuple[OperationId, ...] = (),
+    ) -> None:
         self.publications.append((time.perf_counter_ns(), records_changed))
         self.profiles._operations_advanced(self.profile_id, operation_ids, records_changed)
         self.completed.append(time.perf_counter_ns())
