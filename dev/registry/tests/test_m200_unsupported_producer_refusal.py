@@ -1,18 +1,16 @@
 """Modelo 200 unsupported producer fields: a stated value refuses, an absent one keeps its blank fill.
 
-Two kinds of Modelo 200 field have no wire content stated by their edition's
-official design:
+The DP200DID "Período Impositivo inicio - Año" and "fin - Año" fields are Num
+of length 2 with an empty Contenido cell in every edition, so no official text
+says which digits they carry. The export therefore refuses, with a typed
+terminal refusal and no byte written, whenever it would have to write one, and
+writes the slot's declared blank fill when the fact is absent and the layout
+lets the slot stay empty.
 
-- the DP200DID "Período Impositivo inicio - Año" and "fin - Año" fields, Num of
-  length 2 with an empty Contenido cell in every edition, so no official text
-  says which digits they carry;
-- page 1 field 26, "Autoliquidación rectificativa - ... solicito dar de baja la
-  domiciliación efectuada", whose own Validación and Contenido cells are empty
-  in the editions that carry it.
-
-The export therefore refuses, with a typed terminal refusal and no byte
-written, whenever it would have to write one, and writes the slot's declared
-blank fill when the fact is absent and the layout lets the slot stay empty.
+Page 1 field 26, "Autoliquidación rectificativa - ... solicito dar de baja la
+domiciliación efectuada", is the contrast: sheet DP200014B Nota 1 of its design
+states that the field "tiene valor 1 (opción SÍ)", so a stated statement is
+written as 1.
 
 Each case runs the real ``build_draft`` and ``export_draft`` path for every
 Modelo 200 edition with a committed generated export. The slots are located by
@@ -93,7 +91,7 @@ class _DesignSlot:
 
 @dataclass(frozen=True, slots=True)
 class _Family:
-    """One kind of unsupported field: its design sheet, record tag, row test and producer keys."""
+    """One kind of Modelo 200 field: its design sheet, record tag, row test and producer keys."""
 
     sheet: str
     record_tag: bytes
@@ -107,7 +105,7 @@ class _Family:
 
 _DID_YEARS = _Family("DP200DID", b"<T200DID00>", frozenset({_INICIO, _FIN}))
 _BAJA_DOMICILIACION = _Family("DP200001", b"<T20001000>", frozenset({_BAJA}))
-_FAMILIES = (_DID_YEARS, _BAJA_DOMICILIACION)
+_FAMILIES = (_DID_YEARS,)
 
 
 def _editions() -> tuple[_Edition, ...]:
@@ -271,9 +269,6 @@ def _stated_cases() -> Iterator[object]:
                 ("both", {_INICIO: year[-2:], _FIN: year}),
             ):
                 yield pytest.param(edition, stated, id=f"{edition.revision}-did-{name}")
-        if _design_slots(edition.source_ref, _BAJA_DOMICILIACION):
-            for token in ("1", "0"):
-                yield pytest.param(edition, {_BAJA: token}, id=f"{edition.revision}-baja-domiciliacion-{token}")
 
 
 @pytest.mark.parametrize(("edition", "stated"), tuple(_stated_cases()))
@@ -326,3 +321,27 @@ def test_a_planted_required_unsupported_slot_refuses_even_without_a_value(editio
     assert unsupported_producer_keys(planted, headers) == (planted_key,)
     with pytest.raises(FilingExportValidationError):
         require_supplied_producers(planted, headers, modelo=_M200)
+
+
+def _baja_editions() -> tuple[object, ...]:
+    return tuple(
+        pytest.param(edition, id=edition.revision)
+        for edition in _editions()
+        if _design_slots(edition.source_ref, _BAJA_DOMICILIACION)
+    )
+
+
+@pytest.mark.parametrize("edition", _baja_editions())
+def test_a_stated_baja_de_domiciliacion_exports_1_at_its_design_slot(edition: _Edition) -> None:
+    """The statement made is written as the design note's 'valor 1 (opción SÍ)', and the export succeeds."""
+    (slot,) = _design_slots(edition.source_ref, _BAJA_DOMICILIACION)
+    sink = _PayloadSink()
+    revision = _export(edition.filing_year, sink, **{_fact_name(_BAJA): "1"})
+
+    assert sink.payload is not None
+    (line,) = [line for line in sink.payload.split(b"\r\n") if _BAJA_DOMICILIACION.record_tag in line]
+    record = line[line.index(_BAJA_DOMICILIACION.record_tag) :]
+    assert (slot.length, slot.design_type) == (1, "Num")
+    assert record[slot.offset - 1 : slot.offset - 1 + slot.length] == b"1"
+    assert _BAJA not in UNSUPPORTED_PRODUCER_KEYS
+    assert [field.offset for field in _cited_fields(revision, _BAJA_DOMICILIACION.keys)] == [slot.offset]

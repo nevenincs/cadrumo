@@ -362,17 +362,11 @@ ordinal = "26"
 record_identity = "DP200001"
 
 [singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m200-2025-dp200001-r0031"
-decision_statement = "DP200001 source row 31: encode selected as 1 and absent or unselected as 0."
-justification = "Reviewed exact-anchor policy, not official-source text, for DP200001 source row 31. The own Validación and Contenido cells of this indicator in the DR200-2024 design (DP200001!F31, DP200001!G31) are empty and the Orden anexo prints no box for it, so the export refuses any stated value for this field as an unsupported producer field; this rule governs only the slot's zero fill when the fact is absent."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "DP200001"
-source_row = 31
-source_cell = "A31"
-ordinal = "26"
-record_identity = "DP200001"
+authority_kind = "official_source"
+source_sheet = "DP200014B"
+source_cell = "A102"
+expected_normalized_statement = "Estas casillas solo pueden tener contenido si el campo \"Autoliquidación rectificativa - Como consecuencia de la presentación de la autoliquidación rectificativa solicito dar de baja la domiciliación efectuada\" de la página 1 tiene valor 1 (opción SÍ)."
+justification = "Own-edition design text: the DR200-2024 design, sheet DP200014B, Nota 1 (cell A102, repeated in Nota 2 at A106), names this page 1 field, \"Autoliquidación rectificativa - Como consecuencia de la presentación de la autoliquidación rectificativa solicito dar de baja la domiciliación efectuada\", and states that it \"tiene valor 1 (opción SÍ)\" when the declarant makes the statement, so 1 writes the statement made. The value domain \"0\" o \"1\" of this one-position Num indicator is stated by its sibling cell DP200001!G106 of the same design, so 0 writes the statement not made."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
