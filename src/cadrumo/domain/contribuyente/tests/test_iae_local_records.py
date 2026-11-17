@@ -22,7 +22,7 @@ from ..iae_local_facts import (
     iae_superficies_from_facts,
 )
 from ..iae_local_record import IaeLocalAfectacion, SuperficieRegla14Clase
-from ..inmueble_facts import facts_for_row
+from .profile_row_facts import facts_for_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

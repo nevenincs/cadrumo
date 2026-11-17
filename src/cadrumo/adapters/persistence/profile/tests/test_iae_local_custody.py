@@ -34,7 +34,7 @@ from cadrumo.domain.contribuyente.iae_local_facts import (
     iae_superficies_from_facts,
 )
 from cadrumo.domain.contribuyente.iae_local_record import SuperficieRegla14Clase
-from cadrumo.domain.contribuyente.inmueble_facts import facts_for_row
+from cadrumo.domain.contribuyente.tests.profile_row_facts import facts_for_row
 from cadrumo.domain.user_profile.values import UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
