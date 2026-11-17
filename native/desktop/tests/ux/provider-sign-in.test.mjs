@@ -265,6 +265,9 @@ function pageProviderGroup(provider, words) {
             .querySelector('[data-slot="provider-status"]')
             ?.getAttribute("data-status") ?? null,
         on: swatch ? swatch.getAttribute("aria-checked") === "true" : null,
+        // pending while the service's sign-in reads are out; offered or
+        // unavailable once they settle.
+        signInState: lane.getAttribute("data-sign-in"),
         signIn: buttons.some((el) => norm(el.textContent) === words.signIn),
         unavailable: [...lane.querySelectorAll('p[role="note"]')].some(
           (el) => norm(el.textContent).length > 0,
@@ -496,6 +499,25 @@ async function signInLane(provider) {
   );
   if (!group)
     return { reason: `the provider settings list no provider "${provider}"` };
+  // The window draws a lane before the service has said how it signs in: judge
+  // the lanes only once one offers sign-in or every lane that is on has settled.
+  const settled = (read) =>
+    read.lanes.some((item) => item.signIn) ||
+    read.lanes
+      .filter((item) => item.on !== false)
+      .every((item) => ["offered", "unavailable"].includes(item.signInState));
+  group =
+    (await waitFor(
+      async () => {
+        const read = await readGroup(provider);
+        return read.found && settled(read) ? read : null;
+      },
+      {
+        timeout: 60_000,
+        what: `the sign-in reads of ${provider}`,
+        soft: true,
+      },
+    )) ?? (await readGroup(provider));
   let lane = group.lanes.find((item) => item.signIn);
   if (!lane) {
     // A sign-in lane that is off offers no sign-in: turn it on, as a person
@@ -517,7 +539,7 @@ async function signInLane(provider) {
     return {
       reason:
         `no lane of "${provider}" offers "${signInWords()}" ` +
-        `(lanes: ${JSON.stringify(group.lanes.map(({ id, status, on, unavailable }) => ({ id, status, on, unavailable })))})`,
+        `(lanes: ${JSON.stringify(group.lanes.map(({ id, status, on, signInState, unavailable }) => ({ id, status, on, signInState, unavailable })))})`,
     };
   return { lane };
 }
