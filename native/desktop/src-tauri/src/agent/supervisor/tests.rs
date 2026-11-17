@@ -492,7 +492,7 @@ async fn startup_timeout_is_observed_while_canonical_status_is_pending() {
         let _ = lock(&gate).recv();
         Ok(Prepared {
             command: Command::new("cadrumo-timed-out-preparation-must-never-launch"),
-            person: None,
+            person: Box::new(|| Ok(None)),
             local_engine_default:
                 cadrumo_application::provisioning::local_ai::LocalEngine::LlamaCpp,
         })
@@ -550,7 +550,7 @@ async fn a_profile_change_invalidates_preparation_before_its_result_can_launch()
         }
         Ok(Prepared {
             command: Command::new("cadrumo-cancelled-preparation-must-never-launch"),
-            person: None,
+            person: Box::new(|| Ok(None)),
             local_engine_default:
                 cadrumo_application::provisioning::local_ai::LocalEngine::LlamaCpp,
         })
