@@ -314,12 +314,45 @@ export function AgentColumn({
     });
   const opened =
     opens.open !== settingsOpen && settingsOpen ? opens.count + 1 : opens.count;
+  const needsCredential =
+    status?.state === "refused" &&
+    status.code === "agent_provider_credential_missing";
   const settings = useProviderSettings(
     providerSettings,
     reader,
-    settingsOpen && shown,
+    (settingsOpen && shown) || needsCredential,
     opened,
   );
+  const previousLogins = useRef<{ reader: string; lanes: Set<string> } | null>(
+    null,
+  );
+  useEffect(() => {
+    if (reader === null || settings.read.kind !== "ready") {
+      previousLogins.current = null;
+      return;
+    }
+    if (settings.read.value.readsPending) return;
+    const lanes = new Set(
+      settings.read.value.providers
+        .filter(
+          (lane) =>
+            lane.mode !== "disabled" && lane.cliState === "installed_signed_in",
+        )
+        .map((lane) => lane.id),
+    );
+    const prior = previousLogins.current;
+    previousLogins.current = { reader, lanes };
+    if (
+      needsCredential &&
+      prior?.reader === reader &&
+      [...lanes].some((id) => !prior.lanes.has(id))
+    ) {
+      void session?.retry?.().catch((error: unknown) => {
+        if (currentReader.current === reader)
+          setView((held) => ({ ...held, sendFailure: failureCode(error) }));
+      });
+    }
+  }, [needsCredential, reader, session, settings.read]);
   // The host cannot read the settings while the service starts the agent, so
   // they are read again each time the service publishes the agent ready. The
   // lanes the agent serves follow the engine it runs under, so they are also
