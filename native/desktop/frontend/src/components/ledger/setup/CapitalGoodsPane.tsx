@@ -18,6 +18,7 @@ import type {
   BienesInversionDeclareProjection,
 } from "../../../shell/ledgerCapitalGoodsContract";
 import { servedRefusalWords } from "../../../shell/ledger";
+import { useEntryYears } from "../../../shell/ledgerPeriods";
 import { takesCapitalGoodAcquisition } from "../../../shell/ledgerContract";
 import { LEDGER_PAGE_SIZE } from "../../../shell/ledgerWindow";
 import { vocabularyEmpty } from "../movements/movementWords";
@@ -42,7 +43,7 @@ import {
 } from "./SetupParts";
 import { EditorField } from "./EditorField";
 import type { SetupProps } from "./setupProps";
-import { parsePoints, setupCall, wholeYear } from "./setupModel";
+import { parsePoints, setupCall } from "./setupModel";
 import { grammarText, tokenText } from "./setupWords";
 import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
@@ -91,8 +92,14 @@ export function CapitalGoodsPane({ port, reader, locale, rows }: SetupProps) {
 
   const cuotaParsed = parseDecimal(cuota, TAX_AMOUNT_RULE);
   const pctParsed = parsePoints(pct);
-  const acquired = wholeYear(year);
-  const disposed = disposalYear.trim() ? wholeYear(disposalYear) : null;
+  // A year is held to the window the backend serves for a typed year.
+  const entryYears = useEntryYears();
+  const typedYear = (raw: string) => {
+    const parsed = parseYear(raw, entryYears);
+    return parsed.kind === "value" ? parsed.value : null;
+  };
+  const acquired = typedYear(year);
+  const disposed = disposalYear.trim() ? typedYear(disposalYear) : null;
   // The purchases a good can name: the largest of the year typed, which is all
   // that is decrypted, or with no year yet the movements the page has loaded.
   const yearRows = useSetupRead(
@@ -271,7 +278,7 @@ export function CapitalGoodsPane({ port, reader, locale, rows }: SetupProps) {
     parsed.kind === "refused" ? grammarText(t, parsed.refusal) : null;
   const yearError = (typed: string, read: number | null) => {
     if (!typed.trim() || read !== null) return null;
-    const refused = parseYear(typed);
+    const refused = parseYear(typed, entryYears);
     return refused.kind === "refused" ? grammarText(t, refused.refusal) : null;
   };
   return (

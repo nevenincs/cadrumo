@@ -21,7 +21,7 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.filing_year import FourDigitYear
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import OperationEffect, profile_operation_subject
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.parsing.codes import IsoCurrencyCodeText
 from ...core.time.clock import now
 from ..ledger.read_access import resolve_ledger_request_read_access
@@ -29,7 +29,6 @@ from ..operations.access_resolution import OperationAccessContext, ResolvedOpera
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.models import (
     OperationRequest,
-    OperationTerminalCondition,
     OperationTerminalReceipt,
     require_succeeded_terminal_receipt,
 )

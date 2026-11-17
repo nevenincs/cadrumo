@@ -7,6 +7,7 @@
 // with none served a typed value is refused as not yet checkable.
 
 import type { PublicPeriod } from "./ledgerInvoiceContract";
+import type { LedgerEntryYearWindow } from "./ledgerEntryContract";
 import { ledgerLimits } from "./ledgerLimits";
 import type { LedgerEntryLimits } from "./ledgerSetup";
 
@@ -386,31 +387,34 @@ export function parseLine(raw: string, max?: number | null): Parsed<string> {
  * (`./ledgerPeriods`); the window works none of them out. */
 export type LedgerPeriod = { year: number; code: string };
 
-/** Whether a number is written as a year is: four digits. Which years exist is
- * the registry's, and no limit on them is held here. */
-export const yearAdmitted = (year: number) =>
-  Number.isInteger(year) && String(year).length === 4 && year > 0;
+const inWindow = (year: number, years: LedgerEntryYearWindow) =>
+  Number.isInteger(year) && year >= years.earliest && year <= years.latest;
 
-/** A typed filing year. */
-export function parseYear(raw: string): Parsed<number> {
+/** A typed filing year, held to the window of years the backend serves with
+ * the ledger limits; no bound on a year is held here. A null window, where
+ * none is served, refuses what is typed as not yet checkable. */
+export function parseYear(
+  raw: string,
+  years: LedgerEntryYearWindow | null,
+): Parsed<number> {
   const text = raw.trim();
   if (text === "") return { kind: "empty" };
+  if (years === null) return refuse("limits_unavailable", raw);
   const year = Number(text);
-  return /^\d{4}$/.test(text) && yearAdmitted(year)
+  // A year is written in its own digits: no sign, point or leading zero.
+  return String(year) === text && inWindow(year, years)
     ? value(year)
     : refuse("year_not_a_number", raw);
 }
 
-/** A year field's stepper: by one or by ten, staying put where the step would
- * leave a year that can be written. */
-export function stepYear(year: number, by: number): number {
-  return yearAdmitted(year + by) ? year + by : year;
-}
-
-/** The years of `year`'s decade that can be written. */
-export function decadeYears(year: number): number[] {
-  const first = Math.floor(year / 10) * 10;
-  return Array.from({ length: 10 }, (_, at) => first + at).filter(yearAdmitted);
+/** A year field's step by `by`, or null where it would leave the window
+ * served or none is served: there is nowhere to step to. */
+export function stepYear(
+  year: number,
+  by: number,
+  years: LedgerEntryYearWindow | null,
+): number | null {
+  return years !== null && inWindow(year + by, years) ? year + by : null;
 }
 
 export const samePeriod = (

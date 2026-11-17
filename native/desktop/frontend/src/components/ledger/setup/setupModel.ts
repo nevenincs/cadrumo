@@ -300,12 +300,6 @@ export function parsePoints(raw: string): Parsed<string> {
   return parsed;
 }
 
-/** A whole year of four digits, or null. */
-export function wholeYear(raw: string): number | null {
-  const text = raw.trim();
-  return /^\d{4}$/.test(text) ? Number(text) : null;
-}
-
 /** A JSON object the person pasted or a picked file held, or why it is
  * not one. */
 export function parseObject(
