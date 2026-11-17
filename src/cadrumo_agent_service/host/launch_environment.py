@@ -69,6 +69,8 @@ TOOL_SERVER_VARIABLE: Final = "CADRUMO_AGENT_TOOL_SERVER_CADRUMO"
 """The absolute path of the ``cadrumo-mcp`` tool server the agent may mount."""
 TOOL_SERVER_ARGUMENTS_VARIABLE: Final = "CADRUMO_AGENT_TOOL_SERVER_ARGS_CADRUMO"
 """The JSON array of arguments the agent gives that tool server."""
+TOOL_SERVER_ARGUMENTS: Final = ("--surface", DEFAULT_MCP_SURFACE.value)
+"""The arguments every mount of the ``cadrumo-mcp`` tool server receives, the agent's and the console's."""
 FORWARD_VARIABLE: Final = "CADRUMO_AGENT_FORWARD"
 """The comma-separated names the agent forwards to the tool servers and programs it starts."""
 OLLAMA_BASE_URL_VARIABLE: Final = "CADRUMO_AGENT_OLLAMA_BASE_URL"
@@ -331,7 +333,7 @@ def agent_launch_environment(
     if python is not None:
         environment[PROGRAM_PYTHON_VARIABLE] = str(python)
     environment[TOOL_SERVER_VARIABLE] = str(relay)
-    environment[TOOL_SERVER_ARGUMENTS_VARIABLE] = json.dumps(["--surface", DEFAULT_MCP_SURFACE.value])
+    environment[TOOL_SERVER_ARGUMENTS_VARIABLE] = json.dumps(list(TOOL_SERVER_ARGUMENTS))
     forwarded = [STORAGE_ROOT.variable]
     if PROFILE_ROOT_VARIABLE in environment:
         forwarded.append(PROFILE_ROOT_VARIABLE)
