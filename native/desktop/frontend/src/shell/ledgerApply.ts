@@ -15,14 +15,14 @@ import {
   type LedgerPort,
 } from "./ledger";
 import type {
-  LedgerAddResult,
-  LedgerBulkClassifyResult,
+  LedgerUpdateOperationResult,
+  LedgerAddOperationResult,
+  LedgerBulkClassifyProjection,
   LedgerClassifyField,
-  LedgerClassifyRequest,
-  LedgerClassifyResult,
-  LedgerLlmReviewRequest,
-  LedgerUpdateResult,
-} from "./ledgerMovementOperations";
+  LedgerClassifyWindowRequest,
+  LedgerClassifyOperationResult,
+} from "./ledgerMovementContract";
+import type { LedgerLlmReviewWindowRequest } from "./ledgerMovementCheckContract";
 import type { LedgerPlan, PlanStep } from "./ledgerPlan";
 import {
   actionRows,
@@ -170,7 +170,7 @@ function settledOutcome(
   if (validation) return each(validation);
   switch (step.kind) {
     case "bulk": {
-      const batch = (result as unknown as LedgerBulkClassifyResult).result;
+      const batch = (result as unknown as LedgerBulkClassifyProjection).result;
       if (!batch) return each(refused("validation_error"));
       const failed = new Map(
         batch.failures.map((failure) => [failure.row_index, failure.reason]),
@@ -191,7 +191,7 @@ function settledOutcome(
       };
     }
     case "classify": {
-      const written = result as unknown as LedgerClassifyResult;
+      const written = result as unknown as LedgerClassifyOperationResult;
       return each(
         written.bucket_event_ids.length
           ? { kind: "applied", newId: null }
@@ -199,7 +199,7 @@ function settledOutcome(
       );
     }
     case "update": {
-      const written = result as unknown as LedgerUpdateResult;
+      const written = result as unknown as LedgerUpdateOperationResult;
       if (!written.bucket_event_ids.length) return each({ kind: "unchanged" });
       const after = written.transaction?.transaction_id ?? null;
       return each({
@@ -208,7 +208,7 @@ function settledOutcome(
       });
     }
     case "add": {
-      const written = result as unknown as LedgerAddResult;
+      const written = result as unknown as LedgerAddOperationResult;
       // A replay of the same add returns the row it stored and writes
       // nothing.
       return each(
@@ -352,7 +352,7 @@ export function followUps(step: PlanStep, result: JsonObject): PlanStep[] {
       const wanted = child.classify;
       const id = children[at]!;
       if (!wanted) return [];
-      const patch: LedgerClassifyRequest["patch"] = {
+      const patch: LedgerClassifyWindowRequest["patch"] = {
         business_classification: wanted.classification,
       };
       const fields: StageField[] = ["business_classification"];
@@ -477,8 +477,9 @@ export async function runPlan(
         settled = outcomeOf(step, answered);
         if (answered.kind === "settled" && DONE.has(settled.outcome.kind)) {
           if (step.kind === "add") {
-            const created = (answered.result as unknown as LedgerAddResult)
-              .transaction?.transaction_id;
+            const created = (
+              answered.result as unknown as LedgerAddOperationResult
+            ).transaction?.transaction_id;
             if (created && isTransactionPrefix(created))
               ids.set(step.draftKey, created);
           }
@@ -771,7 +772,7 @@ export function releaseReview(
 export async function askReview(
   port: LedgerPort,
   definition: "ledger.classify.review" | "ledger.split.review",
-  request: LedgerLlmReviewRequest,
+  request: LedgerLlmReviewWindowRequest,
 ): Promise<LedgerOutcome> {
   const earlier = releasing.get(request.transaction_id);
   if (earlier) await Promise.all([...earlier]);

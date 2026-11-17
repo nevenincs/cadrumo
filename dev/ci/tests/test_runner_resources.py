@@ -45,6 +45,10 @@ _KILL_RECORDS: Final = "dmesg"
 _ONLY_WHEN_FAILED: Final = "${{ failure() }}"
 _SHELL_OPERATORS: Final = ("|", "&", ";")
 _LONGEST_INTERVAL: Final = 60
+#: Each test worker holds 1 to 1.7 GB before its first test and levels off at
+#: 3 to 4 GB (one reached 5.5 GB). Four of them used the hosted runner's 16 GB
+#: and 3 GB swap whatever the shard size, and the runner was lost mid-test.
+_MOST_SHARD_WORKERS: Final = 3
 
 _MEMINFO: Final = (
     "MemTotal:       16384000 kB\n"
@@ -198,6 +202,11 @@ def _shard_violations(document: Mapping[str, Any]) -> list[str]:
         for index in shard_steps:
             violations.extend(_step_violations(job_name, steps[index]))
         violations.extend(_kill_record_violations(job_name, job, shard_steps[-1]))
+        workers = str((job.get("env") or {}).get("CADRUMO_PYTEST_WORKERS", ""))
+        if not workers.isdigit() or not 1 <= int(workers) <= _MOST_SHARD_WORKERS:
+            violations.append(
+                f"{job_name} runs its shard with {workers or 'no'} test workers, not 1 to {_MOST_SHARD_WORKERS}"
+            )
         setups = [step for step in steps if step.get("uses") == _SETUP_ACTION]
         if not any((step.get("with") or {}).get("browser") in (True, "true") for step in setups):
             violations.append(f"{job_name} runs the shard population without provisioning Chromium")
@@ -287,3 +296,16 @@ def test_the_shard_rule_reports_a_shard_job_without_chromium() -> None:
     setup = next(step for step in document["jobs"]["tests"]["steps"] if step.get("uses") == _SETUP_ACTION)
     del setup["with"]["browser"]
     assert _shard_violations(document) == ["tests runs the shard population without provisioning Chromium"]
+
+
+@pytest.mark.parametrize("workers", ["4", "auto", ""])
+def test_the_shard_rule_reports_more_workers_than_the_runner_holds(workers: str) -> None:
+    document = _live()
+    env = document["jobs"]["tests"]["env"]
+    if workers:
+        env["CADRUMO_PYTEST_WORKERS"] = workers
+    else:
+        del env["CADRUMO_PYTEST_WORKERS"]
+    assert _shard_violations(document) == [
+        f"tests runs its shard with {workers or 'no'} test workers, not 1 to {_MOST_SHARD_WORKERS}"
+    ]

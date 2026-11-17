@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from uuid import UUID
 
 import typer
 from pydantic import ValidationError
 
-from ...application.operations.public_scalar import PublicDecimal
 from ...application.retencion_soportada_certificado.requests import (
     RetencionSoportadaListRequest,
     RetencionSoportadaRecordRequest,
@@ -17,22 +15,15 @@ from ...application.retencion_soportada_certificado.requests import (
 from ...core.i18n.render import tr
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...domain.renta.retencion_soportada import RetencionSoportadaOrigen
-from .common import active_bucket_id_or_refuse, bad, emit_envelope
-from .decimal_parsing import parse_decimal_amount
+from .common import bad, emit_envelope
+from .decimal_parsing import parse_public_decimal_amount
 from .operation_ledger_retencion_soportada import (
     list_retencion_soportada,
     record_retencion_soportada,
     remove_retencion_soportada,
 )
+from .profile_bound_clients import active_profile_id
 from .retencion_soportada_results import RetencionSoportadaRowPayload
-
-
-def _profile_id() -> UUID:
-    return UUID(active_bucket_id_or_refuse())
-
-
-def _amount(raw: str, *, label: str) -> PublicDecimal:
-    return PublicDecimal(decimal=str(parse_decimal_amount(raw, label=label, signed=False)))
 
 
 def _stated(figure: str | None) -> str:
@@ -69,15 +60,17 @@ def retencion_soportada_record(
 ) -> None:
     """Record or replace the figures one payer's certificate states and present the stored row."""
     amounts = {
-        "importe_integro_dinerario": _amount(importe_integro_dinerario, label="--importe-integro"),
-        "valoracion_especie": _amount(valoracion_especie, label="--valoracion-especie"),
-        "retencion": _amount(retencion, label="--retencion"),
-        "ingreso_a_cuenta": _amount(ingreso_a_cuenta, label="--ingreso-a-cuenta"),
-        "ingreso_a_cuenta_repercutido": _amount(ingreso_a_cuenta_repercutido, label="--ingreso-a-cuenta-repercutido"),
+        "importe_integro_dinerario": parse_public_decimal_amount(importe_integro_dinerario, label="--importe-integro"),
+        "valoracion_especie": parse_public_decimal_amount(valoracion_especie, label="--valoracion-especie"),
+        "retencion": parse_public_decimal_amount(retencion, label="--retencion"),
+        "ingreso_a_cuenta": parse_public_decimal_amount(ingreso_a_cuenta, label="--ingreso-a-cuenta"),
+        "ingreso_a_cuenta_repercutido": parse_public_decimal_amount(
+            ingreso_a_cuenta_repercutido, label="--ingreso-a-cuenta-repercutido"
+        ),
     }
     try:
         request = RetencionSoportadaRecordRequest(
-            profile_id=_profile_id(),
+            profile_id=active_profile_id(),
             ejercicio=ejercicio,
             income_class=income_class,
             payer_tax_id=payer_tax_id,
@@ -90,10 +83,12 @@ def retencion_soportada_record(
             reducciones_aplicables=(
                 None
                 if reducciones_aplicables is None
-                else _amount(reducciones_aplicables, label="--reducciones-aplicables")
+                else parse_public_decimal_amount(reducciones_aplicables, label="--reducciones-aplicables")
             ),
             gastos_deducibles=(
-                None if gastos_deducibles is None else _amount(gastos_deducibles, label="--gastos-deducibles")
+                None
+                if gastos_deducibles is None
+                else parse_public_decimal_amount(gastos_deducibles, label="--gastos-deducibles")
             ),
             **amounts,
         )
@@ -111,7 +106,7 @@ def retencion_soportada_record(
 def retencion_soportada_list(ctx: typer.Context, ejercicio: int) -> None:
     """Read the stored payer records of one ejercicio and present them without tax identifiers."""
     try:
-        request = RetencionSoportadaListRequest(profile_id=_profile_id(), ejercicio=ejercicio)
+        request = RetencionSoportadaListRequest(profile_id=active_profile_id(), ejercicio=ejercicio)
     except ValidationError:
         raise bad(tr("cli.app.ledger.retencion_soportada.invalid_input")) from None
     result = list_retencion_soportada(ctx, request)
@@ -133,7 +128,7 @@ def retencion_soportada_remove(
     """Remove one payer record against the revision a list showed."""
     try:
         request = RetencionSoportadaRemoveRequest(
-            profile_id=_profile_id(),
+            profile_id=active_profile_id(),
             ejercicio=ejercicio,
             income_class=income_class,
             payer_ref=payer_ref,

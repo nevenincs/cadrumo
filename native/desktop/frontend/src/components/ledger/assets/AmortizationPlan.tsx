@@ -1,7 +1,7 @@
 import { Alert } from "@/components/ui/alert";
 import { Icon } from "@/components/ui/icon";
 import type { LedgerPort } from "../../../shell/ledger";
-import type { ListDisposal } from "../../../shell/ledgerSetup";
+import type { ActivityAssetListDisposal } from "../../../shell/ledgerActivityAssetReadContract";
 import { useStrings } from "../../../shell/strings";
 import { CallLine, Reading } from "../setup/SetupParts";
 import { AmortizationLimits } from "./AmortizationLimits";
@@ -39,7 +39,7 @@ export function AmortizationPlan({
   assetId: string;
   locale: string;
   /** The baja the element's current revision records, said above the plan. */
-  disposal?: ListDisposal | null;
+  disposal?: ActivityAssetListDisposal | null;
   year?: number | null;
   /** Whose ledger; null while the account withholds it. */
   reader?: string | null;

@@ -95,11 +95,14 @@ No other job in the gate may be skipped or advisory.
 
 **Scope.** For a pull request into `feature/tui`, `dev.ci.change_scope` maps
 the changed paths to the test directories they can affect, and the plan deals
-those test files into shards (`dev.ci.gate_shards`): about 900 files to a
-shard, eight shards at most, largest files first onto the lightest shard. A
-typical pull request is one shard. A promotion pull request into `main`, and a
-call from the release proof, read no change list and run the full population
-in eight shards.
+those test files into shards (`dev.ci.gate_shards`): at most 400 files to a
+shard, twenty-four shards at most, largest files first onto the lightest shard.
+A shard of 400 files finishes in about a quarter of an hour; the runner's
+memory is held by the worker count (see Worker counts). A contract holds the
+full tree within the cap at that size.
+A typical pull request is one shard. A promotion pull request into `main`, and
+a call from the release proof, read no change list and run the full population
+(19 shards at 7231 test files).
 
 **Concurrency.** A pull request's runs share one group and a newer event
 cancels the older run. A push run's group ends in its own commit, so the runs
@@ -110,7 +113,7 @@ not only `cancel-in-progress: false`, because a group holds one running and
 one pending run: a third landing would replace the pending run of the second,
 and trains land faster than a run finishes. The cost is that the gate applies
 no back-pressure. Runs for successive heads overlap, each starts its own
-seventeen jobs at eight shards, and when landings outpace the account's
+its jobs (twenty-eight at nineteen shards), and when landings outpace the account's
 hosted-runner allowance the jobs wait in GitHub's queue, so a head's verdict
 can arrive well after its landing.
 
@@ -202,8 +205,11 @@ self-hosted fleet.
 Every pytest invocation a workflow reaches carries an explicit worker count,
 never `-n auto`.
 
-A hosted runner has four cores and one tenant, so the headless lane pins
-`CADRUMO_PYTEST_WORKERS` to 4.
+A hosted runner has four cores, 16 GB of memory and one tenant. The scoped
+test shards pin `CADRUMO_PYTEST_WORKERS` to 3, because memory, not cores, is
+their limit: each worker holds 1 to 1.7 GB before its first test and levels
+off at 3 to 4 GB, so four workers used the memory and the swap and the runner
+was lost mid-test, at any shard size. The CI contracts job keeps 4.
 
 The self-hosted fleet is shared, not a cloud. Other runners and interactive
 work share each host, so `-n auto` sizes as though the box were idle and

@@ -6,16 +6,16 @@ import { useCallback, useEffect, useState } from "react";
 import type { LedgerPort } from "../../../shell/ledger";
 import { inLanguage } from "../../../shell/ledgerLanguage";
 import type {
-  ActivityAssetPlanResult,
-  ActivityAssetTimelineResult,
-} from "../../../shell/ledgerSetup";
+  ActivityAssetPlanProjection,
+  ActivityAssetTimelineProjection,
+} from "../../../shell/ledgerActivityAssetReadContract";
 import { useWritePause } from "../WritePause";
 import { setupCall, type SetupCall } from "../setup/setupModel";
 
 export const readPlan = (
   port: LedgerPort,
   assetId: string,
-): Promise<SetupCall<ActivityAssetPlanResult>> =>
+): Promise<SetupCall<ActivityAssetPlanProjection>> =>
   setupCall(
     port,
     "ledger.actividad-asset.plan",
@@ -26,7 +26,7 @@ export const readPlan = (
 export const readTimeline = (
   port: LedgerPort,
   assetId: string,
-): Promise<SetupCall<ActivityAssetTimelineResult>> =>
+): Promise<SetupCall<ActivityAssetTimelineProjection>> =>
   setupCall(
     port,
     "ledger.actividad-asset.timeline",

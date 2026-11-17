@@ -27,16 +27,13 @@ from ...application.modelo.review_package_recipient_operations import (
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import active_bucket_id_or_refuse
+from .profile_bound_clients import active_profile_id
 
 
 def _profile_client(ctx: typer.Context) -> tuple[UUID, FrontendClient]:
     profile_id = UUID(active_bucket_id_or_refuse())
     client = require_profile_client(ctx, expected_profile_id=profile_id)
     return profile_id, client
-
-
-def _active_profile_id() -> UUID:
-    return UUID(active_bucket_id_or_refuse())
 
 
 def _submit[ProjectionT: BaseModel](
@@ -76,7 +73,7 @@ def submit_collab_recipient_add(
     label: str,
 ) -> RegisteredOperationCompletion[ReviewPackageRecipientAddProjection]:
     """Submit the strict normalized recipient-add request to its profile worker."""
-    profile_id = _active_profile_id()
+    profile_id = active_profile_id()
     try:
         request = ReviewPackageRecipientAddRequest(
             profile_id=profile_id,
@@ -101,7 +98,7 @@ def submit_collab_recipient_list(
     ctx: typer.Context,
 ) -> RegisteredOperationCompletion[ReviewPackageRecipientListProjection]:
     """Submit a read-only request for the full recipient register."""
-    profile_id = _active_profile_id()
+    profile_id = active_profile_id()
     request = ReviewPackageRecipientListRequest(profile_id=profile_id)
     completed = _submit(
         ctx,
@@ -126,7 +123,7 @@ def submit_collab_recipient_remove(
     recipient_id: str,
 ) -> RegisteredOperationCompletion[ReviewPackageRecipientRemoveProjection]:
     """Submit the exact-profile recipient removal request."""
-    profile_id = _active_profile_id()
+    profile_id = active_profile_id()
     try:
         request = ReviewPackageRecipientRemoveRequest(profile_id=profile_id, recipient_id=recipient_id)
     except ValidationError:

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { LedgerLlmSuggestion } from "../src/shell/ledgerMovementOperations";
+import type { LedgerLlmReviewProjection } from "../src/shell/ledgerMovementCheckContract";
 import type { LedgerStagedRowAnswer } from "../src/shell/ledgerMovementCheckContract";
 import { EMPTY_CONTENT, type StagedContent } from "../src/shell/ledgerStage";
 import {
@@ -352,8 +352,8 @@ test("a merge needs every active part of the split, and nothing else", () => {
 });
 
 const suggestion = (
-  extra: Partial<LedgerLlmSuggestion["suggestion"]>,
-): LedgerLlmSuggestion["suggestion"] => ({
+  extra: Partial<LedgerLlmReviewProjection["suggestion"]>,
+): LedgerLlmReviewProjection["suggestion"] => ({
   kind: "classification",
   transaction_id: hexId("a"),
   provenance: "llm:local-medium",

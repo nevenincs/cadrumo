@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { EvidencePageResult } from "../src/shell/ledgerDocumentOperations";
+import type { LedgerEvidencePageProjection } from "../src/shell/ledgerDocumentContract";
 import {
   STRUCTURED_SAMPLE_NAMES,
   STRUCTURED_WITH_LINES,
@@ -23,13 +23,13 @@ const t = Object.assign(
 const drawPage = () =>
   markupOf<{
     t: Translate;
-    shown: EvidencePageResult;
+    shown: LedgerEvidencePageProjection;
     scale: number;
     fileName: string;
   }>("components/ledger/documents/DocumentViewer.tsx", "DocumentPage");
 
 const XML_NAME = STRUCTURED_SAMPLE_NAMES.withLines;
-const xmlPage = {
+const xmlPage: LedgerEvidencePageProjection = {
   profile_id: "profile",
   evidence_id: null,
   attachment_id: structuredSampleId(XML_NAME),
@@ -42,7 +42,7 @@ const xmlPage = {
   file_name: XML_NAME,
   image_data_url: null,
   structured_invoice: STRUCTURED_WITH_LINES,
-} as EvidencePageResult;
+};
 
 test("a structured e-invoice page draws its served facts and no image", async () => {
   const markup = await (
@@ -76,7 +76,7 @@ test("a drawn page shows the runtime's image", async () => {
       height: 10,
       image_data_url: "data:image/png;base64,AAAA",
       structured_invoice: null,
-    } as EvidencePageResult,
+    },
     scale: 1,
     fileName: "ticket.jpg",
   });

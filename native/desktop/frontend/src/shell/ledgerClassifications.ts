@@ -6,14 +6,14 @@
 
 import { useSyncExternalStore } from "react";
 import { FIELDS_DROPPED_BY_PERSONAL } from "./ledgerContract";
-import type { LedgerEntryClassification } from "./ledgerSetup";
+import type { LedgerEntryClassificationProjection } from "./ledgerEntryContract";
 
-let held: readonly LedgerEntryClassification[] | null = null;
+let held: readonly LedgerEntryClassificationProjection[] | null = null;
 const listeners = new Set<() => void>();
 
 /** Holds what the backend served, or null where it has served nothing. */
 export function holdLedgerClassifications(
-  rows: readonly LedgerEntryClassification[] | null,
+  rows: readonly LedgerEntryClassificationProjection[] | null,
 ): void {
   if (held === rows) return;
   held = rows;
@@ -28,7 +28,7 @@ function subscribe(listener: () => void): () => void {
 /** The rows served, drawing again when they arrive or go. A control that asks
  * below calls this once, so that it draws again with the answer. */
 export const useLedgerClassifications = ():
-  readonly LedgerEntryClassification[] | null =>
+  readonly LedgerEntryClassificationProjection[] | null =>
   useSyncExternalStore(subscribe, () => held);
 
 /** The served row of a classification, or null where it is not served: the
@@ -36,7 +36,7 @@ export const useLedgerClassifications = ():
  * classification. */
 export const classificationRule = (
   id: string,
-): LedgerEntryClassification | null =>
+): LedgerEntryClassificationProjection | null =>
   held?.find((row) => row.classification === id) ?? null;
 
 /** Whether a movement so classified carries a business share; null where it

@@ -11,9 +11,9 @@ import {
   takesInvoice,
 } from "../shell/ledgerContract";
 import type {
-  LedgerInvoiceMatchRequest,
+  LedgerInvoiceMatchWindowRequest,
   LedgerInvoiceMatchResult,
-} from "../shell/ledgerInvoiceOperations";
+} from "../shell/ledgerInvoiceContract";
 import type {
   CatalogueInvoiceSnapshot,
   LedgerInvoiceMatchMismatch,
@@ -220,7 +220,7 @@ const order = (a: Candidate, b: Candidate) =>
   before(a.row.transaction.transaction_id, b.row.transaction.transaction_id);
 
 export function answerInvoiceMatch(
-  request: LedgerInvoiceMatchRequest,
+  request: LedgerInvoiceMatchWindowRequest,
   rows: readonly HeldRow[],
   invoices: readonly CatalogueInvoiceSnapshot[],
   profileId: string,

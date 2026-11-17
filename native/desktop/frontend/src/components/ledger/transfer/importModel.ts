@@ -23,8 +23,8 @@ import type {
   LedgerImportResultProjection,
   LedgerProviderID,
 } from "../../../shell/ledgerTransferContract";
-import type { EvidenceBatchResult } from "../../../shell/ledgerDocumentOperations";
-import type { InvoiceImportResult } from "../../../shell/ledgerInvoiceOperations";
+import type { LedgerEvidenceBatchProjection } from "../../../shell/ledgerDocumentContract";
+import type { InvoiceImportProjection } from "../../../shell/ledgerInvoiceContract";
 import type {
   InvoiceKind,
   LedgerTransactionProjection,
@@ -401,7 +401,7 @@ export function applyBook(
   file: PickedFile,
   kind: InvoiceKind,
   country: string | null,
-): Promise<Attempt<InvoiceImportResult>> {
+): Promise<Attempt<InvoiceImportProjection>> {
   return attempt(
     port,
     "ledger.invoice.import",
@@ -412,8 +412,8 @@ export function applyBook(
 
 /** What adding documents came to, over every part sent. */
 export type DocumentsApplied = {
-  items: EvidenceBatchResult["run"]["items"];
-  unresolved: EvidenceBatchResult["run"]["unresolved"];
+  items: LedgerEvidenceBatchProjection["run"]["items"];
+  unresolved: LedgerEvidenceBatchProjection["run"]["unresolved"];
   /** The part that did not settle, if one did not, and why: `unknown` may
    * have saved, `saved_unread` saved and its answer was not read. */
   stopped: { code: string; files: PickedFile[] } | null;

@@ -39,7 +39,7 @@ from ...core.iban import normalise_iban
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.iva.sepa_marca import SepaMarca, derive_sepa_marca
 from ...domain.transactions.own_accounts import OwnAccountHolding, OwnAccountRole
-from .common import active_bucket_id_or_refuse, bad, emit_envelope
+from .common import bad, emit_envelope
 from .date_parsing import parse_iso_date
 from .ledger_account_results import (
     OwnAccountChangeResult,
@@ -48,6 +48,7 @@ from .ledger_account_results import (
     OwnAccountPayload,
     OwnAccountShowResult,
 )
+from .profile_bound_clients import active_profile_id
 
 
 class OwnAccountAddSecrets(MachineSecretPayload):
@@ -121,10 +122,6 @@ def _run(ctx: typer.Context, request: LedgerOwnAccountRequest) -> LedgerOwnAccou
     return result
 
 
-def _profile_id() -> UUID:
-    return UUID(active_bucket_id_or_refuse())
-
-
 def date_option(value: str | None, *, option: str) -> date | None:
     """Parse an optional ISO date for a ledger account option."""
     if value is None:
@@ -192,7 +189,7 @@ def account_add(
     secrets_fd: int | None = None,
 ) -> None:
     """Add one own account; its number arrives through the secret channel or a no-echo prompt."""
-    profile_id = _profile_id()
+    profile_id = active_profile_id()
     opened = date_option(opened_on, option="--opened-on")
     selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     secrets = (
@@ -223,7 +220,7 @@ def account_add(
 
 def account_list(ctx: typer.Context) -> None:
     """List every own account by its mask, with the role designations."""
-    result = _run(ctx, LedgerOwnAccountRequest(profile_id=_profile_id(), action="list"))
+    result = _run(ctx, LedgerOwnAccountRequest(profile_id=active_profile_id(), action="list"))
     lines = [_account_line(account) for account in result.accounts]
     lines.extend(_designation_lines(result))
     if not result.accounts:
@@ -240,7 +237,7 @@ def account_show(ctx: typer.Context, own_account_id: str) -> None:
     """Show one own account by its mask, with the designations that name it."""
     result = _run(
         ctx,
-        LedgerOwnAccountRequest(profile_id=_profile_id(), action="show", own_account_id=own_account_id),
+        LedgerOwnAccountRequest(profile_id=active_profile_id(), action="show", own_account_id=own_account_id),
     )
     (account,) = result.accounts
     emit_envelope(
@@ -265,7 +262,7 @@ def account_update(
     secrets_fd: int | None = None,
 ) -> None:
     """Replace the named details of one own account; account material comes only through the secret channel."""
-    profile_id = _profile_id()
+    profile_id = active_profile_id()
     opened = date_option(opened_on, option="--opened-on")
     selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     secrets = (
@@ -302,7 +299,7 @@ def account_close(ctx: typer.Context, own_account_id: str, closed_on: str) -> No
     result = _run(
         ctx,
         LedgerOwnAccountRequest(
-            profile_id=_profile_id(),
+            profile_id=active_profile_id(),
             action="close",
             own_account_id=own_account_id,
             closed_on=closed,
@@ -315,7 +312,7 @@ def account_remove(ctx: typer.Context, own_account_id: str) -> None:
     """Remove an own account no transaction references and no role designates."""
     result = _run(
         ctx,
-        LedgerOwnAccountRequest(profile_id=_profile_id(), action="remove", own_account_id=own_account_id),
+        LedgerOwnAccountRequest(profile_id=active_profile_id(), action="remove", own_account_id=own_account_id),
     )
     _emit_change(ctx, "ledger.account.remove", result)
 
@@ -325,7 +322,7 @@ def account_designate(ctx: typer.Context, own_account_id: str, role: str, modelo
     result = _run(
         ctx,
         LedgerOwnAccountRequest(
-            profile_id=_profile_id(),
+            profile_id=active_profile_id(),
             action="designate",
             own_account_id=own_account_id,
             role=OwnAccountRole(role),
@@ -340,7 +337,7 @@ def account_undesignate(ctx: typer.Context, role: str, modelo: str | None = None
     result = _run(
         ctx,
         LedgerOwnAccountRequest(
-            profile_id=_profile_id(),
+            profile_id=active_profile_id(),
             action="undesignate",
             role=OwnAccountRole(role),
             modelo=modelo,

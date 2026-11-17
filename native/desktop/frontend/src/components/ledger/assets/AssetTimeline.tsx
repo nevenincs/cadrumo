@@ -6,7 +6,10 @@ import type { LedgerPort } from "../../../shell/ledger";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { formatDay, formatTime } from "../../../shared/dateFormats";
 import { CallLine, Reading } from "../setup/SetupParts";
-import type { TimelineChange, TimelineEvent } from "../../../shell/ledgerSetup";
+import type {
+  ActivityAssetTimelineChange,
+  ActivityAssetTimelineEvent,
+} from "../../../shell/ledgerActivityAssetReadContract";
 import {
   ASSET_KEYS,
   changeFieldWord,
@@ -30,7 +33,7 @@ function Change({
   change,
 }: {
   locale: string;
-  change: TimelineChange;
+  change: ActivityAssetTimelineChange;
 }) {
   const t = useStrings();
   // The backend's label, else the word of its key, else what the field is.
@@ -78,7 +81,7 @@ function Recorded({
 }: {
   t: Translate;
   locale: string;
-  event: TimelineEvent;
+  event: ActivityAssetTimelineEvent;
 }) {
   if (event.recorded_at === null)
     return (
@@ -98,7 +101,7 @@ function Recorded({
  * covers, that a later one replaced it, or else whether it still matches the
  * schedule, why not, and what uses it. A dotación that was replaced is
  * never said to match or to differ: only one in effect can. */
-function ClaimUse({ event, locale }: { event: TimelineEvent; locale: string }) {
+function ClaimUse({ event, locale }: { event: ActivityAssetTimelineEvent; locale: string }) {
   const t = useStrings();
   const use = event.claim;
   if (use === null) return null;
@@ -156,7 +159,7 @@ function TimelineTable({
   events,
 }: {
   locale: string;
-  events: readonly TimelineEvent[];
+  events: readonly ActivityAssetTimelineEvent[];
 }) {
   const t = useStrings();
   const column = ASSET_KEYS.timeline.column;

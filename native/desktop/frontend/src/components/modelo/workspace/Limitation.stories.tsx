@@ -40,6 +40,7 @@ const line = (
   answer_lead_words: null,
   answer_lead_words_language: null,
   invoice_id: null,
+  door: null,
 });
 
 const LIMIT = "Synthetic limit: one figure rests on a value you stated.";

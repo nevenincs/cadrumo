@@ -8,15 +8,15 @@ import { holdRecordedPeriods } from "../src/dev/periodRecording";
 import { holdLedgerLanguage } from "../src/shell/ledgerLanguage";
 import { holdLedgerLimits } from "../src/shell/ledgerLimits";
 import type {
-  LedgerEntryClassification,
-  LedgerEntryLimits,
-} from "../src/shell/ledgerSetup";
+  LedgerEntryClassificationProjection,
+  LedgerEntryLimitsProjection,
+} from "../src/shell/ledgerEntryContract";
 
 import "virtual:desktop-palette.css";
 
-holdLedgerLimits(servedEntryOptions.limits as LedgerEntryLimits);
+holdLedgerLimits(servedEntryOptions.limits as LedgerEntryLimitsProjection);
 holdLedgerClassifications(
-  servedEntryOptions.classifications as LedgerEntryClassification[],
+  servedEntryOptions.classifications as LedgerEntryClassificationProjection[],
 );
 
 // The filing periods are held as the recording of the backend's read serves

@@ -13,6 +13,8 @@ from dev.paths import REPO_ROOT
 
 from ..change_scope import ChangeScope
 from ..gate_shards import (
+    DEFAULT_FILES_PER_SHARD,
+    DEFAULT_MAX_SHARDS,
     ShardPlan,
     main,
     parse_shard,
@@ -185,6 +187,22 @@ def test_the_planned_shards_together_select_the_whole_full_gate(
     assert planned["files"] > 1000, "the full gate selects the repository's test population"
     assert all((REPO_ROOT / name).is_file() and Path(name).name.startswith("test_") for name in written)
     assert "dev/ci/tests/test_gate_shards.py" in written
+
+
+def test_the_default_matrix_holds_the_full_tree_without_growing_a_shard(capsys: pytest.CaptureFixture[str]) -> None:
+    """On the real tree: the cap on the matrix never stretches a shard past its file budget.
+
+    A cap the tree has outgrown deals every shard more files than its budget,
+    silently, so each runs longer than the plan was sized for.
+    """
+    assert main(["plan"]) == 0
+    planned = json.loads(capsys.readouterr().out)
+    count = len(planned["shards"])
+    assert count < DEFAULT_MAX_SHARDS or planned["files"] <= DEFAULT_MAX_SHARDS * DEFAULT_FILES_PER_SHARD, (
+        f"{planned['files']} test files over at most {DEFAULT_MAX_SHARDS} shards exceeds "
+        f"{DEFAULT_FILES_PER_SHARD} files per shard: raise the cap, do not grow the shards"
+    )
+    assert -(-planned["files"] // count) <= DEFAULT_FILES_PER_SHARD
 
 
 def test_the_cli_refuses_a_shard_outside_its_count(tmp_path: Path) -> None:

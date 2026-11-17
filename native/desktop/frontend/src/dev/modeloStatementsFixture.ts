@@ -131,6 +131,7 @@ export function checkingStatements(
         findings: [],
         operator_entries_unknown: false,
         refusal_words: check.kind === "refused" ? check.words : null,
+        refusal_door: null,
         rebase: [],
       };
       return {

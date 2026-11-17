@@ -6,12 +6,14 @@ import { said } from "@/dev/assetsServedWords";
 import { ledgerLanguage } from "../../../shell/ledgerLanguage";
 import type { LedgerPort } from "../../../shell/ledger";
 import type {
-  ActivityAssetForecast,
-  DisposalFacts,
-  ListDisposal,
-  PlanRow,
-  ReasonFact,
-} from "../../../shell/ledgerSetup";
+  ScheduledAmortizationChargeSnapshot,
+  ActivityAssetDisposalSnapshot,
+  ActivityAssetReasonFact,
+} from "../../../shell/ledgerActivityAssetContract";
+import type {
+  ActivityAssetListDisposal,
+  ActivityAssetPlanRow,
+} from "../../../shell/ledgerActivityAssetReadContract";
 import { translator } from "../../../shell/strings";
 import { setupCall } from "../setup/setupModel";
 import { AmortizationPlan } from "./AmortizationPlan";
@@ -45,7 +47,7 @@ const scenarioYear = Number(SCENARIO_TODAY.slice(0, 4));
  * register planned as the story needs it. */
 const yearWhere = (
   assetId: string,
-  pick: (row: PlanRow) => boolean,
+  pick: (row: ActivityAssetPlanRow) => boolean,
 ): number => {
   const row = SCENARIO_ELEMENTS.find(
     (element) => element.id === assetId,
@@ -95,7 +97,7 @@ type PlanShape = {
         claim_state: string;
         claimable_intervals: unknown[];
         claimable_refusal_key: string | null;
-        claimable_refusal_facts: ReasonFact[];
+        claimable_refusal_facts: ActivityAssetReasonFact[];
         claimable_refusal_words?: string | null;
         claimable_refusal_remedy_field_key: string | null;
         claimable_refusal_remedy_words?: string | null;
@@ -110,7 +112,7 @@ type PlanShape = {
     legal_citations_complete: boolean;
     maximum_period_last_day: string | null;
     unavailable_reason_key: string | null;
-    unavailable_reason_facts: ReasonFact[];
+    unavailable_reason_facts: ActivityAssetReasonFact[];
     unavailable_reason_words?: string | null;
   } | null;
 };
@@ -118,7 +120,7 @@ type PlanShape = {
 /** The sentence the register said for a reason, as recorded, in the
  * language the story shows; none where the recording holds none, which the
  * window draws as its generic word. */
-const reasonWords = (key: string, facts: ReasonFact[]): string | null =>
+const reasonWords = (key: string, facts: ActivityAssetReasonFact[]): string | null =>
   said({ kind: "reason", key, facts }, ledgerLanguage() ?? "en") ?? null;
 const remedyWords = (fieldKey: string): string | null =>
   said({ kind: "remedy", field_key: fieldKey }, ledgerLanguage() ?? "en") ??
@@ -128,8 +130,8 @@ const ELAPSED = "ledger.actividad_asset.errors.amortization_period_elapsed";
 const OPENING_MISSING = "ledger.actividad_asset.errors.opening_history_missing";
 
 /** The baja the register records for the element, as the detail passes it. */
-function useDisposal(port: LedgerPort, assetId: string): ListDisposal | null {
-  const [disposal, setDisposal] = useState<ListDisposal | null>(null);
+function useDisposal(port: LedgerPort, assetId: string): ActivityAssetListDisposal | null {
+  const [disposal, setDisposal] = useState<ActivityAssetListDisposal | null>(null);
   useEffect(() => {
     let active = true;
     void setupCall(port, "ledger.actividad-asset.list", {}, false).then(
@@ -187,7 +189,7 @@ function withTweak(port: LedgerPort, tweak: Tweak): LedgerPort {
           // cannot be recorded is the last one the plan lists, after it.
           const last = plan.rows?.at(-1);
           const ended = plan.limits?.maximum_period_last_day;
-          const facts: ReasonFact[] = ended
+          const facts: ActivityAssetReasonFact[] = ended
             ? [{ key: "ended_on", value: ended, kind: "date" }]
             : [];
           if (last && ended) {
@@ -270,7 +272,7 @@ function withAnswer(port: LedgerPort, answer: Answer): LedgerPort {
   };
 }
 
-const sale = (disposal_date: string): DisposalFacts => ({
+const sale = (disposal_date: string): ActivityAssetDisposalSnapshot => ({
   disposal_date,
   reason: "sale",
   proceeds: { decimal: "100.00" },
@@ -333,7 +335,7 @@ async function prepared(port: LedgerPort, assetId: string, prepare: Prepare) {
       },
       false,
     );
-    const made: ActivityAssetForecast | null =
+    const made: ScheduledAmortizationChargeSnapshot | null =
       forecast.kind === "done" ? forecast.result.forecast : null;
     if (made !== null)
       await setupCall(

@@ -11,7 +11,7 @@ import {
   type LedgerRequest,
   type LedgerResult,
 } from "../../../shell/ledger";
-import type { InvoiceUpdateRequest } from "../../../shell/ledgerInvoiceOperations";
+import type { InvoiceUpdateWindowRequest } from "../../../shell/ledgerInvoiceContract";
 import type { CatalogueInvoiceSnapshot } from "../../../shell/ledgerInvoiceContract";
 import { holdsCorrection } from "./invoiceModel";
 
@@ -99,7 +99,7 @@ export async function addLanded(
 /** Whether a correction whose outcome was not seen is now stored. */
 export async function updateLanded(
   port: LedgerPort,
-  request: InvoiceUpdateRequest,
+  request: InvoiceUpdateWindowRequest,
 ): Promise<Landed> {
   const found = await view(port, request.invoice_id);
   if (found === "unreadable" || found === null) return { kind: "unreadable" };
