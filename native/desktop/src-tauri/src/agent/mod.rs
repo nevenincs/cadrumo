@@ -13,6 +13,8 @@ mod gateway;
 mod launcher;
 pub(crate) mod local_models;
 pub(crate) mod person;
+#[cfg(windows)]
+mod provider_login;
 pub(crate) mod recovery;
 pub(crate) mod runner;
 mod session;
@@ -72,6 +74,8 @@ const LOCAL_AI_DEMAND_SERVERS: &str = "CADRUMO_LOCAL_AI_DEMAND_SERVERS";
 
 /// The agent host one window serves.
 pub struct AgentHost {
+    #[cfg(windows)]
+    login_watch: std::sync::Mutex<Option<provider_login::Watch>>,
     supervisor: Supervisor,
     session: Session,
     diagnostics: Arc<Diagnostics>,
@@ -158,6 +162,8 @@ impl AgentHost {
         );
         Self {
             supervisor,
+            #[cfg(windows)]
+            login_watch: std::sync::Mutex::new(None),
             session: Session::default(),
             diagnostics,
             sign_in: held,
@@ -255,6 +261,11 @@ impl AgentHost {
 
     /// Stops the launcher and everything it started, for good.
     pub async fn close(&self) -> Result<()> {
+        #[cfg(windows)]
+        self.login_watch
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take();
         self.drops.clear(None);
         self.stop_attendance(None);
         self.session.close();
@@ -495,6 +506,11 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
             ));
             host.sync_local_engine_when_ready();
             console_environment::watch(app.clone(), &host);
+            #[cfg(windows)]
+            {
+                *host.login_watch.lock().unwrap_or_else(|e| e.into_inner()) =
+                    provider_login::Watch::start(app.clone(), &storage_root);
+            }
             app.manage(host);
             Ok(())
         })

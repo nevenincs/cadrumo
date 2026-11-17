@@ -340,10 +340,8 @@ def test_only_the_service_pins_the_agent_location_and_generic_hosts_take_no_agen
     assert profiles["cadrumo-runtime"]["slots"] == []
     assert profiles["python"]["slots"] == [{"name": "CADRUMO_PROFILE_ROOT", "kind": "directory", "required": False}]
     # The image that fixes a package fact cannot also take it from its parent.
-    relay = '  { name = "CADRUMO_PACKAGE_PYTHON_EXECUTABLE", image = "python" },\n]\n'
-    planted = _SOURCE.replace(
-        relay, relay + 'slots = [{ name = "CADRUMO_PACKAGE_AGENT_EXECUTABLE", required = false }]\n', 1
-    )
+    relay = '  { name = "CADRUMO_PACKAGE_PYTHON_EXECUTABLE", image = "python" },\n]\nslots = [\n'
+    planted = _SOURCE.replace(relay, relay + '  { name = "CADRUMO_PACKAGE_AGENT_EXECUTABLE", required = false },\n', 1)
     assert planted != _SOURCE
     with pytest.raises(ApplicationEnvironmentError, match="slot"):
         parse(planted)

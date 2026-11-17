@@ -11,6 +11,8 @@
 //   CADRUMO_SIGN_IN_INTERACTIVE  1: a person completes each provider's browser
 //                    flow when asked; otherwise the success case is skipped
 //                    with its reason, never faked
+//   CADRUMO_SIGN_IN_TERMINAL_INTERACTIVE  1: a person signs in to Claude
+//                    from the console against the open window's profile
 //   CADRUMO_SIGN_IN_PROVIDERS  (optional) comma-separated provider ids, in
 //                    order; default claude,codex
 //   CADRUMO_SIGN_IN_PERSON_MS  (optional) how long a person has to finish the
@@ -32,10 +34,13 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
+  renameSync,
   statSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -1093,6 +1098,120 @@ for (const provider of PROVIDERS) {
     },
   );
 }
+
+function consoleLoginPaths() {
+  const agent = join(runDir, "storage", "agent");
+  const roots = readdirSync(agent, { withFileTypes: true }).filter(
+    (entry) => entry.isDirectory() && /^[a-f0-9]{32}$/.test(entry.name),
+  );
+  assert.equal(roots.length, 1, "expected one synthetic profile agent root");
+  const notices = join(agent, "login-notices");
+  return {
+    root: join(agent, roots[0].name),
+    notices,
+    notice: join(notices, roots[0].name),
+  };
+}
+
+// With unchanged credentials a notice must trigger a read and preserve the
+// original sign-in state.
+test("PSI a console login notice refreshes the open provider settings", async (t) => {
+  if (!PROVIDERS.includes("claude")) return t.skip("Claude is excluded");
+  const found = await signInLane("claude");
+  assert.ok(found.lane, found.reason);
+  const lane = found.lane;
+  assert.ok(await exec(pageTimeInvokes));
+  const { root, notices, notice } = consoleLoginPaths();
+  mkdirSync(notices, { recursive: true });
+  const temporary = join(root, "wdio-login-notice");
+  writeFileSync(temporary, "", { flag: "wx" });
+  const event = "provider-login-changed";
+  const listener = await exec((event) => {
+    window.__uxConsoleLogin = false;
+    const { invoke, transformCallback } = window.__TAURI_INTERNALS__;
+    return invoke("plugin:event|listen", {
+      event,
+      target: { kind: "Any" },
+      handler: transformCallback(() => {
+        window.__uxConsoleLogin = true;
+      }),
+    });
+  }, event);
+  const since = Date.now();
+  renameSync(temporary, notice);
+  try {
+    await waitFor(() => exec(() => window.__uxConsoleLogin), {
+      timeout: 15_000,
+      what: "the native console login change notification",
+    });
+    await waitFor(
+      async () =>
+        (await callsSince(since)).some(
+          (call) => call.cmd === "provider_settings_status" && call.ok,
+        ),
+      { timeout: 15_000, what: "a fresh status in the same open settings" },
+    );
+  } finally {
+    await exec(
+      (event, eventId) => {
+        window.__TAURI_EVENT_PLUGIN_INTERNALS__.unregisterListener(
+          event,
+          eventId,
+        );
+        return window.__TAURI_INTERNALS__.invoke("plugin:event|unlisten", {
+          event,
+          eventId,
+        });
+      },
+      event,
+      listener,
+    );
+  }
+  const after = await readGroup("claude");
+  assert.equal(
+    after.lanes.find((item) => item.id === lane.id)?.status,
+    lane.status,
+  );
+});
+
+test("PSI an attended terminal login is picked up in the same window", async (t) => {
+  if (!PROVIDERS.includes("claude")) return t.skip("Claude is excluded");
+  if (process.env.CADRUMO_SIGN_IN_TERMINAL_INTERACTIVE !== "1")
+    return t.skip("requires a person signing in to Claude from the console");
+  const found = await signInLane("claude");
+  assert.ok(found.lane, found.reason);
+  assert.notEqual(
+    found.lane.status,
+    "ready",
+    "expected a fresh signed-out profile",
+  );
+  const host = JSON.parse(process.env.CADRUMO_PERSONA_HOST);
+  const storage = join(runDir, "storage");
+  const { notice } = consoleLoginPaths();
+  const prior = statSync(notice, { bigint: true, throwIfNoEntry: false });
+  const service = join(host.package, "bin", "cadrumo-agent-service.exe");
+  console.info(
+    `Complete the console sign-in for the open test window. Set CADRUMO_STORAGE_ROOT to ${storage} and run "${service}" provider-login --provider claude.`,
+  );
+  await waitFor(
+    async () => {
+      const current = statSync(notice, { bigint: true, throwIfNoEntry: false });
+      if (
+        !current ||
+        (current.ino === prior?.ino && current.mtimeNs === prior?.mtimeNs)
+      )
+        return false;
+      const group = await readGroup("claude");
+      return group.lanes?.some(
+        (item) => item.id === found.lane.id && item.status === "ready",
+      );
+    },
+    {
+      timeout: PERSON_MS,
+      what: "the signed-in Claude lane without reopening settings",
+    },
+  );
+});
 
 test("PSI-98 provider settings draw: a cold open within its bound, a warm reopen reported", async (t) => {
   const line = { case: "first-draw", verdict: "fail" };

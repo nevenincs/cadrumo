@@ -16,6 +16,7 @@ import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Final
 from uuid import UUID
 
@@ -37,6 +38,7 @@ from .agent_programs import (
     AgentProgramRefusalError,
     existing_profile_agent_root,
     hosted_python,
+    provider_login_notice,
 )
 
 SIGN_IN_PROVIDERS: Final = ("claude", "codex", "antigravity")
@@ -204,4 +206,18 @@ def main(argv: Sequence[str] | None = None) -> int:
         env=launch.environment,
         check=False,
     )
+    if done.returncode == 0:
+        # The empty file only invalidates a reading. The service confirms the
+        # provider's actual state under its current lease.
+        notice = provider_login_notice(launch.directory)
+        try:
+            notice.parent.mkdir(exist_ok=True)
+            with NamedTemporaryFile(dir=launch.directory, delete=False) as change:
+                temporary = Path(change.name)
+            try:
+                temporary.replace(notice)
+            finally:
+                temporary.unlink(missing_ok=True)
+        except OSError:
+            sys.stderr.write("Signed in, but the desktop could not be notified. Reopen provider settings.\n")
     return done.returncode

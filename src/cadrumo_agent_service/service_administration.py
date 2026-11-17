@@ -21,6 +21,7 @@ from .adapters.agent_background_runs import BackgroundRunEndpoint, HostedBackgro
 from .adapters.agent_process import WindowsAgentInvocationRunner
 from .adapters.agent_programs import (
     profile_agent_root,
+    provider_login_notice,
 )
 from .adapters.agent_provider_auth_status import AgentProviderAuthStatusProbe
 from .adapters.agent_provider_catalog import AgentProviderCatalogSource
@@ -216,7 +217,12 @@ class AgentServiceAdministration(ABC):
         if generations is None or self.client.lease != lease:
             return None
         key = f"{lease.lease_id}:{generations.sign_in}:{generations.provider_settings}:{attempt.id if attempt else ''}"
-        return profile_agent_root(self._root, lease.profile_id), key
+        root = profile_agent_root(self._root, lease.profile_id)
+        try:
+            notice = provider_login_notice(root).lstat()
+        except FileNotFoundError:
+            return root, key
+        return root, f"{key}:{notice.st_ino}:{notice.st_mtime_ns}"
 
     def _submit_sign_in_code(self, attempt_id: str | None, secret: bytearray | None) -> dict[str, Any]:
         if self._closing.is_set():

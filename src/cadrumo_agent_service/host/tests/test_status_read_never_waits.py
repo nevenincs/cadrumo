@@ -25,7 +25,7 @@ from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ...adapters import agent_provider_auth_status as status_module
 from ...adapters import agent_provider_catalog
-from ...adapters.agent_programs import AgentImage
+from ...adapters.agent_programs import AgentImage, provider_login_notice
 from ...adapters.agent_provider_catalog import AgentProviderCatalogSource
 from ...providers.application.ports import ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
 from ...providers.application.service import ProviderSettingsService
@@ -52,6 +52,7 @@ class _Agent:
     capabilities_release = Event()
     capabilities_fail = False
     status_reads = 0
+    cli_state = "installed_signed_in"
 
     def __init__(self, **_ignored: Any) -> None:
         self.settled = True
@@ -61,7 +62,7 @@ class _Agent:
         type(self).status_reads += 1
         type(self).status_reached.set()
         assert type(self).status_release.wait(_SETTLE_SECONDS)
-        body = {"schema_version": 2, "providers": {"example": "installed_signed_in"}, "causes": {"example": None}}
+        body = {"schema_version": 2, "providers": {"example": self.cli_state}, "causes": {"example": None}}
         return AgentInvocationResult(status=0, standard_output=json.dumps(body).encode())
 
     @staticmethod
@@ -153,6 +154,32 @@ def test_status_answers_at_once_with_a_cli_lane_unread_while_its_program_outlive
 
     assert _lane(landed)["cli_state_cause"] is None
     assert agent.status_reads == 1, "status reads made while one login read ran started no other"
+
+
+def test_console_login_invalidates_a_fresh_signed_out_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, agent: type[_Agent]
+) -> None:
+    monkeypatch.setattr(agent, "cli_state", "installed_signed_out")
+    agent.capabilities_release.set()
+    agent.status_release.set()
+    service = _service(tmp_path, monkeypatch)
+    first = _status_until(service, lambda answer: not answer["reads_pending"])
+    assert _lane(first)["cli_state"] == "installed_signed_out"
+
+    context = service._login_context()
+    assert context is not None
+    notice = provider_login_notice(context[0])
+    notice.parent.mkdir()
+    agent.status_release.clear()
+    monkeypatch.setattr(agent, "cli_state", "installed_signed_in")
+    notice.touch()
+    try:
+        fresh = _prompt_status(service)
+        assert fresh["reads_pending"] and _lane(fresh)["cli_state"] == "unknown"
+    finally:
+        agent.status_release.set()
+    settled = _status_until(service, lambda answer: not answer["reads_pending"])
+    assert _lane(settled)["cli_state"] == "installed_signed_in"
 
 
 def test_repeated_runtime_pushes_during_a_slow_login_read_still_let_status_answer_and_the_read_land(

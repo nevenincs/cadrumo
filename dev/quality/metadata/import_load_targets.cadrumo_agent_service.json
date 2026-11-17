@@ -25,6 +25,7 @@
         "cadrumo_agent_service.adapters.agent_provider_auth_status",
         "cadrumo_agent_service.adapters.agent_provider_catalog",
         "cadrumo_agent_service.adapters.console_provisioning",
+        "cadrumo_agent_service.adapters.console_tool_registration",
         "cadrumo_agent_service.adapters.local_ai_demand",
         "cadrumo_agent_service.adapters.provider_catalog_metadata",
         "cadrumo_agent_service.adapters.provider_login",
