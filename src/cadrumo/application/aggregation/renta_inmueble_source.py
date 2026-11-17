@@ -62,7 +62,6 @@ from .renta_inmueble_net import RentaInmuebleNet, RentaInmuebleNetInputs, RentaI
 from .renta_inmueble_period import Ejercicio, Occupancy, held_interval, occupancy, within_lease
 
 _HUNDRED: Final = Decimal(100)
-_ZERO: Final = Decimal(0)
 
 
 class RentaInmuebleRowField(StrEnum):

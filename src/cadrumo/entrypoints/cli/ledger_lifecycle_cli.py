@@ -470,7 +470,7 @@ def _render_split_llm_preview(
     proposed_children: list[LedgerSplitChildProposalPayload],
 ) -> None:
     """Emit the non-persisting split preview envelope."""
-    from .ledger_llm_cli import transport_from_provenance
+    from ...application.ledger.llm_classification import transport_from_provenance
     from .ledger_results import LedgerSplitResult
 
     result = LedgerSplitResult.model_validate(
@@ -503,7 +503,7 @@ def _render_split_llm_applied(
     proposed_children: list[LedgerSplitChildProposalPayload],
 ) -> None:
     """Emit the persisted split-applied envelope."""
-    from .ledger_llm_cli import transport_from_provenance
+    from ...application.ledger.llm_classification import transport_from_provenance
     from .ledger_results import LedgerSplitResult
 
     child_id_rows = _split_child_id_rows(applied.child_transaction_ids)

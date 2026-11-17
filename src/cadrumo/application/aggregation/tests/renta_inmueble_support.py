@@ -14,7 +14,6 @@ from ....domain.contribuyente.inmueble_facts import (
     ARRENDAMIENTO_SECTION,
     INMUEBLE_SECTION,
     arrendamiento_row_values,
-    facts_for_row,
     inmueble_row_values,
 )
 from ....domain.contribuyente.inmueble_record import (
@@ -27,6 +26,7 @@ from ....domain.contribuyente.inmueble_record import (
     TitularidadRegimen,
     TitularRole,
 )
+from ....domain.contribuyente.tests.profile_row_facts import facts_for_row
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
