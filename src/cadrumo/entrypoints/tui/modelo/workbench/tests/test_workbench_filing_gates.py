@@ -42,7 +42,6 @@ from ..bulk_confirm import BulkConfirmScreen, TickBox
 from ..export import WorkbenchExportScreen
 from ..header import attention_chips
 from ..issue_projection import issue_lines
-from ..issue_scale import IssueLevel
 from ..issues import WorkbenchIssuesScreen
 from ..progress import next_action_text
 from ..review import EditReviewScreen, ReviewNote
@@ -298,7 +297,7 @@ def test_a_value_the_calculation_inferred_is_worth_checking_and_never_promised_a
     assert note.attention is ModeloFormAttention.CHECK
     assert "confirm" not in chips
     assert progress.next_action is ModeloFormNextAction.EXPORT
-    assert [line.level for line in lines if line.from_calculation] == [IssueLevel.CHECK]
+    assert [line.level for line in lines if line.from_calculation] == [ModeloFormAttention.CHECK]
     assert blocking_count(form) == 0
 
 

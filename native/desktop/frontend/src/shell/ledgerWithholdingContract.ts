@@ -349,3 +349,33 @@ export type LedgerWithholdingContracts = {
     result: RetencionSoportadaAbsenceMutationProjection;
   };
 };
+
+export type RetencionSoportadaAbsenceAttestWindowRequest = Omit<
+  RetencionSoportadaAbsenceAttestRequest,
+  "profile_id"
+>;
+
+export type RetencionSoportadaAbsenceListWindowRequest = Omit<
+  RetencionSoportadaAbsenceListRequest,
+  "profile_id"
+>;
+
+export type RetencionSoportadaAbsenceWithdrawWindowRequest = Omit<
+  RetencionSoportadaAbsenceWithdrawRequest,
+  "profile_id"
+>;
+
+export type RetencionSoportadaListWindowRequest = Omit<
+  RetencionSoportadaListRequest,
+  "profile_id"
+>;
+
+export type RetencionSoportadaRecordWindowRequest = Omit<
+  RetencionSoportadaRecordRequest,
+  "profile_id"
+>;
+
+export type RetencionSoportadaRemoveWindowRequest = Omit<
+  RetencionSoportadaRemoveRequest,
+  "profile_id"
+>;

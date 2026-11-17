@@ -15,12 +15,11 @@ from textual.widgets import OptionList
 from textual.widgets.option_list import Option
 
 from .....application.modelo.calculation_notes import REOPEN_HINT_LOCALE_KEY, STALE_LOCALE_KEY
+from .....application.modelo.work_form_findings import ModeloFormAttention
 from .....application.modelo.work_form_models import ModeloWorkForm
 from .....core.i18n.render import tr
 from .issue_scale import (
-    TO_DO_LEVELS,
     UNENTERED_LOCALE_KEYS,
-    IssueLevel,
     IssueLine,
     UnenteredBoxes,
     UnenteredSection,
@@ -65,7 +64,7 @@ def _paragraph(text: str, style: str = "") -> Text | None:
 
 def issue_prompt(line: IssueLine, *, expanded: bool, technical: bool) -> RenderableType:
     """Render an issue line's location, message, action and detail as a prompt entry."""
-    action = None if line.level is IssueLevel.INFO else _action_with_key(line)
+    action = None if line.level is ModeloFormAttention.INFO else _action_with_key(line)
     return _entry(
         _paragraph(f"[{line.box}] {line.where}" if line.action_targets_box and line.box != "·" else line.where, "bold"),
         _paragraph(line.message),
@@ -112,7 +111,7 @@ def _unentered_intro(boxes: UnenteredBoxes) -> RenderableType:
 
 def _confirm_key_line(boxes: UnenteredBoxes) -> Text | None:
     """Under the assumed values, the key that confirms those of a part of the form, in full words."""
-    if boxes.level is not IssueLevel.CONFIRM:
+    if boxes.level is not ModeloFormAttention.CONFIRM:
         return None
     return _paragraph(f"[{CONFIRM_SCOPE_KEY}] {tr(_CONFIRM_SCOPE_LOCALE_KEY)}", "italic")
 
@@ -159,13 +158,13 @@ def unentered_options(boxes: UnenteredBoxes) -> list[Option]:
 def options_for_screen(
     form: ModeloWorkForm,
     lines: tuple[IssueLine, ...],
-    unentered: Mapping[IssueLevel, UnenteredBoxes],
+    unentered: Mapping[ModeloFormAttention, UnenteredBoxes],
     *,
     recorded: bool,
 ) -> list[Option]:
     """Build the grouped options, preserving level order and recorded-filing counts."""
     options: list[Option] = []
-    for level in IssueLevel:
+    for level in ModeloFormAttention:
         options.extend(_level_options(level, lines, unentered.get(level), recorded=recorded))
     if form.calculation_notes and form.calculation_out_of_date:
         options.insert(0, Option(Text(tr(STALE_LOCALE_KEY), style="italic"), id=_STALE_ID, disabled=True))
@@ -178,18 +177,18 @@ def options_for_screen(
 
 
 def _level_options(
-    level: IssueLevel,
+    level: ModeloFormAttention,
     lines: tuple[IssueLine, ...],
     boxes: UnenteredBoxes | None,
     *,
     recorded: bool,
 ) -> list[Option]:
     indexed = [(index, line) for index, line in enumerate(lines) if line.level is level]
-    count = len(indexed) + (0 if boxes is None else len(boxes.keys))
-    if not count:
+    if not indexed and boxes is None:
         return []
     heading = level_words(level)
-    if not (recorded and level in TO_DO_LEVELS):
+    if not recorded:
+        count = len(indexed) + (0 if boxes is None else len(boxes.keys))
         heading = f"{heading} ({count})"
     options = [Option(levels_marked(heading).stylize("bold"), id=f"level-{level.value}", disabled=True)]
     if boxes is not None:

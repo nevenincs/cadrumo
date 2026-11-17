@@ -22,7 +22,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.identity.digest import ContentDigest
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG, host_filled_schema
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.attachments.errors import AttachmentNotFoundError
@@ -79,7 +79,7 @@ class InvoiceDocumentAttachRequest(BaseModel):
     profile_id: UUID
     invoice_id: str = Field(min_length=1, max_length=64)
     source_path: _EvidencePath
-    source_directory: _EvidencePath
+    source_directory: _EvidencePath = Field(json_schema_extra=host_filled_schema())
 
 
 class InvoiceDocumentAttachProjection(BaseModel):

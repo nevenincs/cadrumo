@@ -522,7 +522,7 @@ export interface HostCommands {
   /** The filing calendar for an inclusive range of at most about a year. */
   profile_views_calendar: {
     args: Authorized<{ from: string; to: string; language: string }>;
-    result: import("../shell/views").FilingCalendar;
+    result: import("../shell/calendarContract").FilingCalendarServed;
   };
   /** Submits one admitted ledger operation with its request, without the
    * profile, and follows it until it settles or waits on the person. A

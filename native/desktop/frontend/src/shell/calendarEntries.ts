@@ -1,21 +1,21 @@
 import type { OverviewPeriodState } from "./calendarContract";
-import type { CalendarEntry, CalendarEvent, FilingCalendar } from "./views";
+import type { FilingCalendarServed } from "./calendarContract";
 
 /** The identity of an obligation: its Modelo and period. */
-export const entryKey = (entry: CalendarEntry) =>
+export const entryKey = (entry: FilingCalendarServed["entries"][number]) =>
   `${entry.modelo}:${entry.period}`;
 
 /** Whether the product could not work out when the obligation's window
  * closes. Its closing dates are then the earliest it can close, never a
  * deadline: nothing is counted down to them or late from them. */
-export const closeUnknown = (entry: CalendarEntry) =>
+export const closeUnknown = (entry: FilingCalendarServed["entries"][number]) =>
   entry.status === "UNKNOWN";
 
 /** The calendar's entries in the order the product serves them as needing
  * the person: its attention order, read over its entries. */
 export const inAttentionOrder = (
-  calendar: Pick<FilingCalendar, "entries" | "attention_order">,
-): CalendarEntry[] =>
+  calendar: Pick<FilingCalendarServed, "entries" | "attention_order">,
+): FilingCalendarServed["entries"][number][] =>
   calendar.attention_order.flatMap((index) => {
     const entry = calendar.entries[index];
     return entry === undefined ? [] : [entry];
@@ -24,7 +24,7 @@ export const inAttentionOrder = (
 /** The readings the calendar holds, in the order its attention order first
  * reaches each. */
 export const attentionStates = (
-  calendar: Pick<FilingCalendar, "entries" | "attention_order">,
+  calendar: Pick<FilingCalendarServed, "entries" | "attention_order">,
 ): OverviewPeriodState[] => [
   ...new Set(inAttentionOrder(calendar).map((entry) => entry.user_state)),
 ];
@@ -35,15 +35,15 @@ export const attentionStates = (
  * for that day stands between them. A close the product could not work out
  * whose earliest has passed is neither. */
 export function listedMonths(
-  calendar: Pick<FilingCalendar, "entries" | "events">,
+  calendar: Pick<FilingCalendarServed, "entries" | "events">,
   title: (iso: string) => string,
 ) {
   const groups = new Map<
     string,
     {
       title: string;
-      entries: CalendarEntry[];
-      events: CalendarEvent[];
+      entries: FilingCalendarServed["entries"][number][];
+      events: FilingCalendarServed["events"][number][];
       ahead: number;
       behind: number;
     }
@@ -84,7 +84,7 @@ export function listedMonths(
 /** Where an opening is after its close, draw only the closing day; never
  * invent a filing window. Where the close is unknown the span ends on the
  * earliest close: the days it is known to be open. */
-export function entrySpan(entry: CalendarEntry): { from: string; to: string } {
+export function entrySpan(entry: FilingCalendarServed["entries"][number]): { from: string; to: string } {
   const to = entry.adjusted_closes_on;
   const from = entry.opens_on <= to ? entry.opens_on : to;
   return { from, to };

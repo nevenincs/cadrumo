@@ -19,9 +19,16 @@ from __future__ import annotations
 import json
 import sys
 
-from dev.fixture_projections.operation_contract_module import EarlierModule, WindowType, render_contract_module
+from dev.fixture_projections.operation_contract_module import (
+    EarlierModule,
+    WindowType,
+    contract_roots,
+    render_contract_module,
+)
+from dev.fixture_projections.typescript_wire_types import literal, ts_name
 from dev.quality.typescript_module_size import MAX_PHYSICAL_LINES
 
+from cadrumo.core.models import OPERATION_FILLED_BY_SCHEMA_KEY
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
 _HEADER = """\
@@ -390,8 +397,9 @@ def module_of(family: str) -> str:
 def render(family: str) -> str:
     """The generated module of one family, before the frontend's formatter writes it."""
     contracts_name, definitions = FAMILIES[family]
-    return render_contract_module(
-        build_production_operation_registry(),
+    registry = build_production_operation_registry()
+    source = render_contract_module(
+        registry,
         header=_HEADER,
         definitions=definitions,
         contracts_name=contracts_name,
@@ -399,6 +407,18 @@ def render(family: str) -> str:
         field_types=FIELD_TYPES.get(family),
         earlier=[EarlierModule(module_of(each), FAMILIES[each][1]) for each in EARLIER.get(family, ())],
     )
+    requests = {model for _, role, model in contract_roots(registry, definitions) if role == "request"}
+    blocks: list[str] = []
+    for model in sorted(requests, key=lambda model: model.__name__):
+        schema = model.model_json_schema(mode="validation")
+        # The desktop host binds profile_id from its held session for every ledger submission.
+        omitted = {"profile_id"} | {
+            name for name, prop in schema["properties"].items() if prop.get(OPERATION_FILLED_BY_SCHEMA_KEY) == "host"
+        }
+        name = ts_name(model.__name__)
+        window_name = name.removesuffix("Request") + "WindowRequest"
+        blocks.append(f"export type {window_name} = Omit<{name}, {' | '.join(map(literal, sorted(omitted)))}>;")
+    return source + "\n" + "\n\n".join(blocks) + "\n"
 
 
 def main() -> None:

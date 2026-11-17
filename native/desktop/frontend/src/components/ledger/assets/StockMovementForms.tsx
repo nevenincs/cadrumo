@@ -3,9 +3,9 @@ import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import type { LedgerPort } from "../../../shell/ledger";
 import type {
-  InventoryBookRow,
-  InventoryMovement,
-} from "../../../shell/ledgerSetup";
+  InventoryListRowProjection,
+  InventoryMovementProjection,
+} from "../../../shell/ledgerInventoryContract";
 import { useStrings } from "../../../shell/strings";
 import {
   CallLine,
@@ -229,7 +229,7 @@ export function MovementForm({
   onWritten,
 }: {
   port: LedgerPort;
-  book: InventoryBookRow;
+  book: InventoryListRowProjection;
   catalogue: OfferState;
   onClose(): void;
   onWritten(): void;
@@ -312,8 +312,8 @@ export function MovementCorrectForm({
   onWritten,
 }: {
   port: LedgerPort;
-  book: InventoryBookRow;
-  target: InventoryMovement;
+  book: InventoryListRowProjection;
+  target: InventoryMovementProjection;
   catalogue: OfferState;
   onClose(): void;
   onWritten(): void;

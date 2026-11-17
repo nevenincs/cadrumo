@@ -12,7 +12,7 @@ import {
   weekStartOf,
 } from "../src/shell/calendarGrid";
 import { closeUnknown, entrySpan } from "../src/shell/calendarEntries";
-import type { CalendarEntry } from "../src/shell/views";
+import type { FilingCalendarServed } from "../src/shell/calendarContract";
 import {
   calendarEntry,
   calendarEvent,
@@ -171,7 +171,7 @@ const obligation = (
   opens: string,
   closes: string,
   adjusted = closes,
-): CalendarEntry =>
+): FilingCalendarServed["entries"][number] =>
   calendarEntry(
     modelo,
     PERIOD,
@@ -187,7 +187,7 @@ const unknownClose = (
   modelo: string,
   opens: string,
   earliest: string,
-): CalendarEntry => ({
+): FilingCalendarServed["entries"][number] => ({
   ...obligation(modelo, opens, earliest),
   status: "UNKNOWN",
   user_state: "unknown",
@@ -757,8 +757,8 @@ const reading = (
   modelo: string,
   opens: string,
   closes: string,
-  state: CalendarEntry["user_state"],
-): CalendarEntry => ({
+  state: FilingCalendarServed["entries"][number]["user_state"],
+): FilingCalendarServed["entries"][number] => ({
   ...obligation(modelo, opens, closes),
   user_state: state,
 });

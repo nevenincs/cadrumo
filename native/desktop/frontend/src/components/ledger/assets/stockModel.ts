@@ -18,23 +18,23 @@ import {
 } from "../../../shell/ledgerGrammar";
 import type {
   InventoryAcquisitionCostRequest,
-  InventoryBook,
-  InventoryBookRow,
-  InventoryClosingValueRequest,
-  InventoryCorrectRequest,
-  InventoryCreateRequest,
-  InventoryDescribeRequest,
-  InventoryEvidenceAddRequest,
-  InventoryEvidenceAddResult,
-  InventoryMovement,
-  InventoryMovementAddRequest,
-  InventoryMovementClaimRequest,
-  InventoryMovementCorrectRequest,
-  InventoryMovementReverseRequest,
-  InventoryProof,
-  InventoryRestoreRequest,
-  InventoryRetireRequest,
-} from "../../../shell/ledgerSetup";
+  InventoryLedgerProjection,
+  InventoryListRowProjection,
+  InventoryClosingValueRecordWindowRequest,
+  InventoryCorrectWindowRequest,
+  InventoryCreateWindowRequest,
+  InventoryDescribeWindowRequest,
+  InventoryEvidenceAddWindowRequest,
+  InventoryEvidenceAddProjection,
+  InventoryMovementProjection,
+  InventoryMovementAddWindowRequest,
+  InventoryMovementClaimWindowRequest,
+  InventoryMovementCorrectWindowRequest,
+  InventoryMovementReverseWindowRequest,
+  InventoryAcquisitionEvidence,
+  InventoryRestoreWindowRequest,
+  InventoryRetireWindowRequest,
+} from "../../../shell/ledgerInventoryContract";
 import type { Landing } from "../WritePause";
 import {
   proofKept,
@@ -114,10 +114,10 @@ export function bookRequest(
   year: number,
   draft: BookDraft,
   vocabulary: Vocabulary,
-): Built<InventoryCreateRequest> {
+): Built<InventoryCreateWindowRequest> {
   const c = collector();
   const name = c.need("name", parseLine(draft.name));
-  const method = c.choice<InventoryCreateRequest["valuation_method"]>(
+  const method = c.choice<InventoryCreateWindowRequest["valuation_method"]>(
     "method",
     draft.method,
     vocabulary.values.valuation_method,
@@ -148,8 +148,8 @@ function proofOf(
   key: string,
   draft: ProofDraft,
   kinds: readonly string[],
-): InventoryProof | null {
-  const kind = c.choice<InventoryProof["evidence_kind"]>(
+): InventoryAcquisitionEvidence | null {
+  const kind = c.choice<InventoryAcquisitionEvidence["evidence_kind"]>(
     `${key}:kind`,
     draft.kind === "" && kinds.length === 1 ? kinds[0] : draft.kind,
     kinds,
@@ -218,7 +218,7 @@ function acquisitionOf(
     return null;
   const built: InventoryAcquisitionCostRequest["attributable_cost_components"] =
     [];
-  const proofs: InventoryProof[] = [consideration];
+  const proofs: InventoryAcquisitionEvidence[] = [consideration];
   for (const part of components) {
     if (
       part.kind === null ||
@@ -268,11 +268,11 @@ export function movementRequest(
   movementId: string,
   draft: MovementDraft,
   vocabulary: Vocabulary,
-): Built<InventoryMovementAddRequest> {
+): Built<InventoryMovementAddWindowRequest> {
   const c = collector();
   const text = (key: string) => draft.values[key] ?? "";
   const date = c.need("date", parseIsoDate(text("date")));
-  const kind = c.choice<InventoryMovementAddRequest["kind"]>(
+  const kind = c.choice<InventoryMovementAddWindowRequest["kind"]>(
     "kind",
     text("kind"),
     vocabulary.values.movement_kind,
@@ -328,12 +328,12 @@ export function movementRequest(
  * of the file, and nothing else; the host names the folder and the profile. */
 export const evidenceRequest = (
   token: FileToken,
-): InventoryEvidenceAddRequest => ({ source_path: token });
+): InventoryEvidenceAddWindowRequest => ({ source_path: token });
 
 /** The proof a result of keeping a file makes, with the name the person saw it
  * under; null for a file the backend did not keep. */
 export function proofFromKept(
-  result: InventoryEvidenceAddResult,
+  result: InventoryEvidenceAddProjection,
   fileName: string,
 ): ProofDraft | null {
   if (
@@ -351,15 +351,15 @@ export function proofFromKept(
 }
 
 type CountFacts = NonNullable<
-  InventoryClosingValueRequest["facts"]["physical_count"]
+  InventoryClosingValueRecordWindowRequest["facts"]["physical_count"]
 >;
 type DecisionRole =
-  InventoryClosingValueRequest["facts"]["decision_evidence"][number]["role"];
+  InventoryClosingValueRecordWindowRequest["facts"]["decision_evidence"][number]["role"];
 type CountRole = CountFacts["evidence"][number]["role"];
 
 /** A document of a closing value, with the role it plays. */
 type ClosingDocument<Role extends string> = Omit<
-  InventoryProof,
+  InventoryAcquisitionEvidence,
   "evidence_kind"
 > & { role: Role };
 
@@ -392,11 +392,11 @@ export function closingRequest(
   ids: { decision: string },
   draft: ClosingDraft,
   vocabulary: Vocabulary,
-): Built<InventoryClosingValueRequest> {
+): Built<InventoryClosingValueRecordWindowRequest> {
   const c = collector();
   const text = (key: string) => draft.values[key] ?? "";
   const authority = c.choice<
-    InventoryClosingValueRequest["facts"]["authority"]
+    InventoryClosingValueRecordWindowRequest["facts"]["authority"]
   >("authority", text("authority"), vocabulary.values.closing_authority);
   const reason = c.need("reason", parseLine(text("reason")));
   const decision = (vocabulary.values.decision_evidence_role ?? []).map(
@@ -410,7 +410,7 @@ export function closingRequest(
   );
   if (decision.length === 0) c.lack("decision:file");
   let count: NonNullable<
-    InventoryClosingValueRequest["facts"]["physical_count"]
+    InventoryClosingValueRecordWindowRequest["facts"]["physical_count"]
   > | null = null;
   if (plays(vocabulary, "count_authority", authority ?? undefined)) {
     const observedOn = c.need("observed_on", parseIsoDate(text("observed_on")));
@@ -420,7 +420,7 @@ export function closingRequest(
     );
     const basis = c.choice<
       NonNullable<
-        InventoryClosingValueRequest["facts"]["physical_count"]
+        InventoryClosingValueRecordWindowRequest["facts"]["physical_count"]
       >["valuation_basis"]
     >("basis", text("basis"), vocabulary.values.closing_valuation_basis);
     const evidence = (vocabulary.values.physical_evidence_role ?? []).map(
@@ -482,7 +482,10 @@ export function closingRequest(
 /** Whether a closing value is in the book as read again; untold where the
  * book could not be read. */
 export function closingLanded(
-  ledger: Pick<InventoryBook, "closing_authority_fingerprints"> | null,
+  ledger: Pick<
+    InventoryLedgerProjection,
+    "closing_authority_fingerprints"
+  > | null,
 ): Landing {
   if (ledger === null) return "untold";
   return ledger.closing_authority_fingerprints !== null ? "saved" : "not_saved";
@@ -504,7 +507,7 @@ export function describeRequest(
   book: Book,
   correction: string,
   draft: DescribeDraft,
-): Built<InventoryDescribeRequest> {
+): Built<InventoryDescribeWindowRequest> {
   const c = collector();
   const label = c.need("label", parseLine(draft.label));
   const description = c.maybe("description", parseLine(draft.description));
@@ -525,9 +528,9 @@ export function correctRequest(
   correction: string,
   draft: CorrectDraft,
   vocabulary: Vocabulary,
-): Built<InventoryCorrectRequest> {
+): Built<InventoryCorrectWindowRequest> {
   const c = collector();
-  const reason = c.choice<InventoryCorrectRequest["reason"]>(
+  const reason = c.choice<InventoryCorrectWindowRequest["reason"]>(
     "reason",
     draft.reason,
     vocabulary.values.correction_reason,
@@ -539,11 +542,9 @@ export function correctRequest(
   const method =
     draft.method === ""
       ? null
-      : c.choice<NonNullable<InventoryCorrectRequest["valuation_method"]>>(
-          "method",
-          draft.method,
-          vocabulary.values.valuation_method,
-        );
+      : c.choice<
+          NonNullable<InventoryCorrectWindowRequest["valuation_method"]>
+        >("method", draft.method, vocabulary.values.valuation_method);
   return {
     request:
       c.ready() && reason !== null
@@ -567,13 +568,11 @@ export function movementCorrectionRequest(
   reason: string,
   draft: MovementDraft,
   vocabulary: Vocabulary,
-): Built<InventoryMovementCorrectRequest> {
+): Built<InventoryMovementCorrectWindowRequest> {
   const made = movementRequest(book, ids.movement, draft, vocabulary);
-  const why = collector().choice<InventoryMovementCorrectRequest["reason"]>(
-    "reason",
-    reason,
-    vocabulary.values.correction_reason,
-  );
+  const why = collector().choice<
+    InventoryMovementCorrectWindowRequest["reason"]
+  >("reason", reason, vocabulary.values.correction_reason);
   const missing = new Set(made.missing);
   if (why === null) missing.add("reason");
   if (made.request === null || why === null)
@@ -599,9 +598,9 @@ export function reverseRequest(
   target: string,
   reason: string,
   vocabulary: Vocabulary,
-): Built<InventoryMovementReverseRequest> {
+): Built<InventoryMovementReverseWindowRequest> {
   const c = collector();
-  const why = c.choice<InventoryMovementReverseRequest["reason"]>(
+  const why = c.choice<InventoryMovementReverseWindowRequest["reason"]>(
     "reason",
     reason,
     vocabulary.values.correction_reason,
@@ -629,8 +628,10 @@ export type PurchaseClaim = {
 
 /** The statement the read served for a purchase, or null where the read
  * served none: an unserved statement is not shown as any of the three. */
-export function claimOf(movement: InventoryMovement): PurchaseClaim | null {
-  const served = movement as InventoryMovement & {
+export function claimOf(
+  movement: InventoryMovementProjection,
+): PurchaseClaim | null {
+  const served = movement as InventoryMovementProjection & {
     ledger_row?: string | null;
     claimed_transaction_id?: string | null;
   };
@@ -648,7 +649,7 @@ export function claimRequest(
   movement: string,
   row: string,
   transaction: string,
-): Built<InventoryMovementClaimRequest> {
+): Built<InventoryMovementClaimWindowRequest> {
   const c = collector();
   const stated = c.choice("row", row, ["unstated", "claimed", "none"]);
   if (stated === "claimed" && transaction === "") c.lack("transaction");
@@ -672,9 +673,9 @@ export function retireRequest(
   correction: string,
   reason: string,
   vocabulary: Vocabulary,
-): Built<InventoryRetireRequest> {
+): Built<InventoryRetireWindowRequest> {
   const c = collector();
-  const why = c.choice<InventoryRetireRequest["reason"]>(
+  const why = c.choice<InventoryRetireWindowRequest["reason"]>(
     "reason",
     reason,
     vocabulary.values.retirement_reason,
@@ -690,12 +691,12 @@ export function retireRequest(
 export const restoreRequest = (
   book: Book,
   correction: string,
-): InventoryRestoreRequest => changeOf(book, correction);
+): InventoryRestoreWindowRequest => changeOf(book, correction);
 
 /** Whether a change sent under its reference is in the history of the book
  * as read again; untold where the book could not be read. */
 export function changeLanded(
-  ledger: Pick<InventoryBook, "history"> | null,
+  ledger: Pick<InventoryLedgerProjection, "history"> | null,
   correction: string,
 ): Landing {
   if (ledger === null) return "untold";
@@ -722,13 +723,13 @@ export function bookName(row: {
  * has its book for `year` already. A book is named by its activity, so a
  * changed spelling would start another book. */
 export function bookNameOptions(
-  rows: readonly InventoryBookRow[],
+  rows: readonly InventoryListRowProjection[],
   year: number,
 ): Suggestion[] {
   const held = new Set(
     rows.filter((row) => row.year === year).map((row) => row.actividad_id),
   );
-  const named = new Map<string, InventoryBookRow>();
+  const named = new Map<string, InventoryListRowProjection>();
   for (const row of rows)
     if (!held.has(row.actividad_id) && !named.has(row.actividad_id))
       named.set(row.actividad_id, row);
@@ -741,7 +742,7 @@ export function bookNameOptions(
 
 /** Whether a book is listed for the activity and year. */
 export function bookListed(
-  rows: readonly InventoryBookRow[],
+  rows: readonly InventoryListRowProjection[],
   name: string,
   year: number,
 ): Landing {
@@ -753,7 +754,7 @@ export function bookListed(
 /** Whether a book now holds more movements than it did when one was sent. A
  * movement's reference is refused if sent again, so the count tells it. */
 export function movementCounted(
-  rows: readonly InventoryBookRow[],
+  rows: readonly InventoryListRowProjection[],
   book: { actividad_id: string; year: number },
   before: number,
 ): Landing {

@@ -2,9 +2,9 @@ import { formatDay } from "../../../shared/dateFormats";
 import { servedRefusalWords } from "../../../shell/ledger";
 import { formatDecimal } from "../../../shared/numbers";
 import type {
-  InventoryMovement,
-  InventoryRefusal,
-} from "../../../shell/ledgerSetup";
+  InventoryMovementProjection,
+  InventoryRefusalProjection,
+} from "../../../shell/ledgerInventoryContract";
 import type { Translate } from "../../../shell/strings";
 import type { SetupCall } from "../setup/setupModel";
 import { wordOf, servedWord, type Offers } from "./stockVocabulary";
@@ -12,16 +12,16 @@ import { wordOf, servedWord, type Offers } from "./stockVocabulary";
 /** The refusal a call carries, wherever the call put it. */
 export function refusalOf(
   call: SetupCall<unknown> | null,
-): InventoryRefusal | null {
+): InventoryRefusalProjection | null {
   if (call?.kind === "refused")
     return (
-      (call.detail as { refusal?: InventoryRefusal | null } | null)?.refusal ??
-      null
+      (call.detail as { refusal?: InventoryRefusalProjection | null } | null)
+        ?.refusal ?? null
     );
   if (call?.kind === "done")
     return (
-      (call.result as { refusal?: InventoryRefusal | null } | null)?.refusal ??
-      null
+      (call.result as { refusal?: InventoryRefusalProjection | null } | null)
+        ?.refusal ?? null
     );
   return null;
 }
@@ -60,7 +60,7 @@ export function choicesOf(
 export function movementLine(
   t: Translate,
   locale: string,
-  movement: InventoryMovement,
+  movement: InventoryMovementProjection,
 ) {
   return t("desktop.ledger.stock.fact.movement", {
     date: formatDay(locale, movement.movement_date),
