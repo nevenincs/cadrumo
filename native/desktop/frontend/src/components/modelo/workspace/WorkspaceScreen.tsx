@@ -943,6 +943,17 @@ function Ready({
             }
             onAnswer={onAnswer}
             onOpenInvoice={onOpenInvoice ?? null}
+            onAmend={
+              !held &&
+              envelope.form.form.issues.some(
+                (issue) => issue.door_action_id === AMEND_DOOR,
+              )
+                ? () => {
+                    setView("history");
+                    setCorrecting(true);
+                  }
+                : null
+            }
             recoveries={
               <NoteRecoveries
                 notes={envelope.form.form.calculation_notes}
@@ -1191,6 +1202,10 @@ function Ready({
     />
   );
 }
+
+/** The served operator action a check finding names as its door when the
+ * finding is resolved by amending the recorded filing. */
+const AMEND_DOOR = "operator.modelo.work.amend";
 
 /** The places a refused apply's served way out can open from the review:
  * the form, where a carry's statements are made, and the correction of the

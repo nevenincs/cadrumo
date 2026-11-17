@@ -167,6 +167,7 @@ export function CheckView({
   onRecalculate,
   onAnswer = null,
   onOpenInvoice = null,
+  onAmend = null,
   answers,
   recoveries,
 }: {
@@ -186,6 +187,10 @@ export function CheckView({
   /** Opens the invoice a line asks a document for, or null while this window
    * has no Libro de facturas. */
   onOpenInvoice?: ((invoiceId: string) => void) | null;
+  /** Opens the correction of the recorded filing, when a finding of the
+   * check is served with the amendment as its door; null when none is, or
+   * while it cannot be opened from here. */
+  onAmend?: (() => void) | null;
   /** The answers given to the declaration's disagreements, drawn under the
    * lines. */
   answers?: ReactNode;
@@ -247,6 +252,14 @@ export function CheckView({
           </section>
         );
       })}
+      {onAmend && (
+        <div data-issue-door="amend" className="flex">
+          <Button size="sm" variant="link" onClick={onAmend}>
+            {t("workspace.modelo.correction.title")}
+            <Icon name="forward" size="xs" />
+          </Button>
+        </div>
+      )}
       {recoveries}
       {answers}
     </div>
