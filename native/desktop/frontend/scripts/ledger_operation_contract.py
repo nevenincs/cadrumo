@@ -401,6 +401,24 @@ FIELD_EXPORTS: dict[str, tuple[tuple[str, str, str, str], ...]] = {
         ("LedgerClassifyValidation", "ledger.classify.single", "result", '{model}["validation_kind"]'),
     ),
     "movementCheck": (
+        (
+            "StageFieldName",
+            "ledger.staged.check",
+            "request",
+            'NonNullable<NonNullable<{model}["rows"]>[number]["cells"]>[number]["field"]',
+        ),
+        (
+            "DraftFieldName",
+            "ledger.staged.check",
+            "request",
+            'NonNullable<NonNullable<{model}["drafts"]>[number]["fields"]>[number]["field"]',
+        ),
+        (
+            "LifecycleAction",
+            "ledger.staged.check",
+            "result",
+            '{model}["rows"][number]["lifecycle_actions"][number]',
+        ),
         ("LedgerLlmReviewMode", "ledger.classify.review", "request", '{model}["mode"]'),
         (
             "LedgerWriteRoute",

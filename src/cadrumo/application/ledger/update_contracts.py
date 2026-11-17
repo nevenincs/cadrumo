@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_va
 
 from ...core.decimal.grammar import CENT_FRACTION_DIGITS, DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.codes import normalise_iso_4217_currency
@@ -169,6 +170,8 @@ class LedgerUpdateRequest(BaseModel):
     ``patch_fields`` preserves explicit ``None`` clears across JSON serialization.
     Nested defaults serialize as null, so every unselected value must be null;
     that rule makes the mask a safe omission equivalent after worker decode.
+
+    ``output_language`` is the language the result's transaction link fields are named in.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -178,6 +181,7 @@ class LedgerUpdateRequest(BaseModel):
     patch: LedgerUpdatePatch
     patch_fields: _UpdateFields
     actor: Annotated[str, Field(min_length=1, max_length=64)] | None = None
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     @field_validator("patch_fields")
     @classmethod

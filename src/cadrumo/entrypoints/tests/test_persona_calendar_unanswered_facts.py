@@ -21,7 +21,9 @@ from ...application.overview.read_request import OVERVIEW_READ_DEFINITION_IDS, O
 from ...application.overview.read_result import OverviewReadProjection
 from ...core.external_constants import OutputLanguage
 from ...tests.personas import persona_ids
-from .persona_materialisation import ReplayScope, materialised_persona, run_operation
+from .persona_materialisation import materialised_persona
+from .persona_operations import run_operation
+from .persona_world import ReplayScope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -15,14 +15,10 @@ from functools import cache
 
 from cadrumo.core.capabilities import ServiceCapability
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
-from cadrumo.entrypoints.tests.persona_materialisation import (
-    WithholdingCapture,
-    classify_patch,
-    household_leaves,
-    party_name,
-    preceding_quarter,
-)
-from cadrumo.tests.personas import (
+from cadrumo.entrypoints.tests.persona_history_replay import preceding_quarter
+from cadrumo.entrypoints.tests.persona_replay_requests import classify_patch, household_leaves, party_name
+from cadrumo.entrypoints.tests.persona_withholding_capture import WithholdingCapture
+from cadrumo.tests.persona_types import (
     FieldValue,
     FiledReturns,
     HouseholdMember,

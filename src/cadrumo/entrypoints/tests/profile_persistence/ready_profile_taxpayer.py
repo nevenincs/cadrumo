@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from cadrumo.tests.personas import identity_catalogue
+from cadrumo.tests.persona_identities import identity_catalogue
 
 _READY_PROFILE_ROLE = "fontanero.titular"
 """The identity role the ready profile (the autonomo-fontanero persona) binds as its taxpayer."""

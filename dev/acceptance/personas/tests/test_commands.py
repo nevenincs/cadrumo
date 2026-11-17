@@ -6,8 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.entrypoints.tests.persona_materialisation import patch_answers
-from cadrumo.tests.personas import FieldValue
+from cadrumo.entrypoints.tests.persona_replay_requests import patch_answers
+from cadrumo.tests.persona_types import FieldValue
 
 from .. import commands
 from .catalogue_support import envelope, persona

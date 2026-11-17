@@ -18,15 +18,11 @@ from pydantic import BaseModel
 
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
-from ...tests.personas import (
-    AttestedPriorValue,
-    PriorValueSource,
-    YearEnvelope,
-    YearToken,
-    read_persona,
-)
-from .persona_materialisation import attested_returns_to_replay, year_envelope
+from ...tests.persona_types import AttestedPriorValue, PriorValueSource, YearEnvelope, YearToken
+from ...tests.personas import read_persona
+from .persona_history_replay import attested_returns_to_replay
 from .persona_prior_values import PriorValueAttestationError, attest_return_prior_values, check_prior_value_bindings
+from .persona_world import year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

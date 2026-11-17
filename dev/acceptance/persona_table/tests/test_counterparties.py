@@ -15,8 +15,8 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
-from cadrumo.tests.personas import ExpectedValue, Identity, IdentityCatalogue, IdentityKind, YearToken
+from cadrumo.entrypoints.tests.persona_world import year_envelope
+from cadrumo.tests.persona_types import ExpectedValue, Identity, IdentityCatalogue, IdentityKind, YearToken
 
 from ..counterparties import DESIGNS, counterparty_mismatches, is_compared, read_records
 from ..rows import planned_rows

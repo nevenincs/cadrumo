@@ -46,6 +46,7 @@ from ...application.user_profile.section_rows import (
     remove_profile_repeatable_section_row,
 )
 from ...core.config import override_settings
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.capital_mobiliario_facts import resolve_capital_mobiliario_concept_vocabulary
 from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
@@ -400,7 +401,7 @@ def test_a_settled_classification_is_correlated_with_the_savings_link(world: _Wo
     )
     resolved = resolve_classification_patch_values(patch, _LINK_FIELDS, current=created, operation=world.operation)
     result = classification_result_from_action(
-        UUID(world.profile_id), _update_result(world, ports, created, **resolved)
+        UUID(world.profile_id), _update_result(world, ports, created, **resolved), language=DEFAULT_OUTPUT_LANGUAGE
     )
 
     assert result.posicion_ref == _POSITION

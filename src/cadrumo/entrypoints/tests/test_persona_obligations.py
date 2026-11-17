@@ -34,7 +34,7 @@ Local filing records a PRESENTADO revision and submits nothing.
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from functools import cache
@@ -90,29 +90,21 @@ from ...application.overview.read_result import OverviewReadProjection
 from ...core.external_constants import OutputLanguage
 from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...tests.personas import (
-    ExpectedObligation,
-    Persona,
-    YearEnvelope,
-    per_period_modelos,
-    persona_ids,
-    read_persona,
-    values_in_force,
-)
-from .persona_materialisation import (
+from ...tests.persona_expectations import per_period_modelos, values_in_force
+from ...tests.persona_types import ExpectedDeadline, ExpectedObligation, Persona, YearEnvelope
+from ...tests.personas import persona_ids, read_persona
+from .persona_history_replay import filing_key
+from .persona_materialisation import materialised_persona
+from .persona_operations import attest_before_first_calculation, run_operation, settle_operation
+from .persona_prior_carries import attest_prior_carries
+from .persona_world import (
     PERSONA_ACTOR,
     MaterialisedPersona,
     PersonaMaterialisationError,
     PersonaWorld,
     ReplayScope,
-    attest_before_first_calculation,
-    filing_key,
-    materialised_persona,
-    run_operation,
-    settle_operation,
     year_envelope,
 )
-from .persona_prior_carries import attest_prior_carries
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -218,6 +210,172 @@ def _next_business_day(day: date) -> date:
     return following
 
 
+@dataclass(frozen=True, slots=True)
+class _CalendarObservation:
+    """What the calendar read of one case showed: its window rows, suppressed verdicts and advices."""
+
+    entries: dict[tuple[str, str], OverviewCalendarEntrySnapshot] = field(default_factory=dict)
+    suppressed: dict[tuple[str, str], ApplicabilityVerdict] = field(default_factory=dict)
+    advised: set[tuple[str, str]] = field(default_factory=set)
+
+
+def _observe_calendar(world: PersonaWorld, case: _Case, problems: list[str]) -> _CalendarObservation:
+    """Read the calendar of the case's years, suppressed obligations shown; a refusal is a problem, not a raise."""
+    try:
+        calendar_read = _read(
+            world,
+            OverviewReadRequest(
+                profile_id=world.profile_id,
+                kind=OverviewReadKind.CALENDAR,
+                output_language=OutputLanguage.ES,
+                from_date=date(case.year, 1, 1),
+                to_date=date(case.year + 1, 12, 31),
+                show_suppressed=True,
+            ),
+        ).payload
+    except PersonaMaterialisationError as error:
+        problems.append(f"the calendar read was refused: {error}")
+        return _CalendarObservation()
+    assert isinstance(calendar_read, OverviewCalendarRead)
+    assert calendar_read.calendar is not None
+    entries = {
+        (entry.modelo, entry.period.rsplit(" ", 1)[-1]): entry
+        for entry in calendar_read.calendar.entries
+        if entry.filing_year == case.year
+    }
+    suppressed = {
+        (row.modelo, code): row.verdict
+        for row in calendar_read.calendar.suppressed_entries
+        for row_year, _, code in (row.period.rpartition(" "),)
+        if row_year == str(case.year)
+    }
+    advised = {(item.modelo, item.reason.value) for item in calendar_read.calendar.coverage.advised}
+    return _CalendarObservation(entries, suppressed, advised)
+
+
+def _explained_verdicts(
+    world: PersonaWorld, case: _Case, obligations: list[ExpectedObligation], problems: list[str]
+) -> dict[str, tuple[ApplicabilityVerdict, bool]]:
+    """The one verdict the explanation states per modelo, for the modelos whose periods share it."""
+    verdicts: dict[str, tuple[ApplicabilityVerdict, bool]] = {}
+    for item in obligations:
+        try:
+            explained = _read(
+                world,
+                OverviewReadRequest(
+                    profile_id=world.profile_id,
+                    kind=OverviewReadKind.EXPLAIN,
+                    output_language=OutputLanguage.ES,
+                    modelo=item.modelo,
+                    year=case.year,
+                ),
+            ).payload
+        except PersonaMaterialisationError as error:
+            problems.append(f"Modelo {item.modelo}: the explanation was refused: {error}")
+            continue
+        assert isinstance(explained, OverviewExplainRead)
+        verdicts[item.modelo] = (explained.explanation.verdict, explained.explanation.applicable)
+    return verdicts
+
+
+def _expected_verdict(item: ExpectedObligation) -> tuple[ApplicabilityVerdict, bool]:
+    if item.applicable == "unknown":
+        return (ApplicabilityVerdict.INCOMPLETE, False)
+    if item.applicable:
+        return (ApplicabilityVerdict.APPLICABLE, True)
+    return (ApplicabilityVerdict.NOT_APPLICABLE, False)
+
+
+def _check_period_verdicts(
+    item: ExpectedObligation,
+    case: _Case,
+    expected_verdict: tuple[ApplicabilityVerdict, bool],
+    calendar: _CalendarObservation,
+    problems: list[str],
+) -> None:
+    for period in item.periods:
+        shown = (
+            ApplicabilityVerdict.APPLICABLE
+            if (item.modelo, period) in calendar.entries
+            else calendar.suppressed.get((item.modelo, period))
+        )
+        if shown != expected_verdict[0]:
+            problems.append(
+                f"Modelo {item.modelo} {case.year} {period}: calendar shows {shown or 'nothing'}, "
+                f"expected {expected_verdict[0]} ({item.legal_ref})"
+            )
+
+
+def _check_calendar_rows(
+    item: ExpectedObligation,
+    case: _Case,
+    calendar: _CalendarObservation,
+    calendar_read_refused: bool,
+    problems: list[str],
+) -> None:
+    """A modelo the persona must file has a window row for each period; one it lacks, or cannot decide, has none."""
+    entries = calendar.entries
+    if item.calendar_advice is not None:
+        if (item.modelo, item.calendar_advice) not in calendar.advised:
+            problems.append(
+                f"Modelo {item.modelo} {case.year}: calendar does not advise {item.calendar_advice} ({item.legal_ref})"
+            )
+        problems.extend(
+            f"Modelo {item.modelo} {case.year} {period}: calendar row present, expected the "
+            f"{item.calendar_advice} advice instead ({item.legal_ref})"
+            for period in item.periods
+            if (item.modelo, period) in entries
+        )
+    elif entries or not calendar_read_refused:
+        problems.extend(
+            f"Modelo {item.modelo} {case.year} {period}: calendar row {'absent' if item.applicable is True else 'present'}, "
+            f"expected {'present' if item.applicable is True else 'absent'} ({item.legal_ref})"
+            for period in item.periods
+            if ((item.modelo, period) in entries) != (item.applicable is True)
+        )
+
+
+def _check_obligation(
+    item: ExpectedObligation,
+    case: _Case,
+    per_period: frozenset[str],
+    calendar: _CalendarObservation,
+    verdicts: dict[str, tuple[ApplicabilityVerdict, bool]],
+    problems: list[str],
+) -> None:
+    expected_verdict = _expected_verdict(item)
+    calendar_read_refused = any("calendar read was refused" in each for each in problems)
+    if item.modelo in per_period and not calendar_read_refused:
+        _check_period_verdicts(item, case, expected_verdict, calendar, problems)
+    if item.modelo in verdicts and verdicts[item.modelo] != expected_verdict:
+        problems.append(
+            f"Modelo {item.modelo} {case.year}: explanation says {verdicts[item.modelo]}, "
+            f"expected {expected_verdict} ({item.legal_ref})"
+        )
+    _check_calendar_rows(item, case, calendar, calendar_read_refused, problems)
+
+
+def _check_deadlines(
+    deadlines: list[ExpectedDeadline],
+    case: _Case,
+    envelope: YearEnvelope,
+    calendar: _CalendarObservation,
+    problems: list[str],
+) -> None:
+    for deadline in deadlines:
+        entry = calendar.entries.get((deadline.modelo, deadline.period))
+        statutory_end = deadline.statutory_end.resolve(envelope)
+        if entry is None:
+            problems.append(
+                f"Modelo {deadline.modelo} {case.year} {deadline.period}: no window for the stated deadline"
+            )
+        elif entry.closes_on != statutory_end and entry.adjusted_closes_on != _next_business_day(statutory_end):
+            problems.append(
+                f"Modelo {deadline.modelo} {case.year} {deadline.period}: window closes {entry.closes_on} "
+                f"(adjusted {entry.adjusted_closes_on}), statute gives {statutory_end} ({deadline.legal_ref})"
+            )
+
+
 @pytest.mark.parametrize("case", _cases(_obligation_years))
 def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path: Path, case: _Case) -> None:
     persona = _personas()[case.persona_id]
@@ -237,120 +395,17 @@ def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path:
     ]
 
     problems: list[str] = []
-    entries: dict[tuple[str, str], OverviewCalendarEntrySnapshot] = {}
-    suppressed: dict[tuple[str, str], ApplicabilityVerdict] = {}
-    advised: set[tuple[str, str]] = set()
     per_period = per_period_modelos(stated_obligations)
-    verdicts: dict[str, tuple[ApplicabilityVerdict, bool]] = {}
     with materialised_persona(case.persona_id, tmp_path, _scope(persona), reuse=True) as materialised:
         world = materialised.world
-        try:
-            calendar_read = _read(
-                world,
-                OverviewReadRequest(
-                    profile_id=world.profile_id,
-                    kind=OverviewReadKind.CALENDAR,
-                    output_language=OutputLanguage.ES,
-                    from_date=date(case.year, 1, 1),
-                    to_date=date(case.year + 1, 12, 31),
-                    show_suppressed=True,
-                ),
-            ).payload
-        except PersonaMaterialisationError as error:
-            problems.append(f"the calendar read was refused: {error}")
-        else:
-            assert isinstance(calendar_read, OverviewCalendarRead)
-            assert calendar_read.calendar is not None
-            entries = {
-                (entry.modelo, entry.period.rsplit(" ", 1)[-1]): entry
-                for entry in calendar_read.calendar.entries
-                if entry.filing_year == case.year
-            }
-            suppressed = {
-                (row.modelo, code): row.verdict
-                for row in calendar_read.calendar.suppressed_entries
-                for row_year, _, code in (row.period.rpartition(" "),)
-                if row_year == str(case.year)
-            }
-            advised = {(item.modelo, item.reason.value) for item in calendar_read.calendar.coverage.advised}
-        for item in obligations:
-            if item.modelo in per_period:
-                continue
-            try:
-                explained = _read(
-                    world,
-                    OverviewReadRequest(
-                        profile_id=world.profile_id,
-                        kind=OverviewReadKind.EXPLAIN,
-                        output_language=OutputLanguage.ES,
-                        modelo=item.modelo,
-                        year=case.year,
-                    ),
-                ).payload
-            except PersonaMaterialisationError as error:
-                problems.append(f"Modelo {item.modelo}: the explanation was refused: {error}")
-                continue
-            assert isinstance(explained, OverviewExplainRead)
-            verdicts[item.modelo] = (explained.explanation.verdict, explained.explanation.applicable)
+        calendar = _observe_calendar(world, case, problems)
+        verdicts = _explained_verdicts(
+            world, case, [item for item in obligations if item.modelo not in per_period], problems
+        )
 
     for item in obligations:
-        expected_verdict = (
-            (ApplicabilityVerdict.INCOMPLETE, False)
-            if item.applicable == "unknown"
-            else (ApplicabilityVerdict.APPLICABLE, True)
-            if item.applicable
-            else (ApplicabilityVerdict.NOT_APPLICABLE, False)
-        )
-        calendar_read_refused = any("calendar read was refused" in each for each in problems)
-        if item.modelo in per_period and not calendar_read_refused:
-            for period in item.periods:
-                shown = (
-                    ApplicabilityVerdict.APPLICABLE
-                    if (item.modelo, period) in entries
-                    else suppressed.get((item.modelo, period))
-                )
-                if shown != expected_verdict[0]:
-                    problems.append(
-                        f"Modelo {item.modelo} {case.year} {period}: calendar shows {shown or 'nothing'}, "
-                        f"expected {expected_verdict[0]} ({item.legal_ref})"
-                    )
-        if item.modelo in verdicts and verdicts[item.modelo] != expected_verdict:
-            problems.append(
-                f"Modelo {item.modelo} {case.year}: explanation says {verdicts[item.modelo]}, "
-                f"expected {expected_verdict} ({item.legal_ref})"
-            )
-        # A modelo the persona must file has a window row for each period; one it lacks, or cannot decide, has none.
-        if item.calendar_advice is not None:
-            if (item.modelo, item.calendar_advice) not in advised:
-                problems.append(
-                    f"Modelo {item.modelo} {case.year}: calendar does not advise {item.calendar_advice} "
-                    f"({item.legal_ref})"
-                )
-            problems.extend(
-                f"Modelo {item.modelo} {case.year} {period}: calendar row present, expected the "
-                f"{item.calendar_advice} advice instead ({item.legal_ref})"
-                for period in item.periods
-                if (item.modelo, period) in entries
-            )
-        elif entries or not any("calendar read was refused" in each for each in problems):
-            problems.extend(
-                f"Modelo {item.modelo} {case.year} {period}: calendar row {'absent' if item.applicable is True else 'present'}, "
-                f"expected {'present' if item.applicable is True else 'absent'} ({item.legal_ref})"
-                for period in item.periods
-                if ((item.modelo, period) in entries) != (item.applicable is True)
-            )
-    for deadline in deadlines:
-        entry = entries.get((deadline.modelo, deadline.period))
-        statutory_end = deadline.statutory_end.resolve(envelope)
-        if entry is None:
-            problems.append(
-                f"Modelo {deadline.modelo} {case.year} {deadline.period}: no window for the stated deadline"
-            )
-        elif entry.closes_on != statutory_end and entry.adjusted_closes_on != _next_business_day(statutory_end):
-            problems.append(
-                f"Modelo {deadline.modelo} {case.year} {deadline.period}: window closes {entry.closes_on} "
-                f"(adjusted {entry.adjusted_closes_on}), statute gives {statutory_end} ({deadline.legal_ref})"
-            )
+        _check_obligation(item, case, per_period, calendar, verdicts, problems)
+    _check_deadlines(deadlines, case, envelope, calendar, problems)
     assert not problems, "\n".join(problems)
 
 
@@ -503,72 +558,111 @@ def _chain_order(key: tuple[str, str]) -> tuple[bool, str, str]:
     return (not period.endswith("T"), period, modelo)
 
 
+@dataclass(frozen=True, slots=True)
+class _StatedValues:
+    """The values a persona states for one year, keyed by modelo and period."""
+
+    expected: dict[tuple[str, str], dict[str, Decimal | None]]
+    legal_refs: dict[tuple[str, str], str | tuple[str, ...]]
+    refusals: dict[tuple[str, str], str]
+    refusal_stages: dict[tuple[str, str], str | None]
+    not_sourced: dict[tuple[str, str], dict[str, Decimal | None]]
+
+
+def _stated_values(persona: Persona, envelope: YearEnvelope, year: int) -> _StatedValues:
+    stated = [
+        value
+        for value_year, value in values_in_force(persona.expectations.values, envelope)
+        if (value.casillas or value.not_sourced or value.refusal is not None)
+        and value.grounding != "unverified"
+        and value_year == year
+    ]
+    return _StatedValues(
+        expected={
+            (value.modelo, value.period): {casilla: _decimal(amount) for casilla, amount in value.casillas}
+            for value in stated
+        },
+        legal_refs={(value.modelo, value.period): value.legal_ref for value in stated},
+        refusals={(value.modelo, value.period): value.refusal for value in stated if value.refusal is not None},
+        refusal_stages={
+            (value.modelo, value.period): value.refusal_stage for value in stated if value.refusal is not None
+        },
+        not_sourced={
+            (value.modelo, value.period): {casilla: _decimal(amount) for casilla, amount in value.not_sourced}
+            for value in stated
+        },
+    )
+
+
+def _check_stated_refusal(
+    where: str, refusal: str, stage: str | None, calculated: dict[str, object], problems: list[str]
+) -> None:
+    if stage != "calculate":
+        # A later stage refuses a completed calculation; the persona
+        # table asserts that stage's refusal against the written file.
+        if "refusal" in calculated:
+            problems.append(f"{where}: calculation refused: {calculated['refusal']}")
+        return
+    if refusal not in str(calculated.get("refusal", "")):
+        problems.append(
+            f"{where}: expected the stated refusal {refusal}, got {calculated.get('refusal', 'a calculation')}"
+        )
+
+
+def _check_stated_casillas(
+    where: str,
+    casillas: dict[str, Decimal | None],
+    not_sourced: dict[str, Decimal | None],
+    calculated: dict[str, object],
+    problems: list[str],
+) -> None:
+    problems.extend(
+        f"{where} casilla {casilla}: expected {amount}, got {actual}"
+        for casilla, amount in casillas.items()
+        if (actual := _decimal(calculated[casilla]) if casilla in calculated else None) != amount
+    )
+    problems.extend(
+        f"{where} casilla {casilla}: now carries the law's {amount}; compare it instead of stating it not sourced"
+        for casilla, amount in not_sourced.items()
+        if casilla in calculated and _decimal(calculated[casilla]) == amount
+    )
+
+
+def _check_calculated_return(
+    where: str,
+    key: tuple[str, str],
+    stated: _StatedValues,
+    calculated: dict[str, object],
+    left_unfiled: dict[str, str],
+    problems: list[str],
+) -> None:
+    if (refusal := stated.refusals.get(key)) is not None:
+        _check_stated_refusal(where, refusal, stated.refusal_stages[key], calculated, problems)
+    elif "refusal" in calculated:
+        earlier = f" ({left_unfiled[key[0]]})" if key[0] in left_unfiled else ""
+        problems.append(f"{where}: calculation refused: {calculated['refusal']}{earlier}")
+    else:
+        _check_stated_casillas(where, stated.expected[key], stated.not_sourced[key], calculated, problems)
+
+
 @pytest.mark.parametrize("case", _cases(_value_years))
 def test_the_application_calculates_the_casillas_a_persona_expects(tmp_path: Path, case: _Case) -> None:
     persona = _personas()[case.persona_id]
-    envelope = _envelope()
-    stated = [
-        value
-        for year, value in values_in_force(persona.expectations.values, envelope)
-        if (value.casillas or value.not_sourced or value.refusal is not None)
-        and value.grounding != "unverified"
-        and year == case.year
-    ]
-    expected = {
-        (value.modelo, value.period): {casilla: _decimal(amount) for casilla, amount in value.casillas}
-        for value in stated
-    }
-    legal_refs = {(value.modelo, value.period): value.legal_ref for value in stated}
-    refusals = {(value.modelo, value.period): value.refusal for value in stated if value.refusal is not None}
-    refusal_stages = {
-        (value.modelo, value.period): value.refusal_stage for value in stated if value.refusal is not None
-    }
-    not_sourced = {
-        (value.modelo, value.period): {casilla: _decimal(amount) for casilla, amount in value.not_sourced}
-        for value in stated
-    }
+    stated = _stated_values(persona, _envelope(), case.year)
 
     problems: list[str] = []
     left_unfiled: dict[str, str] = {}
     with materialised_persona(case.persona_id, tmp_path, _scope(persona), reuse=True) as materialised:
-        for modelo, period in sorted(expected, key=_chain_order):
-            casillas = expected[modelo, period]
+        for modelo, period in sorted(stated.expected, key=_chain_order):
             result = _calculated_casillas(materialised, modelo, case.year, period)
-            calculated = result.values
             if (
                 result.unfiled is not None
                 and period.endswith("T")
                 and (unfiled := _file_if_verified(materialised.world, *result.unfiled)) is not None
             ):
                 left_unfiled[modelo] = f"{period} left unfiled: {unfiled}"
-            where = f"Modelo {modelo} {case.year} {period} ({legal_refs[modelo, period]})"
-            if (refusal := refusals.get((modelo, period))) is not None:
-                if refusal_stages[modelo, period] != "calculate":
-                    # A later stage refuses a completed calculation; the persona
-                    # table asserts that stage's refusal against the written file.
-                    if "refusal" in calculated:
-                        problems.append(f"{where}: calculation refused: {calculated['refusal']}")
-                    continue
-                if refusal not in str(calculated.get("refusal", "")):
-                    problems.append(
-                        f"{where}: expected the stated refusal {refusal}, got "
-                        f"{calculated.get('refusal', 'a calculation')}"
-                    )
-                continue
-            if "refusal" in calculated:
-                earlier = f" ({left_unfiled[modelo]})" if modelo in left_unfiled else ""
-                problems.append(f"{where}: calculation refused: {calculated['refusal']}{earlier}")
-                continue
-            problems.extend(
-                f"{where} casilla {casilla}: expected {amount}, got {actual}"
-                for casilla, amount in casillas.items()
-                if (actual := _decimal(calculated[casilla]) if casilla in calculated else None) != amount
-            )
-            problems.extend(
-                f"{where} casilla {casilla}: now carries the law's {amount}; compare it instead of stating it not sourced"
-                for casilla, amount in not_sourced[modelo, period].items()
-                if casilla in calculated and _decimal(calculated[casilla]) == amount
-            )
+            where = f"Modelo {modelo} {case.year} {period} ({stated.legal_refs[modelo, period]})"
+            _check_calculated_return(where, (modelo, period), stated, result.values, left_unfiled, problems)
     assert not problems, "\n".join(problems)
 
 

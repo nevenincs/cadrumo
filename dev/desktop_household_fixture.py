@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
     from cadrumo.domain.user_profile.schema import ProfileFieldDefinition, ProfileSchemaDefinition
     from cadrumo.domain.user_profile.values import UserProfileRecord
-    from cadrumo.entrypoints.tests.persona_materialisation import MaterialisedPersona
+    from cadrumo.entrypoints.tests.persona_world import MaterialisedPersona
 
 LANGUAGES = ("en", "es", "ca", "hu")
 PROFILE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
@@ -89,7 +89,7 @@ def _rows(persona: MaterialisedPersona, members: str, count: int) -> tuple[tuple
     The persona's own people come first, with their identity; past them its rows repeat without one,
     because an identity is bound to one person only.
     """
-    from cadrumo.entrypoints.tests.persona_materialisation import household_leaves
+    from cadrumo.entrypoints.tests.persona_replay_requests import household_leaves
 
     own = getattr(persona.persona, members)
     if not own:
@@ -122,7 +122,7 @@ def _ascendants(rows: tuple[tuple[tuple[str, str], ...], ...]) -> tuple[ProfileA
 
 
 def _record(persona: MaterialisedPersona) -> UserProfileRecord:
-    from cadrumo.entrypoints.tests.persona_materialisation import load_profile_record
+    from cadrumo.entrypoints.tests.persona_replay_requests import load_profile_record
 
     return load_profile_record(persona.world)
 
@@ -238,7 +238,7 @@ _UNSUPPORTED_LEAF = "apodo"
 
 def _refusal_value() -> str:
     """A NIF the catalogue keeps for refusal tests: its control letter does not match."""
-    from cadrumo.tests.personas import identity_catalogue
+    from cadrumo.tests.persona_identities import identity_catalogue
 
     return next(refusal.value for refusal in identity_catalogue().refusals if refusal.kind == "nif")
 
@@ -332,7 +332,8 @@ def _refusal(persona: MaterialisedPersona, language: str, name: str) -> dict[str
 @contextmanager
 def _persona(root: Path, name: str) -> Generator[MaterialisedPersona]:
     """A copy of the persona replayed without its household, for one state to write into."""
-    from cadrumo.entrypoints.tests.persona_materialisation import ReplayScope, materialised_persona
+    from cadrumo.entrypoints.tests.persona_materialisation import materialised_persona
+    from cadrumo.entrypoints.tests.persona_world import ReplayScope
 
     with materialised_persona(
         PERSONA_ID, root / name, ReplayScope.PROFILE, reuse=True, complete_setup=False

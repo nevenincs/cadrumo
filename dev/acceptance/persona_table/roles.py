@@ -20,7 +20,7 @@ from functools import cache
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.tests.personas import ExpectedValue
+from cadrumo.tests.persona_types import ExpectedValue
 
 
 @dataclass(frozen=True, slots=True)

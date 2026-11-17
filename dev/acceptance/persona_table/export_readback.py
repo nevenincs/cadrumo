@@ -22,7 +22,7 @@ from cadrumo.domain.calculations.registry.export_parse import parse_export_paylo
 from cadrumo.domain.calculations.registry.export_parse_models import ParsedExportFieldValue
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.domain.filing.errors import ModeloBuilderError
-from cadrumo.tests.personas import ExpectedValue
+from cadrumo.tests.persona_types import ExpectedValue
 
 from .roles import CasillaIdentity, StatedCasilla, compared, mismatch_text
 

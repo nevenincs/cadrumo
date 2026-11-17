@@ -766,11 +766,16 @@ def project_modelo_workbench_form(
     *,
     memory: WorkbenchMemoSlot[Hashable, FormProjectionPair | None] | None = None,
     context: FormProjectionContext | None = None,
+    spent: dict[str, int] | None = None,
 ) -> ModeloWorkbenchFormProjectionV1:
-    """Project one workbench read for its exact profile and prove nothing was lost."""
+    """Project one workbench read for its exact profile and prove nothing was lost.
+
+    ``spent`` receives ``projection_pair_reused`` whenever the form could be
+    kept in ``memory``: whether a projection kept for this exact form served it.
+    """
     _require_reviewed_exclusions()
     admission = read.admission
-    pair = _reusable_form(read, memory, context)
+    pair = _reusable_form(read, memory, context, spent)
     public_form = pair.public if pair is not None else _project_form(read.load)
     if not isinstance(public_form, PublicModeloWorkFormLoadV1):
         raise TypeError("workbench form public projection failed")
@@ -817,6 +822,7 @@ def _reusable_form(
     read: ModeloWorkbenchFormReadV1,
     memory: WorkbenchMemoSlot[Hashable, FormProjectionPair | None] | None,
     context: FormProjectionContext | None,
+    spent: dict[str, int] | None = None,
 ) -> FormProjectionPair | None:
     if memory is None or context is None or not isinstance(read.admission, ModeloEditAdmittedV1):
         return None
@@ -838,7 +844,10 @@ def _reusable_form(
             return None
         return built
 
-    return memory.reuse((context, identity), build) or built
+    pair = memory.reuse((context, identity), build) or built
+    if spent is not None:
+        spent["projection_pair_reused"] = built is None and pair is not None
+    return pair
 
 
 def _require_filing_state_roundtrip(

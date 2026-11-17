@@ -152,7 +152,10 @@ id only; no command line is read, because the log of a public run is public.
 The tests remain the step's last command, so their exit status is the step's.
 A shard that fails on a runner that survives also prints the kernel's kill
 records. The shards provision Chromium (the setup action's `browser` input),
-because their population holds the tests that drive a real browser.
+because their population holds the tests that drive a real browser, and
+produce the window projections (`just fixtures-seed-window`) before the tests,
+because the population bundles frontend sources whose `@fixtures` imports
+resolve only into a build tree.
 
 **Speed.** The expected critical path for a pull request is `authority`
 (toolchain, then compiling the registry) followed by the longest of `tests`,

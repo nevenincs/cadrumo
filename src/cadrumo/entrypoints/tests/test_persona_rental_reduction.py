@@ -24,9 +24,10 @@ from ...domain.renta.rental_reduction_derivation import (
     RentalReductionRefusal,
     derive_rental_reduction,
 )
-from ...tests.personas import Persona, RentalProperty, read_persona
-from .persona_materialisation import year_envelope
+from ...tests.persona_types import Persona, RentalProperty
+from ...tests.personas import read_persona
 from .persona_rental_replay import lease_row
+from .persona_world import year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

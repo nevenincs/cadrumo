@@ -3,7 +3,8 @@ import {
   isPurchaseLedgerRow,
   type PurchaseLedgerRow,
 } from "../../../shell/ledgerContract";
-import type { FileToken, PublicDecimal } from "../../../shell/ledger";
+import type { FileToken } from "../../../shell/ledger";
+import type { PublicDecimal } from "../../../shell/ledgerInvoiceContract";
 import {
   AMOUNT_RULE,
   parseDecimal,

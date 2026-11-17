@@ -14,6 +14,8 @@ from cadrumo.application.ledger.classify_requests import (
 from cadrumo.application.ledger.classify_result_contracts import LedgerClassifyOperationResult
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operator_actions.catalogue import lookup_action
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import output_language
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.entrypoints.tui.ledger.models import LedgerClassificationResultV1, LedgerClassificationSubmissionV1
@@ -95,6 +97,7 @@ class RuntimeLedgerClassificationTuiDoorV1:
                 "transaction_id": submission.transaction_id,
                 "patch": {name: _wire_value(getattr(submission.patch, name)) for name in fields},
                 "patch_fields": fields,
+                "output_language": OutputLanguage(output_language()),
             }
         )
 

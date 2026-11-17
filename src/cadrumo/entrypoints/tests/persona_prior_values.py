@@ -45,7 +45,7 @@ from ...core.external_constants import OutputLanguage
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.errors import RegistryError
-from ...tests.personas import AttestedPriorValue, YearEnvelope
+from ...tests.persona_types import AttestedPriorValue, YearEnvelope
 
 
 class PriorValueAttestationError(RuntimeError):
