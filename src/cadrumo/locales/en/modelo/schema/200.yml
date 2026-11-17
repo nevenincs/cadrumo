@@ -1635,6 +1635,16 @@ modelo:
           '01042':
             label: Settlement IV - Self-assessment result - Credit for deductions
               for foreign film productions - State [01042]
+          '01043':
+            label: Conversion of deferred tax assets into a credit claimable from
+              the Tax Administration (art. 130 LIS) - Credit for converting deferred
+              tax assets into a credit claimable against the tax administration (art.
+              130 LIS) - Regional (foral) administrations/Navarre (Totals) [01043]
+          '01044':
+            label: Conversion of deferred tax assets into a credit claimable from
+              the Tax Administration (art. 130 LIS) - Offset for converting deferred
+              tax assets into a credit claimable against the tax administration (art.
+              130 LIS) - Regional (foral) administrations/Navarre (Totals) [01044]
           '01045':
             label: Detail of offset of negative tax bases - 2015 - Pending application
               at beginning of period/generated in the period [01045]
@@ -2739,7 +2749,7 @@ modelo:
               or deferral (art. 11.13 LIS) - Increases [01514]
           '01515':
             label: Deductions under Transitional Provision 24.7 LIS - D.T. 24.7 LIS
-              2024 deductions - Pending/generated deduction [01515]
+              2023 deductions - Pending/generated deduction [01515]
           '01516':
             label: Cooperative regime - Detail of tax liability compensation. 2022
               Pending application at start of period [01516]
@@ -2760,7 +2770,7 @@ modelo:
               in future periods [01521]
           '01522':
             label: Deductions under Transitional Provision 24.7 LIS - D.T. 24.7 LIS
-              2024 deductions - Applied in this settlement [01522]
+              2023 deductions - Applied in this settlement [01522]
           '01523':
             help: 'Amounts attributed: Fixed-asset deduction generated from the attributed
               Canary Islands investment deduction bases'
@@ -2803,7 +2813,7 @@ modelo:
               year - Total - DTA applied in the period [01566]
           '01571':
             label: Deductions under Transitional Provision 24.7 LIS - D.T. 24.7 LIS
-              2024 deductions - Pending application in future periods [01571]
+              2023 deductions - Pending application in future periods [01571]
           '01572':
             label: Settlement I - Detail of adjustments to the profit and loss account
               result - Change of residence to European Union or EEA Member States
@@ -2875,13 +2885,13 @@ modelo:
               or administrative assessments for tax period {year} - Navarre [01610]'
           '01614':
             label: Deductions for investment in the Canary Islands - Fixed assets
-              2024 - Pending/generated deduction [01614]
+              2023 - Pending/generated deduction [01614]
           '01615':
             label: Deductions for investment in the Canary Islands - Fixed assets
-              2024 - Applied in this settlement [01615]
+              2023 - Applied in this settlement [01615]
           '01616':
             label: Deductions for investment in the Canary Islands - Fixed assets
-              2024 - Pending application in future periods [01616]
+              2023 - Pending application in future periods [01616]
           '01617':
             label: Deductions to incentivise certain activities - 2016 Research and
               development (CT) - Pending/generated deduction [01617]
@@ -3174,7 +3184,7 @@ modelo:
               year - 2018 - Positive net tax liability [01755]
           '01763':
             label: Deductions for investment in the Canary Islands - Fixed assets
-              in La Palma, La Gomera and El Hierro 2024 - Deduction carried forward/generated
+              in La Palma, La Gomera and El Hierro 2023 - Deduction carried forward/generated
               [01763]
           '01764':
             label: Settlement II - Detail of adjustments to the profit and loss account
@@ -3291,20 +3301,20 @@ modelo:
               interest groupings and business consortia [01799]
           01800:
             label: Deductions for investment in the Canary Islands - Fixed assets
-              in La Palma, La Gomera and El Hierro 2024 - Applied in this return [01800]
+              in La Palma, La Gomera and El Hierro 2023 - Applied in this return [01800]
           01802:
             label: Deductions for investment in the Canary Islands - Canary Islands
-              investments 2024 - Deduction carried forward/generated [01802]
+              investments 2023 - Deduction carried forward/generated [01802]
           01803:
             label: Deductions for investment in the Canary Islands - Canary Islands
-              investments 2024 - Applied in this return [01803]
+              investments 2023 - Applied in this return [01803]
           01804:
             label: Deductions for investment in the Canary Islands - Canary Islands
-              investments 2024 - Carried forward for application in future periods
+              investments 2023 - Carried forward for application in future periods
               [01804]
           01805:
             label: Deductions for investment in the Canary Islands - Investments in
-              La Palma, La Gomera and El Hierro 2024 - Deduction carried forward/generated
+              La Palma, La Gomera and El Hierro 2023 - Deduction carried forward/generated
               [01805]
           01807:
             label: Settlement I - Detail of adjustments to the profit and loss account
@@ -3430,7 +3440,7 @@ modelo:
               year [01846]'
           01847:
             label: Deductions for investment in the Canary Islands - Investments in
-              La Palma, La Gomera and El Hierro 2024 - Carried forward for application
+              La Palma, La Gomera and El Hierro 2023 - Carried forward for application
               in future periods [01847]
           01848:
             label: Deductions to incentivise certain activities - 2022 Sum of deductions
@@ -4585,10 +4595,10 @@ modelo:
               R&D&i and TAP) - Deduction carried forward/generated [02300]
           '02312':
             label: Deduction for investments and expenses made by port authorities
-              (art. 38 bis LIS) - 2024(*) - Deduction carried forward/generated [02312]
+              (art. 38 bis LIS) - 2023 - Deduction carried forward/generated [02312]
           '02313':
             label: Deduction for investments and expenses made by port authorities
-              (art. 38 bis LIS) - 2024(*) - Applied in this return [02313]
+              (art. 38 bis LIS) - 2023 - Applied in this return [02313]
           '02314':
             label: Settlement IV - Other deductions - Deductions for foreign film
               productions in the Canary Islands (art. 36.2 LIS and Additional Provision
@@ -4715,13 +4725,13 @@ modelo:
               in future periods [02352]
           '02353':
             label: Deduction for investments and expenses made by port authorities
-              (art. 38 bis LIS) - 2024(*) - Carried forward for application in future
+              (art. 38 bis LIS) - 2023 - Carried forward for application in future
               periods [02353]
           '02354':
-            label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
+            label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
               - Deduction carried forward/generated [02354]
           '02355':
-            label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
+            label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
               - Applied in this return [02355]
           '02356':
             label: Deductions to incentivise certain activities - 2019 Research and
@@ -4941,7 +4951,7 @@ modelo:
               future periods - That have not met the tax-deductibility conditions
               [02436]
           '02437':
-            label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
+            label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
               - Amount paid due to insufficient tax liability [02437]
           02438:
             label: Limitation on deductibility of financial expenses. Financial expenses
@@ -4952,7 +4962,7 @@ modelo:
               pending deduction - Year of generation {year} - Pending application
               in future periods - Due to limit [02442]
           '02443':
-            label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
+            label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
               - Carried forward for application in future periods [02443]
           '02444':
             label: Limitation on deductibility of financial expenses. Financial expenses
@@ -5227,30 +5237,30 @@ modelo:
               [02699]
           '02701':
             label: Deduction for reversal of temporary measures (Transitional Provision
-              37.1 LIS) - 2024 - Deduction base [02701]
+              37.1 LIS) - 2023 - Deduction base [02701]
           '02702':
             label: Deduction for reversal of temporary measures (Transitional Provision
-              37.1 LIS) - 2024 - Amount generated/carried forward at start of period
+              37.1 LIS) - 2023 - Amount generated/carried forward at start of period
               [02702]
           '02703':
             label: Deduction for reversal of temporary measures (Transitional Provision
-              37.1 LIS) - 2024 - Amount applied [02703]
+              37.1 LIS) - 2023 - Amount applied [02703]
           '02704':
             label: Deduction for reversal of temporary measures (Transitional Provision
-              37.1 LIS) - 2024 - Amount carried forward [02704]
+              37.1 LIS) - 2023 - Amount carried forward [02704]
           '02705':
             label: Deduction for reversal of temporary measures (Transitional Provision
-              37.2 LIS) - 2024 - Deduction base [02705]
+              37.2 LIS) - 2023 - Deduction base [02705]
           '02706':
             label: Deduction for reversal of temporary measures (Transitional Provision
-              37.2 LIS) - 2024 - Amount generated/carried forward at start of period
+              37.2 LIS) - 2023 - Amount generated/carried forward at start of period
               [02706]
           '02707':
             label: Deduction for reversal of temporary measures (Transitional Provision
-              37.2 LIS) - 2024 - Amount applied [02707]
+              37.2 LIS) - 2023 - Amount applied [02707]
           02708:
             label: Deduction for reversal of temporary measures (Transitional Provision
-              37.2 LIS) - 2024 - Amount carried forward [02708]
+              37.2 LIS) - 2023 - Amount carried forward [02708]
           02709:
             label: R&D&i deductions excluded from the limit - 2023 Research and development
               - Deduction carried forward/generated [02709]
@@ -5343,13 +5353,13 @@ modelo:
               limit - Year of generation 2024 - Carried forward for application in
               future periods [02772]
           '02773':
-            label: Capitalisation reserve - 2024(*) - Right to reduce the taxable
-              base generated in the period/carried forward at start of period [02773]
+            label: Capitalisation reserve - 2023 - Right to reduce the taxable base
+              generated in the period/carried forward at start of period [02773]
           '02774':
-            label: Capitalisation reserve - 2024(*) - Taxable-base reduction applied
+            label: Capitalisation reserve - 2023 - Taxable-base reduction applied
               [02774]
           '02775':
-            label: Capitalisation reserve - 2024(*) - Taxable-base reduction carried
+            label: Capitalisation reserve - 2023 - Taxable-base reduction carried
               forward for application in future periods [02775]
           '02776':
             label: Levelling reserve - Reduction of the taxable base - Year of generation
@@ -5366,16 +5376,16 @@ modelo:
             label: Levelling reserve - Reduction of the taxable base - Year of generation
               2023 - Amount carried forward for addition in future periods [02779]
           02780:
-            label: Levelling reserve - Reserve allocation - Year of generation 2024
+            label: Levelling reserve - Reserve allocation - Year of generation 2023
               - Amount of reserve to be allocated [02780]
           02782:
-            label: Levelling reserve - Reserve allocation - Year of generation 2024
+            label: Levelling reserve - Reserve allocation - Year of generation 2023
               - Amount of reserve allocated [02782]
           02783:
-            label: Levelling reserve - Reserve allocation - Year of generation 2024
+            label: Levelling reserve - Reserve allocation - Year of generation 2023
               - Amount of reserve pending allocation [02783]
           02784:
-            label: Levelling reserve - Reserve allocation - Year of generation 2024
+            label: Levelling reserve - Reserve allocation - Year of generation 2023
               - Reserve utilised [02784]
           02785:
             label: Conversion of deferred tax assets into a credit claimable from
@@ -5384,7 +5394,7 @@ modelo:
           02787:
             label: Conversion of deferred tax assets into a credit claimable from
               the Tax Administration - Deferred tax assets (AID). Art. 130 LIS - Year
-              of generation - 2024 - Positive net tax liability [02787]
+              of generation - 2023 - Positive net tax liability [02787]
           02800:
             label: Provisions for impairment of receivables or other assets - Year
               of generation - 2023 - Provisions carried forward for integration at
@@ -5398,16 +5408,16 @@ modelo:
               future periods - That have met the tax-deductibility conditions [02803]
           02804:
             label: Provisions for impairment of receivables or other assets - Year
-              of generation - 2024 - Provisions carried forward for integration at
+              of generation - 2023 - Provisions carried forward for integration at
               start of period - That have not met the tax-deductibility conditions
               [02804]
           02805:
             label: Provisions for impairment of receivables or other assets - Year
-              of generation - 2024 - Provisions applied to the conversion of deferred
+              of generation - 2023 - Provisions applied to the conversion of deferred
               tax assets [02805]
           02806:
             label: Provisions for impairment of receivables or other assets - Year
-              of generation - 2024 - Provisions carried forward for integration in
+              of generation - 2023 - Provisions carried forward for integration in
               future periods - That have not met the tax-deductibility conditions
               [02806]
           02807:
@@ -15008,14 +15018,14 @@ modelo:
               in future periods [00296]
           is-deduccion-inversion-canarias-islas-menores-aplicado:
             label: Deductions for investment in the Canary Islands - Investments in
-              La Palma, La Gomera and El Hierro 2024 - Applied in this return [01806]
+              La Palma, La Gomera and El Hierro 2023 - Applied in this return [01806]
           is-deduccion-inversion-canarias-islas-menores-generado:
             label: Deductions for investment in the Canary Islands - Fixed assets
               in La Palma, La Gomera and El Hierro 2019 - Deduction carried forward/generated
               [02338]
           is-deduccion-inversion-canarias-islas-menores-pendiente:
             label: Deductions for investment in the Canary Islands - Fixed assets
-              in La Palma, La Gomera and El Hierro 2024 - Carried forward for application
+              in La Palma, La Gomera and El Hierro 2023 - Carried forward for application
               in future periods [01801]
           is-deduccion-inversion-canarias-pendiente:
             label: Deductions for investment in the Canary Islands - Fixed assets
@@ -18179,15 +18189,15 @@ modelo:
               - Donations subtotal 2014 - Deduction carried forward/generated [01689]
           ordinary-nonrecurrent-donation-2024-subperiod-applied:
             label: Deduction for donations to non-profit entities - General donations
-              - 2024(*) without repeated donations to the same entity - Applied in
-              this settlement [02576]
+              - 2023 without repeated donations to the same entity - Applied in this
+              settlement [02576]
           ordinary-nonrecurrent-donation-2024-subperiod-generated:
             label: Deduction for donations to non-profit entities - General donations
-              - 2024(*) without repeated donations to the same entity- deduction pending/generated
+              - 2023 without repeated donations to the same entity- deduction pending/generated
               [02471]
           ordinary-nonrecurrent-donation-2024-subperiod-remaining:
             label: Deduction for donations to non-profit entities - General donations
-              - 2024(*) without repeated donations to the same entity - Carried forward
+              - 2023 without repeated donations to the same entity - Carried forward
               for application in future periods [02577]
           ordinary-recurrent-donation-2015-remaining:
             label: Deduction for donations to non-profit entities - General donations
@@ -18195,15 +18205,15 @@ modelo:
               in future periods [00820]
           ordinary-recurrent-donation-2024-subperiod-applied:
             label: Deduction for donations to non-profit entities - General donations
-              - 2024(*) - With repeated donations to the same entity - Applied in
-              this settlement [02692]
+              - 2023 - With repeated donations to the same entity - Applied in this
+              settlement [02692]
           ordinary-recurrent-donation-2024-subperiod-generated:
             label: Deduction for donations to non-profit entities - General donations
-              - 2024(*) - with repeated donations to the same entity- Pending/generated
+              - 2023 - with repeated donations to the same entity- Pending/generated
               deduction [02691]
           ordinary-recurrent-donation-2024-subperiod-remaining:
             label: Deduction for donations to non-profit entities - General donations
-              - 2024(*) - With repeated donations to the same entity - Carried forward
+              - 2023 - With repeated donations to the same entity - Carried forward
               for application in future periods [02693]
           priority-donation-2014-applied:
             label: Deduction for donations to non-profit entities - Donations for
@@ -18249,17 +18259,17 @@ modelo:
           priority-recurrent-donation-2024-subperiod-applied:
             label: Deduction for donations to non-profit entities - Donations for
               priority patronage activities and others entitled to increased deduction
-              - 2024(*) - With repeated donations to the same entity - Applied in
-              this settlement [02698]
+              - 2023 - With repeated donations to the same entity - Applied in this
+              settlement [02698]
           priority-recurrent-donation-2024-subperiod-generated:
             label: Deduction for donations to non-profit entities - Donations for
               priority patronage activities and others entitled to increased deduction
-              - 2024(*) - With repeated donations to the same entity - Deduction carried
+              - 2023 - With repeated donations to the same entity - Deduction carried
               forward/generated [02697]
           priority-recurrent-donation-2024-subperiod-remaining:
             label: Deduction for donations to non-profit entities - Donations for
               priority patronage activities and others entitled to increased deduction
-              - 2024(*) - With repeated donations to the same entity - Carried forward
+              - 2023 - With repeated donations to the same entity - Carried forward
               for application in future periods [02700]
           public-interest-alicante-sailing-departure-credit-2024-applied:
             label: Deductions to incentivise certain activities - {year} Alicante
@@ -19784,6 +19794,18 @@ modelo:
             x-8h834c1g60oj8ehg64pj6c0:
               label: Settlement III - Taxable base - Reduced-size entities - Tax base
                 after the equalization reserve - Decreases [01330]
+            x-8h834c1g60oj8ghq60o32c1k6c:
+              label: Settlement IV - Conversion of deferred tax assets into a credit
+                claimable from the Tax Administration (art. 130 LIS) - Credit for
+                converting deferred tax assets into a credit claimable against the
+                tax administration (art. 130 LIS) - Regional (foral) administrations/Navarre
+                (Totals) [01043]
+            x-8h834c1g60oj8ghq60o32c1k6g:
+              label: Settlement IV - Conversion of deferred tax assets into a credit
+                claimable from the Tax Administration (art. 130 LIS) - Offset for
+                converting deferred tax assets into a credit claimable against the
+                tax administration (art. 130 LIS) - Regional (foral) administrations/Navarre
+                (Totals) [01044]
             x-8h834c1g60oj8ghq60p38e1m:
               label: Settlement IV - Instalment option in cases of change of residence
                 (art. 19.1 LIS) - Result of the self-assessment including the first
@@ -20118,6 +20140,69 @@ modelo:
                 account result - Exemption on income obtained from the transfer of
                 securities of non-resident entities (art. 21.3, 21.10 and Transitional
                 Provision 40 LIS) - Decreases [02185]
+            02786:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - Total DTAs (art. 130.6 a) pending application
+                at the start of the period [02786]
+            02788:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit [02788]
+            02789:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit for
+                excess tax due [02789]
+            02790:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application at the start of
+                the period - Without a right of conversion into a claimable credit
+                [02790]
+            02792:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs converted into a claimable credit in
+                the period [02792]
+            02793:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit [02793]
+            02794:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit, excess tax due
+                [02794]
+            02795:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application in future periods
+                - Without a right of conversion into a claimable credit [02795]
+            02796:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2023 - Excess positive net tax due outstanding at the start
+                of the period [02796]
+            02797:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2023 - Excess positive net tax due applied in tax periods 2008
+                to 2015 [02797]
+            02798:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2023 - Excess positive net tax due applied in tax periods beginning
+                from 2016 [02798]
+            02799:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2023 - Excess positive net tax due pending application in future
+                periods [02799]
             x-8h834c1g60oj4ehg60pj0e8:
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Other cases of free depreciation (art. 12.3 a) and d) and
@@ -20415,6 +20500,12 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2023 - Without repeated donations to the same entity - Carried forward
                 for application in future periods [01373]
+            '01515':
+              label: Deductions under Transitional Provision 24.7 LIS - D.T. 24.7
+                LIS 2024 deductions - Pending/generated deduction [01515]
+            '01571':
+              label: Deductions under Transitional Provision 24.7 LIS - D.T. 24.7
+                LIS 2024 deductions - Pending application in future periods [01571]
             '01575':
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Transactions under art. 19 LIS other than change
@@ -20452,6 +20543,15 @@ modelo:
                 Corrective: refund agreed by the Tax Agency as a result of processing
                 prior self-assessments or administrative assessments corresponding
                 to the {year} tax period - Bizkaia [01613]'
+            '01614':
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                2024 - Pending/generated deduction [01614]
+            '01615':
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                2024 - Applied in this settlement [01615]
+            '01616':
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                2024 - Pending application in future periods [01616]
             '01623':
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: refund agreed by the Tax Agency as a result of processing
@@ -20590,10 +20690,44 @@ modelo:
               label: Free depreciation of certain vehicles and new charging infrastructure
                 (Additional Provision 18 LIS, RDL 4/2024) - Increase - Adjustments
                 for the tax year - Temporary (originating in this tax year) [01742]
+            '01763':
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2024 - Deduction carried forward/generated
+                [01763]
+            01800:
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2024 - Applied in this return
+                [01800]
+            01801:
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2024 - Carried forward for application
+                in future periods [01801]
+            01802:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2024 - Deduction carried forward/generated [01802]
+            01803:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2024 - Applied in this return [01803]
+            01804:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2024 - Carried forward for application in future periods
+                [01804]
+            01805:
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2024 - Deduction carried forward/generated
+                [01805]
+            01806:
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2024 - Applied in this return
+                [01806]
             01820:
               label: Free depreciation of certain vehicles and new charging infrastructure
                 (Additional Provision 18 LIS, RDL 4/2024) - Increase - Adjustments
                 for the tax year - Temporary (originating in prior tax years) [01820]
+            01847:
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2024 - Carried forward for application
+                in future periods [01847]
             01877:
               label: Joint taxation of State and provincial tax administrations -
                 Payment of deductions for foreign productions in the Canary Islands
@@ -20622,6 +20756,23 @@ modelo:
             '02031':
               label: Open Barcelona-Trofeo Conde de Godó (OB). Pending application
                 in future periods
+            '02312':
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2024(*) - Deduction carried forward/generated
+                [02312]
+            '02313':
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2024(*) - Applied in this return [02313]
+            '02353':
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2024(*) - Carried forward for application in future
+                periods [02353]
+            '02354':
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
+                - Deduction carried forward/generated [02354]
+            '02355':
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
+                - Applied in this return [02355]
             02369:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - k) Overall limit on the deduction of net finance
@@ -20638,15 +20789,111 @@ modelo:
                 Disagreement with the administrative position for certain corrective
                 self-assessment cases that do not belong in other boxes - Gipuzkoa
                 [02379]
+            '02437':
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
+                - Amount paid due to insufficient tax liability [02437]
+            '02443':
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
+                - Carried forward for application in future periods [02443]
+            '02471':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2024(*) without repeated donations to the same entity- deduction
+                pending/generated [02471]
             02492:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
                 result after regularisation: payable - Total [02492]'
+            '02576':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2024(*) without repeated donations to the same entity - Applied
+                in this settlement [02576]
+            '02577':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2024(*) without repeated donations to the same entity - Carried
+                forward for application in future periods [02577]
+            02691:
+              label: Deduction for donations to non-profit entities - General donations
+                - 2024(*) - with repeated donations to the same entity- Pending/generated
+                deduction [02691]
+            02692:
+              label: Deduction for donations to non-profit entities - General donations
+                - 2024(*) - With repeated donations to the same entity - Applied in
+                this settlement [02692]
+            02693:
+              label: Deduction for donations to non-profit entities - General donations
+                - 2024(*) - With repeated donations to the same entity - Carried forward
+                for application in future periods [02693]
+            02697:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2024(*) - With repeated donations to the same entity - Deduction
+                carried forward/generated [02697]
+            02698:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2024(*) - With repeated donations to the same entity - Applied in
+                this settlement [02698]
+            '02700':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2024(*) - With repeated donations to the same entity - Carried forward
+                for application in future periods [02700]
+            '02701':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2024 - Deduction base [02701]
+            '02702':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2024 - Amount generated/carried forward at start of period
+                [02702]
+            '02703':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2024 - Amount applied [02703]
+            '02704':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2024 - Amount carried forward [02704]
+            '02705':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2024 - Deduction base [02705]
+            '02706':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2024 - Amount generated/carried forward at start of period
+                [02706]
+            '02707':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2024 - Amount applied [02707]
+            02708:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2024 - Amount carried forward [02708]
+            '02773':
+              label: Capitalisation reserve - 2024(*) - Right to reduce the taxable
+                base generated in the period/carried forward at start of period [02773]
+            '02774':
+              label: Capitalisation reserve - 2024(*) - Taxable-base reduction applied
+                [02774]
+            '02775':
+              label: Capitalisation reserve - 2024(*) - Taxable-base reduction carried
+                forward for application in future periods [02775]
+            02780:
+              label: Levelling reserve - Reserve allocation - Year of generation 2024
+                - Amount of reserve to be allocated [02780]
+            02782:
+              label: Levelling reserve - Reserve allocation - Year of generation 2024
+                - Amount of reserve allocated [02782]
+            02783:
+              label: Levelling reserve - Reserve allocation - Year of generation 2024
+                - Amount of reserve pending allocation [02783]
+            02784:
+              label: Levelling reserve - Reserve allocation - Year of generation 2024
+                - Reserve utilised [02784]
             02786:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation year - 2024 - Total DTAs (art. 130.6 a) pending application
                 at the start of the period [02786]
+            02787:
+              label: Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
+                Year of generation - 2024 - Positive net tax liability [02787]
             02788:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
@@ -20705,6 +20952,20 @@ modelo:
                 the Tax Administration - Excess positive net tax liability - Generation
                 year - 2024 - Excess positive net tax due pending application in future
                 periods [02799]
+            02804:
+              label: Provisions for impairment of receivables or other assets - Year
+                of generation - 2024 - Provisions carried forward for integration
+                at start of period - That have not met the tax-deductibility conditions
+                [02804]
+            02805:
+              label: Provisions for impairment of receivables or other assets - Year
+                of generation - 2024 - Provisions applied to the conversion of deferred
+                tax assets [02805]
+            02806:
+              label: Provisions for impairment of receivables or other assets - Year
+                of generation - 2024 - Provisions carried forward for integration
+                in future periods - That have not met the tax-deductibility conditions
+                [02806]
             '03317':
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
@@ -20751,18 +21012,6 @@ modelo:
                 Islands: breakdown of the offsetting of negative taxable bases - Offset
                 of the taxable base for other activities for 2024 - Pending application
                 at the beginning of the period/generated in the period [00092]'
-            x-8h834c1g60ojaehg64o38co:
-              label: Conversion of deferred tax assets into a credit claimable from
-                the Tax Administration (art. 130 LIS) - Credit for converting deferred
-                tax assets into a credit claimable against the tax administration
-                (art. 130 LIS) - Regional (foral) administrations/Navarre (Totals)
-                [01043]
-            x-8h834c1g60ojaehg64o38d0:
-              label: Conversion of deferred tax assets into a credit claimable from
-                the Tax Administration (art. 130 LIS) - Offset for converting deferred
-                tax assets into a credit claimable against the tax administration
-                (art. 130 LIS) - Regional (foral) administrations/Navarre (Totals)
-                [01044]
             x-8h834c1g60ojaehg68q3ic0:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
@@ -20795,6 +21044,9 @@ modelo:
                 the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
                 result after regularisation: credit - Regional (foral) administrations/Navarre
                 (Totals) [03319]'
+            x-8h834c1g60ojcehg64qj4cg:
+              label: Deductions under Transitional Provision 24.7 LIS - D.T. 24.7
+                LIS 2024 deductions - Applied in this settlement [01522]
             x-8h834c1g60p30ghq60p36c1h:
               label: Detail of adjustments to the profit and loss result - Adjustments
                 to the profit and loss account result for the tax year - Permanent
@@ -21401,6 +21653,9 @@ modelo:
               label: Impairment allowances for receivables or other assets - Generation
                 year - 2007 and earlier - Allowances pending integration in future
                 periods - That have not met tax deductibility conditions
+            '01515':
+              label: Deductions under Transitional Provision 24.7 LIS - D.T. 24.7
+                LIS 2024 deductions - Pending/generated deduction [01515]
             '01524':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
@@ -21608,6 +21863,9 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation year - Total - DTAs pending application in future periods
                 - Without the right to convert into enforceable credit
+            '01571':
+              label: Deductions under Transitional Provision 24.7 LIS - D.T. 24.7
+                LIS 2024 deductions - Pending application in future periods [01571]
             '01575':
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Transactions under art. 19 LIS other than change
@@ -21679,6 +21937,15 @@ modelo:
                 Corrective: refund agreed by the Tax Agency as a result of processing
                 prior self-assessments or administrative assessments corresponding
                 to the 2025 tax period - Bizkaia'
+            '01614':
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                2024 - Pending/generated deduction [01614]
+            '01615':
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                2024 - Applied in this settlement [01615]
+            '01616':
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                2024 - Pending application in future periods [01616]
             '01623':
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: refund agreed by the Tax Agency as a result of processing
@@ -21911,6 +22178,10 @@ modelo:
                 Year of generation - 2018 - Deferred tax assets carried forward for
                 application in future periods - Without entitlement to conversion
                 into claimable credit
+            '01763':
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2024 - Deduction carried forward/generated
+                [01763]
             01793:
               label: Settlement IV - Tax due for the year, payable or refundable -
                 Withholdings on items other than investment income or urban property
@@ -21920,6 +22191,32 @@ modelo:
                 Withholdings on items other than investment income or urban property
                 leases, attributed by income-attribution entities - Allocated by AIEs
                 and UTEs
+            01800:
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2024 - Applied in this return
+                [01800]
+            01801:
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2024 - Carried forward for application
+                in future periods [01801]
+            01802:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2024 - Deduction carried forward/generated [01802]
+            01803:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2024 - Applied in this return [01803]
+            01804:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2024 - Carried forward for application in future periods
+                [01804]
+            01805:
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2024 - Deduction carried forward/generated
+                [01805]
+            01806:
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2024 - Applied in this return
+                [01806]
             01820:
               label: Free depreciation of certain vehicles and new charging infrastructure
                 (Additional Provision 18 LIS, RDL 4/2024) - Increase - Adjustments
@@ -21928,6 +22225,10 @@ modelo:
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Income from the transfer of fixed assets obtained
                 by Port Authorities (Additional Provision 68, Law 6/2018) - Decreases
+            01847:
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2024 - Carried forward for application
+                in future periods [01847]
             01877:
               label: Joint taxation of State and provincial tax administrations -
                 Payment of deductions for foreign productions in the Canary Islands
@@ -22175,6 +22476,23 @@ modelo:
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Expenses subject to the deduction for investments made by
                 port authorities (art. 15 n) LIS) - Increases
+            '02312':
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2024(*) - Deduction carried forward/generated
+                [02312]
+            '02313':
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2024(*) - Applied in this return [02313]
+            '02353':
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2024(*) - Carried forward for application in future
+                periods [02353]
+            '02354':
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
+                - Deduction carried forward/generated [02354]
+            '02355':
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
+                - Applied in this return [02355]
             02369:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - k) Overall limit on the deduction of net finance
@@ -22235,6 +22553,12 @@ modelo:
                 Year of generation - 2021 - Deferred tax assets carried forward for
                 application in future periods - Without entitlement to conversion
                 into claimable credit
+            '02437':
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
+                - Amount paid due to insufficient tax liability [02437]
+            '02443':
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
+                - Carried forward for application in future periods [02443]
             '02472':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
@@ -22347,6 +22671,32 @@ modelo:
               label: Adjustments for impairment losses on securities representing
                 a holding in capital or equity (art. 13.2 b) LIS) - Decrease - Adjustments
                 for the tax year - Temporary (originating in previous tax years)
+            '02701':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2024 - Deduction base [02701]
+            '02702':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2024 - Amount generated/carried forward at start of period
+                [02702]
+            '02703':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2024 - Amount applied [02703]
+            '02704':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2024 - Amount carried forward [02704]
+            '02705':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2024 - Deduction base [02705]
+            '02706':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2024 - Amount generated/carried forward at start of period
+                [02706]
+            '02707':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2024 - Amount applied [02707]
+            02708:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2024 - Amount carried forward [02708]
             '02722':
               label: Application of the art. 11.12 LIS limit to impairment losses
                 under art. 13.1 LIS and to provisions and expenses (art. 14.1 and
@@ -22367,11 +22717,36 @@ modelo:
                 under art. 13.1 LIS and to provisions and expenses (art. 14.1 and
                 14.2 LIS) - Decrease - Adjustments for the tax year - Temporary (originating
                 in previous tax years)
+            '02773':
+              label: Capitalisation reserve - 2024(*) - Right to reduce the taxable
+                base generated in the period/carried forward at start of period [02773]
+            '02774':
+              label: Capitalisation reserve - 2024(*) - Taxable-base reduction applied
+                [02774]
+            '02775':
+              label: Capitalisation reserve - 2024(*) - Taxable-base reduction carried
+                forward for application in future periods [02775]
+            02780:
+              label: Levelling reserve - Reserve allocation - Year of generation 2024
+                - Amount of reserve to be allocated [02780]
+            02782:
+              label: Levelling reserve - Reserve allocation - Year of generation 2024
+                - Amount of reserve allocated [02782]
+            02783:
+              label: Levelling reserve - Reserve allocation - Year of generation 2024
+                - Amount of reserve pending allocation [02783]
+            02784:
+              label: Levelling reserve - Reserve allocation - Year of generation 2024
+                - Reserve utilised [02784]
             02786:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2024 - Total amount of deferred tax assets (art.
                 130.6 a) carried forward pending application at the start of the period
+            02787:
+              label: Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
+                Year of generation - 2024 - Positive net tax liability [02787]
             02788:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
@@ -22433,6 +22808,20 @@ modelo:
                 the Tax Administration - Excess positive net tax liability - Year
                 of generation - 2024 - Excess positive net tax liability carried forward
                 for application in future periods
+            02804:
+              label: Provisions for impairment of receivables or other assets - Year
+                of generation - 2024 - Provisions carried forward for integration
+                at start of period - That have not met the tax-deductibility conditions
+                [02804]
+            02805:
+              label: Provisions for impairment of receivables or other assets - Year
+                of generation - 2024 - Provisions applied to the conversion of deferred
+                tax assets [02805]
+            02806:
+              label: Provisions for impairment of receivables or other assets - Year
+                of generation - 2024 - Provisions carried forward for integration
+                in future periods - That have not met the tax-deductibility conditions
+                [02806]
             02855:
               label: Impairment losses on securities representing holdings in capital
                 or equity (art. 15 k) LIS) - Increase - Balance carried forward at
@@ -23824,6 +24213,9 @@ modelo:
                 the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
                 result after regularisation: credit - Provincial Councils/Navarre
                 (Totals)'
+            x-8h834c1g60ojcehg64qj4cg:
+              label: Deductions under Transitional Provision 24.7 LIS - D.T. 24.7
+                LIS 2024 deductions - Applied in this settlement [01522]
             x-8h834c1g60ojgghq60o36c9l:
               label: Deductions for foreign film productions (art. 36.2 LIS) - 2025(*)
                 - Deduction carried forward/generated [00315]
