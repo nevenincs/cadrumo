@@ -351,13 +351,23 @@ async function openAgentSettings() {
     });
   }
   const column = last.reached ? null : await exec(agentColumnText, name);
+  // The draw marker polls every 100 ms, so it can trail the check that saw the
+  // providers drawn; wait for it as well, or a late draw reads as unmeasured.
   // The access section draws on its own read, possibly after the providers.
   if (last.reached)
-    await waitFor(() => exec(() => window.__uxDrawn?.access != null), {
-      timeout: 30_000,
-      what: "the agent access section",
-      soft: true,
-    });
+    await waitFor(
+      () =>
+        exec(
+          () =>
+            window.__uxDrawn?.providers != null &&
+            window.__uxDrawn?.access != null,
+        ),
+      {
+        timeout: 30_000,
+        what: "the drawn marks of the providers and the agent access section",
+        soft: true,
+      },
+    );
   const calls = timed ? await callsSince(since) : null;
   const drawnMs = await exec(() => window.__uxDrawn ?? null);
   const opened = { ...last, rounds, column, calls, drawnMs };

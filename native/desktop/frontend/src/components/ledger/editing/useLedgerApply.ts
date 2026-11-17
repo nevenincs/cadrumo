@@ -1,3 +1,4 @@
+import type { StageFieldName } from "../../../shell/ledgerMovementCheckContract";
 // The review and apply of what is staged, as the page runs it: the period is
 // read again and every staged movement compared with how the page read it,
 // the plan is built from that read, the apply runs once, and whatever did
@@ -24,7 +25,6 @@ import {
   actionRows,
   stagedMovements,
   type StageEvent,
-  type StageField,
   type StagedContent,
   type StagedValue,
 } from "../../../shell/ledgerStage";
@@ -240,7 +240,7 @@ function sameJson(left: unknown, right: unknown): boolean {
 }
 
 /** The fields a step saves on each movement it names. */
-export function stepFields(step: PlanStep): Map<string, StageField[]> {
+export function stepFields(step: PlanStep): Map<string, StageFieldName[]> {
   switch (step.kind) {
     case "bulk":
       return new Map(step.rows.map((row) => [row.transactionId, row.fields]));
@@ -386,7 +386,7 @@ export function useLedgerApply({
   /** The person looked at a conflict and chose: theirs drops the staged
    * fields, mine keeps them over what is stored now. */
   const resolve = useCallback(
-    (id: string, keep: "mine" | "theirs", fields: StageField[]) => {
+    (id: string, keep: "mine" | "theirs", fields: StageFieldName[]) => {
       if (keep === "theirs")
         for (const field of fields)
           dispatch({ type: "revert_cell", id, field });

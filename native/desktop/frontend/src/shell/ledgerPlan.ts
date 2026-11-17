@@ -1,3 +1,7 @@
+import type {
+  StageFieldName,
+  DraftFieldName,
+} from "./ledgerMovementCheckContract";
 // How staged changes become ledger operations. Which operation takes each value
 // and what a row's staged state would refuse are the backend's answer to
 // `ledger.staged.check`, which every plan is made from; what is left here is the
@@ -31,16 +35,14 @@ import {
   effectiveFacts,
   STAGE_FIELDS,
   type Draft,
-  type DraftField,
   type MovementFacts,
-  type StageField,
   type StagedAction,
   type StagedActionKind,
   type StagedContent,
 } from "./ledgerStage";
 import type { LedgerTransactionReviewProjection } from "./ledgerReadContract";
 
-const DECIMAL_FIELDS: ReadonlySet<StageField> = new Set([
+const DECIMAL_FIELDS: ReadonlySet<StageFieldName> = new Set([
   "amount",
   "business_pct",
   "taxable_base",
@@ -62,7 +64,7 @@ const CLASSIFYING: ReadonlySet<StagedActionKind> = new Set([
   "allocate",
 ]);
 
-export type PlanField = StageField | "m210_income_classification";
+export type PlanField = StageFieldName | "m210_income_classification";
 
 /** The sentences the backend served for a blocker it names: why the staged
  * work cannot be sent, what puts it right, and the language they are in. */
@@ -86,7 +88,7 @@ export type PlanBlocker =
   | ({ kind: "share_needs_mixed" } & ServedBlockerWords)
   | ({
       kind: "transfer_with_tax";
-      fields: (PlanField | DraftField)[];
+      fields: (PlanField | DraftFieldName)[];
     } & ServedBlockerWords)
   | { kind: "action_and_edits"; action: string }
   | { kind: "exclude_and_classification"; action: string }
@@ -98,32 +100,35 @@ export type PlanBlocker =
   | { kind: "suggestion_needs_share"; action: string }
   | { kind: "actions_conflict"; actions: string[] }
   | { kind: "too_large" }
-  | ({ kind: "draft_incomplete"; fields: DraftField[] } & ServedBlockerWords)
+  | ({
+      kind: "draft_incomplete";
+      fields: DraftFieldName[];
+    } & ServedBlockerWords)
   /** The amount was typed with a sign, and a movement's direction already
    * carries which way the money went. */
   | ({
       kind: "amount_signed";
-      fields: (PlanField | DraftField)[];
+      fields: (PlanField | DraftFieldName)[];
     } & ServedBlockerWords)
   /** The declared base and IVA stand above the cash, which only a declared
    * withholding category accepts. */
   | ({
       kind: "needs_withholding_category";
-      fields: (PlanField | DraftField)[];
+      fields: (PlanField | DraftFieldName)[];
     } & ServedBlockerWords);
 
 /** What the review says about a row's work without holding it back. */
 export type PlanNote =
   | { kind: "sends_current_classification"; classification: string }
   | { kind: "sends_current_share"; share: string }
-  | { kind: "new_identity"; fields: StageField[] };
+  | { kind: "new_identity"; fields: StageFieldName[] };
 
 /** One movement's staged work. */
 export type PlanEntry = {
   transactionId: string;
-  fields: StageField[];
-  routes: Partial<Record<StageField, LedgerWriteRoute>>;
-  clears: StageField[];
+  fields: StageFieldName[];
+  routes: Partial<Record<StageFieldName, LedgerWriteRoute>>;
+  clears: StageFieldName[];
   actions: string[];
   blockers: PlanBlocker[];
   notes: PlanNote[];
@@ -135,7 +140,7 @@ export type BulkColumn = (typeof LEDGER_BULK_CLASSIFY_COLUMNS)[number];
 export type BulkRow = {
   transactionId: string;
   /** The staged fields this row saves. */
-  fields: StageField[];
+  fields: StageFieldName[];
   cells: Partial<Record<BulkColumn, string>>;
 };
 export type SuggestionAction = Extract<StagedAction, { kind: "suggestion" }>;
@@ -150,14 +155,14 @@ export type PlanStep =
   | {
       kind: "classify";
       transactionId: string;
-      fields: StageField[];
+      fields: StageFieldName[];
       m210Action: string | null;
       request: LedgerClassifyWindowRequest;
     }
   | {
       kind: "update";
       transactionId: string;
-      fields: StageField[];
+      fields: StageFieldName[];
       newIdentity: boolean;
       request: LedgerUpdateWindowRequest;
     }
@@ -225,12 +230,12 @@ export function payloadSize(payload: unknown): number {
   return new TextEncoder().encode(JSON.stringify(payload)).length;
 }
 
-const wire = (field: StageField, value: string) =>
+const wire = (field: StageFieldName, value: string) =>
   DECIMAL_FIELDS.has(field) ? (canonicalDecimal(value) ?? value) : value;
 
 // ---- Bulk CSV ----------------------------------------------------------------
 
-const BULK_COLUMN: Partial<Record<StageField, BulkColumn>> = {
+const BULK_COLUMN: Partial<Record<StageFieldName, BulkColumn>> = {
   business_classification: "classification",
   business_pct: "business_pct",
   category_id: "category_id",
@@ -513,13 +518,13 @@ function checkRow(
   const edits = fields.length > 0 || m210 !== undefined;
   const classifyingEdits = answer.classifying_fields.length > 0;
   for (const route of answer.routes)
-    if (route.route) entry.routes[route.field as StageField] = route.route;
+    if (route.route) entry.routes[route.field as StageFieldName] = route.route;
   for (const blocker of answer.blockers)
     entry.blockers.push(heldBy(blocker) as PlanBlocker);
   for (const note of answer.notes)
     entry.notes.push(
       note.kind === "new_identity"
-        ? { kind: "new_identity", fields: note.fields as StageField[] }
+        ? { kind: "new_identity", fields: note.fields as StageFieldName[] }
         : note.kind === "sends_current_share"
           ? { kind: "sends_current_share", share: note.value! }
           : {
@@ -614,7 +619,7 @@ function checkRow(
   return entry;
 }
 
-const DRAFT_DECIMALS: ReadonlySet<DraftField> = new Set([
+const DRAFT_DECIMALS: ReadonlySet<DraftFieldName> = new Set([
   "amount",
   "business_pct",
   "taxable_base",
@@ -632,9 +637,9 @@ function checkDraft(draft: Draft, check: StagedCheck): DraftEntry {
 }
 
 function addRequest(draft: Draft): LedgerAddWindowRequest {
-  const values: Partial<Record<DraftField, string>> = {};
+  const values: Partial<Record<DraftFieldName, string>> = {};
   for (const [field, text] of Object.entries(draft.fields) as [
-    DraftField,
+    DraftFieldName,
     string,
   ][])
     values[field] = DRAFT_DECIMALS.has(field)

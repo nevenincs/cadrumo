@@ -1,3 +1,4 @@
+import type { DraftFieldName } from "../../../shell/ledgerMovementCheckContract";
 import {
   CLASSIFICATION_OF,
   categoryCells,
@@ -5,7 +6,7 @@ import {
   type ConfiguredRatios,
 } from "../../../shell/ledgerCommands";
 import { parsePercent } from "../../../shell/ledgerGrammar";
-import type { DraftField, StageEvent } from "../../../shell/ledgerStage";
+import type { StageEvent } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { typedPoints } from "../editing/editingModel";
 import { ClassifyDialog } from "./ClassifyDialog";
@@ -95,7 +96,7 @@ export function MovementClassifyDialog({
             });
             return;
           }
-          const edit = (field: DraftField, value: string | null) =>
+          const edit = (field: DraftFieldName, value: string | null) =>
             onStage({ type: "edit_draft", key, field, value });
           edit(
             "business_classification",

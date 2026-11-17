@@ -1,5 +1,5 @@
 import { heldDecimal } from "../../../shared/numbers";
-import type { PublicDecimal } from "../../../shell/ledger";
+import type { PublicDecimal } from "../../../shell/ledgerInvoiceContract";
 import { canonicalDecimal } from "../../../shell/ledgerGrammar";
 import type { InventoryMovementProjection } from "../../../shell/ledgerInventoryContract";
 import type { ProofSlotKey } from "./stockVocabulary";

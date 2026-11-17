@@ -1,3 +1,7 @@
+import type {
+  StageFieldName,
+  DraftFieldName,
+} from "../../../shell/ledgerMovementCheckContract";
 // What editing the movements grid makes of the person's input: which field a
 // column stages, why a cell takes no edit, how typed or pasted text becomes a
 // staged value, what fill and copy carry, and how the page counts what is
@@ -32,9 +36,7 @@ import {
   storedFieldValue,
   unchangedBy,
   type Draft,
-  type DraftField,
   type StageCell,
-  type StageField,
   type StagedActionKind,
   type StagedContent,
   type StagedRowChanges,
@@ -95,7 +97,7 @@ export const EDIT_KINDS: Partial<Record<ColumnId, EditKind>> = {
 
 /** Which served limit bounds a one-line field: a correction's text, but for
  * the group label, which has its own. */
-const TEXT_LIMITS: Partial<Record<StageField, TextLimitName>> = {
+const TEXT_LIMITS: Partial<Record<StageFieldName, TextLimitName>> = {
   group_label: "group_label",
 };
 
@@ -111,8 +113,10 @@ export const typedPoints = (said: string): string =>
 
 /** The most a text field takes, as the ledger serves it, or null where it
  * has served none. */
-export const textLimitOf = (field: StageField | DraftField): number | null =>
-  textLimit(TEXT_LIMITS[field as StageField] ?? "entry_text");
+export const textLimitOf = (
+  field: StageFieldName | DraftFieldName,
+): number | null =>
+  textLimit(TEXT_LIMITS[field as StageFieldName] ?? "entry_text");
 
 /** The choice that binds a movement to no own account: a clear of it. */
 export const NO_ACCOUNT = "none:account";
@@ -126,25 +130,25 @@ export const NO_CATEGORY = "none:category";
 export function columnField(
   column: ColumnId,
   row: LedgerTransactionReviewProjection,
-): StageField | null {
+): StageFieldName | null {
   if (!EDIT_KINDS[column]) return null;
   if (column === "date")
     return row.transaction.value_date !== null ? "value_date" : "booked_date";
   if (column === "classification") return "business_classification";
   if (column === "account") return "own_account_id";
   if (column === "category") return "category_id";
-  return column as StageField;
+  return column as StageFieldName;
 }
 
 /** The field a column fills in on a new movement. A group label is set
  * once the movement is saved: an add does not take one. */
-export function draftField(column: ColumnId): DraftField | null {
+export function draftField(column: ColumnId): DraftFieldName | null {
   if (!EDIT_KINDS[column] || column === "group_label") return null;
   if (column === "date") return "booked_date";
   if (column === "classification") return "business_classification";
   if (column === "account") return "own_account_id";
   if (column === "category") return "category_id";
-  return column as DraftField;
+  return column as DraftFieldName;
 }
 
 /** What a cell is edited on: a stored movement, with what is staged on it,
@@ -225,7 +229,7 @@ export type EditRefusal = {
  * fact nobody had filled in. Every other grammar refusal stays here.
  */
 export function backendOwnsRefusal(
-  field: StageField | DraftField,
+  field: StageFieldName | DraftFieldName,
   refusal: EditRefusal,
 ): boolean {
   return field === "amount" && refusal.key === "signed";
@@ -300,7 +304,7 @@ function lift(parsed: Parsed<string>): CellParse {
  * clear. */
 export function parseCell(
   kind: EditKind,
-  field: StageField | DraftField,
+  field: StageFieldName | DraftFieldName,
   raw: string,
   labels: ChoiceLabels,
 ): CellParse {
@@ -365,7 +369,7 @@ const NO_CLEAR: ReadonlySet<string> = new Set(UNCLEARABLE_FIELDS);
 
 /** Why clearing `field` is refused, or null where a clear is staged. */
 export function clearRefusal(
-  field: StageField | DraftField,
+  field: StageFieldName | DraftFieldName,
 ): EditRefusal | null {
   if (REQUIRED.has(field)) return { key: "required", raw: "" };
   if (NO_CLEAR.has(field)) return { key: "cannot_clear", raw: "" };
@@ -379,7 +383,7 @@ export function clearRefusal(
 export function rowCells(
   id: string,
   row: LedgerTransactionReviewProjection,
-  field: StageField,
+  field: StageFieldName,
   input: CellValue | null,
 ): StageCell[] {
   if (input?.value === NO_ACCOUNT || input?.value === NO_CATEGORY) input = null;
@@ -400,7 +404,7 @@ export function rowCells(
   // What the new classification drops is cleared with it, so that the grid,
   // the inspector and the review say so and one undo restores it.
   for (const dropped of fieldsDroppedBy(input.value)) {
-    const name = dropped as StageField;
+    const name = dropped as StageFieldName;
     const held = storedFieldValue(row, name);
     if (held != null && !cells.some((cell) => cell.field === name))
       cells.push({ id, field: name, value: { kind: "clear" }, stored: held });
@@ -411,12 +415,12 @@ export function rowCells(
 /** A new movement's field filled in or emptied. */
 export type DraftEdit = {
   key: string;
-  field: DraftField;
+  field: DraftFieldName;
   value: string | null;
 };
 export function draftEdits(
   key: string,
-  field: DraftField,
+  field: DraftFieldName,
   input: CellValue | null,
 ): DraftEdit[] {
   if (input?.value === NO_ACCOUNT || input?.value === NO_CATEGORY) input = null;
@@ -842,7 +846,7 @@ export function heldUnits(content: StagedContent, plan: LedgerPlan): number {
 /** One kind of change, as the review's summary lists it: the field, what
  * is stored and what is staged, and on which movements. */
 export type ChangeGroup = {
-  field: StageField;
+  field: StageFieldName;
   from: string | null;
   to: StagedValue;
   ids: string[];
@@ -855,7 +859,7 @@ export function changeGroups(
   for (const [id, changes] of Object.entries(content.rows)) {
     const row = rows.get(id);
     for (const [field, to] of Object.entries(changes) as [
-      StageField,
+      StageFieldName,
       StagedValue,
     ][]) {
       const from = row ? (storedFieldValue(row, field) ?? null) : null;
@@ -877,7 +881,7 @@ export type AskedConflict =
       transactionId: string;
       before: LedgerTransactionReviewProjection;
       after: LedgerTransactionReviewProjection;
-      fields: StageField[];
+      fields: StageFieldName[];
     }
   | {
       kind: "gone";
@@ -885,7 +889,7 @@ export type AskedConflict =
       before: LedgerTransactionReviewProjection | null;
     };
 
-const DECIMAL_FIELDS: ReadonlySet<StageField> = new Set([
+const DECIMAL_FIELDS: ReadonlySet<StageFieldName> = new Set([
   "amount",
   "business_pct",
   "taxable_base",
@@ -893,7 +897,7 @@ const DECIMAL_FIELDS: ReadonlySet<StageField> = new Set([
   "iva_amount",
 ]);
 const sameStored = (
-  field: StageField,
+  field: StageFieldName,
   left: string | null | undefined,
   right: string | null | undefined,
 ) =>
@@ -915,7 +919,7 @@ export function askedConflicts(
     }
     const staged = Object.keys(
       content.rows[conflict.transactionId] ?? {},
-    ) as StageField[];
+    ) as StageFieldName[];
     const fields = staged.filter(
       (field) =>
         !sameStored(
@@ -1041,8 +1045,8 @@ export function draftRow(draft: Draft): LedgerTransactionReviewProjection {
 }
 
 /** The fields a new movement still needs before it can be added. */
-export const DRAFT_REQUIRED: readonly DraftField[] = DRAFT_REQUIRED_FIELDS;
-export const draftMissing = (draft: Draft): DraftField[] =>
+export const DRAFT_REQUIRED: readonly DraftFieldName[] = DRAFT_REQUIRED_FIELDS;
+export const draftMissing = (draft: Draft): DraftFieldName[] =>
   DRAFT_REQUIRED.filter((field) => !draft.fields[field]);
 
 /** The room, in rem, a column needs while a new movement is drafted: the

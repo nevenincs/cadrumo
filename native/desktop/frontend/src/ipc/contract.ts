@@ -569,7 +569,7 @@ export interface HostCommands {
   };
   ledger_files_save: {
     args: Authorized<{
-      format: import("../shell/ledger").LedgerExportFormat;
+      format: import("../shell/ledgerTransferContract").ExportSerializationFormat;
       filterLabel: string;
       suggestedName: string | null;
     }>;

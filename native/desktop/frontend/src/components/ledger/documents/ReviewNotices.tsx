@@ -2,7 +2,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { listed } from "../../../shell/compose";
-import { servedNextStep, type LedgerNextStep } from "../../../shell/ledger";
+import { servedNextStep } from "../../../shell/ledger";
+import type { OperationNextStepV1 } from "../../../shell/ledgerDocumentContract";
 import type { LabelReadingFallbackProjectionV1 } from "../../../shell/ledgerDocumentContract";
 import { provisionActionOf } from "../../../shell/provisioningRecovery";
 import { useStrings } from "../../../shell/strings";
@@ -21,7 +22,7 @@ export type ReviewNotice =
       code: string;
       recovery: string | null;
       words: string | null;
-      step: LedgerNextStep | null;
+      step: OperationNextStepV1 | null;
     }
   | { kind: "unknown" }
   | { kind: "failed"; code: string }

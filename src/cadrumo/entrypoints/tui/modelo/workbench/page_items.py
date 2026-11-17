@@ -36,7 +36,6 @@ from .....application.modelo.work_form_field_vocabulary import (
     ModeloFormTextDisclosure,
     address_key,
 )
-from .....application.modelo.work_form_findings import ModeloFormAttention
 from .....application.modelo.work_form_models import (
     ModeloFormBindingInputsBlock,
     ModeloFormBlock,
@@ -80,18 +79,6 @@ _RECORDS_LOCALE_KEY: Final[str] = "workspace.modelo.repeating"
 _CASILLA_KIND: Final[str] = "casilla"
 _RECORDS_UNKNOWN_LOCALE_KEY: Final[str] = "workspace.modelo.grid.records_unknown"
 _RECORDS_READ_ONLY_LOCALE_KEY: Final[str] = "workspace.modelo.grid.records_read_only"
-
-
-_RECORD_FINDING_LEVELS: Final[Mapping[ModeloFormAttention, str]] = MappingProxyType(
-    {
-        ModeloFormAttention.BLOCKS: "blocks",
-        ModeloFormAttention.MISSING: "missing",
-        ModeloFormAttention.CONFIRM: "confirm",
-        ModeloFormAttention.CHECK: "check",
-        ModeloFormAttention.LIMITATION: "check",
-    }
-)
-"""Where a finding about a table's values counts on the attention scale; one for information counts nowhere."""
 
 
 class WorkbenchFilter(StrEnum):
@@ -167,8 +154,9 @@ def records_attention(sections: tuple[ModeloFormSection, ...]) -> Mapping[str, A
     for section in sections:
         total = AttentionCounts()
         for served in section.record_attention:
-            level = _RECORD_FINDING_LEVELS[served.level]
-            total = total + AttentionCounts(**{level: served.count, "pending": 0 if level == "check" else served.count})
+            total = total + AttentionCounts(
+                **{served.counts_as.value: served.count, "pending": served.count if served.asks_filer else 0}
+            )
         if total != AttentionCounts():
             counts[section.id] = total
     return MappingProxyType(counts)
