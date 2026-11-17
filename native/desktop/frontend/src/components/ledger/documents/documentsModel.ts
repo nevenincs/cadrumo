@@ -13,10 +13,8 @@ import type {
   CatalogueInvoiceSnapshot,
   InvoiceKind,
 } from "../../../shell/ledgerInvoiceContract";
-import type {
-  EvidenceConfirmRequest,
-  EvidenceUpdateRequest,
-} from "../../../shell/ledgerDocumentOperations";
+import type { LedgerEvidenceConfirmWindowRequest } from "../../../shell/ledgerDocumentReviewContract";
+import type { LedgerEvidenceUpdateWindowRequest } from "../../../shell/ledgerDocumentContract";
 import type {
   ConfirmationBlockerProjectionV1,
   FieldProvenanceProjectionV1,
@@ -475,7 +473,7 @@ export function confirmation(input: {
   duplicateUnread?: boolean;
   confirmAnyway: boolean;
 }):
-  | { kind: "ready"; request: EvidenceConfirmRequest }
+  | { kind: "ready"; request: LedgerEvidenceConfirmWindowRequest }
   | { kind: "held"; holds: ConfirmHold[] } {
   const holds: ConfirmHold[] = [];
   if (input.kind === null) holds.push("choose_kind");
@@ -616,10 +614,10 @@ export function recordUpdate(
   record: LedgerEvidenceRecordProjection,
   typed: Partial<Record<EvidenceUpdateField, string>>,
 ):
-  | { kind: "update"; request: EvidenceUpdateRequest }
+  | { kind: "update"; request: LedgerEvidenceUpdateWindowRequest }
   | { kind: "unchanged" }
   | { kind: "refused"; fields: EvidenceUpdateField[] } {
-  const patch: EvidenceUpdateRequest["patch"] = {};
+  const patch: LedgerEvidenceUpdateWindowRequest["patch"] = {};
   const fields: EvidenceUpdateField[] = [];
   const refused: EvidenceUpdateField[] = [];
   for (const [field, raw] of Object.entries(typed) as [
@@ -657,7 +655,7 @@ export function recordUpdate(
  * check reads back after an outcome that was not seen. */
 export function holdsUpdate(
   record: LedgerEvidenceRecordProjection,
-  request: EvidenceUpdateRequest,
+  request: LedgerEvidenceUpdateWindowRequest,
 ): boolean {
   return (request.patch_fields ?? []).every((field) => {
     const wanted = request.patch[field] ?? null;

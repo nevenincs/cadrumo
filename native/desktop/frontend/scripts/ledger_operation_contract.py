@@ -400,7 +400,15 @@ FIELD_EXPORTS: dict[str, tuple[tuple[str, str, str, str], ...]] = {
         ("LedgerClassifyField", "ledger.classify.single", "request", '{model}["patch_fields"][number]'),
         ("LedgerClassifyValidation", "ledger.classify.single", "result", '{model}["validation_kind"]'),
     ),
-    "movementCheck": (("LedgerLlmReviewMode", "ledger.classify.review", "request", '{model}["mode"]'),),
+    "movementCheck": (
+        ("LedgerLlmReviewMode", "ledger.classify.review", "request", '{model}["mode"]'),
+        (
+            "LedgerWriteRoute",
+            "ledger.staged.check",
+            "result",
+            'NonNullable<{model}["rows"][number]["routes"][number]["route"]>',
+        ),
+    ),
 }
 
 
