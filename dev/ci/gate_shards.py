@@ -45,16 +45,13 @@ __all__ = [
     "shard_count",
 ]
 
-#: A shard is sized by the memory of a hosted runner (16 GB, 3 GB swap), not
-#: its time: the four test workers each keep what their tests leave behind, so
-#: a runner's memory grows with the tests it runs. At about 900 files every
-#: shard of the full tree used all of it, swap included, and the runner was
-#: lost before pytest's summary. At 400 the worst shard's projected peak is
-#: about 12 GB.
+#: A shard of this size finishes its parallel and serial passes in about a
+#: quarter of an hour on a hosted runner, well inside the job's limit. The
+#: runner's memory is held by the shard job's worker count, not by this size.
 DEFAULT_FILES_PER_SHARD: Final = 400
 #: The widest matrix a run may plan. It must hold the full tree at
 #: ``DEFAULT_FILES_PER_SHARD``: a cap below that makes every shard larger and
-#: brings the memory exhaustion back.
+#: slower.
 DEFAULT_MAX_SHARDS: Final = 24
 
 _TEST_FILE_PATTERN: Final = "test_*.py"
