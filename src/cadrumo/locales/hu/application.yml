@@ -4460,6 +4460,7 @@ application:
         profile_archive_reconcile: Egyeztesd a profil archívumát
         profile_arrendamiento: Nézd át a bérbeadásaidat
         profile_ascendiente: Nézd át a felmenőidet
+        profile_ascendiente_edit: Egészítsd ki a felmenőd adatait
         profile_complete_setup: Fejezd be a profilod beállítását
         profile_create: Hozz létre egy profilt
         profile_descendiente: Nézd át a leszármazottaidat
