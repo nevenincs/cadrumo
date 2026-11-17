@@ -120,7 +120,7 @@ def _restore_model_fields(
     canonical_type: type[object],
 ) -> dict[str, object]:
     source_fields = type(value).model_fields
-    if set(source_fields) - set(target_fields):
+    if set(source_fields) - set(target_fields) - set(_computed_fields(canonical_type)):
         raise ValueError("public-mirror canonical model field inventory drifted")
     restored = {
         name: restore_public_value(
@@ -158,9 +158,36 @@ def _restore_model(
     )
     if complete is not None:
         complete(canonical_type, restored, value)
-    if issubclass(canonical_type, BaseModel):
-        return canonical_type.model_validate(restored)
-    return canonical_type(**restored)
+    if not issubclass(canonical_type, BaseModel):
+        return canonical_type(**restored)
+    model = canonical_type.model_validate(restored)
+    _require_served_decisions(value, model, withheld, complete)
+    return model
+
+
+def _computed_fields(canonical_type: type[object]) -> Mapping[str, object]:
+    """The values a canonical model decides itself and its public mirror serves beside its fields."""
+    if not issubclass(canonical_type, BaseModel):
+        return {}
+    return {name: field.return_type for name, field in canonical_type.model_computed_fields.items()}
+
+
+def _require_served_decisions(
+    value: BaseModel,
+    model: BaseModel,
+    withheld: frozenset[tuple[type[object], str]],
+    complete: _MirrorCompletion | None,
+) -> None:
+    """Refuse a mirror that serves a decided value other than the one the restored model decides again."""
+    source_fields = type(value).model_fields
+    for name, return_type in _computed_fields(type(model)).items():
+        if name not in source_fields:
+            continue
+        served = restore_public_value(
+            getattr(value, name), return_type, source_fields[name].annotation, withheld, complete
+        )
+        if served != getattr(model, name):
+            raise ValueError("public-mirror served decision differs from the one its canonical model decides")
 
 
 def restore_public_value(
