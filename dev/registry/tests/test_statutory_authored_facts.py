@@ -220,7 +220,9 @@ def test_art52_individual_sublimit_changes_at_the_second_dated_variant() -> None
             support=committed_supported_filing_years(),
         )
         assert isinstance(fact, ResolvedScalarFact)
-        return fact.payload.value
+        value = fact.payload.value
+        assert isinstance(value, Decimal)
+        return value
 
     assert first.payload.value == Decimal("2000")
     assert first.valid_to == second.valid_from - timedelta(days=1)
