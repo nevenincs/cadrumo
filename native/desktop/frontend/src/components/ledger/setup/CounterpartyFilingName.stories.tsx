@@ -13,7 +13,7 @@ import type {
   CounterpartyFilingNameProjection as StatedFilingName,
   CounterpartyFilingNameSlot,
 } from "../../../shell/ledgerClassificationContract";
-import type { LedgerCounterpartyResult } from "../../../shell/ledgerClassificationSetup";
+import type { LedgerCounterpartyResult } from "../../../shell/ledgerClassificationContract";
 import { usePagePause, WritePauseContext } from "../WritePause";
 import { CounterpartiesPane } from "./CounterpartiesPane";
 import { CounterpartyFilingName } from "./CounterpartyFilingName";

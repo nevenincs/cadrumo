@@ -12,7 +12,7 @@ import {
   type LedgerErrorDetail,
 } from "../../../shell/ledger";
 import type { CounterpartyFilingNameProjection as StatedFilingName } from "../../../shell/ledgerClassificationContract";
-import type { LedgerCounterpartyResult } from "../../../shell/ledgerClassificationSetup";
+import type { LedgerCounterpartyResult } from "../../../shell/ledgerClassificationContract";
 import {
   COUNTERPARTY_KINDS,
   type CounterpartyKind,

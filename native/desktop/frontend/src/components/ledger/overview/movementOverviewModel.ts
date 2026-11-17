@@ -5,7 +5,7 @@
 import { facts, listed, noted } from "../../../shell/compose";
 import { takesBusinessShare } from "../../../shell/ledgerClassifications";
 import { isDecidedClassification } from "../../../shell/ledgerContract";
-import type { LedgerTrackResult } from "../../../shell/ledgerMovementOperations";
+import type { LedgerTrackProjection } from "../../../shell/ledgerMovementCheckContract";
 import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
 import type { Translate } from "../../../shell/strings";
 import { formatDay, formatTime } from "../../../shared/dateFormats";
@@ -65,7 +65,7 @@ export type MovementOverviewInput = {
   unsaved: number;
   /** Where it came from and which declarations cite it; null while it is
    * not asked for. */
-  track: InspectorRead<LedgerTrackResult> | null;
+  track: InspectorRead<LedgerTrackProjection> | null;
 };
 
 /** The EUR value of a movement in another currency: stored, or unknown

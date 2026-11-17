@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { facts, factsGap } from "@/shell/compose";
 import type { LedgerRuleRowProjection } from "../../../shell/ledgerClassificationContract";
-import type { LedgerRuleApplyResult } from "../../../shell/ledgerClassificationSetup";
+import type { LedgerRuleApplyProjection } from "../../../shell/ledgerClassificationContract";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
 import { categoryLabel, classificationLabel } from "../movements/movementWords";
@@ -116,7 +116,7 @@ function RulesPane({
   const moving = useSetupWrite(t("desktop.ledger.rules.title"));
   const [reaffirm, setReaffirm] = useState(false);
   const [preview, setPreview] =
-    useState<SetupCall<LedgerRuleApplyResult> | null>(null);
+    useState<SetupCall<LedgerRuleApplyProjection> | null>(null);
   const [previewing, setPreviewing] = useState(false);
   const [stagedNote, setStagedNote] = useState<string | null>(null);
   const staged = stage.actions.filter((action) => action.kind === "rule_apply");

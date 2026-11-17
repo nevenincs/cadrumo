@@ -46293,3 +46293,139 @@ segmento = "DP200026F"
 section = ["uefa_europa_league_2022_rdl_3_2022", "disminucion"]
 semantic_role = "is_correccion_uefa_europa_league_2022_disminucion_saldo_final"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# Boxes the 2022 record design prints with the caption a later edition declared them under,
+# declared here at the earliest edition whose design prints them; later editions inherit them.
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4886 DP200026F 43|642|17|Num
+# aeat-dr-200-2023 prints the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:5248 (DP200026F field 33) and aeat-dr-200-2024 at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:5350 (DP200026F field 103).
+[[revisions."2022".casillas]]
+id = "03276"
+continuidad_id = "03276"
+number = "03276"
+section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
+semantic_role = "is_correccion_disminucion"
+legal_refs = ["ley-49-2002:art-6", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4887 DP200026F 44|659|17|Num
+# aeat-dr-200-2023 prints the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:5249 (DP200026F field 34) and aeat-dr-200-2024 at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:5351 (DP200026F field 104).
+[[revisions."2022".casillas]]
+id = "03277"
+continuidad_id = "is-entidad-sin-fines-lucrativos-disminucion"
+number = "03277"
+section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
+semantic_role = "is_entidad_sin_fines_lucrativos_disminucion"
+legal_refs = ["ley-49-2002:art-6", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4888 DP200026F 45|676|17|Num
+# aeat-dr-200-2023 prints the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:5250 (DP200026F field 35) and aeat-dr-200-2024 at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:5352 (DP200026F field 105).
+[[revisions."2022".casillas]]
+id = "03278"
+continuidad_id = "03278"
+number = "03278"
+section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
+semantic_role = "is_entidad_sin_fines_lucrativos_disminucion"
+legal_refs = ["ley-49-2002:art-6", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4885 DP200026F 42|625|17|Num
+# aeat-dr-200-2023 prints the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:5247 (DP200026F field 32) and aeat-dr-200-2024 at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:5349 (DP200026F field 102).
+[[revisions."2022".casillas]]
+id = "03279"
+continuidad_id = "03279"
+number = "03279"
+section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
+semantic_role = "is_entidad_sin_fines_lucrativos_disminucion"
+legal_refs = ["ley-49-2002:art-6", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4889 DP200026F 46|693|17|Num
+# aeat-dr-200-2023 prints the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:5251 (DP200026F field 36) and aeat-dr-200-2024 at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:5353 (DP200026F field 106).
+[[revisions."2022".casillas]]
+id = "03280"
+continuidad_id = "03280"
+number = "03280"
+section = ["regimen_fiscal_entidades_sin_fines_lucrativos_ley", "disminucion"]
+semantic_role = "is_entidad_sin_fines_lucrativos_disminucion"
+legal_refs = ["ley-49-2002:art-6", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1997 DP200016 131|2024|17|Num
+# aeat-dr-200-2023 prints the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2033 (DP200016 field 136) and aeat-dr-200-2024 at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2117 (DP200016 field 142) with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "DP200016:00783"
+continuidad_id = "dp200016-00783"
+number = "00783"
+segmento = "DP200016"
+section = ["deducciones_dt_24a_1_lis", "periodificacion"]
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1998 DP200016 132|2041|17|Num
+# aeat-dr-200-2023 prints the same field at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2034 (DP200016 field 137) and aeat-dr-200-2024 at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2118 (DP200016 field 143) with the year it names read for its own ejercicio.
+[[revisions."2022".casillas]]
+id = "DP200016:00784"
+continuidad_id = "dp200016-00784"
+number = "00784"
+segmento = "DP200016"
+section = ["deducciones_dt_24a_1_lis", "periodificacion"]
+semantic_role = "is_deduccion_dt24a1_periodificacion"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5004 DP200026F 161|2648|17|Num
+# aeat-dr-200-2023 prints the same field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:5376 (DP200026F field 161); aeat-dr-200-2024 prints it on DP200026G at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:5483 (DP200026G field 78).
+[[revisions."2022".casillas]]
+id = "DP200026F:02301"
+continuidad_id = "is-total-aumento-correcciones-del-ejercicio-permanentes"
+number = "02301"
+segmento = "DP200026F"
+section = ["total", "aumento"]
+semantic_role = "is_total_aumento_correcciones_del_ejercicio_permanentes"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:5009 DP200026F 166|2733|17|Num
+# aeat-dr-200-2023 prints the same field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:5381 (DP200026F field 166); aeat-dr-200-2024 prints it on DP200026G at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:5488 (DP200026G field 83).
+[[revisions."2022".casillas]]
+id = "DP200026F:02302"
+continuidad_id = "is-total-disminucion-correcciones-del-ejercicio-permanentes"
+number = "02302"
+segmento = "DP200026F"
+section = ["total", "disminucion"]
+semantic_role = "is_total_disminucion_correcciones_del_ejercicio_permanentes"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2564 DP200018B 9|64|17|Num
+# aeat-dr-200-2023 prints the same field on DP200018 at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2570 (DP200018 field 150) with the year it names read for its own ejercicio; aeat-dr-200-2024 does not print it.
+[[revisions."2022".casillas]]
+id = "DP200018B:01217"
+continuidad_id = "is-m200-dp200018b-01217"
+number = "01217"
+segmento = "DP200018B"
+section = ["deducc_para_incentivar_determ_actividades", "mundo_voluntario_2030_35o_aniversario_plataforma_d"]
+data_type = "money"
+semantic_role = "is_deduccion_idi_evento_especial"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2565 DP200018B 10|81|17|Num
+# aeat-dr-200-2023 prints the same field on DP200018 at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2571 (DP200018 field 151) with the year it names read for its own ejercicio; aeat-dr-200-2024 does not print it.
+[[revisions."2022".casillas]]
+id = "DP200018B:01218"
+continuidad_id = "is-m200-dp200018b-01218"
+number = "01218"
+segmento = "DP200018B"
+section = ["deducc_para_incentivar_determ_actividades", "mundo_voluntario_2030_35o_aniversario_plataforma_d"]
+data_type = "money"
+semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2566 DP200018B 11|98|17|Num
+# aeat-dr-200-2023 prints the same field on DP200018 at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2572 (DP200018 field 152) with the year it names read for its own ejercicio; aeat-dr-200-2024 does not print it.
+[[revisions."2022".casillas]]
+id = "DP200018B:01219"
+continuidad_id = "is-m200-dp200018b-01219"
+number = "01219"
+segmento = "DP200018B"
+section = ["deducc_para_incentivar_determ_actividades", "mundo_voluntario_2030_35o_aniversario_plataforma_d"]
+data_type = "money"
+semantic_role = "is_deduccion_eventos_especiales_pendiente"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]

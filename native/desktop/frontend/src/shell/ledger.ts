@@ -68,6 +68,8 @@ import type {
   LedgerLinkOperationResult,
 } from "./ledgerInvoiceContract";
 import type {
+  LedgerUpdateWindowRequest,
+  LedgerUpdateOperationResult,
   LedgerAddWindowRequest,
   LedgerAddOperationResult,
   LedgerAllocateWindowRequest,
@@ -88,6 +90,7 @@ import type {
   LedgerSplitOperationResult,
 } from "./ledgerMovementContract";
 import type {
+  LedgerTrackProjection,
   LedgerHistoryWindowRequest,
   LedgerHistoryTypedProjection,
   LedgerLlmReviewWindowRequest,
@@ -99,11 +102,6 @@ import type {
   LedgerStagedCheckResult,
   LedgerTrackWindowRequest,
 } from "./ledgerMovementCheckContract";
-import type {
-  LedgerTrackResult,
-  LedgerUpdateRequest,
-  LedgerUpdateResult,
-} from "./ledgerMovementOperations";
 import type {
   InventoryInspectWindowRequest,
   InventoryLedgerChangeProjection,
@@ -172,25 +170,25 @@ import type {
 } from "./ledgerTransferContract";
 import type { LedgerWithholdingContracts } from "./ledgerWithholdingContract";
 import type {
-  LedgerCounterpartyRequest,
+  LedgerCounterpartyWindowRequest,
   LedgerCounterpartyResult,
-  LedgerLlmDiagnosticsRequest,
-  LedgerLlmDiagnosticsResult,
-  LedgerRatiosEligibleRequest,
-  LedgerRatiosEligibleResult,
-  LedgerRatiosListResult,
-  LedgerRatiosSetRequest,
-  LedgerRatiosSetResult,
-  LedgerRatiosUnsetRequest,
-  LedgerRatiosUnsetResult,
-  LedgerRatiosValidateResult,
-  LedgerRatiosYearRequest,
-  LedgerRuleAddRequest,
-  LedgerRuleAddResult,
-  LedgerRuleApplyRequest,
-  LedgerRuleApplyResult,
-  LedgerRuleListResult,
-} from "./ledgerClassificationSetup";
+  LedgerLlmDiagnosticsWindowRequest,
+  LedgerLlmDiagnosticsProjection,
+  LedgerRatiosEligibleWindowRequest,
+  LedgerRatiosEligibleProjection,
+  LedgerRatiosListProjection,
+  LedgerRatiosSetWindowRequest,
+  LedgerRatiosSetProjection,
+  LedgerRatiosUnsetWindowRequest,
+  LedgerRatiosUnsetProjection,
+  LedgerRatiosValidateProjection,
+  LedgerRatiosListWindowRequest,
+  LedgerRuleAddWindowRequest,
+  LedgerRuleAddProjection,
+  LedgerRuleApplyWindowRequest,
+  LedgerRuleApplyProjection,
+  LedgerRuleListProjection,
+} from "./ledgerClassificationContract";
 
 /** The definitions the host admits, mirroring its closed list. */
 export const LEDGER_DEFINITIONS = [
@@ -690,7 +688,7 @@ export interface LedgerRequests {
     LedgerReadContracts["ledger.view"]["request"],
     "profile_id"
   >;
-  "ledger.update": LedgerUpdateRequest;
+  "ledger.update": LedgerUpdateWindowRequest;
   "ledger.classify.single": LedgerClassifyWindowRequest;
   "ledger.classify.bulk": LedgerBulkClassifyWindowRequest;
   "ledger.classify.review": LedgerLlmReviewWindowRequest;
@@ -755,15 +753,15 @@ export interface LedgerRequests {
   "ledger.classify.iva-derive": LedgerOperatorIvaWindowRequest;
   "ledger.allocate": LedgerAllocateWindowRequest;
   "ledger.rule.list": Record<string, never>;
-  "ledger.rule.add": LedgerRuleAddRequest;
-  "ledger.rule.apply": LedgerRuleApplyRequest;
-  "ledger.ratios.list": LedgerRatiosYearRequest;
-  "ledger.ratios.eligible": LedgerRatiosEligibleRequest;
+  "ledger.rule.add": LedgerRuleAddWindowRequest;
+  "ledger.rule.apply": LedgerRuleApplyWindowRequest;
+  "ledger.ratios.list": LedgerRatiosListWindowRequest;
+  "ledger.ratios.eligible": LedgerRatiosEligibleWindowRequest;
   "ledger.ratios.validate": Record<string, never>;
-  "ledger.ratios.set": LedgerRatiosSetRequest;
-  "ledger.ratios.unset": LedgerRatiosUnsetRequest;
-  "ledger.counterparty": LedgerCounterpartyRequest;
-  "ledger.llm-diagnostics": LedgerLlmDiagnosticsRequest;
+  "ledger.ratios.set": LedgerRatiosSetWindowRequest;
+  "ledger.ratios.unset": LedgerRatiosUnsetWindowRequest;
+  "ledger.counterparty": LedgerCounterpartyWindowRequest;
+  "ledger.llm-diagnostics": LedgerLlmDiagnosticsWindowRequest;
   "ledger.own_account": Omit<
     LedgerOwnAccountContracts["ledger.own_account"]["request"],
     "profile_id" | OwnAccountSecret
@@ -876,7 +874,7 @@ export interface LedgerResults {
   "ledger.known-values": LedgerReadContracts["ledger.known-values"]["result"];
   "ledger.list": LedgerReadContracts["ledger.list"]["result"];
   "ledger.view": LedgerReadContracts["ledger.view"]["result"];
-  "ledger.update": LedgerUpdateResult;
+  "ledger.update": LedgerUpdateOperationResult;
   "ledger.classify.single": LedgerClassifyOperationResult;
   "ledger.classify.bulk": LedgerBulkClassifyProjection;
   "ledger.add": LedgerAddOperationResult;
@@ -915,7 +913,7 @@ export interface LedgerResults {
   "ledger.attach": LedgerAttachmentOperationResult;
   "ledger.detach": LedgerAttachmentOperationResult;
   "ledger.check": LedgerCheckProjection;
-  "ledger.track": LedgerTrackResult;
+  "ledger.track": LedgerTrackProjection;
   "ledger.history.typed": LedgerHistoryTypedProjection;
   "ledger.remove": LedgerRemoveOperationResult;
   "ledger.archive": LedgerLifecycleOperationResult;
@@ -926,16 +924,16 @@ export interface LedgerResults {
   "ledger.merge": LedgerMergeOperationResult;
   "ledger.classify.iva-derive": LedgerOperatorIvaResult;
   "ledger.allocate": LedgerAllocateOperationResult;
-  "ledger.rule.list": LedgerRuleListResult;
-  "ledger.rule.add": LedgerRuleAddResult;
-  "ledger.rule.apply": LedgerRuleApplyResult;
-  "ledger.ratios.list": LedgerRatiosListResult;
-  "ledger.ratios.eligible": LedgerRatiosEligibleResult;
-  "ledger.ratios.validate": LedgerRatiosValidateResult;
-  "ledger.ratios.set": LedgerRatiosSetResult;
-  "ledger.ratios.unset": LedgerRatiosUnsetResult;
+  "ledger.rule.list": LedgerRuleListProjection;
+  "ledger.rule.add": LedgerRuleAddProjection;
+  "ledger.rule.apply": LedgerRuleApplyProjection;
+  "ledger.ratios.list": LedgerRatiosListProjection;
+  "ledger.ratios.eligible": LedgerRatiosEligibleProjection;
+  "ledger.ratios.validate": LedgerRatiosValidateProjection;
+  "ledger.ratios.set": LedgerRatiosSetProjection;
+  "ledger.ratios.unset": LedgerRatiosUnsetProjection;
   "ledger.counterparty": LedgerCounterpartyResult;
-  "ledger.llm-diagnostics": LedgerLlmDiagnosticsResult;
+  "ledger.llm-diagnostics": LedgerLlmDiagnosticsProjection;
   "ledger.own_account": LedgerOwnAccountContracts["ledger.own_account"]["result"];
   "ledger.prorrata.list": LedgerProrrataContracts["ledger.prorrata.list"]["result"];
   "ledger.prorrata.seed": LedgerProrrataContracts["ledger.prorrata.seed"]["result"];
