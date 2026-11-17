@@ -748,6 +748,13 @@ for (const provider of PROVIDERS) {
       );
       if (!group)
         assert.fail(`UNMEASURED: the provider settings list no "${provider}"`);
+      // A run that names a directory keeps what the person saw: the agent
+      // column with its provider settings drawn, from the synthetic world.
+      const shots = process.env.CADRUMO_UX_SCREENSHOT_DIR;
+      if (shots) {
+        line.screenshot = join(shots, `provider-settings-${provider}.png`);
+        await win.browser.saveScreenshot(line.screenshot);
+      }
       const PLACES = {
         "desktop.providers.connection_api": "hosted",
         "desktop.providers.connection_app": "hosted",
