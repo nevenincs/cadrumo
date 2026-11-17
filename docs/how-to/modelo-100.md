@@ -80,9 +80,12 @@ Calculation reads the year's classified entries in your records, the profile
 facts, the prior filings the tax rules bring in, and any carry-forward from last
 year's declaration (negative bases carry over through a rule that reads the prior
 filing), then runs the formulas of the tax rules and saves a draft calculation.
-Here box `0003` carries the 24000 of salary income, box `0012` the total
+Here box `0003` carries the 24000 of salary income from the payer's withholding
+record, box `0012` the total
 countable gross employment income (`24000.00`), and box `0019` the other deductible employment
-expenses (art. 19 LIRPF) of `2000.00`. The tool never fabricates a missing
+expenses (art. 19 LIRPF) of `2000.00`. The work-income boxes no payer certificate
+fills, such as employer contributions to pension plans, block the check until you
+state them, so the example states that there are none before checking. The tool never fabricates a missing
 prior period: what it does not have on record stays a visible blank for you to
 resolve, not a guessed zero.
 
@@ -101,10 +104,12 @@ warns that no inventory register is available and the boxes stay at `0`, so
 create the register before you file. Don't put stock figures in box 0155:
 calculation doesn't read it as an inventory figure.
 
-Supply a manual box value and recalculate by passing `--casilla 0003=24000` on the
-`calculate` command, alongside the `--binding` values the declaration still needs
-(the main sequence above shows the full form). Recalculating replaces the current
-draft calculation.
+Supply a manual box value and recalculate by passing `--casilla <box>=<value>` on
+the `calculate` command, alongside the `--binding` values the declaration still
+needs (the main sequence above shows the full form). A box that one of your records
+fills refuses a manual value: when a payer's withholding record states your
+employment income, box 0003 comes from that record, so correct the record instead.
+Recalculating replaces the current draft calculation.
 
 For the full input workflow - boxes Cadrumo fills in versus boxes you supply,
 offsets, and choosing among earlier calculations - see
