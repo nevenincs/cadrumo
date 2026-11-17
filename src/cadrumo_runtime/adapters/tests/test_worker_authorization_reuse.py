@@ -81,7 +81,9 @@ class Owner(UnavailableApprovalAuthority):
                 expires_at=now() + timedelta(seconds=300),
             )
 
-    def operations_advanced(self, operation_ids: tuple[str, ...], *, records_changed: bool = False) -> None:
+    def operations_advanced(
+        self, operation_ids: tuple[str, ...], *, records_changed: bool = False, settled: tuple[str, ...] = ()
+    ) -> None:
         self.advanced.append(operation_ids)
 
     def model_run(
