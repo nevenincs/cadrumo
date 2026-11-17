@@ -4,13 +4,19 @@ from __future__ import annotations
 
 import contextlib
 from queue import Empty, Full, Queue
-from typing import BinaryIO, Literal
+from typing import BinaryIO, Literal, cast
 from urllib.parse import SplitResult, parse_qsl, urlsplit
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator
 
-from ..providers.application.contracts import HelperCause, ServiceCause, SignInReason
+from ..providers.application.contracts import (
+    CliStateCause,
+    HelperCause,
+    ProviderSignInSnapshot,
+    ServiceCause,
+    SignInReason,
+)
 from ..providers.application.next_steps import next_step_for
 
 MAX_AUTH_LINE = 16 * 1024
@@ -98,25 +104,30 @@ def snapshot(
     cause: HelperCause | ServiceCause | None = None,
     status_cause: str | None = None,
     log_ref: str | None = None,
+    url: str | None = None,
+    user_code: str | None = None,
 ) -> dict[str, JsonValue]:
-    """Build a secret-free outcome; browser data is added only while awaiting login.
+    """Build a secret-free outcome through the model the window's type is generated from.
 
     ``cause`` and ``status_cause`` are closed words, and the next step is the
-    one declared for the cause. ``log_ref`` names the log line of a failure.
+    one declared for the cause. ``log_ref`` names the log line of a failure; ``url`` and
+    ``user_code`` are given only while a browser action is awaited.
     """
-    result: dict[str, JsonValue] = {"attempt_id": attempt_id, "provider": provider, "event": event}
-    if reason is not None:
-        result["reason"] = reason
-    if cause is not None:
-        result["cause"] = cause
-        step = next_step_for(cause)
-        if step is not None:
-            result["next_step"] = step.value
-    if status_cause is not None:
-        result["status_cause"] = status_cause
-    if log_ref is not None:
-        result["log_ref"] = log_ref
-    return result
+    served = ProviderSignInSnapshot.model_validate(
+        {
+            "attempt_id": attempt_id,
+            "provider": provider,
+            "event": event,
+            "reason": reason,
+            "cause": cause,
+            "next_step": next_step_for(cause),
+            "status_cause": None if status_cause is None else CliStateCause(status_cause),
+            "log_ref": log_ref,
+            "url": url,
+            "user_code": user_code,
+        }
+    )
+    return cast("dict[str, JsonValue]", served.model_dump(mode="json", exclude_none=True))
 
 
 _PREDECESSORS = {
