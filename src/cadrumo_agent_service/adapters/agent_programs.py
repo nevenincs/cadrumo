@@ -197,14 +197,26 @@ def profile_agent_workspace(agent_root: Path) -> Path:
 
 
 def _root_key(base: Path) -> bytes:
+    """Return the storage root's key, making it once; a reader on another thread never sees it half written.
+
+    The key is written whole under a name of this attempt's own and published by a hard link,
+    which never replaces a key another attempt published first; the loser reads the winner's.
+    """
     path = base / _ROOT_KEY_NAME
-    try:
-        with path.open("xb") as handle:
-            key = secrets.token_bytes(_ROOT_KEY_BYTES)
-            handle.write(key)
+    if not path.exists():
+        key = secrets.token_bytes(_ROOT_KEY_BYTES)
+        staged = base / f"{_ROOT_KEY_NAME}.{secrets.token_hex(8)}.partial"
+        try:
+            with staged.open("xb") as handle:
+                handle.write(key)
+            os.link(staged, path)
+        except FileExistsError:
+            pass
+        else:
             return key
-    except FileExistsError:
-        key = path.read_bytes()
+        finally:
+            staged.unlink(missing_ok=True)
+    key = path.read_bytes()
     if len(key) != _ROOT_KEY_BYTES:
         raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_FAILED)
     return key
