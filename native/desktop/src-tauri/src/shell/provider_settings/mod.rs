@@ -589,7 +589,7 @@ mod tests {
                 Ok(if calls < 3 {
                     json!({"kind":"refused","code":"busy"})
                 } else {
-                    json!({"providers":[]})
+                    json!({"providers":[],"reads_pending":false})
                 })
             },
             Duration::ZERO,
@@ -610,7 +610,7 @@ mod tests {
                 Ok(if calls <= 20 {
                     json!({"kind":"refused","code":"busy"})
                 } else {
-                    json!({"providers":[]})
+                    json!({"providers":[],"reads_pending":false})
                 })
             },
             Duration::ZERO,
