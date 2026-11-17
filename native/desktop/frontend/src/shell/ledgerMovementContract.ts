@@ -640,3 +640,38 @@ export type LedgerMovementContracts = {
     result: LedgerUpdateOperationResult;
   };
 };
+
+export type LedgerAddWindowRequest = Omit<LedgerAddRequest, "profile_id">;
+
+export type LedgerAllocateWindowRequest = Omit<
+  LedgerAllocateRequest,
+  "profile_id"
+>;
+
+export type LedgerBulkClassifyWindowRequest = Omit<
+  LedgerBulkClassifyRequest,
+  "profile_id"
+>;
+
+export type LedgerClassifyWindowRequest = Omit<
+  LedgerClassifyRequest,
+  "profile_id"
+>;
+
+export type LedgerLifecycleMutationWindowRequest = Omit<
+  LedgerLifecycleMutationRequest,
+  "profile_id"
+>;
+
+export type LedgerMergeWindowRequest = Omit<LedgerMergeRequest, "profile_id">;
+
+export type LedgerOperatorIvaWindowRequest = Omit<
+  LedgerOperatorIvaRequest,
+  "profile_id"
+>;
+
+export type LedgerRemoveWindowRequest = Omit<LedgerRemoveRequest, "profile_id">;
+
+export type LedgerSplitWindowRequest = Omit<LedgerSplitRequest, "profile_id">;
+
+export type LedgerUpdateWindowRequest = Omit<LedgerUpdateRequest, "profile_id">;

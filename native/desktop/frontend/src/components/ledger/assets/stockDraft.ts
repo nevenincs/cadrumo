@@ -1,7 +1,7 @@
 import { heldDecimal } from "../../../shared/numbers";
 import type { PublicDecimal } from "../../../shell/ledger";
 import { canonicalDecimal } from "../../../shell/ledgerGrammar";
-import type { InventoryMovement } from "../../../shell/ledgerSetup";
+import type { InventoryMovementProjection } from "../../../shell/ledgerInventoryContract";
 import type { ProofSlotKey } from "./stockVocabulary";
 import { plays, type Vocabulary } from "./stockVocabulary";
 
@@ -116,7 +116,7 @@ export const bookTouched = (draft: BookDraft): boolean =>
 /** The draft a correction starts from: what the book kept of the movement,
  * so the person changes only what was wrong. */
 export function draftOfMovement(
-  movement: InventoryMovement,
+  movement: InventoryMovementProjection,
   vocabulary: Vocabulary,
 ): MovementDraft {
   const blank = blankMovement();

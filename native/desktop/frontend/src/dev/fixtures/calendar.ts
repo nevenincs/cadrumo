@@ -4,13 +4,8 @@ import type {
   OverviewFilingStatus,
   OverviewPeriodState,
 } from "../../shell/calendarContract";
-import type {
-  CalendarEntry,
-  CalendarEvent,
-  CalendarWarning,
-  FilingCalendar,
-  NotificationsSummary,
-} from "../../shell/views";
+import type { FilingCalendarServed } from "../../shell/calendarContract";
+import type { NotificationsSummary } from "../../shell/views";
 import {
   fixtureDay,
   fixtureInstant,
@@ -40,8 +35,8 @@ export const FIXTURE_STATUS: Record<OverviewPeriodState, ObligationStatus> = {
 
 /** What a fixture row sets beyond its Modelo, period and dates: any field of
  * the served row, and any of its filing evidence. */
-export type EntryChange = Partial<Omit<CalendarEntry, "filing_evidence">> & {
-  filing_evidence?: Partial<CalendarEntry["filing_evidence"]>;
+export type EntryChange = Partial<Omit<FilingCalendarServed["entries"][number], "filing_evidence">> & {
+  filing_evidence?: Partial<FilingCalendarServed["entries"][number]["filing_evidence"]>;
 };
 
 /** The fields the product decides from a calendar row rather than stores. */
@@ -51,7 +46,7 @@ type ProductDecided =
   | "filing_status_words"
   | "filing_status_words_language"
   | "scopes";
-type ServedRow = Omit<CalendarEntry, ProductDecided>;
+type ServedRow = Omit<FilingCalendarServed["entries"][number], ProductDecided>;
 
 // The fixture stands in for the product, so it serves these as the
 // product's calendar_models decides them: signed days from the evaluated
@@ -66,7 +61,7 @@ const productDaysUntilClose = (row: ServedRow): number | null =>
 
 const AEAT_FILING_STATUS: Partial<
   Record<
-    CalendarEntry["filing_evidence"]["aeat_submission_state"],
+    FilingCalendarServed["entries"][number]["filing_evidence"]["aeat_submission_state"],
     OverviewFilingStatus
   >
 > = {
@@ -125,7 +120,7 @@ export function calendarEntry(
   closes: string,
   change: EntryChange = {},
   evaluatedOn: string = FIXTURE_TODAY,
-): CalendarEntry {
+): FilingCalendarServed["entries"][number] {
   const {
     filing_evidence: evidence = {},
     days_until_close: count,
@@ -213,7 +208,7 @@ const ATTENTION_RANK: Record<OverviewPeriodState, number> = {
   unknown: 2,
   filed: 3,
 };
-const identity = (row: CalendarEntry): string[] => [
+const identity = (row: FilingCalendarServed["entries"][number]): string[] => [
   row.adjusted_closes_on,
   row.modelo,
   row.period,
@@ -226,12 +221,12 @@ const byKey = (a: (string | number)[], b: (string | number)[]): number => {
   }
   return 0;
 };
-const listKey = (row: CalendarEntry) => [
+const listKey = (row: FilingCalendarServed["entries"][number]) => [
   row.adjusted_closes_on.slice(0, 7),
   Number(row.status === "UNKNOWN"),
   ...identity(row),
 ];
-const attentionKey = (row: CalendarEntry) => [
+const attentionKey = (row: FilingCalendarServed["entries"][number]) => [
   ATTENTION_RANK[row.user_state],
   Number(row.status === "UNKNOWN"),
   ...identity(row),
@@ -240,8 +235,8 @@ const attentionKey = (row: CalendarEntry) => [
 /** A calendar as the product serves it: its entries in list order and its
  * attention order over them, whatever order the fixture wrote them in. */
 export function servedCalendar(
-  calendar: Omit<FilingCalendar, "attention_order">,
-): FilingCalendar {
+  calendar: Omit<FilingCalendarServed, "attention_order">,
+): FilingCalendarServed {
   const entries = [...calendar.entries].sort((a, b) =>
     byKey(listKey(a), listKey(b)),
   );
@@ -257,11 +252,11 @@ const entry = calendarEntry;
 
 /** Something the product observed, as it serves it to the window. */
 export function calendarEvent(
-  type: CalendarEvent["event_type"],
+  type: FilingCalendarServed["events"][number]["event_type"],
   on: string,
   summary: string,
-  change: Partial<CalendarEvent> = {},
-): CalendarEvent {
+  change: Partial<FilingCalendarServed["events"][number]> = {},
+): FilingCalendarServed["events"][number] {
   return {
     event_type: type,
     post_filing_kind: null,
@@ -291,7 +286,7 @@ export function calendarWarning(
   code: string,
   text: string | null,
   affected: string[] = [],
-): CalendarWarning {
+): FilingCalendarServed["warnings"][number] {
   return {
     code,
     message: `cli.overview.warning.${code}`,
@@ -304,7 +299,7 @@ export function calendarWarning(
   };
 }
 
-export const FIXTURE_CALENDAR: FilingCalendar = servedCalendar({
+export const FIXTURE_CALENDAR: FilingCalendarServed = servedCalendar({
   range: { from_date: fixtureDay(7, 1), to_date: fixtureDay(6, 30, 1) },
   support: {
     floor: fixtureYear - 4,
@@ -431,7 +426,7 @@ export const NEVER_CAPTURED: NotificationsSummary = {
   unread: 0,
 };
 
-const without = (keep: (entry: CalendarEntry) => boolean): FilingCalendar =>
+const without = (keep: (entry: FilingCalendarServed["entries"][number]) => boolean): FilingCalendarServed =>
   servedCalendar({
     ...FIXTURE_CALENDAR,
     entries: FIXTURE_CALENDAR.entries.filter(keep),
@@ -449,7 +444,7 @@ export const AHEAD_CALENDAR = without(
 );
 
 /** Today falls between two dates of one month: the month is split by it. */
-export const STRADDLING_CALENDAR: FilingCalendar = servedCalendar({
+export const STRADDLING_CALENDAR: FilingCalendarServed = servedCalendar({
   ...AHEAD_CALENDAR,
   entries: [
     entry("216", fixtureMonth(9), fixtureDay(9, 21), fixtureDay(10, 1), {
@@ -467,7 +462,7 @@ export const STRADDLING_CALENDAR: FilingCalendar = servedCalendar({
  * one whose earliest close is still ahead of today, among the closes of its
  * month, and one whose earliest close has passed, which is not known to be
  * late. Their dates are only the earliest each can close. */
-export const CLOSE_UNKNOWN_CALENDAR: FilingCalendar = servedCalendar({
+export const CLOSE_UNKNOWN_CALENDAR: FilingCalendarServed = servedCalendar({
   ...FIXTURE_CALENDAR,
   warnings: [],
   entries: [
@@ -484,7 +479,7 @@ export const CLOSE_UNKNOWN_CALENDAR: FilingCalendar = servedCalendar({
 });
 
 /** The same calendar with nothing due: an empty range is not a failed read. */
-export const EMPTY_CALENDAR: FilingCalendar = {
+export const EMPTY_CALENDAR: FilingCalendarServed = {
   ...FIXTURE_CALENDAR,
   entries: [],
   attention_order: [],
@@ -494,7 +489,7 @@ export const EMPTY_CALENDAR: FilingCalendar = {
 };
 
 /** Each reason the local projection can leave a modelo without a window. */
-export const ADVISED_CALENDAR: FilingCalendar = {
+export const ADVISED_CALENDAR: FilingCalendarServed = {
   ...FIXTURE_CALENDAR,
   coverage: {
     ...FIXTURE_CALENDAR.coverage,
@@ -509,7 +504,7 @@ export const ADVISED_CALENDAR: FilingCalendar = {
 };
 
 /** No dated entries does not mean no possible obligations. */
-export const ADVICE_ONLY_CALENDAR: FilingCalendar = {
+export const ADVICE_ONLY_CALENDAR: FilingCalendarServed = {
   ...EMPTY_CALENDAR,
   coverage: { ...ADVISED_CALENDAR.coverage, surfaced: [] },
 };
@@ -522,13 +517,13 @@ const WINDOWS_UNAVAILABLE_WARNING = calendarWarning(
 );
 
 /** A year with no deadline windows and so no rows: unknown, not nothing due. */
-export const UNKNOWN_YEAR_EMPTY_CALENDAR: FilingCalendar = {
+export const UNKNOWN_YEAR_EMPTY_CALENDAR: FilingCalendarServed = {
   ...EMPTY_CALENDAR,
   warnings: [WINDOWS_UNAVAILABLE_WARNING],
 };
 
 /** One year resolved and another not: the rows are shown, the gap is said. */
-export const UNKNOWN_YEAR_CALENDAR: FilingCalendar = {
+export const UNKNOWN_YEAR_CALENDAR: FilingCalendarServed = {
   ...FIXTURE_CALENDAR,
   warnings: [WINDOWS_UNAVAILABLE_WARNING],
 };

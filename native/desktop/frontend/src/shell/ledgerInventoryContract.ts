@@ -891,3 +891,83 @@ export type LedgerInventoryContracts = {
     result: InventoryValuationOperationProjection;
   };
 };
+
+export type InventoryClosingAuthorityRecordWindowRequest = Omit<
+  InventoryClosingAuthorityRecordRequest,
+  "profile_id"
+>;
+
+export type InventoryClosingValueRecordWindowRequest = Omit<
+  InventoryClosingValueRecordRequest,
+  "profile_id"
+>;
+
+export type InventoryCorrectWindowRequest = Omit<
+  InventoryCorrectRequest,
+  "profile_id"
+>;
+
+export type InventoryCreateWindowRequest = Omit<
+  InventoryCreateRequest,
+  "profile_id"
+>;
+
+export type InventoryDescribeWindowRequest = Omit<
+  InventoryDescribeRequest,
+  "profile_id"
+>;
+
+export type InventoryEvidenceAddWindowRequest = Omit<
+  InventoryEvidenceAddRequest,
+  "profile_id" | "source_directory"
+>;
+
+export type InventoryInspectWindowRequest = Omit<
+  InventoryInspectRequest,
+  "profile_id"
+>;
+
+export type InventoryListWindowRequest = Omit<
+  InventoryListRequest,
+  "profile_id"
+>;
+
+export type InventoryMovementAddWindowRequest = Omit<
+  InventoryMovementAddRequest,
+  "profile_id"
+>;
+
+export type InventoryMovementClaimWindowRequest = Omit<
+  InventoryMovementClaimRequest,
+  "profile_id"
+>;
+
+export type InventoryMovementCorrectWindowRequest = Omit<
+  InventoryMovementCorrectRequest,
+  "profile_id"
+>;
+
+export type InventoryMovementReverseWindowRequest = Omit<
+  InventoryMovementReverseRequest,
+  "profile_id"
+>;
+
+export type InventoryOptionsWindowRequest = Omit<
+  InventoryOptionsRequest,
+  "profile_id"
+>;
+
+export type InventoryRestoreWindowRequest = Omit<
+  InventoryRestoreRequest,
+  "profile_id"
+>;
+
+export type InventoryRetireWindowRequest = Omit<
+  InventoryRetireRequest,
+  "profile_id"
+>;
+
+export type InventoryValuationPreviewWindowRequest = Omit<
+  InventoryValuationPreviewRequest,
+  "profile_id"
+>;

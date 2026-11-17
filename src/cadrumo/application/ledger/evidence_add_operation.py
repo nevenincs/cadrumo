@@ -18,7 +18,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.decimal.grammar import DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG, host_filled_schema
 from ...core.operations import (
     OperationEffect,
     profile_operation_subject,
@@ -76,7 +76,7 @@ class LedgerEvidenceAddRequest(BaseModel):
 
     profile_id: UUID
     source_path: _EvidencePath
-    source_directory: _EvidencePath
+    source_directory: _EvidencePath = Field(json_schema_extra=host_filled_schema())
     supplier: _EvidenceLabel | None = None
     invoice_number: _EvidenceLabel | None = None
     invoice_date: _InvoiceDate | None = None
