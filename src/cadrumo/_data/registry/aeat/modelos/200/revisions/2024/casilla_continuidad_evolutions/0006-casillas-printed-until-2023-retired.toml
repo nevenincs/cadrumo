@@ -1232,3 +1232,27 @@ to_revision = "2024"
 evolution_kind = "retired"
 legal_refs = ["ley-27-2014:art-41"]
 source_refs = ["aeat-dr-200-2023", "aeat-dr-200-2024"]
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m200-dp200018-01217-2023-2024-retired"
+continuidad_id = "is-m200-dp200018b-01217"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2023", "aeat-dr-200-2024"]
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m200-dp200018-01218-2023-2024-retired"
+continuidad_id = "is-m200-dp200018b-01218"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2023", "aeat-dr-200-2024"]
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m200-dp200018-01219-2023-2024-retired"
+continuidad_id = "is-m200-dp200018b-01219"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2023", "aeat-dr-200-2024"]

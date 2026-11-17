@@ -2475,6 +2475,11 @@ modelo:
               the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS - Generation
               year - 2023 - DTAs pending application in future periods - Without a
               right of conversion into a claimable credit [01422]
+          '01423':
+            label: Conversion of deferred tax assets into enforceable credit against
+              the Tax Administration - Excess positive net tax liability - Generation
+              year - 2023 - Excess positive net tax due outstanding at the start of
+              the period [01423]
           '01424':
             label: Conversion of deferred tax assets into enforceable credit against
               the Tax Administration - Excess positive net tax liability - Generation
@@ -16816,6 +16821,18 @@ modelo:
             label: Deductions to incentivise certain activities - {year} Formula 1
               Spanish Grand Prix (F1) - Carried forward for application in future
               periods [02379]
+          is-m200-dp200018b-01217:
+            label: Deductions to incentivise certain activities - {year} Volunteer
+              World 2030/35th anniversary of the Spanish Volunteering Platform (V30)
+              - Deduction carried forward/generated [01217]
+          is-m200-dp200018b-01218:
+            label: Deductions to incentivise certain activities - {year} Volunteer
+              World 2030/35th anniversary of the Spanish Volunteering Platform (V30)
+              - Applied in this settlement [01218]
+          is-m200-dp200018b-01219:
+            label: Deductions to incentivise certain activities - {year} Volunteer
+              World 2030/35th anniversary of the Spanish Volunteering Platform (V30)
+              - Carried forward for application in future periods [01219]
           is-m200-dp200018b-01883:
             label: Deductions to incentivise certain activities - {year} Holy Jubilee
               Year of Saint Isidore the Labourer (JI) - Deduction carried forward/generated
@@ -20398,11 +20415,6 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2023 - Without repeated donations to the same entity - Carried forward
                 for application in future periods [01373]
-            '01423':
-              label: Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration - Excess positive net tax liability - Generation
-                year - 2023 - Excess positive net tax due outstanding at the start
-                of the period [01423]
             '01575':
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Transactions under art. 19 LIS other than change
