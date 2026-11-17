@@ -72,6 +72,10 @@
         "0",
         "--importe-integro",
         "24000",
+        "--reducciones-aplicables",
+        "0",
+        "--gastos-deducibles",
+        "0",
         "--payer-name",
         "Pagador Sintetico SL"
       ],
@@ -99,7 +103,13 @@
         "--period",
         "0A"
       ],
-      "captures": [],
+      "captures": [
+        {
+          "json_path": "result.work_unit_id",
+          "name": "work_unit_id",
+          "value": "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd"
+        }
+      ],
       "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
@@ -122,8 +132,6 @@
         "2025",
         "--period",
         "0A",
-        "--casilla",
-        "0003=24000",
         "--binding",
         "renta-base-liquidable-negativa-general-anterior=0",
         "--binding",
@@ -132,6 +140,26 @@
         "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
         "--binding",
         "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "attest-work-income",
+        "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd",
+        "--yes"
       ],
       "captures": [],
       "envelope": null,
@@ -197,6 +225,17 @@
               "period": "0A"
             },
             "message": "The exported file is not an AEAT filing receipt.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.export.trabajo_deduction_not_computed",
+            "context": {
+              "filing_year": "2025",
+              "modelo": "100",
+              "period": "0A"
+            },
+            "message": "Your work income does not include the deductions only you can evidence: union dues (0014), professional-body fees (0015), legal-defence costs (0016) and the increase for geographic mobility (0020). If any applies, the return overstates your tax. State it in those boxes.",
             "severity": "warning"
           },
           {
@@ -278,11 +317,11 @@
           }
         ],
         "result": {
-          "bucket_event_id": "e242cc241c46489dd8d5c49c73da847c308af9521d396a8db84066f979bd9c4b",
+          "bucket_event_id": "0a7dedb5cf6c24600137b50ae8ede4597a5d8bc822a38f0f4ab680dbcaaa1f6f",
           "bucket_id": "<bucket-id>",
           "byte_size": 2665,
-          "calculation_revision_id": "6bff74916279de4f2da1365058373f76b7c7037e65dbd634509eefdf1e6301ed",
-          "file_sha256": "2f29e6378e49abfc4492d780dbb5cd0fa0b3eb9c0cf7c840af77f7e18a640a52",
+          "calculation_revision_id": "f5c5bb265bc7b325280979ef8c4baa1aa0f6b3da890a386641a4ae7d8da5c8d4",
+          "file_sha256": "447bf85cf387fdc33ebe422e457c58a8960899389b0552309ce02ce24bd0955a",
           "filing_year": 2025,
           "format": "xml-dictionary",
           "iva_wallet_decision_provenance": null,

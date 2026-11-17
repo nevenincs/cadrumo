@@ -21,6 +21,7 @@ from ..compiler.fact_providers import (
 )
 from ..compiler.validator import RegistryValidator
 from ..maintenance_support import reset_registry_caches
+from .compiler_reset_support import held_authorities_kept_registered
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -117,6 +118,7 @@ def test_authority_reset_invokes_every_registered_provider_reset(monkeypatch: py
     registration = replace(FACT_PROVIDER_REGISTRATIONS[0], reset=lambda: resets.append("authored-facts"))
     monkeypatch.setattr(provider_module, "FACT_PROVIDER_REGISTRATIONS", (registration,))
 
-    reset_registry_caches()
+    with held_authorities_kept_registered():
+        reset_registry_caches()
 
     assert resets == ["authored-facts"]

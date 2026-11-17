@@ -352,7 +352,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tregistry.modelo.bindings.list\nauthority_generation\t9b0835db772ae5d73888d03d6eccf7182ba47a7ba24bcb333adc203f11bc3baf\nmodelo_filter\t130\nyear_filter\t2026\nperiod_filter\t1T\nmissing_filter\tFalse\nbinding_count\t9\nmodelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable\n130\t2019-y-siguientes\t1T\tmodelo-130-resultados-negativos-anteriores\tprevious_filing\tearlier declaration recorded as filed\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-pagos-fraccionados-anteriores\tprevious_filing\tearlier declaration recorded as filed\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tirpf.previous_year_economic_activity_net_income\tprevious_filing\tearlier declaration recorded as filed\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-ingresos-cumulative\tledger_renta_income_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-retenciones-cumulative\tledger_renta_income_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-gastos-cumulative\tledger_renta_gastos_pago_fraccionado_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-volumen-ingresos-agrario\tledger_renta_income_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-retenciones-agrarias\tledger_renta_income_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-estimacion-directa-modalidad\tprofile\tprofile fact\t-\tenum\tFalse\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tregistry.modelo.bindings.list\nauthority_generation\t5679f50b025a5e95da9777c8b5be72db978db4fc3fd9e8890e99a924be2746fb\nmodelo_filter\t130\nyear_filter\t2026\nperiod_filter\t1T\nmissing_filter\tFalse\nbinding_count\t9\nmodelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable\n130\t2019-y-siguientes\t1T\tmodelo-130-resultados-negativos-anteriores\tprevious_filing\tearlier declaration recorded as filed\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-pagos-fraccionados-anteriores\tprevious_filing\tearlier declaration recorded as filed\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tirpf.previous_year_economic_activity_net_income\tprevious_filing\tearlier declaration recorded as filed\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-ingresos-cumulative\tledger_renta_income_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-retenciones-cumulative\tledger_renta_income_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-gastos-cumulative\tledger_renta_gastos_pago_fraccionado_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-volumen-ingresos-agrario\tledger_renta_income_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-retenciones-agrarias\tledger_renta_income_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-estimacion-directa-modalidad\tprofile\tprofile fact\t-\tenum\tFalse\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -375,7 +375,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tregistry.modelo.bindings.list\nauthority_generation\t9b0835db772ae5d73888d03d6eccf7182ba47a7ba24bcb333adc203f11bc3baf\nmodelo_filter\t130\nyear_filter\t2026\nperiod_filter\t1T\nmissing_filter\tTrue\nbinding_count\t8\nmodelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable\n130\t2019-y-siguientes\t1T\tmodelo-130-resultados-negativos-anteriores\tprevious_filing\tearlier declaration recorded as filed\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-pagos-fraccionados-anteriores\tprevious_filing\tearlier declaration recorded as filed\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tirpf.previous_year_economic_activity_net_income\tprevious_filing\tearlier declaration recorded as filed\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-ingresos-cumulative\tledger_renta_income_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-retenciones-cumulative\tledger_renta_income_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-gastos-cumulative\tledger_renta_gastos_pago_fraccionado_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-volumen-ingresos-agrario\tledger_renta_income_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-retenciones-agrarias\tledger_renta_income_aggregation\tdata from your records\t-\tdecimal\tFalse\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tregistry.modelo.bindings.list\nauthority_generation\t5679f50b025a5e95da9777c8b5be72db978db4fc3fd9e8890e99a924be2746fb\nmodelo_filter\t130\nyear_filter\t2026\nperiod_filter\t1T\nmissing_filter\tTrue\nbinding_count\t8\nmodelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable\n130\t2019-y-siguientes\t1T\tmodelo-130-resultados-negativos-anteriores\tprevious_filing\tearlier declaration recorded as filed\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-pagos-fraccionados-anteriores\tprevious_filing\tearlier declaration recorded as filed\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tirpf.previous_year_economic_activity_net_income\tprevious_filing\tearlier declaration recorded as filed\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-ingresos-cumulative\tledger_renta_income_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-retenciones-cumulative\tledger_renta_income_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-actividad-economica-gastos-cumulative\tledger_renta_gastos_pago_fraccionado_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-volumen-ingresos-agrario\tledger_renta_income_aggregation\tdata from your records\t-\tdecimal\tFalse\n130\t2019-y-siguientes\t1T\tmodelo-130-retenciones-agrarias\tledger_renta_income_aggregation\tdata from your records\t-\tdecimal\tFalse\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -399,7 +399,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tregistry.modelo.bindings.resolve\nauthority_generation\t9b0835db772ae5d73888d03d6eccf7182ba47a7ba24bcb333adc203f11bc3baf\nmodelo\t130\nrevision\t2019-y-siguientes\nfiling_year\t2026\nperiod\t1T\noverride_count\t1\nbinding_count\t9\nbinding_id\tsource\treadiness\toverride\nmodelo-130-resultados-negativos-anteriores\tprevious_filing\tearlier declaration recorded as filed\t-\nmodelo-130-pagos-fraccionados-anteriores\tprevious_filing\tearlier declaration recorded as filed\t-\nirpf.previous_year_economic_activity_net_income\tprevious_filing\tearlier declaration recorded as filed\t0\nmodelo-130-actividad-economica-ingresos-cumulative\tledger_renta_income_aggregation\tdata from your records\t-\nmodelo-130-actividad-economica-retenciones-cumulative\tledger_renta_income_aggregation\tdata from your records\t-\nmodelo-130-actividad-economica-gastos-cumulative\tledger_renta_gastos_pago_fraccionado_aggregation\tdata from your records\t-\nmodelo-130-volumen-ingresos-agrario\tledger_renta_income_aggregation\tdata from your records\t-\nmodelo-130-retenciones-agrarias\tledger_renta_income_aggregation\tdata from your records\t-\nmodelo-130-estimacion-directa-modalidad\tprofile\tprofile fact\t-\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tregistry.modelo.bindings.resolve\nauthority_generation\t5679f50b025a5e95da9777c8b5be72db978db4fc3fd9e8890e99a924be2746fb\nmodelo\t130\nrevision\t2019-y-siguientes\nfiling_year\t2026\nperiod\t1T\noverride_count\t1\nbinding_count\t9\nbinding_id\tsource\treadiness\toverride\nmodelo-130-resultados-negativos-anteriores\tprevious_filing\tearlier declaration recorded as filed\t-\nmodelo-130-pagos-fraccionados-anteriores\tprevious_filing\tearlier declaration recorded as filed\t-\nirpf.previous_year_economic_activity_net_income\tprevious_filing\tearlier declaration recorded as filed\t0\nmodelo-130-actividad-economica-ingresos-cumulative\tledger_renta_income_aggregation\tdata from your records\t-\nmodelo-130-actividad-economica-retenciones-cumulative\tledger_renta_income_aggregation\tdata from your records\t-\nmodelo-130-actividad-economica-gastos-cumulative\tledger_renta_gastos_pago_fraccionado_aggregation\tdata from your records\t-\nmodelo-130-volumen-ingresos-agrario\tledger_renta_income_aggregation\tdata from your records\t-\nmodelo-130-retenciones-agrarias\tledger_renta_income_aggregation\tdata from your records\t-\nmodelo-130-estimacion-directa-modalidad\tprofile\tprofile fact\t-\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -449,7 +449,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "804a2f8402ee782c7f637b8b1827e252c089570c109f4b030e20ca310e1f9920",
+          "calculation_revision_id": "326055bcf8129e8c97c313b754e620a96ea44e26df59a4af898463af6f14488d",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",
@@ -599,7 +599,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 804a2f8402ee782c7f637b8b1827e252c089570c109f4b030e20ca310e1f9920 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 326055bcf8129e8c97c313b754e620a96ea44e26df59a4af898463af6f14488d (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -635,10 +635,21 @@
               "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
             },
             {
+              "contributor_binding_source": "ledger_renta_income_aggregation",
+              "contributor_source_kind": "ledger_renta_income_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_renta_income_aggregation",
+              "resolver_id": "ledger_renta_income_aggregation",
+              "source_ref": "bound_input:06"
+            },
+            {
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",
