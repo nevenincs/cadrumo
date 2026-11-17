@@ -25,6 +25,7 @@ from ..authority_location import bundled_authority_descriptor_path
 from ..authority_store import SQLiteAuthorityReader
 from ..schema import ModeloRevision
 from ..schema_references import SourceReference
+from ..schema_surfaces import CasillaEvolutionKind
 from ..snapshot_globals import SupportedFilingYearsCatalogue
 from ..temporal import RevisionSelectionMetadata
 
@@ -325,3 +326,28 @@ def revision_before_first_declaring(modelo_id: str, casilla_id: str) -> Revision
     if first == 0:
         raise LookupError(f"modelo {modelo_id}: casilla {casilla_id} is declared by the oldest revision")
     return revisions[first - 1]
+
+
+def revision_before_casilla_meaning(modelo_id: str, casilla_id: str) -> RevisionSelectionMetadata:
+    """Return the authored revision right before the one from which ``casilla_id`` holds its present meaning.
+
+    A box a later design repurposes keeps its number while the value it holds
+    changes meaning, so its present meaning starts at the target of its latest
+    repurposed evolution; any other box holds it from its first declaring revision.
+    """
+    revisions = authored_revisions(modelo_id)
+    with bundled_indexed_authority().operation() as operation:
+        loaded = [operation.revision(modelo_id, str(metadata.id)) for metadata in revisions]
+    start = next(index for index, revision in enumerate(loaded) if casilla_id in {c.id for c in revision.casillas})
+    lineages = {
+        casilla.continuidad_id for revision in loaded for casilla in revision.casillas if casilla.id == casilla_id
+    }
+    for index, revision in enumerate(loaded):
+        if any(
+            evolution.evolution_kind is CasillaEvolutionKind.REPURPOSED and evolution.continuidad_id in lineages
+            for evolution in revision.casilla_continuidad_evolutions
+        ):
+            start = max(start, index)
+    if start == 0:
+        raise LookupError(f"modelo {modelo_id}: casilla {casilla_id} holds its meaning from the oldest revision")
+    return revisions[start - 1]
