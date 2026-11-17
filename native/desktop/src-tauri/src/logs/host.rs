@@ -236,6 +236,10 @@ pub(super) fn entry(event: &Event) -> Entry {
                 "commandMs" => "command_ms",
                 "personMs" => "person_ms",
                 "spawnMs" => "spawn_ms",
+                "queueMs" => "queue_ms",
+                "creationLockMs" => "creation_lock_ms",
+                "createMs" => "create_ms",
+                "containMs" => "contain_ms",
                 "elapsedMs" => "elapsed_ms",
                 "packageAbi" => "package_abi",
                 "logLevel" => "log_level",
@@ -281,12 +285,16 @@ pub(super) fn entry(event: &Event) -> Entry {
         if let cadrumo_application::diagnostics::service::ServiceFact::AgentStartupTiming {
             command_ms,
             spawn_ms,
+            queue_ms,
+            creation_lock_ms,
+            create_ms,
+            contain_ms,
             person_ms,
             ..
         } = fact
         {
             message.push_str(&format!(
-                ": command {command_ms} ms, process launch {spawn_ms} ms, person session {person_ms} ms"
+                ": command {command_ms} ms, process launch {spawn_ms} ms (queue {queue_ms} ms, creation lock {creation_lock_ms} ms, create {create_ms} ms, contain {contain_ms} ms), person session {person_ms} ms"
             ));
         }
         if let cadrumo_application::diagnostics::service::ServiceFact::AgentAdmissionTiming {
@@ -857,6 +865,10 @@ mod tests {
                 generation: 2,
                 command_ms: 4,
                 spawn_ms: 350,
+                queue_ms: 3,
+                creation_lock_ms: 120,
+                create_ms: 180,
+                contain_ms: 45,
                 person_ms: 2400,
             },
         );
@@ -864,10 +876,14 @@ mod tests {
         assert_eq!(entries.len(), 1);
         assert_eq!(
             entries[0].message,
-            "agent_startup_timing: command 4 ms, process launch 350 ms, person session 2400 ms"
+            "agent_startup_timing: command 4 ms, process launch 350 ms (queue 3 ms, creation lock 120 ms, create 180 ms, contain 45 ms), person session 2400 ms"
         );
         assert_eq!(entries[0].context["service_command_ms"], 4);
         assert_eq!(entries[0].context["service_spawn_ms"], 350);
+        assert_eq!(entries[0].context["service_queue_ms"], 3);
+        assert_eq!(entries[0].context["service_creation_lock_ms"], 120);
+        assert_eq!(entries[0].context["service_create_ms"], 180);
+        assert_eq!(entries[0].context["service_contain_ms"], 45);
         assert_eq!(entries[0].context["service_person_ms"], 2400);
     }
 

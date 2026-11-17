@@ -533,9 +533,10 @@ class ProfileConnectionOperationMixin:
         profile_id: UUID,
         operation_ids: tuple[OperationId, ...],
         records_changed: bool = False,
+        settled: tuple[OperationId, ...] = (),
     ) -> None:
         """Cue each connection of this profile still observing one of the operations its worker reported."""
-        log_operation_cue_timing("fanout_start", operation_ids)
+        log_operation_cue_timing("fanout_start", operation_ids, settled=settled)
         cue_attempt_count = 0
         if records_changed:
             with self._guard:
@@ -558,7 +559,9 @@ class ProfileConnectionOperationMixin:
         for cue in cues:
             cue_attempt_count += 1
             self._events.publish_cue(cue)
-        log_operation_cue_timing("publish_cues_complete", operation_ids, cue_attempt_count=cue_attempt_count)
+        log_operation_cue_timing(
+            "publish_cues_complete", operation_ids, cue_attempt_count=cue_attempt_count, settled=settled
+        )
 
     @contextmanager
     def _language_observed_after(self: RuntimeProfileConnections, context: ConnectionContext) -> Generator[None]:

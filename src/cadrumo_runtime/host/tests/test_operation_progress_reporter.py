@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def test_stage_markers_run_outside_the_reporter_condition(monkeypatch: pytest.MonkeyPatch) -> None:
     stages: list[str] = []
-    reporter = OperationProgressReporter(lambda _batch: None)
+    reporter = OperationProgressReporter(lambda _batch, _settled: None)
     operation_id = new_operation_id()
 
     def record(stage: str, identifiers: tuple[OperationId, ...], **_kwargs: object) -> None:
@@ -52,6 +52,7 @@ class _Runtime:
         escape_first: bool = False,
     ) -> None:
         self.reports: list[tuple[OperationId, ...]] = []
+        self.settled: list[tuple[OperationId, ...]] = []
         self.at: list[float] = []
         self.in_flight = Event()
         self.release = Event()
@@ -61,10 +62,11 @@ class _Runtime:
         self._lock = Lock()
         self._reported = Condition(self._lock)
 
-    def send(self, batch: tuple[OperationId, ...]) -> None:
+    def send(self, batch: tuple[OperationId, ...], settled: tuple[OperationId, ...]) -> None:
         with self._lock:
             first = not self.reports
             self.reports.append(batch)
+            self.settled.append(settled)
             self.at.append(monotonic())
             self._reported.notify_all()
         self.arrived.set()
@@ -153,3 +155,19 @@ def test_close_delivers_what_is_pending_then_reports_nothing_more() -> None:
     reporter.close()
     reporter.committed(late)
     assert runtime.reports == [(first,), (pending,)]
+
+
+def test_a_settlement_is_reported_as_settled_until_the_runtime_takes_it() -> None:
+    # The first report is refused, so the settlement queued behind it is retried and still says so.
+    runtime = _Runtime(hold_first=True, fail_first=True)
+    reporter = OperationProgressReporter(runtime.send)
+    running, settling = new_operation_id(), new_operation_id()
+    reporter.committed(running)
+    assert runtime.in_flight.wait(5)
+    reporter.committed(settling, settled=True)
+    runtime.release.set()
+    assert runtime.wait_for_reports(2)
+    reporter.committed(settling)
+    reporter.close()
+    assert runtime.reports == [(running,), (running, settling), (settling,)]
+    assert runtime.settled == [(), (settling,), ()]
