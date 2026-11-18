@@ -157,6 +157,7 @@ class LedgerAddExecutor:
                     advisory_sector_unmatched=advisory_sector_unmatched,
                     advisory_input_classification=payload.input_classification,
                     advisory_sector_id=payload.prorrata_sector,
+                    language=payload.output_language,
                 )
                 await context.events.effect(
                     OperationEffect.UPDATED if result.bucket_event_ids else OperationEffect.NONE

@@ -4293,12 +4293,17 @@ application:
         overview_status: Review your tax obligations
         profile_archive_reconcile: Reconcile the profile archive
         profile_arrendamiento: Review your arrendamientos
+        profile_arrendamiento_add: Add the lease
+        profile_arrendamiento_edit: Correct the lease
+        profile_arrendamiento_remove: Remove the lease
         profile_ascendiente: Review your ascendientes
         profile_ascendiente_edit: Complete your ascendiente's details
         profile_complete_setup: Complete your profile setup
         profile_create: Create a profile
         profile_descendiente: Review your descendientes
         profile_edit: Edit your profile
+        profile_inmueble_add: Add the property
+        profile_inmueble_edit: Correct the property
         profile_list: Review your profiles
         profile_login: Open your profile
         profile_logout: Close your profile
@@ -4760,23 +4765,23 @@ application:
         any program using the profile store and try again.
       registration_label_blank: The profile name cannot be empty.
       rental_lease_has_ledger_rows: Lease %{row} is named by %{rows} ledger rows;
-        change or clear their link first with “%{door}”.
+        change or clear their link first.
       rental_lease_property_missing: The lease names property %{inmueble}, which is
-        not in your profile; add it first with “%{door}”.
+        not in your profile; add it first.
       rental_ledger_unreadable: The ledger of the profile could not be read, so the
         removal was not made. Nothing was changed.
       rental_principal_missing: The principal property %{principal} is not another
-        property in your profile; add it first with “%{door}”.
+        property in your profile; add it first.
       rental_property_has_accessories: Property %{inmueble} is the principal of accessory
-        properties (%{accessories}); change or clear their principal first with “%{door}”.
+        properties (%{accessories}); change or clear their principal first.
       rental_property_has_leases: Property %{inmueble} has leases (%{leases}); remove
-        them first with “%{door}”.
+        them first.
       rental_property_has_ledger_rows: Property %{row} is named by %{rows} ledger
-        rows; change or clear their link first with “%{door}”.
+        rows; change or clear their link first.
       rental_row_invalid: The fact “%{leaf}” is not valid or contradicts other facts
-        of the record; nothing was stored. Correct it and repeat “%{door}”.
+        of the record; nothing was stored. Correct it and try again.
       rental_tenant_id_invalid: A tenant's tax ID is not valid; check its letters
-        and digits or mark it as foreign, then repeat “%{door}”.
+        and digits or mark it as foreign, then try again.
       repository_classification_mismatch: Secure-object namespace %{namespace} is
         registered for sensitivity %{expected}, but the stored record's classification
         is %{classification}.

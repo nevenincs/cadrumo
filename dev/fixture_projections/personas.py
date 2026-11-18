@@ -21,19 +21,11 @@ from cadrumo.application.wizard.patch_edit import validate_profile_patch
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState
-from cadrumo.entrypoints.tests.persona_materialisation import (
-    PersonaMaterialisationError,
-    patch_answers,
-    year_envelope,
-)
-from cadrumo.tests.personas import (
-    IdentityCatalogue,
-    Persona,
-    PersonaCatalogueError,
-    YearEnvelope,
-    parse_identity_catalogue,
-    parse_persona,
-)
+from cadrumo.entrypoints.tests.persona_replay_requests import patch_answers
+from cadrumo.entrypoints.tests.persona_world import PersonaMaterialisationError, year_envelope
+from cadrumo.tests.persona_identities import parse_identity_catalogue
+from cadrumo.tests.persona_types import IdentityCatalogue, Persona, PersonaCatalogueError, YearEnvelope
+from cadrumo.tests.personas import parse_persona
 
 IDENTITIES_FILE: Final[str] = "identities.toml"
 ACTIVITY_SECTION: Final[str] = "activities"

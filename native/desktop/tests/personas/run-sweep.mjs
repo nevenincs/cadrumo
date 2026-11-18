@@ -304,6 +304,46 @@ function removeRoot(root, parent) {
   if (existsSync(resolved)) throw new Error(`${resolved} was not removed`);
 }
 
+/** Refusals a person can act on, which the host says below error. */
+const ACTIONABLE_REFUSALS = new Set([
+  "agent_signed_out",
+  "agent_provider_credential_missing",
+]);
+
+/**
+ * Why a run root must be kept for diagnosis, or null: its host recorded a
+ * failure or refused the agent, or its runtime logged an error. A sign-in or
+ * agent failure is diagnosed from these logs, which a removed root takes with it.
+ */
+export function keepReason(runRoot) {
+  const host = join(runRoot, "storage", "logs", "cadrumo-native.jsonl");
+  if (existsSync(host)) {
+    for (const line of readFileSync(host, "utf8").split(/\r?\n/)) {
+      if (!line.trim()) continue;
+      let record;
+      try {
+        record = JSON.parse(line);
+      } catch {
+        return "the host log has an unreadable record";
+      }
+      if (record.failure) return "the host recorded a failure";
+      const service = record.service;
+      if (
+        service?.event === "agent_refused" &&
+        !ACTIONABLE_REFUSALS.has(service.reason)
+      )
+        return `the host refused the agent: ${service.reason}`;
+    }
+  }
+  const runtime = join(runRoot, "storage", "logs", "cadrumo.log");
+  if (
+    existsSync(runtime) &&
+    /\[ERROR\]|\[CRITICAL\]/.test(readFileSync(runtime, "utf8"))
+  )
+    return "the runtime logged an error";
+  return null;
+}
+
 /** Why the case's lines do not meet the acceptance contract, or null. */
 export function lineProblem(lines, world, tree, persona) {
   const seen = new Set();
@@ -616,10 +656,22 @@ async function runCase(item, context) {
     result.note = String(error?.message ?? error);
     return result;
   } finally {
+    // A failed case, or one whose window logged a failure, keeps its root
+    // for diagnosis; every other root is removed.
+    let kept = null;
     try {
-      removeRoot(root, parent);
+      kept = result.ok ? keepReason(join(root, "run")) : "the case failed";
     } catch (error) {
-      result.note += ` | cleanup: ${error.message}`;
+      kept = `its logs could not be read: ${error.message}`;
+    }
+    if (kept) {
+      result.note += ` | root kept (${kept}): ${root}`;
+    } else {
+      try {
+        removeRoot(root, parent);
+      } catch (error) {
+        result.note += ` | cleanup: ${error.message}`;
+      }
     }
   }
 }

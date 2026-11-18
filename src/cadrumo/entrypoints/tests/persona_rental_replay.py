@@ -31,7 +31,7 @@ from ...domain.contribuyente.arrendamiento_record import InquilinoEdad
 from ...domain.contribuyente.inmueble_facts import ARRENDAMIENTO_SECTION, INMUEBLE_SECTION
 from ...domain.transactions.rental_link import RENTAL_LINK_IRPF_CATEGORY
 from ...domain.user_profile.values import UserProfileRecord
-from ...tests.personas import Persona, RentalLedgerLink, RentalProperty, YearEnvelope
+from ...tests.persona_types import Persona, RentalLedgerLink, RentalProperty, YearEnvelope
 
 type SettleOperation = Callable[[str, BaseModel], BaseModel | None]
 """Settles one registered operation against the persona's profile and returns its public result."""

@@ -53,14 +53,9 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.entrypoints.tests.modelo_filing_state_support import filing_state_of_form
-from cadrumo.entrypoints.tests.persona_materialisation import (
-    PERSONA_ACTOR,
-    MaterialisedPersona,
-    PersonaWorld,
-    materialised_persona,
-    run_operation,
-    settle_operation,
-)
+from cadrumo.entrypoints.tests.persona_materialisation import materialised_persona
+from cadrumo.entrypoints.tests.persona_operations import run_operation, settle_operation
+from cadrumo.entrypoints.tests.persona_world import PERSONA_ACTOR, MaterialisedPersona, PersonaWorld
 from cadrumo.tests.personas import read_persona
 
 from ..planner import PreparedReturn, plan_rows, prepare_return, registry_envelope, replay_scope, stated_values

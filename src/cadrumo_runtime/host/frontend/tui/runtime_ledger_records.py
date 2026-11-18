@@ -63,6 +63,8 @@ from cadrumo.application.ledger.view_operation import (
 )
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operator_actions.catalogue import lookup_action
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import output_language
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.invoices.errors import InvoiceValidationError
 from cadrumo.domain.transactions.errors import TransactionValidationError
@@ -249,7 +251,11 @@ class RuntimeLedgerRecordDoorsV1:
 
     async def transaction(self, transaction_id: str) -> LedgerTransactionProjection:
         """Resolve one transaction through ``ledger.view``."""
-        request = LedgerViewRequest(profile_id=self.profile_id, transaction_prefix=transaction_id)
+        request = LedgerViewRequest(
+            profile_id=self.profile_id,
+            transaction_prefix=transaction_id,
+            output_language=OutputLanguage(output_language()),
+        )
 
         def settle(
             result: LedgerViewProjection,
@@ -277,7 +283,11 @@ class RuntimeLedgerRecordDoorsV1:
         if await self.transaction(baseline.transaction_id) != baseline:
             raise TransactionValidationError(translated_message=_STALE_RECORD_KEY, context={})
         request = LedgerUpdateRequest(
-            profile_id=self.profile_id, transaction_id=baseline.transaction_id, patch=patch, patch_fields=fields
+            profile_id=self.profile_id,
+            transaction_id=baseline.transaction_id,
+            patch=patch,
+            patch_fields=fields,
+            output_language=OutputLanguage(output_language()),
         )
 
         def settle(
@@ -357,6 +367,7 @@ class RuntimeLedgerLinkSubmitterV1:
             profile_id=self._session.profile_id,
             transaction_id=submission.transaction_id,
             invoice_id=submission.invoice_id,
+            output_language=OutputLanguage(output_language()),
         )
 
         def settle(

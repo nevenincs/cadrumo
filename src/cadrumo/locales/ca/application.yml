@@ -4512,12 +4512,17 @@ application:
         overview_status: Revisa les teves obligacions tributàries
         profile_archive_reconcile: Concilia l'arxiu del perfil
         profile_arrendamiento: Revisa els teus arrendaments
+        profile_arrendamiento_add: Afegeix l'arrendament
+        profile_arrendamiento_edit: Corregeix l'arrendament
+        profile_arrendamiento_remove: Elimina l'arrendament
         profile_ascendiente: Revisa els teus ascendents
         profile_ascendiente_edit: Completa les dades del teu ascendent
         profile_complete_setup: Completa la configuració del teu perfil
         profile_create: Crea un perfil
         profile_descendiente: Revisa els teus descendents
         profile_edit: Edita el teu perfil
+        profile_inmueble_add: Afegeix l'immoble
+        profile_inmueble_edit: Corregeix l'immoble
         profile_list: Revisa els teus perfils
         profile_login: Obre el teu perfil
         profile_logout: Tanca el teu perfil
@@ -4995,23 +5000,23 @@ application:
         a provar.
       registration_label_blank: El nom del perfil no pot estar buit.
       rental_lease_has_ledger_rows: L'arrendament %{row} és anomenat per %{rows} files
-        del llibre; canvia o esborra'n abans el vincle amb «%{door}».
+        del llibre; canvia o esborra'n abans el vincle.
       rental_lease_property_missing: L'arrendament anomena l'immoble %{inmueble},
-        que no és al teu perfil; afegeix-lo abans amb «%{door}».
+        que no és al teu perfil; afegeix-lo abans.
       rental_ledger_unreadable: No s'ha pogut llegir el llibre del perfil, de manera
         que no s'ha fet l'eliminació. No s'ha canviat res.
       rental_principal_missing: L'immoble principal %{principal} no és un altre immoble
-        del teu perfil; afegeix-lo abans amb «%{door}».
+        del teu perfil; afegeix-lo abans.
       rental_property_has_accessories: L'immoble %{inmueble} és el principal d'annexos
-        (%{accessories}); canvia o esborra'n el principal abans amb «%{door}».
+        (%{accessories}); canvia o esborra'n abans el principal.
       rental_property_has_leases: L'immoble %{inmueble} té arrendaments (%{leases});
-        elimina'ls abans amb «%{door}».
+        elimina'ls abans.
       rental_property_has_ledger_rows: L'immoble %{row} és anomenat per %{rows} files
-        del llibre; canvia o esborra'n abans el vincle amb «%{door}».
+        del llibre; canvia o esborra'n abans el vincle.
       rental_row_invalid: La dada «%{leaf}» no és vàlida o contradiu altres dades
-        del registre; no s'ha desat res. Corregeix-la i repeteix «%{door}».
+        del registre; no s'ha desat res. Corregeix-la i torna-ho a provar.
       rental_tenant_id_invalid: El NIF d'un arrendatari no és vàlid; revisa'n les
-        lletres i xifres o marca'l com a estranger, i repeteix «%{door}».
+        lletres i xifres o marca'l com a estranger, i torna-ho a provar.
       repository_classification_mismatch: L'espai de noms d'objecte segur %{namespace}
         està registrat amb sensibilitat %{expected}, però la classificació del registre
         emmagatzemat és %{classification}.

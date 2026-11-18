@@ -15,6 +15,8 @@ from ...application.ledger.review_operation import (
 )
 from ...application.review.filter import LedgerReviewFilterSpec
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as active_output_language
 from .operation_ledger_prefix import normalise_ledger_transaction_id_prefix
 from .operation_ledger_prefix_read import read_ledger_prefix_projection
 
@@ -32,6 +34,7 @@ def read_ledger_review_for_cli(
         client,
         LedgerReviewRequest(
             profile_id=client.profile_id,
+            output_language=OutputLanguage(active_output_language()),
             filters=tuple(f"{clause.key}={clause.value}" for clause in spec.clauses),
             transaction_prefix=prefix,
         ),

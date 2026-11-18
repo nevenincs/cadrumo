@@ -25,7 +25,7 @@ from datetime import date
 from decimal import Decimal
 from xml.sax.saxutils import escape
 
-from .personas import Identity, LedgerRow, Persona, PersonaCatalogueError, PersonaDocument, YearEnvelope
+from .persona_types import Identity, LedgerRow, Persona, PersonaCatalogueError, PersonaDocument, YearEnvelope
 
 _CENT = Decimal("0.01")
 _FACTURAE_NAMESPACE = "http://www.facturae.gob.es/formato/Versiones/Facturaev3_2_2.xml"

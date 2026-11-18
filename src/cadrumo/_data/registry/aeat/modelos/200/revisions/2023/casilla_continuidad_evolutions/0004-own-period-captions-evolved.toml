@@ -1,0 +1,50 @@
+# Boxes whose 2023 caption differs from the 2022 caption only in wording.
+
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200018c-01073-2022-2023-label_evolved"
+continuidad_id = "01073"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200015-03243-2022-2023-label_evolved"
+continuidad_id = "03243"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200015-03244-2022-2023-label_evolved"
+continuidad_id = "03244"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200015-03317-2022-2023-label_evolved"
+continuidad_id = "03317"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200015-03320-2022-2023-label_evolved"
+continuidad_id = "03320"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200015-02492-2022-2023-label_evolved"
+continuidad_id = "02492"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]

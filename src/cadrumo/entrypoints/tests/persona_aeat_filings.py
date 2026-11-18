@@ -49,7 +49,7 @@ from ...core.time.clock import madrid_wall_clock_to_utc, now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...tests.pdf_fixtures import text_pdf_bytes
-from ...tests.personas import AeatFiling, Persona, YearEnvelope
+from ...tests.persona_types import AeatFiling, Persona, YearEnvelope
 from ..live_state_composition import FiledRegisterSource
 
 PRESENTED_TIME = time(10, 30)

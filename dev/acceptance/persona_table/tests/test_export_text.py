@@ -17,7 +17,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
+from cadrumo.entrypoints.tests.persona_world import year_envelope
 
 from ..export_text import check_export_text, declared_case_rule, violation_reason
 

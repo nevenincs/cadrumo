@@ -252,7 +252,9 @@ async def test_executor_loads_in_commit_and_passes_the_same_row_as_expected_curr
     )
     projection_calls: list[object] = []
 
-    def project(_profile_id: UUID, result: object) -> classify_result_contracts.LedgerClassifyOperationResult:
+    def project(
+        _profile_id: UUID, result: object, **_kwargs: object
+    ) -> classify_result_contracts.LedgerClassifyOperationResult:
         projection_calls.append(result)
         return public_result
 

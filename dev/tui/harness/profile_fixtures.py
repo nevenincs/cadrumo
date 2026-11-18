@@ -48,7 +48,8 @@ from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState, Pla
 from cadrumo.domain.user_profile.values import UserProfileRecord
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.ledger_action_composition import load_ledger_rows_for_rental_references
-from cadrumo.entrypoints.tests.persona_materialisation import materialised_persona, year_envelope
+from cadrumo.entrypoints.tests.persona_materialisation import materialised_persona
+from cadrumo.entrypoints.tests.persona_world import year_envelope
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.components.widgets import ContentScroll, DisclosureGroup
 from cadrumo.entrypoints.tui.profile.edit_screens import FieldEditScreen

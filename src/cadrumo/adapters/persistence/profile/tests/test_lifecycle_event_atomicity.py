@@ -56,7 +56,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.tests.personas import identity_catalogue
+from cadrumo.tests.persona_identities import identity_catalogue
 from cadrumo.tests.write_unit_recorder import WriteUnitRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

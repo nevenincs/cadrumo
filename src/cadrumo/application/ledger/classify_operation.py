@@ -111,6 +111,7 @@ class LedgerClassifyExecutor:
                     transaction=current,
                     bucket_event_ids=(),
                 ),
+                language=payload.output_language,
             )
             return ports, catalogue, transaction_id, patch
 
@@ -153,7 +154,9 @@ class LedgerClassifyExecutor:
                     # a known no-write effect.
                     await context.events.effect(OperationEffect.NONE)
                     return await refuse(exc)
-                projection = classification_result_from_action(payload.profile_id, result)
+                projection = classification_result_from_action(
+                    payload.profile_id, result, language=payload.output_language
+                )
                 await context.events.effect(
                     OperationEffect.UPDATED if result.bucket_event_ids else OperationEffect.NONE
                 )

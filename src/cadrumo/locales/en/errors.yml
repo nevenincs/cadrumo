@@ -182,9 +182,11 @@ errors:
     row: row
     schema_version: schema version
     section: section
+    source: source
     state: state
     status: status
     tax_year: tax year
+    terminal_condition: outcome
     value: value
     year: year
   error:

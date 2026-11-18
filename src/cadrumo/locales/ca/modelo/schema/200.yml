@@ -2082,10 +2082,6 @@ modelo:
             label: Limitació deduïbilitat despeses financeres - Límit art. 16.1 i
               16.2 LIS - h) Despeses financeres netes del període impositiu (= [f-g])
               [01248]
-          01249:
-            label: Limitació deduïbilitat despeses financeres - Límit art. 16.1 i
-              16.2 LIS - i) Límit a la deducció de despeses financeres netes (= 30%*
-              [i1-i2-i3-i4+i5-i6]) [01249]
           '01250':
             label: Limitació deduïbilitat despeses financeres - Límit art. 16.1 i
               16.2 LIS - i1) Resultat d'explotació (signe igual a cte. de pèrdues
@@ -2110,18 +2106,6 @@ modelo:
             label: Limitació deduïbilitat despeses financeres - Límit art. 16.1 i
               16.2 LIS - j) Addició per límit benefici operatiu no aplicat en els
               cinc exercicis anteriors [01255]
-          '01256':
-            label: Limitació deduïbilitat despeses financeres - Límit art. 16.1 i
-              16.2 LIS - l1) Despeses financeres netes del període impositiu deduïbles
-              ([h=l1+l2], ≥ 0) [01256]
-          '01257':
-            label: Limitació deduïbilitat despeses financeres - Límit art. 16.1 i
-              16.2 LIS - l2) Despeses financeres netes del període impositiu no deduïbles
-              (=[h - l1], ≥ 0) [01257]
-          '01260':
-            label: Limitació deduïbilitat despeses financeres - Límit art. 16.1 i
-              16.2 LIS - Total despeses financeres del període impositiu no deduïbles
-              (= [c2+l2]) [01260]
           '01275':
             label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
               - BI negatives generades dins del grup fiscal per l'entitat transmesa
@@ -2884,21 +2868,6 @@ modelo:
           '01606':
             label: Reserva de nivellació - Reducció base imposable - Total - Import
               integrat en la declaració per incompliment de requisits [01606]
-          01608:
-            label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
-              a ingressar com a conseqüència de la tramitació d''autoliquidacions
-              anteriors o liquidacions administratives corresponents al període impositiu
-              {year} - Gipuzkoa [01608]'
-          01609:
-            label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
-              a ingressar com a conseqüència de la tramitació d''autoliquidacions
-              anteriors o liquidacions administratives corresponents al període impositiu
-              {year} - Bizkaia [01609]'
-          '01610':
-            label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
-              a ingressar com a conseqüència de la tramitació d''autoliquidacions
-              anteriors o liquidacions administratives corresponents al període impositiu
-              {year} - Navarra [01610]'
           '01614':
             label: Deduccions per inversió a Canàries - Actius fixos 2023 - Deducció
               pendent/generada [01614]
@@ -2969,18 +2938,6 @@ modelo:
           01649:
             label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
               inclòs el 1r fraccionament - Navarra [01649]
-          '01654':
-            label: Tributació conjunta Estat i Adm. forals - Resultat inclòs en el
-              1r fraccionament de l'art. 19.1 LIS - Araba/Àlaba [01654]
-          '01655':
-            label: Tributació conjunta Estat i Adm. forals - Resultat inclòs en el
-              1r fraccionament de l'art. 19.1 LIS - Gipuzkoa [01655]
-          '01656':
-            label: Tributació conjunta Estat i Adm. forals - Resultat inclòs en el
-              1r fraccionament de l'art. 19.1 LIS - Bizkaia [01656]
-          '01657':
-            label: Tributació conjunta Estat i Adm. forals - Resultat inclòs en el
-              1r fraccionament de l'art. 19.1 LIS - Navarra [01657]
           01681:
             label: Operacions de l'art. 19 LIS diferents del canvi de residència a
               Estats membres de la Unió Europea o EEE - Disminució - Saldo pendent
@@ -4996,22 +4953,6 @@ modelo:
             label: Liquidació IV - Opció de fraccionament en supòsits de canvis de
               residència (art. 19.1 LIS) - 1r fraccionament - D. Forals/Navarra (Totals)
               [02484]
-          02487:
-            label: Liquidació IV - Opció de fraccionament en supòsits de canvis de
-              residència (art. 19.1 LIS) - Rectificativa - Resultat de l'autoliquidació
-              inclòs el 1r fraccionament de l'art. 19.1 LIS procedent d'una autoliquidació
-              anterior o liquidació administrativa corresponent al període impositiu
-              {year} - Estat [02487]
-          02488:
-            label: Liquidació IV - Opció de fraccionament en supòsits de canvis de
-              residència (art. 19.1 LIS) - Rectificativa - Resultat de l'autoliquidació
-              inclòs el 1r fraccionament de l'art. 19.1 LIS procedent d'una autoliquidació
-              anterior o liquidació administrativa corresponent al període impositiu
-              {year} - D. Forals/Navarra (Totals) [02488]
-          02489:
-            label: Liquidació IV - Opció de fraccionament en supòsits de canvis de
-              residència (art. 19.1 LIS) - Resultat inclòs el 1r fraccionament de
-              l'art. 19.1 LIS - Estat [02489]
           02495:
             label: 'Informació addicional per al càlcul de límits de deduccions -
               {year}: productor: deducció per produccions cinematogràfiques espanyoles
@@ -6113,18 +6054,6 @@ modelo:
             label: Despeses que siguin objecte de la deducció per inversions realitzades
               per les autoritats portuàries (art. 15 n) LIS) - Augment - Correccions
               de l'exercici - Permanents [03241]
-          '03242':
-            label: Liquidació IV - Opció de fraccionament en supòsits de canvis de
-              residència (art. 19.1 LIS) - Resultat inclòs el 1r fraccionament de
-              l'art. 19.1 LIS - D. Forals/Navarra (Totals) [03242]
-          '03243':
-            label: 'Conversió d''actius per impost diferit en crèdit exigible davant
-              l''Administració tributària (art. 130 LIS) - Rectificativa - Rectificativa:
-              Devolució acordada/compensada - Total [03243]'
-          '03244':
-            label: 'Conversió d''actius per impost diferit en crèdit exigible davant
-              l''Administració tributària (art. 130 LIS) - Rectificativa - Rectificativa:
-              Devolució acordada/compensada - Estat [03244]'
           '03247':
             help: Base de la deducció - B) Dades econòmiques
             label: B) Dades econòmiques. Base de la deducció
@@ -8017,16 +7946,6 @@ modelo:
           dp200026-01332:
             label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
               I+D+i insuf. quota - Total [01332]
-          dp200026-01583:
-            label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
-              a ingressar com a conseqüència de la tramitació d''autoliquidacions
-              anteriors o liquidacions administratives corresponents al període impositiu
-              {year} - Total [01583]'
-          dp200026-01585:
-            label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Devolució
-              acordada per l''Agència Tributària com a conseqüència de la tramitació
-              d''autoliquidacions anteriors o liquidacions administratives corresponents
-              al període impositiu {year} - Total [01585]'
           dp200026-01587:
             label: Tributació conjunta Estat i Adm. forals - Resultat de l'autoliquidació
               - Total [01587]
@@ -8044,10 +7963,6 @@ modelo:
             label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
               per impost diferit en crèdit exigible davant l''Administració tributària
               (art. 130 LIS) - Resultat de conversió: A ingressar - Total [02494]'
-          dp200026-03245:
-            label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
-              per impost diferit en crèdit exigible davant l''Administració tributària
-              (art. 130 LIS) - Rectificativa: Devolució - Total [03245]'
           dp200026-03319:
             label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
               per impost diferit en crèdit exigible davant l''Administració tributària
@@ -13024,8 +12939,6 @@ modelo:
           is-contribuyente-que-genera-deducciones-del-art-36-1-y-36-3-lis-con-financiacion-realizada-por-otros-contribuyentes:
             help: Indicador de contribuent que genera deduccions dels articles 36.1
               i 36.3 de la LIS amb finançament realitzat per altres contribuents [00044].
-            label: Contribuent que genera deduccions dels art. 36.1 i 36.3 LIS amb
-              finançament realitzat per altres contribuents [00044]
           is-conversion-activos-impuesto-diferido-cre-conversion-activos-impuesto-diferido-cre-abono:
             label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
               - Conversió actius impost diferit crèdit exigible davant Adm. tributària
@@ -13056,9 +12969,6 @@ modelo:
           is-cooperativa-compensacion-cuotas-2011-pendiente-inicio:
             label: Règ. cooperatives - Detall compensació quotes. 2011 Pendent d'aplicació
               al principi del període [00017]
-          is-cooperativa-cuota-integra-previa:
-            label: Liquidació III - base imposable - Només societats cooperatives
-              - Quota íntegra prèvia després de la reserva de nivellació [01331]
           is-cooperativa-especialmente-protegida:
             help: Indicador de cooperativa especialment protegida [00018].
             label: Cooperativa especialment protegida [00018]
@@ -13066,10 +12976,6 @@ modelo:
             label: Liquidació III - base imposable - Només societats cooperatives
               - Reserva de nivellació convertida en quotes (només entitats de l'art.
               101 LIS) - Disminucions [01286]
-          is-cooperativa-reversion-deterioro:
-            label: Liquidació III - base imposable - Només societats cooperatives
-              - Rendes corresponents a la reversió de deterioraments cooperatives
-              (a nivell quota) (DT 16a.8 LIS) - Disminucions [01510]
           is-correccion-adquisicion-participaciones-no-residentes-dt14-permanente-aumento:
             label: Adquisició de participacions en entitats no residents (DT 14a LIS)
               - Augment - Correccions de l'exercici - Permanents [03331]
@@ -16913,7 +16819,6 @@ modelo:
               (amb origen en l'exercici) [03047]
           is-opcion-art-39-2-lis:
             help: Indicador de l'opció de l'article 39.2 de la LIS [00059].
-            label: Opció art. 39.2 LIS [00059]
           is-opcion-art-39-3-lis:
             label: Opció art. 39.3 LIS [00090]
           is-opcion-art-46-2-lis-dp200001-00016:
@@ -16940,15 +16845,9 @@ modelo:
           is-participaciones-directas-d-c-eliminacion-del-deterioro-contable-incluido-en-p-y-g-art-1:
             help: Casella 1506 de la declaració anual de l'Impost sobre Societats,
               model 200.
-            label: Participacions directes en altres entitats. Correccions valoratives.
-              c) Eliminació del deteriorament comptable inclòs en pèrdues i guanys
-              (art. 13.2.b LIS)
           is-participaciones-directas-d-d-eliminacion-del-deterioro-de-valores-repr-de-partic-en-el:
             help: Casella 1809 de la declaració anual de l'Impost sobre Societats,
               model 200.
-            label: Participacions directes en altres entitats. Correccions valoratives.
-              d) Eliminació del deteriorament de valors representatius de participació
-              en el capital o fons propis (art. 15.k LIS)
           is-participaciones-directas-d-datos-de-la-declarante-ingresos-por-dividendos-recibidos-en:
             help: Casella 1503 de la declaració anual de l'Impost sobre Societats,
               model 200.
@@ -16957,20 +16856,12 @@ modelo:
           is-participaciones-directas-d-e-ajuste-por-la-disminucion-de-valor-originada-por-criterio:
             help: Casella 1810 de la declaració anual de l'Impost sobre Societats,
               model 200.
-            label: Participacions directes en altres entitats. Correccions valoratives.
-              e) Ajust per la disminució de valor originada pel criteri de valor raonable
-              (art. 15.l LIS)
           is-participaciones-directas-d-f-efecto-correccion-valorativa-en-la-bi-del-ejercicio-a-b-c:
             help: Casella 1507 de la declaració anual de l'Impost sobre Societats,
               model 200.
-            label: Participacions directes en altres entitats. Correccions valoratives.
-              f) Efecte de la correcció valorativa en la base imposable de l'exercici
           is-participaciones-directas-d-g-saldo-de-correcciones-fiscales-art-12-3-rdl-4-2004-pendien:
             help: Casella 1508 de la declaració anual de l'Impost sobre Societats,
               model 200.
-            label: Participacions directes en altres entitats. Correccions valoratives.
-              g) Saldo de correccions fiscals pendents a fi d'exercici (art. 12.3
-              RDL 4/2004)
           is-participaciones-directas-d-valor-en-libros-en-el-activo-de-la-declarante-de-la-particip:
             help: Casella 1502 del model 200.
             label: Valor en llibres (en l'actiu de la declarant) de la participació
@@ -17351,8 +17242,6 @@ modelo:
           is-regimen-especial-fusiones-escisiones-aportaciones-activos-y-canjes-valores-cap-vii-tit-vii:
             help: Indicador del règim especial de fusions, escissions, aportacions
               d'actius i bescanvis de valors del capítol VII, títol VII [00035].
-            label: Règim especial de fusions, escissions, aportacions d'actius i bescanvis
-              de valors (cap. VII, tít. VII) [00035]
           is-regimen-especial-hidrocarburos:
             help: Indicador del règim especial d'hidrocarburs [00034].
             label: Règim especial d'hidrocarburs [00034]
@@ -17774,11 +17663,6 @@ modelo:
             help: Indicador de tributació conjunta entre l'Estat, les diputacions
               i les comunitats forals [00028].
             label: Tributació conjunta Estat / diputacions / comunitats forals [00028]
-          is-tributacion-conjunta-estado-forales-rectificacion-importe:
-            label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
-              a ingressar com a conseqüència de la tramitació d''autoliquidacions
-              anteriors o liquidacions administratives corresponents al període impositiu
-              {year} - Araba/Àlaba [01607]'
           is-tributacion-conjunta-estado-y-adm-forales-abono-deducciones-producciones-extranjeras-en-canarias-total:
             label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
               per produccions estrangeres a Canàries - Total [01881]
@@ -17888,11 +17772,6 @@ modelo:
           is-tributacion-conjunta-estado-y-adm-forales-pagos-fraccionados-3-total:
             label: Tributació conjunta Estat i Adm. forals - Pagaments fraccionats
               3 - Total [00606]
-          is-tributacion-conjunta-estado-y-adm-forales-rectificativa-resultado-de-la-autoliquidacion-incluido-el-1e-total:
-            label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Resultat
-              de l''autoliquidació inclòs el 1r fraccionament de l''art. 19.1 LIS
-              procedent d''una autoliquidació anterior o liquidació administrativa
-              corresponent al període impositiu {year} - Total [02488]'
           is-tributacion-conjunta-estado-y-adm-forales-resultado-araba-alava:
             label: Tributació conjunta Estat i Adm. forals - Resultat - Araba/Àlaba
               [00494]
@@ -17903,9 +17782,6 @@ modelo:
               inclòs el 1r fraccionament - Total [02486]
           is-tributacion-conjunta-estado-y-adm-forales-resultado-gipuzkoa:
             label: Tributació conjunta Estat i Adm. forals - Resultat - Gipuzkoa [00495]
-          is-tributacion-conjunta-estado-y-adm-forales-resultado-incluido-en-el-1er-fraccionamiento-de-art-19-1-lis-total:
-            label: Tributació conjunta Estat i Adm. forals - Resultat inclòs en el
-              1r fraccionament de l'art. 19.1 LIS - Total [03242]
           is-tributacion-conjunta-estado-y-adm-forales-resultado-navarra:
             label: Tributació conjunta Estat i Adm. forals - Resultat - Navarra [00497]
           is-tributacion-conjunta-estado-y-adm-forales-resultado-total:
@@ -18079,21 +17955,6 @@ modelo:
               a activitats prioritàries de mecenatge i altres amb dret a deducció
               incrementada - 2015 sense reiteració de donacions a una mateixa entitat
               - Pendent d'aplicació en períodes futurs [00942]
-          priority-nonrecurrent-donation-2024-subperiod-applied:
-            label: Deducció donatius entitats sense fins lucratius - Donacions per
-              a activitats prioritàries de mecenatge i altres amb dret a deducció
-              incrementada - 2024(*) - Sense reiteració de donacions a una mateixa
-              entitat - Aplicat en aquesta liquidació [02695]
-          priority-nonrecurrent-donation-2024-subperiod-generated:
-            label: Deducció donatius entitats sense fins lucratius - Donacions per
-              a activitats prioritàries de mecenatge i altres amb dret a deducció
-              incrementada - 2024(*) - Sense reiteració de donacions a una mateixa
-              entitat - Deducció pendent/generada [02694]
-          priority-nonrecurrent-donation-2024-subperiod-remaining:
-            label: Deducció donatius entitats sense fins lucratius - Donacions per
-              a activitats prioritàries de mecenatge i altres amb dret a deducció
-              incrementada - 2024(*) - Sense reiteració de donacions a una mateixa
-              entitat - Pendent d'aplicació en períodes futurs [02696]
           priority-recurrent-donation-2015-remaining:
             label: Deducció donatius entitats sense fins lucratius - Donacions per
               a activitats prioritàries de mecenatge i altres amb dret a deducció
@@ -18607,6 +18468,11 @@ modelo:
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2022(*) Sense reiteració de donacions a una mateixa
                 entitat - Pendent d'aplicació en períodes futurs [01072]
+            '01073':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022(*) - Amb reiteració de donacions a una mateixa
+                entitat - Deducció pendent/generada [01073]
             '01074':
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
@@ -18675,6 +18541,33 @@ modelo:
                 i/o 83 LIS - d) Despeses financeres pendents de deduir de períodes
                 anteriors afectades per l'art. 16.5 i/o 83 LIS, deduïbles després
                 d'aquest límit ([b≥c1+d], ≥ 0) [01244]
+            01249:
+              label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
+                i 16.2 LIS - i) Límit a la deducció de despeses financeres netes (=
+                30%* [i1-i2-i3-i4+i5], mínim 1 milió d'euros si la despesa financera
+                neta ≥ 1 milió) [01249]
+            '01256':
+              label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
+                i 16.2 LIS - k1) Despeses financeres netes del període impositiu deduïbles
+                (≤ [i+j], [h=k1+k2], ≥ 0) [01256]
+            '01257':
+              label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
+                i 16.2 LIS - k2) Despeses financeres netes del període impositiu no
+                deduïbles (=[h - k1], ≤ [h - i], ≥ 0) [01257]
+            01258:
+              label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
+                i 16.2 LIS - l) Despeses financeres pendents de deduir de períodes
+                impositius anteriors per l'art. 16.5 i/o 83 LIS, deduïbles després
+                d'aplicar els 2 límits (≤ [d], ≥ 0) [01258]
+            01259:
+              label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
+                i 16.2 LIS - m) Despeses financeres pendents de deduir de períodes
+                impositius anteriors no afectades per l'art. 16.5 i/o 83 LIS, aplicades
+                [01259]
+            '01260':
+              label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
+                i 16.2 LIS - Total despeses financeres del període impositiu no deduïbles
+                (= [c2+k2]) [01260]
             '01303':
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
@@ -18683,6 +18576,10 @@ modelo:
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
                 (art. 130 LIS) - Compensació per conversió d'actius - Navarra [01308]
+            '01331':
+              label: Liquidació III - base imposable - Només societats cooperatives
+                - Quota íntegra prèvia després de la reserva de nivellació - Disminucions
+                [01331]
             01408:
               label: Dotacions deteriorament crèdits o altres actius - Exercici generació
                 - 2007 i anteriors - Dotacions pendents integració a principi període
@@ -18699,6 +18596,10 @@ modelo:
               label: Dotacions deteriorament crèdits o altres actius - Exercici generació
                 - 2007 i anteriors - Dotacions pendents integració períodes futurs
                 - Que no han complert condicions deduïbilitat fiscal [01476]
+            '01510':
+              label: Liquidació III - base imposable - Només societats cooperatives
+                - Rendes corresponents a la reversió de deterioraments cooperatives
+                (a nivell quota) (DT 16a.8 LIS) [01510]
             '01524':
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
@@ -18888,6 +18789,20 @@ modelo:
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
                 Total - AID pendents d'aplicació en períodes futurs - Sense dret de
                 conversió en crèdit exigible [01570]
+            '01576':
+              label: Liquidació III - base imposable - Règim especial de vaixells
+                i empreses navilieres a Canàries - Part de la base imposable que procedeixi
+                de la realització d'activitats a les quals s'aplica el règim especial,
+                després de la reserva d'anivellament [01576]
+            '01577':
+              label: Liquidació III - base imposable - Règim especial de vaixells
+                i empreses navilieres a Canàries - Part de la base imposable que procedeixi
+                de la realització de la resta d'activitats, després de la reserva
+                d'anivellament [01577]
+            01578:
+              label: 'Liquidació IV - Líquid a ingressar o a retornar - Complementària:
+                resultats a ingressar procedents d''autoliquidacions anteriors corresponents
+                al període impositiu {year} - Estat [01578]'
             01579:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Excés quota líquida positiva - Exercici generació - Total - Excés
@@ -18906,6 +18821,10 @@ modelo:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Excés quota líquida positiva - Exercici generació - Total - Excés
                 de quota líquida positiva pendent d'aplicació en períodes futurs [01582]
+            01584:
+              label: 'Liquidació IV - Líquid a ingressar o a retornar - Complementària:
+                devolucions acordades procedents d''autoliquidacions anteriors corresponents
+                al període impositiu {year} - Estat [01584]'
             01589:
               label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
                 - Impost estranger suportat pel contribuent, no deduïble per afectar
@@ -18918,6 +18837,74 @@ modelo:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
                 - Total 2008 a 2015 - AID convertits en crèdit [01591]
+            '01607':
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: resultats
+                a ingressar d''autoliquidacions anteriors {year} - Àlaba [01607]'
+            01608:
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: resultats
+                a ingressar d''autoliquidacions anteriors {year} - Guipúscoa [01608]'
+            01609:
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: resultats
+                a ingressar d''autoliquidacions anteriors {year} - Biscaia [01609]'
+            '01610':
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: resultats
+                a ingressar d''autoliquidacions anteriors {year} - Navarra [01610]'
+            '01611':
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: devolucions
+                acordades d''autoliquidacions anteriors {year} - Àlaba [01611]'
+            '01612':
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: devolucions
+                acordades d''autoliquidacions anteriors {year} - Guipúscoa [01612]'
+            '01613':
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: devolucions
+                acordades d''autoliquidacions anteriors {year} - Biscaia [01613]'
+            '01623':
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: devolucions
+                acordades d''autoliquidacions anteriors {year} - Navarra [01623]'
+            '01650':
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: resultat
+                de l''autoliquidació inclòs el 1r fraccionament procedent d''autoliquidacions
+                anteriors corresponents al període impositiu {year} - Àlaba [01650]'
+            '01651':
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: resultat
+                de l''autoliquidació inclòs el 1r fraccionament procedent d''autoliquidacions
+                anteriors corresponents al període impositiu {year} - Guipúscoa [01651]'
+            '01652':
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: resultat
+                de l''autoliquidació inclòs el 1r fraccionament procedent d''autoliquidacions
+                anteriors corresponents al període impositiu {year} - Biscaia [01652]'
+            '01653':
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: resultat
+                de l''autoliquidació inclòs el 1r fraccionament procedent d''autoliquidacions
+                anteriors corresponents al període impositiu {year} - Navarra [01653]'
+            '01654':
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: líquid
+                a ingressar inclòs el 1r fraccionament - Àlaba [01654]'
+            '01655':
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: líquid
+                a ingressar inclòs el 1r fraccionament - Guipúscoa [01655]'
+            '01656':
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: líquid
+                a ingressar inclòs el 1r fraccionament - Biscaia [01656]'
+            '01657':
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: líquid
+                a ingressar inclòs el 1r fraccionament - Navarra [01657]'
+            01658:
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Complementària: Devolució - Àlaba [01658]'
+            01659:
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Complementària: Devolució - Guipúscoa [01659]'
+            '01660':
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Complementària: Devolució - Biscaia [01660]'
+            '01661':
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Complementària: Devolució - Navarra [01661]'
             '01665':
               label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
                 per impost diferit en crèdit exigible davant l''Administració tributària
@@ -19202,6 +19189,17 @@ modelo:
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2017 Sense reiteració de donacions a una mateixa entitat
                 - Pendent d'aplicació en períodes futurs [02474]
+            02487:
+              label: 'Liquidació IV - Opció de fraccionament en supòsits de canvis
+                de residència (art. 19.1 LIS) - Líquid a ingressar - Complementària:
+                resultat de l''autoliquidació inclòs el 1r fraccionament de l''art.
+                19.1 LIS procedent d''autoliquidacions anteriors corresponents al
+                període impositiu {year} - Estat [02487]'
+            02492:
+              label: 'Liquidació IV - Conversió d''actius per impost diferit en crèdit
+                exigible davant l''Administració tributària (art. 130 LIS) - Líquid
+                a ingressar o a retornar - Resultat de conversió d''AID després de
+                regularització: a ingressar - Total [02492]'
             02578:
               label: Deducció del 30% de l'import de despeses d'amortització comptable
                 (excloses les empreses de reduïda dimensió) (art. 7 Llei 16/2012)
@@ -19524,6 +19522,26 @@ modelo:
               label: Valoració de béns i drets. Règim especial d'operacions de reestructuració
                 (capítol VII del títol VII LIS) - Disminució - Correccions de l'exercici
                 - Temporànies (amb origen en exercicis anteriors) [03148]
+            '03243':
+              label: 'Liquidació IV - Conversió d''actius per impost diferit en crèdit
+                exigible davant l''Administració tributària (art. 130 LIS) - Líquid
+                a ingressar o a retornar - Complementària: devolució acordada o compensada
+                - Total [03243]'
+            '03244':
+              label: 'Liquidació IV - Conversió d''actius per impost diferit en crèdit
+                exigible davant l''Administració tributària (art. 130 LIS) - Líquid
+                a ingressar o a retornar - Complementària: devolució acordada o compensada
+                - Estat [03244]'
+            '03317':
+              label: 'Liquidació IV - Conversió d''actius per impost diferit en crèdit
+                exigible davant l''Administració tributària (art. 130 LIS) - Líquid
+                a ingressar o a retornar - Resultat de conversió d''AID després de
+                regularització: Abonament - Total [03317]'
+            '03320':
+              label: 'Liquidació IV - Conversió d''actius per impost diferit en crèdit
+                exigible davant l''Administració tributària (art. 130 LIS) - Líquid
+                a ingressar o a retornar - Resultat de conversió d''AID després de
+                regularització: Compensació - Total [03320]'
             '03362':
               label: Entitats en règ. d'atribució de rendes const. a l'estranger amb
                 presència en territ. espanyol (art. 38 TRLIRNR) - Augment - Correccions
@@ -19540,6 +19558,33 @@ modelo:
               label: Entitats en règ. d'atribució de rendes const. a l'estranger amb
                 presència en territ. espanyol (art. 38 TRLIRNR) - Disminució - Correccions
                 de l'exercici - Temporànies (amb origen en exercicis anteriors) [03368]
+            '1506':
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                b) Eliminació del deteriorament comptable inclòs en pèrdues i guanys
+                (art. 13.2.b LIS)
+            '1507':
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                e) Efecte de la correcció valorativa en la base imposable de l'exercici
+            '1508':
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                f) Saldo de correccions fiscals pendents a fi d'exercici (art. 12.3
+                RDL 4/2004)
+            '1809':
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                c) Eliminació del deteriorament de valors representatius de participació
+                en el capital o fons propis (art. 15.k LIS)
+            '1810':
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                d) Ajust per la disminució de valor originada pel criteri de valor
+                raonable (art. 15.l LIS)
+            x-8h834c1g60o32ehg60o36d8:
+              label: Aplicació del règim especial de fusions, escissions, aportacions
+                d'actius i bescanvis de valors (cap. VII, tít. VII) [00035]
+            x-8h834c1g60o32ehg60o38d0:
+              label: Contribuent que aplica deduccions dels art. 36.1 i 36.3 LIS amb
+                finançament realitzat per altres contribuents [00044]
+            x-8h834c1g60o32ehg60o3ae8:
+              label: Opció art. 39.2 i 39.3 LIS [00059]
             x-8h834c1g60o32ehg60o3gc8:
               label: Filial d'un grup multinacional [00081]
             x-8h834c1g60o32ehg60o3gcg:
@@ -19567,11 +19612,79 @@ modelo:
                 per conversió d'actius per impost diferit en crèdit exigible davant
                 l'administració tributària (art. 130 LIS) - D. Forals/Navarra (Totals)
                 [01044]
+            x-8h834c1g60oj8ghq60ojae1j:
+              label: 'Liquidació IV - Líquid a ingressar o a retornar - Complementària:
+                resultats a ingressar procedents d''autoliquidacions anteriors corresponents
+                al període impositiu {year} - D. Forals/Navarra (Totals) [01583]'
+            x-8h834c1g60oj8ghq60ojae1l:
+              label: 'Liquidació IV - Líquid a ingressar o a retornar - Complementària:
+                devolucions acordades procedents d''autoliquidacions anteriors corresponents
+                al període impositiu {year} - D. Forals/Navarra (Totals) [01585]'
             x-8h834c1g60oj8ghq60p38e1m:
               label: Liquidació IV - Opció de fraccionament en supòsits de canvis
                 de residència (art. 19.1 LIS) - Resultat de l'autoliquidació inclòs
                 el 1r fraccionament de l'art. 19.1 LIS - D. Forals/Navarra (Totals)
                 [02486]
+            x-8h834c1g60oj8ghq60p38e1o:
+              label: 'Liquidació IV - Opció de fraccionament en supòsits de canvis
+                de residència (art. 19.1 LIS) - Líquid a ingressar - Complementària:
+                resultat de l''autoliquidació inclòs el 1r fraccionament de l''art.
+                19.1 LIS procedent d''autoliquidacions anteriors corresponents al
+                període impositiu {year} - D. Forals/Navarra (Totals) [02488]'
+            x-8h834c1g60oj8ghq60p38e1p:
+              label: Liquidació IV - Opció de fraccionament en supòsits de canvis
+                de residència (art. 19.1 LIS) - Líquid a ingressar - Líquid a ingressar
+                inclòs el 1r fraccionament de l'art. 19.1 LIS - Estat [02489]
+            x-8h834c1g60oj8ghq60p38e9g:
+              label: 'Liquidació IV - Conversió d''actius per impost diferit en crèdit
+                exigible davant l''Administració tributària (art. 130 LIS) - Líquid
+                a ingressar o a retornar - Resultat de conversió d''AID després de
+                regularització: Compensació - Estat [02490]'
+            x-8h834c1g60oj8ghq60p38e9h:
+              label: 'Liquidació IV - Conversió d''actius per impost diferit en crèdit
+                exigible davant l''Administració tributària (art. 130 LIS) - Líquid
+                a ingressar o a retornar - Resultat de conversió d''AID després de
+                regularització: Compensació - D. Forals/Navarra (Totals) [02491]'
+            x-8h834c1g60oj8ghq60p38e9j:
+              label: 'Liquidació IV - Conversió d''actius per impost diferit en crèdit
+                exigible davant l''Administració tributària (art. 130 LIS) - Líquid
+                a ingressar o a retornar - Resultat de conversió d''AID després de
+                regularització: a ingressar - Estat [02493]'
+            x-8h834c1g60oj8ghq60p38e9k:
+              label: 'Liquidació IV - Conversió d''actius per impost diferit en crèdit
+                exigible davant l''Administració tributària (art. 130 LIS) - Líquid
+                a ingressar o a retornar - Resultat de conversió d''AID després de
+                regularització: a ingressar - D. Forals/Navarra (Totals) [02494]'
+            x-8h834c1g60oj8ghq60pj4d1i:
+              label: Liquidació IV - Opció de fraccionament en supòsits de canvis
+                de residència (art. 19.1 LIS) - Líquid a ingressar - Líquid a ingressar
+                inclòs el 1r fraccionament de l'art. 19.1 LIS - D. Forals/Navarra
+                (Totals) [03242]
+            x-8h834c1g60oj8ghq60pj4d1l:
+              label: 'Liquidació IV - Conversió d''actius per impost diferit en crèdit
+                exigible davant l''Administració tributària (art. 130 LIS) - Líquid
+                a ingressar o a retornar - Complementària: devolució acordada o compensada
+                - D. Forals/Navarra (Totals) [03245]'
+            x-8h834c1g60oj8ghq60pj6c9o:
+              label: 'Liquidació IV - Conversió d''actius per impost diferit en crèdit
+                exigible davant l''Administració tributària (art. 130 LIS) - Líquid
+                a ingressar o a retornar - Resultat de conversió d''AID després de
+                regularització: Abonament - Estat [03318]'
+            x-8h834c1g60oj8ghq60pj6c9p:
+              label: 'Liquidació IV - Conversió d''actius per impost diferit en crèdit
+                exigible davant l''Administració tributària (art. 130 LIS) - Líquid
+                a ingressar o a retornar - Resultat de conversió d''AID després de
+                regularització: Abonament - D. Forals/Navarra (Totals) [03319]'
+            x-8h834c1g60ojiehg68pj0c8:
+              label: Detall de correccions del resultat de pèrdues i guanys - Correccions
+                al resultat del compte de pèrdues i guanys de l'exercici - Correcció
+                permanent (exclosa la correcció per l'Impost sobre Societats) - Augments
+                [02301]
+            x-8h834c1g60ojiehg68pj0cg:
+              label: Detall de correccions del resultat de pèrdues i guanys - Correccions
+                al resultat del compte de pèrdues i guanys de l'exercici - Correcció
+                permanent (exclosa la correcció per l'Impost sobre Societats) - Disminucions
+                [02302]
             x-8h834c1g60ojiehg68pj0d0:
               label: Detall de correccions del resultat de pèrdues i guanys - Correccions
                 al resultat del compte de pèrdues i guanys de l'exercici - Correcció
@@ -19584,6 +19697,23 @@ modelo:
               label: Detall de correccions del resultat de pèrdues i guanys - Correccions
                 al resultat del compte de pèrdues i guanys de l'exercici - Correcció
                 temporània amb origen en exercicis anteriors - Disminucions [02308]
+            x-8h834c1g60p3cehg64qjgco:
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: resultats
+                a ingressar d''autoliquidacions anteriors {year} - Total [01583]'
+            x-8h834c1g60p3cehg64qjgd8:
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: devolucions
+                acordades d''autoliquidacions anteriors {year} - Total [01585]'
+            x-8h834c1g60p3cehg68q3ge0:
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: resultat
+                de l''autoliquidació inclòs el 1r fraccionament procedent d''autoliquidacions
+                anteriors corresponents al període impositiu {year} - Total [02488]'
+            x-8h834c1g60p3cehg6cp38cg:
+              label: 'Tributació conjunta Estat i Adm. forals - Complementària: líquid
+                a ingressar inclòs el 1r fraccionament - Total [03242]'
+            x-8h834c1g60p3cehg6cp38d8:
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Complementària: Devolució - Total [03245]'
           field:
             label: Model 200, exercici 2022
         '2023':
@@ -19643,6 +19773,11 @@ modelo:
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2022 Sense reiteració de donacions a una mateixa entitat
                 - Pendent d'aplicació en períodes futurs [01072]
+            '01073':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 20222 - Amb reiteració de donacions a una mateixa entitat
+                - Deducció pendent/generada [01073]
             '01074':
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
@@ -19870,6 +20005,26 @@ modelo:
               label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
                 - Exempció sobre la renda obtinguda en la transmissió de valors d'entitats
                 no residents (art. 21.3, 21.10 i DT 40a LIS) - Disminucions [02185]
+            02492:
+              label: 'Conversió d''actius per impost diferit en crèdit exigible davant
+                l''Administració tributària (art. 130 LIS) - Líquid a ingressar o
+                a retornar - Resultat de conversió d''AID després de regularització:
+                a ingressar - Total [02492]'
+            02694:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2023 sense reiteració de donacions a una mateixa entitat
+                - Deducció pendent/generada [02694]
+            02695:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2023 sense reiteració de donacions a una mateixa entitat
+                - Aplicat en aquesta liquidació [02695]
+            02696:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2023 sense reiteració de donacions a una mateixa entitat
+                - Pendent d'aplicació en períodes futurs [02696]
             02786:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
@@ -19927,6 +20082,26 @@ modelo:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Excés quota líquida positiva - Exercici generació - 2023 - Excés
                 de quota líquida positiva pendent d'aplicació en períodes futurs [02799]
+            '03243':
+              label: 'Conversió d''actius per impost diferit en crèdit exigible davant
+                l''Administració tributària (art. 130 LIS) - Líquid a ingressar o
+                a retornar - Complementària: devolució acordada o compensada - Total
+                [03243]'
+            '03244':
+              label: 'Conversió d''actius per impost diferit en crèdit exigible davant
+                l''Administració tributària (art. 130 LIS) - Líquid a ingressar o
+                a retornar - Complementària: devolució acordada o compensada - Estat
+                [03244]'
+            '03317':
+              label: 'Conversió d''actius per impost diferit en crèdit exigible davant
+                l''Administració tributària (art. 130 LIS) - Líquid a ingressar o
+                a retornar - Resultat de conversió d''AID després de regularització:
+                Abonament - Total [03317]'
+            '03320':
+              label: 'Conversió d''actius per impost diferit en crèdit exigible davant
+                l''Administració tributària (art. 130 LIS) - Líquid a ingressar o
+                a retornar - Resultat de conversió d''AID després de regularització:
+                Compensació - Total [03320]'
             x-8h834c1g60oj4ehg60pj0e8:
               label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
                 - Altres supòsits de llibertat d'amortització (art. 12.3 a) i d) i
@@ -19949,6 +20124,41 @@ modelo:
                 i empreses navilieres a Canàries - Compensació de bases imposables
                 negatives de períodes anteriors de la part de base imposable de la
                 resta d'activitats [01890]
+            x-8h834c1g60ojaehg68q3ic0:
+              label: 'Conversió d''actius per impost diferit en crèdit exigible davant
+                l''Administració tributària (art. 130 LIS) - Líquid a ingressar o
+                a retornar - Resultat de conversió d''AID després de regularització:
+                Compensació - Estat [02490]'
+            x-8h834c1g60ojaehg68q3ic8:
+              label: 'Conversió d''actius per impost diferit en crèdit exigible davant
+                l''Administració tributària (art. 130 LIS) - Líquid a ingressar o
+                a retornar - Resultat de conversió d''AID després de regularització:
+                Compensació - D. Forals/Navarra (Totals) [02491]'
+            x-8h834c1g60ojaehg68q3ico:
+              label: 'Conversió d''actius per impost diferit en crèdit exigible davant
+                l''Administració tributària (art. 130 LIS) - Líquid a ingressar o
+                a retornar - Resultat de conversió d''AID després de regularització:
+                a ingressar - Estat [02493]'
+            x-8h834c1g60ojaehg68q3id0:
+              label: 'Conversió d''actius per impost diferit en crèdit exigible davant
+                l''Administració tributària (art. 130 LIS) - Líquid a ingressar o
+                a retornar - Resultat de conversió d''AID després de regularització:
+                a ingressar - D. Forals/Navarra (Totals) [02494]'
+            x-8h834c1g60ojaehg6cp38d8:
+              label: 'Conversió d''actius per impost diferit en crèdit exigible davant
+                l''Administració tributària (art. 130 LIS) - Líquid a ingressar o
+                a retornar - Complementària: devolució acordada o compensada - D.
+                Forals/Navarra (Totals) [03245]'
+            x-8h834c1g60ojaehg6cpj2e0:
+              label: 'Conversió d''actius per impost diferit en crèdit exigible davant
+                l''Administració tributària (art. 130 LIS) - Líquid a ingressar o
+                a retornar - Resultat de conversió d''AID després de regularització:
+                Abonament - Estat [03318]'
+            x-8h834c1g60ojaehg6cpj2e8:
+              label: 'Conversió d''actius per impost diferit en crèdit exigible davant
+                l''Administració tributària (art. 130 LIS) - Líquid a ingressar o
+                a retornar - Resultat de conversió d''AID després de regularització:
+                Abonament - D. Forals/Navarra (Totals) [03319]'
             x-8h834c1g60ojgehg60pj2d8:
               label: Deduccions per incentivar determ. activitats - 2023 Centenari
                 del Rugby a Espanya i de la Unió Esportiva Santboiana (CRE) - Deducció
@@ -19957,6 +20167,16 @@ modelo:
               label: Deduccions per incentivar determ. activitats - 2023 Centenari
                 del Rugby a Espanya i de la Unió Esportiva Santboiana (CRE) - Aplicat
                 en aquesta liquidació [00316]
+            x-8h834c1g60p30ghq60p36c1h:
+              label: Detall de correccions del resultat de pèrdues i guanys - Correccions
+                al resultat del compte de pèrdues i guanys de l'exercici - Correcció
+                permanent (exclosa la correcció per l'Impost sobre Societats) - Augments
+                [02301]
+            x-8h834c1g60p30ghq60p36c1i:
+              label: Detall de correccions del resultat de pèrdues i guanys - Correccions
+                al resultat del compte de pèrdues i guanys de l'exercici - Correcció
+                permanent (exclosa la correcció per l'Impost sobre Societats) - Disminucions
+                [02302]
             x-8h834c1g60p30ghq60p36c1k:
               label: Detall de correccions del resultat de pèrdues i guanys - Correccions
                 al resultat del compte de pèrdues i guanys de l'exercici - Correcció
@@ -20138,6 +20358,18 @@ modelo:
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
                 2022 - AID pendents d'aplicació en períodes futurs - Sense dret de
                 conversió en crèdit exigible [01133]
+            01249:
+              label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
+                i 16.2 LIS - i) Límit a la deducció de despeses financeres netes (=
+                30%* [i1-i2-i3-i4+i5-i6]) [01249]
+            '01256':
+              label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
+                i 16.2 LIS - l1) Despeses financeres netes del període impositiu deduïbles
+                ([h=l1+l2], ≥ 0) [01256]
+            '01257':
+              label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
+                i 16.2 LIS - l2) Despeses financeres netes del període impositiu no
+                deduïbles (=[h - l1], ≥ 0) [01257]
             01258:
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
                 i 16.2 LIS - m) Despeses financeres pendents de deduir de períodes
@@ -20148,6 +20380,10 @@ modelo:
                 i 16.2 LIS - n) Despeses financeres pendents de deduir de períodes
                 impositius anteriors no afectades per l'art. 16.5 i/o 83 LIS, aplicades
                 [01259]
+            '01260':
+              label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
+                i 16.2 LIS - Total despeses financeres del període impositiu no deduïbles
+                (= [c2+l2]) [01260]
             '01300':
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
@@ -20178,6 +20414,9 @@ modelo:
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2023 - Sense reiteració de donacions a una mateixa
                 entitat - Deducció pendent/generada [01329]
+            '01331':
+              label: Liquidació III - base imposable - Només societats cooperatives
+                - Quota íntegra prèvia després de la reserva de nivellació [01331]
             '01334':
               label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
                 I+D+i insuf. quota - Araba/Àlaba [01334]
@@ -20206,6 +20445,10 @@ modelo:
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2023 - Sense reiteració de donacions a una mateixa
                 entitat - Pendent d'aplicació en períodes futurs [01373]
+            '01510':
+              label: Liquidació III - base imposable - Només societats cooperatives
+                - Rendes corresponents a la reversió de deterioraments cooperatives
+                (a nivell quota) (DT 16a.8 LIS) - Disminucions [01510]
             '01515':
               label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2024
                 - Deducció pendent/generada [01515]
@@ -20235,6 +20478,26 @@ modelo:
                 Tributària com a conseqüència de la tramitació d'autoliquidacions
                 anteriors o liquidacions administratives corresponents al període
                 impositiu {year} - Estat [01584]
+            '01607':
+              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
+                a ingressar com a conseqüència de la tramitació d''autoliquidacions
+                anteriors o liquidacions administratives corresponents al període
+                impositiu {year} - Araba/Àlaba [01607]'
+            01608:
+              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
+                a ingressar com a conseqüència de la tramitació d''autoliquidacions
+                anteriors o liquidacions administratives corresponents al període
+                impositiu {year} - Gipuzkoa [01608]'
+            01609:
+              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
+                a ingressar com a conseqüència de la tramitació d''autoliquidacions
+                anteriors o liquidacions administratives corresponents al període
+                impositiu {year} - Bizkaia [01609]'
+            '01610':
+              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
+                a ingressar com a conseqüència de la tramitació d''autoliquidacions
+                anteriors o liquidacions administratives corresponents al període
+                impositiu {year} - Navarra [01610]'
             '01611':
               label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Devolució
                 acordada per l''Agència Tributària com a conseqüència de la tramitació
@@ -20329,6 +20592,18 @@ modelo:
                 de l''autoliquidació inclòs el 1r fraccionament de l''art. 19.1 LIS
                 procedent d''una autoliquidació anterior o liquidació administrativa
                 corresponent al període impositiu {year} - Navarra [01653]'
+            '01654':
+              label: Tributació conjunta Estat i Adm. forals - Resultat inclòs en
+                el 1r fraccionament de l'art. 19.1 LIS - Araba/Àlaba [01654]
+            '01655':
+              label: Tributació conjunta Estat i Adm. forals - Resultat inclòs en
+                el 1r fraccionament de l'art. 19.1 LIS - Gipuzkoa [01655]
+            '01656':
+              label: Tributació conjunta Estat i Adm. forals - Resultat inclòs en
+                el 1r fraccionament de l'art. 19.1 LIS - Bizkaia [01656]
+            '01657':
+              label: Tributació conjunta Estat i Adm. forals - Resultat inclòs en
+                el 1r fraccionament de l'art. 19.1 LIS - Navarra [01657]
             01658:
               label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
                 per impost diferit en crèdit exigible davant l''Administració tributària
@@ -20486,6 +20761,12 @@ modelo:
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - 2024(*) sense reiteració de donacions a una mateixa
                 entitat- deducció pendent/generada [02471]
+            02487:
+              label: Liquidació IV - Opció de fraccionament en supòsits de canvis
+                de residència (art. 19.1 LIS) - Rectificativa - Resultat de l'autoliquidació
+                inclòs el 1r fraccionament de l'art. 19.1 LIS procedent d'una autoliquidació
+                anterior o liquidació administrativa corresponent al període impositiu
+                {year} - Estat [02487]
             02492:
               label: 'Conversió d''actius per impost diferit en crèdit exigible davant
                 l''Administració tributària (art. 130 LIS) - Rectificativa - Resultat
@@ -20511,6 +20792,21 @@ modelo:
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - 2024(*) - Amb reiteració de donacions a una mateixa
                 entitat - Pendent d'aplicació en períodes futurs [02693]
+            02694:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2024(*) - Sense reiteració de donacions a una mateixa
+                entitat - Deducció pendent/generada [02694]
+            02695:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2024(*) - Sense reiteració de donacions a una mateixa
+                entitat - Aplicat en aquesta liquidació [02695]
+            02696:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2024(*) - Sense reiteració de donacions a una mateixa
+                entitat - Pendent d'aplicació en períodes futurs [02696]
             02697:
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
@@ -20646,6 +20942,14 @@ modelo:
                 de generació - 2024 - Dotacions pendents d'integració en períodes
                 futurs - Que no han complert les condicions de deduïbilitat fiscal
                 [02806]
+            '03243':
+              label: 'Conversió d''actius per impost diferit en crèdit exigible davant
+                l''Administració tributària (art. 130 LIS) - Rectificativa - Rectificativa:
+                Devolució acordada/compensada - Total [03243]'
+            '03244':
+              label: 'Conversió d''actius per impost diferit en crèdit exigible davant
+                l''Administració tributària (art. 130 LIS) - Rectificativa - Rectificativa:
+                Devolució acordada/compensada - Estat [03244]'
             '03317':
               label: 'Conversió d''actius per impost diferit en crèdit exigible davant
                 l''Administració tributària (art. 130 LIS) - Rectificativa - Resultat
@@ -20655,6 +20959,33 @@ modelo:
                 l''Administració tributària (art. 130 LIS) - Rectificativa - Resultat
                 de conversió d''AID després de regularització: Compensació - Total
                 [03320]'
+            '1506':
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                c) Eliminació del deteriorament comptable inclòs en pèrdues i guanys
+                (art. 13.2.b LIS)
+            '1507':
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                f) Efecte de la correcció valorativa en la base imposable de l'exercici
+            '1508':
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                g) Saldo de correccions fiscals pendents a fi d'exercici (art. 12.3
+                RDL 4/2004)
+            '1809':
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                d) Eliminació del deteriorament de valors representatius de participació
+                en el capital o fons propis (art. 15.k LIS)
+            '1810':
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                e) Ajust per la disminució de valor originada pel criteri de valor
+                raonable (art. 15.l LIS)
+            x-8h834c1g60o32ehg60o36d8:
+              label: Règim especial de fusions, escissions, aportacions d'actius i
+                bescanvis de valors (cap. VII, tít. VII) [00035]
+            x-8h834c1g60o32ehg60o38d0:
+              label: Contribuent que genera deduccions dels art. 36.1 i 36.3 LIS amb
+                finançament realitzat per altres contribuents [00044]
+            x-8h834c1g60o32ehg60o3ae8:
+              label: Opció art. 39.2 LIS [00059]
             x-8h834c1g60o3gehg60rjidg:
               label: Compte de pèrdues i guanys (II) - Operacions continuades - Interessos
                 i retorn obligatori de les aportacions al capital social i d'altres
@@ -20684,6 +21015,20 @@ modelo:
                 Tributària com a conseqüència de la tramitació d'autoliquidacions
                 anteriors o liquidacions administratives corresponents al període
                 impositiu {year} - D. Forals/Navarra (Totals) [01585]
+            x-8h834c1g60oj8ghq60p38e1o:
+              label: Liquidació IV - Opció de fraccionament en supòsits de canvis
+                de residència (art. 19.1 LIS) - Rectificativa - Resultat de l'autoliquidació
+                inclòs el 1r fraccionament de l'art. 19.1 LIS procedent d'una autoliquidació
+                anterior o liquidació administrativa corresponent al període impositiu
+                {year} - D. Forals/Navarra (Totals) [02488]
+            x-8h834c1g60oj8ghq60p38e1p:
+              label: Liquidació IV - Opció de fraccionament en supòsits de canvis
+                de residència (art. 19.1 LIS) - Resultat inclòs el 1r fraccionament
+                de l'art. 19.1 LIS - Estat [02489]
+            x-8h834c1g60oj8ghq60pj4d1i:
+              label: Liquidació IV - Opció de fraccionament en supòsits de canvis
+                de residència (art. 19.1 LIS) - Resultat inclòs el 1r fraccionament
+                de l'art. 19.1 LIS - D. Forals/Navarra (Totals) [03242]
             x-8h834c1g60ojaehg60o3ic8:
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Compensació
@@ -20751,6 +21096,28 @@ modelo:
             x-8h834c1g60p3cehg60q3ge0:
               label: Tributació conjunta Estat i Adm. forals - Interessos de demora
                 - Bizkaia [00488]
+            x-8h834c1g60p3cehg64qjgco:
+              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
+                a ingressar com a conseqüència de la tramitació d''autoliquidacions
+                anteriors o liquidacions administratives corresponents al període
+                impositiu {year} - Total [01583]'
+            x-8h834c1g60p3cehg64qjgd8:
+              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Devolució
+                acordada per l''Agència Tributària com a conseqüència de la tramitació
+                d''autoliquidacions anteriors o liquidacions administratives corresponents
+                al període impositiu {year} - Total [01585]'
+            x-8h834c1g60p3cehg68q3ge0:
+              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Resultat
+                de l''autoliquidació inclòs el 1r fraccionament de l''art. 19.1 LIS
+                procedent d''una autoliquidació anterior o liquidació administrativa
+                corresponent al període impositiu {year} - Total [02488]'
+            x-8h834c1g60p3cehg6cp38cg:
+              label: Tributació conjunta Estat i Adm. forals - Resultat inclòs en
+                el 1r fraccionament de l'art. 19.1 LIS - Total [03242]
+            x-8h834c1g60p3cehg6cp38d8:
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Rectificativa: Devolució - Total [03245]'
           field:
             label: Model 200, exercici 2024
         2025-y-siguientes:
@@ -21152,6 +21519,18 @@ modelo:
                 i/o 83 LIS - d) Despeses financeres pendents de deduir en períodes
                 anteriors afectades per art. 16.5 i/o 83 LIS, deduïbles després d'aquest
                 límit ([b≥c1+d], ≥ 0]
+            01249:
+              label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
+                i 16.2 LIS - i) Límit a la deducció de despeses financeres netes (=
+                30%* [i1-i2-i3-i4+i5-i6]) [01249]
+            '01256':
+              label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
+                i 16.2 LIS - l1) Despeses financeres netes del període impositiu deduïbles
+                ([h=l1+l2], ≥ 0) [01256]
+            '01257':
+              label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
+                i 16.2 LIS - l2) Despeses financeres netes del període impositiu no
+                deduïbles (=[h - l1], ≥ 0) [01257]
             01258:
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
                 i 16.2 LIS - m) Despeses financeres pendents de deduir en períodes
@@ -21161,6 +21540,10 @@ modelo:
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
                 i 16.2 LIS - n) Despeses financeres pendents de deduir de períodes
                 impositius anteriors no afectades per art. 16.5 i/o 83 LIS aplicades
+            '01260':
+              label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
+                i 16.2 LIS - Total despeses financeres del període impositiu no deduïbles
+                (= [c2+l2]) [01260]
             '01300':
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
@@ -21199,6 +21582,9 @@ modelo:
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2023 - Sense reiteració de donacions a una mateixa
                 entitat - Deducció pendent/generada
+            '01331':
+              label: Liquidació III - base imposable - Només societats cooperatives
+                - Quota íntegra prèvia després de la reserva de nivellació [01331]
             '01334':
               label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
                 I+D+i insuf. quota - Araba/Àlaba [01334]
@@ -21310,6 +21696,10 @@ modelo:
               label: Dotacions deteriorament crèdits o altres actius - Exercici generació
                 - 2007 i anteriors - Dotacions pendents integració períodes futurs
                 - Que no han complert condicions deduïbilitat fiscal
+            '01510':
+              label: Liquidació III - base imposable - Només societats cooperatives
+                - Rendes corresponents a la reversió de deterioraments cooperatives
+                (a nivell quota) (DT 16a.8 LIS) - Disminucions [01510]
             '01515':
               label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2024
                 - Deducció pendent/generada [01515]
@@ -21556,6 +21946,26 @@ modelo:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
                 - Total 2008 a 2015 - AID convertits en crèdit
+            '01607':
+              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
+                a ingressar com a conseqüència de la tramitació d''autoliquidacions
+                anteriors o liquidacions administratives corresponents al període
+                impositiu {year} - Araba/Àlaba [01607]'
+            01608:
+              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
+                a ingressar com a conseqüència de la tramitació d''autoliquidacions
+                anteriors o liquidacions administratives corresponents al període
+                impositiu {year} - Gipuzkoa [01608]'
+            01609:
+              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
+                a ingressar com a conseqüència de la tramitació d''autoliquidacions
+                anteriors o liquidacions administratives corresponents al període
+                impositiu {year} - Bizkaia [01609]'
+            '01610':
+              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
+                a ingressar com a conseqüència de la tramitació d''autoliquidacions
+                anteriors o liquidacions administratives corresponents al període
+                impositiu {year} - Navarra [01610]'
             '01611':
               label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Devolució
                 acordada per l''Agència Tributària com a conseqüència de la tramitació
@@ -21650,6 +22060,18 @@ modelo:
                 de l''autoliquidació inclòs el 1r fraccionament de l''art. 19.1 LIS
                 procedent d''una autoliquidació anterior o liquidació administrativa
                 corresponent al període impositiu 2025 - Navarra'
+            '01654':
+              label: Tributació conjunta Estat i Adm. forals - Resultat inclòs en
+                el 1r fraccionament de l'art. 19.1 LIS - Araba/Àlaba [01654]
+            '01655':
+              label: Tributació conjunta Estat i Adm. forals - Resultat inclòs en
+                el 1r fraccionament de l'art. 19.1 LIS - Gipuzkoa [01655]
+            '01656':
+              label: Tributació conjunta Estat i Adm. forals - Resultat inclòs en
+                el 1r fraccionament de l'art. 19.1 LIS - Bizkaia [01656]
+            '01657':
+              label: Tributació conjunta Estat i Adm. forals - Resultat inclòs en
+                el 1r fraccionament de l'art. 19.1 LIS - Navarra [01657]
             01658:
               label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
                 per impost diferit en crèdit exigible davant l''Administració tributària
@@ -22203,6 +22625,12 @@ modelo:
                 incrementada - Subtotal de donacions 2015 a 2025 amb reiteració de
                 donacions a una mateixa entitat - Pendent d'aplicació en períodes
                 futurs
+            02487:
+              label: Liquidació IV - Opció de fraccionament en supòsits de canvis
+                de residència (art. 19.1 LIS) - Rectificativa - Resultat de l'autoliquidació
+                inclòs el 1r fraccionament de l'art. 19.1 LIS procedent d'una autoliquidació
+                anterior o liquidació administrativa corresponent al període impositiu
+                {year} - Estat [02487]
             02492:
               label: 'Conversió d''actius per impost diferit en crèdit exigible davant
                 l''Administració tributària (art. 130 LIS) - Rectificativa - Resultat
@@ -22648,6 +23076,14 @@ modelo:
               label: Valoració de béns i drets. Règim especial d'operacions de reestructuració
                 (capítol VII del títol VII LIS) - Disminució - Correccions de l'exercici
                 - Temporànies (amb origen en exercicis anteriors)
+            '03243':
+              label: 'Conversió d''actius per impost diferit en crèdit exigible davant
+                l''Administració tributària (art. 130 LIS) - Rectificativa - Rectificativa:
+                Devolució acordada/compensada - Total [03243]'
+            '03244':
+              label: 'Conversió d''actius per impost diferit en crèdit exigible davant
+                l''Administració tributària (art. 130 LIS) - Rectificativa - Rectificativa:
+                Devolució acordada/compensada - Estat [03244]'
             '03317':
               label: 'Conversió d''actius per impost diferit en crèdit exigible davant
                 l''Administració tributària (art. 130 LIS) - Rectificativa - Resultat
@@ -23651,6 +24087,33 @@ modelo:
                 2023
               label: Inversiones anticipadas 2023. Pendent de dotar RIC al final del
                 període
+            '1506':
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                c) Eliminació del deteriorament comptable inclòs en pèrdues i guanys
+                (art. 13.2.b LIS)
+            '1507':
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                f) Efecte de la correcció valorativa en la base imposable de l'exercici
+            '1508':
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                g) Saldo de correccions fiscals pendents a fi d'exercici (art. 12.3
+                RDL 4/2004)
+            '1809':
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                d) Eliminació del deteriorament de valors representatius de participació
+                en el capital o fons propis (art. 15.k LIS)
+            '1810':
+              label: Participacions directes en altres entitats. Correccions valoratives.
+                e) Ajust per la disminució de valor originada pel criteri de valor
+                raonable (art. 15.l LIS)
+            x-8h834c1g60o32ehg60o36d8:
+              label: Règim especial de fusions, escissions, aportacions d'actius i
+                bescanvis de valors (cap. VII, tít. VII) [00035]
+            x-8h834c1g60o32ehg60o38d0:
+              label: Contribuent que genera deduccions dels art. 36.1 i 36.3 LIS amb
+                finançament realitzat per altres contribuents [00044]
+            x-8h834c1g60o32ehg60o3ae8:
+              label: Opció art. 39.2 LIS [00059]
             x-8h834c1g60o32ehg60o3gc8:
               label: Filial d'un grup multinacional o grup nacional de gran magnitud
                 [00081]
@@ -23707,6 +24170,20 @@ modelo:
               label: Liquidació IV - Opció de fraccionament en supòsits de canvis
                 de residència (art. 19.1 LIS) - Resultat de l'autoliquidació inclòs
                 el 1r fraccionament de l'art. 19.1 LIS - D. Forals/Navarra (Totals)
+            x-8h834c1g60oj8ghq60p38e1o:
+              label: Liquidació IV - Opció de fraccionament en supòsits de canvis
+                de residència (art. 19.1 LIS) - Rectificativa - Resultat de l'autoliquidació
+                inclòs el 1r fraccionament de l'art. 19.1 LIS procedent d'una autoliquidació
+                anterior o liquidació administrativa corresponent al període impositiu
+                {year} - D. Forals/Navarra (Totals) [02488]
+            x-8h834c1g60oj8ghq60p38e1p:
+              label: Liquidació IV - Opció de fraccionament en supòsits de canvis
+                de residència (art. 19.1 LIS) - Resultat inclòs el 1r fraccionament
+                de l'art. 19.1 LIS - Estat [02489]
+            x-8h834c1g60oj8ghq60pj4d1i:
+              label: Liquidació IV - Opció de fraccionament en supòsits de canvis
+                de residència (art. 19.1 LIS) - Resultat inclòs el 1r fraccionament
+                de l'art. 19.1 LIS - D. Forals/Navarra (Totals) [03242]
             x-8h834c1g60ojaehg60o3ic8:
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Compensació
@@ -23813,5 +24290,27 @@ modelo:
             x-8h834c1g60p3cehg60q3ge0:
               label: Tributació conjunta Estat i Adm. forals - Interessos de demora
                 - Bizkaia [00488]
+            x-8h834c1g60p3cehg64qjgco:
+              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
+                a ingressar com a conseqüència de la tramitació d''autoliquidacions
+                anteriors o liquidacions administratives corresponents al període
+                impositiu {year} - Total [01583]'
+            x-8h834c1g60p3cehg64qjgd8:
+              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Devolució
+                acordada per l''Agència Tributària com a conseqüència de la tramitació
+                d''autoliquidacions anteriors o liquidacions administratives corresponents
+                al període impositiu {year} - Total [01585]'
+            x-8h834c1g60p3cehg68q3ge0:
+              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Resultat
+                de l''autoliquidació inclòs el 1r fraccionament de l''art. 19.1 LIS
+                procedent d''una autoliquidació anterior o liquidació administrativa
+                corresponent al període impositiu {year} - Total [02488]'
+            x-8h834c1g60p3cehg6cp38cg:
+              label: Tributació conjunta Estat i Adm. forals - Resultat inclòs en
+                el 1r fraccionament de l'art. 19.1 LIS - Total [03242]
+            x-8h834c1g60p3cehg6cp38d8:
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Rectificativa: Devolució - Total [03245]'
           field:
             label: Model 200, exercicis 2025 i següents

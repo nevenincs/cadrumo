@@ -191,9 +191,11 @@ errors:
     row: fila
     schema_version: versió de l'esquema
     section: secció
+    source: origen
     state: estat
     status: estat
     tax_year: exercici
+    terminal_condition: resultat
     value: valor
     year: any
   error:
