@@ -400,4 +400,24 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.entrypoints.tui.ledger.entries_add_form.LedgerAddFormUnavailableError",
+        ErrorCode(
+            code="INTERNAL_TUI_LEDGER_ADD_FORM_UNAVAILABLE",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.canonical_internal_invariant",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.entrypoints.tui.profile.record_groups.MalformedRecordGroupPageError",
+        ErrorCode(
+            code="INTERNAL_TUI_RECORD_GROUP_PAGE_MALFORMED",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.canonical_internal_invariant",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

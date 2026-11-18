@@ -1112,11 +1112,44 @@ test-unit durations="":
 # Focused subsystem selectors use the same explicit offline-capability boundary
 # as the full lanes. Each runs ordinary tests under xdist and isolation-sensitive
 # tests separately at -n0; a focused green therefore cannot hide serial tests.
+# The CLI currently has no serial-marked case. Keep the explicit serial pass so a
+# future one cannot fall out of the focused selector; pytest exit 5 is accepted
+# only for that visible empty selection, never for a collected failure.
 [doc('Run all offline CLI tests, splitting parallel and isolation-sensitive serial passes.')]
 [group('test')]
+[unix]
 test-cli:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/cli
-    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/cli
+    #!/usr/bin/env bash
+    set -uo pipefail
+    failed=0
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/cli || failed=1
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/cli
+    serial_status=$?
+    if [[ "$serial_status" -eq 5 ]]; then
+        echo "No serial CLI tests are currently declared."
+    elif [[ "$serial_status" -ne 0 ]]; then
+        failed=1
+    fi
+    exit "$failed"
+
+[doc('Run all offline CLI tests, splitting parallel and isolation-sensitive serial passes.')]
+[group('test')]
+[windows]
+test-cli:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    $failed = $false
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/cli
+    if ($LASTEXITCODE -ne 0) { $failed = $true }
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/cli
+    $serialStatus = $LASTEXITCODE
+    if ($serialStatus -eq 5) {
+        Write-Host 'No serial CLI tests are currently declared.'
+    }
+    elseif ($serialStatus -ne 0) {
+        $failed = $true
+    }
+    if ($failed) { exit 1 }
 
 # The TUI currently has no serial-marked case. Keep an explicit serial pass so a
 # future one cannot fall out of the focused selector; pytest exit 5 is accepted

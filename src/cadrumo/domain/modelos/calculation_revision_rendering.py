@@ -212,6 +212,7 @@ def registry_payload(snapshot: RegistrySnapshot) -> dict[str, object]:
 def registry_canonical_value(snapshot: RegistrySnapshot) -> CanonicalJsonValue:
     """The canonical JSON encoding of :func:`registry_payload` for ``snapshot``.
 
+    ``snapshot`` is the :class:`RegistrySnapshot` whose serialization is encoded.
     Equal in bytes to ``CanonicalJsonValue(registry_payload(snapshot))``. It is
     encoded once per live snapshot object and serializer; the value holds only
     immutable bytes, so every caller may share it.
@@ -411,6 +412,7 @@ class VerifiedRegistryMemo:
     ) -> CanonicalJsonValue:
         """Return the canonical encoding of a snapshot's serialization under ``serializer``, encoding it once.
 
+        ``snapshot`` is the :class:`RegistrySnapshot` being encoded.
         A calculation head's concurrency digest encodes its whole registry
         snapshot on every edit admission. The encoding is immutable bytes,
         kept for the live snapshot object and the serializer it came from, so

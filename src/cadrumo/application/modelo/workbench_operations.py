@@ -44,7 +44,7 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.casilla_id import CasillaId
 from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
-from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
 from ...core.logging import get_logger
@@ -387,7 +387,7 @@ _REFRESH_START_QUIET_SECONDS: Final = 1.5
 """How long requests must stay quiet, beyond the worker's own quiet window, before a form refresh starts."""
 
 
-class _RefreshAbandonedError(Exception):
+class _RefreshAbandonedError(CadrumoError):
     """A background form refresh stopped: its session ended, requests stayed busy, or a write overtook it."""
 
 
