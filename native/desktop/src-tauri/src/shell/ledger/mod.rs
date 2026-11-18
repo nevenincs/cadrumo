@@ -18,6 +18,7 @@ use super::settle::{self, Decision, Operations, Outcome, ReviewDocument, Tracked
 use super::user_profile::ProfileHost;
 use crate::agent::person::{HeldPerson, PersonEvent};
 use admitted::{Definition, Subject, admitted};
+use cadrumo_application::diagnostics::Diagnostics;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 use std::sync::{
@@ -288,7 +289,13 @@ async fn submit_on(
     relay::admit_size(&request.0)?;
     operations.room(&identity)?;
     let operation = relay::submit_wiping(person, request, definition.mutation()).await?;
-    let tracked = Tracked::new(operation, definition.settling(), subject, identity, folders);
+    let tracked = operations.timed(Tracked::new(
+        operation,
+        definition.settling(),
+        subject,
+        identity,
+        folders,
+    ));
     operations.track(tracked.clone());
     settle::settle(events, &tracked, person).await
 }
@@ -350,10 +357,10 @@ pub struct LedgerHost {
     listening: AtomicBool,
 }
 impl LedgerHost {
-    pub fn new(profile: Arc<ProfileHost>) -> Self {
+    pub fn new(profile: Arc<ProfileHost>, diagnostics: Arc<Diagnostics>) -> Self {
         Self {
             profile,
-            operations: Operations::default(),
+            operations: Operations::measured(diagnostics),
             files: Files::default(),
             dropping: Mutex::new(None),
             listening: AtomicBool::new(false),
