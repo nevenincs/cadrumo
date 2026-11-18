@@ -16,15 +16,13 @@ from .....application.modelo.work_form_field_vocabulary import (
     address_key,
 )
 from .....application.modelo.work_form_findings import ModeloFormAttention
-from .....application.modelo.work_form_header import attention_counts
 from .....application.modelo.work_form_issue_lines import ModeloFormVerdict
 from .....application.modelo.work_form_models import (
     ModeloWorkForm,
     section_fields,
 )
 from .....application.modelo.work_form_next_step import applicable_fields
-from .....core.external_constants import OutputLanguage
-from .....core.i18n.render import output_language, tr
+from .....core.i18n.render import tr
 from .casilla_list_models import AddressKey
 from .navigator import presented_form
 from .page_items import workbench_pages
@@ -262,12 +260,6 @@ def title_text(counts: Mapping[ModeloFormAttention, int]) -> str:
     return f"{title}   {chips}" if chips else title
 
 
-def served_title(form: ModeloWorkForm, *, recorded: bool) -> str:
-    """The list's name with the counts the form serves for each level, in the page's language."""
-    counts = attention_counts(form, OutputLanguage(output_language()), recorded=recorded)
-    return title_text({count.level: count.count for count in counts})
-
-
 def verdict_text(verdict: ModeloFormVerdict, *, changes_unapplied: bool = False) -> str:
     """Say the served verdict of the last check, or that the declaration has not been checked.
 
@@ -301,7 +293,6 @@ __all__ = (
     "blocks_marked",
     "level_words",
     "levels_marked",
-    "served_title",
     "title_text",
     "unentered_boxes",
     "unentered_levels",

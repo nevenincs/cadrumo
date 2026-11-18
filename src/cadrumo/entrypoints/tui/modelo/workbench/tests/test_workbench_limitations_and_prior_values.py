@@ -23,6 +23,7 @@ from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormOrigin,
 )
 from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
+from ......application.modelo.work_form_header import attention_counts
 from ......application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormFieldBlock,
@@ -37,6 +38,7 @@ from ......application.modelo.work_form_prior_value_models import (
 )
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
+from ......core.i18n.render import output_language
 from ......core.period import Period
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -49,7 +51,7 @@ from ....refusal.tests.refusal_fixtures import CREATE_WORK, primary_verdict
 from ....tests.settling import settle
 from ..header import attention_chips
 from ..issue_projection import issue_lines
-from ..issue_scale import served_title
+from ..issue_scale import title_text
 from ..issues import WorkbenchIssuesScreen
 from ..ports import WorkbenchChangeKind
 from ..screen import ModeloWorkbenchScreen
@@ -80,12 +82,18 @@ def _limitation_form() -> ModeloWorkForm:
     return synthetic_form().model_copy(update={"issues": (issue,)})
 
 
+def _served_title(form: ModeloWorkForm) -> str:
+    """The issue list's title as the screen builds it, from the counts the form serves."""
+    counts = attention_counts(form, OutputLanguage(output_language()), recorded=False)
+    return title_text({count.level: count.count for count in counts})
+
+
 def test_a_disclosed_limitation_has_its_own_chip_mark_and_level() -> None:
     form = _limitation_form()
     with override_settings(cadrumo_output_language="en"):
         chips = attention_chips(form, recorded=False)
         lines = issue_lines(form)
-        title = served_title(form, recorded=False)
+        title = _served_title(form)
 
     (chip,) = [chip for chip in chips if chip.level is ModeloFormAttention.LIMITATION]
     assert chip.mark is LIMITATION_MARK
