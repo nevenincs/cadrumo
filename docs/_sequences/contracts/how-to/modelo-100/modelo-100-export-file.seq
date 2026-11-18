@@ -3,9 +3,10 @@
 @capture work_unit_id result.work_unit_id
 @setup aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --binding renta-base-liquidable-negativa-general-anterior=0 --binding renta-base-liquidable-negativa-general-em4-pendiente-inicio=0 --binding renta-base-liquidable-negativa-general-em3-pendiente-inicio=0 --binding renta-base-liquidable-negativa-general-em2-pendiente-inicio=0
 @setup aeat --format json app modelo work attest-work-income {work_unit_id} --yes
-@setup aeat --format json app modelo work verify --modelo 100 --year 2025 --period 0A
+@capture stated_revision_id result.calculation_revision_id
+@setup aeat --format json app modelo work verify {stated_revision_id}
 @step Export the checked declaration to a local file; it is labelled as not an AEAT receipt.
-@result aeat --format json app modelo export --modelo 100 --year 2025 --period 0A --output ./modelo-100.boe
+@result aeat --format json app modelo export {work_unit_id} --revision {stated_revision_id} --output ./modelo-100.boe
 @expect exit_code == 0
 @expect result.modelo == "100"
 @step After you upload at the portal, record the filing in Cadrumo.

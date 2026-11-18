@@ -86,6 +86,8 @@ _ALLOWED_FIRST_PARTY_IN_CHILD: tuple[str, ...] = (
     "cadrumo.core.credentials",
     "cadrumo.core.descriptor_write",
     "cadrumo.core.hashing",
+    # Stdlib-only leaf that core.hashing imports for its string-keyed mapping guard.
+    "cadrumo.core.type_guards",
 )
 """Every first-party module the supervised child may import, and no other.
 

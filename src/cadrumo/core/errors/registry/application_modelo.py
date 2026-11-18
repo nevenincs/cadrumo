@@ -468,4 +468,24 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.application.modelo.workbench_operations._RefreshAbandonedError",
+        ErrorCode(
+            code="INTERNAL_MODELO_WORKBENCH_REFRESH_ABANDONED",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.canonical_internal_invariant",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.workbench_projection_memory._NotReusableError",
+        ErrorCode(
+            code="INTERNAL_MODELO_WORKBENCH_PROJECTION_NOT_REUSABLE",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.canonical_internal_invariant",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

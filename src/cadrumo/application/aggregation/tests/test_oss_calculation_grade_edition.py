@@ -2,7 +2,9 @@
 
 Every calculation runs this resolver, whatever the modelo. An edition that
 reaches calculation grade and publishes no export layout must still calculate:
-the closing path may not ask the authority for a filing-grade snapshot.
+the closing path may not ask the authority for a filing-grade snapshot. The
+edition is found across every published modelo, because which modelo holds one
+changes as editions are raised to filing grade.
 """
 
 import pytest
@@ -24,27 +26,32 @@ from .test_oss_detail_sections import BUCKET, Reader, Transactions
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
+def _calculation_edition_without_export_layouts(operation: PinnedAuthorityOperation) -> tuple[str, int]:
+    """Return a modelo and an exercise its calculation-grade edition without export layouts covers."""
+    for modelo in operation.modelo_ids():
+        calculation_only = {
+            str(revision.id)
+            for revision in authored_revisions_where(
+                modelo,
+                lambda revision, modelo=modelo: (
+                    revision.authority_grade is RegistryAuthorityGrade.CALCULATION
+                    and not published_revision(modelo, str(revision.id)).export_layouts
+                ),
+            )
+        }
+        for year in supported_authored_exercises(modelo) if calculation_only else ():
+            if str(revision_covering(modelo, year).id) in calculation_only:
+                return modelo, year
+    raise AssertionError("no published modelo has a calculation-grade edition without export layouts")
+
+
 def test_a_calculation_grade_edition_without_export_layouts_closes_no_rows_and_is_not_refused(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    calculation_only = {
-        str(revision.id)
-        for revision in authored_revisions_where(
-            "200",
-            lambda revision: (
-                revision.authority_grade is RegistryAuthorityGrade.CALCULATION
-                and not published_revision("200", str(revision.id)).export_layouts
-            ),
-        )
-    }
-    assert calculation_only
-    exercise = next(
-        year
-        for year in supported_authored_exercises("200")
-        if str(revision_covering("200", year).id) in calculation_only
-    )
-    period = Period.from_year_and_code(exercise, "0A")
-    revision = operation.revision("200", str(revision_covering("200", exercise).id))
+    modelo, exercise = _calculation_edition_without_export_layouts(operation)
+    edition = revision_covering(modelo, exercise)
+    period = Period.from_year_and_code(exercise, edition.period_selector.periods_for_year(exercise)[0])
+    revision = operation.revision(modelo, str(edition.id))
     assert not revision.export_layouts
 
     resolution = OssIossLedgerSourceResolver(
@@ -53,7 +60,7 @@ def test_a_calculation_grade_edition_without_export_layouts_closes_no_rows_and_i
         CalculationSourceContext(
             bucket_id=BUCKET,
             work_unit_id="a" * 64,
-            modelo="200",
+            modelo=modelo,
             filing_year=exercise,
             period=period,
             revision=revision,

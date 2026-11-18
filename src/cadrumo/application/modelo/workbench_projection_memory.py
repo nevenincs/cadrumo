@@ -23,6 +23,7 @@ from zoneinfo import ZoneInfo
 from pydantic import BaseModel
 from pydantic_core import TzInfo
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.verification_report import ModeloVerificationFinding
@@ -67,7 +68,7 @@ class _Identity:
         return id(self.value)
 
 
-class _NotReusableError(Exception):
+class _NotReusableError(CadrumoError):
     """An unproved shape must use the ordinary validating projection."""
 
 
