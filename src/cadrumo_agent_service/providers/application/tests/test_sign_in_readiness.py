@@ -73,6 +73,7 @@ _NEXT_STEPS = {
     "cli_exited_early": "console_sign_in",
     "cli_reported_error": "console_sign_in",
     "login_not_completed": "console_sign_in",
+    "browser_not_offered": "console_sign_in",
     "internal_error": "console_sign_in",
     "helper_start_failed": "console_sign_in",
     "helper_ended_without_result": "console_sign_in",

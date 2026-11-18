@@ -442,7 +442,11 @@ jobs:
           name: cadrumo-window-projections
           path: ${{ steps.window.outputs.directory }}
 
+      # The step stops ten minutes before the job does: a job stopped at its
+      # own limit keeps no log, so a shard that stalls would say nothing about
+      # where; a stopped step keeps its log and the kill-record step still runs.
       - name: Scoped tests
+        timeout-minutes: 50
         shell: bash
         env:
           SHARD: ${{ matrix.shard }}

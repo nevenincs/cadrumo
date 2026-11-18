@@ -199,6 +199,10 @@ def external_probe(destination: Path) -> list[str]:
     return install_external_probe(destination)
 
 
+def unstamped_resources(shared: Path, product: DistributionIdentity) -> None:
+    """Mach-O hosts embed no application manifest, so nothing beyond the layout header is unstamped."""
+
+
 def resources(
     destination: Path,
     version: str,

@@ -423,6 +423,7 @@ desktop:
     sign_in_cause:
       agent_stop_failed: Az ügynököt nem sikerült leállítani a bejelentkezés befejezéséhez.
       agent_tree_running: Az ügynök még futott, ezért a bejelentkezés nem tudott elindulni.
+      browser_not_offered: A Claude nem nyitotta meg időben a bejelentkezési oldalt.
       browser_relay_unavailable: A bejelentkezési oldalt nem sikerült átadni a böngészőnek.
       cleanup_unconfirmed: Nem sikerült megerősíteni, hogy a bejelentkezés rendben
         lezárult.
