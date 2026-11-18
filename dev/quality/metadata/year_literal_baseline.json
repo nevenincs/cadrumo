@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "count": 11895,
+  "count": 11894,
   "occurrences": [
     "native/desktop/frontend/src/components/ledger/setup/CounterpartyFilingName.stories.tsx: date text: \"2026-11-10T09:30:00Z\"",
     "native/desktop/frontend/src/dev/fixtures/documentPage.ts: date text: \"2026-10-15\"",
@@ -11167,7 +11167,6 @@
     "src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_discovery_defects.py: edition id: '2025-02-03-y-siguientes'",
     "src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_discovery_defects.py: edition id: '2025-02-03-y-siguientes'",
     "src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_discovery_defects.py: edition id: '2025-y-siguientes'",
-    "src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_discovery_defects.py: edition id: '2026-y-siguientes'",
     "src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_discovery_defects.py: year bound: filing_year=2024",
     "src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_discovery_defects.py: year bound: filing_year=2024",
     "src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_discovery_defects.py: year bound: filing_year=2024",

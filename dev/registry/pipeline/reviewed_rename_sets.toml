@@ -785,7 +785,7 @@ renamed_casilla_ids = [
 [[sets.members]]
 source_ref = "aeat-dr-200-2023"
 source_sha256 = "07ab6b44ac6b46317d965ef59680aeb0a3380f197f55f94af824383d228190b6"
-manifest_sha256 = "6c2edf72c7dfa298fa81ce4b54005a065242513c8b1effa4460b3e5e2b38d6a9"
+manifest_sha256 = "2ae0ac88d5e6fd3c303c782744e9a0573a520a9dd917bf96914522676af9e140"
 
 [[sets.members]]
 source_ref = "aeat-dr-200-2024"

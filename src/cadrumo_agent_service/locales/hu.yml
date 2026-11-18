@@ -6,12 +6,10 @@ desktop:
       mentett beállításokat, segíts a hiányzó adatokkal, és folytasd a feladatunkat,
       ha minden készen áll.
     agent_replied: Az ügynök válasza
-    approval_allow_always: Engedélyezem
     approval_allow_once: Egyszer engedélyezem
     approval_allow_session: Engedélyezés erre a munkamenetre
     approval_attachment: 'Melléklet: {target}'
     approval_operation: 'Művelet: {target}'
-    approval_reject_always: Nem engedélyezem
     approval_reject_once: Nem engedélyezem
     approval_review_title: Nézd át, mielőtt a Cadrumo elvégzi
     approval_tool_title: Az ügynök engedélyt kér

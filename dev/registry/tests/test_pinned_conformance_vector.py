@@ -68,6 +68,34 @@ _PINNED_M200_REVISIONS = tuple(
 )
 
 
+#: Hand-derived cuota integra (DP200014:00562) for each pinned scenario, keyed by the scenario's
+#: resultado contable (00501), INCN of the preceding periodo impositivo and pending BIN. The
+#: general case: INCN at or above one million euros, so LIS art. 29.1 gives 25 % x 100000.00.
+#: The reduced case: INCN 28500.00, below one million, so the 23 % rate LIS art. 29.1 takes
+#: from Ley 31/2022 art. 39 applies to the base 25400.00 - 16300.00 = 9100.00, giving 2093.00.
+_CUOTA_INTEGRA_BY_SCENARIO = {
+    (Decimal("100000"), Decimal("12000000"), Decimal("0")): Decimal("25000"),
+    (Decimal("25400.00"), Decimal("28500.00"), Decimal("16300.00")): Decimal("2093.00"),
+}
+
+
+def _pinned_scenario_cuota_integra(revision_id: str) -> Decimal:
+    """Return the hand-derived cuota integra of the scenario the Modelo 200 pin for ``revision_id`` declares."""
+    (document,) = (
+        document
+        for document in map(load_pinned_conformance_document, sorted(_PINNED_DIR.glob("*.toml")))
+        if document.coordinate.modelo == "200" and document.coordinate.revision == revision_id
+    )
+    decimals = document.inputs["decimal"]
+    scenario = (
+        Decimal(decimals["DP200012:00501"]),
+        Decimal(decimals["modelo-200-incn-periodo-impositivo-anterior"]),
+        Decimal(decimals["modelo-200-bin-pendiente-ejercicios-anteriores"]),
+    )
+    assert scenario in _CUOTA_INTEGRA_BY_SCENARIO, f"no hand-derived cuota for the pinned scenario {scenario}"
+    return _CUOTA_INTEGRA_BY_SCENARIO[scenario]
+
+
 def _pinned_revision_is_filing_grade(authority: ValidatedRegistryAuthority, revision_id: str) -> bool:
     (revision,) = (
         revision for revision in authority.modelo("200").revisions.values() if str(revision.id) == revision_id
@@ -314,7 +342,7 @@ def test_the_modelo_200_pin_follows_the_declared_grade(
     vector = _pinned_vector(proof.conformance_enrollment.materializable_vectors, "200", pinned_revision)
     render = _prove_through_the_real_writer(tmp_path, proof=proof, authority=authority, vector=vector)
     values = {value.casilla_id: value.value for value in render.draft.values}
-    assert values["DP200014:00562"] == Decimal("25000")
+    assert values["DP200014:00562"] == _pinned_scenario_cuota_integra(pinned_revision)
     assert render.product_software_identity is not None
 
 

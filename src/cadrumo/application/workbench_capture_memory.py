@@ -33,6 +33,7 @@ from collections.abc import Callable, Hashable
 from dataclasses import dataclass
 from datetime import date
 from threading import Event, Lock, Thread
+from time import monotonic
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -59,11 +60,13 @@ __all__ = [
 class _Flight[KeyT: Hashable, ValueT]:
     """One background build of a slot's result, which a read for the same key waits for."""
 
-    __slots__ = ("built", "done", "key")
+    __slots__ = ("built", "done", "joined", "key")
 
     def __init__(self, key: KeyT) -> None:
         self.key = key
         self.done = Event()
+        # Set once a read waits for this build, so the build stops deferring to the requests that read belongs to.
+        self.joined = Event()
         # The built result, boxed so that a result which is itself ``None`` still counts as built.
         self.built: tuple[ValueT] | None = None
 
@@ -103,6 +106,7 @@ class WorkbenchMemoSlot[KeyT: Hashable, ValueT]:
         if entry is not None and entry[0] == key:
             return entry[1]
         if flight is not None and flight.key == key:
+            flight.joined.set()
             flight.done.wait()
             if flight.built is not None:
                 return flight.built[0]
@@ -112,6 +116,12 @@ class WorkbenchMemoSlot[KeyT: Hashable, ValueT]:
                 if not self._closed:
                     self._entry = (key, value)
         return value
+
+    def refresh_joined(self) -> bool:
+        """Whether a read is waiting for the refresh under way."""
+        with self._lock:
+            flight = self._flight
+        return flight is not None and flight.joined.is_set()
 
     def refresh(self, key: KeyT, build: Callable[[], ValueT], *, current: Callable[[], bool]) -> bool:
         """Build and keep the result for ``key`` ahead of the read that will ask for it.
@@ -234,11 +244,22 @@ class WorkbenchCensusMemo:
             self._entry = None
 
 
-class WorkbenchCaptureMemory:
-    """The reusable work of one authenticated session's workbench captures."""
+_REQUESTS_QUIET_POLL_SECONDS = 0.05
+_REQUESTS_QUIET_WAIT_LIMIT_SECONDS = 30.0
+"""How long a background refresh waits for requests to go quiet before it gives up; a busy session reads afresh."""
 
-    def __init__(self) -> None:
+
+class WorkbenchCaptureMemory:
+    """The reusable work of one authenticated session's workbench captures.
+
+    ``deferred`` answers whether the process is serving requests a background
+    refresh must not slow; without it a refresh never waits.
+    """
+
+    def __init__(self, *, deferred: Callable[[], bool] | None = None) -> None:
         """Create the empty slots one session reuses."""
+        self._deferred = deferred
+        self._ended = Event()
         self.calendar: WorkbenchMemoSlot[WorkbenchCalendarMemoKey, WorkbenchCalendarWork] = WorkbenchMemoSlot()
         self.census = WorkbenchCensusMemo()
         self.form_projection: WorkbenchMemoSlot[Hashable, FormProjectionPair | None] = WorkbenchMemoSlot()
@@ -252,6 +273,29 @@ class WorkbenchCaptureMemory:
         with self._refresh_lock:
             if not self._closed:
                 self._form_refresh = refresh
+
+    def yield_to_requests(self, *, unless: Callable[[], bool], quiet_for: float = 0.0) -> bool:
+        """Wait while requests are being served, unless ``unless`` holds; answer whether a refresh may go on.
+
+        A refresh goes on once requests have stayed quiet for a further
+        ``quiet_for`` seconds, or at once when ``unless`` holds, and stops when
+        the session ends or requests stay busy past a bound.
+        """
+        deferred = self._deferred
+        if deferred is not None:
+            gave_up_at = monotonic() + _REQUESTS_QUIET_WAIT_LIMIT_SECONDS
+            quiet_since: float | None = None
+            while not unless():
+                now = monotonic()
+                if deferred():
+                    quiet_since = None
+                elif quiet_since is None:
+                    quiet_since = now
+                if quiet_since is not None and now - quiet_since >= quiet_for:
+                    break
+                if now >= gave_up_at or self._ended.wait(_REQUESTS_QUIET_POLL_SECONDS):
+                    return False
+        return not self._ended.is_set()
 
     def refresh_form(self) -> Thread | None:
         """Read the last served form again in the background, so the read that returns to it finds it kept.
@@ -272,6 +316,7 @@ class WorkbenchCaptureMemory:
         with self._refresh_lock:
             self._closed = True
             self._form_refresh = None
+        self._ended.set()
         self.calendar.close()
         self.census.close()
         self.form_projection.close()
@@ -289,9 +334,10 @@ class WorkbenchCaptureMemoryOwner:
     ended is served after it.
     """
 
-    def __init__(self) -> None:
-        """Start holding no memory."""
+    def __init__(self, *, deferred: Callable[[], bool] | None = None) -> None:
+        """Start holding no memory; ``deferred`` is handed to every memory, as :class:`WorkbenchCaptureMemory` says."""
         self._lock = Lock()
+        self._deferred = deferred
         self._held: tuple[str, WorkbenchCaptureMemory] | None = None
 
     def for_profile(self, profile_id: str) -> WorkbenchCaptureMemory:
@@ -300,7 +346,7 @@ class WorkbenchCaptureMemoryOwner:
             held = self._held
             if held is not None and held[0] == profile_id:
                 return held[1]
-            memory = WorkbenchCaptureMemory()
+            memory = WorkbenchCaptureMemory(deferred=self._deferred)
             self._held = (profile_id, memory)
         if held is not None:
             held[1].close()

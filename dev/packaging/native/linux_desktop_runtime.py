@@ -78,8 +78,15 @@ DEPENDENCY_INPUTS = {
     # 0.18, WebKit2GTK 2.0.2 and soup3 0.5 remain the distributed providers.
     # This admits only the default distributed graph. The automation host's
     # extra prerequisites and Linux artifact/minimum-host proof remain separate.
-    "native/desktop/src-tauri/Cargo.lock": "b7016974ca69e208c765da46de8e2719e23a93c633b7d6598ae95758c4c08bae",
-    "native/desktop/src-tauri/Cargo.toml": "f0e94c97e2a0ae18c39ecd59a16a7c1aa758d3cdfd42f71a6b715a6b212e705f",
+    # The desktop crate later gained schemars 1.2.3 (derive, std) as a dev-dependency only, so
+    # the host's tests can derive the agent snapshot's schema; the lock adds schemars_derive
+    # 1.2.3 and serde_derive_internals 0.30.0, both proc-macro build-time crates of that test
+    # graph. Locked offline `cargo tree --target <triple> -e normal,build,features` is
+    # identical before and after for both x86_64- and aarch64-unknown-linux-gnu: no package,
+    # feature or native provider enters the distributed Linux graph. Source/feature evidence
+    # only, as above; Linux artifact and minimum-host proof remain separate.
+    "native/desktop/src-tauri/Cargo.lock": "af3ee99249af90a202106ec481979c3a92b8a505f519b67960b26c3866dc904b",
+    "native/desktop/src-tauri/Cargo.toml": "e5fd5ff6c7407545cb41f353adc6cff231af43423309f18f7dab713a8cfe85ce",
     # The application manifest later gained only a [[test]] target (service_diagnostics,
     # required-features diagnostics-test-support, an existing feature): no dependency,
     # feature or Linux graph change. Declaration-level evidence.

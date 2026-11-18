@@ -3,15 +3,17 @@ import type {
   ProviderCondition,
   ThreadStatus,
 } from "../../shell/agentGatewayContract";
+import type { AgentStreamToolCall } from "../../shell/agentSession";
 import type {
   AgentConversationRecord,
   AgentDocumentRecord,
+} from "../../shell/agentViews";
+import type {
   AgentDocumentReference,
   AgentRanWith,
-  AgentToolCall,
   AgentTurnRecord,
   AgentUsage,
-} from "../../shell/agentViews";
+} from "../../shell/agentSnapshotContract";
 
 // The agent column's conversations in the shapes a host answers with, for the
 // scenario host. A conversation is a chain of cadrumo-agent runs, and the
@@ -43,6 +45,10 @@ export type FixtureMessage = {
   skills?: string[];
 };
 
+/** A tool call of a run as the agent keeps it: as its stream reports it, with
+ * what its history says of it, where it says anything. */
+export type FixtureToolCall = AgentStreamToolCall & { details?: string[] };
+
 /** One run as the agent keeps it. */
 export type FixtureRun = {
   id: string;
@@ -51,7 +57,7 @@ export type FixtureRun = {
    * opens with the last of its predecessor's messages, under ids of their
    * own. */
   messages: FixtureMessage[];
-  tools: AgentToolCall[];
+  tools: FixtureToolCall[];
   provider_condition?: ProviderCondition;
   failure_reason?: string;
   queued_messages?: number;
@@ -108,10 +114,11 @@ export function conversationRecords(
     );
     const firstAgent = own.findIndex((message) => message.role === "assistant");
     const tools = () =>
-      run.tools.map((tool): AgentTurnRecord => ({
+      run.tools.map(({ details, ...tool }): AgentTurnRecord => ({
         kind: "tool",
         reply_id: run.id,
         ...tool,
+        details: details ?? [],
       }));
     own.forEach((message, at) => {
       if (at === firstAgent) records.push(...tools());
@@ -124,10 +131,8 @@ export function conversationRecords(
               reply_id: run.id,
               text: message.text,
               sent_at: message.sent_at ?? null,
-              ...(message.attachments?.length
-                ? { attachments: message.attachments }
-                : {}),
-              ...(message.skills?.length ? { skills: message.skills } : {}),
+              attachments: message.attachments ?? [],
+              skills: message.skills ?? [],
             }
           : { kind: "agent", id, reply_id: run.id, text: message.text },
       );
@@ -137,13 +142,11 @@ export function conversationRecords(
       kind: "reply",
       id: run.id,
       status: run.status,
-      ...(run.provider_condition
-        ? { provider_condition: run.provider_condition }
-        : {}),
-      ...(run.failure_reason ? { failure_reason: run.failure_reason } : {}),
-      ...(run.queued_messages ? { queued_messages: run.queued_messages } : {}),
-      ...(run.selection ? { selection: run.selection } : {}),
-      ...(run.usage ? { usage: run.usage } : {}),
+      provider_condition: run.provider_condition ?? null,
+      failure_reason: run.failure_reason ?? null,
+      queued_messages: run.queued_messages ?? 0,
+      selection: run.selection ?? null,
+      usage: run.usage ?? null,
     });
   });
   return records;

@@ -24,6 +24,7 @@ import asyncio
 import logging
 from collections.abc import Callable, Mapping
 from contextvars import copy_context
+from dataclasses import dataclass
 from time import perf_counter
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
@@ -382,6 +383,14 @@ def _log_form_memo_read(kept: WorkbenchFormReadKey | None, key: WorkbenchFormRea
     )
 
 
+_REFRESH_START_QUIET_SECONDS: Final = 1.5
+"""How long requests must stay quiet, beyond the worker's own quiet window, before a form refresh starts."""
+
+
+class _RefreshAbandonedError(Exception):
+    """A background form refresh stopped: its session ended, requests stayed busy, or a write overtook it."""
+
+
 def _bucket_id(profile_id: UUID) -> str:
     bucket_id = str(profile_id)
     if require_active_bucket_id() != bucket_id:
@@ -413,6 +422,171 @@ def _require_subject(request_definition_id: str, subject_ref: str, definition_id
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
 
+@dataclass(frozen=True, slots=True)
+class _FormRead:
+    """One declaration's form read for one request: served from the session memo, built afresh, or refreshed."""
+
+    ports_factory: ModeloWorkbenchReadPortsFactory
+    contracts: OperationContractsProvider
+    payload: ModeloWorkbenchFormRequest
+    operation: PinnedAuthorityOperation
+    held: WorkbenchCaptureMemory | None
+
+    def keyed(
+        self,
+        bucket_id: str,
+        ports: ModeloWorkbenchReadPorts,
+        contracts: OperationPublicContractSetV1,
+        epoch_of: Callable[[], str],
+        spent: dict[str, int],
+    ) -> tuple[WorkbenchFormReadKey, ModeloEditAdmissionResultV1]:
+        """Admit the edit baseline afresh and name everything the form is read from."""
+        payload, operation = self.payload, self.operation
+        # The epoch is read before anything it covers, so a write during the read only moves it on.
+        began = perf_counter()
+        epoch = epoch_of()
+        spent["epoch_ms"] = _elapsed_ms(began)
+        began = perf_counter()
+        admission = admit_workbench_form_edit(
+            payload.work_unit_id,
+            bucket_id=bucket_id,
+            ports=ports,
+            operation=operation,
+            operation_contracts=contracts,
+        )
+        spent["admission_ms"] = _elapsed_ms(began)
+        key = WorkbenchFormReadKey(
+            profile_id=payload.profile_id,
+            work_unit_id=payload.work_unit_id,
+            store_epoch=epoch,
+            logical_generation=operation.generation.logical_generation,
+            contract_set_digest=contracts.contract_set_digest,
+            language=payload.output_language,
+            as_of=today_madrid(),
+            admission=admission_identity(admission),
+        )
+        return key, admission
+
+    def read(self) -> ModeloWorkbenchFormProjectionV1:
+        """Serve the form, from the session memo when nothing it is read from changed."""
+        bucket_id = _bucket_id(self.payload.profile_id)
+        ports = self.ports_factory(bucket_id, self.operation)
+        contracts = self.contracts()
+        epoch_of = ports.store_epoch
+        held = self.held
+        if held is None or epoch_of is None:
+            return self.fresh(bucket_id, ports, contracts, None)
+        spent: dict[str, int] = {}
+        key, admission = self.keyed(bucket_id, ports, contracts, epoch_of, spent)
+        kept = held.form_read.kept_key()
+        served = held.form_read.reuse(key, lambda: self.fresh(bucket_id, ports, contracts, admission, spent))
+        _log_form_memo_read(kept, key, spent)
+        # The refresh runs in this read's context, so it reads the same profile's settings and storage.
+        context = copy_context()
+        held.keep_form_refresh(lambda: context.run(self.refresh, held))
+        return with_fresh_admission(served, admission)
+
+    def refresh(self, memo: WorkbenchCaptureMemory) -> None:
+        """Read this form again into the session memo, keeping it only if nothing it reads moved meanwhile.
+
+        It defers to the requests being served before it starts and between
+        reading and projecting the form, unless a read is already waiting for
+        it, and stops as soon as a write moves the epoch it was keyed on.
+        """
+        spent: dict[str, int] = {}
+        began = perf_counter()
+        try:
+            with validating_governed_facts(self.operation):
+                kept = self._refreshed(memo, spent)
+        except _RefreshAbandonedError:
+            kept = False
+        except Exception as error:
+            # The read that returns to the form builds it itself and reports any failure.
+            diagnostic_event(_log, "workbench_form_memo_refresh_failed", fields=diagnostic_error_fields(error))
+            return
+        if kept is None:
+            return
+        spent["refresh_ms"] = _elapsed_ms(began)
+        diagnostic_event(
+            _log, "workbench_form_memo_refresh", fields={"refresh_kept": kept, **spent}, level=logging.INFO
+        )
+
+    def _refreshed(self, memo: WorkbenchCaptureMemory, spent: dict[str, int]) -> bool | None:
+        """Build and keep the form; ``None`` when the refresh never started."""
+        # The frontend's own reads after an export follow it within a second or two; they go first.
+        if not memo.yield_to_requests(unless=lambda: False, quiet_for=_REFRESH_START_QUIET_SECONDS):
+            return None
+        bucket_id = _bucket_id(self.payload.profile_id)
+        ports = self.ports_factory(bucket_id, self.operation)
+        epoch_of = ports.store_epoch
+        if epoch_of is None:
+            return None
+        contracts = self.contracts()
+        key, admission = self.keyed(bucket_id, ports, contracts, epoch_of, spent)
+
+        def going_on() -> bool:
+            unblocked = memo.yield_to_requests(unless=memo.form_read.refresh_joined)
+            return unblocked and epoch_of() == key.store_epoch
+
+        return memo.form_read.refresh(
+            key,
+            lambda: self.fresh(bucket_id, ports, contracts, admission, spent, going_on),
+            current=lambda: epoch_of() == key.store_epoch,
+        )
+
+    def fresh(
+        self,
+        bucket_id: str,
+        ports: ModeloWorkbenchReadPorts,
+        contracts: OperationPublicContractSetV1,
+        admission: ModeloEditAdmissionResultV1 | None,
+        spent: dict[str, int] | None = None,
+        going_on: Callable[[], bool] | None = None,
+    ) -> ModeloWorkbenchFormProjectionV1:
+        """Read and project the form afresh; ``going_on`` may stop a refresh between the two."""
+        payload = self.payload
+        began = perf_counter()
+        form = read_modelo_workbench_form(
+            payload.work_unit_id,
+            bucket_id=bucket_id,
+            ports=ports,
+            operation=self.operation,
+            operation_contracts=contracts,
+            language=payload.output_language,
+            admission=admission,
+        )
+        if spent is not None:
+            spent["form_ms"] = _elapsed_ms(began)
+        if going_on is not None and not going_on():
+            raise _RefreshAbandonedError
+        began = perf_counter()
+        projected = project_modelo_workbench_form(
+            payload.profile_id,
+            payload.work_unit_id,
+            form,
+            memory=self.held.form_projection if self.held is not None else None,
+            context=self._projection_context(form.admission),
+            spent=spent,
+        )
+        if spent is not None:
+            spent["projection_ms"] = _elapsed_ms(began)
+        return projected
+
+    def _projection_context(self, admission: ModeloEditAdmissionResultV1) -> FormProjectionContext | None:
+        if not isinstance(admission, ModeloEditAdmittedV1):
+            return None
+        baseline = admission.baseline
+        return FormProjectionContext(
+            profile_id=self.payload.profile_id,
+            work_unit_id=self.payload.work_unit_id,
+            work_unit_record_digest=baseline.work_unit_record_digest,
+            calculation_head_digest=baseline.calculation_head_digest,
+            calculation_revision_id=baseline.current_calculation_revision_id,
+            logical_generation=self.operation.generation.logical_generation,
+            language=self.payload.output_language,
+        )
+
+
 class ModeloWorkbenchFormExecutor:
     """Read one declaration's form and admit its edit baseline."""
 
@@ -435,133 +609,19 @@ class ModeloWorkbenchFormExecutor:
         _require_subject(
             request.definition_id, request.subject_ref, MODELO_WORK_FORM_OPERATION_DEFINITION_ID, payload.work_unit_id
         )
-        operation = context.authority_operation
-        held = self._capture_memory.for_profile(str(payload.profile_id)) if self._capture_memory is not None else None
-        memory = held.form_projection if held is not None else None
-
-        def keyed(
-            bucket_id: str,
-            ports: ModeloWorkbenchReadPorts,
-            contracts: OperationPublicContractSetV1,
-            epoch_of: Callable[[], str],
-            spent: dict[str, int],
-        ) -> tuple[WorkbenchFormReadKey, ModeloEditAdmissionResultV1]:
-            # The epoch is read before anything it covers, so a write during the read only moves it on.
-            began = perf_counter()
-            epoch = epoch_of()
-            spent["epoch_ms"] = _elapsed_ms(began)
-            began = perf_counter()
-            admission = admit_workbench_form_edit(
-                payload.work_unit_id,
-                bucket_id=bucket_id,
-                ports=ports,
-                operation=operation,
-                operation_contracts=contracts,
-            )
-            spent["admission_ms"] = _elapsed_ms(began)
-            key = WorkbenchFormReadKey(
-                profile_id=payload.profile_id,
-                work_unit_id=payload.work_unit_id,
-                store_epoch=epoch,
-                logical_generation=operation.generation.logical_generation,
-                contract_set_digest=contracts.contract_set_digest,
-                language=payload.output_language,
-                as_of=today_madrid(),
-                admission=admission_identity(admission),
-            )
-            return key, admission
-
-        def read() -> ModeloWorkbenchFormProjectionV1:
-            bucket_id = _bucket_id(payload.profile_id)
-            ports = self._ports_factory(bucket_id, operation)
-            contracts = self._contracts()
-            epoch_of = ports.store_epoch
-            if held is None or epoch_of is None:
-                return fresh(bucket_id, ports, contracts, None)
-            spent: dict[str, int] = {}
-            key, admission = keyed(bucket_id, ports, contracts, epoch_of, spent)
-            kept = held.form_read.kept_key()
-            served = held.form_read.reuse(key, lambda: fresh(bucket_id, ports, contracts, admission, spent))
-            _log_form_memo_read(kept, key, spent)
-            # The refresh runs in this read's context, so it reads the same profile's settings and storage.
-            context, memo = copy_context(), held
-            memo.keep_form_refresh(lambda: context.run(refresh, memo))
-            return with_fresh_admission(served, admission)
-
-        def refresh(memo: WorkbenchCaptureMemory) -> None:
-            """Read this form again into the session memo, keeping it only if nothing it reads moved meanwhile."""
-            spent: dict[str, int] = {}
-            began = perf_counter()
-            try:
-                with validating_governed_facts(operation):
-                    bucket_id = _bucket_id(payload.profile_id)
-                    ports = self._ports_factory(bucket_id, operation)
-                    epoch_of = ports.store_epoch
-                    if epoch_of is None:
-                        return
-                    contracts = self._contracts()
-                    key, admission = keyed(bucket_id, ports, contracts, epoch_of, spent)
-                    kept = memo.form_read.refresh(
-                        key,
-                        lambda: fresh(bucket_id, ports, contracts, admission, spent),
-                        current=lambda: epoch_of() == key.store_epoch,
-                    )
-            except Exception as error:
-                # The read that returns to the form builds it itself and reports any failure.
-                diagnostic_event(_log, "workbench_form_memo_refresh_failed", fields=diagnostic_error_fields(error))
-                return
-            spent["refresh_ms"] = _elapsed_ms(began)
-            diagnostic_event(
-                _log, "workbench_form_memo_refresh", fields={"refresh_kept": kept, **spent}, level=logging.INFO
-            )
-
-        def fresh(
-            bucket_id: str,
-            ports: ModeloWorkbenchReadPorts,
-            contracts: OperationPublicContractSetV1,
-            admission: ModeloEditAdmissionResultV1 | None,
-            spent: dict[str, int] | None = None,
-        ) -> ModeloWorkbenchFormProjectionV1:
-            began = perf_counter()
-            form = read_modelo_workbench_form(
-                payload.work_unit_id,
-                bucket_id=bucket_id,
-                ports=ports,
-                operation=operation,
-                operation_contracts=contracts,
-                language=payload.output_language,
-                admission=admission,
-            )
-            if spent is not None:
-                spent["form_ms"] = _elapsed_ms(began)
-            began = perf_counter()
-            admission = form.admission
-            projection_context = None
-            if isinstance(admission, ModeloEditAdmittedV1):
-                baseline = admission.baseline
-                projection_context = FormProjectionContext(
-                    profile_id=payload.profile_id,
-                    work_unit_id=payload.work_unit_id,
-                    work_unit_record_digest=baseline.work_unit_record_digest,
-                    calculation_head_digest=baseline.calculation_head_digest,
-                    calculation_revision_id=baseline.current_calculation_revision_id,
-                    logical_generation=operation.generation.logical_generation,
-                    language=payload.output_language,
-                )
-            projected = project_modelo_workbench_form(
-                payload.profile_id,
-                payload.work_unit_id,
-                form,
-                memory=memory,
-                context=projection_context,
-                spent=spent,
-            )
-            if spent is not None:
-                spent["projection_ms"] = _elapsed_ms(began)
-            return projected
-
+        owner = self._capture_memory
+        form_read = _FormRead(
+            ports_factory=self._ports_factory,
+            contracts=self._contracts,
+            payload=payload,
+            operation=context.authority_operation,
+            held=owner.for_profile(str(payload.profile_id)) if owner is not None else None,
+        )
         return await _read(
-            context, phase=MODELO_WORK_FORM_OPERATION_DEFINITION_ID, task_name="modelo-work-form-read", read=read
+            context,
+            phase=MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
+            task_name="modelo-work-form-read",
+            read=form_read.read,
         )
 
 

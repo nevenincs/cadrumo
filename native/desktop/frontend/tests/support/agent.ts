@@ -1,11 +1,13 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import type {
-  AgentApproval,
-  AgentQuestionnaire,
   AgentQuestionnaireAnswer,
   AgentSendRequest,
 } from "../../src/shell/agentSession";
 import { label } from "./strings";
+import type {
+  AgentApproval,
+  AgentQuestionnaire,
+} from "../../src/shell/agentSnapshotContract";
 
 // The agent column as a person finds it: by its roles and its words, never
 // by how a host makes it. The same helpers drive the scenario host and the
@@ -124,16 +126,9 @@ export const questionsPrompt = (target: Page) =>
     name: label("desktop.agent.questions_title"),
   });
 
-export const approvalPrompt = (
-  target: Page,
-  source: "agent_tool" | "cadrumo_review" = "agent_tool",
-) =>
+export const approvalPrompt = (target: Page) =>
   agentColumn(target).getByRole("region", {
-    name: label(
-      source === "agent_tool"
-        ? "desktop.agent.approval_tool_title"
-        : "desktop.agent.approval_review_title",
-    ),
+    name: label("desktop.agent.approval_tool_title"),
   });
 
 /** Writes `text` in the message field and presses Enter. */

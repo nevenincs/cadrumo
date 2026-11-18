@@ -13,4 +13,5 @@ dependency_classifications = ["modelo-200-dep-202-instalments", "modelo-200-dep-
 workbook_parity_refs = ["modelo-200-dr-xls"]
 application_links = ["modelo-200-portal", "modelo-200-calculation", "modelo-200-filing", "modelo-200-deadline", "modelo-200-review", "modelo-200-approval", "modelo-200-reconciliation", "modelo-200-workflow"]
 filing_schedules = ["modelo-200-anual"]
+live_cross_references = ["modelo-200-static-documentation"]
 deadline_windows = ["modelo-200-2022-0a"]

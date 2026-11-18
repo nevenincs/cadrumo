@@ -6,10 +6,12 @@ import {
 } from "../src/shell/agentLive";
 import {
   createTranscriptProjection,
-  type AgentTurnRecord,
+  type AgentColumnRecord,
+  type AgentThoughtRecord,
 } from "../src/shell/agentViews";
 import type { AgentStreamEvent } from "../src/shell/agentSession";
 import { label } from "./support/strings";
+import type { AgentTurnRecord } from "../src/shell/agentSnapshotContract";
 
 const now = new Date("2026-10-20T12:00:00Z");
 const t = (key: string, values?: Record<string, string | number>) =>
@@ -130,8 +132,19 @@ test("cached rows follow reply state, thoughts, locale, day and duplicate occurr
     reply_id: "r1",
     text: "Hello",
     sent_at: now.toISOString(),
+    attachments: [],
+    skills: [],
   };
-  const reply: AgentTurnRecord = { kind: "reply", id: "r1", status: "running" };
+  const reply: AgentTurnRecord = {
+    kind: "reply",
+    id: "r1",
+    status: "running",
+    provider_condition: null,
+    failure_reason: null,
+    queued_messages: 0,
+    selection: null,
+    usage: null,
+  };
   const message: AgentTurnRecord = {
     kind: "agent",
     id: "m1",
@@ -144,7 +157,7 @@ test("cached rows follow reply state, thoughts, locale, day and duplicate occurr
   expect(writing).toHaveLength(2);
   expect(writing[0]).toBe(waiting[0]);
   expect(writing[1]).toMatchObject({ id: "agent:r1:m1", state: "working" });
-  const done: AgentTurnRecord[] = [
+  const done: AgentColumnRecord[] = [
     person,
     person,
     message,
@@ -157,7 +170,7 @@ test("cached rows follow reply state, thoughts, locale, day and duplicate occurr
     "agent:r1:m1",
   ]);
   expect(finished.at(-1)).toMatchObject({ state: "complete" });
-  const thought: AgentTurnRecord = {
+  const thought: AgentThoughtRecord = {
     kind: "thought",
     id: "t1",
     reply_id: "r1",

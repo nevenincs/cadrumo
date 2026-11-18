@@ -1,0 +1,112 @@
+# Pinned public conformance-vector declaration for Modelo 200 revision 2023.
+#
+# Only the generation MANIFEST digest is pinned, not the output digests it
+# already contains. The manifest enumerates every generated output with its own
+# sha256, so any change to any output changes the manifest and therefore this
+# digest: one pin carries the identical fail-closed property. The pin stays
+# committed data rather than being re-derived beside the enrollment, which is
+# what keeps the canonical_builder_conflict check from being tautological.
+# A regenerated export tree must refresh this digest under review.
+
+authority_id = "dev.registry.filing-export-conformance"
+mechanism_source_ref = "generated-provenance/200/2023"
+generation_manifest_sha256 = "e2aec07f307d74f7e604c7a36fedc8ebcd070b99734ceca5b1a0bb51fd00305d"
+filing_year = 2023
+period_code = "0A"
+
+[coordinate]
+modelo = "200"
+revision = "2023"
+layout_ids = ["generated-modelo-200-2023-fichero"]
+
+# The vector carries the sociedad-limitada persona's return for this exercise
+# (dev/fixtures/personas/sociedad-limitada), so the mechanism run exercises the
+# branch the 2023 law adds: the flat 23 % rate of LIS art. 29.1 as worded by
+# Ley 31/2022 art. 39 (BOE-A-2022-22128) for INCN of the preceding period
+# below 1 millon de euros. The 2024 and 2025 vectors exercise the general 25 %.
+[inputs.decimal]
+# Casilla 00501, resultado de la cuenta de perdidas y ganancias antes del IS
+# (aeat-dr-200-2023 DP200012 row 9, position 64, length 17, type N). Non-zero so
+# the cuota chain is exercised.
+"DP200012:00501" = "25400.00"
+# Casilla 00547, compensacion de BIN de periodos anteriores (DP200014 row 12,
+# position 115). The whole pending 16300.00: LIS art. 26.1 limit is
+# max(1000000.00, 70 % x 25400.00) = 1000000.00 (manual Sociedades 2023 L13273-13277, L13287-13288).
+"DP200014:00547" = "16300.00"
+# Casilla 00619, cuota liquida minima (DP200014B row 19). Art. 30 bis LIS reaches
+# only INCN >= 20 millones or consolidacion fiscal (manual 2023 L14611-14626): 0.
+"DP200014B:00619" = "0.00"
+# Casilla 00255 of the preceding Modelo 200 (LIS art. 29.1, art. 101.2-3): 28500.00,
+# below 1000000, so the 23 % rate (manual 2023 L13587-13588, L2895-2900).
+"modelo-200-incn-periodo-impositivo-anterior" = "28500.00"
+"modelo-200-profile-tributacion-estado-porcentaje" = "100"
+"modelo-200-bin-pendiente-ejercicios-anteriores" = "16300.00"
+"modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores" = "0"
+"modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores" = "0"
+# First instalment, LIS art. 40.2: 18 % x 300.00 (cuota of the last return due).
+"modelo-200-pago-fraccionado-primero-40-2" = "54.00"
+"modelo-200-pago-fraccionado-primero-40-3" = "0"
+"modelo-200-pago-fraccionado-segundo-40-2" = "0"
+"modelo-200-pago-fraccionado-segundo-40-3" = "0"
+"modelo-200-pago-fraccionado-tercero-40-2" = "0"
+"modelo-200-pago-fraccionado-tercero-40-3" = "0"
+
+[inputs.enum]
+"modelo-200-profile-legal-entity-form" = "sl"
+
+[boolean_inputs]
+# Third period with a positive base: the nueva creacion 15 % no longer applies.
+"modelo-200-profile-new-entity-flag" = false
+
+# ORACLE (hand-derived; never read from a run). Box positions from
+# aeat-dr-200-2023; operations from the Manual practico de Sociedades 2023
+# (corpus/manuals/sociedades/2023/source.pdf.extracted.md line numbers).
+#   DP200014:00550  = 00501 + 00417 - 00418 = 25400.00             (L7103; DP200014 row 6, pos 13)
+#   DP200014:00552  = 00550 - 01032 - 00547 = 9100.00              (L13026; row 15, pos 166)
+#   DP200014:01330  = 00552 + 01033 - 01034 = 9100.00              (L13515, L23767; row 18, pos 217)
+#   DP200014:00558  = 23.00                                        (L13587-13588; LIS 29.1 per Ley 31/2022 art. 39; row 30, pos 421, "2 enteros y 2 decimales")
+#   DP200014:00562  = 01330 x 00558 / 100 = 2093.00                (L13559, L24089; row 42, pos 612)
+#   DP200014:00582  = (00562 + 01038) - (...) = 2093.00            (L13702; row 60, pos 918)
+#   DP200014B:00592 = 00582 - (...) = 2093.00                      (L15177; DP200014B row 20, pos 251)
+#   DP200014B:00599 = (00625/100) x (00592 - 01766 - 01784) = 2093.00 (L19199; row 40, pos 575)
+#   DP200014B:00601 = 54.00; 00603 = 00605 = 0.00                  (L19453-19455; rows 42/44/46)
+#   DP200014B:00611 = 00599 - (00601 + 00603 + 00605) = 2039.00    (L19441; row 48, pos 711)
+#   DP200026:00625  = 100.00                                       (Ley 12/2002 art. 15, Ley 28/1990 art. 19; row 17, pos 152)
+# Same figures as dev/fixtures/personas/sociedad-limitada/expectations.toml, the
+# [[values]] entry governed_by "ley-27-2014:art-29-2023", which cites the 2024 manual;
+# the lines above re-derive them from the 2023 manual.
+
+# Probes: DP200001 rows 1-4 and the end-of-record row of aeat-dr-200-2023. The
+# envelope DP200000 ends at position 328 in both the 2023 and 2024 designs, so a
+# DP200001 row at design position p is emitted at offset 328 + p - 1, as the 2024
+# vector's probes are. The 2023 DP200001 has 123 rows (2024: 113), its end marker
+# "</T20001000>" at position 725, length 12.
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2023.dp200001.f0001"
+emitted_offset = 328
+length = 2
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2023.dp200001.f0002"
+emitted_offset = 330
+length = 3
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2023.dp200001.f0003"
+emitted_offset = 333
+length = 5
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2023.dp200001.f0004"
+emitted_offset = 338
+length = 1
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2023.dp200001.f0123"
+emitted_offset = 1052
+length = 12

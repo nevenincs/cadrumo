@@ -192,7 +192,9 @@ export type TranscriptToolActivity = {
   id: string;
   /** The tool's title, as the agent names it. */
   label: string;
-  state: ToolCallStatus;
+  /** Null where the host could not read the call's status: the row then
+   * says no outcome. */
+  state: ToolCallStatus | null;
   /** More about the call, such as what kind of tool it is, already worded. */
   detail?: string;
   /** What the call took and gave, as the agent recorded it: shown, as it
