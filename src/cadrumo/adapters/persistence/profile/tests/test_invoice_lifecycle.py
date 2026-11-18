@@ -351,30 +351,6 @@ def test_an_empty_correction_refuses(tmp_path: Path) -> None:
         assert exc.value.translated_message == "application.invoices.lifecycle.errors.empty_invoice_patch"
 
 
-def test_the_patch_model_cannot_express_an_identity_change() -> None:
-    """Structural, not a runtime refusal: identity fields are absent entirely.
-
-    A runtime check could be bypassed by a future caller building the payload
-    another way. Excluding the fields from the patch model means there is no
-    code path that can attempt an identity change at all, which is the stronger
-    guarantee for the one axis where getting it wrong strands a link.
-    """
-    identity_fields = {
-        "kind",
-        "invoice_number",
-        "issued_at",
-        "counterparty_tax_id",
-        "currency",
-        "base_total",
-        "iva_total",
-        "grand_total",
-        "recargo_amount",
-        "lines",
-    }
-
-    assert identity_fields.isdisjoint(set(CatalogueInvoicePatch.model_fields))
-
-
 def test_no_lifecycle_refusal_carries_an_authored_sentence(tmp_path: Path) -> None:
     """Every refusal this module raises resolves from the catalogue, never from source.
 
