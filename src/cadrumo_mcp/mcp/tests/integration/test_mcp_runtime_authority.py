@@ -5,12 +5,15 @@ from __future__ import annotations
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import replace
+from datetime import date
 from pathlib import Path
 from typing import override
 
 import pytest
 
-from cadrumo.application.modelo.registry_discovery import registry_support_matrix
+from cadrumo.application import reference_catalogue
+from cadrumo.application.operator_output.connection_remedies import connection_unavailable_remedy
+from cadrumo.application.reference_catalogue import read_support_matrix
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry import authority as authority_module
 from cadrumo.domain.calculations.registry.authority import (
@@ -20,6 +23,7 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
+    AuthorityGenerationPin,
     SnapshotGlobalsComponentQuery,
 )
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
@@ -32,6 +36,7 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     synthetic_legal_identity,
 )
 from cadrumo.domain.portals.registry import PORTAL_REGISTRY
+from cadrumo_client.contracts.contracts import RefusalCode
 from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_mcp.mcp.server import build_server
 from cadrumo_mcp.mcp.tests.admitted_lease import admitted_adapter
@@ -120,7 +125,19 @@ class _SucceededWhileHeld(IndexedRegistryAuthority):
 
 
 @pytest.mark.anyio
-async def test_public_authority_queries_preserve_coordinates_and_support_projection() -> None:
+async def test_public_authority_queries_preserve_coordinates_and_support_projection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    describe_modelo = reference_catalogue.registry_describe_modelo_for_registry_scope
+    observed_pins: list[AuthorityGenerationPin] = []
+
+    def record_pin(
+        modelo: str, *, filing_year: int, period: str, as_of: date | None, operation: PinnedAuthorityOperation
+    ) -> object:
+        observed_pins.append(operation.pin())
+        return describe_modelo(modelo, filing_year=filing_year, period=period, as_of=as_of, operation=operation)
+
+    monkeypatch.setattr(reference_catalogue, "registry_describe_modelo_for_registry_scope", record_pin)
     adapter = admitted_adapter()
     held = adapter.client
     try:
@@ -142,6 +159,9 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
         assert described["report"]["period"] == "0A"
         assert described["report"]["revision"]
         assert described["report"]["authority_grade"] == "filing"
+        (pin,) = observed_pins
+        assert described["logical_generation"] == pin.logical_generation
+        assert described["reader_incarnation"] == pin.reader_incarnation
 
         low_grade = await adapter.call(
             "authority",
@@ -157,17 +177,40 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
         assert low_grade["report"]["authority_grade"] == "applicability"
         assert (low_grade["report"]["filing_year"], low_grade["report"]["period"]) == (2024, "alta")
 
+        default_coordinates = await adapter.call("authority", {"query": "describe", "modelo": "036", "period": "alta"})
+        assert default_coordinates["outcome"] == "published"
+        assert default_coordinates["report"]["authority_grade"] == "applicability"
+
         with bundled_indexed_authority().operation() as operation:
-            canonical_support = registry_support_matrix(operation=operation).model_dump(mode="json")
+            canonical_support = read_support_matrix(operation=operation).model_dump(mode="json")
         support = await adapter.call("authority", {"query": "support"})
 
         assert support["outcome"] == "published"
         assert canonical_support["entries"], "the published authority supports no modelo; the comparison is empty"
-        assert support["report"]["entries"] == canonical_support["entries"]
+        assert support["report"] == canonical_support
         assert support["report"]["modelo_count"] == len(canonical_support["entries"])
         assert adapter.client is held and held is not None
     finally:
         await adapter.close()
+
+
+@pytest.mark.anyio
+async def test_authority_is_refused_to_a_connection_with_no_key_and_no_runtime(tmp_path: Path) -> None:
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
+        adapter = RuntimeMcpAdapter(profile_id=None, client=None, requests_attendance=True)
+        try:
+            async with connected_server_and_client_session(build_server(adapter)) as client:
+                names = {tool.name for tool in (await client.list_tools()).tools}
+                support = await client.call_tool("authority", {"query": "support"})
+        finally:
+            await adapter.close()
+
+    assert {"status", "authority", "corpus_search", "search", "execute"} <= names
+    assert support.is_error is True
+    assert isinstance(support.structured_content, dict)
+    assert support.structured_content["code"] == RefusalCode.UNAVAILABLE.value
+    assert support.structured_content["remedy"] == connection_unavailable_remedy(RefusalCode.UNAVAILABLE.value)
+    assert adapter.client is None and adapter.profile_id is None
 
 
 @pytest.mark.anyio
@@ -260,8 +303,8 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
     authority = _SucceededWhileHeld(tmp_path / DESCRIPTOR_NAME, succeed=succeed)
     with authority.operation() as initial:
         first_pin = initial.pin()
-        expected_entries = registry_support_matrix(operation=initial).model_dump(mode="json")["entries"]
-    assert expected_entries
+        expected_report = read_support_matrix(operation=initial).model_dump(mode="json")
+    assert expected_report["entries"]
 
     monkeypatch.setattr(authority_module, "bundled_indexed_authority_owner", authority)
     adapter = admitted_adapter()
@@ -276,7 +319,7 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
             assert result.structured_content["outcome"] == "published"
             assert result.structured_content["logical_generation"] == first_pin.logical_generation
             assert result.structured_content["reader_incarnation"] == first_pin.reader_incarnation
-            assert result.structured_content["report"]["entries"] == expected_entries
+            assert result.structured_content["report"] == expected_report
             current = await client.call_tool("authority", {"query": "support"})
             assert current.is_error is False
             assert isinstance(current.structured_content, dict)
