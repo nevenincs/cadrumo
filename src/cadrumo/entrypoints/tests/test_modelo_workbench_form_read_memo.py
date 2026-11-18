@@ -13,10 +13,13 @@ baseline every admission issues anew.
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import dataclasses
 import inspect
 import json
 import logging
+import threading
+import time
 from collections.abc import Callable, Hashable, Iterator
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -478,3 +481,62 @@ def test_another_profile_is_handed_no_refresh_of_this_profiles_form(reader: _Rea
     assert reader.owner.refresh_settled_form() is None
     assert held.refresh_form() is None
     assert other.form_read.kept_key() is None
+
+
+class _JoinedSlot(_RecordingSlot):
+    """The session's form slot, letting a read join the refresh before it builds."""
+
+    def __init__(self, join: Callable[[], None]) -> None:
+        super().__init__()
+        self._join = join
+
+    @override
+    def refresh(
+        self,
+        key: WorkbenchFormReadKey,
+        build: Callable[[], ModeloWorkbenchFormProjectionV1],
+        *,
+        current: Callable[[], bool],
+    ) -> bool:
+        def joined() -> ModeloWorkbenchFormProjectionV1:
+            self._join()
+            return build()
+
+        return super().refresh(key, joined, current=current)
+
+
+def test_a_refresh_a_returning_read_joined_finishes_while_requests_stay_busy(tmp_path: Path) -> None:
+    busy = threading.Event()
+    with seeded_operator_work(tmp_path) as work:
+        work.recalculate()
+        owner = WorkbenchCaptureMemoryOwner(deferred=busy.is_set)
+        reader = _Reader(work=work, owner=owner)
+        reader.read()
+        _write_06(reader, "100")
+        returned: list[ModeloWorkbenchFormProjectionV1] = []
+        reading: list[threading.Thread] = []
+
+        def join() -> None:
+            # The returning read is the request being served; it waits for this refresh rather than building.
+            busy.set()
+            context = contextvars.copy_context()
+            thread = threading.Thread(target=lambda: returned.append(context.run(reader.read)))
+            reading.append(thread)
+            thread.start()
+            joined_by = time.monotonic() + 60
+            while not slot.refresh_joined() and thread.is_alive():
+                assert time.monotonic() < joined_by, "the returning read never joined the refresh"
+                threading.Event().wait(0.01)
+
+        slot = _JoinedSlot(join)
+        owner.for_profile(work.work_unit.bucket_id).form_read = slot
+        reader.recorder = slot
+        _refreshed(owner)
+        reading[0].join(timeout=60)
+        fresh = _execute(work, None, OutputLanguage.EN)
+        owner.close()
+
+    assert slot.builds == 0, "the read that joined the refresh built the form itself"
+    assert [r.model_dump_json(exclude={"admitted_baseline"}) for r in returned] == [
+        fresh.model_dump_json(exclude={"admitted_baseline"})
+    ]
