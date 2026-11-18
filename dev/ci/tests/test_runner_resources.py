@@ -52,8 +52,11 @@ _LONGEST_INTERVAL: Final = 60
 _MOST_SHARD_WORKERS: Final = 2
 #: Tests in the population bundle frontend sources whose ``@fixtures`` imports
 #: resolve only into a build tree, which a hosted runner holds only once the
-#: window projections are produced.
+#: window projections are placed there. One job seeds them for every shard.
 _WINDOW_PROJECTIONS: Final = "just fixtures-seed-window"
+_WINDOW_ARTIFACT: Final = "cadrumo-window-projections"
+_UPLOAD: Final = "actions/upload-artifact@"
+_DOWNLOAD: Final = "actions/download-artifact@"
 
 _MEMINFO: Final = (
     "MemTotal:       16384000 kB\n"
@@ -196,6 +199,24 @@ def _kill_record_violations(job_name: str, job: Mapping[str, Any], shard_step: i
     return violations
 
 
+def _moves_window_artifact(step: Mapping[str, Any], action: str) -> bool:
+    named = str((step.get("with") or {}).get("name") or "")
+    return str(step.get("uses") or "").startswith(action) and named == _WINDOW_ARTIFACT
+
+
+def _window_producer_violations(document: Mapping[str, Any], job_name: str, job: Mapping[str, Any]) -> list[str]:
+    """Report a shard job whose window projections no job it needs seeds and uploads."""
+    needs = job.get("needs") or []
+    needs = [needs] if isinstance(needs, str) else list(needs)
+    for name in needs:
+        steps = ((document.get("jobs") or {}).get(name) or {}).get("steps") or []
+        seeds = [index for index, step in enumerate(steps) if _WINDOW_PROJECTIONS in str(step.get("run") or "")]
+        uploads = [index for index, step in enumerate(steps) if _moves_window_artifact(step, _UPLOAD)]
+        if seeds and uploads and seeds[0] < uploads[0]:
+            return []
+    return [f"{job_name} needs no job that seeds and uploads the window projections"]
+
+
 def _shard_violations(document: Mapping[str, Any]) -> list[str]:
     """Report every way a shard could lose its resource lines, its exit status or its browser."""
     violations: list[str] = []
@@ -212,9 +233,10 @@ def _shard_violations(document: Mapping[str, Any]) -> list[str]:
             violations.append(
                 f"{job_name} runs its shard with {workers or 'no'} test workers, not 1 to {_MOST_SHARD_WORKERS}"
             )
-        seeds = [index for index, step in enumerate(steps) if str(step.get("run") or "").strip() == _WINDOW_PROJECTIONS]
-        if not seeds or seeds[0] > shard_steps[0]:
-            violations.append(f"{job_name} runs the shard population before producing the window projections")
+        placed = [index for index, step in enumerate(steps) if _moves_window_artifact(step, _DOWNLOAD)]
+        if not placed or placed[0] > shard_steps[0]:
+            violations.append(f"{job_name} runs the shard population before placing the window projections")
+        violations.extend(_window_producer_violations(document, job_name, job))
         setups = [step for step in steps if step.get("uses") == _SETUP_ACTION]
         if not any((step.get("with") or {}).get("browser") in (True, "true") for step in setups):
             violations.append(f"{job_name} runs the shard population without provisioning Chromium")
@@ -319,16 +341,27 @@ def test_the_shard_rule_reports_more_workers_than_the_runner_holds(workers: str)
     ]
 
 
-def test_the_shard_rule_reports_window_projections_missing_or_produced_after_the_tests() -> None:
-    def seed_index(steps: list[dict[str, Any]]) -> int:
-        return next(index for index, step in enumerate(steps) if step.get("run", "").strip() == _WINDOW_PROJECTIONS)
+def test_the_shard_rule_reports_window_projections_missing_placed_late_or_never_produced() -> None:
+    def download(steps: list[dict[str, Any]]) -> int:
+        return next(index for index, step in enumerate(steps) if _moves_window_artifact(step, _DOWNLOAD))
 
     removed = _live()
     steps = removed["jobs"]["tests"]["steps"]
-    del steps[seed_index(steps)]
-    assert _shard_violations(removed) == ["tests runs the shard population before producing the window projections"]
+    del steps[download(steps)]
+    assert _shard_violations(removed) == ["tests runs the shard population before placing the window projections"]
 
     late = _live()
     steps = late["jobs"]["tests"]["steps"]
-    steps.append(steps.pop(seed_index(steps)))
-    assert _shard_violations(late) == ["tests runs the shard population before producing the window projections"]
+    steps.append(steps.pop(download(steps)))
+    assert _shard_violations(late) == ["tests runs the shard population before placing the window projections"]
+
+    unneeded = _live()
+    unneeded["jobs"]["tests"]["needs"] = [name for name in unneeded["jobs"]["tests"]["needs"] if name != "window"]
+    assert _shard_violations(unneeded) == ["tests needs no job that seeds and uploads the window projections"]
+
+    unseeded = _live()
+    producer = unseeded["jobs"]["window"]["steps"]
+    for step in producer:
+        if _WINDOW_PROJECTIONS in str(step.get("run") or ""):
+            step["run"] = "true"
+    assert _shard_violations(unseeded) == ["tests needs no job that seeds and uploads the window projections"]
