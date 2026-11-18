@@ -1518,17 +1518,30 @@ desktop:
     bottom: Divideix a baix
     close: Tanca el panell
     dock: Acobla el panell
+    drag_cancelled: Moviment cancel·lat.
+    drag_moved: S’ha mogut {pane}.
+    drag_started: S’està movent {pane}.
     exit_fullscreen: Surt de pantalla completa
     expand: Amplia a l’espai de treball
     float: Panell flotant
     fullscreen: Pantalla completa
     left: Divideix a l’esquerra
     move: Mou el panell flotant
+    reset_layout: Restableix la distribució predeterminada
+    reset_layout_description: Només canviarà la distribució de l’espai de treball.
+      Es conservaran la pàgina actual, els esborranys i les sessions de terminal.
     resize: Redimensiona el panell flotant
     restore: Restaura la mida del panell
     right: Divideix a la dreta
     tab: Mou a les pestanyes
     tabs: Pestanyes de l’espai de treball
+    target_after: Mou després de {target}
+    target_before: Mou abans de {target}
+    target_bottom: Mou sota de {target}
+    target_left: Mou a l’esquerra de {target}
+    target_right: Mou a la dreta de {target}
+    target_tab: Mou a {target} com a pestanya
+    target_top: Mou damunt de {target}
     top: Divideix a dalt
   docs:
     frame_title: Documentació de Cadrumo

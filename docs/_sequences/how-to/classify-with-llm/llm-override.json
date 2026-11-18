@@ -55,6 +55,7 @@
           "transaction": {
             "accrual_date": null,
             "amount": "605",
+            "arrendamiento_ref": null,
             "attachment_ids": [],
             "booked_date": "2026-02-11",
             "business_classification": "BUSINESS",
@@ -74,6 +75,8 @@
             "description": "Compra de material de oficina",
             "direction": "OUTGOING",
             "fx_rate": null,
+            "gasto_capital_inmobiliario": null,
+            "inmueble_ref": null,
             "investment_asset_id": null,
             "invoice_id": null,
             "irpf_category": null,
@@ -81,13 +84,38 @@
             "iva_category": null,
             "iva_rate": null,
             "lifecycle_state": "ACTIVE",
+            "link_fields": [
+              {
+                "family": "rental_lease",
+                "field": "arrendamiento_ref",
+                "field_words": "Linked lease",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "rental_property",
+                "field": "inmueble_ref",
+                "field_words": "Linked property",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "gasto_capital_inmobiliario",
+                "field": "gasto_capital_inmobiliario",
+                "field_words": "Rental expense concept",
+                "field_words_language": "en",
+                "value": null
+              }
+            ],
             "m210_income_classification": null,
             "modified_at": "2026-04-01T09:00:00+00:00",
             "notes": "",
             "operation_date": null,
             "prorrata_reference": null,
             "purchase_invoice_evidence_id": null,
+            "recargo_amount": null,
             "source_jurisdiction": null,
+            "statement_reference": "ALT-MAT-01",
             "taxable_base": null,
             "transaction_id": "1703f84035f8f1b9e95d99784e08d3a3fd56d526fb555e3d71d59887f5082e3e",
             "usage_ratio_id": null,

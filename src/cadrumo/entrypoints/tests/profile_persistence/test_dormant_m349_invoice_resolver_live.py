@@ -150,3 +150,25 @@ def test_m349_importe_operaciones_folds_seeded_invoices_on_live_calculate(
     _, revision = m349_calculated
     assert revision.casilla_values[_M349_IMPORTE_CASILLA] == M349_EXPECTED_IMPORTE
     assert len(revision.detail_rows) == 3
+
+
+@pytest.mark.unit
+def test_recalculation_replaying_the_current_rows_keeps_the_m349_totals(
+    m349_calculated: tuple[WorkUnit, CalculationRevision],
+    m349_objects: SecureObjectRepository,
+) -> None:
+    # A recalculation replays the current revision's detail rows as caller rows,
+    # and those are the resolver's own rows; counting them again doubled the totals.
+    work_unit, revision = m349_calculated
+    with bundled_indexed_authority().operation() as operation:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_M349_BUCKET, operation=operation),
+            detail_rows=revision.detail_rows,
+            clock=T1,
+        )
+
+    assert isinstance(result, BucketAggregationCalculationResult)
+    assert Decimal(result.revision.casilla_values[_M349_IMPORTE_CASILLA]) == M349_EXPECTED_IMPORTE
+    assert Decimal(result.revision.casilla_values[_M349_OPERADORES_CASILLA]) == M349_EXPECTED_OPERADORES
+    assert result.revision.detail_rows == revision.detail_rows

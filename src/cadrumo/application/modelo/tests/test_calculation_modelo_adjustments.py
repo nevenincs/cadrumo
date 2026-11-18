@@ -145,7 +145,7 @@ def test_union_collapses_an_identical_row_named_by_both_paths_to_one() -> None:
 
     assert len(unioned) == 1
     values = detail_row_binding_values_for_calculation(
-        work_unit=_work_unit(Modelo("349")),
+        resolver_rows=(),
         # Modelo 349 declares only monthly and quarterly periods.
         revision=published_snapshot(
             Modelo("349").value, filing_year=filing_year_envelope().horizon, period="4T"

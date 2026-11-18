@@ -418,7 +418,7 @@ def stdin_is_a_real_console() -> bool:
     Fails CLOSED. When the check cannot be completed the answer is "not a
     console", because the whole point is to never reach a promptable-looking
     channel that cannot actually be typed into. On non-win32, ``isatty()`` is
-    trusted: :func:`getpass.unix_getpass` opens the terminal device itself and
+    trusted: ``getpass.unix_getpass`` opens the terminal device itself and
     surfaces a real failure instead of blocking.
     """
     if sys.platform != "win32":

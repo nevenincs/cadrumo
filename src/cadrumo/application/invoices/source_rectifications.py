@@ -10,6 +10,7 @@ hand, after each invoice has been observed on its own:
   period, from the base declared for it;
 - Modelo 347 keeps a correction of an earlier ejercicio in the amount declared
   but out of the comparison with the floor;
+
 :class:`InvoiceCatalogue`, the profile's invoice catalogue.
 """
 

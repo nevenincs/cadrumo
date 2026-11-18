@@ -17,7 +17,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo_client.commands.access_management_payloads import (
     ConfigProfileAutomationDecisionResult,
     ConfigProfileAutomationDenyResult,
@@ -102,7 +102,8 @@ def profile_sessions(ctx: typer.Context, output_language: OutputLanguage | None 
         sessions = client.sessions()
     except FrontendRefusedError as error:
         raise _refused(error) from error
-    instant = now()
+    # Session expiry is minted on the wall clock, so remaining access is judged on it too.
+    instant = wall_now()
     projected = tuple(
         session_payload(item, instant=instant) for item in sorted(sessions, key=lambda item: item.session_id)
     )

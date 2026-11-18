@@ -956,7 +956,7 @@ nitpick_ignore_regex = [
         r"LocaleNode|ModeloAmendment|ModeloCalculationRevisionDefault|ModeloCode|"
         r"ModeloInputScalar|ModeloInputValue|ModeloInputs|ModeloWorkTarget|"
         r"PlaywrightStorageState|ProviderSessionMetadata|RegisteredSchema|"
-        r"ReviewedSuggestion|SourceEvidenceFingerprint|UserProfileFactValue)$",
+        r"ReviewedSuggestion|RowBindingValue|SourceEvidenceFingerprint|UserProfileFactValue)$",
     ),
     # References into private (single-underscore) modules or to private classes
     # (``pkg._mod.Thing``, ``pkg.mod._Private``), which are implementation
@@ -1007,7 +1007,16 @@ nitpick_ignore_regex = [
     # Playwright is in ``autodoc_mock_imports`` (offline, no inventory), so the
     # dotted ignore above does not cover these short forms; the names are
     # playwright-owned in this codebase (no project class shares them).
+    #
+    # The import-safe alias module ``adapters.outbound.aeat.playwright`` declares
+    # ``type Playwright = Any`` and the like, and autodoc renders a subscripted or
+    # inherited reference to one by that module's qualified path, which names an
+    # alias for a mocked class rather than a documentable object.
     (r"py:.*", r"^(Playwright|Page|BrowserContext|Locator|Response|CDPSession|Download)$"),
+    (
+        r"py:class",
+        r"^cadrumo\.adapters\.outbound\.aeat\.playwright\.(Playwright|Page|BrowserContext|Locator|Response)$",
+    ),
     # Project anchors referenced by bare short name (per the docstring-anchor
     # convention; qualifying a bare anchor is barred by
     # aeat-documentation) whose short name the auto short-reference
@@ -1042,8 +1051,18 @@ nitpick_ignore_regex = [
     (
         r"py:.*",
         r"^(Ed25519PrivateKey|Ed25519PublicKey|X25519PrivateKey|X25519PublicKey|"
-        r"SupportsAllComparisons|model_dump_json|model_validate_json)$",
+        r"SupportsAllComparisons|model_dump_json|model_validate_json|"
+        # ``google_auth_oauthlib`` (annotated under ``TYPE_CHECKING`` in the OAuth
+        # flow), pydantic-core's compiled serializer, and pywin32's security
+        # descriptor in the Windows permission helpers, and pydantic's ``ConfigDict``
+        # (annotating the shared model-config constants): none ships an inventory
+        # offline, and no project symbol shares these names.
+        r"OAuthCredentials|SchemaSerializer|PySECURITY_DESCRIPTOR|ConfigDict)$",
     ),
+    # The builtin mapping view types a ``Mapping`` subclass's ``keys``/``items``/
+    # ``values`` return; Python's inventory documents them only as prose, not as
+    # ``py:class`` targets.
+    (r"py:class", r"^(dict_keys|dict_items|dict_values)$"),
     # Project short references the bare/unrooted resolver cannot uniquely map.
     # Two shapes: (1) an AMBIGUOUS bare helper name with two or more documented
     # definitions across modules (``write_manifest`` x4; ``project_answers`` /
@@ -1127,7 +1146,7 @@ nitpick_ignore_regex = [
     # ``Widget`` above: the TUI screens subclass ``Screen`` and annotate Rich
     # ``Style`` and Textual ``AutopilotCallbackType``. The vendored textual
     # inventory carries the qualified targets, unreachable from the short form.
-    (r"py:class", r"^(Screen|Style|AutopilotCallbackType)$"),
+    (r"py:class", r"^(Screen|Style|AutopilotCallbackType|OptionListContent)$"),
     # The same, for what the profile and workbench screens annotate: Textual's
     # ``App`` and its visual types, Rich's ``RenderableType``, and the message
     # classes Textual nests in a widget (``Button.Pressed``), which autodoc
@@ -1212,7 +1231,7 @@ nitpick_ignore_regex = [
         # Period-token regex fragments (``Q``, ``annual`` from a
         # StringConstraints ``^(Q[1-4]|...|annual)$`` pattern) that autodoc
         # mis-renders as bare class targets.
-        r"Q|annual)$",
+        r"Q|annual|AB)$",
     ),
     # Bound-method references on external (stdlib / pydantic) types, written
     # ``datetime.now`` / ``date.today``; the owning type resolves via inventory
