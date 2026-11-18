@@ -1,7 +1,13 @@
 import { useCallback, useRef, useState } from "react";
-import { activateDockPane, type DockPane } from "./docking";
+import { activateDockPane, initialDockLayout, type DockPane } from "./docking";
 import type { Host } from "./host";
-import type { Layout, LedgerView, ProfileView } from "./layout";
+import {
+  DEFAULT_LAYOUT,
+  DEFAULT_PREFS,
+  type Layout,
+  type LedgerView,
+  type ProfileView,
+} from "./layout";
 import type { AccountPhase } from "./signIn";
 import type { Translate } from "./strings";
 import { useFullscreen } from "./useFullscreen";
@@ -38,6 +44,53 @@ export function useWorkspaceArrangement({
   const fullscreen = useFullscreen(host, () =>
     say(t("desktop.titlebar.failed")),
   );
+  const [reset, setReset] = useState<"closed" | "confirm" | "applying">(
+    "closed",
+  );
+  const resetOpener = useRef<HTMLElement | null>(null);
+  const askResetLayout = useCallback(() => {
+    const held = document.activeElement;
+    const triggerId = held
+      ?.closest("[data-dock-menu]")
+      ?.getAttribute("aria-labelledby");
+    resetOpener.current = triggerId
+      ? document.getElementById(triggerId)
+      : held instanceof HTMLElement
+        ? held
+        : null;
+    setReset("confirm");
+  }, []);
+  const closeReset = () =>
+    setReset((current) => (current === "confirm" ? "closed" : current));
+  const resetLayout = async () => {
+    if (reset !== "confirm") return;
+    setReset("applying");
+    if (!(await fullscreen.leavePaneFullscreen())) {
+      setReset("confirm");
+      return;
+    }
+    setPrefs((current) => ({
+      ...current,
+      orientation: DEFAULT_PREFS.orientation,
+      order: DEFAULT_PREFS.order,
+    }));
+    setLayout((current) => ({
+      ...current,
+      docking: initialDockLayout(DEFAULT_PREFS, DEFAULT_LAYOUT),
+      maximized: DEFAULT_LAYOUT.maximized,
+      agentShown: DEFAULT_LAYOUT.agentShown,
+      agentRatio: DEFAULT_LAYOUT.agentRatio,
+      tuiShown: DEFAULT_LAYOUT.tuiShown,
+      // A document requested by the user stays on screen.
+      docsShown: current.page === "docs" && current.docsShown,
+      splitRatio: DEFAULT_LAYOUT.splitRatio,
+      panelOpen: DEFAULT_LAYOUT.panelOpen,
+      panelRatio: DEFAULT_LAYOUT.panelRatio,
+      tab: DEFAULT_LAYOUT.tab,
+    }));
+    resetOpener.current = null;
+    setReset("closed");
+  };
   const enterFullscreen = fullscreen.toggle;
   const revealPane = fullscreen.reveal;
   const activatePane = useCallback(
@@ -111,6 +164,12 @@ export function useWorkspaceArrangement({
     [setLayout],
   );
   return {
+    resetOpen: reset !== "closed",
+    resetOpener,
+    resetPending: reset === "applying",
+    closeReset,
+    askResetLayout,
+    resetLayout,
     workspace,
     viewportWidth,
     prefersDark,

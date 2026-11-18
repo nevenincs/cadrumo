@@ -1461,17 +1461,30 @@ desktop:
     bottom: Split below
     close: Close panel
     dock: Dock panel
+    drag_cancelled: Move cancelled.
+    drag_moved: Moved {pane}.
+    drag_started: Moving {pane}.
     exit_fullscreen: Exit full screen
     expand: Expand in workspace
     float: Float panel
     fullscreen: Full screen
     left: Split left
     move: Move floating panel
+    reset_layout: Revert to default layout
+    reset_layout_description: Only the workspace layout will change. Your current
+      page, drafts, and terminal sessions will be preserved.
     resize: Resize floating panel
     restore: Restore panel size
     right: Split right
     tab: Move to tabs
     tabs: Workspace tabs
+    target_after: Move after {target}
+    target_before: Move before {target}
+    target_bottom: Move below {target}
+    target_left: Move left of {target}
+    target_right: Move right of {target}
+    target_tab: Move into {target} as a tab
+    target_top: Move above {target}
     top: Split above
   docs:
     frame_title: Cadrumo documentation

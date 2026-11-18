@@ -72,6 +72,7 @@ export function ShellDock({
   settledSetups,
   byId,
   runAction,
+  cancelDrag,
   maximizeControl,
   splitControls,
   layout,
@@ -148,6 +149,7 @@ export function ShellDock({
   settledSetups: string | null;
   byId: (id: string) => Action | undefined;
   runAction: (id: string) => void;
+  cancelDrag: boolean;
   maximizeControl: (area: Area, labelKey: string) => PaneControl;
   splitControls: PaneControl[];
   layout: Layout;
@@ -263,6 +265,8 @@ export function ShellDock({
 
   return (
     <DockWorkspace
+      onResetLayout={() => runAction("layout.reset")}
+      cancelDrag={cancelDrag}
       layout={docking}
       minimumWidths={dockMinimumWidths}
       besideWidths={dockBesideWidths}
