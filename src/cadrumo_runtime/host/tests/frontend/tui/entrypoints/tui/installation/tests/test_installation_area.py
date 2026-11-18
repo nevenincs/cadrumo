@@ -26,7 +26,7 @@ from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo.entrypoints.tui.installation.act_screen import InstallationActScreen
 from cadrumo.entrypoints.tui.installation.destination import InstallationScreen
 from cadrumo.entrypoints.tui.installation.door import InstallationClientOpener
-from cadrumo.entrypoints.tui.installation.texts import act_label, yes_no
+from cadrumo.entrypoints.tui.installation.texts import act_label
 from cadrumo.entrypoints.tui.tests.frame import screen_text
 from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 from cadrumo.tests.log_records import delivered_records, delivered_text
@@ -198,7 +198,7 @@ async def test_a_read_act_runs_at_once_and_shows_its_typed_reply(tmp_path: Path)
             assert _status(check).tone == "success"
             assert _status(check).message == tr("tui.installation.status.completed")
             result = _result(check)
-            assert _fact(result, "healthy") == yes_no(True)
+            assert _fact(result, "healthy") == tr("flows.confirm.yes")
             assert _fact(result, "storage_root") == str(served.root) and _fact(result, "checked_areas") == "4"
             # The reply's correlation coordinates say nothing about the act.
             assert "request_id" not in result and "connection_id" not in result
@@ -217,7 +217,7 @@ async def test_a_read_act_runs_at_once_and_shows_its_typed_reply(tmp_path: Path)
                 "populated",
                 str(RECLAIMABLE_ENTRIES),
                 "4096 B",
-                yes_no(True),
+                tr("flows.confirm.yes"),
             ]
             assert "footprint_bytes" in _result(inventory)
 
@@ -289,12 +289,12 @@ async def test_confirmation_is_asked_only_when_the_confirmed_act_would_change_re
             assert served.acts.repairs[-1] == (None, True, False)
             assert _status(repair).message == tr("tui.installation.status.preview")
             asked = str(dialog.query_one("#confirm-message", Static).content)
-            assert _fact(asked, "dry_run") == yes_no(True)
+            assert _fact(asked, "dry_run") == tr("flows.confirm.yes")
             dialog.query_one("#btn-confirm-accept", Button).press()
             await act_settled(pilot, repair)
 
             assert served.acts.repairs == [(None, False, False), (None, True, False), (None, True, True)]
-            assert _fact(_result(repair), "cleared_pointer") == yes_no(True)
+            assert _fact(_result(repair), "cleared_pointer") == tr("flows.confirm.yes")
 
 
 @pytest.mark.asyncio
@@ -340,7 +340,7 @@ async def test_archive_import_reads_the_source_first_and_its_passphrase_travels_
             assert served.acts.passphrases == [_TYPED]
             assert importing._pending_passphrase is None and not any(held)
             assert _fact(_result(importing), "label") == "Restored profile"
-            assert _fact(_result(importing), "recovery_enrolled") == yes_no(False)
+            assert _fact(_result(importing), "recovery_enrolled") == tr("flows.confirm.no")
             assert _TYPED not in _shown(app)
     assert changed == [True]
     assert _TYPED not in _logged(caplog)
