@@ -333,7 +333,7 @@ profile:
         escalera:
           label: Lépcsőház
         km:
-          label: Km
+          label: km
         municipality_code:
           label: Településkód
         municipality_name:
@@ -702,7 +702,7 @@ profile:
         incumple_lau_17_6:
           label: Megsérti a LAU 17.6. cikkét (feszített zóna)
         inmueble:
-          label: Bérbeadott ingatlan (sorkulcs)
+          label: Bérbe adott ingatlan (sorkulcs)
         inquilinos:
           label: Bérlők
         primer_arrendamiento_vivienda:
@@ -1104,7 +1104,7 @@ profile:
       renta_inmueble:
         summary: A bérbe adott ingatlanaid, ingatlanonként egy sor. Ide kerülnek az
           állandó adataik; az összegek a főkönyvből jönnek.
-        title: Bérbeadott ingatlanok
+        title: Bérbe adott ingatlanok
       renta_spouse:
         summary: A házastársad adatai, amelyekre a közös bevalláshoz van szükség.
         title: Házastárs (Renta)

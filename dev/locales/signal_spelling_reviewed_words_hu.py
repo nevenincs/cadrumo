@@ -399,5 +399,27 @@ REVIEWED_HUNGARIAN_SPELLINGS: frozenset[str] = frozenset(
         # Decreto 1007/2023 (written VERI*FACTU in the regulation):
         # https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840
         "Verifactu",
+        # AEAT terms quoted as printed in filing guidance and profile labels.
+        "apartado",
+        "Delegación",
+        "Regla",
+        "contingencia",
+        "denominación",
+        "rústico",
+        # Hungarian equivalents and their used inflections in contribution,
+        # filing and export guidance. The pinned dictionary lacks these forms.
+        "alkulcs",
+        "alkulcshoz",
+        "alkulcsnak",
+        "alkulcsnál",
+        "alkulcsot",
+        "alkulcsához",
+        "imputációjához",
+        "jogvédelmi",
+        "késedelmi",
+        "szerializáló",
+        "kockázatitőke",
+        "Kockázatitőke",
+        "újrabefektetés",
     }
 )
