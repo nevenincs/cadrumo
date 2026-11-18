@@ -1,0 +1,256 @@
+# The 2022 design prints the cooperativa base-imponible lines as letter tokens [C1] to [E11]
+# (aeat-dr-200-2022 lines 3652 to 3672); the 2023 design prints the same lines as boxes [02827] to
+# [02849]. No field is discontinued in substance: each 2022 lineage ends because one casilla lineage
+# cannot span two identifier grammars, and no value carries between the two editions.
+
+# DP200022:C1 is not discontinued in substance. aeat-dr-200-2022 line 3652 (DP200022 field 46): 'Rég. cooperativas - Determ. base imponible - Ingresos computables - Resultados cooperativos [C1]'; aeat-dr-200-2023 line 3786 (DP200022 field 50): 'Rég. cooperativas - Determ. base imponible - 1, Ingresos computables - Resultados cooperativos [02827]'. The successor is 02827. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [C1] to the
+# printed number [02827]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-c1-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-c1"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:E1 is not discontinued in substance. aeat-dr-200-2022 line 3653 (DP200022 field 47): 'Rég. cooperativas - Determ. base imponible - Ingresos computables - Resultados extracooperativos [E1]'; aeat-dr-200-2023 line 3787 (DP200022 field 51): 'Rég. cooperativas - Determ. base imponible - 1. Ingresos computables - Resultados extracooperativos [02828]'. The successor is 02828. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [E1] to the
+# printed number [02828]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-e1-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-e1"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:C2 is not discontinued in substance. aeat-dr-200-2022 line 3654 (DP200022 field 48): 'Rég. cooperativas - Determ. base imponible - Gastos específicos - Resultados cooperativos [C2]'; aeat-dr-200-2023 line 3788 (DP200022 field 52): 'Rég. cooperativas - Determ. base imponible - 2. Gastos específicos - Resultados cooperativos [02829]'. The successor is 02829. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [C2] to the
+# printed number [02829]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-c2-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-c2"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:E2 is not discontinued in substance. aeat-dr-200-2022 line 3655 (DP200022 field 49): 'Rég. cooperativas - Determ. base imponible - Gastos específicos - Resultados extracooperativos [E2]'; aeat-dr-200-2023 line 3789 (DP200022 field 53): 'Rég. cooperativas - Determ. base imponible - 2. Gastos específicos - Resultados extracooperativos [02830]'. The successor is 02830. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [E2] to the
+# printed number [02830]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-e2-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-e2"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:C3 is not discontinued in substance. aeat-dr-200-2022 line 3656 (DP200022 field 50): 'Rég. cooperativas - Determ. base imponible - Gastos generales imputados - Resultados cooperativos [C3]'; aeat-dr-200-2023 line 3790 (DP200022 field 54): 'Rég. cooperativas - Determ. base imponible - 3. Gastos generales imputados - Resultados cooperativos [02832]'. The successor is 02832. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [C3] to the
+# printed number [02832]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-c3-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-c3"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:E3 is not discontinued in substance. aeat-dr-200-2022 line 3657 (DP200022 field 51): 'Rég. cooperativas - Determ. base imponible - Gastos generales imputados - Resultados extracooperativos [E3]'; aeat-dr-200-2023 line 3791 (DP200022 field 55): 'Rég. cooperativas - Determ. base imponible - 3. Gastos generales imputados - Resultados extracooperativos [02833]'. The successor is 02833. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [E3] to the
+# printed number [02833]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-e3-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-e3"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:C4 is not discontinued in substance. aeat-dr-200-2022 line 3658 (DP200022 field 52): 'Rég. cooperativas - Determ. base imponible - Gastos Fondo de Educación y Promoción - Resultados cooperativos [C4]'; aeat-dr-200-2023 line 3792 (DP200022 field 56): 'Rég. cooperativas - Determ. base imponible - 4. Gastos Fondo de Educación y Promoción - Resultados cooperativos [02834]'. The successor is 02834. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [C4] to the
+# printed number [02834]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-c4-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-c4"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:E4 is not discontinued in substance. aeat-dr-200-2022 line 3659 (DP200022 field 53): 'Rég. cooperativas - Determ. base imponible - Gastos Fondo de Educación y Promoción - Resultados extracooperativos [E4]'; aeat-dr-200-2023 line 3793 (DP200022 field 57): 'Rég. cooperativas - Determ. base imponible - 4. Gastos Fondo de Educación y Promoción - Resultados extracooperativos [02835]'. The successor is 02835. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [E4] to the
+# printed number [02835]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-e4-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-e4"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:E5 is not discontinued in substance. aeat-dr-200-2022 line 3660 (DP200022 field 54): 'Rég. cooperativas - Determ. base imponible - Incrementos y disminuciones patrimoniales - Resultados extracooperativos [E5]'; aeat-dr-200-2023 line 3794 (DP200022 field 58): 'Rég. cooperativas - Determ. base imponible - 5. Incrementos y disminuciones patrimoniales - Resultados extracooperativos [02836]'. The successor is 02836. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [E5] to the
+# printed number [02836]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-e5-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-e5"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:C6 is not discontinued in substance. aeat-dr-200-2022 line 3661 (DP200022 field 55): 'Rég. cooperativas - Determ. base imponible - Resultado - Resultados cooperativos [C6]'; aeat-dr-200-2023 line 3795 (DP200022 field 59): 'Rég. cooperativas - Determ. base imponible - 6. Resultado - Resultados cooperativos [02837]'. The successor is 02837. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [C6] to the
+# printed number [02837]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-c6-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-c6"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:E6 is not discontinued in substance. aeat-dr-200-2022 line 3662 (DP200022 field 56): 'Rég. cooperativas - Determ. base imponible - Resultado - Resultados extracooperativos [E6]'; aeat-dr-200-2023 line 3796 (DP200022 field 60): 'Rég. cooperativas - Determ. base imponible - 6. Resultado - Resultados extracooperativos [02838]'. The successor is 02838. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [E6] to the
+# printed number [02838]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-e6-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-e6"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:C7 is not discontinued in substance. aeat-dr-200-2022 line 3663 (DP200022 field 57): 'Rég. cooperativas - Determ. base imponible - Aumentos - Resultados cooperativos [C7]'; aeat-dr-200-2023 line 3797 (DP200022 field 61): 'Rég. cooperativas - Determ. base imponible - 7. Aumentos - Resultados cooperativos [02839]'. The successor is 02839. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [C7] to the
+# printed number [02839]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-c7-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-c7"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:E7 is not discontinued in substance. aeat-dr-200-2022 line 3664 (DP200022 field 58): 'Rég. cooperativas - Determ. base imponible - Aumentos - Resultados extracooperativos [E7]'; aeat-dr-200-2023 line 3798 (DP200022 field 62): 'Rég. cooperativas - Determ. base imponible - 7. Aumentos - Resultados extracooperativos [02840]'. The successor is 02840. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [E7] to the
+# printed number [02840]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-e7-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-e7"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:C8 is not discontinued in substance. aeat-dr-200-2022 line 3665 (DP200022 field 59): 'Rég. cooperativas - Determ. base imponible - Disminuciones - Resultados cooperativos [C8]'; aeat-dr-200-2023 line 3799 (DP200022 field 63): 'Rég. cooperativas - Determ. base imponible - 8. Disminuciones - Resultados cooperativos [02841]'. The successor is 02841. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [C8] to the
+# printed number [02841]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-c8-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-c8"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:E8 is not discontinued in substance. aeat-dr-200-2022 line 3666 (DP200022 field 60): 'Rég. cooperativas - Determ. base imponible - Disminuciones - Resultados extracooperativos [E8]'; aeat-dr-200-2023 line 3800 (DP200022 field 64): 'Rég. cooperativas - Determ. base imponible - 8. Disminuciones - Resultados extracooperativos [02842]'. The successor is 02842. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [E8] to the
+# printed number [02842]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-e8-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-e8"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:C9 is not discontinued in substance. aeat-dr-200-2022 line 3667 (DP200022 field 61): 'Rég. cooperativas - Determ. base imponible - 50% Dotación obligatoria - Resultados cooperativos [C9]'; aeat-dr-200-2023 line 3801 (DP200022 field 65): 'Rég. cooperativas - Determ. base imponible - 9. 50% Dotación obligatoria - Resultados cooperativos [02843]'. The successor is 02843. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [C9] to the
+# printed number [02843]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-c9-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-c9"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:E9 is not discontinued in substance. aeat-dr-200-2022 line 3668 (DP200022 field 62): 'Rég. cooperativas - Determ. base imponible - 50% Dotación obligatoria - Resultados extracooperativos [E9]'; aeat-dr-200-2023 line 3802 (DP200022 field 66): 'Rég. cooperativas - Determ. base imponible - 9. 50% Dotación obligatoria - Resultados extracooperativos [02845]'. The successor is 02845. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [E9] to the
+# printed number [02845]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-e9-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-e9"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:C10 is not discontinued in substance. aeat-dr-200-2022 line 3669 (DP200022 field 63): 'Rég. cooperativas - Determ. base imponible - Reserva inversiones Canarias - Resultados cooperativos [C10]'; aeat-dr-200-2023 line 3803 (DP200022 field 67): 'Rég. cooperativas - Determ. base imponible - 10. Reserva inversiones Canarias - Resultados cooperativos [02846]'. The successor is 02846. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [C10] to the
+# printed number [02846]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-c10-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-c10"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:E10 is not discontinued in substance. aeat-dr-200-2022 line 3670 (DP200022 field 64): 'Rég. cooperativas - Determ. base imponible - Reserva inversiones Canarias - Resultados extracooperativos [E10]'; aeat-dr-200-2023 line 3804 (DP200022 field 68): 'Rég. cooperativas - Determ. base imponible - 10. Reserva inversiones Canarias - Resultados extracooperativos [02847]'. The successor is 02847. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [E10] to the
+# printed number [02847]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-e10-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-e10"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:C11 is not discontinued in substance. aeat-dr-200-2022 line 3671 (DP200022 field 65): 'Rég. cooperativas - Determ. base imponible - Factor de agotamiento - Resultados cooperativos [C11]'; aeat-dr-200-2023 line 3807 (DP200022 field 71): 'Rég. cooperativas - Determ. base imponible - 12, Factor de agotamiento - Resultados cooperativos [02848]'. The successor is 02848. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [C11] to the
+# printed number [02848]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-c11-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-c11"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# DP200022:E11 is not discontinued in substance. aeat-dr-200-2022 line 3672 (DP200022 field 66): 'Rég. cooperativas - Determ. base imponible - Factor de agotamiento - Resultados extracooperativos [E11]'; aeat-dr-200-2023 line 3808 (DP200022 field 72): 'Rég. cooperativas - Determ. base imponible - 12, Factor de agotamiento - Resultados extracooperativos [02849]'. The successor is 02849. The lineage
+# restarts only because the identifier changes grammar from the printed letter token [E11] to the
+# printed number [02849]; no value carries between the two.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200022-e11-2022-2023-retired"
+continuidad_id = "is-m200-dp200022-e11"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]

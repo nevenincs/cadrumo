@@ -635,3 +635,27 @@ to_revision = "2023"
 evolution_kind = "retired"
 legal_refs = ["orden-hac-495-2024:modelo-200"]
 source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200024-pos-193-2022-2023-retired"
+continuidad_id = "is-m200-dp200024-pos-193"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200024-pos-210-2022-2023-retired"
+continuidad_id = "is-m200-dp200024-pos-210"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200024-pos-227-2022-2023-retired"
+continuidad_id = "is-m200-dp200024-pos-227"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]

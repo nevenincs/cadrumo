@@ -1965,7 +1965,7 @@ legal_refs = ["ley-19-1994:art-27"]
 [[revisions."2023".casillas]]
 id = "02827"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3786 (DP200022 field 50): Rég. cooperativas - Determ. base imponible - 1, Ingresos computables - Resultados cooperativos [02827]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02827]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3786 (DP200022 field 50): 'Rég. cooperativas - Determ. base imponible - 1, Ingresos computables - Resultados cooperativos [02827]'. aeat-dr-200-2022 line 3652 (DP200022 field 46): 'Rég. cooperativas - Determ. base imponible - Ingresos computables - Resultados cooperativos [C1]', which the 2022 edition declares as DP200022:C1 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [C1] to the printed number [02827], so no value carries between the two."
 continuidad_id = "02827"
 number = "02827"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -1976,7 +1976,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02828"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3787 (DP200022 field 51): Rég. cooperativas - Determ. base imponible - 1. Ingresos computables - Resultados extracooperativos [02828]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02828]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3787 (DP200022 field 51): 'Rég. cooperativas - Determ. base imponible - 1. Ingresos computables - Resultados extracooperativos [02828]'. aeat-dr-200-2022 line 3653 (DP200022 field 47): 'Rég. cooperativas - Determ. base imponible - Ingresos computables - Resultados extracooperativos [E1]', which the 2022 edition declares as DP200022:E1 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [E1] to the printed number [02828], so no value carries between the two."
 continuidad_id = "02828"
 number = "02828"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -1987,7 +1987,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02829"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3788 (DP200022 field 52): Rég. cooperativas - Determ. base imponible - 2. Gastos específicos - Resultados cooperativos [02829]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02829]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3788 (DP200022 field 52): 'Rég. cooperativas - Determ. base imponible - 2. Gastos específicos - Resultados cooperativos [02829]'. aeat-dr-200-2022 line 3654 (DP200022 field 48): 'Rég. cooperativas - Determ. base imponible - Gastos específicos - Resultados cooperativos [C2]', which the 2022 edition declares as DP200022:C2 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [C2] to the printed number [02829], so no value carries between the two."
 continuidad_id = "02829"
 number = "02829"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -1998,7 +1998,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02830"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3789 (DP200022 field 53): Rég. cooperativas - Determ. base imponible - 2. Gastos específicos - Resultados extracooperativos [02830]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02830]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3789 (DP200022 field 53): 'Rég. cooperativas - Determ. base imponible - 2. Gastos específicos - Resultados extracooperativos [02830]'. aeat-dr-200-2022 line 3655 (DP200022 field 49): 'Rég. cooperativas - Determ. base imponible - Gastos específicos - Resultados extracooperativos [E2]', which the 2022 edition declares as DP200022:E2 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [E2] to the printed number [02830], so no value carries between the two."
 continuidad_id = "02830"
 number = "02830"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2009,7 +2009,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02832"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3790 (DP200022 field 54): Rég. cooperativas - Determ. base imponible - 3. Gastos generales imputados - Resultados cooperativos [02832]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02832]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3790 (DP200022 field 54): 'Rég. cooperativas - Determ. base imponible - 3. Gastos generales imputados - Resultados cooperativos [02832]'. aeat-dr-200-2022 line 3656 (DP200022 field 50): 'Rég. cooperativas - Determ. base imponible - Gastos generales imputados - Resultados cooperativos [C3]', which the 2022 edition declares as DP200022:C3 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [C3] to the printed number [02832], so no value carries between the two."
 continuidad_id = "02832"
 number = "02832"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2020,7 +2020,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02833"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3791 (DP200022 field 55): Rég. cooperativas - Determ. base imponible - 3. Gastos generales imputados - Resultados extracooperativos [02833]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02833]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3791 (DP200022 field 55): 'Rég. cooperativas - Determ. base imponible - 3. Gastos generales imputados - Resultados extracooperativos [02833]'. aeat-dr-200-2022 line 3657 (DP200022 field 51): 'Rég. cooperativas - Determ. base imponible - Gastos generales imputados - Resultados extracooperativos [E3]', which the 2022 edition declares as DP200022:E3 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [E3] to the printed number [02833], so no value carries between the two."
 continuidad_id = "02833"
 number = "02833"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2031,7 +2031,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02834"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3792 (DP200022 field 56): Rég. cooperativas - Determ. base imponible - 4. Gastos Fondo de Educación y Promoción - Resultados cooperativos [02834]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02834]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3792 (DP200022 field 56): 'Rég. cooperativas - Determ. base imponible - 4. Gastos Fondo de Educación y Promoción - Resultados cooperativos [02834]'. aeat-dr-200-2022 line 3658 (DP200022 field 52): 'Rég. cooperativas - Determ. base imponible - Gastos Fondo de Educación y Promoción - Resultados cooperativos [C4]', which the 2022 edition declares as DP200022:C4 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [C4] to the printed number [02834], so no value carries between the two."
 continuidad_id = "02834"
 number = "02834"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2042,7 +2042,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02835"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3793 (DP200022 field 57): Rég. cooperativas - Determ. base imponible - 4. Gastos Fondo de Educación y Promoción - Resultados extracooperativos [02835]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02835]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3793 (DP200022 field 57): 'Rég. cooperativas - Determ. base imponible - 4. Gastos Fondo de Educación y Promoción - Resultados extracooperativos [02835]'. aeat-dr-200-2022 line 3659 (DP200022 field 53): 'Rég. cooperativas - Determ. base imponible - Gastos Fondo de Educación y Promoción - Resultados extracooperativos [E4]', which the 2022 edition declares as DP200022:E4 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [E4] to the printed number [02835], so no value carries between the two."
 continuidad_id = "02835"
 number = "02835"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2053,7 +2053,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02836"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3794 (DP200022 field 58): Rég. cooperativas - Determ. base imponible - 5. Incrementos y disminuciones patrimoniales - Resultados extracooperativos [02836]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02836]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3794 (DP200022 field 58): 'Rég. cooperativas - Determ. base imponible - 5. Incrementos y disminuciones patrimoniales - Resultados extracooperativos [02836]'. aeat-dr-200-2022 line 3660 (DP200022 field 54): 'Rég. cooperativas - Determ. base imponible - Incrementos y disminuciones patrimoniales - Resultados extracooperativos [E5]', which the 2022 edition declares as DP200022:E5 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [E5] to the printed number [02836], so no value carries between the two."
 continuidad_id = "02836"
 number = "02836"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2064,7 +2064,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02837"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3795 (DP200022 field 59): Rég. cooperativas - Determ. base imponible - 6. Resultado - Resultados cooperativos [02837]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02837]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3795 (DP200022 field 59): 'Rég. cooperativas - Determ. base imponible - 6. Resultado - Resultados cooperativos [02837]'. aeat-dr-200-2022 line 3661 (DP200022 field 55): 'Rég. cooperativas - Determ. base imponible - Resultado - Resultados cooperativos [C6]', which the 2022 edition declares as DP200022:C6 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [C6] to the printed number [02837], so no value carries between the two."
 continuidad_id = "02837"
 number = "02837"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2075,7 +2075,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02838"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3796 (DP200022 field 60): Rég. cooperativas - Determ. base imponible - 6. Resultado - Resultados extracooperativos [02838]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02838]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3796 (DP200022 field 60): 'Rég. cooperativas - Determ. base imponible - 6. Resultado - Resultados extracooperativos [02838]'. aeat-dr-200-2022 line 3662 (DP200022 field 56): 'Rég. cooperativas - Determ. base imponible - Resultado - Resultados extracooperativos [E6]', which the 2022 edition declares as DP200022:E6 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [E6] to the printed number [02838], so no value carries between the two."
 continuidad_id = "02838"
 number = "02838"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2086,7 +2086,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02839"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3797 (DP200022 field 61): Rég. cooperativas - Determ. base imponible - 7. Aumentos - Resultados cooperativos [02839]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02839]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3797 (DP200022 field 61): 'Rég. cooperativas - Determ. base imponible - 7. Aumentos - Resultados cooperativos [02839]'. aeat-dr-200-2022 line 3663 (DP200022 field 57): 'Rég. cooperativas - Determ. base imponible - Aumentos - Resultados cooperativos [C7]', which the 2022 edition declares as DP200022:C7 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [C7] to the printed number [02839], so no value carries between the two."
 continuidad_id = "02839"
 number = "02839"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2097,7 +2097,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02840"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3798 (DP200022 field 62): Rég. cooperativas - Determ. base imponible - 7. Aumentos - Resultados extracooperativos [02840]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02840]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3798 (DP200022 field 62): 'Rég. cooperativas - Determ. base imponible - 7. Aumentos - Resultados extracooperativos [02840]'. aeat-dr-200-2022 line 3664 (DP200022 field 58): 'Rég. cooperativas - Determ. base imponible - Aumentos - Resultados extracooperativos [E7]', which the 2022 edition declares as DP200022:E7 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [E7] to the printed number [02840], so no value carries between the two."
 continuidad_id = "02840"
 number = "02840"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2108,7 +2108,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02841"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3799 (DP200022 field 63): Rég. cooperativas - Determ. base imponible - 8. Disminuciones - Resultados cooperativos [02841]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02841]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3799 (DP200022 field 63): 'Rég. cooperativas - Determ. base imponible - 8. Disminuciones - Resultados cooperativos [02841]'. aeat-dr-200-2022 line 3665 (DP200022 field 59): 'Rég. cooperativas - Determ. base imponible - Disminuciones - Resultados cooperativos [C8]', which the 2022 edition declares as DP200022:C8 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [C8] to the printed number [02841], so no value carries between the two."
 continuidad_id = "02841"
 number = "02841"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2119,7 +2119,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02842"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3800 (DP200022 field 64): Rég. cooperativas - Determ. base imponible - 8. Disminuciones - Resultados extracooperativos [02842]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02842]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3800 (DP200022 field 64): 'Rég. cooperativas - Determ. base imponible - 8. Disminuciones - Resultados extracooperativos [02842]'. aeat-dr-200-2022 line 3666 (DP200022 field 60): 'Rég. cooperativas - Determ. base imponible - Disminuciones - Resultados extracooperativos [E8]', which the 2022 edition declares as DP200022:E8 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [E8] to the printed number [02842], so no value carries between the two."
 continuidad_id = "02842"
 number = "02842"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2130,7 +2130,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02843"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3801 (DP200022 field 65): Rég. cooperativas - Determ. base imponible - 9. 50% Dotación obligatoria - Resultados cooperativos [02843]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02843]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3801 (DP200022 field 65): 'Rég. cooperativas - Determ. base imponible - 9. 50% Dotación obligatoria - Resultados cooperativos [02843]'. aeat-dr-200-2022 line 3667 (DP200022 field 61): 'Rég. cooperativas - Determ. base imponible - 50% Dotación obligatoria - Resultados cooperativos [C9]', which the 2022 edition declares as DP200022:C9 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [C9] to the printed number [02843], so no value carries between the two."
 continuidad_id = "02843"
 number = "02843"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2141,7 +2141,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02845"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3802 (DP200022 field 66): Rég. cooperativas - Determ. base imponible - 9. 50% Dotación obligatoria - Resultados extracooperativos [02845]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02845]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3802 (DP200022 field 66): 'Rég. cooperativas - Determ. base imponible - 9. 50% Dotación obligatoria - Resultados extracooperativos [02845]'. aeat-dr-200-2022 line 3668 (DP200022 field 62): 'Rég. cooperativas - Determ. base imponible - 50% Dotación obligatoria - Resultados extracooperativos [E9]', which the 2022 edition declares as DP200022:E9 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [E9] to the printed number [02845], so no value carries between the two."
 continuidad_id = "02845"
 number = "02845"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2152,7 +2152,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02846"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3803 (DP200022 field 67): Rég. cooperativas - Determ. base imponible - 10. Reserva inversiones Canarias - Resultados cooperativos [02846]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02846]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3803 (DP200022 field 67): 'Rég. cooperativas - Determ. base imponible - 10. Reserva inversiones Canarias - Resultados cooperativos [02846]'. aeat-dr-200-2022 line 3669 (DP200022 field 63): 'Rég. cooperativas - Determ. base imponible - Reserva inversiones Canarias - Resultados cooperativos [C10]', which the 2022 edition declares as DP200022:C10 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [C10] to the printed number [02846], so no value carries between the two."
 continuidad_id = "02846"
 number = "02846"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2163,7 +2163,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02847"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3804 (DP200022 field 68): Rég. cooperativas - Determ. base imponible - 10. Reserva inversiones Canarias - Resultados extracooperativos [02847]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02847]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3804 (DP200022 field 68): 'Rég. cooperativas - Determ. base imponible - 10. Reserva inversiones Canarias - Resultados extracooperativos [02847]'. aeat-dr-200-2022 line 3670 (DP200022 field 64): 'Rég. cooperativas - Determ. base imponible - Reserva inversiones Canarias - Resultados extracooperativos [E10]', which the 2022 edition declares as DP200022:E10 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [E10] to the printed number [02847], so no value carries between the two."
 continuidad_id = "02847"
 number = "02847"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2174,7 +2174,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02848"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3807 (DP200022 field 71): Rég. cooperativas - Determ. base imponible - 12, Factor de agotamiento - Resultados cooperativos [02848]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02848]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3807 (DP200022 field 71): 'Rég. cooperativas - Determ. base imponible - 12, Factor de agotamiento - Resultados cooperativos [02848]'. aeat-dr-200-2022 line 3671 (DP200022 field 65): 'Rég. cooperativas - Determ. base imponible - Factor de agotamiento - Resultados cooperativos [C11]', which the 2022 edition declares as DP200022:C11 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [C11] to the printed number [02848], so no value carries between the two."
 continuidad_id = "02848"
 number = "02848"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -2185,7 +2185,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 [[revisions."2023".casillas]]
 id = "02849"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3808 (DP200022 field 72): Rég. cooperativas - Determ. base imponible - 12, Factor de agotamiento - Resultados extracooperativos [02849]. aeat-dr-200-2022 prints no field with this caption. It prints no box [02849]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
+continuidad_evidence = "aeat-dr-200-2023 line 3808 (DP200022 field 72): 'Rég. cooperativas - Determ. base imponible - 12, Factor de agotamiento - Resultados extracooperativos [02849]'. aeat-dr-200-2022 line 3672 (DP200022 field 66): 'Rég. cooperativas - Determ. base imponible - Factor de agotamiento - Resultados extracooperativos [E11]', which the 2022 edition declares as DP200022:E11 (aeat-dr-200-2022 lines 3652 to 3672 print the cooperativa base-imponible lines as [C1] to [E11]). The field is not new in substance; this lineage starts at 2023 only because the identifier changes grammar from the printed letter token [E11] to the printed number [02849], so no value carries between the two."
 continuidad_id = "02849"
 number = "02849"
 section = ["reg_cooperativas", "determ_base_imponible"]
@@ -3190,16 +3190,6 @@ section = ["reg_cooperativas", "determ_base_imponible"]
 semantic_role = "is_cooperativa_base_imponible"
 
 [[revisions."2023".casillas]]
-id = "DP200024:00021"
-segmento = "DP200024"
-continuidad_id = "dp200024-00021"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4001 (DP200024 field 12): Agrup. interés económico y UTES - B) Datos económicos - 6.- Deduc. evitar doble imposición: Base de la deducción [00021]. aeat-dr-200-2022 prints no box [00021] on DP200024 and no [00021] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "00021"
-section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
-semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
-
-[[revisions."2023".casillas]]
 id = "DP200024:00034"
 segmento = "DP200024"
 continuidad_id = "dp200024-00034"
@@ -3208,16 +3198,6 @@ continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07
 number = "00034"
 section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
 semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_importe_de_la_de"
-
-[[revisions."2023".casillas]]
-id = "DP200024:00035"
-segmento = "DP200024"
-continuidad_id = "dp200024-00035"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4004 (DP200024 field 15): Agrup. interés económico y UTES - B) Datos económicos - 6.- Deduc. evitar doble imposición: Base de la deducción [00035]. aeat-dr-200-2022 prints no box [00035] on DP200024 and no [00035] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "00035"
-section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
-semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
 
 [[revisions."2023".casillas]]
 id = "DP200024:00036"
@@ -3230,16 +3210,6 @@ section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
 semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_importe_de_la_de"
 
 [[revisions."2023".casillas]]
-id = "DP200024:00043"
-segmento = "DP200024"
-continuidad_id = "dp200024-00043"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4007 (DP200024 field 18): Agrup. interés económico y UTES - B) Datos económicos - 6.- Deduc. evitar doble imposición: Base de la deducción [00043]. aeat-dr-200-2022 prints no box [00043] on DP200024 and no [00043] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "00043"
-section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
-semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
-
-[[revisions."2023".casillas]]
 id = "DP200024:00048"
 segmento = "DP200024"
 continuidad_id = "dp200024-00048"
@@ -3248,16 +3218,6 @@ continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07
 number = "00048"
 section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
 semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_importe_de_la_de"
-
-[[revisions."2023".casillas]]
-id = "DP200024:00049"
-segmento = "DP200024"
-continuidad_id = "dp200024-00049"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4010 (DP200024 field 21): Agrup. interés económico y UTES - B) Datos económicos - 6.- Deduc. evitar doble imposición: Base de la deducción [00049]. aeat-dr-200-2022 prints no box [00049] on DP200024 and no [00049] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "00049"
-section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
-semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
 
 [[revisions."2023".casillas]]
 id = "DP200024:00057"
@@ -3338,26 +3298,6 @@ continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07
 number = "00069"
 section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
 semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
-
-[[revisions."2023".casillas]]
-id = "DP200024:00070"
-segmento = "DP200024"
-continuidad_id = "is-agrup-interes-economico-y-utes-b-datos-economicos-10-dividendos-y-participaciones-a-ejercicios-que-no-haya-tri"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4076 (DP200024 field 87): Agrup. interés económico y UTES - B) Datos económicos - 10.- Dividendos y participaciones. a) Ejercicios que no haya tributado en régimen especial [00070]. aeat-dr-200-2022 prints no box [00070] on DP200024 and no [00070] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "00070"
-section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
-semantic_role = "is_agrup_interes_economico_y_utes_b_datos_economicos_10_dividendos_y_participaciones_a_ejercicios_que_no_haya_tri"
-
-[[revisions."2023".casillas]]
-id = "DP200024:00072"
-segmento = "DP200024"
-continuidad_id = "is-agrup-interes-economico-y-utes-b-datos-economicos-10-dividendos-y-participaciones-b-ejercicios-que-haya-tribut"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4077 (DP200024 field 88): Agrup. interés económico y UTES - B) Datos económicos - 10.- Dividendos y participaciones. b) Ejercicios que haya tributado en régimen especial [00072]. aeat-dr-200-2022 prints no box [00072] on DP200024 and no [00072] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "00072"
-section = ["agrup_interes_economico_y_utes", "b_datos_economicos"]
-semantic_role = "is_agrup_interes_economico_y_utes_b_datos_economicos_10_dividendos_y_participaciones_b_ejercicios_que_haya_tribut"
 
 [[revisions."2023".casillas]]
 id = "DP200026B:00073"

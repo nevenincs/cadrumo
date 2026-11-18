@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "design_box_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "4956b82ce340f00c5a33fac47b400067ffb8a866f88a7eead70905d2ff2e727b"
+source_state_digest = "8fbe9b1ba3d474d5b7df627768873f1aa66909a7857dbf538ddf69aaf8f1f2c5"
 design_sources = [
     { source_ref = "aeat-dr-200-2022", sha256 = "8c9fa09e5713dc19ed9235757c314a1afee24108bccee4e39031f0df9a75fae6" },
 ]
@@ -3631,9 +3631,39 @@ placements = [
     { casilla_id = "DP200022:02442", kind = "on_form", box_number = "02442" },
     { casilla_id = "DP200022:02444", kind = "on_form", box_number = "02444" },
     { casilla_id = "DP200022:02447", kind = "on_form", box_number = "02447" },
+    { casilla_id = "DP200022:C1", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:C10", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:C11", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:C2", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:C3", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:C4", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:C6", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:C7", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:C8", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:C9", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:E1", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:E10", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:E11", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:E2", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:E3", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:E4", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:E5", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:E6", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:E7", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:E8", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200022:E9", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "DP200024:00060", kind = "on_form", box_number = "00060" },
     { casilla_id = "DP200024:00062", kind = "on_form", box_number = "00062" },
     { casilla_id = "DP200024:00500", kind = "on_form", box_number = "00500" },
+    { casilla_id = "DP200024:pos-105", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200024:pos-127", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200024:pos-149", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200024:pos-171", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200024:pos-193", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200024:pos-210", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200024:pos-227", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200024:pos-261", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "DP200024:pos-278", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "DP200025:00387", kind = "unplaced", unplaced_reason = "ambiguous_anchor", box_number = "00387" },
     { casilla_id = "DP200026:00056", kind = "on_form", box_number = "00056" },
     { casilla_id = "DP200026:00402", kind = "on_form", box_number = "00402" },
