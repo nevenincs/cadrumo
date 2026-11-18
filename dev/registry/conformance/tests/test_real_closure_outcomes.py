@@ -107,11 +107,16 @@ def test_real_loader_reports_cross_limb_disagreement_from_divergent_authority_ca
     )
     # The planted revision stands alone in its modelo, so selection has exactly
     # one candidate for the successor's first year and answers with it rather than refusing the year
-    # as ambiguous. Its references to siblings go with them: a predecessor and a
-    # reviewed-against naming revisions this copy does not carry both dangle,
-    # and construction refuses for a reason this test is not about.
+    # as ambiguous. Its references to siblings go with them: a predecessor, a
+    # reviewed-against and continuity evolutions naming revisions this copy does
+    # not carry all dangle, and construction refuses for a reason this test is not about.
     divergent_revision = selected.model_copy(
-        update={"period_selector": selector, "reviewed_against": None, "predecessor": None}
+        update={
+            "period_selector": selector,
+            "reviewed_against": None,
+            "predecessor": None,
+            "casilla_continuidad_evolutions": (),
+        }
     )
     divergent_modelo = modelo.model_copy(update={"revisions": {divergent_revision.id: divergent_revision}})
     mutated = replace(

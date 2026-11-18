@@ -1,3 +1,36 @@
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200012-00309-2022-2023-label_and_legal_refs_evolved"
+continuidad_id = "is-liquidacion-i-amortizacion-otros-supuestos-libertad-amortizacion-aumentos"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["ley-27-2014:art-12-3-a", "ley-27-2014:art-12-3-d", "ley-27-2014:da-16", "ley-27-2014:da-17"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200012-00310-2022-2023-label_and_legal_refs_evolved"
+continuidad_id = "is-liquidacion-i-amortizacion-otros-supuestos-libertad-amortizacion-disminuciones"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["ley-27-2014:art-12-3-a", "ley-27-2014:art-12-3-d", "ley-27-2014:da-16", "ley-27-2014:da-17"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200018-00315-2022-2023-label_evolved"
+continuidad_id = "is-deduccion-centenario-rugby-pendiente-generada"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-11-2020:da-76"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200018-00316-2022-2023-label_evolved"
+continuidad_id = "is-deduccion-centenario-rugby-aplicado-periodo"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-11-2020:da-76"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
 # Retirement of the Modelo 200 ejercicio 2022 boxes the 2023 design aeat-dr-200-2023 no
 # longer prints on any sheet. revision.toml removes the rows; each lineage ends here.
 # The retirement is grounded in Orden HAC/495/2024, which approves the 2023 form
@@ -927,4 +960,925 @@ from_revision = "2022"
 to_revision = "2023"
 evolution_kind = "retired"
 legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# Boxes whose 2023 caption differs from the 2022 caption only in wording.
+
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200018c-01073-2022-2023-label_evolved"
+continuidad_id = "01073"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200015-03243-2022-2023-label_evolved"
+continuidad_id = "03243"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200015-03244-2022-2023-label_evolved"
+continuidad_id = "03244"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200015-03317-2022-2023-label_evolved"
+continuidad_id = "03317"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200015-03320-2022-2023-label_evolved"
+continuidad_id = "03320"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200015-02492-2022-2023-label_evolved"
+continuidad_id = "02492"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# Cells the 2022 record design prints without the box number the 2023 design gives them.
+
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200024-pos-105-2022-2023-label_evolved"
+continuidad_id = "dp200024-00021"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200024-pos-127-2022-2023-label_evolved"
+continuidad_id = "dp200024-00035"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200024-pos-149-2022-2023-label_evolved"
+continuidad_id = "dp200024-00043"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200024-pos-171-2022-2023-label_evolved"
+continuidad_id = "dp200024-00049"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200024-pos-261-2022-2023-label_evolved"
+continuidad_id = "is-agrup-interes-economico-y-utes-b-datos-economicos-10-dividendos-y-participaciones-a-ejercicios-que-no-haya-tri"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200024-pos-278-2022-2023-label_evolved"
+continuidad_id = "is-agrup-interes-economico-y-utes-b-datos-economicos-10-dividendos-y-participaciones-b-ejercicios-que-haya-tribut"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# Boxes the 2022 record design prints that the 2023 design repurposes or rewords.
+
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-00696-2022-2023-repurposed"
+continuidad_id = "is-deduccion-reinversion-beneficios-dt24a7-periodo"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:dt-24"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-00697-2022-2023-repurposed"
+continuidad_id = "00697"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:dt-24"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02077-2022-2023-repurposed"
+continuidad_id = "02077"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02078-2022-2023-repurposed"
+continuidad_id = "02078"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01913-2022-2023-repurposed"
+continuidad_id = "01913"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200016b-00766-2022-2023-repurposed"
+continuidad_id = "is-deducciones-inversion-canarias-activos-fijos-en-la-palma-la-gomera-y-el-pendiente-de-aplicacion-en-periodos-futuros-00766"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200016b-00767-2022-2023-repurposed"
+continuidad_id = "dp200016b-00767"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200016b-00768-2022-2023-repurposed"
+continuidad_id = "dp200016b-00768"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200016b-00769-2022-2023-repurposed"
+continuidad_id = "is-deducciones-inversion-canarias-inversiones-canarias-y-pendiente-de-aplicacion-en-periodos-futuros-00769"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200016b-00770-2022-2023-repurposed"
+continuidad_id = "dp200016b-00770"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200016b-00771-2022-2023-repurposed"
+continuidad_id = "dp200016b-00771"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-00774-2022-2023-repurposed"
+continuidad_id = "is-deduccion-inversion-canarias-importe"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01295-2022-2023-repurposed"
+continuidad_id = "01295"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01296-2022-2023-repurposed"
+continuidad_id = "01296"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01297-2022-2023-repurposed"
+continuidad_id = "01297"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200018b-02140-2022-2023-repurposed"
+continuidad_id = "02140"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200018b-02141-2022-2023-repurposed"
+continuidad_id = "02141"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200018b-02142-2022-2023-repurposed"
+continuidad_id = "02142"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200018b-02143-2022-2023-repurposed"
+continuidad_id = "02143"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01313-2022-2023-repurposed"
+continuidad_id = "01313"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01314-2022-2023-repurposed"
+continuidad_id = "01314"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01315-2022-2023-repurposed"
+continuidad_id = "01315"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01316-2022-2023-repurposed"
+continuidad_id = "01316"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01323-2022-2023-repurposed"
+continuidad_id = "01323"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01324-2022-2023-repurposed"
+continuidad_id = "01324"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01325-2022-2023-repurposed"
+continuidad_id = "01325"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01326-2022-2023-repurposed"
+continuidad_id = "01326"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01327-2022-2023-repurposed"
+continuidad_id = "01327"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01328-2022-2023-repurposed"
+continuidad_id = "01328"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01329-2022-2023-repurposed"
+continuidad_id = "01329"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01372-2022-2023-repurposed"
+continuidad_id = "01372"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01373-2022-2023-repurposed"
+continuidad_id = "01373"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01374-2022-2023-repurposed"
+continuidad_id = "01374"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01375-2022-2023-repurposed"
+continuidad_id = "01375"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01376-2022-2023-repurposed"
+continuidad_id = "01376"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01377-2022-2023-repurposed"
+continuidad_id = "01377"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01378-2022-2023-repurposed"
+continuidad_id = "01378"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01379-2022-2023-repurposed"
+continuidad_id = "01379"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01380-2022-2023-repurposed"
+continuidad_id = "01380"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01381-2022-2023-repurposed"
+continuidad_id = "01381"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01382-2022-2023-repurposed"
+continuidad_id = "01382"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01383-2022-2023-repurposed"
+continuidad_id = "is-deduccion-reversion-medidas-dt2-periodo"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01384-2022-2023-repurposed"
+continuidad_id = "01384"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01401-2022-2023-repurposed"
+continuidad_id = "01401"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-25"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01402-2022-2023-repurposed"
+continuidad_id = "01402"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-25"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01403-2022-2023-repurposed"
+continuidad_id = "capitalization-reserve-2023-remaining"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-25"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01872-2022-2023-repurposed"
+continuidad_id = "01872"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01410-2022-2023-repurposed"
+continuidad_id = "01410"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01411-2022-2023-repurposed"
+continuidad_id = "01411"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01412-2022-2023-repurposed"
+continuidad_id = "01412"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01414-2022-2023-repurposed"
+continuidad_id = "01414"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-130"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01415-2022-2023-repurposed"
+continuidad_id = "01415"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-130"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01416-2022-2023-repurposed"
+continuidad_id = "01416"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-130"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01417-2022-2023-repurposed"
+continuidad_id = "01417"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-130"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01418-2022-2023-repurposed"
+continuidad_id = "01418"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-130"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01419-2022-2023-repurposed"
+continuidad_id = "01419"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-130"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01420-2022-2023-repurposed"
+continuidad_id = "01420"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-130"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01421-2022-2023-repurposed"
+continuidad_id = "01421"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-130"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01422-2022-2023-repurposed"
+continuidad_id = "01422"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-130"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01424-2022-2023-repurposed"
+continuidad_id = "01424"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01425-2022-2023-repurposed"
+continuidad_id = "01425"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01469-2022-2023-repurposed"
+continuidad_id = "deferred-tax-excess-quota-2023-remaining"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-130"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01479-2022-2023-repurposed"
+continuidad_id = "01479"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01480-2022-2023-repurposed"
+continuidad_id = "01480"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01500-2022-2023-repurposed"
+continuidad_id = "01500"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200001-00013-2022-2023-repurposed"
+continuidad_id = "is-agrupacion-de-interes-economico-espanola"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200001-00083-2022-2023-repurposed"
+continuidad_id = "is-tipo-gravamen-reducido-para-empresa-emergente"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01309-2022-2023-label_evolved"
+continuidad_id = "01309"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200018c-01689-2022-2023-repurposed"
+continuidad_id = "is-deduccion-donativos-general-subtotal-2013-2014-pendiente-generada"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200018c-01690-2022-2023-repurposed"
+continuidad_id = "is-deduccion-donativos-general-subtotal-2013-2014-aplicado-periodo"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200018c-01691-2022-2023-repurposed"
+continuidad_id = "is-deduccion-donativos-general-subtotal-2013-2014-pendiente-futuro"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200018c-01701-2022-2023-repurposed"
+continuidad_id = "is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-generada"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200018c-01702-2022-2023-repurposed"
+continuidad_id = "is-deduccion-donativos-prioritarias-subtotal-2013-2014-aplicado-periodo"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200018c-01703-2022-2023-repurposed"
+continuidad_id = "is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-futuro"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-49-2002:art-20"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01395-2022-2023-repurposed"
+continuidad_id = "01395"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01396-2022-2023-repurposed"
+continuidad_id = "01396"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01397-2022-2023-repurposed"
+continuidad_id = "01397"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01398-2022-2023-repurposed"
+continuidad_id = "01398"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01399-2022-2023-repurposed"
+continuidad_id = "01399"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01400-2022-2023-repurposed"
+continuidad_id = "01400"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01423-2022-2023-repurposed"
+continuidad_id = "01423"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "repurposed"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01227-2022-2023-label_evolved"
+continuidad_id = "is-agrupacion-interes-econo-2-gastos-financieros-netos-no-deducidos-por-la-e"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01228-2022-2023-label_evolved"
+continuidad_id = "is-agrupacion-interes-econo-3-reserva-capitaliz-no-aplicada-por-la-entidad"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02624-2022-2023-label_evolved"
+continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-saldo-inicial"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-12"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02621-2022-2023-label_evolved"
+continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-permanente-aumento"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-12"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02622-2022-2023-label_evolved"
+continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-temporaria-ejercicio-aumento"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-12"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02623-2022-2023-label_evolved"
+continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-temporaria-anteriores-aumento"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-12"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02625-2022-2023-label_evolved"
+continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-saldo-final-neto"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-12"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02629-2022-2023-label_evolved"
+continuidad_id = "02629"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-12"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02626-2022-2023-label_evolved"
+continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-permanente-disminucion"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-12"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02627-2022-2023-label_evolved"
+continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-temporaria-ejercicio-disminucion"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-12"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02628-2022-2023-label_evolved"
+continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-temporaria-anteriores-disminucion"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-12"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02630-2022-2023-label_evolved"
+continuidad_id = "02630"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-12"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02181-2022-2023-label_evolved"
+continuidad_id = "02181"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01764-2022-2023-label_evolved"
+continuidad_id = "01764"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01765-2022-2023-label_evolved"
+continuidad_id = "01765"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02182-2022-2023-label_evolved"
+continuidad_id = "02182"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02183-2022-2023-label_evolved"
+continuidad_id = "02183"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02184-2022-2023-label_evolved"
+continuidad_id = "02184"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-02185-2022-2023-label_evolved"
+continuidad_id = "02185"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01020-2022-2023-label_evolved"
+continuidad_id = "is-conversion-aid-abono"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-01021-2022-2023-label_evolved"
+continuidad_id = "is-conversion-aid-compensacion"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-27-2014:art-41"]
 source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]

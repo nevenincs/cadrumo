@@ -39,7 +39,6 @@ from __future__ import annotations
 from types import MappingProxyType
 from typing import Final
 
-from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import CasillaObservation
@@ -80,18 +79,12 @@ def _retired_bare_ids(
     """Return the bare ids the row's own stamped revision retired in favour of their qualified ids."""
     observation = payload.observation
     try:
-        snapshot = operation.snapshot(
-            str(observation.modelo),
-            filing_year=observation.filing_year,
-            period=observation.period,
-            revision_id=payload.stamped_revision_id,
-            grade=RegistryAuthorityGrade.CALCULATION,
-        )
+        revision = operation.revision(str(observation.modelo), payload.stamped_revision_id)
     except RegistryError:
         # A stamp the pinned authority cannot resolve settles nothing; the carry
         # gate refuses such a row before any value is read from it.
         return frozenset[CasillaId]()
-    declared = declared_casilla_ids(snapshot.revision)
+    declared = declared_casilla_ids(revision)
     return frozenset(
         bare for bare in bare_ids if bare not in declared and MODELO_200_PAGE_QUALIFIED_CASILLAS[bare] in declared
     )

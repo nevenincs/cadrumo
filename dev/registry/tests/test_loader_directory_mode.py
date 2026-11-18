@@ -470,14 +470,19 @@ def test_revision_fragment_inventory_uses_live_sections_and_excludes_locales(tmp
     assert set(revision_source.fragment_paths) == {revision_dir / "revision.toml", casilla_fragment, export_fragment}
 
 
+_GENERATOR_MARKER = "dev.registry.authoring"
+"""Every fragment a registry authoring generator writes names its generator module."""
+
+
 def test_committed_authored_sections_are_consolidated() -> None:
-    """Non-generated sections have one declaration file, independent of row count."""
+    """Hand-authored sections have one declaration file; a generator's own fragment is its output."""
     split_sections: list[str] = []
     modelos_dir = committed_modelos_dir()
     for section in modelos_dir.glob("*/revisions/*/*"):
         if not section.is_dir() or section.name in {"export", "locales"}:
             continue
-        if len(list(section.glob("*.toml"))) > 1:
+        authored = [f for f in section.glob("*.toml") if _GENERATOR_MARKER not in f.read_text(encoding="utf-8")]
+        if len(authored) > 1:
             split_sections.append(section.relative_to(modelos_dir).as_posix())
     assert split_sections == []
 
