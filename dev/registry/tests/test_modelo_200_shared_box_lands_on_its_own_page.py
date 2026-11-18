@@ -4,9 +4,12 @@ The record designs print one box number on several pages with a different meanin
 on each: ``[00009]`` is "Entidad dominante de grupo fiscal" on DP200001 and also a
 bases imponibles negativas cohort on DP200015; ``[00017]`` is "Cooperativa
 protegida" on DP200001 and also a cooperativas cuota-compensation cohort on
-DP200022; ``[00088]``, ``[00089]`` and ``[00090]`` are identification flags on
-DP200001 and also the three cells of the Festival Porta Ferrada deduction row on
-the deducciones page. A value the taxpayer states for the DP200001 flag must reach
+DP200022; ``[00088]``, ``[00089]`` and ``[00090]`` are the three cells of the
+Festival Porta Ferrada deduction row on a deducciones page, and a design that also
+prints an identification flag of the same number on DP200001 gives it another
+meaning there. An edition that does not declare a box is not asked about it: each
+case pairs a filing year with a box that year's edition declares, and every box
+must be exercised by at least one filing year. A value the taxpayer states for the DP200001 flag must reach
 the DP200001 cell and nothing else, and a stated deduction amount must reach its own
 deduction cell and leave the flag of the same number alone, although it does feed
 the deduction totals the design derives from it. These tests run the real
@@ -52,25 +55,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _M200 = "200"
 
-# Each flag's continuity identity, the record sheet whose design prints it as that
-# flag, and the byte the design gives a selected flag (DP200001, type Num, length 1).
+# Each flag's continuity identity and its case label. The design prints every one on
+# DP200001 as a selected-flag byte (type Num, length 1).
+_FLAG_SHEET = "DP200001"
 _FLAGS = (
-    pytest.param("is-entidad-dominante-de-grupo-fiscal", "DP200001", id="00009-entidad-dominante"),
-    pytest.param(
+    ("is-entidad-dominante-de-grupo-fiscal", "00009-entidad-dominante"),
+    (
         "is-participe-de-agrupacion-de-interes-economico-o-de-union-temporal-de-empresas",
-        "DP200001",
-        id="00089-participe-aie-ute",
+        "00089-participe-aie-ute",
     ),
-    pytest.param("is-opcion-art-39-3-lis", "DP200001", id="00090-opcion-art-39-3"),
+    ("is-opcion-art-39-3-lis", "00090-opcion-art-39-3"),
 )
-# The Festival Porta Ferrada deduction row, whose three boxes repeat the identification
-# page's [00088], [00089] and [00090]. Only the editions with an export layout are
-# exercised here, and their designs print the row on DP200018; the 2023 design prints it
-# on DP200018B, which that edition declares under its own ids.
+# The Festival Porta Ferrada deduction row. Each edition prints it on its own deducciones
+# page, so the sheet is read from the page the edition declares the casilla on.
 _PORTA_FERRADA = (
-    pytest.param("is-deduccion-porta-ferrada-pendiente-generada", "DP200018", id="00088-porta-ferrada-pendiente"),
-    pytest.param("is-deduccion-porta-ferrada-aplicado-periodo", "DP200018", id="00089-porta-ferrada-aplicado"),
-    pytest.param("is-deduccion-porta-ferrada-pendiente-futuro", "DP200018", id="00090-porta-ferrada-futuro"),
+    ("is-deduccion-porta-ferrada-pendiente-generada", "00088-porta-ferrada-pendiente"),
+    ("is-deduccion-porta-ferrada-aplicado-periodo", "00089-porta-ferrada-aplicado"),
+    ("is-deduccion-porta-ferrada-pendiente-futuro", "00090-porta-ferrada-futuro"),
 )
 _PORTA_FERRADA_AMOUNT = Decimal("1234.56")
 _COOPERATIVA_PROTEGIDA = "is-cooperativa-protegida"
@@ -92,9 +93,9 @@ class _PayloadSink:
         self.payload = payload.payload
 
 
-def _filing_grade_years() -> tuple[int, ...]:
-    """Every supported year the published authority serves Modelo 200 at filing grade with an export layout."""
-    years: list[int] = []
+def _filing_grade_chains() -> dict[int, frozenset[str]]:
+    """Map every year served at filing grade with an export layout to the continuity ids its edition declares."""
+    chains: dict[int, frozenset[str]] = {}
     with bundled_indexed_authority().operation() as operation:
         for year in operation.supported_filing_years().years:
             try:
@@ -102,8 +103,8 @@ def _filing_grade_years() -> tuple[int, ...]:
             except RegistryError:
                 continue
             if canonical_export_layout(snapshot.revision.export_layouts) is not None:
-                years.append(year)
-    return tuple(years)
+                chains[year] = frozenset(str(casilla.continuidad_id) for casilla in snapshot.revision.casillas)
+    return chains
 
 
 def _export(year: int, supplied: ModeloInputs) -> tuple[bytes, ModeloRevision]:
@@ -136,6 +137,13 @@ def _export(year: int, supplied: ModeloInputs) -> tuple[bytes, ModeloRevision]:
 def _casilla_id(revision: ModeloRevision, continuidad_id: str) -> str:
     (casilla,) = [casilla for casilla in revision.casillas if str(casilla.continuidad_id) == continuidad_id]
     return str(casilla.id)
+
+
+def _declared_sheet(casilla_id: str) -> str:
+    """Return the record sheet a page-qualified casilla id names."""
+    sheet, separator, _number = casilla_id.partition(":")
+    assert separator, f"{casilla_id} is not page qualified"
+    return sheet
 
 
 def _cells(revision: ModeloRevision, casilla_id: str) -> tuple[ExportFieldDefinition, ...]:
@@ -173,16 +181,34 @@ def _record_line(payload: bytes, revision: ModeloRevision, sheet: str) -> tuple[
     return start, payload[start : len(payload) if end == -1 else end]
 
 
-_YEARS = _filing_grade_years()
+_CHAINS = _filing_grade_chains()
+_YEARS = tuple(_CHAINS)
+
+
+def _declared_cases(chains: tuple[tuple[str, str], ...]) -> list[object]:
+    """Pair each filing-grade year with every one of ``chains`` its edition declares."""
+    return [
+        pytest.param(year, continuidad_id, id=f"{label}-{year}")
+        for continuidad_id, label in chains
+        for year, declared in _CHAINS.items()
+        if continuidad_id in declared
+    ]
 
 
 def test_a_filing_grade_modelo_200_edition_exists() -> None:
     assert _YEARS, "no supported year serves Modelo 200 at filing grade, so these checks prove nothing"
 
 
-@pytest.mark.parametrize("year", _YEARS)
-@pytest.mark.parametrize(("continuidad_id", "sheet"), _FLAGS)
-def test_a_stated_flag_lands_only_in_its_own_page_cell(year: int, continuidad_id: str, sheet: str) -> None:
+@pytest.mark.parametrize(("continuidad_id", "label"), (*_FLAGS, *_PORTA_FERRADA))
+def test_every_shared_box_is_exercised_by_some_filing_grade_year(continuidad_id: str, label: str) -> None:
+    assert any(continuidad_id in declared for declared in _CHAINS.values()), (
+        f"no filing-grade Modelo 200 edition declares {label}, so its case proves nothing"
+    )
+
+
+@pytest.mark.parametrize(("year", "continuidad_id"), _declared_cases(_FLAGS))
+def test_a_stated_flag_lands_only_in_its_own_page_cell(year: int, continuidad_id: str) -> None:
+    sheet = _FLAG_SHEET
     absent, revision = _export(year, {})
     casilla_id = _casilla_id(revision, continuidad_id)
 
@@ -199,20 +225,27 @@ def test_a_stated_flag_lands_only_in_its_own_page_cell(year: int, continuidad_id
     assert changed == [position]
 
 
-@pytest.mark.parametrize("year", _YEARS)
-@pytest.mark.parametrize(("continuidad_id", "sheet"), _PORTA_FERRADA)
+@pytest.mark.parametrize(("year", "continuidad_id"), _declared_cases(_PORTA_FERRADA))
 def test_a_stated_porta_ferrada_amount_lands_in_its_own_cell_and_not_in_the_flag_of_the_same_number(
-    year: int, continuidad_id: str, sheet: str
+    year: int, continuidad_id: str
 ) -> None:
     absent, revision = _export(year, {})
     casilla_id = _casilla_id(revision, continuidad_id)
+    sheet = _declared_sheet(casilla_id)
+    assert sheet != _FLAG_SHEET
     (cell,) = _cells(revision, casilla_id)
     assert f".{sheet.lower()}." in str(cell.id)
     assert cell.offset is not None and cell.length == 17
-    # The identification flag the same printed number names on page one.
+    # The identification flag the same printed number names on page one, where the
+    # edition's design prints one.
     number = str(next(casilla for casilla in revision.casillas if str(casilla.id) == casilla_id).number)
-    (flag_cell,) = _cells(revision, f"DP200001:{number}")
-    assert flag_cell.offset is not None and flag_cell.length == 1
+    flag_id = f"{_FLAG_SHEET}:{number}"
+    flag_cells = _cells(revision, flag_id)
+    if any(str(casilla.id) == flag_id for casilla in revision.casillas):
+        (flag_cell,) = flag_cells
+        assert flag_cell.offset is not None and flag_cell.length == 1
+    else:
+        assert flag_cells == ()
 
     stated, _ = _export(year, {casilla_id: _PORTA_FERRADA_AMOUNT})
 
@@ -221,11 +254,14 @@ def test_a_stated_porta_ferrada_amount_lands_in_its_own_cell_and_not_in_the_flag
     position = start + cell.offset - 1
     assert absent[position : position + cell.length] == b"00000000000000000"
     assert stated[position : position + cell.length] == b"00000000000123456"
-    flag_start, _flag_line = _record_line(stated, revision, "DP200001")
-    flag_position = flag_start + flag_cell.offset - 1
-    assert stated[flag_position : flag_position + flag_cell.length] == absent[flag_position : flag_position + 1]
-    changed = {index for index, (left, right) in enumerate(zip(absent, stated, strict=True)) if left != right}
-    assert flag_position not in changed
+    # Page one, with any flag of the same number on it, is left byte for byte as it was.
+    flag_start, stated_page_one = _record_line(stated, revision, _FLAG_SHEET)
+    assert _record_line(absent, revision, _FLAG_SHEET) == (flag_start, stated_page_one)
+    for flag_cell in flag_cells:
+        assert flag_cell.offset is not None
+        flag_position = flag_start + flag_cell.offset - 1
+        changed = {index for index, (left, right) in enumerate(zip(absent, stated, strict=True)) if left != right}
+        assert flag_position not in changed
 
 
 @pytest.mark.parametrize("year", _YEARS)

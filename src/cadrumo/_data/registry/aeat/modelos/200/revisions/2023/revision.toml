@@ -7,7 +7,9 @@ parameter_source_refs = ["aeat-modelo-200-manual-2023"]
 dependency_classification_source_refs = ["aeat-modelo-200-manual-2023"]
 application_link_source_refs = ["boe-modelo-200-2023-form", "aeat-dr-200-2023"]
 filing_schedule_source_refs = ["boe-modelo-200-2023-form", "aeat-modelo-200-manual-2023"]
-authority_grade = "calculation"
+# This edition files ejercicio 2023 through the exact 2023 design its export
+# layout renders.
+authority_grade = "filing"
 # Modelo 200, declaracion del Impuesto sobre Sociedades y del IRNR (establecimientos
 # permanentes y entidades en regimen de atribucion de rentas constituidas en el
 # extranjero con presencia en territorio espanol), for periodos impositivos
@@ -40,8 +42,7 @@ authority_grade = "calculation"
 # moved boxes are stated here. Every box they read or write is printed on the same
 # record and with the same box number by aeat-dr-200-2023 as by the 2024 design, and
 # the Manual practico de Sociedades 2023 states the same operations. The rates are
-# those the manual's "Tipos de gravamen vigentes" table prints for contribuyentes 2023. Its export layout renders the 2023
-# design.
+# those the manual's "Tipos de gravamen vigentes" table prints for contribuyentes 2023.
 valid_from = 2023-01-01
 valid_to = 2023-12-31
 period_selector = { year_from = 2023, year_to = 2023, periods = ["0A"] }
@@ -3680,3 +3681,15 @@ selector = { revision = "2022", id = "01021" }
 fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 1557 (DP200014B field 73): 'Liquidación IV - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Compensación por conversión de activos por impuesto diferido en crédito exigible frente a la admon.tribut. (art. 130 LIS) - Estado [01021]'; aeat-dr-200-2023 line 1591 (DP200015 field 10): 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Compensación por conversión de activos por impuesto diferido en crédito exigible frente a la admon.tribut. (art. 130 LIS) - Estado [01021]'. Both designs print box [01021] with the same concept, width and type; the 2023 design moves the cell from DP200014B to DP200015, so the 2022 member continues with its 2023 sheet and section." }
 removed_fields = []
 restate_provenance = true
+
+[[revisions."2023".family_overrides]]
+family = "live_cross_references"
+selector = {revision = "2022", id = "modelo-200-filed-declarations-read"}
+sequence_additions = {source_refs = ["aeat-modelo-200-manual-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "live_cross_references"
+selector = {revision = "2022", id = "modelo-200-static-documentation"}
+sequence_additions = {source_refs = ["aeat-modelo-200-manual-2023"]}
+sequence_removals = {source_refs = [0]}
