@@ -104,19 +104,25 @@ def test_a_present_malformed_geometry_fact_is_not_treated_as_absent(
 def test_an_expired_geometry_fact_is_not_treated_as_absent(
     _worker_compiled_authority: Any, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """A window that closed inside the envelope still answers from its nearest edition, so it is read and judged."""
     catalogues = _worker_compiled_authority.catalogues
     original = catalogues.facts.facts["form-row-codes"]
-    variant = original.variants[0].model_copy(update={"valid_to": date(filing_year_envelope().floor, 1, 2)})
-    expired = original.model_copy(update={"variants": (variant,)})
+    variant = original.variants[0]
+    payload = variant.payload
+    malformed_payload = payload.model_copy(update={"entries": (*payload.entries, payload.entries[0])})
+    expired_variant = variant.model_copy(
+        update={"valid_to": date(filing_year_envelope().floor, 1, 2), "payload": malformed_payload}
+    )
+    expired = original.model_copy(update={"variants": (expired_variant,)})
     facts = catalogues.facts.model_copy(update={"facts": {**catalogues.facts.facts, "form-row-codes": expired}})
     authority = CandidateFactAuthority(facts, catalogues.require_supported_filing_years())
     monkeypatch.setattr(fact_providers, "FACT_PROVIDER_REGISTRATIONS", ())
-    with validating_governed_facts(authority), pytest.raises(RegistryValidationError):
+    with validating_governed_facts(authority), pytest.raises(ValidationError, match="keys must be unique"):
         validate_form_geometry(())
     validator = registry_validator.RegistryValidator(catalogues.model_copy(update={"facts": facts}))
     monkeypatch.setattr(validator, "_validate_registry_modelos", lambda _modelos: [])
     monkeypatch.setattr(registry_validator, "validate_registry_scope", lambda _modelos: ())
-    with validating_governed_facts(authority), pytest.raises(RegistryValidationError):
+    with validating_governed_facts(authority), pytest.raises(ValidationError, match="keys must be unique"):
         validator.validate_registry(())
 
 
