@@ -15,6 +15,7 @@ pub(crate) mod local_models;
 pub(crate) mod person;
 #[cfg(windows)]
 mod provider_login;
+mod records;
 pub(crate) mod recovery;
 pub(crate) mod runner;
 mod session;

@@ -101,7 +101,13 @@ function Recorded({
  * covers, that a later one replaced it, or else whether it still matches the
  * schedule, why not, and what uses it. A dotación that was replaced is
  * never said to match or to differ: only one in effect can. */
-function ClaimUse({ event, locale }: { event: ActivityAssetTimelineEvent; locale: string }) {
+function ClaimUse({
+  event,
+  locale,
+}: {
+  event: ActivityAssetTimelineEvent;
+  locale: string;
+}) {
   const t = useStrings();
   const use = event.claim;
   if (use === null) return null;

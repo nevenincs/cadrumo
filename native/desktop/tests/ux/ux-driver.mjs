@@ -467,9 +467,7 @@ export function profileCredential() {
     readFileSync(CREDENTIAL_SOURCE, "utf8"),
   );
   if (!match)
-    throw new Error(
-      "no PERSONA_PROFILE_CREDENTIAL in persona_world.py",
-    );
+    throw new Error("no PERSONA_PROFILE_CREDENTIAL in persona_world.py");
   return match[1];
 }
 

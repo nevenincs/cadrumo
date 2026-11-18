@@ -10,8 +10,12 @@
 use super::{
     Refused,
     gateway::{self, Client},
+    records::{
+        AgentKind, AgentRecord, DocumentReference, Pending, PersonKind, PersonRecord, RanWith,
+        ReplyKind, ReplyRecord, Snapshot, ToolKindTag, ToolRecord, TurnRecord, Usage,
+    },
     sse,
-    stream::{Mapping, Step, StreamEvent},
+    stream::{Approval, Mapping, Questionnaire, Step, StreamEvent},
     supervisor::{Supervisor, protocol::Gateway, protocol::State},
 };
 use serde::Deserialize;
@@ -61,6 +65,13 @@ fn refused(code: &str) -> Refused {
 
 fn text<'a>(value: &'a Value, key: &str) -> Option<&'a str> {
     value.get(key).and_then(Value::as_str)
+}
+
+/// A composed answer as the command serves it: the JSON document it
+/// serializes to, whose objects order their keys as every other answer the
+/// column reads does.
+fn answer(composed: &impl serde::Serialize) -> Result<Value, Refused> {
+    serde_json::to_value(composed).map_err(|_| refused("agent_host_failed"))
 }
 
 /// The selection a send names: a catalog lane, by provider and transport,
@@ -231,46 +242,44 @@ pub fn documents_page(page: &Value) -> Result<Value, Refused> {
 }
 
 /// The stored documents a user message names, as its history echoes them.
-fn echoed_documents(message: &Value) -> Value {
-    Value::Array(
-        message
-            .get("attachments")
-            .and_then(Value::as_array)
-            .into_iter()
-            .flatten()
-            .filter_map(|item| {
-                let name = text(item, "name").filter(|name| plain_name(name))?;
-                Some(json!({
-                    "name": name,
-                    "sha256": text(item, "sha256").filter(|sha| digest(sha)),
-                    "media_type": text(item, "media_type"),
-                }))
+fn echoed_documents(message: &Value) -> Vec<DocumentReference> {
+    message
+        .get("attachments")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|item| {
+            let name = text(item, "name").filter(|name| plain_name(name))?;
+            Some(DocumentReference {
+                name: name.to_owned(),
+                sha256: text(item, "sha256")
+                    .filter(|sha| digest(sha))
+                    .map(str::to_owned),
+                media_type: text(item, "media_type").map(str::to_owned),
             })
-            .collect(),
-    )
+        })
+        .collect()
 }
 
 /// The skills a user message loaded, as its history echoes them: names of
 /// the skill grammar only.
-fn echoed_skills(message: &Value) -> Value {
-    Value::Array(
-        message
-            .get("skills")
-            .and_then(Value::as_array)
-            .into_iter()
-            .flatten()
-            .filter_map(Value::as_str)
-            .filter(|name| skill_name(name))
-            .map(|name| json!(name))
-            .collect(),
-    )
+fn echoed_skills(message: &Value) -> Vec<String> {
+    message
+        .get("skills")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .filter(|name| skill_name(name))
+        .map(str::to_owned)
+        .collect()
 }
 
 /// What a tool call's history says of it, as text to preview: its text
 /// blocks, the call's input and its result as the agent worded them, each cut
 /// to `DETAIL_LIMIT` characters, then the places it touched. Diffs and
 /// terminals are named by their path only.
-fn tool_details(call: &Value) -> Value {
+fn tool_details(call: &Value) -> Vec<String> {
     let blocks = call
         .get("content")
         .and_then(Value::as_array)
@@ -293,17 +302,15 @@ fn tool_details(call: &Value) -> Value {
                 None => path.to_owned(),
             })
         });
-    Value::Array(
-        blocks
-            .map(str::to_owned)
-            .chain(places)
-            .take(DETAIL_BLOCKS)
-            .map(|detail| match detail.char_indices().nth(DETAIL_LIMIT) {
-                Some((cut, _)) => json!(format!("{}…", &detail[..cut])),
-                None => json!(detail),
-            })
-            .collect(),
-    )
+    blocks
+        .map(str::to_owned)
+        .chain(places)
+        .take(DETAIL_BLOCKS)
+        .map(|detail| match detail.char_indices().nth(DETAIL_LIMIT) {
+            Some((cut, _)) => format!("{}…", &detail[..cut]),
+            None => detail,
+        })
+        .collect()
 }
 
 /// Which pending request of which reply an answer is for.
@@ -463,23 +470,21 @@ pub fn deletion_complete(answer: &Value) -> Result<(), Refused> {
 
 /// The questionnaires and approvals a run waits on, from its status and its
 /// history, which alone lists pending permissions.
-pub fn pending_of(run: &str, status: &Value, history: &Value) -> Value {
+pub fn pending_of(run: &str, status: &Value, history: &Value) -> Pending {
     let mut mapping = Mapping::new(run);
-    let questionnaires: Vec<Value> = status
+    let questionnaires: Vec<Questionnaire> = status
         .get("pending_clarification")
         .and_then(|pending| pending.get("request_id"))
         .and_then(Value::as_str)
         .map(str::to_owned)
         .and_then(|request| mapping.questionnaire(&request, status))
         .and_then(|event| match event {
-            StreamEvent::Questions { questionnaire, .. } => {
-                serde_json::to_value(questionnaire).ok()
-            }
+            StreamEvent::Questions { questionnaire, .. } => Some(questionnaire),
             _ => None,
         })
         .into_iter()
         .collect();
-    let approvals: Vec<Value> = history
+    let approvals: Vec<Approval> = history
         .get("state")
         .and_then(|state| state.get("pending_permissions"))
         .and_then(Value::as_array)
@@ -494,14 +499,15 @@ pub fn pending_of(run: &str, status: &Value, history: &Value) -> Value {
                 .frame(&frame.to_string())
                 .into_iter()
                 .find_map(|step| match step {
-                    Step::Emit(StreamEvent::Approval { approval, .. }) => {
-                        serde_json::to_value(approval).ok()
-                    }
+                    Step::Emit(StreamEvent::Approval { approval, .. }) => Some(approval),
                     _ => None,
                 })
         })
         .collect();
-    json!({ "questionnaires": questionnaires, "approvals": approvals })
+    Pending {
+        questionnaires,
+        approvals,
+    }
 }
 
 /// One run as the listing names it, with the run it continues.
@@ -604,9 +610,9 @@ pub fn seeded(previous: &[(String, String)], messages: &[(String, String)]) -> u
         .unwrap_or(0)
 }
 
-fn ran_with(status: &Value) -> Value {
+fn ran_with(status: &Value) -> Option<RanWith> {
     let (Some(agent), selection) = (status.get("agent"), status.get("selection")) else {
-        return Value::Null;
+        return None;
     };
     let field = |key: &str| {
         agent
@@ -618,15 +624,21 @@ fn ran_with(status: &Value) -> Value {
     };
     let transport = field("transport");
     if !transport.is_string() {
-        return Value::Null;
+        return None;
     }
-    json!({
-        "provider": field("provider"),
-        "transport": transport,
-        "provider_display_name": selection.and_then(|s| s.get("provider_display_name")).cloned().unwrap_or(Value::Null),
-        "model": field("model"),
-        "model_display_name": selection.and_then(|s| s.get("model_display_name")).cloned().unwrap_or(Value::Null),
-        "effort": field("effort"),
+    let shown = |key: &str| {
+        selection
+            .and_then(|selection| selection.get(key))
+            .cloned()
+            .unwrap_or(Value::Null)
+    };
+    Some(RanWith {
+        provider: field("provider"),
+        transport,
+        provider_display_name: shown("provider_display_name"),
+        model: field("model"),
+        model_display_name: shown("model_display_name"),
+        effort: field("effort"),
     })
 }
 
@@ -634,7 +646,7 @@ fn ran_with(status: &Value) -> Value {
 /// its tool calls, the agent's messages, and the run's own record. Each
 /// message is listed once: a continuing run's seed is left out. Messages are
 /// listed under the ids cadrumo-agent gives them.
-pub fn history_records(runs: &[(String, Value, Value)]) -> Vec<Value> {
+pub fn history_records(runs: &[(String, Value, Value)]) -> Vec<TurnRecord> {
     let mut records = Vec::new();
     let mut previous: Vec<(String, String)> = Vec::new();
     for (run, status, history) in runs {
@@ -658,14 +670,14 @@ pub fn history_records(runs: &[(String, Value, Value)]) -> Vec<Value> {
         let skip = seeded(&previous, &transcript);
         let own = &messages[skip..];
         for message in own.iter().filter(|m| text(m, "role") == Some("user")) {
-            records.push(json!({
-                "kind": "person",
-                "id": text(message, "message_id"),
-                "reply_id": run,
-                "text": text(message, "content").unwrap_or_default(),
-                "sent_at": message.get("timestamp").cloned().unwrap_or(Value::Null),
-                "attachments": echoed_documents(message),
-                "skills": echoed_skills(message),
+            records.push(TurnRecord::Person(PersonRecord {
+                kind: PersonKind::Only,
+                id: text(message, "message_id").map(str::to_owned),
+                reply_id: run.clone(),
+                text: text(message, "content").unwrap_or_default().to_owned(),
+                sent_at: message.get("timestamp").cloned().unwrap_or(Value::Null),
+                attachments: echoed_documents(message),
+                skills: echoed_skills(message),
             }));
         }
         for call in state
@@ -674,44 +686,49 @@ pub fn history_records(runs: &[(String, Value, Value)]) -> Vec<Value> {
             .into_iter()
             .flatten()
         {
-            records.push(json!({
-                "kind": "tool",
-                "reply_id": run,
-                "id": text(call, "tool_call_id"),
-                "title": text(call, "title"),
-                "tool_kind": text(call, "kind"),
-                "status": text(call, "status"),
-                "details": tool_details(call),
+            records.push(TurnRecord::Tool(ToolRecord {
+                kind: ToolKindTag::Only,
+                reply_id: run.clone(),
+                id: text(call, "tool_call_id").map(str::to_owned),
+                title: text(call, "title").map(str::to_owned),
+                tool_kind: text(call, "kind").map(str::to_owned),
+                status: text(call, "status").map(str::to_owned),
+                details: tool_details(call),
             }));
         }
         for message in own.iter().filter(|m| text(m, "role") == Some("assistant")) {
-            records.push(json!({
-                "kind": "agent",
-                "id": text(message, "message_id"),
-                "reply_id": run,
-                "text": text(message, "content").unwrap_or_default(),
+            records.push(TurnRecord::Agent(AgentRecord {
+                kind: AgentKind::Only,
+                id: text(message, "message_id").map(str::to_owned),
+                reply_id: run.clone(),
+                text: text(message, "content").unwrap_or_default().to_owned(),
             }));
         }
         let usage = history
             .get("usage")
             .and_then(|usage| usage.get("total"))
             .map(|total| {
-                json!({
-                    "input_tokens": total.get("input_tokens"),
-                    "output_tokens": total.get("output_tokens"),
-                })
-            })
-            .unwrap_or(Value::Null);
-        records.push(json!({
-            "kind": "reply",
-            "id": run,
-            "status": status.get("status").or_else(|| state.get("status")),
-            "provider_condition": status.get("provider_condition").cloned().unwrap_or(Value::Null),
-            "failure_reason": status.get("failure_reason").cloned().unwrap_or(Value::Null),
-            "queued_messages": status.get("queued_messages").cloned().unwrap_or(json!(0)),
-            "selection": ran_with(status),
-            "usage": usage,
-        }));
+                let count = |key: &str| total.get(key).cloned().unwrap_or(Value::Null);
+                Usage {
+                    input_tokens: count("input_tokens"),
+                    output_tokens: count("output_tokens"),
+                }
+            });
+        let copied = |key: &str| status.get(key).cloned().unwrap_or(Value::Null);
+        records.push(TurnRecord::Reply(Box::new(ReplyRecord {
+            kind: ReplyKind::Only,
+            id: run.clone(),
+            status: status
+                .get("status")
+                .or_else(|| state.get("status"))
+                .cloned()
+                .unwrap_or(Value::Null),
+            provider_condition: copied("provider_condition"),
+            failure_reason: copied("failure_reason"),
+            queued_messages: status.get("queued_messages").cloned().unwrap_or(json!(0)),
+            selection: ran_with(status),
+            usage,
+        })));
         previous = transcript;
     }
     records
@@ -1121,9 +1138,9 @@ impl Session {
     }
 
     pub fn history(&self, supervisor: &Supervisor, conversation: &str) -> Result<Value, Refused> {
-        Ok(Value::Array(history_records(
+        answer(&history_records(
             &self.read_history(supervisor, conversation)?,
-        )))
+        ))
     }
 
     /// History and pending questions share the same reads of the newest run.
@@ -1135,8 +1152,11 @@ impl Session {
                 !text(status, "status").is_some_and(|status| SETTLED.contains(&status))
             })
             .map(|(id, status, history)| pending_of(id, status, history))
-            .unwrap_or_else(|| json!({ "questionnaires": [], "approvals": [] }));
-        Ok(json!({ "history": history_records(&runs), "pending": pending }))
+            .unwrap_or_default();
+        answer(&Snapshot {
+            history: history_records(&runs),
+            pending,
+        })
     }
 
     /// One page of the documents stored for one conversation: its own
@@ -1229,9 +1249,9 @@ impl Session {
             .last()
             .filter(Run::live)
         else {
-            return Ok(json!({ "questionnaires": [], "approvals": [] }));
+            return answer(&Pending::default());
         };
-        Ok(pending_of(
+        answer(&pending_of(
             &last.id,
             &client.run_status(&last.id)?,
             &client.history(&last.id)?,
@@ -1978,7 +1998,7 @@ mod tests {
         let records =
             history_records(&[("c1".into(), status, first), ("c2".into(), failed, second)]);
         assert_eq!(
-            Value::Array(records),
+            serde_json::to_value(records).unwrap(),
             json!([
                 {"kind": "person", "id": "u1", "reply_id": "c1", "text": "Hola", "sent_at": "2026-10-13T12:00:00Z",
                  "attachments": [], "skills": []},
@@ -2030,7 +2050,7 @@ mod tests {
              "options": [{"option_id": "ok", "name": "Allow", "kind": "allow_once"}]}
         ]}});
         assert_eq!(
-            pending_of("run-1", &status, &history),
+            serde_json::to_value(pending_of("run-1", &status, &history)).unwrap(),
             json!({
                 "questionnaires": [{"request_id": "clar-1", "reply_id": "run-1", "questions": [
                     {"id": "q", "prompt": "¿Año?", "kind": "text", "options": null, "required": true}
@@ -2052,3 +2072,7 @@ mod tests {
         assert_ne!(id, mint_run_id().unwrap());
     }
 }
+
+#[cfg(test)]
+#[path = "session_composition_tests.rs"]
+mod composition_tests;
