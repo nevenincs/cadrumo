@@ -121,6 +121,16 @@ def test_a_member_state_still_resolves() -> None:
         ) == IvaTerritorialScope.from_registry("eu_member")
 
 
+def test_monaco_resolves_to_the_same_iva_scope_as_france() -> None:
+    """Monaco inherits the scope of its parent in the bundled registry."""
+    with bundled_indexed_authority().operation() as operation:
+        france = territorial_scope_for_country("FR", operation=operation, effective_date=_ON_DATE)
+        monaco = territorial_scope_for_country("MC", operation=operation, effective_date=_ON_DATE)
+
+    assert france is not None
+    assert monaco == france
+
+
 def test_northern_ireland_survives_the_narrowing() -> None:
     """``XI`` is user-assigned in shape and a Member State in this catalogue.
 

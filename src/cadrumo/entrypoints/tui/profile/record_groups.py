@@ -134,11 +134,6 @@ class RecordGroupStream:
     refusal_words: str | None = None
     _read: int = 0
 
-    @property
-    def read_started(self) -> bool:
-        """Whether a page of this stream has been accepted."""
-        return self.pin is not None
-
     def accept(self, result: ProfileRecordGroupsResult) -> None:
         """Take the next page, or the read's refusal of it, after checking that it continues this stream.
 

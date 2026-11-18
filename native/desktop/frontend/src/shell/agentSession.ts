@@ -15,8 +15,6 @@ import type {
   SkillDetailRecord,
   SkillListResponse,
   SkillVerificationRecord,
-  ToolCallStatus,
-  ToolKind,
 } from "./agentGatewayContract";
 import type {
   AttachmentCardAnswer,
@@ -36,6 +34,7 @@ import type {
   AgentApproval,
   AgentPending,
   AgentQuestionnaire,
+  AgentToolRecord,
 } from "./agentSnapshotContract";
 import type {
   AgentConversationRecord,
@@ -261,15 +260,13 @@ export type AgentToolRefusal = {
   recovery_action_id?: string;
 };
 
-/** A tool call as the stream reports it: its `tool_call_id`, its `title`
- * (the tool's name), its `kind` and its `status`. The stream carries nothing
- * of its input or result; only the history says more. */
-export type AgentStreamToolCall = {
-  id: string;
-  title: string;
-  tool_kind: ToolKind;
-  status: ToolCallStatus;
-};
+/** History can omit these values. Every stream tool call supplies them as
+ * strings, with the kind and status still constrained by the contract. */
+export type AgentStreamToolCall = Pick<
+  AgentToolRecord,
+  "id" | "title" | "tool_kind" | "status"
+> &
+  Record<"id" | "title" | "tool_kind" | "status", string>;
 
 export type AgentStreamEvent =
   /** The host's, before the first frame it maps of a run. */

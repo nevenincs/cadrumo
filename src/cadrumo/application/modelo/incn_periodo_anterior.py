@@ -71,7 +71,6 @@ from ..calculations.cross_period_models import (
 )
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
-from .calculation_action_ports import CalculationActionPorts
 from .preconditions import ATTEST_PRIOR_VALUE_ACTION_ID
 from .selectors import (
     ModeloCalculationRevisionSelector,
@@ -167,18 +166,6 @@ class IncnPeriodoAnteriorStores:
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol
     filing_repository: ModeloRecordCatalogueRepositoryProtocol
-
-    @classmethod
-    def from_calculation_ports(cls, ports: CalculationActionPorts) -> IncnPeriodoAnteriorStores:
-        """The stores a calculation invocation already holds."""
-        return cls(
-            operation=ports.operation,
-            observation_repository=ports.observation_repository,
-            iva_compensation_history_repository=ports.iva_compensation_history_repository,
-            calculation_repository=ports.calculation_repository,
-            work_unit_repository=ports.work_unit_repository,
-            filing_repository=ports.filing_repository,
-        )
 
 
 @dataclass(frozen=True, slots=True)

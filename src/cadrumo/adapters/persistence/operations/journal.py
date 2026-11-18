@@ -404,11 +404,6 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
             definition_id=record.snapshot.identity.definition_id,
         )
 
-    @property
-    def claim_index_root(self) -> Path:
-        """Return the directory of derived idempotency-claim lookup entries."""
-        return self._claim_index.root
-
     @override
     def save(self, operation: OperationJournalRecord) -> None:
         """Refuse a whole-record write that would bypass create's claim index entry."""
