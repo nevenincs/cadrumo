@@ -18,11 +18,10 @@ close, reintroduced through the data instead of the code.
 **Assimilation is gated as a POINTER, not as a scope**, because that is the
 property that keeps it true. The article fixes what a territory is treated as and
 says nothing about what the parent establishes, so the Isle of Man followed the
-United Kingdom out of the Community without the article changing a word. The
-tests below assert Monaco AGREES WITH FRANCE and the Isle of Man AGREES WITH THE
-UNITED KINGDOM rather than pinning either to a literal scope: a literal would
-pass today and would have to be edited the day a parent's status moved, which is
-exactly when nobody would notice it was the test rather than the law that changed.
+United Kingdom out of the Community without the article changing a word. This
+suite compares the Isle of Man with the United Kingdom at runtime.
+``test_country_vocabulary_boundary`` compares Monaco with France through the
+same resolver.
 
 Real registry data and the real loader throughout; the citations are verified
 against the bundled consolidated law at load, so an ungrounded row cannot be read
@@ -62,18 +61,6 @@ def test_monaco_is_not_a_third_country() -> None:
         assert territorial_scope_for_country(
             "MC", operation=_authority_operation_for_test, effective_date=_ON_DATE
         ) != IvaTerritorialScope.from_registry("third_country")
-
-
-def test_monaco_resolves_exactly_as_france_does() -> None:
-    """The assimilation as a pointer: agreement with the parent, not a literal.
-
-    Pinning ``MC`` to the EU-member scope would pass identically today and would
-    stop being about art. 3.Tres the moment France's own status was what moved.
-    """
-    with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        assert territorial_scope_for_country(
-            "MC", operation=_authority_operation_for_test, effective_date=_ON_DATE
-        ) == territorial_scope_for_country("FR", operation=_authority_operation_for_test, effective_date=_ON_DATE)
 
 
 def test_the_isle_of_man_resolves_exactly_as_the_united_kingdom_does() -> None:
