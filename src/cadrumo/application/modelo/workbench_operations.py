@@ -23,6 +23,8 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Callable, Mapping
+from contextvars import copy_context
+from functools import partial
 from time import perf_counter
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
@@ -41,7 +43,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.casilla_id import CasillaId
-from ...core.diagnostic_log import diagnostic_event
+from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
@@ -74,7 +76,7 @@ from ..operations.registry import (
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from ..workbench_capture_memory import WorkbenchCaptureMemoryOwner
+from ..workbench_capture_memory import WorkbenchCaptureMemory, WorkbenchCaptureMemoryOwner
 from .carry_family_selection import prior_carry_binding_ids
 from .casilla_help import ModeloCasillaHelpCardV1
 from .edit_admission import ModeloEditRenewedV1, renew_modelo_edit_baseline
@@ -438,16 +440,16 @@ class ModeloWorkbenchFormExecutor:
         held = self._capture_memory.for_profile(str(payload.profile_id)) if self._capture_memory is not None else None
         memory = held.form_projection if held is not None else None
 
-        def read() -> ModeloWorkbenchFormProjectionV1:
-            bucket_id = _bucket_id(payload.profile_id)
-            ports = self._ports_factory(bucket_id, operation)
-            contracts = self._contracts()
-            if held is None or ports.store_epoch is None:
-                return fresh(bucket_id, ports, contracts, None)
+        def keyed(
+            bucket_id: str,
+            ports: ModeloWorkbenchReadPorts,
+            contracts: OperationPublicContractSetV1,
+            epoch_of: Callable[[], str],
+            spent: dict[str, int],
+        ) -> tuple[WorkbenchFormReadKey, ModeloEditAdmissionResultV1]:
             # The epoch is read before anything it covers, so a write during the read only moves it on.
-            spent: dict[str, int] = {}
             began = perf_counter()
-            epoch = ports.store_epoch()
+            epoch = epoch_of()
             spent["epoch_ms"] = _elapsed_ms(began)
             began = perf_counter()
             admission = admit_workbench_form_edit(
@@ -468,10 +470,50 @@ class ModeloWorkbenchFormExecutor:
                 as_of=today_madrid(),
                 admission=admission_identity(admission),
             )
+            return key, admission
+
+        def read() -> ModeloWorkbenchFormProjectionV1:
+            bucket_id = _bucket_id(payload.profile_id)
+            ports = self._ports_factory(bucket_id, operation)
+            contracts = self._contracts()
+            epoch_of = ports.store_epoch
+            if held is None or epoch_of is None:
+                return fresh(bucket_id, ports, contracts, None)
+            spent: dict[str, int] = {}
+            key, admission = keyed(bucket_id, ports, contracts, epoch_of, spent)
             kept = held.form_read.kept_key()
             served = held.form_read.reuse(key, lambda: fresh(bucket_id, ports, contracts, admission, spent))
             _log_form_memo_read(kept, key, spent)
+            # The refresh runs in this read's context, so it reads the same profile's settings and storage.
+            held.keep_form_refresh(partial(copy_context().run, refresh, held))
             return with_fresh_admission(served, admission)
+
+        def refresh(memo: WorkbenchCaptureMemory) -> None:
+            """Read this form again into the session memo, keeping it only if nothing it reads moved meanwhile."""
+            spent: dict[str, int] = {}
+            began = perf_counter()
+            try:
+                with validating_governed_facts(operation):
+                    bucket_id = _bucket_id(payload.profile_id)
+                    ports = self._ports_factory(bucket_id, operation)
+                    epoch_of = ports.store_epoch
+                    if epoch_of is None:
+                        return
+                    contracts = self._contracts()
+                    key, admission = keyed(bucket_id, ports, contracts, epoch_of, spent)
+                    kept = memo.form_read.refresh(
+                        key,
+                        lambda: fresh(bucket_id, ports, contracts, admission, spent),
+                        current=lambda: epoch_of() == key.store_epoch,
+                    )
+            except Exception as error:
+                # The read that returns to the form builds it itself and reports any failure.
+                diagnostic_event(_log, "workbench_form_memo_refresh_failed", fields=diagnostic_error_fields(error))
+                return
+            spent["refresh_ms"] = _elapsed_ms(began)
+            diagnostic_event(
+                _log, "workbench_form_memo_refresh", fields={"refresh_kept": kept, **spent}, level=logging.INFO
+            )
 
         def fresh(
             bucket_id: str,
