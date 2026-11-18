@@ -54,7 +54,7 @@ from cadrumo.application.user_profile.automation_custody_port import AutomationS
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
 from cadrumo.core.config import override_settings
 from cadrumo.core.model_roles import ModelRole
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo.core.time.fixed_clock import FixedClock
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
@@ -217,7 +217,7 @@ class _LoanCustody(ProfileWorkerCustody):
         identity: ProfileWorkerIdentity,
         *,
         storage_root: Path,
-        clock: Callable[[], UtcInstant] = now,
+        clock: Callable[[], UtcInstant] = wall_now,
         monotonic: Callable[[], float] = time.monotonic,
         oracle: BucketSession | None = None,
     ) -> None:
@@ -366,7 +366,7 @@ class _Worker(ProfileWorkerHumanAdmission):
         storage_root: Path,
         authorization: WorkerAuthorizationOwner | None = None,
         worker_script: Path | None = None,
-        wall_clock=now,
+        wall_clock=wall_now,
         exited: Callable[[_Worker], None] | None = None,
         stopping: ChannelWake | None = None,
         fixed_clock: FixedClock | None = None,
@@ -546,8 +546,8 @@ def portable_human_cli_runtime(
         stop=stop,
         capture_login=lambda _: login,
         secret_store=lambda: native,
-        # Login proof threads must observe the same replay clock as the owned worker.
-        wall_clock=lambda: test_context.copy().run(now),
+        # Authority expiry is wall time; a replay's frozen document clock never reaches it.
+        wall_clock=wall_now,
     )
     server = _ContextServer(
         listener,
