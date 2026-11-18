@@ -238,7 +238,8 @@ class ProfileWorkerOperationHost:
         from cadrumo.application.workbench_capture_memory import WorkbenchCaptureMemoryOwner
         from cadrumo.entrypoints.operation_composition import compose_operation_dependencies
 
-        capture_memory = WorkbenchCaptureMemoryOwner()
+        # A form refresh after an export defers to the requests this worker serves, as the grounding warm-up does.
+        capture_memory = WorkbenchCaptureMemoryOwner(deferred=grounding_deferred)
         self._capture_memory = capture_memory
         with startup_phase(_log, "worker_operation_compose"), self.governed():
             return compose_operation_dependencies(

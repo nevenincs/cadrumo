@@ -382,6 +382,14 @@ def _log_form_memo_read(kept: WorkbenchFormReadKey | None, key: WorkbenchFormRea
     )
 
 
+_REFRESH_START_QUIET_SECONDS: Final = 1.5
+"""How long requests must stay quiet, beyond the worker's own quiet window, before a form refresh starts."""
+
+
+class _RefreshAbandonedError(Exception):
+    """A background form refresh stopped: its session ended, requests stayed busy, or a write overtook it."""
+
+
 def _bucket_id(profile_id: UUID) -> str:
     bucket_id = str(profile_id)
     if require_active_bucket_id() != bucket_id:
@@ -489,11 +497,20 @@ class ModeloWorkbenchFormExecutor:
             return with_fresh_admission(served, admission)
 
         def refresh(memo: WorkbenchCaptureMemory) -> None:
-            """Read this form again into the session memo, keeping it only if nothing it reads moved meanwhile."""
+            """Read this form again into the session memo, keeping it only if nothing it reads moved meanwhile.
+
+            It defers to the requests being served before it starts and between
+            reading and projecting the form, unless a read is already waiting
+            for it, and stops as soon as a write moves the epoch it was keyed on.
+            """
             spent: dict[str, int] = {}
             began = perf_counter()
+            kept = False
             try:
                 with validating_governed_facts(operation):
+                    # The frontend's own reads after an export follow it within a second or two; they go first.
+                    if not memo.yield_to_requests(unless=lambda: False, quiet_for=_REFRESH_START_QUIET_SECONDS):
+                        return
                     bucket_id = _bucket_id(payload.profile_id)
                     ports = self._ports_factory(bucket_id, operation)
                     epoch_of = ports.store_epoch
@@ -501,11 +518,18 @@ class ModeloWorkbenchFormExecutor:
                         return
                     contracts = self._contracts()
                     key, admission = keyed(bucket_id, ports, contracts, epoch_of, spent)
+
+                    def going_on() -> bool:
+                        unblocked = memo.yield_to_requests(unless=memo.form_read.refresh_joined)
+                        return unblocked and epoch_of() == key.store_epoch
+
                     kept = memo.form_read.refresh(
                         key,
-                        lambda: fresh(bucket_id, ports, contracts, admission, spent),
+                        lambda: fresh(bucket_id, ports, contracts, admission, spent, going_on),
                         current=lambda: epoch_of() == key.store_epoch,
                     )
+            except _RefreshAbandonedError:
+                pass
             except Exception as error:
                 # The read that returns to the form builds it itself and reports any failure.
                 diagnostic_event(_log, "workbench_form_memo_refresh_failed", fields=diagnostic_error_fields(error))
@@ -521,6 +545,7 @@ class ModeloWorkbenchFormExecutor:
             contracts: OperationPublicContractSetV1,
             admission: ModeloEditAdmissionResultV1 | None,
             spent: dict[str, int] | None = None,
+            going_on: Callable[[], bool] | None = None,
         ) -> ModeloWorkbenchFormProjectionV1:
             began = perf_counter()
             form = read_modelo_workbench_form(
@@ -534,6 +559,8 @@ class ModeloWorkbenchFormExecutor:
             )
             if spent is not None:
                 spent["form_ms"] = _elapsed_ms(began)
+            if going_on is not None and not going_on():
+                raise _RefreshAbandonedError
             began = perf_counter()
             admission = form.admission
             projection_context = None
