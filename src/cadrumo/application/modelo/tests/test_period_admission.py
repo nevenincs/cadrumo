@@ -57,3 +57,21 @@ def test_a_token_that_is_no_period_for_a_modelo_with_periods_is_refused(
 
     assert admission.outcome is _OUTCOME.NOT_A_PERIOD
     assert admission.declared_tokens == ("1T", "2T", "3T", "4T")
+
+
+@pytest.mark.parametrize("token", ["EVENT-1", "event-2", " EVENT-12 "])
+def test_a_concrete_event_is_admitted_where_the_registry_declares_the_event_selector(
+    authority_operation: PinnedAuthorityOperation, token: str
+) -> None:
+    admission = admit_modelo_period("210", _YEAR, token, operation=authority_operation)
+
+    assert "EVENT-N" in admission.declared_tokens
+    assert admission.outcome is _OUTCOME.ADMITTED
+    assert admission.period == Period.from_year_and_code(_YEAR, token.strip().upper())
+
+
+def test_the_event_selector_itself_is_no_period(authority_operation: PinnedAuthorityOperation) -> None:
+    admission = admit_modelo_period("210", _YEAR, "EVENT-N", operation=authority_operation)
+
+    assert admission.outcome is _OUTCOME.NOT_A_PERIOD
+    assert admission.period is None
