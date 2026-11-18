@@ -293,7 +293,11 @@ export function makeRegister(
   // ---- Restating a year after a claim -------------------------------------------
 
   /** The parts of [from, until) the effective claims leave uncovered. */
-  const uncovered = (row: ActivityAssetPlanRow, from: string, until: string) => {
+  const uncovered = (
+    row: ActivityAssetPlanRow,
+    from: string,
+    until: string,
+  ) => {
     const covered = row.claims
       .filter((claim) => claim.effective)
       .map((claim) => [claim.covered_from, claim.covered_until] as const)
@@ -366,7 +370,9 @@ export function makeRegister(
 
   /** The year a dotación form opens on: the latest year up to the scenario's
    * with something left to claim, else the earliest later one. */
-  const claimYearOf = (rows: readonly ActivityAssetPlanRow[]): number | null => {
+  const claimYearOf = (
+    rows: readonly ActivityAssetPlanRow[],
+  ): number | null => {
     const open = rows
       .filter((row) => row.claimable_intervals.length > 0)
       .map((row) => row.tax_year);
@@ -465,7 +471,8 @@ export function makeRegister(
             : {
                 ...claim,
                 matches_current_schedule: found.matches_current_schedule,
-                stale_reason: found.stale_reason as ActivityAssetPlanClaim["stale_reason"],
+                stale_reason:
+                  found.stale_reason as ActivityAssetPlanClaim["stale_reason"],
               };
         }),
       }));
