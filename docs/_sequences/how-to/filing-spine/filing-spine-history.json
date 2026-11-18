@@ -417,9 +417,9 @@
             },
             {
               "actor": "docs-sequence-sandbox",
-              "event_id": "a03674b6a7e939484022d08b236f4d96cfaf5706ef07f2394f11183fd722da92",
+              "event_id": "1a54477e88b7c34bc6dc7b291693daed8fdf9a11fa035ff7d235530323e91fd2",
               "event_type": "modelo.calculation.created",
-              "object_id": "f749449a22137c07dce140b436f6ad3cc3896872f5812a6d39e7d777b9ac026e",
+              "object_id": "52485110aafdc92205d8bf35af4b2d59b7768863a5ad44c36e674f1a542844b7",
               "object_type": "calculation_revision",
               "occurred_at": "2026-04-01T09:00:00+00:00",
               "payload": {
@@ -427,7 +427,7 @@
                 "borrador_bindings_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                 "borrador_participated": "false",
                 "borrador_snapshot_id": "",
-                "calculation_revision_id": "f749449a22137c07dce140b436f6ad3cc3896872f5812a6d39e7d777b9ac026e",
+                "calculation_revision_id": "52485110aafdc92205d8bf35af4b2d59b7768863a5ad44c36e674f1a542844b7",
                 "casilla_count": "167",
                 "filing_year": "2026",
                 "formula_count": "40",
