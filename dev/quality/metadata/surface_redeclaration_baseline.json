@@ -4,7 +4,7 @@
     "wire-type": 290,
     "tui-date-decision": 0,
     "tui-precedence": 0,
-    "duplicated-helper": 5
+    "duplicated-helper": 3
   },
   "occurrences": {
     "wire-type": [
@@ -302,8 +302,6 @@
     "tui-date-decision": [],
     "tui-precedence": [],
     "duplicated-helper": [
-      "duplicated-helper:src/cadrumo/entrypoints/tui/installation/texts.py:yes_no",
-      "duplicated-helper:src/cadrumo/entrypoints/tui/ledger/registers_inventory.py:yes_no",
       "duplicated-helper:src/cadrumo/entrypoints/tui/modelo/disagreements_screen.py:entry",
       "duplicated-helper:src/cadrumo/entrypoints/tui/modelo/workbench/issue_scale.py:require_total_tables",
       "duplicated-helper:src/cadrumo/entrypoints/tui/modelo/workbench/issue_screen_components.py:entry"
