@@ -16,6 +16,7 @@ export function useArrangementActions({
   t,
   maximized,
   setMaximized,
+  askResetLayout,
   toggleMaximize,
   agentVisible,
   tuiVisible,
@@ -28,6 +29,7 @@ export function useArrangementActions({
   t: Translate;
   maximized: Maximized;
   setMaximized: (update: SetStateAction<Maximized>) => void;
+  askResetLayout: () => void;
   toggleMaximize: (area: Exclude<Maximized, null>) => void;
   agentVisible: boolean;
   tuiVisible: boolean;
@@ -39,6 +41,13 @@ export function useArrangementActions({
 }): Action[] {
   return useMemo<Action[]>(
     () => [
+      {
+        id: "layout.reset",
+        label: t("desktop.dock.reset_layout"),
+        group: "layout",
+        icon: "restore",
+        run: askResetLayout,
+      },
       {
         id: "view.maximize",
         label: maximized
@@ -134,6 +143,7 @@ export function useArrangementActions({
       t,
       maximized,
       setMaximized,
+      askResetLayout,
       toggleMaximize,
       agentVisible,
       tuiVisible,
