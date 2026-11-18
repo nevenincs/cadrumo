@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import {
   BUDGET,
   caseBudgetMs,
+  keepReason,
   lineProblem,
   recordedDurations,
   selectCases,
@@ -291,4 +292,46 @@ test("a timed-out case's unreached rows are the world rows its spec wrote no lin
     ),
     null,
   );
+});
+
+test("a run root is kept when its window refused the agent or logged an error", () => {
+  const dir = mkdtempSync(join(tmpdir(), "cadrumo-sweep-keep-"));
+  try {
+    const logs = join(dir, "storage", "logs");
+    mkdirSync(logs, { recursive: true });
+    const host = join(logs, "cadrumo-native.jsonl");
+    const runtime = join(logs, "cadrumo.log");
+    const record = (service, failure = null) =>
+      JSON.stringify({ kind: "service_event", service, failure });
+    // A clean start, and a refusal the person acts on, leave nothing to keep.
+    writeFileSync(
+      host,
+      [
+        record({ event: "agent_starting", generation: 1 }),
+        record({ event: "agent_refused", reason: "agent_signed_out" }),
+        record({ event: "agent_ready", generation: 1, gatewayPort: 1 }),
+      ].join("\n") + "\n",
+    );
+    writeFileSync(runtime, "2026-11-17T21:00:00.000Z [INFO] runtime: ready\n");
+    assert.equal(keepReason(dir), null);
+    // The operator's error: the agent refused because the runtime was not ready.
+    writeFileSync(
+      host,
+      record({ event: "agent_refused", reason: "agent_runtime_unavailable" }) +
+        "\n",
+    );
+    assert.match(keepReason(dir), /agent_runtime_unavailable/);
+    writeFileSync(host, record(null, { code: "spawn_failed" }) + "\n");
+    assert.match(keepReason(dir), /failure/);
+    writeFileSync(host, "");
+    writeFileSync(
+      runtime,
+      "2026-11-17T21:00:00.000Z [ERROR] sign_in: helper ended without result\n",
+    );
+    assert.match(keepReason(dir), /runtime logged an error/);
+    // A root without logs has nothing that asks to keep it.
+    assert.equal(keepReason(join(dir, "absent")), null);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

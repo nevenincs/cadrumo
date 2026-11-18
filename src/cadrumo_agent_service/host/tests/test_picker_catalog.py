@@ -63,7 +63,7 @@ def _declared() -> dict[str, Any]:
     """The fallback the service serves while no agent is ready: the declared document in its envelope."""
     return declared_catalog_envelope(
         {
-            "schema_version": 6,
+            "schema_version": 7,
             "providers": [
                 _declared_lane("example", "api"),
                 _declared_lane("example", "cli"),
@@ -133,7 +133,7 @@ def test_without_a_ready_agent_the_declared_catalog_is_served_in_its_envelope_le
 
     catalog = service.admin("catalog")
     assert _declared_identities(catalog) == [("example", "cli"), ("other", "api")]
-    assert catalog["catalog"]["schema_version"] == 6
+    assert catalog["catalog"]["schema_version"] == 7
     assert catalog["catalog"]["providers"][0]["models"] == _declared()["catalog"]["providers"][1]["models"]
 
 
@@ -253,7 +253,7 @@ def test_the_declared_catalog_states_the_model_download_of_each_lane(
         service_module,
         "declared_provider_catalog_response",
         lambda: declared_catalog_envelope(
-            {"schema_version": 6, "providers": [_declared_lane("llamacpp", "api"), _declared_lane("other", "api")]}
+            {"schema_version": 7, "providers": [_declared_lane("llamacpp", "api"), _declared_lane("other", "api")]}
         ),
     )
 

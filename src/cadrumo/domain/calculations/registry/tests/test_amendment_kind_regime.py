@@ -37,7 +37,7 @@ from .....core.period import Period
 from ..amendment_regime_policy import resolve_amendment_regime_policy_for_period
 from .authored_editions import (
     filing_year_envelope,
-    revision_before_first_declaring,
+    revision_before_casilla_meaning,
     split_exercise_revisions,
 )
 
@@ -53,14 +53,15 @@ _HORIZON = filing_year_envelope().horizon
 
 
 def _exercise_after_revision(modelo: str, casilla_id: str) -> int:
-    before = revision_before_first_declaring(modelo, casilla_id)
+    before = revision_before_casilla_meaning(modelo, casilla_id)
     if before.valid_to is None:
         raise LookupError(f"modelo {modelo}: the design before casilla {casilla_id} is open-ended")
     return before.valid_to.year + 1
 
 
 # The M303 diseño splits one exercise between the periods 2T/08 and 3T/09; the M100 and M200 designs
-# adopt the rectificativa casillas (0669, 01578) in the exercise their older design lacks them.
+# give the rectificativa casillas (0669, 01578) their rectificativa meaning in the exercise their older design
+# lacks it.
 _M303_BOUNDARY_EXERCISE = split_exercise_revisions("303", early_period="2T", late_period="3T")[0].valid_from.year
 _M100_BOUNDARY_EXERCISE = _exercise_after_revision("100", "0669")
 _M200_BOUNDARY_EXERCISE = _exercise_after_revision("200", "01578")

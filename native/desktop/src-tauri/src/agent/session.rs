@@ -175,21 +175,38 @@ pub fn admit_document_removal(conversation: &str, name: Option<&str>) -> Result<
 }
 
 /// One stored document as the column reads it: its name, size, time, digest
-/// and type, and nothing else the agent says of it.
+/// and type, and nothing else the agent says of it. The agent states each of
+/// them for every stored document; one without its type is not read as one.
 pub fn document_record(item: &Value) -> Result<Value, Refused> {
     let name = text(item, "name").filter(|name| plain_name(name));
     let sha256 = text(item, "sha256").filter(|sha| digest(sha));
     let size = item.get("size_bytes").and_then(Value::as_u64);
     let modified = text(item, "modified_at");
-    match (name, sha256, size, modified) {
-        (Some(name), Some(sha256), Some(size), Some(modified)) => Ok(json!({
+    let media_type = text(item, "media_type").filter(|media| !media.is_empty());
+    match (name, sha256, size, modified, media_type) {
+        (Some(name), Some(sha256), Some(size), Some(modified), Some(media_type)) => Ok(json!({
             "name": name,
             "size_bytes": size,
             "modified_at": modified,
             "sha256": sha256,
-            "media_type": text(item, "media_type"),
+            "media_type": media_type,
         })),
         _ => Err(refused("agent_gateway_unreadable")),
+    }
+}
+
+/// The agent's answer to a clarification, passed on as it states it once it
+/// reads as the answer for this very request: whether it was accepted and
+/// what became of the action it asked about.
+pub fn clarification_reply(reply: Value, target: &RequestRef) -> Result<Value, Refused> {
+    let answers_this = text(&reply, "run_id") == Some(target.reply_id.as_str())
+        && text(&reply, "request_id") == Some(target.request_id.as_str())
+        && reply.get("accepted").is_some_and(Value::is_boolean)
+        && text(&reply, "action_status").is_some();
+    if answers_this {
+        Ok(reply)
+    } else {
+        Err(refused("agent_gateway_unreadable"))
     }
 }
 
@@ -1250,9 +1267,11 @@ impl Session {
             return Err(refused("agent_invalid_request"));
         }
         let body = clarification_body(answer)?;
-        Client::new(&gateway).clarification(&target.reply_id, &target.request_id, &body)?;
+        let reply =
+            Client::new(&gateway).clarification(&target.reply_id, &target.request_id, &body)?;
+        let reply = clarification_reply(reply, target)?;
         self.resolved(&target.reply_id, &target.request_id);
-        Ok(json!({}))
+        Ok(reply)
     }
 
     pub fn decide(
@@ -1633,11 +1652,37 @@ mod tests {
     }
 
     #[test]
+    fn a_clarification_answer_is_the_agents_own_reply_for_that_request() {
+        let target = RequestRef {
+            reply_id: "run-1".into(),
+            request_id: "q1".into(),
+        };
+        let reply = json!({"api_version": "v1", "run_id": "run-1", "request_id": "q1",
+            "accepted": false, "applied": false, "action_status": "superseded",
+            "idempotency_key": null});
+        assert_eq!(clarification_reply(reply.clone(), &target).unwrap(), reply);
+        for bad in [
+            json!({}),
+            json!({"run_id": "run-2", "request_id": "q1", "accepted": true, "action_status": "applied"}),
+            json!({"run_id": "run-1", "request_id": "q2", "accepted": true, "action_status": "applied"}),
+            json!({"run_id": "run-1", "request_id": "q1", "accepted": "yes", "action_status": "applied"}),
+            json!({"run_id": "run-1", "request_id": "q1", "accepted": true}),
+        ] {
+            assert_eq!(
+                clarification_reply(bad.clone(), &target).unwrap_err().code,
+                "agent_gateway_unreadable",
+                "{bad}"
+            );
+        }
+    }
+
+    #[test]
     fn a_document_page_reads_only_whole_documents() {
         let page = json!({"workspace_root": "C:\\private\\ws", "attachments": [
             {"name": "a.pdf", "size_bytes": 10, "modified_at": "2026-10-18T10:00:00Z",
              "sha256": SHA, "media_type": "application/pdf"},
-            {"name": "b", "size_bytes": 0, "modified_at": "2026-10-18T10:00:00Z", "sha256": SHA}],
+            {"name": "b", "size_bytes": 0, "modified_at": "2026-10-18T10:00:00Z", "sha256": SHA,
+             "media_type": "application/octet-stream"}],
             "skipped": [{"name": "link", "reason": "link"}], "truncated": true, "next_after": "b"});
         // The workspace's path and what was skipped never reach the column.
         assert_eq!(
@@ -1646,7 +1691,7 @@ mod tests {
                 {"name": "a.pdf", "size_bytes": 10, "modified_at": "2026-10-18T10:00:00Z",
                  "sha256": SHA, "media_type": "application/pdf"},
                 {"name": "b", "size_bytes": 0, "modified_at": "2026-10-18T10:00:00Z",
-                 "sha256": SHA, "media_type": null}],
+                 "sha256": SHA, "media_type": "application/octet-stream"}],
                 "next_after": "b"})
         );
         assert_eq!(
@@ -1656,6 +1701,11 @@ mod tests {
         for bad in [
             json!({}),
             json!({"attachments": [{"name": "a", "size_bytes": 1, "modified_at": "t"}]}),
+            json!({"attachments": [{"name": "a", "size_bytes": 1, "modified_at": "t", "sha256": SHA}]}),
+            json!({"attachments": [{"name": "a", "size_bytes": 1, "modified_at": "t", "sha256": SHA,
+                                    "media_type": ""}]}),
+            json!({"attachments": [{"name": "a", "size_bytes": 1, "modified_at": "t", "sha256": SHA,
+                                    "media_type": null}]}),
             json!({"attachments": [{"name": "a/b", "size_bytes": 1, "modified_at": "t", "sha256": SHA}]}),
             json!({"attachments": [{"name": "a", "size_bytes": -1, "modified_at": "t", "sha256": SHA}]}),
             json!({"attachments": [], "next_after": "../x"}),

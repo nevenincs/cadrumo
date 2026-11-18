@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "design_box_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "d07fdc31e91772f55e6b70d964e8d4020a57f6897e1eed144afb9e6679bbd0fb"
+source_state_digest = "b21d2389dccc02923e4196f8d93d3c7081c8e6ef90790058b97440f7f4f19d0e"
 design_sources = [
     { source_ref = "aeat-dr-200-2022", sha256 = "8c9fa09e5713dc19ed9235757c314a1afee24108bccee4e39031f0df9a75fae6" },
 ]
@@ -296,6 +296,7 @@ placements = [
     { casilla_id = "01070", kind = "on_form", box_number = "01070" },
     { casilla_id = "01071", kind = "on_form", box_number = "01071" },
     { casilla_id = "01072", kind = "on_form", box_number = "01072" },
+    { casilla_id = "01073", kind = "on_form", box_number = "01073" },
     { casilla_id = "01074", kind = "on_form", box_number = "01074" },
     { casilla_id = "01075", kind = "on_form", box_number = "01075" },
     { casilla_id = "01076", kind = "on_form", box_number = "01076" },
@@ -459,12 +460,18 @@ placements = [
     { casilla_id = "01246", kind = "on_form", box_number = "01246" },
     { casilla_id = "01247", kind = "on_form", box_number = "01247" },
     { casilla_id = "01248", kind = "on_form", box_number = "01248" },
+    { casilla_id = "01249", kind = "on_form", box_number = "01249" },
     { casilla_id = "01250", kind = "on_form", box_number = "01250" },
     { casilla_id = "01251", kind = "on_form", box_number = "01251" },
     { casilla_id = "01252", kind = "on_form", box_number = "01252" },
     { casilla_id = "01253", kind = "on_form", box_number = "01253" },
     { casilla_id = "01254", kind = "on_form", box_number = "01254" },
     { casilla_id = "01255", kind = "on_form", box_number = "01255" },
+    { casilla_id = "01256", kind = "on_form", box_number = "01256" },
+    { casilla_id = "01257", kind = "on_form", box_number = "01257" },
+    { casilla_id = "01258", kind = "on_form", box_number = "01258" },
+    { casilla_id = "01259", kind = "on_form", box_number = "01259" },
+    { casilla_id = "01260", kind = "on_form", box_number = "01260" },
     { casilla_id = "01261", kind = "on_form", box_number = "01261" },
     { casilla_id = "01262", kind = "on_form", box_number = "01262" },
     { casilla_id = "01263", kind = "on_form", box_number = "01263" },
@@ -503,6 +510,7 @@ placements = [
     { casilla_id = "01320", kind = "on_form", box_number = "01320" },
     { casilla_id = "01321", kind = "on_form", box_number = "01321" },
     { casilla_id = "01322", kind = "on_form", box_number = "01322" },
+    { casilla_id = "01331", kind = "on_form", box_number = "01331" },
     { casilla_id = "01337", kind = "on_form", box_number = "01337" },
     { casilla_id = "01341", kind = "on_form", box_number = "01341" },
     { casilla_id = "01342", kind = "on_form", box_number = "01342" },
@@ -610,6 +618,7 @@ placements = [
     { casilla_id = "01498", kind = "on_form", box_number = "01498" },
     { casilla_id = "01499", kind = "on_form", box_number = "01499" },
     { casilla_id = "01509", kind = "on_form", box_number = "01509" },
+    { casilla_id = "01510", kind = "on_form", box_number = "01510" },
     { casilla_id = "01511", kind = "on_form", box_number = "01511" },
     { casilla_id = "01512", kind = "on_form", box_number = "01512" },
     { casilla_id = "01513", kind = "on_form", box_number = "01513" },
@@ -669,10 +678,14 @@ placements = [
     { casilla_id = "01570", kind = "on_form", box_number = "01570" },
     { casilla_id = "01572", kind = "on_form", box_number = "01572" },
     { casilla_id = "01573", kind = "on_form", box_number = "01573" },
+    { casilla_id = "01576", kind = "on_form", box_number = "01576" },
+    { casilla_id = "01577", kind = "on_form", box_number = "01577" },
+    { casilla_id = "01578", kind = "on_form", box_number = "01578" },
     { casilla_id = "01579", kind = "on_form", box_number = "01579" },
     { casilla_id = "01580", kind = "on_form", box_number = "01580" },
     { casilla_id = "01581", kind = "on_form", box_number = "01581" },
     { casilla_id = "01582", kind = "on_form", box_number = "01582" },
+    { casilla_id = "01584", kind = "on_form", box_number = "01584" },
     { casilla_id = "01588", kind = "on_form", box_number = "01588" },
     { casilla_id = "01589", kind = "on_form", box_number = "01589" },
     { casilla_id = "01590", kind = "on_form", box_number = "01590" },
@@ -690,17 +703,37 @@ placements = [
     { casilla_id = "01604", kind = "on_form", box_number = "01604" },
     { casilla_id = "01605", kind = "on_form", box_number = "01605" },
     { casilla_id = "01606", kind = "on_form", box_number = "01606" },
+    { casilla_id = "01607", kind = "on_form", box_number = "01607" },
+    { casilla_id = "01608", kind = "on_form", box_number = "01608" },
+    { casilla_id = "01609", kind = "on_form", box_number = "01609" },
+    { casilla_id = "01610", kind = "on_form", box_number = "01610" },
+    { casilla_id = "01611", kind = "on_form", box_number = "01611" },
+    { casilla_id = "01612", kind = "on_form", box_number = "01612" },
+    { casilla_id = "01613", kind = "on_form", box_number = "01613" },
     { casilla_id = "01617", kind = "on_form", box_number = "01617" },
     { casilla_id = "01618", kind = "on_form", box_number = "01618" },
     { casilla_id = "01619", kind = "on_form", box_number = "01619" },
     { casilla_id = "01620", kind = "on_form", box_number = "01620" },
     { casilla_id = "01621", kind = "on_form", box_number = "01621" },
     { casilla_id = "01622", kind = "on_form", box_number = "01622" },
+    { casilla_id = "01623", kind = "on_form", box_number = "01623" },
     { casilla_id = "01630", kind = "on_form", box_number = "01630" },
     { casilla_id = "01634", kind = "on_form", box_number = "01634" },
     { casilla_id = "01641", kind = "on_form", box_number = "01641" },
     { casilla_id = "01645", kind = "on_form", box_number = "01645" },
     { casilla_id = "01649", kind = "on_form", box_number = "01649" },
+    { casilla_id = "01650", kind = "on_form", box_number = "01650" },
+    { casilla_id = "01651", kind = "on_form", box_number = "01651" },
+    { casilla_id = "01652", kind = "on_form", box_number = "01652" },
+    { casilla_id = "01653", kind = "on_form", box_number = "01653" },
+    { casilla_id = "01654", kind = "on_form", box_number = "01654" },
+    { casilla_id = "01655", kind = "on_form", box_number = "01655" },
+    { casilla_id = "01656", kind = "on_form", box_number = "01656" },
+    { casilla_id = "01657", kind = "on_form", box_number = "01657" },
+    { casilla_id = "01658", kind = "on_form", box_number = "01658" },
+    { casilla_id = "01659", kind = "on_form", box_number = "01659" },
+    { casilla_id = "01660", kind = "on_form", box_number = "01660" },
+    { casilla_id = "01661", kind = "on_form", box_number = "01661" },
     { casilla_id = "01665", kind = "on_form", box_number = "01665" },
     { casilla_id = "01669", kind = "on_form", box_number = "01669" },
     { casilla_id = "01673", kind = "on_form", box_number = "01673" },
@@ -1236,6 +1269,8 @@ placements = [
     { casilla_id = "02481", kind = "on_form", box_number = "02481" },
     { casilla_id = "02483", kind = "on_form", box_number = "02483" },
     { casilla_id = "02485", kind = "on_form", box_number = "02485" },
+    { casilla_id = "02487", kind = "on_form", box_number = "02487" },
+    { casilla_id = "02492", kind = "on_form", box_number = "02492" },
     { casilla_id = "02495", kind = "on_form", box_number = "02495" },
     { casilla_id = "02496", kind = "on_form", box_number = "02496" },
     { casilla_id = "02497", kind = "on_form", box_number = "02497" },
@@ -1830,6 +1865,8 @@ placements = [
     { casilla_id = "03239", kind = "on_form", box_number = "03239" },
     { casilla_id = "03240", kind = "on_form", box_number = "03240" },
     { casilla_id = "03241", kind = "on_form", box_number = "03241" },
+    { casilla_id = "03243", kind = "on_form", box_number = "03243" },
+    { casilla_id = "03244", kind = "on_form", box_number = "03244" },
     { casilla_id = "03246", kind = "on_form", box_number = "03246" },
     { casilla_id = "03251", kind = "on_form", box_number = "03251" },
     { casilla_id = "03252", kind = "on_form", box_number = "03252" },
@@ -1883,6 +1920,8 @@ placements = [
     { casilla_id = "03309", kind = "on_form", box_number = "03309" },
     { casilla_id = "03310", kind = "on_form", box_number = "03310" },
     { casilla_id = "03316", kind = "on_form", box_number = "03316" },
+    { casilla_id = "03317", kind = "on_form", box_number = "03317" },
+    { casilla_id = "03320", kind = "on_form", box_number = "03320" },
     { casilla_id = "03321", kind = "on_form", box_number = "03321" },
     { casilla_id = "03322", kind = "on_form", box_number = "03322" },
     { casilla_id = "03323", kind = "on_form", box_number = "03323" },
@@ -1957,6 +1996,11 @@ placements = [
     { casilla_id = "1502", kind = "on_form", box_number = "1502" },
     { casilla_id = "1503", kind = "on_form", box_number = "1503" },
     { casilla_id = "1504", kind = "on_form", box_number = "1504" },
+    { casilla_id = "1506", kind = "on_form", box_number = "1506" },
+    { casilla_id = "1507", kind = "on_form", box_number = "1507" },
+    { casilla_id = "1508", kind = "on_form", box_number = "1508" },
+    { casilla_id = "1809", kind = "on_form", box_number = "1809" },
+    { casilla_id = "1810", kind = "on_form", box_number = "1810" },
     { casilla_id = "2231", kind = "on_form", box_number = "2231" },
     { casilla_id = "DP200001:00001", kind = "on_form", box_number = "00001" },
     { casilla_id = "DP200001:00002", kind = "on_form", box_number = "00002" },
@@ -1989,6 +2033,7 @@ placements = [
     { casilla_id = "DP200001:00032", kind = "on_form", box_number = "00032" },
     { casilla_id = "DP200001:00033", kind = "on_form", box_number = "00033" },
     { casilla_id = "DP200001:00034", kind = "on_form", box_number = "00034" },
+    { casilla_id = "DP200001:00035", kind = "on_form", box_number = "00035" },
     { casilla_id = "DP200001:00036", kind = "on_form", box_number = "00036" },
     { casilla_id = "DP200001:00037", kind = "on_form", box_number = "00037" },
     { casilla_id = "DP200001:00038", kind = "on_form", box_number = "00038" },
@@ -1997,6 +2042,7 @@ placements = [
     { casilla_id = "DP200001:00041", kind = "on_form", box_number = "00041" },
     { casilla_id = "DP200001:00042", kind = "on_form", box_number = "00042" },
     { casilla_id = "DP200001:00043", kind = "on_form", box_number = "00043" },
+    { casilla_id = "DP200001:00044", kind = "on_form", box_number = "00044" },
     { casilla_id = "DP200001:00045", kind = "on_form", box_number = "00045" },
     { casilla_id = "DP200001:00046", kind = "on_form", box_number = "00046" },
     { casilla_id = "DP200001:00048", kind = "on_form", box_number = "00048" },
@@ -2004,6 +2050,7 @@ placements = [
     { casilla_id = "DP200001:00056", kind = "on_form", box_number = "00056" },
     { casilla_id = "DP200001:00057", kind = "on_form", box_number = "00057" },
     { casilla_id = "DP200001:00058", kind = "on_form", box_number = "00058" },
+    { casilla_id = "DP200001:00059", kind = "on_form", box_number = "00059" },
     { casilla_id = "DP200001:00060", kind = "on_form", box_number = "00060" },
     { casilla_id = "DP200001:00061", kind = "on_form", box_number = "00061" },
     { casilla_id = "DP200001:00062", kind = "on_form", box_number = "00062" },
@@ -2781,6 +2828,8 @@ placements = [
     { casilla_id = "DP200014B:01319", kind = "unplaced", unplaced_reason = "ambiguous_anchor", box_number = "01319" },
     { casilla_id = "DP200014B:01332", kind = "on_form", box_number = "01332" },
     { casilla_id = "DP200014B:01333", kind = "on_form", box_number = "01333" },
+    { casilla_id = "DP200014B:01583", kind = "unplaced", unplaced_reason = "ambiguous_anchor", box_number = "01583" },
+    { casilla_id = "DP200014B:01585", kind = "unplaced", unplaced_reason = "ambiguous_anchor", box_number = "01585" },
     { casilla_id = "DP200014B:01586", kind = "on_form", box_number = "01586" },
     { casilla_id = "DP200014B:01587", kind = "on_form", box_number = "01587" },
     { casilla_id = "DP200014B:01766", kind = "on_form", box_number = "01766" },
@@ -2791,6 +2840,16 @@ placements = [
     { casilla_id = "DP200014B:02482", kind = "on_form", box_number = "02482" },
     { casilla_id = "DP200014B:02484", kind = "on_form", box_number = "02484" },
     { casilla_id = "DP200014B:02486", kind = "on_form", box_number = "02486" },
+    { casilla_id = "DP200014B:02488", kind = "unplaced", unplaced_reason = "ambiguous_anchor", box_number = "02488" },
+    { casilla_id = "DP200014B:02489", kind = "on_form", box_number = "02489" },
+    { casilla_id = "DP200014B:02490", kind = "on_form", box_number = "02490" },
+    { casilla_id = "DP200014B:02491", kind = "on_form", box_number = "02491" },
+    { casilla_id = "DP200014B:02493", kind = "on_form", box_number = "02493" },
+    { casilla_id = "DP200014B:02494", kind = "on_form", box_number = "02494" },
+    { casilla_id = "DP200014B:03242", kind = "on_form", box_number = "03242" },
+    { casilla_id = "DP200014B:03245", kind = "on_form", box_number = "03245" },
+    { casilla_id = "DP200014B:03318", kind = "on_form", box_number = "03318" },
+    { casilla_id = "DP200014B:03319", kind = "on_form", box_number = "03319" },
     { casilla_id = "DP200015:00013", kind = "on_form", box_number = "00013" },
     { casilla_id = "DP200015:00014", kind = "on_form", box_number = "00014" },
     { casilla_id = "DP200015:00015", kind = "on_form", box_number = "00015" },
@@ -3298,6 +3357,8 @@ placements = [
     { casilla_id = "DP200019:00574", kind = "on_form", box_number = "00574" },
     { casilla_id = "DP200019:00580", kind = "on_form", box_number = "00580" },
     { casilla_id = "DP200019:00589", kind = "on_form", box_number = "00589" },
+    { casilla_id = "DP200019:02301", kind = "on_form", box_number = "02301" },
+    { casilla_id = "DP200019:02302", kind = "on_form", box_number = "02302" },
     { casilla_id = "DP200019:02303", kind = "on_form", box_number = "02303" },
     { casilla_id = "DP200019:02304", kind = "on_form", box_number = "02304" },
     { casilla_id = "DP200019:02305", kind = "on_form", box_number = "02305" },
@@ -3450,14 +3511,19 @@ placements = [
     { casilla_id = "DP200026:01044", kind = "on_form", box_number = "01044" },
     { casilla_id = "DP200026:01332", kind = "on_form", box_number = "01332" },
     { casilla_id = "DP200026:01333", kind = "on_form", box_number = "01333" },
+    { casilla_id = "DP200026:01583", kind = "on_form", box_number = "01583" },
+    { casilla_id = "DP200026:01585", kind = "on_form", box_number = "01585" },
     { casilla_id = "DP200026:01587", kind = "on_form", box_number = "01587" },
     { casilla_id = "DP200026:01881", kind = "on_form", box_number = "01881" },
     { casilla_id = "DP200026:02480", kind = "on_form", box_number = "02480" },
     { casilla_id = "DP200026:02482", kind = "on_form", box_number = "02482" },
     { casilla_id = "DP200026:02484", kind = "on_form", box_number = "02484" },
     { casilla_id = "DP200026:02486", kind = "on_form", box_number = "02486" },
+    { casilla_id = "DP200026:02488", kind = "on_form", box_number = "02488" },
     { casilla_id = "DP200026:02491", kind = "on_form", box_number = "02491" },
     { casilla_id = "DP200026:02494", kind = "on_form", box_number = "02494" },
+    { casilla_id = "DP200026:03242", kind = "on_form", box_number = "03242" },
+    { casilla_id = "DP200026:03245", kind = "on_form", box_number = "03245" },
     { casilla_id = "DP200026:03319", kind = "on_form", box_number = "03319" },
     { casilla_id = "DP200026F:01860", kind = "on_form", box_number = "01860" },
     { casilla_id = "DP200026F:01861", kind = "on_form", box_number = "01861" },
@@ -4906,28 +4972,29 @@ blocks = [
     { kind = "field", id = "field-29", casilla_id = "DP200001:00022" },
     { kind = "field", id = "field-30", casilla_id = "DP200001:00028" },
     { kind = "field", id = "field-31", casilla_id = "DP200001:00049" },
-    { kind = "field", id = "field-32", casilla_id = "DP200001:00029" },
-    { kind = "field", id = "field-33", casilla_id = "DP200001:00069" },
-    { kind = "field", id = "field-34", casilla_id = "DP200001:00033" },
-    { kind = "field", id = "field-35", casilla_id = "DP200001:00034" },
-    { kind = "field", id = "field-36", casilla_id = "DP200001:00038" },
-    { kind = "field", id = "field-37", casilla_id = "DP200001:00046" },
-    { kind = "field", id = "field-38", casilla_id = "DP200001:00012" },
-    { kind = "field", id = "field-39", casilla_id = "DP200001:00064" },
-    { kind = "field", id = "field-40", casilla_id = "DP200001:00057" },
-    { kind = "field", id = "field-41", casilla_id = "DP200001:00062" },
-    { kind = "field", id = "field-42", casilla_id = "DP200001:00020" },
-    { kind = "field", id = "field-43", casilla_id = "00007" },
-    { kind = "field", id = "field-44", casilla_id = "DP200001:00009" },
-    { kind = "field", id = "field-45", casilla_id = "DP200001:00010" },
-    { kind = "field", id = "field-46", casilla_id = "DP200001:00081" },
-    { kind = "field", id = "field-47", casilla_id = "DP200001:00082" },
-    { kind = "field", id = "field-48", casilla_id = "DP200001:00016" },
-    { kind = "field", id = "field-49", casilla_id = "DP200001:00026" },
-    { kind = "field", id = "field-50", casilla_id = "DP200001:00027" },
-    { kind = "field", id = "field-51", casilla_id = "DP200001:00030" },
-    { kind = "field", id = "field-52", casilla_id = "DP200001:00039" },
-    { kind = "field", id = "field-53", casilla_id = "DP200001:00043" },
+    { kind = "field", id = "field-32", casilla_id = "DP200001:00035" },
+    { kind = "field", id = "field-33", casilla_id = "DP200001:00029" },
+    { kind = "field", id = "field-34", casilla_id = "DP200001:00069" },
+    { kind = "field", id = "field-35", casilla_id = "DP200001:00033" },
+    { kind = "field", id = "field-36", casilla_id = "DP200001:00034" },
+    { kind = "field", id = "field-37", casilla_id = "DP200001:00038" },
+    { kind = "field", id = "field-38", casilla_id = "DP200001:00046" },
+    { kind = "field", id = "field-39", casilla_id = "DP200001:00012" },
+    { kind = "field", id = "field-40", casilla_id = "DP200001:00064" },
+    { kind = "field", id = "field-41", casilla_id = "DP200001:00057" },
+    { kind = "field", id = "field-42", casilla_id = "DP200001:00062" },
+    { kind = "field", id = "field-43", casilla_id = "DP200001:00020" },
+    { kind = "field", id = "field-44", casilla_id = "00007" },
+    { kind = "field", id = "field-45", casilla_id = "DP200001:00009" },
+    { kind = "field", id = "field-46", casilla_id = "DP200001:00010" },
+    { kind = "field", id = "field-47", casilla_id = "DP200001:00081" },
+    { kind = "field", id = "field-48", casilla_id = "DP200001:00082" },
+    { kind = "field", id = "field-49", casilla_id = "DP200001:00016" },
+    { kind = "field", id = "field-50", casilla_id = "DP200001:00026" },
+    { kind = "field", id = "field-51", casilla_id = "DP200001:00027" },
+    { kind = "field", id = "field-52", casilla_id = "DP200001:00030" },
+    { kind = "field", id = "field-53", casilla_id = "DP200001:00039" },
+    { kind = "field", id = "field-54", casilla_id = "DP200001:00043" },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -4945,13 +5012,15 @@ blocks = [
     { kind = "field", id = "field", casilla_id = "DP200001:00063" },
     { kind = "field", id = "field-2", casilla_id = "DP200001:00071" },
     { kind = "field", id = "field-3", casilla_id = "DP200001:00070" },
-    { kind = "field", id = "field-4", casilla_id = "DP200001:00065" },
-    { kind = "field", id = "field-5", casilla_id = "DP200001:00084" },
-    { kind = "field", id = "field-6", casilla_id = "DP200001:00072" },
-    { kind = "field", id = "field-7", casilla_id = "DP200001:00073" },
-    { kind = "field", id = "field-8", casilla_id = "DP200001:00037" },
-    { kind = "field", id = "field-9", casilla_id = "DP200001:00074" },
-    { kind = "field", id = "field-10", casilla_id = "DP200001:00061" },
+    { kind = "field", id = "field-4", casilla_id = "DP200001:00059" },
+    { kind = "field", id = "field-5", casilla_id = "DP200001:00065" },
+    { kind = "field", id = "field-6", casilla_id = "DP200001:00084" },
+    { kind = "field", id = "field-7", casilla_id = "DP200001:00072" },
+    { kind = "field", id = "field-8", casilla_id = "DP200001:00073" },
+    { kind = "field", id = "field-9", casilla_id = "DP200001:00037" },
+    { kind = "field", id = "field-10", casilla_id = "DP200001:00044" },
+    { kind = "field", id = "field-11", casilla_id = "DP200001:00074" },
+    { kind = "field", id = "field-12", casilla_id = "DP200001:00061" },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -4984,6 +5053,11 @@ blocks = [
     { kind = "field", id = "field-2", casilla_id = "1502" },
     { kind = "field", id = "field-3", casilla_id = "1503" },
     { kind = "field", id = "field-4", casilla_id = "1504" },
+    { kind = "field", id = "field-5", casilla_id = "1506" },
+    { kind = "field", id = "field-6", casilla_id = "1809" },
+    { kind = "field", id = "field-7", casilla_id = "1810" },
+    { kind = "field", id = "field-8", casilla_id = "1507" },
+    { kind = "field", id = "field-9", casilla_id = "1508" },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -6136,6 +6210,8 @@ official_heading = "Liquidación III - Base imponible"
 blocks = [
     { kind = "field", id = "field", casilla_id = "DP200014:00545" },
     { kind = "field", id = "field-2", casilla_id = "01509" },
+    { kind = "field", id = "field-3", casilla_id = "01576" },
+    { kind = "field", id = "field-4", casilla_id = "01577" },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -6168,7 +6244,8 @@ id = "liquidacion-iii-base-imponible-3"
 heading_key = "modelo.schema.200.form.section.liquidacion-iii-base-imponible.heading"
 official_heading = "Liquidación III - Base imponible"
 blocks = [
-    { kind = "field", id = "field", casilla_id = "DP200014:00561" },
+    { kind = "field", id = "field", casilla_id = "01510" },
+    { kind = "field", id = "field-2", casilla_id = "DP200014:00561" },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -6177,6 +6254,7 @@ heading_key = "modelo.schema.200.form.section.liquidacion-iii-base-imponible-sol
 official_heading = "Liquidación III - Base imponible - Sólo sociedades cooperativas"
 blocks = [
     { kind = "grid", id = "grid", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "reserva-de-nivelacion-convertido-en-cuota-a6d9f0", heading_key = "modelo.schema.200.form.row.reserva-de-nivelacion-convertido-en-cuota-a6d9f0.heading", official_heading = "Reserva de nivelación convertido en cuotas (solo entidades del art. 101 LIS)", cells = [{ kind = "casilla", casilla_id = "01285" }, { kind = "casilla", casilla_id = "01286" }] }] },
+    { kind = "field", id = "field", casilla_id = "01331" },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -6271,12 +6349,10 @@ heading_key = "modelo.schema.200.form.section.liquidacion-iv-resultado-de-la-aut
 official_heading = "Liquidación IV - Resultado de la autoliquidación"
 blocks = [
     { kind = "grid", id = "grid", columns = [{ key = "territorio_estado", heading_key = "modelo.form.column.territorio_estado", official_heading = "Estado" }, { key = "d-forales-navarra-totales", heading_key = "modelo.schema.200.form.column.d-forales-navarra-totales.heading", official_heading = "D. Forales/Navarra (Totales)" }], rows = [{ key = "incremento-por-perdida-beneficios-fiscale-46d9c1", heading_key = "modelo.schema.200.form.row.incremento-por-perdida-beneficios-fiscale-46d9c1.heading", official_heading = "Incremento por pérdida beneficios fiscales períodos anteriores", cells = [{ kind = "casilla", casilla_id = "DP200014B:00615" }, { kind = "casilla", casilla_id = "DP200014B:00616" }] }, { key = "incremento-por-incumplimiento-de-requisit-dbe898", heading_key = "modelo.schema.200.form.row.incremento-por-incumplimiento-de-requisit-dbe898.heading", official_heading = "Incremento por incumplimiento de requisitos SOCIMI", cells = [{ kind = "casilla", casilla_id = "DP200014B:00633" }, { kind = "casilla", casilla_id = "DP200014B:00642" }] }, { key = "intereses-de-demora", heading_key = "modelo.schema.200.form.row.intereses-de-demora.heading", official_heading = "Intereses de demora", cells = [{ kind = "casilla", casilla_id = "DP200014B:00617" }, { kind = "casilla", casilla_id = "DP200014B:00618" }] }] },
-    { kind = "field", id = "field", casilla_id = "DP200014B:01234" },
-    { kind = "field", id = "field-2", casilla_id = "DP200014B:00083" },
-    { kind = "field", id = "field-3", casilla_id = "DP200014B:01332" },
-    { kind = "field", id = "field-4", casilla_id = "DP200014B:01892" },
-    { kind = "field", id = "field-5", casilla_id = "01042" },
-    { kind = "field", id = "field-6", casilla_id = "DP200014B:01333" },
+    { kind = "grid", id = "grid-2", columns = [{ key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }, { key = "territorio_estado", heading_key = "modelo.form.column.territorio_estado", official_heading = "Estado" }, { key = "d-forales-navarra-totales", heading_key = "modelo.schema.200.form.column.d-forales-navarra-totales.heading", official_heading = "D. Forales/Navarra (Totales)" }], rows = [{ key = "abono-deducciones-i-d-i-por-insuficiencia-8699ea", heading_key = "modelo.schema.200.form.row.abono-deducciones-i-d-i-por-insuficiencia-8699ea.heading", official_heading = "Abono deducciones I+D+i por insuficiencia de cuota", cells = [{ kind = "casilla", casilla_id = "DP200014B:01234" }, { kind = "casilla", casilla_id = "DP200014B:00083" }, { kind = "casilla", casilla_id = "DP200014B:01332" }] }] },
+    { kind = "field", id = "field", casilla_id = "DP200014B:01892" },
+    { kind = "field", id = "field-2", casilla_id = "01042" },
+    { kind = "field", id = "field-3", casilla_id = "DP200014B:01333" },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -6286,6 +6362,21 @@ official_heading = "Liquidación IV"
 blocks = [
     { kind = "field", id = "field", casilla_id = "DP200014B:01586" },
     { kind = "field", id = "field-2", casilla_id = "DP200014B:01587" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "liquidacion-iv-liquido-a-ingresar-o-a-devolver"
+heading_key = "modelo.schema.200.form.section.liquidacion-iv-liquido-a-ingresar-o-a-devolver.heading"
+official_heading = "Liquidación IV - Líquido a ingresar o a devolver"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "01578" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "liquidacion-iv-2"
+heading_key = "modelo.schema.200.form.section.liquidacion-iv.heading"
+official_heading = "Liquidación IV"
+blocks = [
     { kind = "grid", id = "grid", columns = [{ key = "territorio_estado", heading_key = "modelo.form.column.territorio_estado", official_heading = "Estado" }, { key = "d-forales-navarra-totales", heading_key = "modelo.schema.200.form.column.d-forales-navarra-totales.heading", official_heading = "D. Forales/Navarra (Totales)" }], rows = [{ key = "liquido-a-ingresar-o-a-devolver", heading_key = "modelo.schema.200.form.row.liquido-a-ingresar-o-a-devolver.heading", official_heading = "Líquido a ingresar o a devolver", cells = [{ kind = "casilla", casilla_id = "DP200014B:00621" }, { kind = "casilla", casilla_id = "DP200014B:00622" }] }] },
 ]
 
@@ -6298,12 +6389,28 @@ blocks = [
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
+id = "liquidacion-iv-opcion-de-fraccionamiento-1f029e"
+heading_key = "modelo.schema.200.form.section.liquidacion-iv-opcion-de-fraccionamiento-1f029e.heading"
+official_heading = "Liquidación IV - Opción de fraccionamiento en supuestos de cambios de residencia (art. 19.1 LIS) - Líquido a ingresar"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "territorio_estado", heading_key = "modelo.form.column.territorio_estado", official_heading = "Estado" }, { key = "d-forales-navarra-totales", heading_key = "modelo.schema.200.form.column.d-forales-navarra-totales.heading", official_heading = "D. Forales/Navarra (Totales)" }], rows = [{ key = "liquido-a-ingresar-incluido-el-1er-fracci-dbd435", heading_key = "modelo.schema.200.form.row.liquido-a-ingresar-incluido-el-1er-fracci-dbd435.heading", official_heading = "Líquido a ingresar incluido el 1er fraccionamiento del art. 19.1 LIS", cells = [{ kind = "casilla", casilla_id = "DP200014B:02489" }, { kind = "casilla", casilla_id = "DP200014B:03242" }] }] },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
 id = "liquidacion-iv-conversion-de-activos-por-ff5d57"
 heading_key = "modelo.schema.200.form.section.liquidacion-iv-conversion-de-activos-por-ff5d57.heading"
 official_heading = "Liquidación IV - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS)"
 blocks = [
     { kind = "field", id = "field", casilla_id = "DP200014B:00150" },
     { kind = "field", id = "field-2", casilla_id = "DP200014B:00506" },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "liquidacion-iv-conversion-de-activos-por-7bac4c"
+heading_key = "modelo.schema.200.form.section.liquidacion-iv-conversion-de-activos-por-7bac4c.heading"
+official_heading = "Liquidación IV - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devolver"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }, { key = "territorio_estado", heading_key = "modelo.form.column.territorio_estado", official_heading = "Estado" }, { key = "d-forales-navarra-totales", heading_key = "modelo.schema.200.form.column.d-forales-navarra-totales.heading", official_heading = "D. Forales/Navarra (Totales)" }], rows = [{ key = "complementaria-devolucion-acordada-compensada", heading_key = "modelo.schema.200.form.row.complementaria-devolucion-acordada-compensada.heading", official_heading = "Complementaria: Devolución acordada/compensada", cells = [{ kind = "casilla", casilla_id = "03243" }, { kind = "casilla", casilla_id = "03244" }, { kind = "casilla", casilla_id = "DP200014B:03245" }] }, { key = "resultado-de-conversion-de-aid-tras-regul-ab10c1", heading_key = "modelo.schema.200.form.row.resultado-de-conversion-de-aid-tras-regul-ab10c1.heading", official_heading = "Resultado de conversión de AID tras regularización: Abono", cells = [{ kind = "casilla", casilla_id = "03317" }, { kind = "casilla", casilla_id = "DP200014B:03318" }, { kind = "casilla", casilla_id = "DP200014B:03319" }] }, { key = "resultado-de-conversion-de-aid-tras-regul-130875", heading_key = "modelo.schema.200.form.row.resultado-de-conversion-de-aid-tras-regul-130875.heading", official_heading = "Resultado de conversión de AID tras regularización: Compensación", cells = [{ kind = "casilla", casilla_id = "03320" }, { kind = "casilla", casilla_id = "DP200014B:02490" }, { kind = "casilla", casilla_id = "DP200014B:02491" }] }, { key = "resultado-de-conversion-de-aid-tras-regul-6bde83", heading_key = "modelo.schema.200.form.row.resultado-de-conversion-de-aid-tras-regul-6bde83.heading", official_heading = "Resultado de conversión de AID tras regularización: A ingresar", cells = [{ kind = "casilla", casilla_id = "02492" }, { kind = "casilla", casilla_id = "DP200014B:02493" }, { kind = "casilla", casilla_id = "DP200014B:02494" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -7066,7 +7173,7 @@ id = "deduccion-donativos-entidades-sin-fines-l-f2e274"
 heading_key = "modelo.schema.200.form.section.deduccion-donativos-entidades-sin-fines-l-f2e274.heading"
 official_heading = "Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2022(*)"
 blocks = [
-    { kind = "grid", id = "grid", columns = [{ key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "con-reiteracion-de-donaciones-a-una-misma-9e8bd9", heading_key = "modelo.schema.200.form.row.con-reiteracion-de-donaciones-a-una-misma-9e8bd9.heading", official_heading = "Con reiteración de donaciones a una misma entidad", cells = [{ kind = "casilla", casilla_id = "01074" }, { kind = "casilla", casilla_id = "01078" }] }] },
+    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Deducción pendiente/generada" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente de aplicación en periodos futuros" }], rows = [{ key = "con-reiteracion-de-donaciones-a-una-misma-9e8bd9", heading_key = "modelo.schema.200.form.row.con-reiteracion-de-donaciones-a-una-misma-9e8bd9.heading", official_heading = "Con reiteración de donaciones a una misma entidad", cells = [{ kind = "casilla", casilla_id = "01073" }, { kind = "casilla", casilla_id = "01074" }, { kind = "casilla", casilla_id = "01078" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -7130,7 +7237,7 @@ id = "detalle-correcciones-resultado-perdidas-y-3dd1f3"
 heading_key = "modelo.schema.200.form.section.detalle-correcciones-resultado-perdidas-y-3dd1f3.heading"
 official_heading = "Detalle correcciones resultado pérdidas y ganancias - Correcciones al resultado de la cuenta de pérdidas y ganancias del ejercicio"
 blocks = [
-    { kind = "grid", id = "grid", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "correccion-temporaria-con-origen-en-el-ejercicio", heading_key = "modelo.schema.200.form.row.correccion-temporaria-con-origen-en-el-ejercicio.heading", official_heading = "Corrección temporaria con origen en el ejercicio", cells = [{ kind = "casilla", casilla_id = "DP200019:02303" }, { kind = "casilla", casilla_id = "DP200019:02304" }] }, { key = "correccion-temporaria-con-origen-en-ejerc-df83e0", heading_key = "modelo.schema.200.form.row.correccion-temporaria-con-origen-en-ejerc-df83e0.heading", official_heading = "Corrección temporaria con origen en ejerc. anteriores", cells = [{ kind = "casilla", casilla_id = "DP200019:02307" }, { kind = "casilla", casilla_id = "DP200019:02308" }] }] },
+    { kind = "grid", id = "grid", columns = [{ key = "aumentos", heading_key = "modelo.form.column.aumentos", official_heading = "Aumentos" }, { key = "disminuciones", heading_key = "modelo.form.column.disminuciones", official_heading = "Disminuciones" }], rows = [{ key = "correccion-permanente-excluida-correccion-13d2e6", heading_key = "modelo.schema.200.form.row.correccion-permanente-excluida-correccion-13d2e6.heading", official_heading = "Corrección permanente (excluida corrección I. Sociedades)", cells = [{ kind = "casilla", casilla_id = "DP200019:02301" }, { kind = "casilla", casilla_id = "DP200019:02302" }] }, { key = "correccion-temporaria-con-origen-en-el-ejercicio", heading_key = "modelo.schema.200.form.row.correccion-temporaria-con-origen-en-el-ejercicio.heading", official_heading = "Corrección temporaria con origen en el ejercicio", cells = [{ kind = "casilla", casilla_id = "DP200019:02303" }, { kind = "casilla", casilla_id = "DP200019:02304" }] }, { key = "correccion-temporaria-con-origen-en-ejerc-df83e0", heading_key = "modelo.schema.200.form.row.correccion-temporaria-con-origen-en-ejerc-df83e0.heading", official_heading = "Corrección temporaria con origen en ejerc. anteriores", cells = [{ kind = "casilla", casilla_id = "DP200019:02307" }, { kind = "casilla", casilla_id = "DP200019:02308" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -7160,12 +7267,18 @@ blocks = [
     { kind = "field", id = "field-7", casilla_id = "01246" },
     { kind = "field", id = "field-8", casilla_id = "01247" },
     { kind = "field", id = "field-9", casilla_id = "01248" },
-    { kind = "field", id = "field-10", casilla_id = "01250" },
-    { kind = "field", id = "field-11", casilla_id = "01251" },
-    { kind = "field", id = "field-12", casilla_id = "01252" },
-    { kind = "field", id = "field-13", casilla_id = "01253" },
-    { kind = "field", id = "field-14", casilla_id = "01254" },
-    { kind = "field", id = "field-15", casilla_id = "01255" },
+    { kind = "field", id = "field-10", casilla_id = "01249" },
+    { kind = "field", id = "field-11", casilla_id = "01250" },
+    { kind = "field", id = "field-12", casilla_id = "01251" },
+    { kind = "field", id = "field-13", casilla_id = "01252" },
+    { kind = "field", id = "field-14", casilla_id = "01253" },
+    { kind = "field", id = "field-15", casilla_id = "01254" },
+    { kind = "field", id = "field-16", casilla_id = "01255" },
+    { kind = "field", id = "field-17", casilla_id = "01256" },
+    { kind = "field", id = "field-18", casilla_id = "01257" },
+    { kind = "field", id = "field-19", casilla_id = "01258" },
+    { kind = "field", id = "field-20", casilla_id = "01259" },
+    { kind = "field", id = "field-21", casilla_id = "01260" },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -8420,7 +8533,7 @@ blocks = [
     { kind = "field", id = "field-19", casilla_id = "DP200026:00489" },
     { kind = "field", id = "field-20", casilla_id = "DP200026:00618" },
     { kind = "grid", id = "grid-4", columns = [{ key = "territorio_navarra", heading_key = "modelo.form.column.territorio_navarra", official_heading = "Navarra" }, { key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }], rows = [{ key = "abono-deducciones-i-d-i-insuf-cuota", heading_key = "modelo.schema.200.form.row.abono-deducciones-i-d-i-insuf-cuota.heading", official_heading = "Abono deducciones I+D+i insuf. cuota", cells = [{ kind = "casilla", casilla_id = "01337" }, { kind = "casilla", casilla_id = "DP200026:01332" }] }, { key = "abono-deducciones-producciones-extranjeras", heading_key = "modelo.schema.200.form.row.abono-deducciones-producciones-extranjeras.heading", official_heading = "Abono deducciones producciones extranjeras", cells = [{ kind = "casilla", casilla_id = "01341" }, { kind = "casilla", casilla_id = "DP200026:01333" }] }, { key = "abono-deducciones-producciones-extranjera-b28cd8", heading_key = "modelo.schema.200.form.row.abono-deducciones-producciones-extranjera-b28cd8.heading", official_heading = "Abono deducciones producciones extranjeras en Canarias", cells = [{ kind = "casilla", casilla_id = "01880" }, { kind = "casilla", casilla_id = "DP200026:01881" }] }, { key = "resultado-de-la-autoliquidacion", heading_key = "modelo.schema.200.form.row.resultado-de-la-autoliquidacion.heading", official_heading = "Resultado de la autoliquidación", cells = [{ kind = "casilla", casilla_id = "01630" }, { kind = "casilla", casilla_id = "DP200026:01587" }] }] },
-    { kind = "grid", id = "grid-5", columns = [{ key = "alava", heading_key = "modelo.schema.200.form.column.alava.heading", official_heading = "Álava" }, { key = "guipuzcoa", heading_key = "modelo.schema.200.form.column.guipuzcoa.heading", official_heading = "Guipúzcoa" }, { key = "vizcaya", heading_key = "modelo.schema.200.form.column.vizcaya.heading", official_heading = "Vizcaya" }, { key = "territorio_navarra", heading_key = "modelo.form.column.territorio_navarra", official_heading = "Navarra" }, { key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }], rows = [{ key = "liquido-a-ingresar-o-a-devolver", heading_key = "modelo.schema.200.form.row.liquido-a-ingresar-o-a-devolver.heading", official_heading = "Líquido a ingresar o a devolver", cells = [{ kind = "casilla", casilla_id = "DP200026:00494" }, { kind = "casilla", casilla_id = "DP200026:00495" }, { kind = "casilla", casilla_id = "DP200026:00496" }, { kind = "casilla", casilla_id = "DP200026:00497" }, { kind = "casilla", casilla_id = "DP200026:00622" }] }] },
+    { kind = "grid", id = "grid-5", columns = [{ key = "alava", heading_key = "modelo.schema.200.form.column.alava.heading", official_heading = "Álava" }, { key = "guipuzcoa", heading_key = "modelo.schema.200.form.column.guipuzcoa.heading", official_heading = "Guipúzcoa" }, { key = "vizcaya", heading_key = "modelo.schema.200.form.column.vizcaya.heading", official_heading = "Vizcaya" }, { key = "territorio_navarra", heading_key = "modelo.form.column.territorio_navarra", official_heading = "Navarra" }, { key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }], rows = [{ key = "complementaria-resultados-a-ingresar-auto-dc6b35", heading_key = "modelo.schema.200.form.row.complementaria-resultados-a-ingresar-auto-dc6b35.heading", official_heading = "Complementaria: Resultados a ingresar autoliq. anteriores 2022", cells = [{ kind = "casilla", casilla_id = "01607" }, { kind = "casilla", casilla_id = "01608" }, { kind = "casilla", casilla_id = "01609" }, { kind = "casilla", casilla_id = "01610" }, { kind = "casilla", casilla_id = "DP200026:01583" }] }, { key = "complementaria-devoluciones-acordadas-aut-4ff539", heading_key = "modelo.schema.200.form.row.complementaria-devoluciones-acordadas-aut-4ff539.heading", official_heading = "Complementaria: Devoluciones acordadas autoliq. anteriores 2022", cells = [{ kind = "casilla", casilla_id = "01611" }, { kind = "casilla", casilla_id = "01612" }, { kind = "casilla", casilla_id = "01613" }, { kind = "casilla", casilla_id = "01623" }, { kind = "casilla", casilla_id = "DP200026:01585" }] }, { key = "liquido-a-ingresar-o-a-devolver", heading_key = "modelo.schema.200.form.row.liquido-a-ingresar-o-a-devolver.heading", official_heading = "Líquido a ingresar o a devolver", cells = [{ kind = "casilla", casilla_id = "DP200026:00494" }, { kind = "casilla", casilla_id = "DP200026:00495" }, { kind = "casilla", casilla_id = "DP200026:00496" }, { kind = "casilla", casilla_id = "DP200026:00497" }, { kind = "casilla", casilla_id = "DP200026:00622" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -8437,6 +8550,7 @@ heading_key = "modelo.schema.200.form.section.tributacion-conjunta-estado-y-adm-
 official_heading = "Tributación conjunta Estado y Adm.Forales"
 blocks = [
     { kind = "grid", id = "grid", columns = [{ key = "territorio_navarra", heading_key = "modelo.form.column.territorio_navarra", official_heading = "Navarra" }, { key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }], rows = [{ key = "resultado-de-la-autoliquidacion-incluido-1c3547", heading_key = "modelo.schema.200.form.row.resultado-de-la-autoliquidacion-incluido-1c3547.heading", official_heading = "Resultado de la autoliquidación incluido el 1º fraccionamiento", cells = [{ kind = "casilla", casilla_id = "01649" }, { kind = "casilla", casilla_id = "DP200026:02486" }] }] },
+    { kind = "grid", id = "grid-2", columns = [{ key = "alava", heading_key = "modelo.schema.200.form.column.alava.heading", official_heading = "Álava" }, { key = "guipuzcoa", heading_key = "modelo.schema.200.form.column.guipuzcoa.heading", official_heading = "Guipúzcoa" }, { key = "vizcaya", heading_key = "modelo.schema.200.form.column.vizcaya.heading", official_heading = "Vizcaya" }, { key = "territorio_navarra", heading_key = "modelo.form.column.territorio_navarra", official_heading = "Navarra" }, { key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }], rows = [{ key = "complementaria-resultado-autoliq-incluido-dc421a", heading_key = "modelo.schema.200.form.row.complementaria-resultado-autoliq-incluido-dc421a.heading", official_heading = "Complementaria: Resultado autoliq. incluido el 1º fraccionamiento procedente de autoliquidaciones anteriores correspondientes al período impositivo 2022", cells = [{ kind = "casilla", casilla_id = "01650" }, { kind = "casilla", casilla_id = "01651" }, { kind = "casilla", casilla_id = "01652" }, { kind = "casilla", casilla_id = "01653" }, { kind = "casilla", casilla_id = "DP200026:02488" }] }, { key = "complementaria-liquido-a-ingresar-incluid-fe3910", heading_key = "modelo.schema.200.form.row.complementaria-liquido-a-ingresar-incluid-fe3910.heading", official_heading = "Complementaria: Liquido a ingresar incluido el 1º fraccionamiento", cells = [{ kind = "casilla", casilla_id = "01654" }, { kind = "casilla", casilla_id = "01655" }, { kind = "casilla", casilla_id = "01656" }, { kind = "casilla", casilla_id = "01657" }, { kind = "casilla", casilla_id = "DP200026:03242" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]
@@ -8444,7 +8558,8 @@ id = "tributacion-conjunta-estado-y-adm-forales-715fbc"
 heading_key = "modelo.schema.200.form.section.tributacion-conjunta-estado-y-adm-forales-715fbc.heading"
 official_heading = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS)"
 blocks = [
-    { kind = "grid", id = "grid", columns = [{ key = "territorio_navarra", heading_key = "modelo.form.column.territorio_navarra", official_heading = "Navarra" }, { key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }], rows = [{ key = "abono-por-conversion-activos", heading_key = "modelo.schema.200.form.row.abono-por-conversion-activos.heading", official_heading = "Abono por conversión activos", cells = [{ kind = "casilla", casilla_id = "01303" }, { kind = "casilla", casilla_id = "DP200026:01043" }] }, { key = "compensacion-conversion-activos", heading_key = "modelo.schema.200.form.row.compensacion-conversion-activos.heading", official_heading = "Compensación conversión activos", cells = [{ kind = "casilla", casilla_id = "01308" }, { kind = "casilla", casilla_id = "DP200026:01044" }] }, { key = "resultado-de-conversion-abono", heading_key = "modelo.schema.200.form.row.resultado-de-conversion-abono.heading", official_heading = "Resultado de conversión: Abono", cells = [{ kind = "casilla", casilla_id = "01665" }, { kind = "casilla", casilla_id = "DP200026:03319" }] }, { key = "resultado-de-conversion-compensacion", heading_key = "modelo.schema.200.form.row.resultado-de-conversion-compensacion.heading", official_heading = "Resultado de conversión: Compensación", cells = [{ kind = "casilla", casilla_id = "01669" }, { kind = "casilla", casilla_id = "DP200026:02491" }] }, { key = "resultado-de-conversion-a-ingresar", heading_key = "modelo.schema.200.form.row.resultado-de-conversion-a-ingresar.heading", official_heading = "Resultado de conversión: A Ingresar", cells = [{ kind = "casilla", casilla_id = "01673" }, { kind = "casilla", casilla_id = "DP200026:02494" }] }] },
+    { kind = "grid", id = "grid", columns = [{ key = "territorio_navarra", heading_key = "modelo.form.column.territorio_navarra", official_heading = "Navarra" }, { key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }], rows = [{ key = "abono-por-conversion-activos", heading_key = "modelo.schema.200.form.row.abono-por-conversion-activos.heading", official_heading = "Abono por conversión activos", cells = [{ kind = "casilla", casilla_id = "01303" }, { kind = "casilla", casilla_id = "DP200026:01043" }] }, { key = "compensacion-conversion-activos", heading_key = "modelo.schema.200.form.row.compensacion-conversion-activos.heading", official_heading = "Compensación conversión activos", cells = [{ kind = "casilla", casilla_id = "01308" }, { kind = "casilla", casilla_id = "DP200026:01044" }] }] },
+    { kind = "grid", id = "grid-2", columns = [{ key = "alava", heading_key = "modelo.schema.200.form.column.alava.heading", official_heading = "Álava" }, { key = "guipuzcoa", heading_key = "modelo.schema.200.form.column.guipuzcoa.heading", official_heading = "Guipúzcoa" }, { key = "vizcaya", heading_key = "modelo.schema.200.form.column.vizcaya.heading", official_heading = "Vizcaya" }, { key = "territorio_navarra", heading_key = "modelo.form.column.territorio_navarra", official_heading = "Navarra" }, { key = "total", heading_key = "modelo.form.column.total", official_heading = "Total" }], rows = [{ key = "complementaria-devolucion", heading_key = "modelo.schema.200.form.row.complementaria-devolucion.heading", official_heading = "Complementaria: Devolución", cells = [{ kind = "casilla", casilla_id = "01658" }, { kind = "casilla", casilla_id = "01659" }, { kind = "casilla", casilla_id = "01660" }, { kind = "casilla", casilla_id = "01661" }, { kind = "casilla", casilla_id = "DP200026:03245" }] }, { key = "resultado-de-conversion-abono", heading_key = "modelo.schema.200.form.row.resultado-de-conversion-abono.heading", official_heading = "Resultado de conversión: Abono", cells = [{ kind = "blank" }, { kind = "blank" }, { kind = "blank" }, { kind = "casilla", casilla_id = "01665" }, { kind = "casilla", casilla_id = "DP200026:03319" }] }, { key = "resultado-de-conversion-compensacion", heading_key = "modelo.schema.200.form.row.resultado-de-conversion-compensacion.heading", official_heading = "Resultado de conversión: Compensación", cells = [{ kind = "blank" }, { kind = "blank" }, { kind = "blank" }, { kind = "casilla", casilla_id = "01669" }, { kind = "casilla", casilla_id = "DP200026:02491" }] }, { key = "resultado-de-conversion-a-ingresar", heading_key = "modelo.schema.200.form.row.resultado-de-conversion-a-ingresar.heading", official_heading = "Resultado de conversión: A Ingresar", cells = [{ kind = "blank" }, { kind = "blank" }, { kind = "blank" }, { kind = "casilla", casilla_id = "01673" }, { kind = "casilla", casilla_id = "DP200026:02494" }] }] },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -14212,5 +14327,7 @@ blocks = [
 id = "liquidacion-iv"
 heading_key = "modelo.schema.200.form.section.liquidacion-iv.heading"
 blocks = [
-    { kind = "field", id = "field-1", casilla_id = "01893" },
+    { kind = "field", id = "field-1", casilla_id = "01584" },
+    { kind = "field", id = "field-2", casilla_id = "01893" },
+    { kind = "field", id = "field-3", casilla_id = "02487" },
 ]

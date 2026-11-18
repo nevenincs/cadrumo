@@ -101,8 +101,12 @@ SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
         FilingProducerKey.M200_CUENTA_BANCARIA_CODIGO_SWIFT_BIC,
         FilingProducerKey.M200_CUENTA_BANCARIA_MARCA_SEPA,
         FilingProducerKey.M200_CUENTA_CORRIENTE_TRIBUTARIA,
+        FilingProducerKey.M200_CUOTA_CERO,
+        FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_CODIGO_PAIS,
         FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NIF,
+        FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NIF_O_EQUIVALENTE,
         FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NOMBRE_DE,
+        FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_PAIS_O_JURISDICCION,
         FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_RAZON_SOC,
         FilingProducerKey.M200_DEDUCCION_RESTO_DEL_GRUPO,
         FilingProducerKey.M200_DEDUCCION_RESTO_DEL_GRUPO_10,
@@ -142,6 +146,7 @@ SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
         FilingProducerKey.M200_IDENTIFICACION_TIPO_DE_EJERCICIO,
         FilingProducerKey.M200_IMPORTE_A_DEVOLVER,
         FilingProducerKey.M200_IMPORTE_A_INGRESAR,
+        FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_AL_MENOS_20_MILLONES,
         FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS,
         FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS_2,
         FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS_3,
@@ -198,6 +203,8 @@ SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
         FilingProducerKey.M200_PRESENTACION_DE_DOCUMENTACION_PREVIA_EN_LA_S_7,
         FilingProducerKey.M200_PRESENTACION_DE_DOCUMENTACION_PREVIA_EN_LA_S_8,
         FilingProducerKey.M200_REALIZA_ACTIVIDADES_AGRICOLAS_Y_O_GANADERAS,
+        FilingProducerKey.M200_REGIMEN_DE_COOPERATIVAS_INCN_DE_AL_MENOS_20_MILLONES_PERO_INFERIOR_A_60,
+        FilingProducerKey.M200_REGIMEN_DE_COOPERATIVAS_INCN_DE_AL_MENOS_60_MILLONES,
         FilingProducerKey.M200_REG_ENTIDADES_NAVIERAS_EN_FUNCION_DEL_TONELA,
         FilingProducerKey.M200_RENUNCIA_O_POR_TRANSFERENCIA,
         FilingProducerKey.M200_RESULTADO_A_INGRESAR_CORRESPONDIENTE_A_LA_AN,
@@ -699,8 +706,18 @@ _M200_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
     FilingProducerKey.M200_CODIGO_CNAE_2025_ACTIVIDAD_PRINCIPAL: "codigo_cnae_2025_actividad_principal",
     FilingProducerKey.M200_COMO_CONSECUENCIA_DE_LA_PRESENTACION_DE_LA_A: "como_consecuencia_de_la_presentacion_de_la_a",
     FilingProducerKey.M200_CUENTA_CORRIENTE_TRIBUTARIA: "cuenta_corriente_tributaria",
+    FilingProducerKey.M200_CUOTA_CERO: "cuota_cero",
+    FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_CODIGO_PAIS: (
+        "datos_de_la_sociedad_matriz_ultima_codigo_pais"
+    ),
     FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NIF: "datos_de_la_sociedad_matriz_ultima_nif",
+    FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NIF_O_EQUIVALENTE: (
+        "datos_de_la_sociedad_matriz_ultima_nif_o_equivalente"
+    ),
     FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NOMBRE_DE: "datos_de_la_sociedad_matriz_ultima_nombre_de",
+    FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_PAIS_O_JURISDICCION: (
+        "datos_de_la_sociedad_matriz_ultima_pais_o_jurisdiccion"
+    ),
     FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_RAZON_SOC: "datos_de_la_sociedad_matriz_ultima_razon_soc",
     FilingProducerKey.M200_DEDUCCION_RESTO_DEL_GRUPO: "deduccion_resto_del_grupo",
     FilingProducerKey.M200_DEDUCCION_RESTO_DEL_GRUPO_10: "deduccion_resto_del_grupo_10",
@@ -739,6 +756,9 @@ _M200_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
     FilingProducerKey.M200_IDENTIFICACION_TIPO_DE_EJERCICIO: "identificacion_tipo_de_ejercicio",
     FilingProducerKey.M200_IMPORTE_A_DEVOLVER: "importe_a_devolver",
     FilingProducerKey.M200_IMPORTE_A_INGRESAR: "importe_a_ingresar",
+    FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_AL_MENOS_20_MILLONES: (
+        "importe_neto_de_la_cifra_de_negocios_de_al_menos_20_millones"
+    ),
     FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS: "importe_neto_de_la_cifra_de_negocios_de_los",
     FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS_2: (
         "importe_neto_de_la_cifra_de_negocios_de_los_2"
@@ -833,6 +853,12 @@ _M200_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
         "presentacion_de_documentacion_previa_en_la_s_8"
     ),
     FilingProducerKey.M200_REALIZA_ACTIVIDADES_AGRICOLAS_Y_O_GANADERAS: "realiza_actividades_agricolas_y_o_ganaderas",
+    FilingProducerKey.M200_REGIMEN_DE_COOPERATIVAS_INCN_DE_AL_MENOS_20_MILLONES_PERO_INFERIOR_A_60: (
+        "regimen_de_cooperativas_incn_de_al_menos_20_millones_pero_inferior_a_60"
+    ),
+    FilingProducerKey.M200_REGIMEN_DE_COOPERATIVAS_INCN_DE_AL_MENOS_60_MILLONES: (
+        "regimen_de_cooperativas_incn_de_al_menos_60_millones"
+    ),
     FilingProducerKey.M200_REG_ENTIDADES_NAVIERAS_EN_FUNCION_DEL_TONELA: "reg_entidades_navieras_en_funcion_del_tonela",
     FilingProducerKey.M200_RENUNCIA_O_POR_TRANSFERENCIA: "renuncia_o_por_transferencia",
     FilingProducerKey.M200_RESULTADO_A_INGRESAR_CORRESPONDIENTE_A_LA_AN: "resultado_a_ingresar_correspondiente_a_la_an",
