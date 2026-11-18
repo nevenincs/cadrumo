@@ -29,6 +29,16 @@ REVIEWED_SPANISH_LEGAL_SPELLINGS = frozenset(
 )
 REVIEWED_SPANISH_SPELLINGS: frozenset[str] = frozenset(
     {
+        # Legal and business labels in the housing, ownership and Modelo 200
+        # declarations, plus the XML converter and serialiser diagnostics.
+        "tensionado",
+        "tensionada",
+        "Nuda",
+        "valorativa",
+        "autoventa",
+        "reinviertes",
+        "conversor",
+        "serializador",
         # Month abbreviations of the Spanish CLDR medium date format, which
         # the application writes dates in.
         "feb",

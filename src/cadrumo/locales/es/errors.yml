@@ -771,10 +771,10 @@ errors:
       a aprobar la declaración.
     filing_binding_row_source_kind_differs: Un valor de fila de la declaración indica
       un origen de fila distinto de la fuente de su campo. La declaración guardada
-      está dañada; constrúyela de nuevo.
+      está dañada; vuelve a preparar la declaración.
     filing_binding_row_source_needs_row: Un valor de fila de la declaración indica
       de dónde vienen sus filas, pero no qué fila es. La declaración guardada está
-      dañada; constrúyela de nuevo.
+      dañada; vuelve a preparar la declaración.
     filing_draft_binding_claimed_twice: La declaración da más de un valor a la misma
       fila de campo (%{bindings}). Deja un solo valor por fila de campo.
     filing_draft_casilla_claimed_twice: La declaración da más de un valor a la misma
@@ -792,7 +792,8 @@ errors:
       Construye la declaración de nuevo.
     filing_draft_taxpayer_diverges: La declaración nombra a dos contribuyentes distintos,
       uno para el perfil y otro para el sujeto de la presentación. Una declaración
-      pertenece a un solo contribuyente; constrúyela de nuevo desde el perfil correcto.
+      pertenece a un solo contribuyente; vuelve a preparar la declaración desde el
+      perfil correcto.
     filing_export_boolean_in_text_slot: El campo de exportación %{field} no puede
       escribir un hecho de productor booleano en un espacio de texto de %{length}
       bytes. La aplicación lo deriva de su propio diseño de exportación, así que ningún
@@ -881,7 +882,7 @@ errors:
       no declara clave de productor. La aplicación lo deriva de su propio diseño de
       exportación, así que ningún cambio en tus datos lo corrige.
     filing_export_field_projection_context_absent: El campo de exportación %{field}
-      necesita un contexto de generación de la instantánea para direccionar su proyección.
+      necesita un contexto de generación de la instantánea para localizar su proyección.
       La aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
       en tus datos lo corrige.
     filing_export_field_projection_ref_undeclared: El campo de exportación %{field}
@@ -1103,14 +1104,14 @@ errors:
       XML %{source}. La aplicación lo deriva de su propio diseño de exportación, así
       que ningún cambio en tus datos lo corrige.
     filing_export_xsd_version_absent: El origen XSD del diccionario XML %{source}
-      no declara valores de versionxsd. La aplicación lo deriva de su propio diseño
+      no declara valores de `versionxsd`. La aplicación lo deriva de su propio diseño
       de exportación, así que ningún cambio en tus datos lo corrige.
     filing_value_kind_contradicts_trace: 'La declaración tiene en la casilla %{casilla_id}
       un rastro de cálculo que contradice su tipo (%{kind}): solo una casilla calculada
-      lo lleva. La declaración guardada está dañada; constrúyela de nuevo.'
+      lo lleva. La declaración guardada está dañada; vuelve a preparar la declaración.'
     filing_value_kind_contradicts_value: 'La declaración tiene en la casilla %{casilla_id}
       un valor que contradice su tipo (%{kind}): solo una casilla vacía no tiene valor.
-      La declaración guardada está dañada; constrúyela de nuevo.'
+      La declaración guardada está dañada; vuelve a preparar la declaración.'
     integrity_active_profile_pointer: El puntero de perfil activo no es válido; repara
       el perfil seleccionado antes de continuar.
     integrity_apoderado_configuration_identity: La configuración de apoderado almacenada
@@ -1633,7 +1634,8 @@ errors:
       actual, así que se ha rechazado.
     profile_access_operation_unavailable: Esta operación no está disponible ahora
       mismo. Inténtalo de nuevo más tarde.
-    profile_access_os_locked: El equipo está bloqueado. Desbloquéalo y vuelve a intentarlo.
+    profile_access_os_locked: El equipo está bloqueado. Desbloquea el equipo y vuelve
+      a intentarlo.
     profile_access_os_session_unavailable: La sesión de usuario del equipo no está
       disponible, así que no se puede comprobar el acceso. Entra en tu cuenta del
       equipo y vuelve a intentarlo.
