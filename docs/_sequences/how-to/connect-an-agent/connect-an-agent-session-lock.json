@@ -5,21 +5,6 @@
         "cadrumo-runtime",
         "config",
         "profile",
-        "sessions"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "command",
-      "stderr_text": null,
-      "text": "session\t<profile-id>\thuman\tactive\t900\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
-    },
-    {
-      "argv": [
-        "cadrumo-runtime",
-        "config",
-        "profile",
         "lock"
       ],
       "captures": [],
@@ -76,7 +61,9 @@
             ],
             "failed_condition_id": "cli.refusal.completed",
             "missing_argument_names": [],
-            "no_recovery_outcome": "operator_decision"
+            "no_recovery_outcome": "operator_decision",
+            "no_recovery_words": "This needs your own decision; no action can take it for you.",
+            "no_recovery_words_language": "en"
           },
           "category": "REFUSED",
           "code": "REFUSED_CLI_BOUNDARY",

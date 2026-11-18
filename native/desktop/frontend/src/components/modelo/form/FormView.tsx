@@ -441,23 +441,6 @@ export function FormView({
             window; the person sizes it with its line, it scrolls on its own
             and gives way first, so the boxes keep their room. */}
         <FormBand>
-          {/* The rung of authority this year reaches, as the registry named
-              it, and, below filing grade, the sentence saying why it cannot be
-              filed. */}
-          <p
-            data-year-projection={form.year_projection.direction}
-            data-reachable-grade={form.year_projection.reachable_grade}
-            className="flex flex-none flex-wrap gap-x-2 border-b border-border px-4 py-1.5 text-sm text-muted-foreground"
-          >
-            <span data-year-projection-grade className="font-medium">
-              {form.year_projection.reachable_grade_words}
-            </span>
-            {form.year_projection.words && (
-              <span data-year-projection-words>
-                {form.year_projection.words}
-              </span>
-            )}
-          </p>
           <StatementsOffer
             key={`${envelope.work_unit_id}:${session.statements
               .map(

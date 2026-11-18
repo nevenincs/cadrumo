@@ -84,7 +84,7 @@
             }
           ],
           "profile_id": "<profile-id>",
-          "schema_version": 8,
+          "schema_version": 15,
           "setup_state": "complete",
           "valid": true
         },

@@ -242,9 +242,20 @@ for (const size of SIZES) {
     await target.setViewportSize(size);
     await openDeclaration(target);
     const band = workspace(target).locator("aside[data-form-gives-way]");
+    // This declaration can have no offer. Give the band a test-only tall
+    // offer so this test exercises a real range of resize travel.
+    const addOffer = () =>
+      band.locator(":scope > div").evaluate((element) => {
+        const offer = document.createElement("span");
+        offer.style.display = "block";
+        offer.style.height = "2122px";
+        element.append(offer);
+      });
+    await addOffer();
     const height = () =>
       band.evaluate((element) => element.getBoundingClientRect().height);
     const line = bandLine(target);
+    await expect(line).toBeVisible();
     await expect(line).toHaveAttribute("aria-orientation", "horizontal");
     await line.focus();
     await target.keyboard.press("Home");
@@ -277,6 +288,7 @@ for (const size of SIZES) {
     const chosen = await height();
     expect(chosen).not.toBeCloseTo(drawn, 0);
     await openDeclaration(target);
+    await addOffer();
     await expect.poll(height).toBeCloseTo(chosen, 0);
   });
 }
