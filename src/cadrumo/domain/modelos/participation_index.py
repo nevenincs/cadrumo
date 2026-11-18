@@ -176,6 +176,24 @@ def upsert_transaction_participation(
     return index.model_copy(update={"participations": tuple(merged)})
 
 
+def remove_transaction_participation(
+    index: TransactionRevisionParticipationIndex,
+    calculation_revision_id: str,
+) -> TransactionRevisionParticipationIndex:
+    """Return ``index`` without the participation of ``calculation_revision_id``.
+
+    A revision whose verification is reopened is no longer finalized, so it leaves
+    the index exactly as a rebuild from the revision catalogue would drop it.
+    """
+    return index.model_copy(
+        update={
+            "participations": tuple(
+                item for item in index.participations if item.calculation_revision_id != calculation_revision_id
+            )
+        }
+    )
+
+
 class TransactionParticipationIndexPersistenceError(ModeloError):
     """Raised when the participation index cannot be persisted or loaded."""
 
@@ -185,5 +203,6 @@ __all__ = [
     "TransactionRevisionParticipation",
     "TransactionRevisionParticipationIndex",
     "derive_participation_index_id",
+    "remove_transaction_participation",
     "upsert_transaction_participation",
 ]

@@ -50,6 +50,7 @@ from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from ...domain.modelos.profile_read_fingerprint import ProfileReadFingerprint
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
+    TransactionParticipationIndexRepositoryProtocol,
 )
 from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.row_models import ModeloDetailRow
@@ -58,6 +59,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from .calculation_publication import CalculationRevisionPublication
 from .filing_revision_persistence import validate_filing_instance_evidence_for_work_unit
 from .modelo_bucket_events import build_modelo_bucket_event
+from .participation_writes import build_participation_removals
 
 
 def _source_provenance_trace_sha256(source_provenance: tuple[CalculationSourceRef, ...]) -> str:
@@ -197,17 +199,20 @@ def _duplicate_calculation_work_units(
     revision_id: str,
     work_unit: WorkUnit,
     work_units: WorkUnitCatalogue,
+    revisions: CalculationRevisionCatalogue,
     now: datetime,
 ) -> WorkUnitCatalogue:
-    """Restore a duplicate draft as current without touching sealed revisions.
+    """Restore a duplicate draft or verified revision as current, never a filed one.
 
-    A work unit whose calculation was withdrawn has no current calculation; a
-    recalculation that reproduces its verified revision exactly makes that
-    revision current again, unchanged.
+    A recalculation that reproduces a verified revision exactly makes that
+    revision current again: when the work unit's calculation was withdrawn, and
+    when its current calculation is a draft, as after the operator recalculated a
+    verified revision and then restated the same values on the new draft. Whether
+    that verification still holds is decided by the caller from the sources this
+    calculation read.
     """
     restorable = existing.state is CalculationRevisionState.BORRADOR or (
-        existing.state is CalculationRevisionState.VERIFICADO_COMPLETO
-        and work_unit.current_calculation_revision_id is None
+        existing.state is CalculationRevisionState.VERIFICADO_COMPLETO and _current_is_open(work_unit, revisions)
     )
     if not restorable:
         return work_units
@@ -224,6 +229,15 @@ def _duplicate_calculation_work_units(
     )
 
 
+def _current_is_open(work_unit: WorkUnit, revisions: CalculationRevisionCatalogue) -> bool:
+    """Whether the work unit has no current calculation or only a draft one."""
+    current_id = work_unit.current_calculation_revision_id
+    if current_id is None:
+        return True
+    current = revisions.get(current_id)
+    return current is None or current.state is CalculationRevisionState.BORRADOR
+
+
 def _duplicate_calculation_secure_writes(
     *,
     revision_id: str,
@@ -235,22 +249,44 @@ def _duplicate_calculation_secure_writes(
     return additional_secure_object_writes_for_revision(revision_id, None)
 
 
-def _refreshed_draft_fingerprint(
+def _refreshed_duplicate(
     existing: CalculationRevision,
     invoice_fingerprint: InvoiceFingerprintSnapshot | None,
     ledger_filing_snapshot: LedgerFilingSnapshot | None,
     profile_read_fingerprint: ProfileReadFingerprint | None,
     *,
+    current: bool,
     now: datetime,
 ) -> CalculationRevision | None:
-    """Return the draft re-pinned to what this calculation read, when that moved.
+    """Return the duplicate re-pinned to what this calculation read, when that moved.
 
     An invoice, ledger or profile edit that moves no casilla derives the same revision id.
     Without this the operator's recalculation would land on the stored draft and
     leave it reporting drift that no further recalculation could clear.
+
+    A verified duplicate that is ``current`` after this calculation keeps its
+    verification only while those reads are unchanged: the revision id covers the
+    casilla values, rows, attestations and contributing sources, not these wider
+    reads. When one moved, the revision reopens as a draft on the new reads, so it
+    must be verified again before it is exported or filed.
     """
-    if existing.state is not CalculationRevisionState.BORRADOR:
+    update = _moved_source_pins(existing, invoice_fingerprint, ledger_filing_snapshot, profile_read_fingerprint)
+    if not update:
         return None
+    if existing.state is CalculationRevisionState.BORRADOR:
+        return existing.model_copy(update={**update, "updated_at": now})
+    if existing.state is not CalculationRevisionState.VERIFICADO_COMPLETO or not current:
+        return None
+    reopened = {"state": CalculationRevisionState.BORRADOR, "verified_at": None, "verified_by": None}
+    return existing.model_copy(update={**update, **reopened, "ledger_filing_evidence": None, "updated_at": now})
+
+
+def _moved_source_pins(
+    existing: CalculationRevision,
+    invoice_fingerprint: InvoiceFingerprintSnapshot | None,
+    ledger_filing_snapshot: LedgerFilingSnapshot | None,
+    profile_read_fingerprint: ProfileReadFingerprint | None,
+) -> dict[str, object]:
     update: dict[str, object] = {}
     if _invoice_fingerprint_moved(existing.invoice_fingerprint, invoice_fingerprint):
         update["invoice_fingerprint"] = invoice_fingerprint
@@ -258,9 +294,7 @@ def _refreshed_draft_fingerprint(
         update["ledger_filing_snapshot"] = ledger_filing_snapshot
     if profile_read_fingerprint is not None and existing.profile_read_fingerprint != profile_read_fingerprint:
         update["profile_read_fingerprint"] = profile_read_fingerprint
-    if not update:
-        return None
-    return existing.model_copy(update={**update, "updated_at": now})
+    return update
 
 
 def _invoice_fingerprint_moved(
@@ -304,6 +338,7 @@ def _persist_duplicate_calculation_revision(
     work_units_revision_id: str,
     now: datetime,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    participation_index_repository: TransactionParticipationIndexRepositoryProtocol,
     additional_secure_object_writes_for_revision: (Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None),
 ) -> CalculationRevisionPublication:
     """Guard and co-commit duplicate-result pointer and side-effect writes."""
@@ -312,16 +347,30 @@ def _persist_duplicate_calculation_revision(
         revision_id=revision_id,
         work_unit=work_unit,
         work_units=work_units,
+        revisions=revisions,
         now=now,
     )
     duplicate_writes = _duplicate_calculation_secure_writes(
         revision_id=revision_id,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
-    refreshed = _refreshed_draft_fingerprint(
-        existing, invoice_fingerprint, ledger_filing_snapshot, profile_read_fingerprint, now=now
+    refreshed = _refreshed_duplicate(
+        existing,
+        invoice_fingerprint,
+        ledger_filing_snapshot,
+        profile_read_fingerprint,
+        current=duplicate_work_units.work_units[work_unit.work_unit_id].current_calculation_revision_id == revision_id,
+        now=now,
     )
     if refreshed is not None:
+        # A reopened verification is no longer a finalized participation.
+        participation_writes = (
+            build_participation_removals(
+                revision=existing, participation_index_repository=participation_index_repository
+            )
+            if refreshed.state is not existing.state
+            else ()
+        )
         calculation_repository.save_with_secure_object_writes(
             upsert_calculation_revision(revisions, refreshed),
             (
@@ -329,6 +378,7 @@ def _persist_duplicate_calculation_revision(
                     duplicate_work_units,
                     expected_revision_id=work_units_revision_id,
                 ),
+                *participation_writes,
                 *duplicate_writes,
             ),
             expected_revision_id=revisions_revision_id,
@@ -665,6 +715,7 @@ def _load_calculation_publication_target(
     work_units_revision_id: str,
     now: datetime,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    participation_index_repository: TransactionParticipationIndexRepositoryProtocol,
     additional_secure_object_writes_for_revision: Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None,
 ) -> tuple[CalculationRevisionCatalogue, str, CalculationRevisionPublication | None]:
     """Load the guarded catalogue and publish a duplicate when the identity already exists."""
@@ -686,6 +737,7 @@ def _load_calculation_publication_target(
         work_units_revision_id=work_units_revision_id,
         now=now,
         work_unit_repository=work_unit_repository,
+        participation_index_repository=participation_index_repository,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
     return revisions, revisions_revision_id, publication
@@ -835,6 +887,7 @@ def persist_calculation_revision(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    participation_index_repository: TransactionParticipationIndexRepositoryProtocol,
     ledger_filing_snapshot: LedgerFilingSnapshot | None = None,
     invoice_fingerprint: InvoiceFingerprintSnapshot | None = None,
     profile_read_fingerprint: ProfileReadFingerprint | None = None,
@@ -889,6 +942,7 @@ def persist_calculation_revision(
         work_units_revision_id=work_units_revision_id,
         now=now,
         work_unit_repository=work_unit_repository,
+        participation_index_repository=participation_index_repository,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
     if duplicate is not None:

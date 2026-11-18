@@ -10,7 +10,7 @@ import pytest
 from cadrumo.adapters.persistence.profile import participation_index as participation_adapter
 from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.participation_writes import build_participation_writes
+from cadrumo.application.modelo.participation_writes import build_participation_removals, build_participation_writes
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from cadrumo.domain.modelos.codes import ModeloCode
@@ -136,3 +136,28 @@ def test_a_revision_without_contributing_transactions_writes_nothing(tmp_path: P
             )
             == ()
         )
+
+
+def test_a_reopened_revision_leaves_only_the_entries_that_recorded_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(participation_adapter, "now", lambda: _T0)
+    other = _expected("verificado_completo", None).model_copy(update={"calculation_revision_id": "f" * 64})
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        repository = TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID)
+        repository.save(
+            repository.load(_TX_A).model_copy(
+                update={"participations": (_expected("verificado_completo", None), other)}
+            )
+        )
+
+        writes = build_participation_removals(
+            revision=_revision((_TX_A, _TX_B)),
+            participation_index_repository=repository,
+        )
+
+        expected = repository.to_secure_object_write(
+            repository.load(_TX_A).model_copy(update={"participations": (other,)})
+        )
+        # _TX_B never recorded the revision, so it costs no write.
+        assert writes == (expected,)

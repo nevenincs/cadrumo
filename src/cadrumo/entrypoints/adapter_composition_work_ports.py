@@ -211,6 +211,7 @@ def build_calculation_action_ports(
     from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
     from ..adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
     from ..adapters.persistence.profile.prevision_social_contribution_records import (
         PrevisionSocialContributionRecordRepositoryAdapter,
@@ -271,6 +272,9 @@ def build_calculation_action_ports(
         ),
         calculation_repository=calculation_binding.calculation_repository(),
         verification_repository=calculation_binding.verification_repository(),
+        participation_index_repository=TransactionParticipationIndexRepository(
+            bucket_id=normalized_bucket_id, objects=objects
+        ),
         bucket_event_repository=bucket_event_repository,
         transaction_repository=TransactionCatalogueRepository(
             bucket_id=normalized_bucket_id,

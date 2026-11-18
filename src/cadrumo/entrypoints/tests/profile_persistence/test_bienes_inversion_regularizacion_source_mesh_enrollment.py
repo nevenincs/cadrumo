@@ -110,6 +110,7 @@ def _source_mesh_ports(
         work_lifecycle_ports=ports.work_lifecycle_ports,
         calculation_repository=ports.calculation_repository,
         verification_repository=ports.verification_repository,
+        participation_index_repository=ports.participation_index_repository,
         bucket_event_repository=ports.bucket_event_repository,
         transaction_repository=transaction_repository,
         activity_asset_history_repository=ports.activity_asset_history_repository,
