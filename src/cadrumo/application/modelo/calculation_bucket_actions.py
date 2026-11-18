@@ -596,10 +596,14 @@ def _bucket_aggregation_channels(
         transaction_repository=transaction_repository,
         detail_rows=all_detail_rows,
     )
+    # The resolver's own binding values already count its rows, and a recalculation
+    # replays the current revision's rows (resolver rows included) as caller rows;
+    # only the caller rows the union added are summed on top of the resolver's count.
+    resolver_rows = source_resolution.detail_rows
     detail_row_binding_values = detail_row_binding_values_for_calculation(
         work_unit=preparation.work_unit,
         revision=preparation.snapshot.revision,
-        detail_rows=detail_rows,
+        detail_rows=tuple(row for row in detail_rows if row not in resolver_rows),
     )
     backend_binding_values = _merge_detail_row_binding_values(
         source_resolution.binding_values,
