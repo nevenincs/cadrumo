@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import json
+import re
+import shutil
 from datetime import date, datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -27,10 +30,11 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFa
 from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
 from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 
-from ..compiler.authority import compiled_bundled_authority
+from ..compiler.authority import compile_validated_authority_uncached
 from ..compiler.fact_loader import load_governed_fact_file
-from ..compiler.loader import load_modelo_directory, load_shared_catalogues
+from ..compiler.loader import load_shared_catalogues
 from ..compiler.validate_evidence import EvidenceValidator
+from .gate_support import scratch_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -64,6 +68,7 @@ _RESTRICTED_FROM_130 = _POLICY_DATES["restriction.130.date"]
 _LATER_PERIOD_369 = _POLICY_DATES["later_period_adjustment.369.date"]
 _PRE = frozenset({"complementaria", "sustitutiva"})
 _POST = frozenset({"rectificativa"})
+_AUTHORITY_GRADE_LINE = re.compile(r'^authority_grade = "[a-z_]+"$', re.MULTILINE)
 
 
 def test_only_the_evidenced_modelos_have_dated_restrictions() -> None:
@@ -175,18 +180,42 @@ def test_every_supported_year_intersects_the_dated_rectificativa_regime() -> Non
                 assert permitted_amendment_kind_values_for_period(modelo, period) == expected, (modelo, year)
 
 
-def test_sociedades_procedure_evidence_does_not_promote_the_boundary_year_revision() -> None:
-    """The boundary year keeps its own edition's grade: a filing-grade snapshot of it is refused, typed."""
-    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "200"))
-    boundary_revision = revision_covering("200", _BOUNDARY_200.year)
-    assert modelo.revisions[boundary_revision.id].authority_grade is RegistryAuthorityGrade.CALCULATION
-    authority = compiled_bundled_authority()
+def test_sociedades_procedure_evidence_does_not_promote_the_boundary_year_revision(tmp_path: Path) -> None:
+    """The boundary year keeps its own edition's grade: the procedure evidence grants none.
+
+    The amendment-regime policy dates the Sociedades rectificativa boundary and
+    cites the manual that states it. That evidence is procedural: an edition's
+    reach comes only from the grade its own revision declares. A scratch copy of
+    the registry, carrying the same policy and its cited source, declares the
+    boundary edition at calculation grade, and the real compiler then serves
+    that year at calculation grade and refuses a filing-grade snapshot, typed,
+    whatever grade the bundled edition has earned on its own evidence.
+    """
+    boundary_year = _BOUNDARY_200.year
+    boundary_revision = str(revision_covering("200", boundary_year).id)
+    scratch_root = scratch_registry_tree(tmp_path, "200", "202")
+    shutil.copytree(bundled_path("registry", "aeat", "facts"), scratch_root / "facts")
+    revision_file = scratch_root / "modelos" / "200" / "revisions" / boundary_revision / "revision.toml"
+    declared = revision_file.read_text(encoding="utf-8")
+    planted, count = _AUTHORITY_GRADE_LINE.subn('authority_grade = "calculation"', declared)
+    assert count == 1, revision_file
+    revision_file.write_text(planted, encoding="utf-8", newline="")
+
+    authority = compile_validated_authority_uncached(scratch_root, bundled_path())
+
+    variant = authority.catalogues.facts.facts["amendment-regime-policy"].variants[0]
+    assert isinstance(variant.payload, MappingFactPayload)
+    entries = {entry.key: entry.value for entry in variant.payload.entries}
+    assert str(entries["boundary.200.date"]) == _BOUNDARY_200.isoformat()
+    assert entries["restriction.200.source"] in authority.catalogues.sources
+    assert authority.modelo("200").revisions[boundary_revision].authority_grade is RegistryAuthorityGrade.CALCULATION
     calculated = authority.snapshot(
-        "200", filing_year=_BOUNDARY_200.year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+        "200", filing_year=boundary_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
-    assert str(calculated.revision.id) == str(boundary_revision.id)
+    assert str(calculated.revision.id) == boundary_revision
+    assert calculated.effective_authority_grade is RegistryAuthorityGrade.CALCULATION
     with pytest.raises(RegistryValidationError) as refusal:
-        authority.snapshot("200", filing_year=_BOUNDARY_200.year, period="0A", grade=RegistryAuthorityGrade.FILING)
+        authority.snapshot("200", filing_year=boundary_year, period="0A", grade=RegistryAuthorityGrade.FILING)
     failure = refusal.value.registry_failure
     assert failure is not None
     assert failure.condition is RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT
