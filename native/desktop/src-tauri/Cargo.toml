@@ -55,6 +55,9 @@ cadrumo-platform = { path = "../../platform", features = ["test-support"] }
 # helper the same feature exposes.
 cadrumo-application = { path = "../../application", features = ["platform", "test-support"] }
 tokio = { version = "1", features = ["test-util"] }
+# The schema of the conversation answers the host composes, which the window's
+# generated types are written from; already in the graph without its derive.
+schemars = { version = "1.2.3", default-features = false, features = ["derive", "std"] }
 
 [target.'cfg(windows)'.dependencies]
 cadrumo-manager = { path = "../../manager" }

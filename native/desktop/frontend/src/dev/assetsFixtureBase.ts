@@ -65,7 +65,8 @@ export const dec = (value: string) => ({ decimal: value });
 
 /** A reason fact stated with the kind of the value it was raised with, as the
  * backend serves it; a bare string is a text. */
-export type Fact = string | { value: string; kind: ActivityAssetReasonFactKind };
+export type Fact =
+  string | { value: string; kind: ActivityAssetReasonFactKind };
 export const typed =
   (kind: ActivityAssetReasonFactKind) =>
   (value: string | number): Fact => ({ value: String(value), kind });

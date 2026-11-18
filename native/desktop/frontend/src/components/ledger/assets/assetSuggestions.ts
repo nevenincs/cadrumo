@@ -1,9 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { SuggestionProps } from "@/components/editors/editorProps";
 import type { Suggestion } from "@/components/ui/suggestions";
-import type {
-  ActivityAssetAcquisitionCandidate,
-} from "../../../shell/ledgerActivityAssetReadContract";
+import type { ActivityAssetAcquisitionCandidate } from "../../../shell/ledgerActivityAssetReadContract";
 import {
   useFieldSuggestions,
   useHeldInvoices,

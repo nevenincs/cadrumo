@@ -170,7 +170,10 @@ test("a handoff for a year alone states the Modelo 100 boxes and no Modelo 130 s
 
 test("the vehicle declaration is stated, with no question, for a table class the options say requires one, and nothing is drawn for any other", async () => {
   const port = portOf();
-  const options = (await optionsOf(port, "material")) as ActivityAssetFormOptionsView;
+  const options = (await optionsOf(
+    port,
+    "material",
+  )) as ActivityAssetFormOptionsView;
   const classKey = factKey(["authority_class_key"]);
   const drawn = (chosen: string, assetKind = "material") =>
     fieldsFor(
@@ -226,7 +229,10 @@ test("a baja form offers exactly the reasons the options serve, each worded by t
       {},
     ).find((found) => found.key === "reason")!.choices;
   for (const kind of ["material", "intangible"] as const) {
-    const options = (await optionsOf(port, kind)) as ActivityAssetFormOptionsView;
+    const options = (await optionsOf(
+      port,
+      kind,
+    )) as ActivityAssetFormOptionsView;
     const reasons = reasonsOf(options);
     expect(options.disposal_reasons.length).toBeGreaterThan(0);
     expect(reasons.map((choice) => [choice.token, choice.word])).toEqual(
@@ -815,8 +821,14 @@ test("the handoff marks an amount that leaves elements out with the sentence the
 
 test("the facts of a condition are drawn from the conditions the options serve, so a fact no condition lists is never asked", async () => {
   const port = portOf();
-  const options = (await optionsOf(port, "material")) as ActivityAssetFormOptionsView;
-  const keys = (served: ActivityAssetFormOptionsView, draft: Record<string, string>) =>
+  const options = (await optionsOf(
+    port,
+    "material",
+  )) as ActivityAssetFormOptionsView;
+  const keys = (
+    served: ActivityAssetFormOptionsView,
+    draft: Record<string, string>,
+  ) =>
     fieldsFor(
       {
         kind: "element",
@@ -881,12 +893,17 @@ test("the facts of a condition are drawn from the conditions the options serve, 
 
 test("the shapes of a later payment are the ones the options serve", async () => {
   const port = portOf();
-  const options = (await optionsOf(port, "material")) as ActivityAssetFormOptionsView;
+  const options = (await optionsOf(
+    port,
+    "material",
+  )) as ActivityAssetFormOptionsView;
   expect(options.further_acquisition_shapes).toEqual([
     "split_payment",
     "ancillary_cost",
   ]);
-  const choices = (served: ActivityAssetFormOptionsView["further_acquisition_shapes"]) =>
+  const choices = (
+    served: ActivityAssetFormOptionsView["further_acquisition_shapes"],
+  ) =>
     fieldsFor(
       {
         kind: "element",

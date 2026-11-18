@@ -5,13 +5,15 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from typing import Any
 
 from cadrumo.core.toml import parse_toml
 from dev.paths import REPO_ROOT
 
 from .build_directory import require_enrolled_output
 from .build_stamp import BuildStamp, display_version, load_identity
-from .identity import identity
+from .discovered_inputs import record_discovered_inputs
+from .identity import DistributionIdentity, identity
 from .layout import backend, bundled_images, distribution_target, load_layout
 from .stable_output import write_text
 
@@ -39,17 +41,9 @@ def generate(
     display versions are written and each image selects its own through ``CADRUMO_BUILD_DEBUG``.
     """
     identity_destination = destination if identity_destination is None else identity_destination
-    version = parse_toml((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+    version, layout, product = _selection(destination, channel, target)
     python = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
-    configured_identity = destination / "identity.json"
-    if target is None and configured_identity.is_file():
-        configured_target = json.loads(configured_identity.read_text(encoding="utf-8"))["target"]
-        if not isinstance(configured_target, str):
-            raise ValueError("Configured target must be a string")
-        target = configured_target
-    layout = load_layout(target)
-    product = identity(distribution_target(layout), channel)
-    destination.mkdir(parents=True, exist_ok=True)
+    _write_unstamped(destination, version, layout, product)
     identity_destination.mkdir(parents=True, exist_ok=True)
     metadata = {
         "product": product.name,
@@ -69,12 +63,6 @@ def generate(
         },
     }
     write_text(identity_destination / "build.json", json.dumps(metadata, indent=2))
-    layout_values = {
-        "VERSION": version,
-        "EXECUTABLE": layout["paths"]["executable"],
-        **{name.upper(): value for name, value in layout["files"].items()},
-    }
-    write_text(destination / LAYOUT_HEADER, _header(layout_values))
     write_text(identity_destination / "build_metadata.h", identity_header(version, stamp))
     images = {**layout["entrypoints"], **{name: entry["description"] for name, entry in bundled_images(layout).items()}}
     backend(layout).resources(identity_destination, version, stamp, tools, images, product, shared=destination)
@@ -82,6 +70,38 @@ def generate(
 
 LAYOUT_HEADER = "build_layout.h"
 """The package layout and product version the C hosts compile in, identical for every build."""
+
+
+def generate_unstamped(destination: Path, channel: str = "stable", *, target: str | None = None) -> None:
+    """Write only the outputs that carry no build identity: the layout header and the application manifests.
+
+    A host built against a contract no package embeds compiles these beside that contract,
+    and needs no interpreter identity, contract or build tools to have them.
+    """
+    _write_unstamped(destination, *_selection(destination, channel, target))
+
+
+def _selection(destination: Path, channel: str, target: str | None) -> tuple[str, dict[str, Any], DistributionIdentity]:
+    version = parse_toml((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+    configured_identity = destination / "identity.json"
+    if target is None and configured_identity.is_file():
+        configured_target = json.loads(configured_identity.read_text(encoding="utf-8"))["target"]
+        if not isinstance(configured_target, str):
+            raise ValueError("Configured target must be a string")
+        target = configured_target
+    layout = load_layout(target)
+    return version, layout, identity(distribution_target(layout), channel)
+
+
+def _write_unstamped(destination: Path, version: str, layout: dict[str, Any], product: DistributionIdentity) -> None:
+    destination.mkdir(parents=True, exist_ok=True)
+    layout_values = {
+        "VERSION": version,
+        "EXECUTABLE": layout["paths"]["executable"],
+        **{name.upper(): value for name, value in layout["files"].items()},
+    }
+    write_text(destination / LAYOUT_HEADER, _header(layout_values))
+    backend(layout).unstamped_resources(destination, product)
 
 
 def _header(values: dict[str, str]) -> str:
@@ -118,14 +138,23 @@ _BUILD_TYPE_SELECTION = """#ifndef CADRUMO_BUILD_DEBUG
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("destination", type=require_enrolled_output)
-    parser.add_argument("--identity", type=Path, required=True, help="the interpreter component's published identity")
-    parser.add_argument("--tools", type=Path, required=True)
+    parser.add_argument("--identity", type=Path, help="the interpreter component's published identity")
+    parser.add_argument("--tools", type=Path)
+    parser.add_argument("--unstamped", action="store_true", help="write only the outputs that carry no build identity")
     parser.add_argument("--channel", choices=("stable", "preview"), default="stable")
     parser.add_argument("--target")
     parser.add_argument(
         "--identity-destination", type=require_enrolled_output, help="the configuration's identity output directory"
     )
     args = parser.parse_args()
+    record_discovered_inputs()
+    if args.unstamped:
+        if args.identity is not None or args.tools is not None or args.identity_destination is not None:
+            parser.error("--unstamped writes no identity outputs and takes no identity, tools or identity destination")
+        generate_unstamped(args.destination, args.channel, target=args.target)
+        raise SystemExit(0)
+    if args.identity is None or args.tools is None:
+        parser.error("--identity and --tools are required unless --unstamped")
     generate(
         args.destination,
         load_identity(args.identity, "interpreter").stamp,

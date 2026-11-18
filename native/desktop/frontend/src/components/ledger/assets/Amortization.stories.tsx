@@ -120,7 +120,10 @@ type PlanShape = {
 /** The sentence the register said for a reason, as recorded, in the
  * language the story shows; none where the recording holds none, which the
  * window draws as its generic word. */
-const reasonWords = (key: string, facts: ActivityAssetReasonFact[]): string | null =>
+const reasonWords = (
+  key: string,
+  facts: ActivityAssetReasonFact[],
+): string | null =>
   said({ kind: "reason", key, facts }, ledgerLanguage() ?? "en") ?? null;
 const remedyWords = (fieldKey: string): string | null =>
   said({ kind: "remedy", field_key: fieldKey }, ledgerLanguage() ?? "en") ??
@@ -130,8 +133,13 @@ const ELAPSED = "ledger.actividad_asset.errors.amortization_period_elapsed";
 const OPENING_MISSING = "ledger.actividad_asset.errors.opening_history_missing";
 
 /** The baja the register records for the element, as the detail passes it. */
-function useDisposal(port: LedgerPort, assetId: string): ActivityAssetListDisposal | null {
-  const [disposal, setDisposal] = useState<ActivityAssetListDisposal | null>(null);
+function useDisposal(
+  port: LedgerPort,
+  assetId: string,
+): ActivityAssetListDisposal | null {
+  const [disposal, setDisposal] = useState<ActivityAssetListDisposal | null>(
+    null,
+  );
   useEffect(() => {
     let active = true;
     void setupCall(port, "ledger.actividad-asset.list", {}, false).then(
