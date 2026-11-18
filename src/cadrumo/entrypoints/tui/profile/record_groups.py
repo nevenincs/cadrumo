@@ -25,6 +25,7 @@ from ....application.user_profile.record_group_contracts import (
     ProfileRecordLedgerRowItem,
     ProfileRecordMemberItem,
 )
+from ....core.errors.hierarchy import CadrumoError
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,7 +85,7 @@ def field_doors(member: ProfileRecordMemberItem) -> tuple[RecordGroupDoor, ...]:
     return tuple(doors)
 
 
-class MalformedRecordGroupPageError(ValueError):
+class MalformedRecordGroupPageError(CadrumoError):
     """A page that does not continue the stream it was read for."""
 
 

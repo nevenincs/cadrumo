@@ -19,11 +19,12 @@ from types import MappingProxyType
 from typing import Literal
 
 from ....application.operations.form_field_annotation import OperationFormFieldV1, served_form_field
+from ....core.errors.hierarchy import CadrumoError
 from ....core.type_guards import is_object_list, is_str_keyed_dict
 from .link_picker import LedgerLinkFieldV1
 
 
-class LedgerAddFormUnavailableError(ValueError):
+class LedgerAddFormUnavailableError(CadrumoError):
     """The served schema cannot be offered as a form: a required fact has no place on it."""
 
 
