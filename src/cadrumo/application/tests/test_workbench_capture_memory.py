@@ -349,6 +349,90 @@ def test_an_ended_or_replaced_session_starts_no_form_refresh() -> None:
     assert ran == ["third"]
 
 
+def test_a_read_waiting_for_a_refresh_marks_it_joined() -> None:
+    slot: WorkbenchMemoSlot[str, str] = WorkbenchMemoSlot()
+    started, release = threading.Event(), threading.Event()
+    joined: list[bool] = []
+
+    def refreshing() -> str:
+        started.set()
+        release.wait()
+        return "refreshed"
+
+    refresh = threading.Thread(target=lambda: slot.refresh("next", refreshing, current=lambda: True))
+    refresh.start()
+    started.wait()
+    joined.append(slot.refresh_joined())
+    reading = threading.Thread(target=lambda: slot.reuse("next", lambda: "built"))
+    reading.start()
+    for _ in range(1000):
+        if slot.refresh_joined():
+            break
+        threading.Event().wait(0.01)
+    joined.append(slot.refresh_joined())
+    release.set()
+    reading.join()
+    refresh.join()
+
+    assert joined == [False, True]
+    assert not slot.refresh_joined()
+
+
+def test_a_refresh_waits_while_requests_are_served_and_goes_on_once_they_are_quiet() -> None:
+    busy = threading.Event()
+    busy.set()
+    memory = WorkbenchCaptureMemory(deferred=busy.is_set)
+    answered: list[bool] = []
+
+    waiting = threading.Thread(target=lambda: answered.append(memory.yield_to_requests(unless=lambda: False)))
+    waiting.start()
+    waiting.join(timeout=0.3)
+    assert waiting.is_alive(), "a refresh went on while requests were being served"
+    busy.clear()
+    waiting.join(timeout=10)
+
+    assert answered == [True]
+
+
+def test_a_refresh_holds_on_through_its_extra_quiet_period() -> None:
+    memory = WorkbenchCaptureMemory(deferred=lambda: False)
+    answered: list[bool] = []
+
+    waiting = threading.Thread(
+        target=lambda: answered.append(memory.yield_to_requests(unless=lambda: False, quiet_for=0.4))
+    )
+    waiting.start()
+    waiting.join(timeout=0.2)
+    assert waiting.is_alive(), "a refresh started before its extra quiet period passed"
+    waiting.join(timeout=10)
+
+    assert answered == [True]
+
+
+def test_a_refresh_a_read_waits_for_goes_on_however_busy_requests_are() -> None:
+    memory = WorkbenchCaptureMemory(deferred=lambda: True)
+
+    assert memory.yield_to_requests(unless=lambda: True, quiet_for=60)
+
+
+def test_a_refresh_waiting_for_quiet_stops_when_its_session_ends() -> None:
+    memory = WorkbenchCaptureMemory(deferred=lambda: True)
+    answered: list[bool] = []
+
+    waiting = threading.Thread(target=lambda: answered.append(memory.yield_to_requests(unless=lambda: False)))
+    waiting.start()
+    memory.close()
+    waiting.join(timeout=10)
+
+    assert answered == [False]
+
+
+def test_a_memory_without_a_request_signal_never_holds_a_refresh_back() -> None:
+    memory = WorkbenchCaptureMemory()
+
+    assert memory.yield_to_requests(unless=lambda: False, quiet_for=60)
+
+
 def _kept(memory: WorkbenchCaptureMemory) -> bool:
     """Whether the memory still stores and serves work: a second reuse of one key builds nothing."""
     key = cast(Any, object())
