@@ -241,6 +241,8 @@ pub(super) fn entry(event: &Event) -> Entry {
                 "createMs" => "create_ms",
                 "containMs" => "contain_ms",
                 "elapsedMs" => "elapsed_ms",
+                "observeMs" => "observe_ms",
+                "outcomeMs" => "outcome_ms",
                 "packageAbi" => "package_abi",
                 "logLevel" => "log_level",
                 "logLevelOverridden" => "log_level_overridden",
@@ -319,6 +321,22 @@ pub(super) fn entry(event: &Event) -> Entry {
                 ": {} read {} in {elapsed_ms} ms",
                 token(read),
                 token(outcome)
+            ));
+        }
+        if let cadrumo_application::diagnostics::service::ServiceFact::OperationSettle {
+            end,
+            wake,
+            observes,
+            cues,
+            observe_ms,
+            outcome_ms,
+            elapsed_ms,
+        } = fact
+        {
+            message.push_str(&format!(
+                ": {} in {elapsed_ms} ms, {observes} observes ({cues} cued, last woken by {}) {observe_ms} ms, outcome read {outcome_ms} ms",
+                token(end),
+                token(wake)
             ));
         }
         if let cadrumo_application::diagnostics::service::ServiceFact::PersonRestore {
@@ -939,6 +957,37 @@ mod tests {
         assert_eq!(entries[0].context["service_read"], "local_models");
         assert_eq!(entries[0].context["service_outcome"], "unanswered");
         assert_eq!(entries[0].context["service_elapsed_ms"], 21_000);
+    }
+
+    #[test]
+    fn an_operation_settle_is_visible_with_its_wake_and_times_as_closed_scalars() {
+        use cadrumo_application::diagnostics::service::{ServiceFact, SettleEnd, SettleWake};
+        let diagnostics = Diagnostics::default();
+        diagnostics.service(
+            None,
+            ServiceFact::OperationSettle {
+                end: SettleEnd::Settled,
+                wake: SettleWake::Recheck,
+                observes: 4,
+                cues: 1,
+                observe_ms: 120,
+                outcome_ms: 35,
+                elapsed_ms: 2_400,
+            },
+        );
+        let entries = HostEvents::default().poll(&diagnostics);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            entries[0].message,
+            "operation_settle: settled in 2400 ms, 4 observes (1 cued, last woken by recheck) 120 ms, outcome read 35 ms"
+        );
+        assert_eq!(entries[0].level, Some(Level::Info));
+        assert_eq!(entries[0].context["service_end"], "settled");
+        assert_eq!(entries[0].context["service_wake"], "recheck");
+        assert_eq!(entries[0].context["service_observes"], 4);
+        assert_eq!(entries[0].context["service_observe_ms"], 120);
+        assert_eq!(entries[0].context["service_outcome_ms"], 35);
+        assert_eq!(entries[0].context["service_elapsed_ms"], 2_400);
     }
 
     #[test]

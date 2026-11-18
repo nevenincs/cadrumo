@@ -33,7 +33,6 @@ from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo.entrypoints.tui.installation.act_screen import InstallationActScreen
 from cadrumo.entrypoints.tui.installation.destination import InstallationScreen
-from cadrumo.entrypoints.tui.installation.texts import yes_no
 from cadrumo.entrypoints.tui.secret.registration import RecoveryCodeScreen
 from cadrumo.entrypoints.tui.tests.frame import screen_text
 from cadrumo.entrypoints.tui.tests.settling import settle_until
@@ -195,7 +194,10 @@ async def test_the_code_is_shown_once_typed_back_and_only_then_installed(
             assert app.screen is enrolling
             assert _status(enrolling).tone == "success"
             result = str(enrolling.query_one("#installation-act-result", Static).content)
-            assert f"enrolled    {yes_no(True)}" in result and f"changed     {yes_no(True)}" in result
+            assert (
+                f"enrolled    {tr('flows.confirm.yes')}" in result
+                and f"changed     {tr('flows.confirm.yes')}" in result
+            )
             assert served.enrolled()
             # The code the person copied down is the one the installed wrapper opens under.
             unlock_profile_custody_recovery(

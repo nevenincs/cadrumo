@@ -67,8 +67,10 @@ from ....application.inventory.registered_requests import (
     InventoryValuationPreviewRequest,
 )
 from ....application.ledger.workspace import LedgerWorkspaceArea
+from ....application.modelo.value_presentation import format_casilla_value
 from ....core.errors.hierarchy import CadrumoError
-from ....core.i18n.render import tr
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
 from ....domain.contribuyente.inventory.records import (
     InventoryCorrectionReason,
     InventoryRetirementReason,
@@ -430,10 +432,6 @@ def _ledger_detail_lines(ledger: InventoryLedgerProjection) -> tuple[str, ...]:
     )
 
 
-def _yes_no(value: bool) -> str:
-    return tr("tui.ledger.registers.yes" if value else "tui.ledger.registers.no")
-
-
 def inventory_outcome(
     result: InventoryCreateProjection
     | InventoryMovementAddProjection
@@ -491,7 +489,9 @@ def _closing_outcome(result: InventoryClosingAuthorityOperationProjection) -> Re
                 "tui.ledger.registers.inventory.result.closing",
                 actividad=record.actividad_id,
                 year=record.year,
-                changed=_yes_no(record.changed),
+                changed=format_casilla_value(
+                    record.changed, data_type="boolean", language=OutputLanguage(output_language())
+                ),
             ),
             tr(
                 "tui.ledger.registers.inventory.result.fingerprint",
