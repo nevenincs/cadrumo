@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#modelo-200-pyg-page-qualified'
 date: '2026-11-14'
-modified: '2026-11-14'
+modified: '2026-11-18'
 body_schema: 'body-v2'
-body_hash: 'sha256:2e0b76523a049d09e8536bc4b81e5a5f712177efc69061b37be211924aa87e1e'
+body_hash: 'sha256:fe5c6c7731767e8b7d05befac450a58632b8f244b6d08449f5d229666e06e110'
 related:
   - "[[2026-09-02-registry-declaration-hardening-identifier-grammar-adr]]"
   - "[[2026-06-03-m200-internal-casilla-discipline-adr]]"
@@ -135,6 +135,17 @@ real-export test that a stated `00009` lands on its own page, a migration refusa
 `delta_minimality` and `edition_delta_assessment` lanes. Mapping other-page cells to filler or an
 absent kind (option c) is rejected: it misstates the official design. The remaining shared owners
 (about 680 per edition) are later hands under this same mechanism, each needing its own scope.
+
+Amendment 2026-11-17 (PRIME ruling 22:44, under the operator's standing authority to PRIME). The
+aeat-dr-200-2022 record design prints box `[00659]` twice: on DP200015 as the bases imponibles
+negativas "Aplicado en esta liquidación" cell, and on DP200020D field 17 as "Aplicación de
+resultados - Aplicación - A F.R.O y dotaciones voluntarias al F.E.P (Cooperativas)". Under this
+decision the bare id `00659` becomes `DP200015:00659` at its earliest declaring edition, and
+`DP200020D:00659` is declared at 2022 as its own field and retired at 2023, whose design no longer
+prints it. The frozen prior-filing read map gains `00659` -> `DP200015:00659` under the same
+generation, stamped-revision and dual-id conflict conditions. Emitted 2024 and 2025 export bytes
+are unchanged, since only the casilla id each field reads is renamed; that byte equality is part
+of the hand's proof. The pattern is the one applied to `00009` and `00017`.
 
 ## Rationale
 
