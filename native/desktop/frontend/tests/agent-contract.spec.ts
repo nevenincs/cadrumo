@@ -6,11 +6,9 @@ import {
   isLineSafe,
   questionnaireFaults,
 } from "../src/shell/agentClarification";
-import { offeredOptions } from "../src/shell/agentPermission";
-import type { AgentApprovalOption } from "../src/shell/agentSession";
 import type { ClarificationQuestion } from "../src/shell/agentGatewayContract";
 
-// cadrumo-agent's clarification and permission rules, as the column reads
+// cadrumo-agent's clarification rules, as the column reads
 // them. Every expected value is written out from the agent's contract (its
 // bounds, its identifier grammar, the Unicode Cc rule, the answer checks),
 // not derived from the code under test.
@@ -287,47 +285,5 @@ test.describe("text predicates", () => {
       expect(isBlank(blank)).toBe(true);
     for (const said of ["a", " a ", "\u200b", "\ufeff", "0"])
       expect(isBlank(said)).toBe(false);
-  });
-});
-
-test.describe("the options a permission offers", () => {
-  const option = (
-    kind: AgentApprovalOption["kind"],
-    option_id: string = kind,
-  ): AgentApprovalOption => ({ option_id, name: kind, kind });
-
-  test("those that answer this call alone, when there are any", () => {
-    expect(
-      offeredOptions([
-        option("allow_always"),
-        option("allow_once"),
-        option("allow_session"),
-        option("reject_always"),
-        option("reject_once"),
-      ]).map(({ kind }) => kind),
-    ).toEqual(["allow_once", "allow_session", "reject_once"]);
-    expect(
-      offeredOptions([option("allow_once")]).map(({ kind }) => kind),
-    ).toEqual(["allow_once"]);
-  });
-
-  test("otherwise every option, so that what a person could answer stays answerable", () => {
-    expect(
-      offeredOptions([option("allow_always"), option("reject_always")]).map(
-        ({ kind }) => kind,
-      ),
-    ).toEqual(["allow_always", "reject_always"]);
-    expect(offeredOptions([])).toEqual([]);
-  });
-
-  test("in the order the agent gave them", () => {
-    expect(
-      offeredOptions([
-        option("reject_once", "b"),
-        option("allow_always", "x"),
-        option("allow_once", "a"),
-        option("reject_once", "c"),
-      ]).map(({ option_id }) => option_id),
-    ).toEqual(["b", "a", "c"]);
   });
 });

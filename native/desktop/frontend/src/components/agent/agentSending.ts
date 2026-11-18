@@ -5,8 +5,6 @@ import { documentRefs } from "../../shell/agentDocuments";
 import { sendRefusalStep } from "../../shell/agentSendRefusals";
 import type { newestReply, useLiveConversation } from "../../shell/agentLive";
 import type {
-  AgentApproval,
-  AgentQuestionnaire,
   AgentQuestionnaireAnswer,
   AgentSendRequest,
   AgentSession,
@@ -21,6 +19,10 @@ import type {
 import type { ComposerReferences } from "./Composer";
 import type { AgentSelection } from "./types";
 import type { useAgentCatalog } from "./useAgentCatalog";
+import type {
+  AgentApproval,
+  AgentQuestionnaire,
+} from "../../shell/agentSnapshotContract";
 
 /**
  * Sending a message, stopping a reply, and answering what a reply waits on:

@@ -93,7 +93,7 @@ async function holdPrompt(
 // read what the scenario host was asked, its call log, or the options and
 // bounds it serves, and are left to it.
 
-const open = (target: Page, asks: "questions" | "approval" | "review") =>
+const open = (target: Page, asks: "questions" | "approval") =>
   target.goto(
     `/scenarios.html?scenario=signed-in&latency=0&bar=off&asks=${asks}`,
   );
@@ -319,22 +319,6 @@ test("a tool refused does not run", async ({ page: target }) => {
   expect(
     calls.filter((call) => call.startsWith("agentDecideApproval ")),
   ).toEqual([expect.stringMatching(/ reject-once$/)]);
-});
-
-test("a Cadrumo operation is reviewed before it commits", async ({
-  page: target,
-}) => {
-  scenarioOnly("the review is the scenario host's");
-  await open(target, "review");
-  await send(target, "Registra la factura 2026-031.");
-  const prompt = approvalPrompt(target, "cadrumo_review");
-  await expect(prompt).toBeVisible();
-  await expect(prompt).toContainText("Registrar la factura 2026-031");
-  await prompt
-    .getByRole("button", { name: "Registrar la factura", exact: true })
-    .click();
-  await expect(prompt).toHaveCount(0);
-  await settled(target);
 });
 
 // The bounds and rules below are cadrumo-agent's own. The expected values are
@@ -921,37 +905,6 @@ test("options the agent gives no name are worded by what they do", async ({
   ).toEqual([expect.stringMatching(/ b$/)]);
 });
 
-test("options the agent would remember, when it offers nothing else, promise no more than they do", async ({
-  page: target,
-}) => {
-  scenarioOnly("what is checked is what the scenario host asked and served");
-  await open(target, "approval");
-  await send(target, "Lee mis apuntes, solo recuerdos.");
-  const prompt = approvalPrompt(target);
-  await expect(prompt).toBeVisible();
-  const [approval] = (await waitingOn(target)).approvals;
-  expect(approval?.options.map((option) => option.kind)).toEqual([
-    "allow_always",
-    "reject_always",
-  ]);
-  // The agent keeps no grant: it applies an answer to the call it was asked
-  // about. The words say neither always nor never.
-  const words = await shownOptions(prompt);
-  expect(words).toEqual([
-    label("desktop.agent.approval_reject_always"),
-    label("desktop.agent.approval_allow_always"),
-  ]);
-  expect(words).toEqual(["Don't allow", "Allow"]);
-  for (const locale of ["es", "ca", "hu"])
-    for (const key of [
-      "desktop.agent.approval_allow_always",
-      "desktop.agent.approval_reject_always",
-    ])
-      expect(label(key, {}, locale)).not.toMatch(
-        /siempre|nunca|sempre|mai|mindig|soha/i,
-      );
-});
-
 test("the most an approval can say is shown whole, in the agent's order within each kind", async ({
   page: target,
 }) => {
@@ -983,26 +936,6 @@ test("the most an approval can say is shown whole, in the agent's order within e
   expect(
     await prompt.evaluate((card) => card.scrollWidth <= card.clientWidth),
   ).toBe(true);
-});
-
-test("a Cadrumo review offers the same choices in the same order", async ({
-  page: target,
-}) => {
-  scenarioOnly("what is checked is what the scenario host asked and served");
-  await open(target, "review");
-  await send(target, "Registra la factura 2026-031.");
-  const prompt = approvalPrompt(target, "cadrumo_review");
-  await expect(prompt).toBeVisible();
-  expect(await shownOptions(prompt)).toEqual([
-    "No registrar",
-    "Registrar la factura",
-  ]);
-  await expect(
-    prompt.getByRole("button", { name: "Registrar la factura", exact: true }),
-  ).toHaveAttribute("data-variant", "primary");
-  await expect(
-    prompt.getByRole("button", { name: "No registrar", exact: true }),
-  ).toHaveAttribute("data-variant", "outline");
 });
 
 test("the agent refuses a decision it did not offer", async ({

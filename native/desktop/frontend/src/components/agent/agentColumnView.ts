@@ -1,7 +1,7 @@
 import type { ContextFit } from "../../errors";
 import type { AgentSession } from "../../shell/agentSession";
-import type { AgentDocumentReference } from "../../shell/agentViews";
 import type { AgentSelection } from "./types";
+import type { AgentDocumentReference } from "../../shell/agentSnapshotContract";
 
 /** What the agent column shows beside its conversation. */
 export type Panel = "none" | "history" | "settings" | "documents";

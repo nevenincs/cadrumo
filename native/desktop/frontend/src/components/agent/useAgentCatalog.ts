@@ -20,7 +20,7 @@ import type {
   AgentSession,
 } from "../../shell/agentSession";
 import type { ServedCatalogAnswer } from "../../shell/agentCatalogContract";
-import { useAgentRead, type AgentRanWith } from "../../shell/agentViews";
+import { useAgentRead } from "../../shell/agentViews";
 import { catalogLanes } from "../../shell/localModelLanes";
 import {
   useReadingModel,
@@ -28,6 +28,7 @@ import {
 } from "../../shell/readingModel";
 import type { Translate } from "../../shell/strings";
 import type { AgentSelection } from "./types";
+import type { AgentRanWith } from "../../shell/agentSnapshotContract";
 
 /**
  * What the agent can run, which is the agent's own catalog, every lane of

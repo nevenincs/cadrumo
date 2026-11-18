@@ -5,11 +5,8 @@ import type {
 } from "@/components/agent/types";
 import type { AttachmentPolicyResponse } from "./agentGatewayContract";
 import type { AgentDocumentRef } from "./agentSession";
-import type {
-  AgentDocumentRecord,
-  AgentDocumentReference,
-  AgentViews,
-} from "./agentViews";
+import type { AgentDocumentRecord, AgentViews } from "./agentViews";
+import type { AgentDocumentReference } from "./agentSnapshotContract";
 
 // The documents stored for a conversation, as its messages name them with `@`:
 // listed in name order, filtered by the words after the `@`, and named in a

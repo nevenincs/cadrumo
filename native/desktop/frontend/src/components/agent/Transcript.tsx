@@ -315,10 +315,11 @@ const ToolRow = memo(function ToolRow({
   const t = useStrings();
   const { state } = activity;
   const failed = state === "failed";
-  const outcome = toolWords(t)[state];
+  const outcome = state === null ? "" : toolWords(t)[state];
   return (
     <li className="flex min-w-0 items-start gap-2 pr-4 text-sm text-muted-foreground">
-      {state === "pending" || state === "in_progress" ? (
+      {state === null ? null : state === "pending" ||
+        state === "in_progress" ? (
         <Spinner className="mt-0.5" />
       ) : (
         <Icon
@@ -333,7 +334,7 @@ const ToolRow = memo(function ToolRow({
               {activity.label}
               {/* A failed call is said in words, not by its icon alone. */}
               <span className={failed ? "ml-1.5 text-destructive" : "sr-only"}>
-                {failed ? outcome : `${describedGap(t)}${outcome}`}
+                {failed || !outcome ? outcome : `${describedGap(t)}${outcome}`}
               </span>
             </span>
           }

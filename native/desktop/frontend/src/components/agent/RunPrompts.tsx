@@ -1,12 +1,14 @@
 import type {
-  AgentApproval,
-  AgentQuestionnaire,
   AgentQuestionnaireAnswer,
   AgentSession,
 } from "../../shell/agentSession";
 import { ApprovalPrompt } from "./ApprovalPrompt";
 import { AttachmentReadPrompt } from "./AttachmentReadPrompt";
 import { QuestionsPrompt } from "./QuestionsPrompt";
+import type {
+  AgentApproval,
+  AgentQuestionnaire,
+} from "../../shell/agentSnapshotContract";
 
 /**
  * What a reply waits on: each approval it asks for, a request to read an

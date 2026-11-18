@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { failureCode } from "../../errors";
-import type { AgentApproval, AgentSession } from "../../shell/agentSession";
+import type { AgentSession } from "../../shell/agentSession";
 import type {
   AttachmentCardAnswer,
   ReleaseScope,
@@ -14,6 +14,7 @@ import type {
 import { useStrings } from "../../shell/strings";
 import { AgentTextAction } from "./AgentAction";
 import { ConsentPrompt } from "./ConsentPrompt";
+import type { AgentApproval } from "../../shell/agentSnapshotContract";
 
 type Sent = "idle" | "sending" | "done";
 
