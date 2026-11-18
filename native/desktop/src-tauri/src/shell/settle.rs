@@ -10,8 +10,13 @@ use super::relay::{
 };
 use super::user_profile::ProfileHost;
 use crate::agent::person::{HeldPerson, PersonEvent};
+use cadrumo_application::diagnostics::{
+    Diagnostics,
+    service::{ServiceFact, SettleEnd},
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
+use std::time::{Duration, Instant};
 use std::{
     collections::VecDeque,
     sync::{
@@ -167,6 +172,21 @@ pub(super) struct Tracked {
     /// instead. Shared by every copy of this record, so a copy that follows
     /// the operation tells the window's record.
     state: Arc<AtomicU8>,
+    /// Where following it records how it settled, if anywhere.
+    timing: Timing,
+}
+
+/// The diagnostics a followed operation's settle timing goes to.
+#[derive(Clone, Default)]
+struct Timing(Option<Arc<Diagnostics>>);
+impl std::fmt::Debug for Timing {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(if self.0.is_some() {
+            "Timing(recorded)"
+        } else {
+            "Timing(none)"
+        })
+    }
 }
 impl Tracked {
     pub(super) fn new(
@@ -184,6 +204,31 @@ impl Tracked {
             shown: None,
             folders,
             state: Arc::new(AtomicU8::new(OPEN)),
+            timing: Timing::default(),
+        }
+    }
+    /// Records how following the operation went, where its window records it.
+    /// Only the closed classes, the counts and the milliseconds are recorded.
+    fn timed_settle(
+        &self,
+        end: SettleEnd,
+        trace: &relay::FollowTrace,
+        outcome: Duration,
+        elapsed: Duration,
+    ) {
+        if let Some(diagnostics) = &self.timing.0 {
+            diagnostics.service(
+                None,
+                ServiceFact::OperationSettle {
+                    end,
+                    wake: trace.wake,
+                    observes: trace.observes,
+                    cues: trace.cues,
+                    observe_ms: millis(trace.observe),
+                    outcome_ms: millis(outcome),
+                    elapsed_ms: millis(elapsed),
+                },
+            );
         }
     }
     /// Notes what following the operation answered. A review, a running
@@ -224,8 +269,17 @@ impl Tracked {
 
 /// The operations this window submitted, for the session that submitted them.
 #[derive(Default)]
-pub(super) struct Operations(Mutex<VecDeque<Tracked>>);
+pub(super) struct Operations(Mutex<VecDeque<Tracked>>, Timing);
 impl Operations {
+    /// A window's operations, each recording how it settled in `diagnostics`.
+    pub(super) fn measured(diagnostics: Arc<Diagnostics>) -> Self {
+        Self(Mutex::default(), Timing(Some(diagnostics)))
+    }
+    /// `tracked`, recording how it settles where this window's operations do.
+    pub(super) fn timed(&self, mut tracked: Tracked) -> Tracked {
+        tracked.timing = self.1.clone();
+        tracked
+    }
     /// Makes room for one more operation of the session `identity`, before
     /// it is submitted: at the ceiling the oldest settled operation goes,
     /// else the oldest read still running. Refuses when every one left is a
@@ -521,15 +575,38 @@ pub(super) async fn settle(
 ) -> Result<Outcome> {
     let relayed = tracked.relayed(person);
     let mutation = tracked.definition.mutation;
+    let started = Instant::now();
+    let mut trace = relay::FollowTrace::default();
+    let mut reached = None;
+    let mut outcome_took = Duration::ZERO;
     let settled = tokio::time::timeout(relay::SETTLE_LIMIT, async {
-        let p = relay::follow(events, &relayed, waits_on_person).await?;
-        outcome(&relayed, &p, tracked).await
+        let p = relay::follow_traced(events, &relayed, waits_on_person, &mut trace).await?;
+        reached = Some(if p["lifecycle"] == "terminal" {
+            SettleEnd::Settled
+        } else {
+            SettleEnd::Person
+        });
+        let reading = Instant::now();
+        let read = outcome(&relayed, &p, tracked).await;
+        outcome_took = reading.elapsed();
+        read
     })
-    .await
-    .unwrap_or_else(|_| Err(failure(if mutation { "unknown" } else { "unavailable" })));
+    .await;
+    let end = match &settled {
+        Err(_) => SettleEnd::Unobserved,
+        Ok(Err(_)) => SettleEnd::Failed,
+        Ok(Ok(_)) => reached.unwrap_or(SettleEnd::Failed),
+    };
+    tracked.timed_settle(end, &trace, outcome_took, started.elapsed());
+    let settled =
+        settled.unwrap_or_else(|_| Err(failure(if mutation { "unknown" } else { "unavailable" })));
     let settled = settled.map_err(|failure| attributed(failure, tracked));
     tracked.record(&settled);
     settled
+}
+
+fn millis(elapsed: Duration) -> u64 {
+    u64::try_from(elapsed.as_millis()).unwrap_or(u64::MAX)
 }
 
 /// Where a tracked operation stands now, without waiting.
@@ -1696,6 +1773,69 @@ mod tests {
             .await
             .unwrap();
             assert!(matches!(outcome, Outcome::Settled { revision: 7, .. }));
+        }
+
+        #[tokio::test]
+        async fn a_followed_operation_records_whether_a_cue_or_the_recheck_woke_its_settlement() {
+            use cadrumo_application::diagnostics::service::SettleWake;
+            for (cued, wake) in [(true, SettleWake::Cue), (false, SettleWake::Recheck)] {
+                let held = holder(|_| {
+                    vec![
+                        step(
+                            "operation_observe",
+                            json!([]),
+                            observed(READ.id, &subject(), "running", json!({})),
+                            cued,
+                        ),
+                        step(
+                            "operation_observe",
+                            json!([]),
+                            observed(
+                                READ.id,
+                                &subject(),
+                                "terminal",
+                                json!({"terminal_condition":"succeeded","revision":2}),
+                            ),
+                            false,
+                        ),
+                        step(
+                            "operation_result",
+                            json!([]),
+                            resulted(READ.id, json!({"outcome":"read"})),
+                            false,
+                        ),
+                    ]
+                });
+                let diagnostics = Arc::new(Diagnostics::default());
+                let operations = Operations::measured(diagnostics.clone());
+                let read = operations.timed(tracked(READ, &held.identity));
+                let mut events = held.events.subscribe();
+                let outcome = settle(&mut events, &read, &held.person).await.unwrap();
+                assert!(matches!(outcome, Outcome::Settled { revision: 2, .. }));
+                let facts: Vec<ServiceFact> = diagnostics
+                    .snapshot(u64::MAX)
+                    .events
+                    .iter()
+                    .filter_map(|event| event.service)
+                    .collect();
+                let [
+                    ServiceFact::OperationSettle {
+                        end: SettleEnd::Settled,
+                        wake: woken,
+                        observes: 2,
+                        cues,
+                        elapsed_ms,
+                        observe_ms,
+                        outcome_ms,
+                    },
+                ] = facts[..]
+                else {
+                    panic!("one settle record: {facts:?}");
+                };
+                assert_eq!(woken, wake);
+                assert_eq!(cues, u32::from(cued));
+                assert!(observe_ms + outcome_ms <= elapsed_ms);
+            }
         }
 
         #[tokio::test]
