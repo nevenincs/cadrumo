@@ -148,6 +148,14 @@ def test_deferred_model_renders_its_real_constructor_signature() -> None:
     assert complete_deferred_model(int) is False
 
 
+def test_the_pydantic_base_class_is_not_treated_as_a_deferred_model() -> None:
+    # autodoc imports every module member, BaseModel included, before it skips
+    # imported names; rebuilding the base class raised and aborted the build.
+    assert not BaseModel.__pydantic_complete__
+
+    assert complete_deferred_model(BaseModel) is False
+
+
 def test_typehints_formatter_config_value_is_pickleable() -> None:
     formatter = TypeHintsFormatter()
 
