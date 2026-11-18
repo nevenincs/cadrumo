@@ -22,7 +22,14 @@ from cadrumo_client.contracts.view_stream import (
     ViewResize,
 )
 
-from ..screencast import ScreencastImage, ScreencastProfile, ViewScreencast, image_matches_layout, jpeg_pixel_size
+from ..screencast import (
+    ScreencastImage,
+    ScreencastProfile,
+    ViewScreencast,
+    _RetainedFrame,
+    image_matches_layout,
+    jpeg_pixel_size,
+)
 from .view_page_support import EVENT_TIMEOUT_SECONDS, until, view_browser
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -55,6 +62,21 @@ def received_frames(monkeypatch: pytest.MonkeyPatch) -> Callable[[], int]:
 
     monkeypatch.setattr(BrowserContext, "new_cdp_session", open_observed_session)
     return lambda: count
+
+
+@pytest.fixture
+def frame_evaluated(monkeypatch: pytest.MonkeyPatch) -> asyncio.Event:
+    """Signal when the delivery task has applied the image limits to a real frame."""
+    evaluated = asyncio.Event()
+    announce = ViewScreencast._announce
+
+    def observe(screencast: ViewScreencast, frame: _RetainedFrame) -> ScreencastImage | None:
+        image = announce(screencast, frame)
+        evaluated.set()
+        return image
+
+    monkeypatch.setattr(ViewScreencast, "_announce", observe)
+    return evaluated
 
 
 class _Sink:
@@ -276,7 +298,7 @@ async def test_screencast_resize_lays_the_page_out_at_the_new_size(chromium: Bro
 
 @pytest.mark.asyncio(loop_scope="module")
 async def test_screencast_discards_an_image_scaled_below_the_contract_minimum(
-    chromium: Browser, received_frames: Callable[[], int]
+    chromium: Browser, frame_evaluated: asyncio.Event
 ) -> None:
     sink = _Sink()
     async with view_browser(chromium) as (context, page):
@@ -286,8 +308,7 @@ async def test_screencast_discards_an_image_scaled_below_the_contract_minimum(
         )
         try:
             screencast.grant_credit(1)
-            await until(lambda: received_frames() >= 1)
-            await asyncio.sleep(_QUIET_SECONDS)
+            await asyncio.wait_for(frame_evaluated.wait(), timeout=EVENT_TIMEOUT_SECONDS)
             assert sink.images == []
         finally:
             await screencast.stop()
@@ -295,7 +316,7 @@ async def test_screencast_discards_an_image_scaled_below_the_contract_minimum(
 
 @pytest.mark.asyncio(loop_scope="module")
 async def test_screencast_discards_an_image_over_its_byte_cap_and_keeps_acknowledging(
-    chromium: Browser, received_frames: Callable[[], int]
+    chromium: Browser, frame_evaluated: asyncio.Event, received_frames: Callable[[], int]
 ) -> None:
     sink = _Sink()
     async with view_browser(chromium) as (context, page):
@@ -305,11 +326,11 @@ async def test_screencast_discards_an_image_over_its_byte_cap_and_keeps_acknowle
         )
         try:
             screencast.grant_credit(1)
-            await until(lambda: received_frames() >= 1)
-            await asyncio.sleep(_QUIET_SECONDS)
+            await asyncio.wait_for(frame_evaluated.wait(), timeout=EVENT_TIMEOUT_SECONDS)
             assert sink.images == []
+            received = received_frames()
             await page.set_content(_paint(_BLUE))
-            await until(lambda: received_frames() >= 2)
+            await until(lambda: received_frames() > received)
         finally:
             await screencast.stop()
 
