@@ -215,10 +215,52 @@ def test_every_edition_with_an_export_layout_has_a_semantic_map() -> None:
     assert exporting <= mapped
 
 
+def edition_echoes(
+    echoes: Iterable[Cell], casillas: Mapping[str, CasillaDefinition], printed: frozenset[tuple[str, str]]
+) -> frozenset[Cell]:
+    """Return the echo rows one edition holds: it declares the casilla and its design prints that number on the sheet.
+
+    The echo table names each edition's own casilla ids, and the designs move a
+    liquidación block between records, so a row written for one edition names an
+    id another edition does not declare, or a sheet that edition prints the
+    number on for nothing.
+    """
+    return frozenset(
+        (sheet, casilla_id)
+        for sheet, casilla_id in echoes
+        if casilla_id in casillas and (sheet, str(casillas[casilla_id].number)) in printed
+    )
+
+
+def _printed_numbers(revision: ModeloRevision) -> frozenset[tuple[str, str]]:
+    sheets = extract_record_design(bundled_path() / _design_source(revision).corpus_path).require_complete()
+    return frozenset(
+        (sheet.name.strip(), number)
+        for sheet in sheets
+        for field in sheet.fields
+        for number in _PRINTED_BOX.findall(field.description)
+    )
+
+
+def test_an_echo_row_of_another_edition_is_not_expected() -> None:
+    casillas = {
+        "DP200013:00547": CasillaDefinition.model_construct(id="DP200013:00547", number="00547"),
+        "DP200014:00547": CasillaDefinition.model_construct(id="DP200014:00547", number="00547"),
+    }
+    echoes = [("DP200015", "DP200013:00547"), ("DP200015", "DP200014:00547"), ("DP200015", "DP200099:00547")]
+
+    held = edition_echoes(echoes, casillas, frozenset({("DP200015", "00547")}))
+    unprinted = edition_echoes(echoes, casillas, frozenset({("DP200016", "00547")}))
+
+    assert held == {("DP200015", "DP200013:00547"), ("DP200015", "DP200014:00547")}
+    assert unprinted == frozenset()
+
+
 @pytest.mark.parametrize("revision", _mapped_revisions(), ids=lambda revision: str(revision.id))
 def test_every_cross_sheet_mapping_is_a_declared_echo(revision: ModeloRevision) -> None:
     semantic_map = _semantic_map(str(_design_source(revision).record_design_epoch))
-    expected = MODELO_200_ECHO_CELLS
+    expected = edition_echoes(MODELO_200_ECHO_CELLS, _casillas(revision), _printed_numbers(revision))
+    assert expected, f"no echo row applies to edition {revision.id}, so this check proves nothing"
     assert set(foreign_sheet_cells(_semantic_map_cells(semantic_map), _casillas(revision))) == expected
     if revision.export_layouts:
         assert set(foreign_sheet_cells(_layout_cells(revision), _casillas(revision))) == expected
