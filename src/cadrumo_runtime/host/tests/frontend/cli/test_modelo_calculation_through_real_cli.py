@@ -213,14 +213,14 @@ def test_modelo_200_micro_empresa_pyme_cuota_under_the_first_dt44_scale(
             # 00552 (base imponible) is now computed from the resultado
             # contable chain from the M200 base-determination contract:
             #   00550 = 00501 + DP200013:00417 - DP200013:00418
-            #   00552 = max(00550 - 01032 - DP200014:00547, 0)
+            #   00552 = max(00550 - DP200014:01032 - DP200014:00547, 0)
             # Supplying 00501 = 100000 and zero corrections / reserva / BIN
             # aplicada produces 00552 = 100000 exactly. Then
             # 01330 = 00552 + 01033 - 01034 = 100000 with 01033 = 01034 = 0.
             "--casilla", "DP200012:00501=100000.00",
             "--casilla", "DP200013:00417=0.00",
             "--casilla", "DP200013:00418=0.00",
-            "--casilla", "01032=0.00",
+            "--casilla", "DP200014:01032=0.00",
             "--casilla", "DP200014:00547=0.00",
             "--casilla", "DP200014:01033=0.00",
             "--casilla", "DP200014:01034=0.00",
@@ -596,7 +596,7 @@ def test_modelo_200_enum_binding_accepts_non_numeric_value(
             "--casilla", "DP200012:00501=100000.00",
             "--casilla", "DP200013:00417=0.00",
             "--casilla", "DP200013:00418=0.00",
-            "--casilla", "01032=0.00",
+            "--casilla", "DP200014:01032=0.00",
             "--casilla", "DP200014:00547=0.00",
             "--casilla", "DP200014:01033=0.00",
             "--casilla", "DP200014:01034=0.00",
