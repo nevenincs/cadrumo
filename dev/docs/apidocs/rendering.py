@@ -213,9 +213,16 @@ def complete_deferred_model(value: object) -> bool:
     A deferred model exposes only the generic ``(**data)`` constructor until its
     schema is built, so introspecting it earlier documents no fields. Returns
     whether this call completed a model; any other value is left untouched and
-    an unresolvable annotation propagates to the caller.
+    an unresolvable annotation propagates to the caller. ``BaseModel`` itself
+    is left alone: it never reports complete, has no schema of its own, and
+    autodoc imports it from every module that subclasses it before it skips
+    imported members.
     """
-    if not (isinstance(value, type) and issubclass(value, BaseModel)) or value.__pydantic_complete__:
+    if (
+        not (isinstance(value, type) and issubclass(value, BaseModel))
+        or value is BaseModel
+        or value.__pydantic_complete__
+    ):
         return False
     value.model_rebuild(raise_errors=True)
     return True
