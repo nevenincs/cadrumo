@@ -1,7 +1,7 @@
 use cadrumo_application::diagnostics::{
     Diagnostics, EventKind,
     delivery_wait::delivered,
-    service::{AdmissionRead, AdmissionReadOutcome, ServiceFact},
+    service::{AdmissionRead, AdmissionReadOutcome, ServiceFact, SettleEnd, SettleWake},
 };
 use serde_json::{Value, json};
 use std::fs;
@@ -37,6 +37,47 @@ fn an_admission_read_persists_only_its_closed_name_outcome_and_milliseconds() {
             "elapsedMs": 21_000,
         })
     );
+}
+
+#[test]
+fn an_operation_settle_persists_only_its_classes_counts_and_milliseconds() {
+    let record = persisted(ServiceFact::OperationSettle {
+        end: SettleEnd::Unobserved,
+        wake: SettleWake::Cue,
+        observes: 9,
+        cues: 8,
+        observe_ms: 410,
+        outcome_ms: 0,
+        elapsed_ms: 90_000,
+    });
+    assert_eq!(
+        record,
+        json!({
+            "event": "operation_settle",
+            "end": "unobserved",
+            "wake": "cue",
+            "observes": 9,
+            "cues": 8,
+            "observeMs": 410,
+            "outcomeMs": 0,
+            "elapsedMs": 90_000,
+        })
+    );
+    for (end, token) in [
+        (SettleEnd::Settled, "settled"),
+        (SettleEnd::Person, "person"),
+        (SettleEnd::Failed, "failed"),
+        (SettleEnd::Unobserved, "unobserved"),
+    ] {
+        assert_eq!(serde_json::to_value(end).unwrap(), json!(token));
+    }
+    for (wake, token) in [
+        (SettleWake::First, "first"),
+        (SettleWake::Cue, "cue"),
+        (SettleWake::Recheck, "recheck"),
+    ] {
+        assert_eq!(serde_json::to_value(wake).unwrap(), json!(token));
+    }
 }
 
 #[test]
