@@ -350,7 +350,9 @@ test("the options are the registry's methods and table classes for the kind and 
   expect(options.methods).toEqual(recorded.methods);
   expect(options.methods.length).toBeGreaterThan(0);
   expect(
-    (options as ActivityAssetFormOptionsView).method_facts!.map((found) => found.method),
+    (options as ActivityAssetFormOptionsView).method_facts!.map(
+      (found) => found.method,
+    ),
   ).toEqual(options.methods);
   expect(options.table_groups).toEqual(recorded.table_groups);
   expect(options.edition).toEqual(servedEditionOf(lastAuthored));

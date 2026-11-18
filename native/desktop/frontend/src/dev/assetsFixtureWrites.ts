@@ -94,7 +94,8 @@ export function makeWrites(register: Register) {
   const create: Handler = (request) => {
     exact(request, ["revision", "descriptor"]);
     const revision = obj(request.revision);
-    const descriptor = request.descriptor as unknown as ActivityAssetDescriptorFacts;
+    const descriptor =
+      request.descriptor as unknown as ActivityAssetDescriptorFacts;
     if (!revision || typeof descriptor !== "object" || descriptor === null)
       return invalid();
     const shape = { history: null };
@@ -571,7 +572,9 @@ export function makeWrites(register: Register) {
   const ids = (claims: readonly ActivityAssetPlanClaim[]) =>
     claims.map((claim) => claim.claim_id).join(",");
 
-  const statedDisposal = (request: JsonObject): ActivityAssetDisposalSnapshot => {
+  const statedDisposal = (
+    request: JsonObject,
+  ): ActivityAssetDisposalSnapshot => {
     const given = request.disposal;
     if (typeof given !== "object" || given === null || Array.isArray(given))
       return invalid();
@@ -590,7 +593,10 @@ export function makeWrites(register: Register) {
   /** The element stands out of service after the baja's last day. The plan
    * ends the year of that day; the fixture does not work the figures of the
    * years it drops out again if the baja later moves back. */
-  const putOutOfService = (element: Element, facts: ActivityAssetDisposalSnapshot) => {
+  const putOutOfService = (
+    element: Element,
+    facts: ActivityAssetDisposalSnapshot,
+  ) => {
     element.baja = facts;
     element.outOfService = dayAfter(facts.disposal_date);
     element.list.disposal = {

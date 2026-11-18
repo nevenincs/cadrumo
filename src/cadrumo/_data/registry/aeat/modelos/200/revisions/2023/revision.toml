@@ -3059,3 +3059,622 @@ selector = { revision = "2022", id = "DP200013:01890" }
 fields = { id = "DP200014:01890", segmento = "DP200014", section = ["liquidacion_iii", "base_imponible"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1387 (DP200013 field 100): Liquidación II - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Compensación de bases imponibles negativas períodos anteriores de la parte de base imponible resto de actividades [01890]. aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1423 (DP200014 field 14): Liquidación III - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Compensación de bases imponibles negativas períodos anteriores de la parte de base imponible resto de actividades [01890]. Both designs print box [01890] with the same concept, width and type; the 2023 design moves the cell from DP200013 to DP200014, so the 2022 member continues with its 2023 sheet and section." }
 removed_fields = []
 restate_provenance = true
+
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200017:00468" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:01907" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:01908" }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "00696" }
+fields = { section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 1973 (DP200016 field 107): 'Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2022 - Deducción pendiente/generada [00696]'; aeat-dr-200-2023 line 2006 (DP200016 field 109): 'Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023(*) - Deducción pendiente/generada [00696]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [00249] at line 2003 (DP200016 field 106), so box [00696] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "00697" }
+fields = { section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 1974 (DP200016 field 108): 'Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2022 - Aplicado en esta liquidación [00697]'; aeat-dr-200-2023 line 2007 (DP200016 field 110): 'Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023(*) - Aplicado en esta liquidación [00697]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [00252] at line 2004 (DP200016 field 107), so box [00697] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02077" }
+fields = { section = ["deducciones_inversion_canarias", "activos_fijos_2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2058 (DP200016B field 47): 'Deducciones inversión Canarias - Activos fijos 2022 - Pendiente de aplicación en periodos futuros [02077]'; aeat-dr-200-2023 line 2094 (DP200016B field 47): 'Deducciones inversión Canarias - Activos fijos 2023(*) - Pendiente de aplicación en periodos futuros [02077]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [00239] at line 2091 (DP200016B field 44), so box [02077] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02078" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2074 (DP200016B field 63): 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2022 - Deducción pendiente/generada [02078]'; aeat-dr-200-2023 line 2113 (DP200016B field 66): 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2023(*) - Deducción pendiente/generada [02078]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [00244] at line 2110 (DP200016B field 63), so box [02078] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01913" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2075 (DP200016B field 64): 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2022 - Aplicado en esta liquidación [01913]'; aeat-dr-200-2023 line 2114 (DP200016B field 67): 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2023(*) - Aplicado en esta liquidación [01913]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [00245] at line 2111 (DP200016B field 64), so box [01913] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200016B:00766" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2076 (DP200016B field 65): 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2022 - Pendiente de aplicación en periodos futuros [00766]'; aeat-dr-200-2023 line 2115 (DP200016B field 68): 'Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2023(*) - Pendiente de aplicación en periodos futuros [00766]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [02497] at line 2112 (DP200016B field 65), so box [00766] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200016B:00767" }
+fields = { section = ["deducciones_inversion_canarias", "inversiones_canarias_2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2133 (DP200016B field 122): 'Deducciones inversión Canarias - Inversiones Canarias 2022 - Deducción pendiente/generada [00767]'; aeat-dr-200-2023 line 2172 (DP200016B field 125): 'Deducciones inversión Canarias - Inversiones Canarias 2023(*) - Deducción pendiente/generada [00767]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [00217] at line 2169 (DP200016B field 122), so box [00767] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200016B:00768" }
+fields = { section = ["deducciones_inversion_canarias", "inversiones_canarias_2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2134 (DP200016B field 123): 'Deducciones inversión Canarias - Inversiones Canarias 2022 - Aplicado en esta liquidación [00768]'; aeat-dr-200-2023 line 2173 (DP200016B field 126): 'Deducciones inversión Canarias - Inversiones Canarias 2023(*) - Aplicado en esta liquidación [00768]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [00218] at line 2170 (DP200016B field 123), so box [00768] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200016B:00769" }
+fields = { section = ["deducciones_inversion_canarias", "inversiones_canarias_2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2135 (DP200016B field 124): 'Deducciones inversión Canarias - Inversiones Canarias 2022 - Pendiente de aplicación en periodos futuros [00769]'; aeat-dr-200-2023 line 2174 (DP200016B field 127): 'Deducciones inversión Canarias - Inversiones Canarias 2023(*) - Pendiente de aplicación en periodos futuros [00769]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [00219] at line 2171 (DP200016B field 124), so box [00769] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200016B:00770" }
+fields = { section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2151 (DP200016B field 140): 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2022 - Deducción pendiente/generada [00770]'; aeat-dr-200-2023 line 2193 (DP200016B field 146): 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023(*) - Deducción pendiente/generada [00770]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [00220] at line 2190 (DP200016B field 143), so box [00770] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200016B:00771" }
+fields = { section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2152 (DP200016B field 141): 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2022 - Aplicado en esta liquidación [00771]'; aeat-dr-200-2023 line 2194 (DP200016B field 147): 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023(*) - Aplicado en esta liquidación [00771]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [00221] at line 2191 (DP200016B field 144), so box [00771] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "00774" }
+fields = { section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2153 (DP200016B field 142): 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2022 - Pendiente de aplicación en periodos futuros [00774]'; aeat-dr-200-2023 line 2195 (DP200016B field 148): 'Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023(*) - Pendiente de aplicación en periodos futuros [00774]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [00222] at line 2192 (DP200016B field 145), so box [00774] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01295" }
+fields = { section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2621 (DP200018B field 63): 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2022 - Deducción pendiente/generada [01295]'; aeat-dr-200-2023 line 2684 (DP200018B field 75): 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2023(*) - Deducción pendiente/generada [01295]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01292] at line 2681 (DP200018B field 72), so box [01295] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01296" }
+fields = { section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2622 (DP200018B field 64): 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2022 - Aplicado en esta liquidación [01296]'; aeat-dr-200-2023 line 2685 (DP200018B field 76): 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2023(*) - Aplicado en esta liquidación [01296]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01293] at line 2682 (DP200018B field 73), so box [01296] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01297" }
+fields = { section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2623 (DP200018B field 65): 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2022 - Pendiente de aplicación en períodos futuros [01297]'; aeat-dr-200-2023 line 2686 (DP200018B field 77): 'Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2023(*) - Pendiente de aplicación en períodos futuros [01297]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01294] at line 2683 (DP200018B field 74), so box [01297] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200018B:02140" }
+fields = { section = ["deducciones_por_producciones_cinematograficas_extr", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2659 (DP200018B field 101): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2022 - Deducción pendiente/generada [02140]'; aeat-dr-200-2023 line 2725 (DP200018B field 116): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023(*) - Deducción pendiente/generada [02140]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [02136] at line 2721 (DP200018B field 112), so box [02140] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200018B:02141" }
+fields = { section = ["deducciones_por_producciones_cinematograficas_extr", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2660 (DP200018B field 102): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2022 - Aplicado en esta liquidación [02141]'; aeat-dr-200-2023 line 2726 (DP200018B field 117): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023(*) - Aplicado en esta liquidación [02141]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [02137] at line 2722 (DP200018B field 113), so box [02141] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200018B:02142" }
+fields = { section = ["deducciones_por_producciones_cinematograficas_extr", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2661 (DP200018B field 103): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2022 - Importe abonado por insuficiencia de cuota [02142]'; aeat-dr-200-2023 line 2727 (DP200018B field 118): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023(*) - Importe abonado por insuficiencia de cuota [02142]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [02138] at line 2723 (DP200018B field 114), so box [02142] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200018B:02143" }
+fields = { section = ["deducciones_por_producciones_cinematograficas_extr", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2662 (DP200018B field 104): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2022 - Pendiente de aplicación en períodos futuros [02143]'; aeat-dr-200-2023 line 2728 (DP200018B field 119): 'Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023(*) - Pendiente de aplicación en períodos futuros [02143]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [02139] at line 2724 (DP200018B field 115), so box [02143] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01313" }
+fields = { section = ["deducciones_por_producciones_cinematograficas_extr", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2699 (DP200018B field 141): 'Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2022 - Deducción pendiente/generada [01313]'; aeat-dr-200-2023 line 2769 (DP200018B field 160): 'Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2023(*) - Deducción pendiente/generada [01313]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the next generation on box [01313], so the box is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01314" }
+fields = { section = ["deducciones_por_producciones_cinematograficas_extr", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2700 (DP200018B field 142): 'Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2022 - Aplicado en esta liquidación [01314]'; aeat-dr-200-2023 line 2770 (DP200018B field 161): 'Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2023(*) - Aplicado en esta liquidación [01314]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01310] at line 2766 (DP200018B field 157), so box [01314] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01315" }
+fields = { section = ["deducciones_por_producciones_cinematograficas_extr", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2701 (DP200018B field 143): 'Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2022 - Importe abonado por insuficiencia de cuota [01315]'; aeat-dr-200-2023 line 2771 (DP200018B field 162): 'Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2023(*) - Importe abonado por insuficiencia de cuota [01315]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01311] at line 2767 (DP200018B field 158), so box [01315] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01316" }
+fields = { section = ["deducciones_por_producciones_cinematograficas_extr", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2702 (DP200018B field 144): 'Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2022 - Pendiente de aplicación en períodos futuros [01316]'; aeat-dr-200-2023 line 2772 (DP200018B field 163): 'Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2023(*) - Pendiente de aplicación en períodos futuros [01316]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01312] at line 2768 (DP200018B field 159), so box [01316] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01323" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2778 (DP200018C field 62): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2022 Sin reiteración de donaciones a una misma entidad- Deducción pendiente/generada [01323]'; aeat-dr-200-2023 line 2849 (DP200018C field 59): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) Sin reiteración de donaciones a una misma entidad- Deducción pendiente/generada [01323]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [02499] at line 2843 (DP200018C field 53), so box [01323] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01324" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2779 (DP200018C field 63): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2022 Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01324]'; aeat-dr-200-2023 line 2850 (DP200018C field 60): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01324]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [00876] at line 2844 (DP200018C field 54), so box [01324] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01325" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2780 (DP200018C field 64): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2022 Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01325]'; aeat-dr-200-2023 line 2851 (DP200018C field 61): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01325]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [00890] at line 2845 (DP200018C field 55), so box [01325] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01326" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2781 (DP200018C field 65): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2022 - Con reiteración de donaciones a una misma entidad- Deducción pendiente/generada [01326]'; aeat-dr-200-2023 line 2852 (DP200018C field 62): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) - Con reiteración de donaciones a una misma entidad- Deducción pendiente/generada [01326]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [00891] at line 2846 (DP200018C field 56), so box [01326] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01327" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2782 (DP200018C field 66): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2022 - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01327]'; aeat-dr-200-2023 line 2853 (DP200018C field 63): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01327]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [00892] at line 2847 (DP200018C field 57), so box [01327] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01328" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2783 (DP200018C field 67): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2022 - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01328]'; aeat-dr-200-2023 line 2854 (DP200018C field 64): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01328]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [00893] at line 2848 (DP200018C field 58), so box [01328] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01329" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2852 (DP200018C field 136): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2022 Sin reiteración de donaciones a una misma entidad - Deducción pendiente/generada [01329]'; aeat-dr-200-2023 line 2926 (DP200018C field 136): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Deducción pendiente/generada [01329]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01061] at line 2920 (DP200018C field 130), so box [01329] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01372" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2853 (DP200018C field 137): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2022 Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01372]'; aeat-dr-200-2023 line 2927 (DP200018C field 137): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01372]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01062] at line 2921 (DP200018C field 131), so box [01372] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01373" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2854 (DP200018C field 138): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2022 Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01373]'; aeat-dr-200-2023 line 2928 (DP200018C field 138): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01373]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01072] at line 2922 (DP200018C field 132), so box [01373] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01374" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2855 (DP200018C field 139): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2022 - Con reiteración de donaciones a una misma entidad - Deducción pendiente/generada [01374]'; aeat-dr-200-2023 line 2929 (DP200018C field 139): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) - Con reiteración de donaciones a una misma entidad - Deducción pendiente/generada [01374]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the next generation on box [01374], so the box is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01375" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2856 (DP200018C field 140): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2022 - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01375]'; aeat-dr-200-2023 line 2930 (DP200018C field 140): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01375]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01074] at line 2924 (DP200018C field 134), so box [01375] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01376" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2857 (DP200018C field 141): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2022 - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01376]'; aeat-dr-200-2023 line 2931 (DP200018C field 141): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01376]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01078] at line 2925 (DP200018C field 135), so box [01376] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01377" }
+fields = { section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2921 (DP200019 field 38): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2022 - Base deducción [01377]'; aeat-dr-200-2023 line 3001 (DP200019 field 38): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023(*) - Base deducción [01377]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01082] at line 2997 (DP200019 field 34), so box [01377] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01378" }
+fields = { section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2922 (DP200019 field 39): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2022 - Importe generado/pendiente principio periodo [01378]'; aeat-dr-200-2023 line 3002 (DP200019 field 39): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023(*) - Importe generado/pendiente principio periodo [01378]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01083] at line 2998 (DP200019 field 35), so box [01378] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01379" }
+fields = { section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2923 (DP200019 field 40): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2022 - Importe aplicado [01379]'; aeat-dr-200-2023 line 3003 (DP200019 field 40): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023(*) - Importe aplicado [01379]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01084] at line 2999 (DP200019 field 36), so box [01379] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01380" }
+fields = { section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2924 (DP200019 field 41): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2022 - Importe pendiente [01380]'; aeat-dr-200-2023 line 3004 (DP200019 field 41): 'Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023(*) - Importe pendiente [01380]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01085] at line 3000 (DP200019 field 37), so box [01380] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01381" }
+fields = { section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2961 (DP200019 field 78): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2022 - Base deducción [01381]'; aeat-dr-200-2023 line 3045 (DP200019 field 82): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023(*) - Base deducción [01381]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01086] at line 3041 (DP200019 field 78), so box [01381] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01382" }
+fields = { section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2962 (DP200019 field 79): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2022 - Importe generado/pendiente principio periodo [01382]'; aeat-dr-200-2023 line 3046 (DP200019 field 83): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023(*) - Importe generado/pendiente principio periodo [01382]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [02477] at line 3042 (DP200019 field 79), so box [01382] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01383" }
+fields = { section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2963 (DP200019 field 80): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2022 - Importe aplicado [01383]'; aeat-dr-200-2023 line 3047 (DP200019 field 84): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023(*) - Importe aplicado [01383]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [02478] at line 3043 (DP200019 field 80), so box [01383] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01384" }
+fields = { section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2964 (DP200019 field 81): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2022 - Importe pendiente [01384]'; aeat-dr-200-2023 line 3048 (DP200019 field 85): 'Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023(*) - Importe pendiente [01384]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [02479] at line 3044 (DP200019 field 81), so box [01384] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01401" }
+fields = { section = ["reserva_capitalizacion", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3226 (DP200020B field 14): 'Reserva Capitalización - 2022 - Derecho reducir B.I. generado periodo/pendiente aplicar inicio periodo [01401]'; aeat-dr-200-2023 line 3329 (DP200020B field 23): 'Reserva Capitalización - 2023(*) - Derecho reducir B.I. generado periodo/pendiente aplicar inicio periodo [01401]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01106] at line 3326 (DP200020B field 20), so box [01401] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01402" }
+fields = { section = ["reserva_capitalizacion", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3227 (DP200020B field 15): 'Reserva Capitalización - 2022 - Reducción B.I. aplicada [01402]'; aeat-dr-200-2023 line 3330 (DP200020B field 24): 'Reserva Capitalización - 2023(*) - Reducción B.I. aplicada [01402]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01107] at line 3327 (DP200020B field 21), so box [01402] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01403" }
+fields = { section = ["reserva_capitalizacion", "2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3228 (DP200020B field 16): 'Reserva Capitalización - 2022 - Reducción B.I. pdte. De aplicar en períodos futuros [01403]'; aeat-dr-200-2023 line 3331 (DP200020B field 25): 'Reserva Capitalización - 2023(*) - Reducción B.I. pdte. De aplicar en períodos futuros [01403]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01108] at line 3328 (DP200020B field 22), so box [01403] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01872" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3286 (DP200020B field 74): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2022 - Importe reserva a dotar [01872]'; aeat-dr-200-2023 line 3388 (DP200020B field 82): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023(*) - Importe reserva a dotar [01872]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01112] at line 3384 (DP200020B field 78), so box [01872] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01410" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3287 (DP200020B field 75): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2022 - Importe reserva dotada [01410]'; aeat-dr-200-2023 line 3389 (DP200020B field 83): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023(*) - Importe reserva dotada [01410]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01113] at line 3385 (DP200020B field 79), so box [01410] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01411" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3288 (DP200020B field 76): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2022 - Importe reserva pendiente dotación [01411]'; aeat-dr-200-2023 line 3390 (DP200020B field 84): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023(*) - Importe reserva pendiente dotación [01411]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01114] at line 3386 (DP200020B field 80), so box [01411] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01412" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3289 (DP200020B field 77): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2022 - Reserva dispuesta [01412]'; aeat-dr-200-2023 line 3391 (DP200020B field 85): 'Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023(*) - Reserva dispuesta [01412]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01115] at line 3387 (DP200020B field 81), so box [01412] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01414" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3399 (DP200020C field 96): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2022 - Importe total AID (art. 130.6 a) pendiente aplicación a principio periodo [01414]'; aeat-dr-200-2023 line 3505 (DP200020C field 96): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023(*) - Importe total AID (art. 130.6 a) pendiente aplicación a principio periodo [01414]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01117] at line 3495 (DP200020C field 86), so box [01414] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01415" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3400 (DP200020C field 97): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2022 - Cuota líquida positiva [01415]'; aeat-dr-200-2023 line 3506 (DP200020C field 97): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023(*) - Cuota líquida positiva [01415]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01118] at line 3496 (DP200020C field 87), so box [01415] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01416" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3401 (DP200020C field 98): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2022 - AID pendientes aplicación a principio periodo - Con derecho conversión crédito exigible [01416]'; aeat-dr-200-2023 line 3507 (DP200020C field 98): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023(*) - AID pendientes aplicación a principio periodo - Con derecho conversión crédito exigible [01416]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01119] at line 3497 (DP200020C field 88), so box [01416] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01417" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3402 (DP200020C field 99): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2022 - AID pendientes aplicación a principio periodo - Con derecho conversión crédito exigible por exceso cuota [01417]'; aeat-dr-200-2023 line 3508 (DP200020C field 99): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023(*) - AID pendientes aplicación a principio periodo - Con derecho conversión crédito exigible por exceso cuota [01417]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01120] at line 3498 (DP200020C field 89), so box [01417] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01418" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3403 (DP200020C field 100): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2022 - AID pendientes aplicación a principio periodo - Sin derecho conversión crédito exigible [01418]'; aeat-dr-200-2023 line 3509 (DP200020C field 100): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023(*) - AID pendientes aplicación a principio periodo - Sin derecho conversión crédito exigible [01418]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01121] at line 3499 (DP200020C field 90), so box [01418] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01419" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3404 (DP200020C field 101): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2022 - AID convertidos en crédito exigible periodo [01419]'; aeat-dr-200-2023 line 3511 (DP200020C field 102): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023(*) - AID convertidos en crédito exigible periodo [01419]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01122] at line 3501 (DP200020C field 92), so box [01419] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01420" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3405 (DP200020C field 102): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2022 - AID pendientes aplicación periodos futuros - Con derecho conversión crédito exigible [01420]'; aeat-dr-200-2023 line 3512 (DP200020C field 103): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023(*) - AID pendientes aplicación periodos futuros - Con derecho conversión crédito exigible [01420]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01131] at line 3502 (DP200020C field 93), so box [01420] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01421" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3406 (DP200020C field 103): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2022 - AID pendientes aplicación periodos futuros - Con derecho conversión crédito exigible exceso cuota [01421]'; aeat-dr-200-2023 line 3513 (DP200020C field 104): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023(*) - AID pendientes aplicación periodos futuros - Con derecho conversión crédito exigible exceso cuota [01421]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01132] at line 3503 (DP200020C field 94), so box [01421] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01422" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3407 (DP200020C field 104): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2022 - AID pendientes aplicación periodos futuros - Sin derecho conversión crédito exigible [01422]'; aeat-dr-200-2023 line 3514 (DP200020C field 105): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2023(*) - AID pendientes aplicación periodos futuros - Sin derecho conversión crédito exigible [01422]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01133] at line 3504 (DP200020C field 95), so box [01422] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01424" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3433 (DP200020C field 130): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2022 - Exceso cuota líquida positiva aplicado periodos impositivos 2008 a 2015 [01424]'; aeat-dr-200-2023 line 3545 (DP200020C field 136): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023(*) - Exceso cuota líquida positiva aplicado periodos impositivos 2008 a 2015 [01424]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01135] at line 3541 (DP200020C field 132), so box [01424] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01425" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3434 (DP200020C field 131): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2022 - Exceso cuota líquida positiva aplicado periodos impositivos iniciados a partir 2016 [01425]'; aeat-dr-200-2023 line 3546 (DP200020C field 137): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023(*) - Exceso cuota líquida positiva aplicado periodos impositivos iniciados a partir 2016 [01425]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01136] at line 3542 (DP200020C field 133), so box [01425] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01469" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3435 (DP200020C field 132): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2022 - Exceso cuota líquida positiva pendiente aplicación periodos futuros [01469]'; aeat-dr-200-2023 line 3547 (DP200020C field 138): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023(*) - Exceso cuota líquida positiva pendiente aplicación periodos futuros [01469]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01138] at line 3543 (DP200020C field 134), so box [01469] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01479" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3526 (DP200020D field 77): 'Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2022 - Dotaciones pendientes integración a principio periodo - Que no han cumplido condiciones deducibilidad fiscal [01479]'; aeat-dr-200-2023 line 3643 (DP200020D field 78): 'Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2023(*) - Dotaciones pendientes integración a principio periodo - Que no han cumplido condiciones deducibilidad fiscal [01479]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01162] at line 3637 (DP200020D field 72), so box [01479] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01480" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3527 (DP200020D field 78): 'Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2022 - Dotaciones aplicadas conversión activos imp. diferido [01480]'; aeat-dr-200-2023 line 3646 (DP200020D field 81): 'Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2023(*) - Dotaciones aplicadas conversión activos imp. diferido [01480]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01163] at line 3640 (DP200020D field 75), so box [01480] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01500" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3528 (DP200020D field 79): 'Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2022 - Dotaciones pendientes integración periodos futuros - Que no han cumplido condiciones deducibilidad fiscal [01500]'; aeat-dr-200-2023 line 3647 (DP200020D field 82): 'Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2023(*) - Dotaciones pendientes integración periodos futuros - Que no han cumplido condiciones deducibilidad fiscal [01500]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01164] at line 3641 (DP200020D field 76), so box [01500] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200001:00013" }
+fields = { section = ["agrupacion_de_interes_economico_espanola"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 62 (DP200001 field 32): 'Agrupación de interés económico española o U.T.E. [00013]'; aeat-dr-200-2023 line 63 (DP200001 field 33): 'Agrupación de interés económico española [00013]'. The 2022 flag covers an agrupación de interés económico española or a U.T.E.; the 2023 flag covers the agrupación only, so a U.T.E. marked under the 2022 box is not marked under the 2023 box and the box is repurposed." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200001:00083" }
+fields = { section = ["tipo_gravamen_reducido_para_empresa_emergente"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 80 (DP200001 field 50): 'Empresa emergente [00083]'; aeat-dr-200-2023 line 116 (DP200001 field 86): 'Tipo gravamen reducido para empresa emergente [00083]'. The 2022 flag marks an empresa emergente; the 2023 flag marks the application of the reduced tipo de gravamen for an empresa emergente, a narrower fact, so the box is repurposed." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01309" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2695 (DP200018B field 137): 'Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2022(*) - Deducción pendiente/generada [01309]'; aeat-dr-200-2023 line 2765 (DP200018B field 156): 'Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2022) - Deducción pendiente/generada [01309]'. Both captions name the same 2022 generation of the deduction; the 2023 caption prints '2022)' where the 2022 caption prints '2022(*)', a printing difference, so the concept continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200018C:01689" }
+fields = { section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general", "subtotal_donaciones_2013_y_2014"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2784 (DP200018C field 68): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2012 a 2014 - Deducción pendiente/generada [01689]'; aeat-dr-200-2023 line 2861 (DP200018C field 71): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2013 y 2014 - Deducción pendiente/generada [01689]'. The 2022 subtotal sums the donations of 2012 to 2014; the 2023 subtotal sums those of 2013 and 2014, so the 2012 donations leave the cell and the box is repurposed." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200018C:01690" }
+fields = { section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general", "subtotal_donaciones_2013_y_2014"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2785 (DP200018C field 69): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2012 a 2014 - Aplicado en esta liquidación [01690]'; aeat-dr-200-2023 line 2862 (DP200018C field 72): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2013 y 2014 - Aplicado en esta liquidación [01690]'. The 2022 subtotal sums the donations of 2012 to 2014; the 2023 subtotal sums those of 2013 and 2014, so the 2012 donations leave the cell and the box is repurposed." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200018C:01691" }
+fields = { section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general", "subtotal_donaciones_2013_y_2014"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2786 (DP200018C field 70): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2012 a 2014 - Pendiente de aplicación en periodos futuros [01691]'; aeat-dr-200-2023 line 2863 (DP200018C field 73): 'Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2013 y 2014 - Pendiente de aplicación en periodos futuros [01691]'. The 2022 subtotal sums the donations of 2012 to 2014; the 2023 subtotal sums those of 2013 and 2014, so the 2012 donations leave the cell and the box is repurposed." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200018C:01701" }
+fields = { section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecenazgo_y_otras_con_derecho_a_deduccion_incrementada", "subtotal_donaciones_2013_y_2014"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2858 (DP200018C field 142): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - Subtotal donaciones 2012 a 2014 - Deducción pendiente/generada [01701]'; aeat-dr-200-2023 line 2938 (DP200018C field 148): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - Subtotal donaciones 2013 y 2014 - Deducción pendiente/generada [01701]'. The 2022 subtotal sums the donations of 2012 to 2014; the 2023 subtotal sums those of 2013 and 2014, so the 2012 donations leave the cell and the box is repurposed." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200018C:01702" }
+fields = { section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecenazgo_y_otras_con_derecho_a_deduccion_incrementada", "subtotal_donaciones_2013_y_2014"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2859 (DP200018C field 143): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - Subtotal donaciones 2012 a 2014 - Aplicado en esta liquidación [01702]'; aeat-dr-200-2023 line 2939 (DP200018C field 149): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - Subtotal donaciones 2013 y 2014 - Aplicado en esta liquidación [01702]'. The 2022 subtotal sums the donations of 2012 to 2014; the 2023 subtotal sums those of 2013 and 2014, so the 2012 donations leave the cell and the box is repurposed." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200018C:01703" }
+fields = { section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecenazgo_y_otras_con_derecho_a_deduccion_incrementada", "subtotal_donaciones_2013_y_2014"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 2860 (DP200018C field 144): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - Subtotal donaciones 2012 a 2014 - Pendiente de aplicación en periodos futuros [01703]'; aeat-dr-200-2023 line 2940 (DP200018C field 150): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - Subtotal donaciones 2013 y 2014 - Pendiente de aplicación en periodos futuros [01703]'. The 2022 subtotal sums the donations of 2012 to 2014; the 2023 subtotal sums those of 2013 and 2014, so the 2012 donations leave the cell and the box is repurposed." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01395" }
+fields = { section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3172 (DP200020 field 76): 'Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2022(**) - Aplicado en esta liquidación [01395]'; aeat-dr-200-2023 line 3263 (DP200020 field 78): 'Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2023(*) - Aplicado en esta liquidación [01395]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the next generation on box [01395], so the box is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01396" }
+fields = { section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3173 (DP200020 field 77): 'Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2022(**) - Pendiente aplicación en períodos futuros - Por límite [01396]'; aeat-dr-200-2023 line 3264 (DP200020 field 79): 'Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2023(*) - Pendiente aplicación en períodos futuros - Por límite [01396]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the next generation on box [01396], so the box is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01397" }
+fields = { section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3174 (DP200020 field 78): 'Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2022(**) - Pendiente aplicación en períodos futuros - Resto [01397]'; aeat-dr-200-2023 line 3265 (DP200020 field 80): 'Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2023(*) - Pendiente aplicación en períodos futuros - Resto [01397]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the next generation on box [01397], so the box is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01398" }
+fields = { section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3197 (DP200020 field 101): 'Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2022(**) - Pendiente aplicación a principio del período [01398]'; aeat-dr-200-2023 line 3288 (DP200020 field 103): 'Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2023(*) - Pendiente aplicación a principio del período [01398]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the next generation on box [01398], so the box is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01399" }
+fields = { section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3198 (DP200020 field 102): 'Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2022(**) - Aplicado en esta liquidación [01399]'; aeat-dr-200-2023 line 3289 (DP200020 field 104): 'Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2023(*) - Aplicado en esta liquidación [01399]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the next generation on box [01399], so the box is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01400" }
+fields = { section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2023"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3199 (DP200020 field 103): 'Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2022(**) - Pendiente aplicación períodos futuros [01400]'; aeat-dr-200-2023 line 3290 (DP200020 field 105): 'Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2023(*) - Pendiente aplicación períodos futuros [01400]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the next generation on box [01400], so the box is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01423" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3432 (DP200020C field 129): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2022 - Exceso cuota líquida positiva pendiente a principio periodo [01423]'; aeat-dr-200-2023 line 3544 (DP200020C field 135): 'Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023(*)- Exceso cuota líquida positiva pendiente a principio periodo [01423]'. Neither design prints a footnote defining its (*) or (**) mark, so the generation each caption names is read from the year it prints, an inference from the captions. The 2023 design prints the 2022 generation on box [01134] at line 3540 (DP200020C field 131), so box [01423] is repurposed and carries no value from the 2022 row." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01227" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3833 (DP200024 field 8): 'Agrup. interés económico y UTES - Modelo de información - Gastos financieros netos no deducidos por la entidad [01227]'; aeat-dr-200-2023 line 3997 (DP200024 field 8): 'Agrup. interés económico y UTES - B) Datos económicos - 2.- Gastos financieros netos no deducidos por la entidad [01227]'. Both captions name the same amount of the agrupación de interés económico or U.T.E.; the 2023 design files it under the heading 'B) Datos económicos' with a list number, so only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01228" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3834 (DP200024 field 9): 'Agrup. interés económico y UTES - Modelo de información - Reserva capitaliz. no aplicada por la entidad [01228]'; aeat-dr-200-2023 line 3998 (DP200024 field 9): 'Agrup. interés económico y UTES - B) Datos económicos - 3.- Reserva capitaliz. no aplicada por la entidad [01228]'. Both captions name the same amount of the agrupación de interés económico or U.T.E.; the 2023 design files it under the heading 'B) Datos económicos' with a list number, so only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02624" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 4292 (DP200026B field 119): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Aumento - Saldo pendiente a principio de ejercicio [02624]'; aeat-dr-200-2023 line 4644 (DP200026B field 121): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Aumento - Saldo pendiente a principio de ejercicio [02624]'. Both captions name the other free-depreciation cases of the same correction block; the 2023 caption adds the DA 16ª and 17ª LIS cases to the art. 12.3 a) and d) LIS ones the 2022 caption names, so the balance continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02621" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 4293 (DP200026B field 120): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Aumento - Correcciones del ejercicio - Permanentes [02621]'; aeat-dr-200-2023 line 4645 (DP200026B field 122): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Aumento - Correcciones del ejercicio - Permanentes [02621]'. Both captions name the other free-depreciation cases of the same correction block; the 2023 caption adds the DA 16ª and 17ª LIS cases to the art. 12.3 a) and d) LIS ones the 2022 caption names, so the balance continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02622" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 4294 (DP200026B field 121): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02622]'; aeat-dr-200-2023 line 4646 (DP200026B field 123): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02622]'. Both captions name the other free-depreciation cases of the same correction block; the 2023 caption adds the DA 16ª and 17ª LIS cases to the art. 12.3 a) and d) LIS ones the 2022 caption names, so the balance continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02623" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 4295 (DP200026B field 122): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02623]'; aeat-dr-200-2023 line 4647 (DP200026B field 124): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02623]'. Both captions name the other free-depreciation cases of the same correction block; the 2023 caption adds the DA 16ª and 17ª LIS cases to the art. 12.3 a) and d) LIS ones the 2022 caption names, so the balance continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02625" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 4296 (DP200026B field 123): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Aumento - Saldo pendiente a fin de ejercicio [02625]'; aeat-dr-200-2023 line 4648 (DP200026B field 125): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Aumento - Saldo pendiente a fin de ejercicio [02625]'. Both captions name the other free-depreciation cases of the same correction block; the 2023 caption adds the DA 16ª and 17ª LIS cases to the art. 12.3 a) and d) LIS ones the 2022 caption names, so the balance continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02629" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 4297 (DP200026B field 124): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Disminución - Saldo pendiente a principio de ejercicio [02629]'; aeat-dr-200-2023 line 4649 (DP200026B field 126): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Disminución - Saldo pendiente a principio de ejercicio [02629]'. Both captions name the other free-depreciation cases of the same correction block; the 2023 caption adds the DA 16ª and 17ª LIS cases to the art. 12.3 a) and d) LIS ones the 2022 caption names, so the balance continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02626" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 4298 (DP200026B field 125): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Disminución - Correcciones del ejercicio - Permanentes [02626]'; aeat-dr-200-2023 line 4650 (DP200026B field 127): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Disminución - Correcciones del ejercicio - Permanentes [02626]'. Both captions name the other free-depreciation cases of the same correction block; the 2023 caption adds the DA 16ª and 17ª LIS cases to the art. 12.3 a) and d) LIS ones the 2022 caption names, so the balance continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02627" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 4299 (DP200026B field 126): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02627]'; aeat-dr-200-2023 line 4651 (DP200026B field 128): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02627]'. Both captions name the other free-depreciation cases of the same correction block; the 2023 caption adds the DA 16ª and 17ª LIS cases to the art. 12.3 a) and d) LIS ones the 2022 caption names, so the balance continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02628" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 4300 (DP200026B field 127): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02628]'; aeat-dr-200-2023 line 4652 (DP200026B field 129): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02628]'. Both captions name the other free-depreciation cases of the same correction block; the 2023 caption adds the DA 16ª and 17ª LIS cases to the art. 12.3 a) and d) LIS ones the 2022 caption names, so the balance continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02630" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 4301 (DP200026B field 128): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Disminución - Saldo pendiente a fin de ejercicio [02630]'; aeat-dr-200-2023 line 4653 (DP200026B field 130): 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Disminución - Saldo pendiente a fin de ejercicio [02630]'. Both captions name the other free-depreciation cases of the same correction block; the 2023 caption adds the DA 16ª and 17ª LIS cases to the art. 12.3 a) and d) LIS ones the 2022 caption names, so the balance continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02181" }
+fields = { section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 1271 (DP200012 field 96): 'Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participaciones en beneficios de entidades no residentes (art. 21.1, 21.10 y DT 40ª LIS) - Disminuciones [02181]'; aeat-dr-200-2023 line 1305 (DP200013 field 7): 'Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participaciones en beneficios de entidades no residentes (art. 21.1, 21.10 y DT 40ª LIS) - Disminuciones [02181]'. Both designs print box [02181] with the same concept, width and type; the 2023 design moves the cell from DP200012 to DP200013, so the 2022 member continues with its 2023 sheet and section." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01764" }
+fields = { section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 1272 (DP200012 field 97): 'Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participaciones en beneficios de entidades residentes (art. 21.11 LIS) - Disminuciones [01764]'; aeat-dr-200-2023 line 1306 (DP200013 field 8): 'Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participaciones en beneficios de entidades residentes (art. 21.11 LIS) - Disminuciones [01764]'. Both designs print box [01764] with the same concept, width and type; the 2023 design moves the cell from DP200012 to DP200013, so the 2022 member continues with its 2023 sheet and section." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01765" }
+fields = { section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 1273 (DP200012 field 98): 'Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participaciones en beneficios de entidades no residentes (art. 21.11 LIS) - Disminuciones [01765]'; aeat-dr-200-2023 line 1307 (DP200013 field 9): 'Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participaciones en beneficios de entidades no residentes (art. 21.11 LIS) - Disminuciones [01765]'. Both designs print box [01765] with the same concept, width and type; the 2023 design moves the cell from DP200012 to DP200013, so the 2022 member continues with its 2023 sheet and section." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02182" }
+fields = { section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 1274 (DP200012 field 99): 'Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre la renta obtenida en la transmisión de valores entidades residentes (art. 21.3, 21.10 y DT 40ª LIS) - Aumentos [02182]'; aeat-dr-200-2023 line 1308 (DP200013 field 10): 'Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre la renta obtenida en la transmisión de valores entidades residentes (art. 21.3, 21.10 y DT 40ª LIS) - Aumentos [02182]'. Both designs print box [02182] with the same concept, width and type; the 2023 design moves the cell from DP200012 to DP200013, so the 2022 member continues with its 2023 sheet and section." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02183" }
+fields = { section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 1275 (DP200012 field 100): 'Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre la renta obtenida en la transmisión de valores entidades residentes (art. 21.3, 21.10 y DT 40ª LIS) - Disminuciones [02183]'; aeat-dr-200-2023 line 1309 (DP200013 field 11): 'Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre la renta obtenida en la transmisión de valores entidades residentes (art. 21.3, 21.10 y DT 40ª LIS) - Disminuciones [02183]'. Both designs print box [02183] with the same concept, width and type; the 2023 design moves the cell from DP200012 to DP200013, so the 2022 member continues with its 2023 sheet and section." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02184" }
+fields = { section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 1276 (DP200012 field 101): 'Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre la renta obtenida en la transmisión de valores entidades no residentes (art. 21.3, 21.10 y DT 40ª LIS) - Aumentos [02184]'; aeat-dr-200-2023 line 1310 (DP200013 field 12): 'Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre la renta obtenida en la transmisión de valores entidades no residentes (art. 21.3, 21.10 y DT 40ª LIS) - Aumentos [02184]'. Both designs print box [02184] with the same concept, width and type; the 2023 design moves the cell from DP200012 to DP200013, so the 2022 member continues with its 2023 sheet and section." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02185" }
+fields = { section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 1277 (DP200012 field 102): 'Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre la renta obtenida en la transmisión de valores entidades no residentes (art. 21.3, 21.10 y DT 40ª LIS) - Disminuciones [02185]'; aeat-dr-200-2023 line 1311 (DP200013 field 13): 'Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre la renta obtenida en la transmisión de valores entidades no residentes (art. 21.3, 21.10 y DT 40ª LIS) - Disminuciones [02185]'. Both designs print box [02185] with the same concept, width and type; the 2023 design moves the cell from DP200012 to DP200013, so the 2022 member continues with its 2023 sheet and section." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01020" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 1554 (DP200014B field 70): 'Liquidación IV - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Abono por conversión de activos por impuesto diferido en crédito exigible frente a la admon.tribut. (art. 130 LIS) - Estado [01020]'; aeat-dr-200-2023 line 1588 (DP200015 field 7): 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Abono por conversión de activos por impuesto diferido en crédito exigible frente a la admon.tribut. (art. 130 LIS) - Estado [01020]'. Both designs print box [01020] with the same concept, width and type; the 2023 design moves the cell from DP200014B to DP200015, so the 2022 member continues with its 2023 sheet and section." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01021" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 1557 (DP200014B field 73): 'Liquidación IV - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Compensación por conversión de activos por impuesto diferido en crédito exigible frente a la admon.tribut. (art. 130 LIS) - Estado [01021]'; aeat-dr-200-2023 line 1591 (DP200015 field 10): 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Compensación por conversión de activos por impuesto diferido en crédito exigible frente a la admon.tribut. (art. 130 LIS) - Estado [01021]'. Both designs print box [01021] with the same concept, width and type; the 2023 design moves the cell from DP200014B to DP200015, so the 2022 member continues with its 2023 sheet and section." }
+removed_fields = []
+restate_provenance = true

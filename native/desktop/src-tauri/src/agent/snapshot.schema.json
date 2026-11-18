@@ -1,0 +1,557 @@
+{
+  "$defs": {
+    "AgentApproval": {
+      "properties": {
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "options": {
+          "items": {
+            "$ref": "#/$defs/AgentApprovalOption"
+          },
+          "type": "array"
+        },
+        "reply_id": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "agent_tool"
+          ],
+          "type": "string"
+        },
+        "tool_call": {
+          "description": "The tool the agent wants to call, as the agent names it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tool_kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ToolKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "One of the agent's ten tool kinds."
+        },
+        "tool_server": {
+          "description": "The host-declared server that owns this tool, when supplied.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "request_id",
+        "reply_id",
+        "source",
+        "tool_call",
+        "description",
+        "tool_kind",
+        "options"
+      ],
+      "type": "object"
+    },
+    "AgentApprovalOption": {
+      "properties": {
+        "kind": {
+          "enum": [
+            "allow_once",
+            "allow_session",
+            "reject_once"
+          ],
+          "type": "string"
+        },
+        "name": {
+          "description": "The option's own name, which may be absent: the card words an option\nby its kind.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "option_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "option_id",
+        "name",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "AgentDocumentReference": {
+      "description": "A stored document a message names, as the history echoes it.",
+      "properties": {
+        "media_type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "sha256",
+        "media_type"
+      ],
+      "type": "object"
+    },
+    "AgentMessageRecord": {
+      "description": "A message the agent wrote.",
+      "properties": {
+        "id": {
+          "description": "cadrumo-agent's `message_id`; null where it served none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "The `agent` record's kind.",
+          "enum": [
+            "agent"
+          ],
+          "type": "string"
+        },
+        "reply_id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "reply_id",
+        "text"
+      ],
+      "type": "object"
+    },
+    "AgentPending": {
+      "description": "What a reply waits on: the questionnaires and the approvals it asked for\nand nobody answered yet.",
+      "properties": {
+        "approvals": {
+          "items": {
+            "$ref": "#/$defs/AgentApproval"
+          },
+          "type": "array"
+        },
+        "questionnaires": {
+          "items": {
+            "$ref": "#/$defs/AgentQuestionnaire"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "questionnaires",
+        "approvals"
+      ],
+      "type": "object"
+    },
+    "AgentPersonRecord": {
+      "description": "A message the person sent.",
+      "properties": {
+        "attachments": {
+          "description": "The stored documents the message named, in the order it named them.",
+          "items": {
+            "$ref": "#/$defs/AgentDocumentReference"
+          },
+          "type": "array"
+        },
+        "id": {
+          "description": "cadrumo-agent's `message_id`; null where it served none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "The `person` record's kind.",
+          "enum": [
+            "person"
+          ],
+          "type": "string"
+        },
+        "reply_id": {
+          "type": "string"
+        },
+        "sent_at": {
+          "description": "When it was sent, as the agent's `timestamp`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "skills": {
+          "description": "The skills the message loaded, by name.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "reply_id",
+        "text",
+        "sent_at",
+        "attachments",
+        "skills"
+      ],
+      "type": "object"
+    },
+    "AgentQuestion": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "choice",
+            "text"
+          ],
+          "type": "string"
+        },
+        "options": {
+          "description": "A choice's options; null for a text question.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "prompt",
+        "kind",
+        "options",
+        "required"
+      ],
+      "type": "object"
+    },
+    "AgentQuestionnaire": {
+      "properties": {
+        "questions": {
+          "items": {
+            "$ref": "#/$defs/AgentQuestion"
+          },
+          "type": "array"
+        },
+        "reply_id": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "reply_id",
+        "questions"
+      ],
+      "type": "object"
+    },
+    "AgentRanWith": {
+      "description": "What a reply ran with, as the agent froze it when the run started.",
+      "properties": {
+        "effort": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Effort"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model_display_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "provider": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Provider"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "provider_display_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "transport": {
+          "$ref": "#/$defs/ProviderTransport"
+        }
+      },
+      "required": [
+        "provider",
+        "transport",
+        "provider_display_name",
+        "model",
+        "model_display_name",
+        "effort"
+      ],
+      "type": "object"
+    },
+    "AgentReplyRecord": {
+      "description": "The record of a reply (a run) itself.",
+      "properties": {
+        "failure_reason": {
+          "description": "For a failed run, the agent's one line about it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "The run's id: the reply's handle.",
+          "type": "string"
+        },
+        "kind": {
+          "description": "The `reply` record's kind.",
+          "enum": [
+            "reply"
+          ],
+          "type": "string"
+        },
+        "provider_condition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProviderCondition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "For a failed run, why its provider failed."
+        },
+        "queued_messages": {
+          "description": "Messages queued behind the run's current turn; 0 where the agent\nserved no count.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "selection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentRanWith"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ThreadStatus"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The run's status, from its status read or else its history."
+        },
+        "usage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentUsage"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "status",
+        "provider_condition",
+        "failure_reason",
+        "queued_messages",
+        "selection",
+        "usage"
+      ],
+      "type": "object"
+    },
+    "AgentSnapshot": {
+      "description": "One read of a conversation: its records, and what its current reply\nwaits on.",
+      "properties": {
+        "history": {
+          "items": {
+            "$ref": "#/$defs/AgentTurnRecord"
+          },
+          "type": "array"
+        },
+        "pending": {
+          "$ref": "#/$defs/AgentPending"
+        }
+      },
+      "required": [
+        "history",
+        "pending"
+      ],
+      "type": "object"
+    },
+    "AgentToolRecord": {
+      "description": "A tool call of a reply, as its history lists it.",
+      "properties": {
+        "details": {
+          "description": "What the history says of the call, as the agent worded it and the\nhost cut it: its text, its diffs' paths and the places it touched.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "id": {
+          "description": "cadrumo-agent's `tool_call_id`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "The `tool` record's kind.",
+          "enum": [
+            "tool"
+          ],
+          "type": "string"
+        },
+        "reply_id": {
+          "type": "string"
+        },
+        "status": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ToolCallStatus"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "description": "The tool's name, as the agent gives it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tool_kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ToolKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "reply_id",
+        "id",
+        "title",
+        "tool_kind",
+        "status",
+        "details"
+      ],
+      "type": "object"
+    },
+    "AgentTurnRecord": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AgentPersonRecord"
+        },
+        {
+          "$ref": "#/$defs/AgentToolRecord"
+        },
+        {
+          "$ref": "#/$defs/AgentMessageRecord"
+        },
+        {
+          "$ref": "#/$defs/AgentReplyRecord"
+        }
+      ],
+      "description": "What history lists of a conversation, oldest first: per reply, the\nperson's messages, its tool calls, the agent's messages, and last the\nreply's own record."
+    },
+    "AgentUsage": {
+      "description": "The tokens a run's provider reported, as the agent counts them.",
+      "properties": {
+        "input_tokens": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "output_tokens": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "input_tokens",
+        "output_tokens"
+      ],
+      "type": "object"
+    }
+  },
+  "root": "AgentSnapshot"
+}
