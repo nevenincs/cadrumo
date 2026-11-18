@@ -48,3 +48,54 @@ to_revision = "2023"
 evolution_kind = "label_evolved"
 legal_refs = ["orden-hac-495-2024:modelo-200"]
 source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+
+# Cells the 2022 record design prints without the box number the 2023 design gives them.
+
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200024-pos-105-2022-2023-label_evolved"
+continuidad_id = "dp200024-00021"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200024-pos-127-2022-2023-label_evolved"
+continuidad_id = "dp200024-00035"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200024-pos-149-2022-2023-label_evolved"
+continuidad_id = "dp200024-00043"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200024-pos-171-2022-2023-label_evolved"
+continuidad_id = "dp200024-00049"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200024-pos-261-2022-2023-label_evolved"
+continuidad_id = "is-agrup-interes-economico-y-utes-b-datos-economicos-10-dividendos-y-participaciones-a-ejercicios-que-no-haya-tri"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200024-pos-278-2022-2023-label_evolved"
+continuidad_id = "is-agrup-interes-economico-y-utes-b-datos-economicos-10-dividendos-y-participaciones-b-ejercicios-que-haya-tribut"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]

@@ -1,0 +1,1377 @@
+[[revisions.2022.export_layouts]]
+id = "generated-modelo-200-2022-fichero"
+
+[[revisions.2022.export_layouts.records]]
+id = "m200-page-024"
+record_type = "page-024"
+order = 32
+encoding = "iso-8859-1"
+line_ending = "crlf"
+required = true
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0001"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0002"
+offset = 3
+length = 3
+kind = "literal"
+literal = "200"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0003"
+offset = 6
+length = 5
+kind = "literal"
+literal = "24000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0004"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0005"
+offset = 12
+length = 1
+kind = "header"
+producer_key = "amendment_evidence.is_complementaria"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0006"
+offset = 13
+length = 7
+kind = "casilla"
+casilla_id = "DP200024:00060"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 4
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0007"
+offset = 20
+length = 17
+kind = "casilla"
+casilla_id = "DP200024:00500"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+design_type = "N"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0008"
+offset = 37
+length = 17
+kind = "casilla"
+casilla_id = "01227"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0009"
+offset = 54
+length = 17
+kind = "casilla"
+casilla_id = "01228"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0010"
+offset = 71
+length = 17
+kind = "casilla"
+casilla_id = "DP200013:00552"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+design_type = "N"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0011"
+offset = 88
+length = 17
+kind = "casilla"
+casilla_id = "DP200014:01330"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+design_type = "N"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0012"
+offset = 105
+length = 17
+kind = "casilla"
+casilla_id = "DP200024:pos-105"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0013"
+offset = 122
+length = 5
+kind = "header"
+producer_key = "m200.6_deduc_evitar_doble_imposicion_participacio"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0014"
+offset = 127
+length = 17
+kind = "casilla"
+casilla_id = "DP200024:pos-127"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0015"
+offset = 144
+length = 5
+kind = "header"
+producer_key = "m200.6_deduc_evitar_doble_imposicion_participacio_2"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0016"
+offset = 149
+length = 17
+kind = "casilla"
+casilla_id = "DP200024:pos-149"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0017"
+offset = 166
+length = 5
+kind = "header"
+producer_key = "m200.6_deduc_evitar_doble_imposicion_participacio_3"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0018"
+offset = 171
+length = 17
+kind = "casilla"
+casilla_id = "DP200024:pos-171"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0019"
+offset = 188
+length = 5
+kind = "header"
+producer_key = "m200.6_deduc_evitar_doble_imposicion_participacio_4"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0020"
+offset = 193
+length = 17
+kind = "casilla"
+casilla_id = "DP200024:pos-193"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0021"
+offset = 210
+length = 17
+kind = "casilla"
+casilla_id = "DP200024:pos-210"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0022"
+offset = 227
+length = 17
+kind = "casilla"
+casilla_id = "DP200024:pos-227"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0023"
+offset = 244
+length = 17
+kind = "casilla"
+casilla_id = "DP200024:00062"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0024"
+offset = 261
+length = 17
+kind = "casilla"
+casilla_id = "DP200024:pos-261"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0025"
+offset = 278
+length = 17
+kind = "casilla"
+casilla_id = "DP200024:pos-278"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0026"
+offset = 295
+length = 9
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 1
+field = "nif"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0027"
+offset = 304
+length = 1
+kind = "projection"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+design_type = "Num"
+value_policy = "enumerated-digits"
+allowed_values = [
+    "0",
+    "1",
+]
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 1
+field = "representante"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0028"
+offset = 305
+length = 1
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 1
+field = "forma_juridica"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0029"
+offset = 306
+length = 1
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 1
+field = "residencia"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0030"
+offset = 307
+length = 34
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 1
+field = "apellidos_nombre_razon_social"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0031"
+offset = 341
+length = 2
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 1
+field = "codigo_provincia_pais"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0032"
+offset = 343
+length = 17
+kind = "projection"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+design_type = "N"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 1
+field = "base_imponible"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0033"
+offset = 360
+length = 7
+kind = "projection"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 4
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 1
+field = "porcentaje_participacion"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0034"
+offset = 367
+length = 9
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 2
+field = "nif"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0035"
+offset = 376
+length = 1
+kind = "projection"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+design_type = "Num"
+value_policy = "enumerated-digits"
+allowed_values = [
+    "0",
+    "1",
+]
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 2
+field = "representante"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0036"
+offset = 377
+length = 1
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 2
+field = "forma_juridica"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0037"
+offset = 378
+length = 1
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 2
+field = "residencia"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0038"
+offset = 379
+length = 34
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 2
+field = "apellidos_nombre_razon_social"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0039"
+offset = 413
+length = 2
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 2
+field = "codigo_provincia_pais"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0040"
+offset = 415
+length = 17
+kind = "projection"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+design_type = "N"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 2
+field = "base_imponible"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0041"
+offset = 432
+length = 7
+kind = "projection"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 4
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 2
+field = "porcentaje_participacion"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0042"
+offset = 439
+length = 9
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 3
+field = "nif"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0043"
+offset = 448
+length = 1
+kind = "projection"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+design_type = "Num"
+value_policy = "enumerated-digits"
+allowed_values = [
+    "0",
+    "1",
+]
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 3
+field = "representante"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0044"
+offset = 449
+length = 1
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 3
+field = "forma_juridica"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0045"
+offset = 450
+length = 1
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 3
+field = "residencia"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0046"
+offset = 451
+length = 34
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 3
+field = "apellidos_nombre_razon_social"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0047"
+offset = 485
+length = 2
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 3
+field = "codigo_provincia_pais"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0048"
+offset = 487
+length = 17
+kind = "projection"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+design_type = "N"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 3
+field = "base_imponible"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0049"
+offset = 504
+length = 7
+kind = "projection"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 4
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 3
+field = "porcentaje_participacion"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0050"
+offset = 511
+length = 9
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 4
+field = "nif"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0051"
+offset = 520
+length = 1
+kind = "projection"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+design_type = "Num"
+value_policy = "enumerated-digits"
+allowed_values = [
+    "0",
+    "1",
+]
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 4
+field = "representante"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0052"
+offset = 521
+length = 1
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 4
+field = "forma_juridica"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0053"
+offset = 522
+length = 1
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 4
+field = "residencia"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0054"
+offset = 523
+length = 34
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 4
+field = "apellidos_nombre_razon_social"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0055"
+offset = 557
+length = 2
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 4
+field = "codigo_provincia_pais"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0056"
+offset = 559
+length = 17
+kind = "projection"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+design_type = "N"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 4
+field = "base_imponible"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0057"
+offset = 576
+length = 7
+kind = "projection"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 4
+signed = false
+design_type = "Num"
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 4
+field = "porcentaje_participacion"
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200024.f0058"
+offset = 583
+length = 9
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = "m200_participe_aie_ute"
+slot = 5
+field = "nif"
+
+[revisions.2022.export_layouts.records.row_field_casilla_ids]

@@ -290,6 +290,7 @@ class Modelo200ProfileFacts(BaseModel):
     b_2_suma_de_porcentajes_de_participacion_de: str | None = None
     b_2_suma_de_porcentajes_de_participaciones_e: str | None = None
     balance_0_no_consta_1_mod_normal_2_mod_abrev: str | None = None
+    certificacion_fecha_solo_declaraciones_irnr: str | None = None
     codigo_cnae_2025_actividad_principal: str | None = None
     como_consecuencia_de_la_presentacion_de_la_a: str | None = None
     cuenta_corriente_tributaria: str | None = None

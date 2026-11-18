@@ -414,6 +414,13 @@ class FilingProducerKey(StrEnum):
     M200_B_2_SUMA_DE_PORCENTAJES_DE_PARTICIPACION_DE = "m200.b_2_suma_de_porcentajes_de_participacion_de"
     M200_B_2_SUMA_DE_PORCENTAJES_DE_PARTICIPACIONES_E = "m200.b_2_suma_de_porcentajes_de_participaciones_e"
     M200_BALANCE_0_NO_CONSTA_1_MOD_NORMAL_2_MOD_ABREV = "m200.balance_0_no_consta_1_mod_normal_2_mod_abrev"
+    #: The 2022 diseño prints "Certificación del Secretario del Consejo de
+    #: Administración, declarante o representante - Fecha (sólo declaraciones
+    #: del I.R.N.R.)" as a Num 8 AAAAMMDD field. The Manual práctico de
+    #: Sociedades 2022 (p. 88) has an establecimiento permanente or an entidad en
+    #: régimen de atribución de rentas subject to the IRNR state the date the
+    #: declarante or representante signs; later diseños print no such field.
+    M200_CERTIFICACION_FECHA_SOLO_DECLARACIONES_IRNR = "m200.certificacion_fecha_solo_declaraciones_irnr"
     M200_CODIGO_CNAE_2025_ACTIVIDAD_PRINCIPAL = "m200.codigo_cnae_2025_actividad_principal"
     M200_CODIGO_PAIS_COUNTRY_CODE = "m200.codigo_pais_country_code"
     M200_COMO_CONSECUENCIA_DE_LA_PRESENTACION_DE_LA_A = "m200.como_consecuencia_de_la_presentacion_de_la_a"
