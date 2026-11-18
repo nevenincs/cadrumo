@@ -5,6 +5,12 @@ const header = (page: Page, pane: string) =>
   page.locator(`[data-dock-header="${pane}"]`);
 const content = (page: Page, pane: string) =>
   page.locator(`[data-dock-pane="${pane}"]`);
+const consoleOpens = (page: Page) =>
+  page.evaluate(() =>
+    (window.__scenarioHostCalls ?? []).filter((call) =>
+      call.startsWith("openTerminal console "),
+    ),
+  );
 async function arrange(page: Page, pane: string, key: string) {
   await header(page, pane)
     .getByRole("button", { name: label("desktop.dock.arrange"), exact: true })
@@ -105,6 +111,24 @@ test("native fullscreen restores the saved split and expansion is separate", asy
     "",
   );
   await expect(content(page, "tui")).toBeHidden();
+  const title = (await page
+    .locator("#tab-docs [data-dock-title]")
+    .boundingBox())!;
+  await page.mouse.move(title.x + title.width / 2, title.y + title.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(
+    title.x + title.width + 20,
+    title.y + title.height + 24,
+  );
+  const ghost = page.locator("[data-dock-drag-ghost]");
+  await expect(ghost).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  await expect(ghost).toHaveCount(0);
+  await expect(page.locator(".titlebar")).toHaveAttribute(
+    "data-fullscreen",
+    "",
+  );
   await page.keyboard.press("Escape");
   await expect(page.locator(".titlebar")).not.toHaveAttribute(
     "data-fullscreen",
@@ -279,4 +303,208 @@ test("rail drops reopen the same panel and tab activation transfers keyboard foc
   await expect(page.locator('[data-terminal="console"]')).toHaveCount(1);
   await page.locator("#tab-console").press("Enter");
   await expect(content(page, "console").locator("textarea")).toBeFocused();
+});
+
+for (const side of ["left", "right", "top", "bottom", "centre"] as const) {
+  test(`title pointer previews and places a ${side} drop`, async ({
+    page,
+  }, testInfo) => {
+    const title = page.locator("#tab-console [data-dock-title]");
+    const source = (await title.boundingBox())!;
+    const target = (await content(page, "docs").boundingBox())!;
+    const x =
+      target.x +
+      target.width * (side === "left" ? 0.05 : side === "right" ? 0.95 : 0.5);
+    const y =
+      target.y +
+      target.height * (side === "top" ? 0.05 : side === "bottom" ? 0.95 : 0.5);
+    await page.mouse.move(
+      source.x + source.width / 2,
+      source.y + source.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(x, y, { steps: 12 });
+    await page.screenshot({ path: testInfo.outputPath(`${side}.png`) });
+    await expect(page.locator("[data-dock-drag-ghost]")).toBeVisible();
+    const preview = page.locator("[data-dock-drop-preview]");
+    await expect(preview).toBeVisible();
+    const rect = (await preview.boundingBox())!;
+    const midX = target.x + target.width / 2;
+    const midY = target.y + target.height / 2;
+    if (side === "left")
+      expect(rect.x + rect.width).toBeLessThanOrEqual(midX + 6);
+    if (side === "right") expect(rect.x).toBeGreaterThanOrEqual(midX - 6);
+    if (side === "top")
+      expect(rect.y + rect.height).toBeLessThanOrEqual(midY + 6);
+    if (side === "bottom") expect(rect.y).toBeGreaterThanOrEqual(midY - 32);
+    if (side === "centre") {
+      expect(rect.width).toBeGreaterThan(target.width * 0.8);
+      expect(rect.height).toBeGreaterThan(target.height * 0.8);
+    }
+    await page.mouse.up();
+    await expect(preview).toHaveCount(0);
+    if (side === "centre") {
+      await expect(header(page, "console").getByRole("tab")).toHaveCount(2);
+    } else {
+      const a = (await content(page, "console").boundingBox())!;
+      const b = (await content(page, "docs").boundingBox())!;
+      if (side === "left") expect(a.x + a.width).toBeLessThanOrEqual(b.x + 1);
+      if (side === "right")
+        expect(a.x).toBeGreaterThanOrEqual(b.x + b.width - 1);
+      if (side === "top") expect(a.y + a.height).toBeLessThanOrEqual(b.y + 1);
+      if (side === "bottom")
+        expect(a.y).toBeGreaterThanOrEqual(b.y + b.height - 1);
+    }
+  });
+}
+
+async function dragTitle(
+  page: Page,
+  pane: string,
+  target: string,
+  fraction: number,
+) {
+  const title = (await page
+    .locator(`#tab-${pane} [data-dock-title]`)
+    .boundingBox())!;
+  const destination = (await page.locator(`#tab-${target}`).boundingBox())!;
+  await page.mouse.move(title.x + title.width / 2, title.y + title.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(
+    destination.x + destination.width * fraction,
+    destination.y + destination.height / 2,
+    { steps: 12 },
+  );
+}
+
+test("strip insertion orders both ways and Escape restores an inactive title", async ({
+  page,
+}) => {
+  await arrange(page, "console", "desktop.dock.tab");
+  const tabs = page
+    .locator("#tab-console")
+    .locator("xpath=ancestor::*[@role='tablist']")
+    .getByRole("tab");
+  const order = () => tabs.evaluateAll((items) => items.map((item) => item.id));
+  const original = await order();
+  for (const placement of ["before", "after"] as const) {
+    await dragTitle(
+      page,
+      "console",
+      "docs",
+      placement === "before" ? 0.2 : 0.8,
+    );
+    const line = page.locator(`[data-dock-insertion="${placement}"]`);
+    await expect(line).toBeVisible();
+    const bounds = (await line.boundingBox())!;
+    expect(bounds.width).toBeLessThan(bounds.height / 2);
+    await page.mouse.up();
+    expect(await order()).toEqual(
+      placement === "before"
+        ? ["tab-console", "tab-docs"]
+        : ["tab-docs", "tab-console"],
+    );
+  }
+  await page.locator("#tab-docs").click();
+  await expect(page.locator("#tab-docs")).toBeFocused();
+  const before = await order();
+  await dragTitle(page, "console", "docs", 0.2);
+  await expect(page.locator("[data-dock-drag-ghost]")).toBeVisible();
+  const source = (await page.locator("#tab-console").boundingBox())!;
+  await page.mouse.move(
+    source.x + source.width / 2,
+    source.y + source.height / 2,
+  );
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  await expect(page.locator("[data-dock-drag-ghost]")).toHaveCount(0);
+  await expect(page.locator("#tab-docs")).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(page.locator("#tab-docs")).toBeFocused();
+  expect(await order()).toEqual(before);
+  expect(original).toHaveLength(2);
+});
+
+test("keyboard arrangement offers pointer destinations and moves the same terminal", async ({
+  page,
+}) => {
+  await expect.poll(() => consoleOpens(page)).toHaveLength(1);
+  const terminal = content(page, "console").locator(".terminal-host");
+  await terminal.evaluate((element) =>
+    element.setAttribute("data-retained", "yes"),
+  );
+  await page.locator("#tab-console").press("Shift+F10");
+  await page.locator('[data-dock-target-menu="docs"]').press("ArrowRight");
+  for (const intent of [
+    "left",
+    "right",
+    "top",
+    "bottom",
+    "tab",
+    "before",
+    "after",
+  ]) {
+    await expect(
+      page.locator(`[data-dock-intent="${intent}"][data-dock-target="docs"]`),
+    ).toBeAttached();
+  }
+  const item = page.locator(
+    '[data-dock-intent="tab"][data-dock-target="docs"]',
+  );
+  await item.focus();
+  await page.keyboard.press("Enter");
+  await expect(header(page, "console").getByRole("tab")).toHaveCount(2);
+  await expect(terminal).toHaveAttribute("data-retained", "yes");
+  expect(await consoleOpens(page)).toHaveLength(1);
+});
+
+test("reset from the arrangement menu and palette preserves the current page and terminal", async ({
+  page,
+}) => {
+  await expect.poll(() => consoleOpens(page)).toHaveLength(1);
+  const terminal = content(page, "console").locator(".terminal-host");
+  await terminal.evaluate((element) =>
+    element.setAttribute("data-retained", "yes"),
+  );
+  await arrange(page, "console", "desktop.dock.float");
+  const action = label("desktop.dock.reset_layout");
+  await arrange(page, "console", "desktop.dock.reset_layout");
+  const description = page.getByText(
+    label("desktop.dock.reset_layout_description"),
+    { exact: true },
+  );
+  await expect(description).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(
+    header(page, "console").getByRole("button", {
+      name: label("desktop.dock.move"),
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: label("desktop.rail.search") })
+    .click();
+  await page.locator('.palette [data-slot="command-input"]').fill(action);
+  await page
+    .locator(".palette")
+    .getByRole("option")
+    .filter({ hasText: action })
+    .click();
+  await expect(description).toBeVisible();
+  await page.getByRole("button", { name: action, exact: true }).click();
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const state = JSON.parse(localStorage.getItem("cadrumo-shell-layout")!);
+        return [
+          state.layout.page,
+          state.prefs.order,
+          state.layout.docking?.floating ?? [],
+        ];
+      }),
+    )
+    .toEqual(["docs", "tui", []]);
+  await expect(terminal).toHaveAttribute("data-retained", "yes");
+  expect(await consoleOpens(page)).toHaveLength(1);
 });

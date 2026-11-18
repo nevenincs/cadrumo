@@ -12,6 +12,7 @@ import type { SourceSurface } from "../../../shell/modeloContract/modeloWork";
 import type { ModeloCasillaHelpCardV1 } from "../../../shell/modeloContract/modeloWorkCasillaHelp";
 import type {
   ModeloFormCounts,
+  ModeloFormYearProjection,
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
 } from "../../../shell/modeloContract/modeloWorkForm";
@@ -58,6 +59,28 @@ const SUMMARY: [string, (c: ModeloFormCounts) => number][] = [
   ["workspace.modelo.summary.blocked", (c) => c.blocked],
 ];
 
+/** The authority grade and optional warning as served for this form's year. */
+function YearProjection({
+  projection,
+}: {
+  projection: ModeloFormYearProjection;
+}) {
+  return (
+    <p
+      data-year-projection={projection.direction}
+      data-reachable-grade={projection.reachable_grade}
+      className="flex min-w-0 flex-col gap-1 text-sm break-words text-muted-foreground"
+    >
+      <span data-year-projection-grade className="font-medium">
+        {projection.reachable_grade_words}
+      </span>
+      {projection.words && (
+        <span data-year-projection-words>{projection.words}</span>
+      )}
+    </p>
+  );
+}
+
 /** With nothing chosen: where the declaration stands, by the form's counts. */
 function Summary({ envelope }: { envelope: ModeloWorkbenchFormProjectionV1 }) {
   const t = useStrings();
@@ -67,6 +90,7 @@ function Summary({ envelope }: { envelope: ModeloWorkbenchFormProjectionV1 }) {
       <h3 className="font-serif text-md">
         {t("workspace.modelo.summary.title")}
       </h3>
+      <YearProjection projection={form.year_projection} />
       {form.calculation_revision_id ? (
         <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1.5 text-base">
           {SUMMARY.map(([key, count]) => (
@@ -500,6 +524,9 @@ export function Details({
         onRestore={restore ? () => session.stage(field, restore) : null}
         onRemove={remove ? () => session.stage(field, remove) : null}
       />
+      <Part title={t("workspace.modelo.summary.title")}>
+        <YearProjection projection={envelope.form.form.year_projection} />
+      </Part>
       {read?.kind === "ready" ? (
         <CardParts
           card={read.card}

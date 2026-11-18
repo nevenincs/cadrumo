@@ -1528,17 +1528,30 @@ desktop:
     bottom: Dividir abajo
     close: Cerrar panel
     dock: Acoplar panel
+    drag_cancelled: Movimiento cancelado.
+    drag_moved: Se ha movido {pane}.
+    drag_started: Moviendo {pane}.
     exit_fullscreen: Salir de pantalla completa
     expand: Ampliar en el espacio de trabajo
     float: Panel flotante
     fullscreen: Pantalla completa
     left: Dividir a la izquierda
     move: Mover panel flotante
+    reset_layout: Restablecer la distribución predeterminada
+    reset_layout_description: Solo cambiará la distribución del espacio de trabajo.
+      Se conservarán tu página actual, tus borradores y tus sesiones de terminal.
     resize: Cambiar el tamaño del panel flotante
     restore: Restaurar tamaño del panel
     right: Dividir a la derecha
     tab: Mover a pestañas
     tabs: Pestañas del espacio de trabajo
+    target_after: Mover después de {target}
+    target_before: Mover antes de {target}
+    target_bottom: Mover debajo de {target}
+    target_left: Mover a la izquierda de {target}
+    target_right: Mover a la derecha de {target}
+    target_tab: Mover a {target} como pestaña
+    target_top: Mover encima de {target}
     top: Dividir arriba
   docs:
     frame_title: Documentación de Cadrumo

@@ -1,5 +1,14 @@
 import settings from "virtual:operational-settings";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useMemo } from "react";
 import { AccountDialogs } from "./components/AccountDialogs";
 import { AttendanceRequests } from "./components/AttendanceRequests";
@@ -319,6 +328,7 @@ export function App({ host }: { host: Host }) {
   const pastedLink = usePastedLink(t, resolveView, openViewLink);
 
   const actions = useShellActions({
+    askResetLayout: arrangement.askResetLayout,
     t,
     fullscreen,
     enterFullscreen: arrangement.enterFullscreen,
@@ -593,6 +603,48 @@ export function App({ host }: { host: Host }) {
     >
       <TooltipProvider>
         <div className="desktop-window flex h-dvh min-w-0 flex-col bg-chrome">
+          <Dialog
+            open={arrangement.resetOpen}
+            onOpenChange={(open) => {
+              if (!open) arrangement.closeReset();
+            }}
+          >
+            <DialogContent
+              onCloseAutoFocus={(event) => {
+                event.preventDefault();
+                const opener = arrangement.resetOpener.current;
+                if (
+                  opener?.isConnected &&
+                  opener !== document.body &&
+                  opener.getClientRects().length
+                ) {
+                  opener.focus();
+                } else focusRail();
+              }}
+            >
+              <DialogHeader>
+                <DialogTitle>{t("desktop.dock.reset_layout")}</DialogTitle>
+                <DialogDescription>
+                  {t("desktop.dock.reset_layout_description")}
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="ghost"
+                  disabled={arrangement.resetPending}
+                  onClick={arrangement.closeReset}
+                >
+                  {t("desktop.profile.cancel")}
+                </Button>
+                <Button
+                  disabled={arrangement.resetPending}
+                  onClick={() => void arrangement.resetLayout()}
+                >
+                  {t("desktop.dock.reset_layout")}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <WindowTitlebar
             host={host}
             t={t}
@@ -618,6 +670,7 @@ export function App({ host }: { host: Host }) {
               bottom={railBottom}
             />
             <ShellDock
+              cancelDrag={arrangement.resetOpen}
               host={host}
               t={t}
               locale={locale}

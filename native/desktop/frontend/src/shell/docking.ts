@@ -198,20 +198,48 @@ export function activateDockPane(
   };
 }
 
+export type DockMove = DockSide | "tab" | "before" | "after";
+
+function groupContaining(
+  node: DockNode | null,
+  pane: DockPane,
+): DockGroup | null {
+  if (!node) return null;
+  if (node.kind === "tabs") return node.tabs.includes(pane) ? node : null;
+  return (
+    groupContaining(node.first, pane) ?? groupContaining(node.second, pane)
+  );
+}
+
 /** A move first removes its source. Splitting never creates a second instance. */
 export function moveDockPane(
   layout: DockLayout,
   pane: DockPane,
   target: DockPane,
-  side: DockSide | "tab",
+  side: DockMove,
 ): DockLayout {
-  if (pane === target || !dockPanes(layout.root).includes(target))
-    return layout;
+  const destination = groupContaining(layout.root, target);
+  if (pane === target || !destination) return layout;
+  if (destination.tabs.includes(pane)) {
+    const relative =
+      destination.tabs.indexOf(pane) - destination.tabs.indexOf(target);
+    if (
+      side === "tab" ||
+      (side === "before" && relative === -1) ||
+      (side === "after" && relative === 1)
+    )
+      return layout;
+  }
   const removed = removeDockPane(layout, pane);
   return {
     ...removed,
     root: mapGroups(removed.root, (node) => {
       if (!node.tabs.includes(target)) return node;
+      if (side === "before" || side === "after") {
+        const tabs = [...node.tabs];
+        tabs.splice(tabs.indexOf(target) + Number(side === "after"), 0, pane);
+        return { ...node, tabs, active: pane };
+      }
       if (side === "tab")
         return { ...node, tabs: [...node.tabs, pane], active: pane };
       const before = side === "left" || side === "top";

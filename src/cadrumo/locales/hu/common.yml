@@ -1498,17 +1498,30 @@ desktop:
     bottom: Felosztás alul
     close: Panel bezárása
     dock: Panel dokkolása
+    drag_cancelled: Az áthelyezés megszakítva.
+    drag_moved: 'Áthelyezve: {pane}.'
+    drag_started: 'Áthelyezés folyamatban: {pane}.'
     exit_fullscreen: Kilépés a teljes képernyőből
     expand: Munkaterület kitöltése
     float: Lebegő panel
     fullscreen: Teljes képernyő
     left: Felosztás balra
     move: Lebegő panel mozgatása
+    reset_layout: Alapértelmezett elrendezés visszaállítása
+    reset_layout_description: Csak a munkaterület elrendezése változik. Az aktuális
+      oldalad, a piszkozataid és a terminálmunkameneteid megmaradnak.
     resize: Lebegő panel átméretezése
     restore: Panelméret visszaállítása
     right: Felosztás jobbra
     tab: Áthelyezés a lapokhoz
     tabs: Munkaterület lapjai
+    target_after: 'Áthelyezés ez után: {target}'
+    target_before: 'Áthelyezés ez elé: {target}'
+    target_bottom: 'Áthelyezés ez alá: {target}'
+    target_left: 'Áthelyezés ettől balra: {target}'
+    target_right: 'Áthelyezés ettől jobbra: {target}'
+    target_tab: 'Áthelyezés lapként ide: {target}'
+    target_top: 'Áthelyezés e fölé: {target}'
     top: Felosztás felül
   docs:
     frame_title: Cadrumo-dokumentáció

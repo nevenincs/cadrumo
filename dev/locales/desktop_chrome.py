@@ -77,6 +77,7 @@ DESKTOP_LOCALES: Final[tuple[str, ...]] = ("en", "es", "ca", "hu")
 DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType[str, tuple[str, ...]](
     {
         "desktop.dock.": ("left", "right", "top", "bottom", "tab"),
+        "desktop.dock.target_": ("left", "right", "top", "bottom", "tab", "before", "after"),
         "desktop.aeat_sync.area.": (
             "census.about",
             "census.name",
