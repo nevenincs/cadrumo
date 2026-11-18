@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { basename } from "node:path";
+import { wholeEnvelopes } from "../../src/dev/modeloEnvelopePatch";
 import type { ModeloWorkbenchFormProjectionV1 } from "../../src/shell/modeloContract/modeloWorkForm";
 import { label } from "../support/strings";
 import { MODELO_FIXTURES } from "../support/windowFixtures";
@@ -229,9 +231,9 @@ async function servedRenta(target: Page) {
 /** Opens the filer's 2025 Modelo 100 the way the list offers it: its row
  * opens no local work, so the new-declaration dialog opens the one that
  * exists. */
-async function openRenta(target: Page) {
+async function openRenta(target: Page, shape = "renta") {
   await target.goto(
-    "/scenarios.html?scenario=ledger&latency=0&bar=off&modelo=renta",
+    `/scenarios.html?scenario=ledger&latency=0&bar=off&modelo=${shape}`,
   );
   await target.locator("[data-rail=declarations]").click();
   const read = await target.evaluate(async () =>
@@ -256,6 +258,101 @@ async function openRenta(target: Page) {
   await expect(
     workspace(target).getByRole("heading", { level: 1 }),
   ).toBeVisible({ timeout: 30_000 });
+}
+
+for (const size of [
+  { width: 1440, height: 900 },
+  { width: 900, height: 600 },
+]) {
+  test(`the served projection stays in details at ${size.width}px, including after selecting and reopening`, async ({
+    page: target,
+  }) => {
+    const entries = readdirSync(MODELO_FIXTURES).filter((entry) =>
+      /^modelo-100-0A(?:-.*)?-en\.json$/.test(entry),
+    );
+    const whole = wholeEnvelopes(
+      Object.fromEntries(
+        entries.map((entry) => [
+          basename(entry, ".json"),
+          async () =>
+            JSON.parse(
+              readFileSync(new URL(entry, MODELO_FIXTURES), "utf8"),
+            ) as unknown,
+        ]),
+      ),
+    );
+    let fixture:
+      | {
+          shape: string;
+          projection: ModeloWorkbenchFormProjectionV1["form"]["form"]["year_projection"];
+        }
+      | undefined;
+    for (const entry of entries) {
+      const year = /^modelo-100-0A-(y\d+)-en\.json$/.exec(entry)?.[1];
+      if (!year) continue;
+      const read = (await whole[
+        basename(entry, ".json")
+      ]!()) as ModeloWorkbenchFormProjectionV1;
+      const projection = read.form.form.year_projection;
+      if (projection.direction !== "authored" && projection.words) {
+        fixture = { shape: `renta-${year}`, projection };
+        break;
+      }
+    }
+    if (!fixture) throw new Error("no served projected year with a warning");
+    const projection = fixture.projection;
+    const warning = projection.words;
+    if (!warning) throw new Error("the projected year has no warning");
+    await target.setViewportSize(size);
+    await openRenta(target, fixture.shape);
+    await tab(target, "desktop.modelo.view.form").click();
+    const toggle = workspace(target).locator("[data-pane-toggle=details]");
+    if ((await toggle.getAttribute("aria-pressed")) !== "true")
+      await toggle.click();
+    const details = workspace(target).getByRole("complementary", {
+      name: label("desktop.modelo.details.label"),
+    });
+    const line = details.locator("[data-year-projection]");
+    const check = async () => {
+      await expect(
+        workspace(target).locator("[data-year-projection]"),
+      ).toHaveCount(1);
+      await expect(line).toHaveAttribute(
+        "data-year-projection",
+        projection.direction,
+      );
+      await expect(line).toHaveAttribute(
+        "data-reachable-grade",
+        projection.reachable_grade,
+      );
+      await expect(line.locator("[data-year-projection-grade]")).toHaveText(
+        projection.reachable_grade_words,
+      );
+      await expect(line.locator("[data-year-projection-words]")).toHaveText(
+        warning,
+      );
+      expect(
+        await line.evaluate(
+          (element) => element.scrollWidth <= element.clientWidth,
+        ),
+      ).toBe(true);
+    };
+    await check();
+    await workspace(target)
+      .locator('[data-modelo-form] [data-key^="c:"]')
+      .first()
+      .click();
+    await expect(details.locator("[data-modelo-details]")).toBeVisible();
+    await check();
+    await toggle.click();
+    await expect(
+      workspace(target).locator("[data-year-projection]"),
+    ).toHaveCount(0);
+    await toggle.focus();
+    await target.keyboard.press("Enter");
+    await expect(details.locator("[data-modelo-details]")).toBeVisible();
+    await check();
+  });
 }
 
 async function openOutline(target: Page) {
