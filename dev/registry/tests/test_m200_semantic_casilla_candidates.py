@@ -25,7 +25,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 # The earlier of the two editions the identity worklists cover; its cell ceiling below is that edition's.
-_TARGET_REVISION = identity_subject.load_bundled_m200_target_identity_worklists()[0].revision
+# The earliest edition whose worklist carries both orphan dispositions, so the
+# disposition checks below have one of each to classify; an edition declaring no
+# design-unprinted row has only working figures.
+_TARGET_REVISION = next(
+    worklist.revision
+    for worklist in identity_subject.load_bundled_m200_target_identity_worklists()
+    if {row.disposition for row in worklist.orphaned_declarations}
+    == {
+        identity_subject.M200OrphanDisposition.DECLARED_UNPLACED,
+        identity_subject.M200OrphanDisposition.DECLARED_WORKING_FIGURE,
+    }
+)
 _SHARED_OWNER_CELL_CEILING = 2717
 
 
