@@ -53,6 +53,7 @@ from ...core.i18n.render import tr
 from ...core.identity.documents import SpanishTaxIdFormat
 from .common import emit_envelope
 from .modelo_cli_support import resolve_explicit_or_active_bucket_id
+from .modelo_reused_sealed_notice import applied_edit_notices
 from .modelo_work_manual_entry_payloads import WorkManualEntryResult
 from .modelo_work_preflight_findings import checked
 from .operation_modelo_carry_attestation import (
@@ -195,7 +196,7 @@ def _settle(
         submission.baseline, intent=intent, address=address, value_text=value_text, findings=findings, applied=applied
     )
     lines = _lines(result, command=command, command_words=command_words)
-    emit_envelope(ctx, command=command, result=result, lines=lines)
+    emit_envelope(ctx, command=command, result=result, lines=lines, notices=applied_edit_notices(command, applied))
 
 
 def _session(ctx: typer.Context, output_language: OutputLanguage | None) -> tuple[FrontendClient, OutputLanguage]:

@@ -30,6 +30,7 @@ from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
 from .common import emit_envelope
 from .modelo_cli_support import resolve_explicit_or_active_bucket_id
+from .modelo_reused_sealed_notice import applied_edit_notices
 from .modelo_work_income_attestation_payloads import WorkAttestWorkIncomeResult, WorkIncomeStatementPayload
 from .modelo_work_preflight_findings import checked
 from .operation_modelo_carry_attestation import (
@@ -112,7 +113,13 @@ def work_attest_work_income(
             raise ModeloEditRefusedError()
         applied = apply_modelo_edit_for_cli(client, submission, language=language).projection
     result = _result(submission, attestations, findings, applied)
-    emit_envelope(ctx, command=_COMMAND, result=result, lines=_lines(result, submission.baseline.work_unit_id))
+    emit_envelope(
+        ctx,
+        command=_COMMAND,
+        result=result,
+        lines=_lines(result, submission.baseline.work_unit_id),
+        notices=applied_edit_notices(_COMMAND, applied),
+    )
 
 
 __all__ = ["work_attest_work_income"]

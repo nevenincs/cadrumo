@@ -29,7 +29,7 @@ from ...core.hashing import canonical_json_bytes
 from ...core.i18n.render import output_language as current_output_language
 from ...core.i18n.render import tr
 from ...core.irnr import M210GrossIncomeSourceMode
-from ...core.json_contract import Notice, NoticeSeverity
+from ...core.json_contract import Notice
 from ...core.rescate_type import RescateType
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from .argument_only_refusals import refuse_filing_evidence_options_for_other_modelo
@@ -50,6 +50,7 @@ from .modelo_rendering import (
 )
 from .modelo_replaced_head_rendering import replaced_head_statement_output
 from .modelo_results import WorkCalculateResult
+from .modelo_reused_sealed_notice import reused_sealed_revision_message, reused_sealed_revision_notice
 from .modelo_revision_rendering import calculation_revision_state_label
 from .operation_modelo_calculation import (
     calculation_snapshot_lines,
@@ -249,11 +250,7 @@ def _emit_work_calculation(ctx: typer.Context, projection: ModeloWorkCalculatePu
         not projection.revision_published and snapshot.state is not CalculationRevisionState.BORRADOR
     )
     saved_confirmation = (
-        tr(
-            "cli.app.modelo.work.calculate_reused_sealed",
-            revision_id=snapshot.calculation_revision_id,
-            state=calculation_revision_state_label(snapshot.state.value),
-        )
+        reused_sealed_revision_message(snapshot.calculation_revision_id, snapshot.state.value)
         if reused_sealed_revision
         else tr(
             "cli.app.modelo.work.calculate_saved",
@@ -308,19 +305,12 @@ def _emit_work_calculation(ctx: typer.Context, projection: ModeloWorkCalculatePu
             *statement_notices,
             *(
                 [
-                    Notice(
-                        severity=NoticeSeverity.INFO,
-                        code="modelo.work.calculate.reused_sealed_revision",
-                        message=saved_confirmation,
-                        context={
-                            "calculation_revision_id": snapshot.calculation_revision_id,
-                            **(
-                                {"current_calculation_revision_id": projection.unit.current_calculation_revision_id}
-                                if projection.unit.current_calculation_revision_id is not None
-                                else {}
-                            ),
-                            "revision_published": "false",
-                        },
+                    reused_sealed_revision_notice(
+                        command="modelo.work.calculate",
+                        revision_id=snapshot.calculation_revision_id,
+                        state=snapshot.state.value,
+                        current_revision_id=projection.unit.current_calculation_revision_id,
+                        context={"revision_published": "false"},
                     )
                 ]
                 if reused_sealed_revision

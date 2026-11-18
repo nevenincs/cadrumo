@@ -72,7 +72,7 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.filing.schema import ModeloScalar
 from ...domain.identifiers import canonical_decimal_string
-from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.calculation_revision_operator_layer import (
     ATTESTED_ZERO,
     AttestedSource,
@@ -95,6 +95,7 @@ from ..operator_actions.models import ActionReference
 from .action_errors import ModeloClearedCasillaSourceFedError, ModeloRequiredBindingsMissingError
 from .calculation_action_ports import CalculationActionPorts
 from .calculation_bucket_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from .calculation_publication import CalculationRevisionPublication
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .caller_context import CalculationCallerContext, caller_context_calculation_inputs, caller_context_of
 from .edit_carry_withdrawal import (
@@ -121,6 +122,7 @@ from .edit_models import (
     ModeloEditParseReason,
     ModeloEditParseRefusalV1,
     ModeloEditRefusalCode,
+    ModeloEditReusedSealedRevisionV1,
     ModeloEditRowIntentKind,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
@@ -945,7 +947,7 @@ def _execute_modelo_edit(
             ),
             revision=prepared.revision,
         )
-        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        calculation = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             submission.baseline.work_unit_id,
             actor=RESPONSIBLE_OWNER,
             casilla_inputs=replay.casilla_inputs,
@@ -989,7 +991,21 @@ def _execute_modelo_edit(
             translated_message="application.modelo.errors.edit_revision_id_unresolved",
             precondition_verdict=caller_defect_verdict("edit_calculation_revision_id"),
         )
-    return ModeloEditExecutionUpdatedV1(receipt=captured_receipt[0])
+    return ModeloEditExecutionUpdatedV1(
+        receipt=captured_receipt[0], reused_sealed_revision=_reused_sealed_revision(calculation.publication)
+    )
+
+
+def _reused_sealed_revision(publication: CalculationRevisionPublication) -> ModeloEditReusedSealedRevisionV1 | None:
+    """Name the sealed revision the edit reproduced; a fresh calculation is always a draft."""
+    revision = publication.revision
+    if revision.state is CalculationRevisionState.BORRADOR:
+        return None
+    return ModeloEditReusedSealedRevisionV1(
+        calculation_revision_id=revision.calculation_revision_id,
+        state=revision.state,
+        current_calculation_revision_id=publication.work_unit.current_calculation_revision_id,
+    )
 
 
 def _prepare_edit(

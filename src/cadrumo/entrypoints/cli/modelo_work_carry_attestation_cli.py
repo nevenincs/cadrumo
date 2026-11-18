@@ -35,6 +35,7 @@ from ...core.i18n.render import tr
 from ...domain.calculations.registry.ids import BindingId
 from .common import emit_envelope
 from .modelo_cli_support import resolve_explicit_or_active_bucket_id
+from .modelo_reused_sealed_notice import applied_edit_notices
 from .modelo_work_carry_attestation_payloads import (
     PriorCarryPayload,
     PriorCarryStatementPayload,
@@ -145,6 +146,7 @@ def work_attest_prior_carries(
         lines=attest_prior_carries_lines(
             result, submission.baseline.work_unit_id, _selection(attestations, amount or ())
         ),
+        notices=applied_edit_notices(_COMMAND, applied),
     )
 
 

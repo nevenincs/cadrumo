@@ -35,6 +35,7 @@ from ...domain.calculations.registry.field_absence import absent_when_none
 from ...domain.calculations.registry.ids import BindingId, RevisionId
 from ...domain.calculations.registry.schema_base import CasillaDataTypeValue
 from ...domain.filing.schema import ModeloScalar
+from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.row_models import ModeloDetailRow
 from ..operations.models import OperationId
@@ -1068,11 +1069,26 @@ class ModeloEditApplyRequestV1(EditModel):
         return self
 
 
+class ModeloEditReusedSealedRevisionV1(EditModel):
+    """The checked or filed calculation an applied edit reproduced exactly, left as it stands.
+
+    A calculation is content addressed, so an edit whose values equal a sealed
+    revision's yields that revision rather than a new draft. The sealed revision
+    is never reopened or rewritten, and the declaration's current calculation is
+    left where it was, which ``current_calculation_revision_id`` names.
+    """
+
+    calculation_revision_id: CalculationRevisionId
+    state: CalculationRevisionState
+    current_calculation_revision_id: CalculationRevisionId | None
+
+
 class ModeloEditExecutionUpdatedV1(EditModel):
     """The successful compare-and-swap arm carrying the authoritative receipt."""
 
     effect: Literal[ModeloEditExecutionEffect.UPDATED] = ModeloEditExecutionEffect.UPDATED
     receipt: ModeloEditMutationResultReceiptV1
+    reused_sealed_revision: ModeloEditReusedSealedRevisionV1 | None = None
 
 
 class ModeloEditExecutionNoEffectV1(EditModel):
@@ -1131,6 +1147,7 @@ __all__ = [
     "ModeloEditRefusalCode",
     "ModeloEditRefusalV1",
     "ModeloEditRefusedV1",
+    "ModeloEditReusedSealedRevisionV1",
     "ModeloEditRowAddressV1",
     "ModeloEditRowIntentKind",
     "ModeloEditScalarAddressV1",
