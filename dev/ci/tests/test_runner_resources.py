@@ -54,6 +54,9 @@ _MOST_SHARD_WORKERS: Final = 2
 #: resolve only into a build tree, which a hosted runner holds only once the
 #: window projections are placed there. One job seeds them for every shard.
 _WINDOW_PROJECTIONS: Final = "just fixtures-seed-window"
+#: A job stopped at its own limit keeps no log; the shard step stops this many
+#: minutes before the job so a stalled shard's log survives.
+_LOG_MARGIN_MINUTES: Final = 5
 _WINDOW_ARTIFACT: Final = "cadrumo-window-projections"
 _UPLOAD: Final = "actions/upload-artifact@"
 _DOWNLOAD: Final = "actions/download-artifact@"
@@ -199,6 +202,16 @@ def _kill_record_violations(job_name: str, job: Mapping[str, Any], shard_step: i
     return violations
 
 
+def _step_limit_violations(job_name: str, job: Mapping[str, Any], shard_steps: list[Mapping[str, Any]]) -> list[str]:
+    """Report a shard step that could run until the job's own limit, which keeps no log."""
+    job_limit = job.get("timeout-minutes")
+    for step in shard_steps:
+        limit = step.get("timeout-minutes")
+        if not isinstance(limit, int) or not isinstance(job_limit, int) or limit > job_limit - _LOG_MARGIN_MINUTES:
+            return [f"{job_name} lets its shard step run until the job's limit, where its log is lost"]
+    return []
+
+
 def _moves_window_artifact(step: Mapping[str, Any], action: str) -> bool:
     named = str((step.get("with") or {}).get("name") or "")
     return str(step.get("uses") or "").startswith(action) and named == _WINDOW_ARTIFACT
@@ -228,6 +241,7 @@ def _shard_violations(document: Mapping[str, Any]) -> list[str]:
         for index in shard_steps:
             violations.extend(_step_violations(job_name, steps[index]))
         violations.extend(_kill_record_violations(job_name, job, shard_steps[-1]))
+        violations.extend(_step_limit_violations(job_name, job, [steps[index] for index in shard_steps]))
         workers = str((job.get("env") or {}).get("CADRUMO_PYTEST_WORKERS", ""))
         if not workers.isdigit() or not 1 <= int(workers) <= _MOST_SHARD_WORKERS:
             violations.append(
@@ -365,3 +379,14 @@ def test_the_shard_rule_reports_window_projections_missing_placed_late_or_never_
         if _WINDOW_PROJECTIONS in str(step.get("run") or ""):
             step["run"] = "true"
     assert _shard_violations(unseeded) == ["tests needs no job that seeds and uploads the window projections"]
+
+
+@pytest.mark.parametrize("limit", [None, 60, 56])
+def test_the_shard_rule_reports_a_shard_step_without_a_limit_inside_the_jobs(limit: int | None) -> None:
+    document = _live()
+    step = _shard_step(document)
+    if limit is None:
+        del step["timeout-minutes"]
+    else:
+        step["timeout-minutes"] = limit
+    assert _shard_violations(document) == ["tests lets its shard step run until the job's limit, where its log is lost"]

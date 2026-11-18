@@ -11,6 +11,12 @@ key holds it without its own identity and lifetime (``baseline_id``,
 served form carries the fresh admission's baseline. A served form is
 therefore the one a fresh read would return, but for the new baseline's
 identity and lifetime, which a fresh read also issues anew.
+
+An export writes one bucket event, which moves ``store_epoch``, so the read
+that returns to the form after it would build the whole form again. When an
+export settles having written, the session therefore reads its last served
+form again in the background, through the same reader and under the same
+key, and the returning read finds it kept or joins the read under way.
 """
 
 from __future__ import annotations
@@ -21,11 +27,20 @@ from typing import Final
 from uuid import UUID
 
 from ...core.external_constants import OutputLanguage
+from ...core.operations import OperationEffect, OperationLifecycle
+from ..operations.persistence.journal import OperationPersistedSnapshot
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
+from .operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from .workbench_projection import ModeloWorkbenchFormProjectionV1
 
-__all__ = ["WorkbenchFormReadKey", "admission_identity", "changed_key_parts", "with_fresh_admission"]
+__all__ = [
+    "WorkbenchFormReadKey",
+    "admission_identity",
+    "changed_key_parts",
+    "export_settled_with_effect",
+    "with_fresh_admission",
+]
 
 _BASELINE_LIFETIME: Final[frozenset[str]] = frozenset({"baseline_id", "issued_at", "expires_at"})
 """What every admission issues anew, even for an unchanged declaration."""
@@ -66,3 +81,12 @@ def with_fresh_admission(
     if not isinstance(admission, ModeloEditAdmittedV1):
         return served
     return served.model_copy(update={"admitted_baseline": ModeloEditApplyBaselineV1.from_baseline(admission.baseline)})
+
+
+def export_settled_with_effect(snapshot: OperationPersistedSnapshot) -> bool:
+    """Whether ``snapshot`` records a Modelo export that settled having written, or may have written, its event."""
+    return (
+        snapshot.lifecycle is OperationLifecycle.TERMINAL
+        and snapshot.identity.definition_id == MODELO_EXPORT_OPERATION_DEFINITION_ID
+        and snapshot.effect is not OperationEffect.NONE
+    )
