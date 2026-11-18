@@ -2065,10 +2065,6 @@ modelo:
             label: Limitation on deductibility of financial expenses - Limit art.
               16.1 and 16.2 LIS - h) Net financial expenses of the tax period (= [f-g])
               [01248]
-          01249:
-            label: Limitation on deductibility of financial expenses - Limit art.
-              16.1 and 16.2 LIS - i) Limit on deduction of net financial expenses
-              (= 30%* [i1-i2-i3-i4+i5-i6]) [01249]
           '01250':
             label: Limitation on deductibility of financial expenses - Limit art.
               16.1 and 16.2 LIS - i1) Operating result (same sign as profit and loss
@@ -2093,18 +2089,6 @@ modelo:
             label: Limitation on deductibility of financial expenses - Limit art.
               16.1 and 16.2 LIS - j) Addition for operating profit limit not applied
               in the previous five years [01255]
-          '01256':
-            label: Limitation on deductibility of financial expenses - Limit art.
-              16.1 and 16.2 LIS - l1) Deductible net financial expenses of the tax
-              period ([h=l1+l2], ≥ 0) [01256]
-          '01257':
-            label: Limitation on deductibility of financial expenses - Limit art.
-              16.1 and 16.2 LIS - l2) Non-deductible net financial expenses of the
-              tax period (=[h - l1], ≥ 0) [01257]
-          '01260':
-            label: Limitation on deductibility of financial expenses - Limit art.
-              16.1 and 16.2 LIS - Total non-deductible financial expenses of the tax
-              period (= [c2+l2]) [01260]
           '01275':
             label: Settlement II - Detail of adjustments to the profit and loss account
               result - Negative tax bases generated within the tax group by the transferred
@@ -2871,18 +2855,6 @@ modelo:
           '01606':
             label: Levelling reserve - Reduction of the taxable base - Total - Amount
               included in the return due to non-compliance with requirements [01606]
-          01608:
-            label: 'Joint taxation of State and provincial tax administrations - Corrective:
-              amount payable following the processing of earlier self-assessments
-              or administrative assessments for tax period {year} - Gipuzkoa [01608]'
-          01609:
-            label: 'Joint taxation of State and provincial tax administrations - Corrective:
-              amount payable following the processing of earlier self-assessments
-              or administrative assessments for tax period {year} - Bizkaia [01609]'
-          '01610':
-            label: 'Joint taxation of State and provincial tax administrations - Corrective:
-              amount payable following the processing of earlier self-assessments
-              or administrative assessments for tax period {year} - Navarre [01610]'
           '01614':
             label: Deductions for investment in the Canary Islands - Fixed assets
               2023 - Pending/generated deduction [01614]
@@ -2954,18 +2926,6 @@ modelo:
           01649:
             label: Joint taxation of State and provincial tax administrations - Self-assessment
               result including the first instalment - Navarre [01649]
-          '01654':
-            label: Joint taxation of State and provincial tax administrations - Result
-              included in the first instalment under art. 19.1 LIS - Araba/Alava [01654]
-          '01655':
-            label: Joint taxation of State and provincial tax administrations - Result
-              included in the first instalment under art. 19.1 LIS - Gipuzkoa [01655]
-          '01656':
-            label: Joint taxation of State and provincial tax administrations - Result
-              included in the first instalment under art. 19.1 LIS - Bizkaia [01656]
-          '01657':
-            label: Joint taxation of State and provincial tax administrations - Result
-              included in the first instalment under art. 19.1 LIS - Navarre [01657]
           01681:
             label: Transactions under art. 19 LIS other than change of residence to
               European Union or EEA Member States - Decrease - Balance pending at
@@ -5057,21 +5017,6 @@ modelo:
             label: Settlement IV - Instalment option in cases of change of residence
               (art. 19.1 LIS) - 1st instalment - Regional (foral) administrations/Navarre
               (Totals) [02484]
-          02487:
-            label: Settlement IV - Instalment option in cases of change of residence
-              (art. 19.1 LIS) - Corrective return - Self-assessment result including
-              the first instalment under art. 19.1 LIS arising from an earlier self-assessment
-              or administrative assessment for tax period {year} - State [02487]
-          02488:
-            label: Settlement IV - Instalment option in cases of change of residence
-              (art. 19.1 LIS) - Corrective return - Self-assessment result including
-              the first instalment under art. 19.1 LIS arising from an earlier self-assessment
-              or administrative assessment for tax period {year} - Regional (foral)
-              administrations/Navarre (Totals) [02488]
-          02489:
-            label: Settlement IV - Instalment option in cases of change of residence
-              (art. 19.1 LIS) - Result including the first instalment under art. 19.1
-              LIS - State [02489]
           02495:
             label: 'Additional information for calculating deduction limits - {year}:
               producer: deduction for Spanish film productions in the Canary Islands
@@ -6206,18 +6151,6 @@ modelo:
             label: Expenses subject to the deduction for investments made by port
               authorities (art. 15 n) LIS) - Increase - Adjustments for the tax year
               - Permanent [03241]
-          '03242':
-            label: Settlement IV - Instalment option in cases of change of residence
-              (art. 19.1 LIS) - Result including the first instalment under art. 19.1
-              LIS - Regional (foral) administrations/Navarre (Totals) [03242]
-          '03243':
-            label: 'Conversion of deferred tax assets into a credit claimable from
-              the Tax Administration (art. 130 LIS) - Corrective return - Amending
-              return: refund agreed/offset - Total [03243]'
-          '03244':
-            label: 'Conversion of deferred tax assets into a credit claimable from
-              the Tax Administration (art. 130 LIS) - Corrective return - Amending
-              return: refund agreed/offset - State [03244]'
           '03247':
             help: Deduction base - B) Financial data
             label: B) Financial data. Deduction base
@@ -8159,15 +8092,6 @@ modelo:
           dp200026-01332:
             label: Joint taxation of State and provincial tax administrations - Credit
               of R&D&I deductions due to insufficient tax liability - Total [01332]
-          dp200026-01583:
-            label: 'Joint taxation of State and provincial tax administrations - Corrective:
-              amount payable following the processing of earlier self-assessments
-              or administrative assessments for tax period {year} - Total [01583]'
-          dp200026-01585:
-            label: 'Joint taxation of State and provincial tax administrations - Corrective:
-              refund agreed by the Tax Agency as a result of processing prior self-assessments
-              or administrative assessments corresponding to the {year} tax period
-              - Total [01585]'
           dp200026-01587:
             label: Joint taxation of State and provincial tax administrations - Self-assessment
               result - Total [01587]
@@ -8185,10 +8109,6 @@ modelo:
             label: 'Joint taxation of State and provincial tax administrations - Conversion
               of deferred tax assets into a credit claimable from the Tax Administration
               (art. 130 LIS) - Conversion result: Payable - Total [02494]'
-          dp200026-03245:
-            label: 'Joint taxation of State and provincial tax administrations - Conversion
-              of deferred tax assets into a credit claimable from the Tax Administration
-              (art. 130 LIS) - Corrective: refund - Total [03245]'
           dp200026-03319:
             label: 'Joint taxation of State and provincial tax administrations - Conversion
               of deferred tax assets into a credit claimable from the Tax Administration
@@ -13098,8 +13018,6 @@ modelo:
             help: Flag indicating a taxpayer generating deductions under articles
               36.1 and 36.3 of the Corporate Income Tax Law with financing by other
               taxpayers [00044].
-            label: Taxpayer generating deductions under articles 36.1 and 36.3 LIS
-              with financing by other taxpayers [00044]
           is-conversion-activos-impuesto-diferido-cre-conversion-activos-impuesto-diferido-cre-abono:
             label: Conversion of deferred tax assets into enforceable credit against
               the Tax Administration - Conversion of deferred tax assets into enforceable
@@ -13130,9 +13048,6 @@ modelo:
           is-cooperativa-compensacion-cuotas-2011-pendiente-inicio:
             label: Cooperative regime - Detail of tax liability offset. 2011 Pending
               application at the beginning of the period [00017]
-          is-cooperativa-cuota-integra-previa:
-            label: Settlement III - Taxable base - Only cooperative companies - Prior
-              gross tax liability after the equalization reserve [01331]
           is-cooperativa-especialmente-protegida:
             help: Flag indicating a specially protected cooperative [00018].
             label: Specially protected cooperative [00018]
@@ -13143,10 +13058,6 @@ modelo:
             label: Settlement III - Taxable base - Only cooperative companies - Equalization
               reserve converted into tax liabilities (only entities under art. 101
               LIS) - Decreases [01286]
-          is-cooperativa-reversion-deterioro:
-            label: Settlement III - Taxable base - Only cooperative companies - Income
-              corresponding to reversal of cooperative impairments (at tax-liability
-              level) (Transitional Provision 16.8 LIS) - Decreases [01510]
           is-correccion-adquisicion-participaciones-no-residentes-dt14-permanente-aumento:
             label: Acquisition of holdings in non-resident entities (Transitional
               Provision 14 LIS) - Increase - Adjustments for the tax year - Permanent
@@ -17081,7 +16992,6 @@ modelo:
           is-opcion-art-39-2-lis:
             help: Flag indicating the option under article 39.2 of the Corporate Income
               Tax Law [00059].
-            label: Option under article 39.2 LIS [00059]
           is-opcion-art-39-3-lis:
             label: Option under art. 39.3 LIS [00090]
           is-opcion-art-46-2-lis-dp200001-00016:
@@ -17107,31 +17017,18 @@ modelo:
               correction included in the year's profit and loss
           is-participaciones-directas-d-c-eliminacion-del-deterioro-contable-incluido-en-p-y-g-art-1:
             help: Box 1506 of the annual corporate income tax return, modelo 200.
-            label: Direct holdings in other entities. Valuation corrections. c) Removal
-              of the accounting impairment included in profit and loss (art. 13.2.b
-              LIS)
           is-participaciones-directas-d-d-eliminacion-del-deterioro-de-valores-repr-de-partic-en-el:
             help: Box 1809 of the annual corporate income tax return, modelo 200.
-            label: Direct holdings in other entities. Valuation corrections. d) Removal
-              of the impairment of securities representing holdings in capital or
-              equity (art. 15.k LIS)
           is-participaciones-directas-d-datos-de-la-declarante-ingresos-por-dividendos-recibidos-en:
             help: Box 1503 of the annual corporate income tax return, modelo 200.
             label: Direct holdings in other entities. Valuation corrections. Income
               from dividends received in the declared year
           is-participaciones-directas-d-e-ajuste-por-la-disminucion-de-valor-originada-por-criterio:
             help: Box 1810 of the annual corporate income tax return, modelo 200.
-            label: Direct holdings in other entities. Valuation corrections. e) Adjustment
-              for the decrease in value arising from the fair-value criterion (art.
-              15.l LIS)
           is-participaciones-directas-d-f-efecto-correccion-valorativa-en-la-bi-del-ejercicio-a-b-c:
             help: Box 1507 of the annual corporate income tax return, modelo 200.
-            label: Direct holdings in other entities. Valuation corrections. f) Effect
-              of the valuation correction on the year's tax base
           is-participaciones-directas-d-g-saldo-de-correcciones-fiscales-art-12-3-rdl-4-2004-pendien:
             help: Box 1508 of the annual corporate income tax return, modelo 200.
-            label: Direct holdings in other entities. Valuation corrections. g) Balance
-              of tax corrections outstanding at year end (art. 12.3 RDL 4/2004)
           is-participaciones-directas-d-valor-en-libros-en-el-activo-de-la-declarante-de-la-particip:
             help: Box 1502 of modelo 200.
             label: Book value of the holding (in the declarant's assets) [1502]
@@ -17505,8 +17402,6 @@ modelo:
           is-regimen-especial-fusiones-escisiones-aportaciones-activos-y-canjes-valores-cap-vii-tit-vii:
             help: Flag indicating the special regime for mergers, spin-offs, asset
               contributions and share exchanges under Chapter VII, Title VII [00035].
-            label: Special regime for mergers, spin-offs, asset contributions and
-              share exchanges (Chapter VII, Title VII) [00035]
           is-regimen-especial-hidrocarburos:
             help: Flag indicating the special hydrocarbons regime [00034].
             label: Special hydrocarbons regime [00034]
@@ -17930,10 +17825,6 @@ modelo:
               and Foral Communities [00028].
             label: Joint taxation State / Provincial Councils / Foral Communities
               [00028]
-          is-tributacion-conjunta-estado-forales-rectificacion-importe:
-            label: 'Joint taxation of State and provincial tax administrations - Corrective:
-              amount payable following the processing of earlier self-assessments
-              or administrative assessments for tax period {year} - Araba/Alava [01607]'
           is-tributacion-conjunta-estado-y-adm-forales-abono-deducciones-producciones-extranjeras-en-canarias-total:
             label: Joint taxation of State and provincial tax administrations - Payment
               of deductions for foreign productions in the Canary Islands - Total
@@ -18044,11 +17935,6 @@ modelo:
           is-tributacion-conjunta-estado-y-adm-forales-pagos-fraccionados-3-total:
             label: Joint taxation of State and provincial tax administrations - Instalment
               payments 3 - Total [00606]
-          is-tributacion-conjunta-estado-y-adm-forales-rectificativa-resultado-de-la-autoliquidacion-incluido-el-1e-total:
-            label: 'Joint taxation of State and provincial tax administrations - Corrective:
-              self-assessment result including the first instalment under art. 19.1
-              LIS arising from an earlier self-assessment or administrative assessment
-              for tax period {year} - Total [02488]'
           is-tributacion-conjunta-estado-y-adm-forales-resultado-araba-alava:
             label: Joint taxation of State and provincial tax administrations - Result
               - Araba/Alava [00494]
@@ -18061,9 +17947,6 @@ modelo:
           is-tributacion-conjunta-estado-y-adm-forales-resultado-gipuzkoa:
             label: Joint taxation of State and provincial tax administrations - Result
               - Gipuzkoa [00495]
-          is-tributacion-conjunta-estado-y-adm-forales-resultado-incluido-en-el-1er-fraccionamiento-de-art-19-1-lis-total:
-            label: Joint taxation of State and provincial tax administrations - Result
-              included in the first instalment under art. 19.1 LIS - Total [03242]
           is-tributacion-conjunta-estado-y-adm-forales-resultado-navarra:
             label: Joint taxation of State and provincial tax administrations - Result
               - Navarre [00497]
@@ -18236,21 +18119,6 @@ modelo:
               priority patronage activities and others entitled to increased deduction
               - 2015 without repeated donations to the same entity - Carried forward
               for application in future periods [00942]
-          priority-nonrecurrent-donation-2024-subperiod-applied:
-            label: Deduction for donations to non-profit entities - Donations for
-              priority patronage activities and others entitled to increased deduction
-              - 2024(*) - Without repeated donations to the same entity - Applied
-              in this settlement [02695]
-          priority-nonrecurrent-donation-2024-subperiod-generated:
-            label: Deduction for donations to non-profit entities - Donations for
-              priority patronage activities and others entitled to increased deduction
-              - 2024(*) - Without repeated donations to the same entity - Deduction
-              carried forward/generated [02694]
-          priority-nonrecurrent-donation-2024-subperiod-remaining:
-            label: Deduction for donations to non-profit entities - Donations for
-              priority patronage activities and others entitled to increased deduction
-              - 2024(*) - Without repeated donations to the same entity - Carried
-              forward for application in future periods [02696]
           priority-recurrent-donation-2015-remaining:
             label: Deduction for donations to non-profit entities - Donations for
               priority patronage activities and others entitled to increased deduction
@@ -18780,6 +18648,11 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2022(*) without repeated donations to the same entity - Carried
                 forward for application in future periods [01072]
+            '01073':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022(*) - With repeated donations to the same entity - Deduction
+                carried forward/generated [01073]
             '01074':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
@@ -18853,6 +18726,32 @@ modelo:
                 16.5 and/or 83 LIS - d) Finance costs pending deduction from earlier
                 periods, affected by art. 16.5 and/or 83 LIS, deductible after this
                 limit ([b≥c1+d], ≥ 0] [01244]
+            01249:
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - i) Limit on deduction of net financial expenses
+                (= 30%* [i1-i2-i3-i4+i5], minimum EUR 1 million if net financial expense
+                ≥ 1 million) [01249]
+            '01256':
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - k1) Deductible net financial expenses of the tax
+                period (≤ [i+j], [h=k1+k2], ≥ 0) [01256]
+            '01257':
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - k2) Non-deductible net financial expenses of the
+                tax period (=[h - k1], ≤ [h - i], ≥ 0) [01257]
+            01258:
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - l) Finance costs pending deduction from earlier
+                tax periods under art. 16.5 and/or 83 LIS, deductible after applying
+                both limits (≤ [d], ≥ 0) [01258]
+            01259:
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - m) Finance costs pending deduction from earlier
+                tax periods, not affected by art. 16.5 and/or 83 LIS, applied [01259]
+            '01260':
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - Total non-deductible financial expenses of the
+                tax period (= [c2+k2]) [01260]
             '01303':
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
@@ -18863,6 +18762,10 @@ modelo:
                 Conversion of deferred tax assets into a credit claimable from the
                 Tax Administration (art. 130 LIS) - Offset for asset conversion -
                 Navarre [01308]
+            '01331':
+              label: Settlement III - Taxable base - Only cooperative companies -
+                Prior gross tax liability after the equalization reserve - Decreases
+                [01331]
             01408:
               label: Impairment allowances for receivables or other assets - Generation
                 year - 2007 and earlier - Allowances pending integration at start
@@ -18879,6 +18782,10 @@ modelo:
               label: Impairment allowances for receivables or other assets - Generation
                 year - 2007 and earlier - Allowances pending integration in future
                 periods - That have not met tax deductibility conditions [01476]
+            '01510':
+              label: Settlement III - Taxable base - Only cooperative companies -
+                Income corresponding to reversal of cooperative impairments (at tax-liability
+                level) (Transitional Provision 16.8 LIS) [01510]
             '01524':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
@@ -19091,6 +18998,19 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation year - Total - DTAs pending application in future periods
                 - Without a right of conversion into a claimable credit [01570]
+            '01576':
+              label: Settlement III - Taxable base - Special regime for ships and
+                shipping companies in the Canary Islands - Part of the taxable base
+                arising from activities under the special regime, after the levelling
+                reserve [01576]
+            '01577':
+              label: Settlement III - Taxable base - Special regime for ships and
+                shipping companies in the Canary Islands - Part of the taxable base
+                arising from other activities, after the levelling reserve [01577]
+            01578:
+              label: 'Settlement IV - Net amount payable or refundable - Supplementary:
+                amounts payable arising from earlier self-assessments for the {year}
+                tax period - State [01578]'
             01579:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Excess positive net tax liability - Generation
@@ -19111,6 +19031,10 @@ modelo:
                 the Tax Administration - Excess positive net tax liability - Generation
                 year - Total - Excess positive net tax due pending application in
                 future periods [01582]
+            01584:
+              label: 'Settlement IV - Net amount payable or refundable - Supplementary:
+                refunds agreed arising from earlier self-assessments for the {year}
+                tax period - State [01584]'
             01589:
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Foreign tax borne by the taxpayer, not deductible
@@ -19126,6 +19050,94 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
                 33 and Additional Provision 13 LIS - Generation year - Total 2008
                 to 2015 - DTA converted into credit [01591]
+            '01607':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: amounts payable from earlier self-assessments {year}
+                - Álava [01607]'
+            01608:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: amounts payable from earlier self-assessments {year}
+                - Guipúzcoa [01608]'
+            01609:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: amounts payable from earlier self-assessments {year}
+                - Vizcaya [01609]'
+            '01610':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: amounts payable from earlier self-assessments {year}
+                - Navarre [01610]'
+            '01611':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: refunds agreed from earlier self-assessments {year}
+                - Álava [01611]'
+            '01612':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: refunds agreed from earlier self-assessments {year}
+                - Guipúzcoa [01612]'
+            '01613':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: refunds agreed from earlier self-assessments {year}
+                - Vizcaya [01613]'
+            '01623':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: refunds agreed from earlier self-assessments {year}
+                - Navarre [01623]'
+            '01650':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: self-assessment result including the first instalment
+                arising from earlier self-assessments for tax period {year} - Álava
+                [01650]'
+            '01651':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: self-assessment result including the first instalment
+                arising from earlier self-assessments for tax period {year} - Guipúzcoa
+                [01651]'
+            '01652':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: self-assessment result including the first instalment
+                arising from earlier self-assessments for tax period {year} - Vizcaya
+                [01652]'
+            '01653':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: self-assessment result including the first instalment
+                arising from earlier self-assessments for tax period {year} - Navarre
+                [01653]'
+            '01654':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: amount payable including the first instalment - Álava
+                [01654]'
+            '01655':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: amount payable including the first instalment - Guipúzcoa
+                [01655]'
+            '01656':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: amount payable including the first instalment - Vizcaya
+                [01656]'
+            '01657':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: amount payable including the first instalment - Navarre
+                [01657]'
+            01658:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Supplementary: refund - Álava
+                [01658]'
+            01659:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Supplementary: refund - Guipúzcoa
+                [01659]'
+            '01660':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Supplementary: refund - Vizcaya
+                [01660]'
+            '01661':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Supplementary: refund - Navarre
+                [01661]'
             '01665':
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
@@ -19430,6 +19442,16 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2017 Without repeated donations to the same entity - Carried forward
                 for application in future periods [02474]
+            02487:
+              label: 'Settlement IV - Instalment option in cases of change of residence
+                (art. 19.1 LIS) - Net amount payable - Supplementary: self-assessment
+                result including the first instalment under art. 19.1 LIS arising
+                from earlier self-assessments for tax period {year} - State [02487]'
+            02492:
+              label: 'Settlement IV - Conversion of deferred tax assets into a credit
+                claimable from the Tax Administration (art. 130 LIS) - Net amount
+                payable or refundable - DTA conversion result after regularisation:
+                payable - Total [02492]'
             02578:
               label: 30% deduction on the amount of accounting depreciation expense
                 (excluding small enterprises) (art. 7 Law 16/2012) - Decrease - Adjustments
@@ -19760,6 +19782,26 @@ modelo:
               label: Valuation of assets and rights. Special regime for restructuring
                 transactions (chapter VII of title VII LIS) - Decrease - Adjustments
                 for the tax year - Temporary (originating in prior tax years) [03148]
+            '03243':
+              label: 'Settlement IV - Conversion of deferred tax assets into a credit
+                claimable from the Tax Administration (art. 130 LIS) - Net amount
+                payable or refundable - Supplementary: refund granted or offset -
+                Total [03243]'
+            '03244':
+              label: 'Settlement IV - Conversion of deferred tax assets into a credit
+                claimable from the Tax Administration (art. 130 LIS) - Net amount
+                payable or refundable - Supplementary: refund granted or offset -
+                State [03244]'
+            '03317':
+              label: 'Settlement IV - Conversion of deferred tax assets into a credit
+                claimable from the Tax Administration (art. 130 LIS) - Net amount
+                payable or refundable - DTA conversion result after regularisation:
+                credit - Total [03317]'
+            '03320':
+              label: 'Settlement IV - Conversion of deferred tax assets into a credit
+                claimable from the Tax Administration (art. 130 LIS) - Net amount
+                payable or refundable - DTA conversion result after regularisation:
+                offset - Total [03320]'
             '03362':
               label: Entities under the income-attribution regime incorporated abroad
                 with a presence in Spanish territory (art. 38 TRLIRNR) - Increase
@@ -19780,6 +19822,33 @@ modelo:
                 with a presence in Spanish territory (art. 38 TRLIRNR) - Decrease
                 - Adjustments for the tax year - Temporary (originating in prior tax
                 years) [03368]
+            '1506':
+              label: Direct holdings in other entities. Valuation corrections. b)
+                Removal of the accounting impairment included in profit and loss (art.
+                13.2.b LIS)
+            '1507':
+              label: Direct holdings in other entities. Valuation corrections. e)
+                Effect of the valuation correction on the year's tax base
+            '1508':
+              label: Direct holdings in other entities. Valuation corrections. f)
+                Balance of tax corrections outstanding at year end (art. 12.3 RDL
+                4/2004)
+            '1809':
+              label: Direct holdings in other entities. Valuation corrections. c)
+                Removal of the impairment of securities representing holdings in capital
+                or equity (art. 15.k LIS)
+            '1810':
+              label: Direct holdings in other entities. Valuation corrections. d)
+                Adjustment for the decrease in value arising from the fair-value criterion
+                (art. 15.l LIS)
+            x-8h834c1g60o32ehg60o36d8:
+              label: Application of the special regime for mergers, spin-offs, asset
+                contributions and share exchanges (Chapter VII, Title VII) [00035]
+            x-8h834c1g60o32ehg60o38d0:
+              label: Taxpayer applying deductions under articles 36.1 and 36.3 LIS
+                with financing by other taxpayers [00044]
+            x-8h834c1g60o32ehg60o3ae8:
+              label: Option under articles 39.2 and 39.3 LIS [00059]
             x-8h834c1g60o32ehg60o3gc8:
               label: Subsidiary of a multinational group [00081]
             x-8h834c1g60o32ehg60o3gcg:
@@ -19806,11 +19875,79 @@ modelo:
                 converting deferred tax assets into a credit claimable against the
                 tax administration (art. 130 LIS) - Regional (foral) administrations/Navarre
                 (Totals) [01044]
+            x-8h834c1g60oj8ghq60ojae1j:
+              label: 'Settlement IV - Net amount payable or refundable - Supplementary:
+                amounts payable arising from earlier self-assessments for the {year}
+                tax period - Regional (foral) administrations/Navarre (Totals) [01583]'
+            x-8h834c1g60oj8ghq60ojae1l:
+              label: 'Settlement IV - Net amount payable or refundable - Supplementary:
+                refunds agreed arising from earlier self-assessments for the {year}
+                tax period - Regional (foral) administrations/Navarre (Totals) [01585]'
             x-8h834c1g60oj8ghq60p38e1m:
               label: Settlement IV - Instalment option in cases of change of residence
                 (art. 19.1 LIS) - Result of the self-assessment including the first
                 instalment under art. 19.1 LIS - Regional (foral) administrations/Navarre
                 (Totals) [02486]
+            x-8h834c1g60oj8ghq60p38e1o:
+              label: 'Settlement IV - Instalment option in cases of change of residence
+                (art. 19.1 LIS) - Net amount payable - Supplementary: self-assessment
+                result including the first instalment under art. 19.1 LIS arising
+                from earlier self-assessments for tax period {year} - Regional (foral)
+                administrations/Navarre (Totals) [02488]'
+            x-8h834c1g60oj8ghq60p38e1p:
+              label: Settlement IV - Instalment option in cases of change of residence
+                (art. 19.1 LIS) - Net amount payable - Amount payable including the
+                first instalment under art. 19.1 LIS - State [02489]
+            x-8h834c1g60oj8ghq60p38e9g:
+              label: 'Settlement IV - Conversion of deferred tax assets into a credit
+                claimable from the Tax Administration (art. 130 LIS) - Net amount
+                payable or refundable - DTA conversion result after regularisation:
+                offset - State [02490]'
+            x-8h834c1g60oj8ghq60p38e9h:
+              label: 'Settlement IV - Conversion of deferred tax assets into a credit
+                claimable from the Tax Administration (art. 130 LIS) - Net amount
+                payable or refundable - DTA conversion result after regularisation:
+                offset - Regional (foral) administrations/Navarre (Totals) [02491]'
+            x-8h834c1g60oj8ghq60p38e9j:
+              label: 'Settlement IV - Conversion of deferred tax assets into a credit
+                claimable from the Tax Administration (art. 130 LIS) - Net amount
+                payable or refundable - DTA conversion result after regularisation:
+                payable - State [02493]'
+            x-8h834c1g60oj8ghq60p38e9k:
+              label: 'Settlement IV - Conversion of deferred tax assets into a credit
+                claimable from the Tax Administration (art. 130 LIS) - Net amount
+                payable or refundable - DTA conversion result after regularisation:
+                payable - Regional (foral) administrations/Navarre (Totals) [02494]'
+            x-8h834c1g60oj8ghq60pj4d1i:
+              label: Settlement IV - Instalment option in cases of change of residence
+                (art. 19.1 LIS) - Net amount payable - Amount payable including the
+                first instalment under art. 19.1 LIS - Regional (foral) administrations/Navarre
+                (Totals) [03242]
+            x-8h834c1g60oj8ghq60pj4d1l:
+              label: 'Settlement IV - Conversion of deferred tax assets into a credit
+                claimable from the Tax Administration (art. 130 LIS) - Net amount
+                payable or refundable - Supplementary: refund granted or offset -
+                Regional (foral) administrations/Navarre (Totals) [03245]'
+            x-8h834c1g60oj8ghq60pj6c9o:
+              label: 'Settlement IV - Conversion of deferred tax assets into a credit
+                claimable from the Tax Administration (art. 130 LIS) - Net amount
+                payable or refundable - DTA conversion result after regularisation:
+                credit - State [03318]'
+            x-8h834c1g60oj8ghq60pj6c9p:
+              label: 'Settlement IV - Conversion of deferred tax assets into a credit
+                claimable from the Tax Administration (art. 130 LIS) - Net amount
+                payable or refundable - DTA conversion result after regularisation:
+                credit - Regional (foral) administrations/Navarre (Totals) [03319]'
+            x-8h834c1g60ojiehg68pj0c8:
+              label: Detail of adjustments to the profit and loss result - Adjustments
+                to the profit and loss account result for the tax year - Permanent
+                adjustment (excluding the corporate income tax adjustment) - Increases
+                [02301]
+            x-8h834c1g60ojiehg68pj0cg:
+              label: Detail of adjustments to the profit and loss result - Adjustments
+                to the profit and loss account result for the tax year - Permanent
+                adjustment (excluding the corporate income tax adjustment) - Decreases
+                [02302]
             x-8h834c1g60ojiehg68pj0d0:
               label: Detail of adjustments to the profit and loss result - Adjustments
                 to the profit and loss account result for the tax year - Temporary
@@ -19823,6 +19960,28 @@ modelo:
               label: Detail of adjustments to the profit and loss result - Adjustments
                 to the profit and loss account result for the tax year - Temporary
                 adjustment originating in prior tax years - Decreases [02308]
+            x-8h834c1g60p3cehg64qjgco:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: amounts payable from earlier self-assessments {year}
+                - Total [01583]'
+            x-8h834c1g60p3cehg64qjgd8:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: refunds agreed from earlier self-assessments {year}
+                - Total [01585]'
+            x-8h834c1g60p3cehg68q3ge0:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: self-assessment result including the first instalment
+                arising from earlier self-assessments for tax period {year} - Total
+                [02488]'
+            x-8h834c1g60p3cehg6cp38cg:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Supplementary: amount payable including the first instalment - Total
+                [03242]'
+            x-8h834c1g60p3cehg6cp38d8:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Supplementary: refund - Total
+                [03245]'
           field:
             label: Modelo 200, tax year 2022
         '2023':
@@ -19882,6 +20041,11 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2022 without repeated donations to the same entity - Carried forward
                 for application in future periods [01072]
+            '01073':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 20222 - With repeated donations to the same entity - Deduction carried
+                forward/generated [01073]
             '01074':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
@@ -20140,6 +20304,25 @@ modelo:
                 account result - Exemption on income obtained from the transfer of
                 securities of non-resident entities (art. 21.3, 21.10 and Transitional
                 Provision 40 LIS) - Decreases [02185]
+            02492:
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Net amount payable or refundable
+                - DTA conversion result after regularisation: payable - Total [02492]'
+            02694:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023 without repeated donations to the same entity - Deduction carried
+                forward/generated [02694]
+            02695:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023 without repeated donations to the same entity - Applied in
+                this settlement [02695]
+            02696:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023 without repeated donations to the same entity - Carried forward
+                for application in future periods [02696]
             02786:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
@@ -20203,6 +20386,22 @@ modelo:
                 the Tax Administration - Excess positive net tax liability - Generation
                 year - 2023 - Excess positive net tax due pending application in future
                 periods [02799]
+            '03243':
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Net amount payable or refundable
+                - Supplementary: refund granted or offset - Total [03243]'
+            '03244':
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Net amount payable or refundable
+                - Supplementary: refund granted or offset - State [03244]'
+            '03317':
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Net amount payable or refundable
+                - DTA conversion result after regularisation: credit - Total [03317]'
+            '03320':
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Net amount payable or refundable
+                - DTA conversion result after regularisation: offset - Total [03320]'
             x-8h834c1g60oj4ehg60pj0e8:
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Other cases of free depreciation (art. 12.3 a) and d) and
@@ -20226,6 +20425,38 @@ modelo:
                 shipping companies in the Canary Islands - Offset of negative taxable
                 bases from earlier periods for the other-activities part of the taxable
                 base [01890]
+            x-8h834c1g60ojaehg68q3ic0:
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Net amount payable or refundable
+                - DTA conversion result after regularisation: offset - State [02490]'
+            x-8h834c1g60ojaehg68q3ic8:
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Net amount payable or refundable
+                - DTA conversion result after regularisation: offset - Regional (foral)
+                administrations/Navarre (Totals) [02491]'
+            x-8h834c1g60ojaehg68q3ico:
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Net amount payable or refundable
+                - DTA conversion result after regularisation: payable - State [02493]'
+            x-8h834c1g60ojaehg68q3id0:
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Net amount payable or refundable
+                - DTA conversion result after regularisation: payable - Regional (foral)
+                administrations/Navarre (Totals) [02494]'
+            x-8h834c1g60ojaehg6cp38d8:
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Net amount payable or refundable
+                - Supplementary: refund granted or offset - Regional (foral) administrations/Navarre
+                (Totals) [03245]'
+            x-8h834c1g60ojaehg6cpj2e0:
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Net amount payable or refundable
+                - DTA conversion result after regularisation: credit - State [03318]'
+            x-8h834c1g60ojaehg6cpj2e8:
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Net amount payable or refundable
+                - DTA conversion result after regularisation: credit - Regional (foral)
+                administrations/Navarre (Totals) [03319]'
             x-8h834c1g60ojgehg60pj2d8:
               label: Deductions to incentivise certain activities - 2023 Centenary
                 of Rugby in Spain and of the Unió Esportiva Santboiana (CRE) - Deduction
@@ -20234,6 +20465,16 @@ modelo:
               label: Deductions to incentivise certain activities - 2023 Centenary
                 of Rugby in Spain and of the Unió Esportiva Santboiana (CRE) - Applied
                 in this return [00316]
+            x-8h834c1g60p30ghq60p36c1h:
+              label: Detail of adjustments to the profit and loss result - Adjustments
+                to the profit and loss account result for the tax year - Permanent
+                adjustment (excluding the corporate income tax adjustment) - Increases
+                [02301]
+            x-8h834c1g60p30ghq60p36c1i:
+              label: Detail of adjustments to the profit and loss result - Adjustments
+                to the profit and loss account result for the tax year - Permanent
+                adjustment (excluding the corporate income tax adjustment) - Decreases
+                [02302]
             x-8h834c1g60p30ghq60p36c1k:
               label: Detail of adjustments to the profit and loss result - Adjustments
                 to the profit and loss account result for the tax year - Temporary
@@ -20425,6 +20666,18 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation year - 2022 - DTAs pending application in future periods
                 - Without a right of conversion into a claimable credit [01133]
+            01249:
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - i) Limit on deduction of net financial expenses
+                (= 30%* [i1-i2-i3-i4+i5-i6]) [01249]
+            '01256':
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - l1) Deductible net financial expenses of the tax
+                period ([h=l1+l2], ≥ 0) [01256]
+            '01257':
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - l2) Non-deductible net financial expenses of the
+                tax period (=[h - l1], ≥ 0) [01257]
             01258:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - m) Finance costs pending deduction from earlier
@@ -20434,6 +20687,10 @@ modelo:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - n) Finance costs pending deduction from earlier
                 tax periods, not affected by art. 16.5 and/or 83 LIS, applied [01259]
+            '01260':
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - Total non-deductible financial expenses of the
+                tax period (= [c2+l2]) [01260]
             '01300':
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
@@ -20469,6 +20726,9 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2023 - Without repeated donations to the same entity - Deduction
                 carried forward/generated [01329]
+            '01331':
+              label: Settlement III - Taxable base - Only cooperative companies -
+                Prior gross tax liability after the equalization reserve [01331]
             '01334':
               label: Joint taxation of State and provincial tax administrations -
                 Credit of R&D&I deductions due to insufficient tax liability - Araba/Alava
@@ -20500,6 +20760,10 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2023 - Without repeated donations to the same entity - Carried forward
                 for application in future periods [01373]
+            '01510':
+              label: Settlement III - Taxable base - Only cooperative companies -
+                Income corresponding to reversal of cooperative impairments (at tax-liability
+                level) (Transitional Provision 16.8 LIS) - Decreases [01510]
             '01515':
               label: Deductions under Transitional Provision 24.7 LIS - D.T. 24.7
                 LIS 2024 deductions - Pending/generated deduction [01515]
@@ -20528,6 +20792,23 @@ modelo:
               label: Settlement IV - Corrective return - Refund agreed by the Tax
                 Agency as a result of processing prior self-assessments or administrative
                 assessments corresponding to the {year} tax period - State [01584]
+            '01607':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: amount payable following the processing of earlier self-assessments
+                or administrative assessments for tax period {year} - Araba/Alava
+                [01607]'
+            01608:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: amount payable following the processing of earlier self-assessments
+                or administrative assessments for tax period {year} - Gipuzkoa [01608]'
+            01609:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: amount payable following the processing of earlier self-assessments
+                or administrative assessments for tax period {year} - Bizkaia [01609]'
+            '01610':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: amount payable following the processing of earlier self-assessments
+                or administrative assessments for tax period {year} - Navarre [01610]'
             '01611':
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: refund agreed by the Tax Agency as a result of processing
@@ -20623,6 +20904,22 @@ modelo:
                 Corrective: self-assessment result including the first instalment
                 under art. 19.1 LIS arising from an earlier self-assessment or administrative
                 assessment for tax period {year} - Navarre [01653]'
+            '01654':
+              label: Joint taxation of State and provincial tax administrations -
+                Result included in the first instalment under art. 19.1 LIS - Araba/Alava
+                [01654]
+            '01655':
+              label: Joint taxation of State and provincial tax administrations -
+                Result included in the first instalment under art. 19.1 LIS - Gipuzkoa
+                [01655]
+            '01656':
+              label: Joint taxation of State and provincial tax administrations -
+                Result included in the first instalment under art. 19.1 LIS - Bizkaia
+                [01656]
+            '01657':
+              label: Joint taxation of State and provincial tax administrations -
+                Result included in the first instalment under art. 19.1 LIS - Navarre
+                [01657]
             01658:
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
@@ -20799,6 +21096,11 @@ modelo:
               label: Deduction for donations to non-profit entities - General donations
                 - 2024(*) without repeated donations to the same entity- deduction
                 pending/generated [02471]
+            02487:
+              label: Settlement IV - Instalment option in cases of change of residence
+                (art. 19.1 LIS) - Corrective return - Self-assessment result including
+                the first instalment under art. 19.1 LIS arising from an earlier self-assessment
+                or administrative assessment for tax period {year} - State [02487]
             02492:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
@@ -20823,6 +21125,21 @@ modelo:
               label: Deduction for donations to non-profit entities - General donations
                 - 2024(*) - With repeated donations to the same entity - Carried forward
                 for application in future periods [02693]
+            02694:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2024(*) - Without repeated donations to the same entity - Deduction
+                carried forward/generated [02694]
+            02695:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2024(*) - Without repeated donations to the same entity - Applied
+                in this settlement [02695]
+            02696:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2024(*) - Without repeated donations to the same entity - Carried
+                forward for application in future periods [02696]
             02697:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
@@ -20966,6 +21283,14 @@ modelo:
                 of generation - 2024 - Provisions carried forward for integration
                 in future periods - That have not met the tax-deductibility conditions
                 [02806]
+            '03243':
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Corrective return - Amending
+                return: refund agreed/offset - Total [03243]'
+            '03244':
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Corrective return - Amending
+                return: refund agreed/offset - State [03244]'
             '03317':
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
@@ -20974,6 +21299,33 @@ modelo:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
                 result after regularisation: offset - Total [03320]'
+            '1506':
+              label: Direct holdings in other entities. Valuation corrections. c)
+                Removal of the accounting impairment included in profit and loss (art.
+                13.2.b LIS)
+            '1507':
+              label: Direct holdings in other entities. Valuation corrections. f)
+                Effect of the valuation correction on the year's tax base
+            '1508':
+              label: Direct holdings in other entities. Valuation corrections. g)
+                Balance of tax corrections outstanding at year end (art. 12.3 RDL
+                4/2004)
+            '1809':
+              label: Direct holdings in other entities. Valuation corrections. d)
+                Removal of the impairment of securities representing holdings in capital
+                or equity (art. 15.k LIS)
+            '1810':
+              label: Direct holdings in other entities. Valuation corrections. e)
+                Adjustment for the decrease in value arising from the fair-value criterion
+                (art. 15.l LIS)
+            x-8h834c1g60o32ehg60o36d8:
+              label: Special regime for mergers, spin-offs, asset contributions and
+                share exchanges (Chapter VII, Title VII) [00035]
+            x-8h834c1g60o32ehg60o38d0:
+              label: Taxpayer generating deductions under articles 36.1 and 36.3 LIS
+                with financing by other taxpayers [00044]
+            x-8h834c1g60o32ehg60o3ae8:
+              label: Option under article 39.2 LIS [00059]
             x-8h834c1g60o3gehg60rjidg:
               label: Profit and loss account (II) - Continuing operations - Interest
                 and compulsory return on contributions to share capital and other
@@ -21002,6 +21354,20 @@ modelo:
                 Agency as a result of processing prior self-assessments or administrative
                 assessments corresponding to the {year} tax period - Regional (foral)
                 administrations/Navarre (Totals) [01585]
+            x-8h834c1g60oj8ghq60p38e1o:
+              label: Settlement IV - Instalment option in cases of change of residence
+                (art. 19.1 LIS) - Corrective return - Self-assessment result including
+                the first instalment under art. 19.1 LIS arising from an earlier self-assessment
+                or administrative assessment for tax period {year} - Regional (foral)
+                administrations/Navarre (Totals) [02488]
+            x-8h834c1g60oj8ghq60p38e1p:
+              label: Settlement IV - Instalment option in cases of change of residence
+                (art. 19.1 LIS) - Result including the first instalment under art.
+                19.1 LIS - State [02489]
+            x-8h834c1g60oj8ghq60pj4d1i:
+              label: Settlement IV - Instalment option in cases of change of residence
+                (art. 19.1 LIS) - Result including the first instalment under art.
+                19.1 LIS - Regional (foral) administrations/Navarre (Totals) [03242]
             x-8h834c1g60ojaehg60o3ic8:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offsetting of negative taxable bases - Offset
@@ -21069,6 +21435,28 @@ modelo:
             x-8h834c1g60p3cehg60q3ge0:
               label: Joint taxation of State and provincial tax administrations -
                 Late-payment interest - Bizkaia [00488]
+            x-8h834c1g60p3cehg64qjgco:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: amount payable following the processing of earlier self-assessments
+                or administrative assessments for tax period {year} - Total [01583]'
+            x-8h834c1g60p3cehg64qjgd8:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: refund agreed by the Tax Agency as a result of processing
+                prior self-assessments or administrative assessments corresponding
+                to the {year} tax period - Total [01585]'
+            x-8h834c1g60p3cehg68q3ge0:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: self-assessment result including the first instalment
+                under art. 19.1 LIS arising from an earlier self-assessment or administrative
+                assessment for tax period {year} - Total [02488]'
+            x-8h834c1g60p3cehg6cp38cg:
+              label: Joint taxation of State and provincial tax administrations -
+                Result included in the first instalment under art. 19.1 LIS - Total
+                [03242]
+            x-8h834c1g60p3cehg6cp38d8:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Corrective: refund - Total [03245]'
           field:
             label: Modelo 200, tax year 2024
         2025-y-siguientes:
@@ -21480,6 +21868,18 @@ modelo:
                 16.5 and/or 83 LIS - d) Financial expenses pending deduction from
                 prior periods affected by art. 16.5 and/or 83 LIS, deductible after
                 this limit ([b≥c1+d], ≥ 0]
+            01249:
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - i) Limit on deduction of net financial expenses
+                (= 30%* [i1-i2-i3-i4+i5-i6]) [01249]
+            '01256':
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - l1) Deductible net financial expenses of the tax
+                period ([h=l1+l2], ≥ 0) [01256]
+            '01257':
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - l2) Non-deductible net financial expenses of the
+                tax period (=[h - l1], ≥ 0) [01257]
             01258:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - m) Financial expenses pending deduction from prior
@@ -21489,6 +21889,10 @@ modelo:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - n) Financial expenses pending deduction from prior
                 tax periods not affected by art. 16.5 and/or 83 LIS applied
+            '01260':
+              label: Limitation on deductibility of financial expenses - Limit art.
+                16.1 and 16.2 LIS - Total non-deductible financial expenses of the
+                tax period (= [c2+l2]) [01260]
             '01300':
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
@@ -21534,6 +21938,9 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2023 - Without repeated donations to the same entity - Pending/generated
                 deduction
+            '01331':
+              label: Settlement III - Taxable base - Only cooperative companies -
+                Prior gross tax liability after the equalization reserve [01331]
             '01334':
               label: Joint taxation of State and provincial tax administrations -
                 Credit of R&D&I deductions due to insufficient tax liability - Araba/Alava
@@ -21653,6 +22060,10 @@ modelo:
               label: Impairment allowances for receivables or other assets - Generation
                 year - 2007 and earlier - Allowances pending integration in future
                 periods - That have not met tax deductibility conditions
+            '01510':
+              label: Settlement III - Taxable base - Only cooperative companies -
+                Income corresponding to reversal of cooperative impairments (at tax-liability
+                level) (Transitional Provision 16.8 LIS) - Decreases [01510]
             '01515':
               label: Deductions under Transitional Provision 24.7 LIS - D.T. 24.7
                 LIS 2024 deductions - Pending/generated deduction [01515]
@@ -21922,6 +22333,23 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
                 33 and Additional Provision 13 LIS - Generation year - Total 2008
                 to 2015 - DTA converted into credit
+            '01607':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: amount payable following the processing of earlier self-assessments
+                or administrative assessments for tax period {year} - Araba/Alava
+                [01607]'
+            01608:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: amount payable following the processing of earlier self-assessments
+                or administrative assessments for tax period {year} - Gipuzkoa [01608]'
+            01609:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: amount payable following the processing of earlier self-assessments
+                or administrative assessments for tax period {year} - Bizkaia [01609]'
+            '01610':
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: amount payable following the processing of earlier self-assessments
+                or administrative assessments for tax period {year} - Navarre [01610]'
             '01611':
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: refund agreed by the Tax Agency as a result of processing
@@ -22017,6 +22445,22 @@ modelo:
                 Corrective: self-assessment result including the first instalment
                 under art. 19.1 LIS arising from an earlier self-assessment or administrative
                 assessment for tax period 2025 - Navarre'
+            '01654':
+              label: Joint taxation of State and provincial tax administrations -
+                Result included in the first instalment under art. 19.1 LIS - Araba/Alava
+                [01654]
+            '01655':
+              label: Joint taxation of State and provincial tax administrations -
+                Result included in the first instalment under art. 19.1 LIS - Gipuzkoa
+                [01655]
+            '01656':
+              label: Joint taxation of State and provincial tax administrations -
+                Result included in the first instalment under art. 19.1 LIS - Bizkaia
+                [01656]
+            '01657':
+              label: Joint taxation of State and provincial tax administrations -
+                Result included in the first instalment under art. 19.1 LIS - Navarre
+                [01657]
             01658:
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
@@ -22584,6 +23028,11 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - Donations subtotal 2015 to 2025 with repeated donations to the same
                 entity - Pending application in future periods
+            02487:
+              label: Settlement IV - Instalment option in cases of change of residence
+                (art. 19.1 LIS) - Corrective return - Self-assessment result including
+                the first instalment under art. 19.1 LIS arising from an earlier self-assessment
+                or administrative assessment for tax period {year} - State [02487]
             02492:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
@@ -23055,6 +23504,14 @@ modelo:
               label: Valuation of assets and rights. Special regime for restructuring
                 transactions (chapter VII of title VII LIS) - Decrease - Adjustments
                 for the tax year - Temporary (originating in previous tax years)
+            '03243':
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Corrective return - Amending
+                return: refund agreed/offset - Total [03243]'
+            '03244':
+              label: 'Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Corrective return - Amending
+                return: refund agreed/offset - State [03244]'
             '03317':
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Corrective return - DTA conversion
@@ -24091,6 +24548,33 @@ modelo:
                 investments 2023
               label: Advance investments 2023. RIC allocation outstanding at the end
                 of the period
+            '1506':
+              label: Direct holdings in other entities. Valuation corrections. c)
+                Removal of the accounting impairment included in profit and loss (art.
+                13.2.b LIS)
+            '1507':
+              label: Direct holdings in other entities. Valuation corrections. f)
+                Effect of the valuation correction on the year's tax base
+            '1508':
+              label: Direct holdings in other entities. Valuation corrections. g)
+                Balance of tax corrections outstanding at year end (art. 12.3 RDL
+                4/2004)
+            '1809':
+              label: Direct holdings in other entities. Valuation corrections. d)
+                Removal of the impairment of securities representing holdings in capital
+                or equity (art. 15.k LIS)
+            '1810':
+              label: Direct holdings in other entities. Valuation corrections. e)
+                Adjustment for the decrease in value arising from the fair-value criterion
+                (art. 15.l LIS)
+            x-8h834c1g60o32ehg60o36d8:
+              label: Special regime for mergers, spin-offs, asset contributions and
+                share exchanges (Chapter VII, Title VII) [00035]
+            x-8h834c1g60o32ehg60o38d0:
+              label: Taxpayer generating deductions under articles 36.1 and 36.3 LIS
+                with financing by other taxpayers [00044]
+            x-8h834c1g60o32ehg60o3ae8:
+              label: Option under article 39.2 LIS [00059]
             x-8h834c1g60o32ehg60o3gc8:
               label: Subsidiary of a multinational group or large-scale domestic group
                 [00081]
@@ -24148,6 +24632,20 @@ modelo:
               label: Settlement IV - Instalment option in cases of change of residence
                 (art. 19.1 LIS) - Result of the self-assessment including the first
                 instalment under art. 19.1 LIS - Provincial Councils/Navarre (Totals)
+            x-8h834c1g60oj8ghq60p38e1o:
+              label: Settlement IV - Instalment option in cases of change of residence
+                (art. 19.1 LIS) - Corrective return - Self-assessment result including
+                the first instalment under art. 19.1 LIS arising from an earlier self-assessment
+                or administrative assessment for tax period {year} - Regional (foral)
+                administrations/Navarre (Totals) [02488]
+            x-8h834c1g60oj8ghq60p38e1p:
+              label: Settlement IV - Instalment option in cases of change of residence
+                (art. 19.1 LIS) - Result including the first instalment under art.
+                19.1 LIS - State [02489]
+            x-8h834c1g60oj8ghq60pj4d1i:
+              label: Settlement IV - Instalment option in cases of change of residence
+                (art. 19.1 LIS) - Result including the first instalment under art.
+                19.1 LIS - Regional (foral) administrations/Navarre (Totals) [03242]
             x-8h834c1g60ojaehg60o3ic8:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offsetting of negative taxable bases - Offset
@@ -24256,5 +24754,27 @@ modelo:
             x-8h834c1g60p3cehg60q3ge0:
               label: Joint taxation of State and provincial tax administrations -
                 Late-payment interest - Bizkaia [00488]
+            x-8h834c1g60p3cehg64qjgco:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: amount payable following the processing of earlier self-assessments
+                or administrative assessments for tax period {year} - Total [01583]'
+            x-8h834c1g60p3cehg64qjgd8:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: refund agreed by the Tax Agency as a result of processing
+                prior self-assessments or administrative assessments corresponding
+                to the {year} tax period - Total [01585]'
+            x-8h834c1g60p3cehg68q3ge0:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Corrective: self-assessment result including the first instalment
+                under art. 19.1 LIS arising from an earlier self-assessment or administrative
+                assessment for tax period {year} - Total [02488]'
+            x-8h834c1g60p3cehg6cp38cg:
+              label: Joint taxation of State and provincial tax administrations -
+                Result included in the first instalment under art. 19.1 LIS - Total
+                [03242]
+            x-8h834c1g60p3cehg6cp38d8:
+              label: 'Joint taxation of State and provincial tax administrations -
+                Conversion of deferred tax assets into a credit claimable from the
+                Tax Administration (art. 130 LIS) - Corrective: refund - Total [03245]'
           field:
             label: Modelo 200, tax years 2025 onwards

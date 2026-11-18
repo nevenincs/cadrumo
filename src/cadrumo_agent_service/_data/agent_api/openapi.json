@@ -6107,6 +6107,11 @@
           "auth_kind": {
             "$ref": "#/components/schemas/AuthKind"
           },
+          "logout": {
+            "type": "boolean",
+            "title": "Logout",
+            "default": false
+          },
           "default_base_url": {
             "anyOf": [
               {
@@ -6214,7 +6219,7 @@
           "unread"
         ],
         "title": "DeclaredLane",
-        "description": "One registered lane, as a host configures it.\n\nAttributes:\n    id: ``<provider>_<transport>``, stable and unique per lane.\n    provider: The canonical provider id a run names. A string, not a\n        closed set: a provider added to the build is a new entry, not a\n        change of shape.\n    transport: ``api`` or ``cli``.\n    display_name: The provider's name as shown to a person. Every lane of a\n        provider carries the same name.\n    description: One sentence saying what the provider is, for a person\n        choosing one. Every lane of a provider carries the same text.\n    auth_kind: What a host supplies for the lane (:class:`AuthKind`).\n    default_base_url: The endpoint the lane uses when none is handed, or\n        null when it declares none.\n    agent_credential_id: The id the credential frame carries this lane's\n        credential under, or null when the frame carries none for it.\n    reads_off_host: Whether the lane sends a run's content to a computer\n        other than this one. False only for a lane whose every endpoint is\n        validated as loopback.\n    cli_programs: The program names a CLI lane resolves on the search path;\n        empty for an API lane.\n    icon: The provider's icon, whose artwork the service bundles and\n        serves for the client to draw, or null when it has none. Every lane\n        of a provider carries the same icon.\n    platform: The provider's public pages and endpoints: its\n        documentation, its model-list endpoint and where it publishes its\n        service status. Every lane of a provider carries the same value.\n    default_model: The model the lane uses when a run names none, or null\n        when the lane names none. When given it is one of ``models``.\n    models: The models the lane offers, by id. Empty when no source lists\n        any; the lane is still listed.\n    recommended: The model the lane recommends for each capability\n        (``vision``, ``text``), by capability. Empty where the lane\n        recommends none; each value is one of ``models``.\n    background: What a host's background request on the lane may carry.\n    unread: The sources the metadata meant to read for the lane and did\n        not, with the reason. A lane named here is described from the next\n        source in order of authority, not from the vendor's own listing."
+        "description": "One registered lane, as a host configures it.\n\nAttributes:\n    id: ``<provider>_<transport>``, stable and unique per lane.\n    provider: The canonical provider id a run names. A string, not a\n        closed set: a provider added to the build is a new entry, not a\n        change of shape.\n    transport: ``api`` or ``cli``.\n    display_name: The provider's name as shown to a person. Every lane of a\n        provider carries the same name.\n    description: One sentence saying what the provider is, for a person\n        choosing one. Every lane of a provider carries the same text.\n    auth_kind: What a host supplies for the lane (:class:`AuthKind`).\n    logout: Whether the hosted provider's sign-out command applies to this lane.\n    default_base_url: The endpoint the lane uses when none is handed, or\n        null when it declares none.\n    agent_credential_id: The id the credential frame carries this lane's\n        credential under, or null when the frame carries none for it.\n    reads_off_host: Whether the lane sends a run's content to a computer\n        other than this one. False only for a lane whose every endpoint is\n        validated as loopback.\n    cli_programs: The program names a CLI lane resolves on the search path;\n        empty for an API lane.\n    icon: The provider's icon, whose artwork the service bundles and\n        serves for the client to draw, or null when it has none. Every lane\n        of a provider carries the same icon.\n    platform: The provider's public pages and endpoints: its\n        documentation, its model-list endpoint and where it publishes its\n        service status. Every lane of a provider carries the same value.\n    default_model: The model the lane uses when a run names none, or null\n        when the lane names none. When given it is one of ``models``.\n    models: The models the lane offers, by id. Empty when no source lists\n        any; the lane is still listed.\n    recommended: The model the lane recommends for each capability\n        (``vision``, ``text``), by capability. Empty where the lane\n        recommends none; each value is one of ``models``.\n    background: What a host's background request on the lane may carry.\n    unread: The sources the metadata meant to read for the lane and did\n        not, with the reason. A lane named here is described from the next\n        source in order of authority, not from the vendor's own listing."
       },
       "DeclaredLicence": {
         "properties": {
@@ -6345,9 +6350,9 @@
         "properties": {
           "schema_version": {
             "type": "integer",
-            "const": 6,
+            "const": 7,
             "title": "Schema Version",
-            "default": 6
+            "default": 7
           },
           "providers": {
             "items": {

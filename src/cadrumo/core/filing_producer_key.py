@@ -422,8 +422,23 @@ class FilingProducerKey(StrEnum):
     M200_CUENTA_BANCARIA_CODIGO_SWIFT_BIC = "m200.cuenta_bancaria_codigo_swift_bic"
     M200_CUENTA_BANCARIA_MARCA_SEPA = "m200.cuenta_bancaria_marca_sepa"
     M200_CUENTA_CORRIENTE_TRIBUTARIA = "m200.cuenta_corriente_tributaria"
+    #: The 2022 and 2023 diseños print an alphanumeric "Cuota Cero" slot on the
+    #: documento de ingreso o devolución; the 2024 diseño prints a numeric
+    #: "Resultado cero" in its place, so the two captions keep their own keys.
+    M200_CUOTA_CERO = "m200.cuota_cero"
+    #: The 2022 and 2023 diseños identify the sociedad matriz última by "NIF o
+    #: equivalente", "Código país" and "País o jurisdicción"; the 2024 diseño
+    #: splits the identifier into a NIF and a TIN in the country of residence,
+    #: so none of its keys names these three slots.
+    M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_CODIGO_PAIS = "m200.datos_de_la_sociedad_matriz_ultima_codigo_pais"
     M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NIF = "m200.datos_de_la_sociedad_matriz_ultima_nif"
+    M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NIF_O_EQUIVALENTE = (
+        "m200.datos_de_la_sociedad_matriz_ultima_nif_o_equivalente"
+    )
     M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NOMBRE_DE = "m200.datos_de_la_sociedad_matriz_ultima_nombre_de"
+    M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_PAIS_O_JURISDICCION = (
+        "m200.datos_de_la_sociedad_matriz_ultima_pais_o_jurisdiccion"
+    )
     M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_RAZON_SOC = "m200.datos_de_la_sociedad_matriz_ultima_razon_soc"
     M200_DEDUCCION_RESTO_DEL_GRUPO = "m200.deduccion_resto_del_grupo"
     M200_DEDUCCION_RESTO_DEL_GRUPO_10 = "m200.deduccion_resto_del_grupo_10"
@@ -464,6 +479,13 @@ class FilingProducerKey(StrEnum):
     M200_IDENTIFICADOR_CLIENTE_EEDD_RESERVADO_PARA_LA = "m200.identificador_cliente_eedd_reservado_para_la"
     M200_IMPORTE_A_DEVOLVER = "m200.importe_a_devolver"
     M200_IMPORTE_A_INGRESAR = "m200.importe_a_ingresar"
+    #: The 2023 diseño prints one "de al menos 20 millones de euros" band on its
+    #: first page and moves the 20 to 60 and 60 million bands to the régimen de
+    #: cooperativas sheet; the 2022 and 2024 diseños print all three bands on the
+    #: first page, so the single band and the cooperativa bands keep their own keys.
+    M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_AL_MENOS_20_MILLONES = (
+        "m200.importe_neto_de_la_cifra_de_negocios_de_al_menos_20_millones"
+    )
     M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS = "m200.importe_neto_de_la_cifra_de_negocios_de_los"
     M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS_2 = "m200.importe_neto_de_la_cifra_de_negocios_de_los_2"
     M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS_3 = "m200.importe_neto_de_la_cifra_de_negocios_de_los_3"
@@ -520,6 +542,12 @@ class FilingProducerKey(StrEnum):
     M200_PRESENTACION_DE_DOCUMENTACION_PREVIA_EN_LA_S_7 = "m200.presentacion_de_documentacion_previa_en_la_s_7"
     M200_PRESENTACION_DE_DOCUMENTACION_PREVIA_EN_LA_S_8 = "m200.presentacion_de_documentacion_previa_en_la_s_8"
     M200_REALIZA_ACTIVIDADES_AGRICOLAS_Y_O_GANADERAS = "m200.realiza_actividades_agricolas_y_o_ganaderas"
+    M200_REGIMEN_DE_COOPERATIVAS_INCN_DE_AL_MENOS_20_MILLONES_PERO_INFERIOR_A_60 = (
+        "m200.regimen_de_cooperativas_incn_de_al_menos_20_millones_pero_inferior_a_60"
+    )
+    M200_REGIMEN_DE_COOPERATIVAS_INCN_DE_AL_MENOS_60_MILLONES = (
+        "m200.regimen_de_cooperativas_incn_de_al_menos_60_millones"
+    )
     M200_REG_ENTIDADES_NAVIERAS_EN_FUNCION_DEL_TONELA = "m200.reg_entidades_navieras_en_funcion_del_tonela"
     M200_RENUNCIA_O_POR_TRANSFERENCIA = "m200.renuncia_o_por_transferencia"
     M200_RESERVADO_PARA_LA_A_E_A_T_DEJAR_EN_BLANCO_IN = "m200.reservado_para_la_a_e_a_t_dejar_en_blanco_in"

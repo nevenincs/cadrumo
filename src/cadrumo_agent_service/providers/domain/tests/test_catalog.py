@@ -24,7 +24,7 @@ from ..catalog import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _document(*lanes: dict[str, Any], schema_version: int = 6) -> str:
+def _document(*lanes: dict[str, Any], schema_version: int = 7) -> str:
     return json.dumps({"schema_version": schema_version, "providers": list(lanes), "icon_attribution": {}})
 
 
@@ -151,6 +151,13 @@ def _key_lane(**overrides: Any) -> dict[str, Any]:
     }
     lane.update(overrides)
     return lane
+
+
+def test_v7_can_offer_cli_logout_and_a_v6_lane_without_the_capability_stays_unavailable() -> None:
+    current = parse_provider_catalog(_document(_cli_lane(logout=True)))
+    previous = parse_provider_catalog(_document(_cli_lane(), schema_version=6))
+    assert current.providers[0].logout
+    assert not previous.providers[0].logout
 
 
 def _cli_lane(**overrides: Any) -> dict[str, Any]:
@@ -557,7 +564,7 @@ def test_acceptable_base_url_passes() -> None:
 @pytest.mark.parametrize(
     "document",
     [
-        pytest.param(_document(_key_lane(), schema_version=7), id="unknown-schema-version"),
+        pytest.param(_document(_key_lane(), schema_version=8), id="unknown-schema-version"),
         pytest.param(_document(_key_lane(), schema_version=5), id="retired-schema-version-five"),
         pytest.param(_document(_key_lane(), schema_version=4), id="retired-schema-version-four"),
         pytest.param(_document(_key_lane(), schema_version=3), id="retired-schema-version-three"),
