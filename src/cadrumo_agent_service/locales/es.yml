@@ -6,12 +6,10 @@ desktop:
       la configuración guardada, ayúdame con los requisitos pendientes y continúa
       nuestra tarea cuando esté lista.
     agent_replied: El agente respondió
-    approval_allow_always: Permitir
     approval_allow_once: Permitir una vez
     approval_allow_session: Permitir durante esta sesión
     approval_attachment: 'Adjunto: {target}'
     approval_operation: 'Operación: {target}'
-    approval_reject_always: No permitir
     approval_reject_once: No permitir
     approval_review_title: Revisa esto antes de que Cadrumo lo haga
     approval_tool_title: El agente te pide permiso
@@ -428,7 +426,8 @@ desktop:
       agent_stop_failed: No se pudo detener el agente para terminar el inicio de sesión.
       agent_tree_running: El agente seguía en marcha, así que no se pudo iniciar la
         sesión.
-      browser_not_offered: Claude no ha ofrecido una página de inicio de sesión a tiempo.
+      browser_not_offered: Claude no ha ofrecido una página de inicio de sesión a
+        tiempo.
       browser_relay_unavailable: No se pudo pasar la página de inicio de sesión al
         navegador.
       cleanup_unconfirmed: No se pudo confirmar que el inicio de sesión se cerrara
