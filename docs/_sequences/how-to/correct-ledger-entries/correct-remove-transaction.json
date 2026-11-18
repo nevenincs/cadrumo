@@ -47,6 +47,7 @@
           "transaction": {
             "accrual_date": null,
             "amount": "60.5",
+            "arrendamiento_ref": null,
             "attachment_ids": [],
             "booked_date": "2026-03-15",
             "business_classification": "NOT_YET_PROCESSED",
@@ -66,6 +67,8 @@
             "description": "Wrong import",
             "direction": "OUTGOING",
             "fx_rate": null,
+            "gasto_capital_inmobiliario": null,
+            "inmueble_ref": null,
             "investment_asset_id": null,
             "invoice_id": null,
             "irpf_category": null,
@@ -73,13 +76,38 @@
             "iva_category": null,
             "iva_rate": null,
             "lifecycle_state": "ACTIVE",
+            "link_fields": [
+              {
+                "family": "rental_lease",
+                "field": "arrendamiento_ref",
+                "field_words": "Linked lease",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "rental_property",
+                "field": "inmueble_ref",
+                "field_words": "Linked property",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "gasto_capital_inmobiliario",
+                "field": "gasto_capital_inmobiliario",
+                "field_words": "Rental expense concept",
+                "field_words_language": "en",
+                "value": null
+              }
+            ],
             "m210_income_classification": null,
             "modified_at": "2026-04-01T09:00:00+00:00",
             "notes": "",
             "operation_date": null,
             "prorrata_reference": null,
             "purchase_invoice_evidence_id": null,
+            "recargo_amount": null,
             "source_jurisdiction": "ES",
+            "statement_reference": null,
             "taxable_base": null,
             "transaction_id": "1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb",
             "usage_ratio_id": null,
@@ -166,13 +194,15 @@
             ],
             "failed_condition_id": "cli.ledger.transaction_id.resolves",
             "missing_argument_names": [],
-            "no_recovery_outcome": "operator_decision"
+            "no_recovery_outcome": "operator_decision",
+            "no_recovery_words": "This needs your own decision; no action can take it for you.",
+            "no_recovery_words_language": "en"
           },
           "category": "REFUSED",
           "code": "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
           "context": {
             "effect": "none",
-            "operation_id": "50c127787653b9c62979455b465b24bce518a0c43d251cee6031fb749c20bc47",
+            "operation_id": "b3958be401690e14abddb85910f288b9c5b60b815b6c175945781414cf0639c9",
             "reason": "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
             "refusal_code": "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
             "terminal_condition": "refused"

@@ -154,22 +154,22 @@
     {"argv":["aeat","app","ledger","attach","778fc3f6dfc0f99e33146ab6db8e10f9234ef7066fd7ae581beefa862299be81","--purchase-invoice-evidence-id","22f934e3cfa077ef"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","--format","json","app","modelo","iva-wallet","seed","--filing-year","2024","--period","4T","--amount","0","--confirm"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","--format","json","app","modelo","work","create","--modelo","303","--year","2025","--period","1T"],"captures":[{"json_path":"result.work_unit_id","name":"m303_1t_work_unit_id","value":"09420aa5c5d838d4a8a8b9198fa2adc02ff2573a0983d696a225f0269e6476b3"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","calculate","09420aa5c5d838d4a8a8b9198fa2adc02ff2573a0983d696a225f0269e6476b3","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"m303_1t_calculation_revision_id","value":"ec02dc9705e75aa1d320a0d905d9fc081c14aa9061d317964f939c492e0e49c4"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","verify","ec02dc9705e75aa1d320a0d905d9fc081c14aa9061d317964f939c492e0e49c4"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","file","ec02dc9705e75aa1d320a0d905d9fc081c14aa9061d317964f939c492e0e49c4"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","calculate","09420aa5c5d838d4a8a8b9198fa2adc02ff2573a0983d696a225f0269e6476b3","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"m303_1t_calculation_revision_id","value":"19602f0e745c76b95407a865a545385654796549bc8212411e885430ec149917"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","verify","19602f0e745c76b95407a865a545385654796549bc8212411e885430ec149917"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","file","19602f0e745c76b95407a865a545385654796549bc8212411e885430ec149917"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","--format","json","app","modelo","work","create","--modelo","303","--year","2025","--period","2T"],"captures":[{"json_path":"result.work_unit_id","name":"m303_2t_work_unit_id","value":"af6d15eead73e8acebfb6efaefcbde65819a23082408d091b4947d5697fb590c"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","calculate","af6d15eead73e8acebfb6efaefcbde65819a23082408d091b4947d5697fb590c","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"m303_2t_calculation_revision_id","value":"33da613cce1dc4953a7648af98300b369fc4df1427bd3a5ac36c0365ceb863bc"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","verify","33da613cce1dc4953a7648af98300b369fc4df1427bd3a5ac36c0365ceb863bc"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","file","33da613cce1dc4953a7648af98300b369fc4df1427bd3a5ac36c0365ceb863bc"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","calculate","af6d15eead73e8acebfb6efaefcbde65819a23082408d091b4947d5697fb590c","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"m303_2t_calculation_revision_id","value":"eb49c1c7c18088d160be3e960bbbd3248b4ca108b7897ce314be39cd3cb0fd20"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","verify","eb49c1c7c18088d160be3e960bbbd3248b4ca108b7897ce314be39cd3cb0fd20"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","file","eb49c1c7c18088d160be3e960bbbd3248b4ca108b7897ce314be39cd3cb0fd20"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","--format","json","app","modelo","work","create","--modelo","303","--year","2025","--period","3T"],"captures":[{"json_path":"result.work_unit_id","name":"m303_3t_work_unit_id","value":"e214f91933b3bae05a0b032a61021b63be883fd5836372825eb06adc206d0a2c"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","calculate","e214f91933b3bae05a0b032a61021b63be883fd5836372825eb06adc206d0a2c","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"m303_3t_calculation_revision_id","value":"47cbd9434d8ed384a44ea9f7a6cec10156fec6ffabb9ab870f6f705af7c4803e"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","verify","47cbd9434d8ed384a44ea9f7a6cec10156fec6ffabb9ab870f6f705af7c4803e"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","file","47cbd9434d8ed384a44ea9f7a6cec10156fec6ffabb9ab870f6f705af7c4803e"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","calculate","e214f91933b3bae05a0b032a61021b63be883fd5836372825eb06adc206d0a2c","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"m303_3t_calculation_revision_id","value":"5ad228a8316c11bf03de659b297b80208821f6445ee3d56c3f53c5c72c165992"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","verify","5ad228a8316c11bf03de659b297b80208821f6445ee3d56c3f53c5c72c165992"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","file","5ad228a8316c11bf03de659b297b80208821f6445ee3d56c3f53c5c72c165992"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","--format","json","app","modelo","work","create","--modelo","303","--year","2025","--period","4T"],"captures":[{"json_path":"result.work_unit_id","name":"m303_4t_work_unit_id","value":"16b8f7f898fc8458c8dc67f8cdaf35f8382fc22e9f2e0742869ef82ef1b8e138"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","attest-m303-exonerado-390","--year","2025","--period","4T","--observed-at","2025-12-31T12:00:00+00:00"],"captures":[{"json_path":"result.attachment_id","name":"m303_4t_attestation","value":"fc668ed75eabee031fd2d030b85e149f8cccc1217ba49140504c5cf1c5f78110"},{"json_path":"result.sha256","name":"m303_4t_attestation_sha256","value":"fc668ed75eabee031fd2d030b85e149f8cccc1217ba49140504c5cf1c5f78110"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","calculate","16b8f7f898fc8458c8dc67f8cdaf35f8382fc22e9f2e0742869ef82ef1b8e138","--no-joint-return-elected","--m303-exonerado-390-attachment-id","fc668ed75eabee031fd2d030b85e149f8cccc1217ba49140504c5cf1c5f78110","--m303-exonerado-390-sha256","fc668ed75eabee031fd2d030b85e149f8cccc1217ba49140504c5cf1c5f78110"],"captures":[{"json_path":"result.calculation_revision_id","name":"m303_4t_calculation_revision_id","value":"30d6eb75a0c09e73198ff3bcafa07a5e412b9394c2c4cce45d56d8c42ba9f9a8"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","verify","30d6eb75a0c09e73198ff3bcafa07a5e412b9394c2c4cce45d56d8c42ba9f9a8"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","file","30d6eb75a0c09e73198ff3bcafa07a5e412b9394c2c4cce45d56d8c42ba9f9a8"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","attest-m303-exonerado-390","--year","2025","--period","4T","--observed-at","2025-12-31T12:00:00+00:00"],"captures":[{"json_path":"result.attachment_id","name":"m303_4t_attestation","value":"bcd2132f44cbdf761a26fea584e975f8c3db80aae2eb4893a5859d77796182b3"},{"json_path":"result.sha256","name":"m303_4t_attestation_sha256","value":"bcd2132f44cbdf761a26fea584e975f8c3db80aae2eb4893a5859d77796182b3"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","calculate","16b8f7f898fc8458c8dc67f8cdaf35f8382fc22e9f2e0742869ef82ef1b8e138","--no-joint-return-elected","--m303-exonerado-390-attachment-id","bcd2132f44cbdf761a26fea584e975f8c3db80aae2eb4893a5859d77796182b3","--m303-exonerado-390-sha256","bcd2132f44cbdf761a26fea584e975f8c3db80aae2eb4893a5859d77796182b3"],"captures":[{"json_path":"result.calculation_revision_id","name":"m303_4t_calculation_revision_id","value":"01537be2e33ddb6ca75822270d0353b1cc261f7a60f9b83578bdf0124a05641a"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","verify","01537be2e33ddb6ca75822270d0353b1cc261f7a60f9b83578bdf0124a05641a"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","file","01537be2e33ddb6ca75822270d0353b1cc261f7a60f9b83578bdf0124a05641a"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {
       "argv": [
         "aeat",
@@ -259,7 +259,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "03f2b2fe2f86872cfa8d8e54fc250f6e5baf9eaa34344793fd65641e4d09adcd"
+          "value": "525a43f38ce2536366e9cee310e658a35bbc821044fad6de538a3b381d47ad38"
         }
       ],
       "envelope": {
@@ -466,9 +466,11 @@
             "modelo-390-prev-303-resultado-regimen-general": "893.7",
             "modelo-390-prorrata-regularizacion-anual": "0",
             "modelo-390-volumen-entregas-intracomunitarias-base": "0",
-            "modelo-390-volumen-exportaciones-exentas-base": "0"
+            "modelo-390-volumen-exentas-sin-derecho-deduccion-base": "0",
+            "modelo-390-volumen-exportaciones-exentas-base": "0",
+            "modelo-390-volumen-regimen-general-base": "30000"
           },
-          "calculation_revision_id": "03f2b2fe2f86872cfa8d8e54fc250f6e5baf9eaa34344793fd65641e4d09adcd",
+          "calculation_revision_id": "525a43f38ce2536366e9cee310e658a35bbc821044fad6de538a3b381d47ad38",
           "casilla_values": {
             "decl.ejercicio": "2025",
             "iva.anual.aic.bienes.general.base": "0",
@@ -694,6 +696,21 @@
             "iva.anual.modificacion.recargo-concurso.cuota": "0",
             "iva.anual.modificacion.recargo.base": "0",
             "iva.anual.modificacion.recargo.cuota": "0",
+            "iva.anual.prorrata.actividad-1.importe-con-derecho": "0",
+            "iva.anual.prorrata.actividad-1.importe-operaciones": "0",
+            "iva.anual.prorrata.actividad-1.porcentaje": "0",
+            "iva.anual.prorrata.actividad-2.importe-con-derecho": "0",
+            "iva.anual.prorrata.actividad-2.importe-operaciones": "0",
+            "iva.anual.prorrata.actividad-2.porcentaje": "0",
+            "iva.anual.prorrata.actividad-3.importe-con-derecho": "0",
+            "iva.anual.prorrata.actividad-3.importe-operaciones": "0",
+            "iva.anual.prorrata.actividad-3.porcentaje": "0",
+            "iva.anual.prorrata.actividad-4.importe-con-derecho": "0",
+            "iva.anual.prorrata.actividad-4.importe-operaciones": "0",
+            "iva.anual.prorrata.actividad-4.porcentaje": "0",
+            "iva.anual.prorrata.actividad-5.importe-con-derecho": "0",
+            "iva.anual.prorrata.actividad-5.importe-operaciones": "0",
+            "iva.anual.prorrata.actividad-5.porcentaje": "0",
             "iva.anual.reconciliacion.deducible-303": "3492.30",
             "iva.anual.reconciliacion.devengada-303": "4386.00",
             "iva.anual.reconciliacion.devengada-simplificado-303": "0",
@@ -880,9 +897,9 @@
             "iva.anual.volumen.oss-sujetas": "0",
             "iva.anual.volumen.reagp": "0",
             "iva.anual.volumen.recargo-equivalencia": "0",
-            "iva.anual.volumen.regimen-general": "0",
+            "iva.anual.volumen.regimen-general": "30000.00",
             "iva.anual.volumen.regimen-simplificado": "0",
-            "iva.anual.volumen.total": "0.00"
+            "iva.anual.volumen.total": "30000.00"
           },
           "created_at": "2026-04-01T09:00:00+00:00",
           "deadline": {
@@ -1047,7 +1064,9 @@
             "iva.anual.repercutido.zero.base": "0",
             "iva.anual.soportado.importaciones": "0",
             "iva.anual.volumen.entregas-intracomunitarias": "0",
-            "iva.anual.volumen.exportaciones-exentas": "0"
+            "iva.anual.volumen.exentas-sin-derecho-deduccion": "0",
+            "iva.anual.volumen.exportaciones-exentas": "0",
+            "iva.anual.volumen.regimen-general": "30000"
           },
           "modality": null,
           "modality_reason": null,
@@ -1410,6 +1429,21 @@
             {"absent_by_design":false,"casilla_id":"iva.anual.modificacion.recargo-concurso.cuota","formula_id":null,"legal_refs":["ley-37-1992:art-161","ley-37-1992:art-80","ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.anual.modificacion.recargo.base","formula_id":null,"legal_refs":["ley-37-1992:art-161","ley-37-1992:art-80","ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.anual.modificacion.recargo.cuota","formula_id":null,"legal_refs":["ley-37-1992:art-161","ley-37-1992:art-80","ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.prorrata.actividad-1.importe-con-derecho","formula_id":null,"legal_refs":["ley-37-1992:art-104","ley-37-1992:art-94","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.prorrata.actividad-1.importe-operaciones","formula_id":null,"legal_refs":["ley-37-1992:art-104","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.prorrata.actividad-1.porcentaje","formula_id":null,"legal_refs":["ley-37-1992:art-103","ley-37-1992:art-104","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.prorrata.actividad-2.importe-con-derecho","formula_id":null,"legal_refs":["ley-37-1992:art-104","ley-37-1992:art-94","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.prorrata.actividad-2.importe-operaciones","formula_id":null,"legal_refs":["ley-37-1992:art-104","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.prorrata.actividad-2.porcentaje","formula_id":null,"legal_refs":["ley-37-1992:art-103","ley-37-1992:art-104","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.prorrata.actividad-3.importe-con-derecho","formula_id":null,"legal_refs":["ley-37-1992:art-104","ley-37-1992:art-94","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.prorrata.actividad-3.importe-operaciones","formula_id":null,"legal_refs":["ley-37-1992:art-104","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.prorrata.actividad-3.porcentaje","formula_id":null,"legal_refs":["ley-37-1992:art-103","ley-37-1992:art-104","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.prorrata.actividad-4.importe-con-derecho","formula_id":null,"legal_refs":["ley-37-1992:art-104","ley-37-1992:art-94","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.prorrata.actividad-4.importe-operaciones","formula_id":null,"legal_refs":["ley-37-1992:art-104","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.prorrata.actividad-4.porcentaje","formula_id":null,"legal_refs":["ley-37-1992:art-103","ley-37-1992:art-104","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.prorrata.actividad-5.importe-con-derecho","formula_id":null,"legal_refs":["ley-37-1992:art-104","ley-37-1992:art-94","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.prorrata.actividad-5.importe-operaciones","formula_id":null,"legal_refs":["ley-37-1992:art-104","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.prorrata.actividad-5.porcentaje","formula_id":null,"legal_refs":["ley-37-1992:art-103","ley-37-1992:art-104","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.anual.reconciliacion.deducible-303","formula_id":null,"legal_refs":["ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3111-2009:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"3492.30"},
             {"absent_by_design":false,"casilla_id":"iva.anual.reconciliacion.devengada-303","formula_id":null,"legal_refs":["ley-37-1992:art-88","rd-1624-1992:art-71","orden-eha-3111-2009:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"4386.00"},
             {"absent_by_design":false,"casilla_id":"iva.anual.reconciliacion.devengada-simplificado-303","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","rd-1624-1992:art-71","orden-eha-3111-2009:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
@@ -2048,7 +2082,7 @@
             {"absent_by_design":false,"casilla_id":"iva.anual.volumen.bienes-usados","formula_id":null,"legal_refs":["ley-37-1992:art-121","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.anual.volumen.criterio-caja","formula_id":null,"legal_refs":["ley-37-1992:art-121","ley-37-1992:art-163-decies","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.anual.volumen.entregas-intracomunitarias","formula_id":null,"legal_refs":["ley-37-1992:art-25","ley-37-1992:art-121","rd-1624-1992:art-71","orden-eha-3111-2009:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"iva.anual.volumen.exentas-sin-derecho-deduccion","formula_id":null,"legal_refs":["ley-37-1992:art-121","ley-37-1992:art-20","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.volumen.exentas-sin-derecho-deduccion","formula_id":null,"legal_refs":["ley-37-1992:art-121","ley-37-1992:art-20","ley-37-1992:art-104","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.anual.volumen.exportaciones-exentas","formula_id":null,"legal_refs":["ley-37-1992:art-21","ley-37-1992:art-22","ley-37-1992:art-121","rd-1624-1992:art-71","orden-eha-3111-2009:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.anual.volumen.inmuebles-financieras-no-habituales","formula_id":null,"legal_refs":["ley-37-1992:art-121","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.anual.volumen.intragrupo-arts-78-79","formula_id":null,"legal_refs":["ley-37-1992:art-121","ley-37-1992:art-163-sexies","ley-37-1992:art-79","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
@@ -2058,7 +2092,7 @@
             {"absent_by_design":false,"casilla_id":"iva.anual.volumen.oss-sujetas","formula_id":null,"legal_refs":["ley-37-1992:art-121","ley-37-1992:art-163-noniesdecies","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.anual.volumen.reagp","formula_id":null,"legal_refs":["ley-37-1992:art-121","ley-37-1992:art-124","ley-37-1992:art-130","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.anual.volumen.recargo-equivalencia","formula_id":null,"legal_refs":["ley-37-1992:art-121","ley-37-1992:art-148","ley-37-1992:art-161","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"iva.anual.volumen.regimen-general","formula_id":null,"legal_refs":["ley-37-1992:art-121","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.anual.volumen.regimen-general","formula_id":null,"legal_refs":["ley-37-1992:art-121","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"30000.00"},
             {"absent_by_design":false,"casilla_id":"iva.anual.volumen.regimen-simplificado","formula_id":null,"legal_refs":["ley-37-1992:art-121","ley-37-1992:art-122","ley-37-1992:art-123","orden-eha-3111-2009:art-1","rd-1624-1992:art-71"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-390-2025"],"value":"0"},
             {
               "absent_by_design": false,
@@ -2108,7 +2142,7 @@
                 "iva.anual.volumen.bienes-de-inversion"
               ],
               "operand_values": [
-                "0",
+                "30000.00",
                 "0",
                 "0",
                 "0",
@@ -2129,7 +2163,7 @@
               "source_refs": [
                 "aeat-modelo-390-2024-printed-calculations"
               ],
-              "value": "0.00"
+              "value": "30000.00"
             }
           ],
           "operation": "modelo.work.calculate",
@@ -2161,7 +2195,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 03f2b2fe2f86872cfa8d8e54fc250f6e5baf9eaa34344793fd65641e4d09adcd (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 525a43f38ce2536366e9cee310e658a35bbc821044fad6de538a3b381d47ad38 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {"contributor_binding_source":"ledger_iva_aggregation","contributor_source_kind":"ledger_iva_aggregation","dependency_treatment":"","fingerprint":null,"lineage_role":"primary","parent_source_ref":null,"resolved_binding_source":"ledger_iva_aggregation","resolver_id":"ledger_iva_aggregation","source_ref":"transaction:3d9adf6c43c021bddfe7784631d9c297ed8f3ee00af0fd0da202f64717caeca8"},
             {"contributor_binding_source":"ledger_iva_aggregation","contributor_source_kind":"ledger_iva_aggregation","dependency_treatment":"","fingerprint":null,"lineage_role":"primary","parent_source_ref":null,"resolved_binding_source":"ledger_iva_aggregation","resolver_id":"ledger_iva_aggregation","source_ref":"transaction:407f534d9d16e65042c762737fb68fcd0548824b8cf5287cbe3173c3dc0610b0"},
@@ -2248,7 +2282,7 @@
         "modelo",
         "work",
         "verify",
-        "03f2b2fe2f86872cfa8d8e54fc250f6e5baf9eaa34344793fd65641e4d09adcd"
+        "525a43f38ce2536366e9cee310e658a35bbc821044fad6de538a3b381d47ad38"
       ],
       "captures": [],
       "envelope": {
@@ -2296,7 +2330,7 @@
           {"action":null,"code":"config.login.session_not_persisted","context":null,"message":"Profile authentication supplied to this command applies to this process only; supply it again to the next process.","severity":"warning"}
         ],
         "result": {
-          "calculation_revision_id": "03f2b2fe2f86872cfa8d8e54fc250f6e5baf9eaa34344793fd65641e4d09adcd",
+          "calculation_revision_id": "525a43f38ce2536366e9cee310e658a35bbc821044fad6de538a3b381d47ad38",
           "completeness_status": "complete",
           "findings": [
             {"action":null,"casilla_id":null,"expectation_id":null,"kind":"advisory","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","orden-eha-3111-2009:art-1"],"message":"A built-in check flagged this declaration for a closer look.","severity":"warning","source_refs":[]},
@@ -2349,7 +2383,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "7566a4997106306a1270141e9807da2d3467f6ffd0f1ea6bc13d160b30eddab0",
+          "verification_report_id": "86efe69169757ce0974372aec08a6231c5aa94ae0d2718c24179de79be252bf6",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

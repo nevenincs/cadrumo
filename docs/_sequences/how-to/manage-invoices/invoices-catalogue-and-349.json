@@ -313,6 +313,84 @@
         "command": "modelo.work.calculate",
         "notices": [
           {
+            "action": {
+              "action": {
+                "action_id": "operator.ledger.counterparty.filing_name",
+                "cli_path": [
+                  "aeat",
+                  "app",
+                  "ledger",
+                  "counterparty",
+                  "filing-name"
+                ],
+                "target_command_key": "ledger.counterparty.filing_name"
+              },
+              "action_words": "State the counterparty's name for the declaration",
+              "action_words_language": "en",
+              "argument_bindings": [
+                {
+                  "argument_name": "country_code",
+                  "source": null,
+                  "source_evidence_id": null,
+                  "source_key": null,
+                  "status": "missing",
+                  "value": null
+                },
+                {
+                  "argument_name": "kind",
+                  "source": null,
+                  "source_evidence_id": null,
+                  "source_key": null,
+                  "status": "missing",
+                  "value": null
+                },
+                {
+                  "argument_name": "tax_identifier",
+                  "source": null,
+                  "source_evidence_id": null,
+                  "source_key": null,
+                  "status": "missing",
+                  "value": null
+                }
+              ],
+              "conditionality": "requires_arguments",
+              "evidence": [
+                {
+                  "condition_id": "modelo.work.calculate.declared_party_name_unresolved.stated",
+                  "evidence_id": "modelo.work.calculate.declared_party_name_unresolved",
+                  "provenance": "application_state",
+                  "values": {
+                    "reason": "declared_party_name_unresolved"
+                  }
+                }
+              ],
+              "failed_condition_id": "modelo.work.calculate.declared_party_name_unresolved.stated",
+              "missing_argument_names": [
+                "country_code",
+                "kind",
+                "tax_identifier"
+              ],
+              "no_recovery_outcome": null,
+              "target_operation_ids": [
+                "ledger.counterparty"
+              ]
+            },
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
+              "binding_source": "m349_intracommunity_operation",
+              "casilla_id": "op.apellidos-razon-social",
+              "detail": "Modelo 349 names Kunde GmbH (sha256:a9224776) in a 40-character name field, but no filing name is declared for it, so the field is left without content.",
+              "level": "missing",
+              "reason": "declared_party_name_unresolved",
+              "remedy": "State the counterparty's filing name (surnames and given name, or razón social), then calculate again.",
+              "resolver_id": "invoice_catalogue",
+              "source_kind": "m349_intracommunity_operation",
+              "source_ref": "party-name:missing:a922477629e2"
+            },
+            "message": "No filing name is stated for Kunde GmbH (sha256:a9224776).",
+            "severity": "warning"
+          },
+          {
             "action": null,
             "code": "modelo.work.calculate.plazo_vencido_unassessed_preview",
             "context": {
@@ -346,7 +424,7 @@
             "iva-349-declarante-numero-operadores": "1",
             "iva-349-declarante-numero-rectificaciones": "0"
           },
-          "calculation_revision_id": "3cc2cce9a7f8dfbf33cd9e16b1f48256e9b79fb61d2942923fc332d21ffdf78a",
+          "calculation_revision_id": "62b40026fc9b13eb81c3c79fa570ed5635bbda52b71577ab22a11ecc9d8fa37e",
           "casilla_values": {
             "decl.importe-operaciones": "2000.00",
             "decl.importe-rectificaciones": "0",
@@ -376,7 +454,7 @@
                 "codigo_pais": "DE",
                 "importe": "2000.00",
                 "nif_comunitario": "sha256:a9224776",
-                "razon_social": "Kunde GmbH"
+                "razon_social": null
               },
               "index": 1,
               "row_type": "operador"
@@ -493,13 +571,13 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 3cc2cce9a7f8dfbf33cd9e16b1f48256e9b79fb61d2942923fc332d21ffdf78a (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 62b40026fc9b13eb81c3c79fa570ed5635bbda52b71577ab22a11ecc9d8fa37e (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:f12f51c3576db4bbbd61709987ff76733707995f08da8dca5bec584cc075ea06",
+              "fingerprint": "sha256:26e52b0fe2b7134908a90103b976483d52f3ff4c8d987c4a4f71b224c8a3f78d",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "m349_intracommunity_operation",

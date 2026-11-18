@@ -407,7 +407,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "68495cb6d778f723587403f438fc869f3c6ac5587456d58c23c2c6862dbda909"
+          "value": "84fdd61b43251f7d22af0d164f3cd3a5b56b45e7b2b4b1ebd7423a49dd64400f"
         }
       ],
       "envelope": {
@@ -451,7 +451,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "68495cb6d778f723587403f438fc869f3c6ac5587456d58c23c2c6862dbda909",
+          "calculation_revision_id": "84fdd61b43251f7d22af0d164f3cd3a5b56b45e7b2b4b1ebd7423a49dd64400f",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",
@@ -601,7 +601,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 68495cb6d778f723587403f438fc869f3c6ac5587456d58c23c2c6862dbda909 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 84fdd61b43251f7d22af0d164f3cd3a5b56b45e7b2b4b1ebd7423a49dd64400f (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -637,10 +637,21 @@
               "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
             },
             {
+              "contributor_binding_source": "ledger_renta_income_aggregation",
+              "contributor_source_kind": "ledger_renta_income_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_renta_income_aggregation",
+              "resolver_id": "ledger_renta_income_aggregation",
+              "source_ref": "bound_input:06"
+            },
+            {
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",
@@ -676,7 +687,7 @@
         "modelo",
         "work",
         "revision",
-        "68495cb6d778f723587403f438fc869f3c6ac5587456d58c23c2c6862dbda909"
+        "84fdd61b43251f7d22af0d164f3cd3a5b56b45e7b2b4b1ebd7423a49dd64400f"
       ],
       "captures": [],
       "envelope": {
@@ -703,7 +714,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "68495cb6d778f723587403f438fc869f3c6ac5587456d58c23c2c6862dbda909",
+          "calculation_revision_id": "84fdd61b43251f7d22af0d164f3cd3a5b56b45e7b2b4b1ebd7423a49dd64400f",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",
@@ -879,10 +890,21 @@
               "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
             },
             {
+              "contributor_binding_source": "ledger_renta_income_aggregation",
+              "contributor_source_kind": "ledger_renta_income_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_renta_income_aggregation",
+              "resolver_id": "ledger_renta_income_aggregation",
+              "source_ref": "bound_input:06"
+            },
+            {
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",

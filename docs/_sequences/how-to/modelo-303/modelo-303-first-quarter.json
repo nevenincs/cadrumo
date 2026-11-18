@@ -376,7 +376,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "a9b630266698301b9478e06caa01e63cf7f480fa3a6a0b8b815aee42265493ae"
+          "value": "5aff5d68438a2d94190cf0ec242b7f0847f0887633041fd2233d75d5d083ec4a"
         }
       ],
       "envelope": {
@@ -460,7 +460,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a9b630266698301b9478e06caa01e63cf7f480fa3a6a0b8b815aee42265493ae",
+          "calculation_revision_id": "5aff5d68438a2d94190cf0ec242b7f0847f0887633041fd2233d75d5d083ec4a",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1027,7 +1027,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision a9b630266698301b9478e06caa01e63cf7f480fa3a6a0b8b815aee42265493ae (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 5aff5d68438a2d94190cf0ec242b7f0847f0887633041fd2233d75d5d083ec4a (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1124,7 +1124,7 @@
         "modelo",
         "work",
         "verify",
-        "a9b630266698301b9478e06caa01e63cf7f480fa3a6a0b8b815aee42265493ae"
+        "5aff5d68438a2d94190cf0ec242b7f0847f0887633041fd2233d75d5d083ec4a"
       ],
       "captures": [],
       "envelope": {
@@ -1173,7 +1173,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "a9b630266698301b9478e06caa01e63cf7f480fa3a6a0b8b815aee42265493ae",
+          "calculation_revision_id": "5aff5d68438a2d94190cf0ec242b7f0847f0887633041fd2233d75d5d083ec4a",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1217,7 +1217,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "1067c820f5dec10bf494b082a9d5848d85cd1e0ef522c05651814ff2af23abe1",
+          "verification_report_id": "000754d74518cb25a92b1091ae6d92ff3735618663e96598c649a9f239d2bc0f",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1249,7 +1249,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.file\nfiling_record_id\tb5f4ce8718366595983029ed6540975d7551769c3c359f57f7995f5c93abd60d\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\ta9b630266698301b9478e06caa01e63cf7f480fa3a6a0b8b815aee42265493ae\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_timeliness\ten_plazo\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.file\nfiling_record_id\tc48c5c0b129016f4bd200df3fe5837929d6a7aac13b062bb605a4cc279ae60d9\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\t5aff5d68438a2d94190cf0ec242b7f0847f0887633041fd2233d75d5d083ec4a\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_timeliness\ten_plazo\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -1306,10 +1306,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "27ecf023be4ea50b482f40481c783996ce23b30f4b3e9e7b068f21c55760b79a",
+          "bucket_event_id": "f21db7f73476a3f9bf143fe8a2e876948c9e119f44d7514f2afd0f871117a4c8",
           "bucket_id": "<bucket-id>",
           "byte_size": 2948,
-          "calculation_revision_id": "a9b630266698301b9478e06caa01e63cf7f480fa3a6a0b8b815aee42265493ae",
+          "calculation_revision_id": "5aff5d68438a2d94190cf0ec242b7f0847f0887633041fd2233d75d5d083ec4a",
           "file_sha256": "172aa359db8236b841ea0f48c4f9b9425d0138a191b62f1887ab797c6d6bf97a",
           "filing_year": 2026,
           "format": "fichero-boe",

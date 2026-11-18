@@ -90,6 +90,52 @@
     {
       "argv": [
         "aeat",
+        "app",
+        "ledger",
+        "counterparty",
+        "filing-name",
+        "DE000000001",
+        "--kind",
+        "entity",
+        "--razon-social",
+        "Nordlicht Plattformen GmbH",
+        "--country-code",
+        "DE"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "counterparty",
+        "filing-name",
+        "FR15000000001",
+        "--kind",
+        "entity",
+        "--razon-social",
+        "Atelier Numérique Garonne SARL",
+        "--country-code",
+        "FR"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
         "--format",
         "json",
         "app",
@@ -156,7 +202,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tregistry.modelo.bindings.list\nauthority_generation\t9b0835db772ae5d73888d03d6eccf7182ba47a7ba24bcb333adc203f11bc3baf\nmodelo_filter\t349\nyear_filter\t2026\nperiod_filter\t1T\nmissing_filter\tTrue\nbinding_count\t17\nmodelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable\n349\t2020-y-siguientes\t1T\tiva-349-declarante-numero-operadores\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-importe-operaciones\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-numero-rectificaciones\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-importe-rectificaciones\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-codigo-pais\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-nif\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-apellidos\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-clave\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-base\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-codigo-pais\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-nif\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-apellidos\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-clave\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-ejercicio\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-periodo\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-base-rectificada\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-base-anterior\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tregistry.modelo.bindings.list\nauthority_generation\t164e0cd6302402a2bdbeef09bf765040ea94159a090d68366406b70d80e9ff86\nmodelo_filter\t349\nyear_filter\t2026\nperiod_filter\t1T\nmissing_filter\tTrue\nbinding_count\t17\nmodelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable\n349\t2020-y-siguientes\t1T\tiva-349-declarante-numero-operadores\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-importe-operaciones\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-numero-rectificaciones\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-importe-rectificaciones\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-codigo-pais\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-nif\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-apellidos\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-clave\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-base\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-codigo-pais\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-nif\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-apellidos\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-clave\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-ejercicio\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-periodo\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-base-rectificada\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-base-anterior\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -194,7 +240,7 @@
             "iva-349-declarante-numero-operadores": "2",
             "iva-349-declarante-numero-rectificaciones": "0"
           },
-          "calculation_revision_id": "15c433c68e606f8e345f480e0dd0842e3d0a8b962179ee6d02dc04b079edd2f1",
+          "calculation_revision_id": "3157ab153f4cca38b9e36b8a82b2a642166814c7670c28e761307fb93c437929",
           "casilla_values": {
             "decl.importe-operaciones": "8000.00",
             "decl.importe-rectificaciones": "0",
@@ -341,7 +387,7 @@
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:4cf4f35b6d1c9f187839fb1e76b47cb75c4b1e77bb6bc8b5e8452607d95598c6",
+              "fingerprint": "sha256:1fbc35fbcbe2fc1b0bd7a4fa26f6bd8cd2e872bc657314a47d1e69e6c9d010eb",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "m349_intracommunity_operation",
@@ -352,7 +398,7 @@
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:c119ea453a97e2e23a4c6da5fcb530b0510eb59964277d91031f9b0ebc25e7f7",
+              "fingerprint": "sha256:1f1b8d33d1357375654bf96050debafc0bd1e40f1618f6dd127c32c16a63d80c",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "m349_intracommunity_operation",

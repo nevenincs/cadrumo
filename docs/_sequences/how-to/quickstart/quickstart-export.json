@@ -281,10 +281,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "1a762dd67f83209ac1947c137fea7210a8e18f0cb41a4879c6a2a3568fc39800",
+          "bucket_event_id": "759f61159f49af8657612864436cc61cb332352c85aac395097bc50e44f66389",
           "bucket_id": "<bucket-id>",
           "byte_size": 946,
-          "calculation_revision_id": "fe675aa78c378276ecb9824d866d8a65b02ecaa012b28569fedd9cbf9fdd06ab",
+          "calculation_revision_id": "5b41d659f4f1f310088015c85add3eabaebff275b603b2a9929be9d7105dd071",
           "file_sha256": "77e3d52f4b731a1ce2a2bc30b3c88ee091ce17b370140d5db054aa32e1a22942",
           "filing_year": 2026,
           "format": "fichero-boe",
