@@ -151,7 +151,9 @@ it prints one line with the machine's used and available memory, swap, free
 disk, load and the four processes holding the most memory, by name and process
 id only; no command line is read, because the log of a public run is public.
 The tests remain the step's last command, so their exit status is the step's.
-A shard that fails on a runner that survives also prints the kernel's kill
+The tests step stops ten minutes before its job (`timeout-minutes: 50` of
+60), because a job stopped at its own limit keeps no log and a stalled
+shard would not say where it stalled. A shard that fails on a runner that survives also prints the kernel's kill
 records. The shards provision Chromium (the setup action's `browser` input),
 because their population holds the tests that drive a real browser, and
 place the window projections the `window` job seeded and uploaded before the

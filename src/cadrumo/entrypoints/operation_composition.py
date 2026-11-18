@@ -612,6 +612,21 @@ def build_manifest_operation_registry(
     return ManifestOperationRegistry.from_manifest(resolved, partial(compose_operation_group, bound))
 
 
+def _refreshing_form_after_export(
+    journal_committed: Callable[[OperationPersistedSnapshot], None] | None, capture_memory: WorkbenchCaptureMemoryOwner
+) -> Callable[[OperationPersistedSnapshot], None]:
+    """Tell the host of each commit, and refresh the session's form once an export that wrote has settled."""
+    from ..application.modelo.workbench_form_read_memo import export_settled_with_effect
+
+    def committed(snapshot: OperationPersistedSnapshot) -> None:
+        if journal_committed is not None:
+            journal_committed(snapshot)
+        if export_settled_with_effect(snapshot):
+            capture_memory.refresh_settled_form()
+
+    return committed
+
+
 def compose_operation_dependencies(
     *,
     authority_operation: PinnedAuthorityOperation,
@@ -735,7 +750,7 @@ def compose_operation_dependencies(
         reader=journal,
         leases=OperationLeaseFilesystemRepository(storage_root=storage_root),
         operands=operation_secure_reference_repository(),
-        committed=journal_committed,
+        committed=_refreshing_form_after_export(journal_committed, capture_memory),
     )
     return compose_operation_services(
         registry=registry,

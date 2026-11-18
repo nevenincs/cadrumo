@@ -414,6 +414,7 @@ desktop:
     sign_in_cause:
       agent_stop_failed: The agent couldn't be stopped to finish the sign-in.
       agent_tree_running: The agent was still running, so the sign-in couldn't start.
+      browser_not_offered: Claude didn't offer a sign-in page in time.
       browser_relay_unavailable: The sign-in page couldn't be passed on to your browser.
       cleanup_unconfirmed: It couldn't be confirmed that the sign-in closed cleanly.
       cli_exited_early: The provider's app stopped before the sign-in finished.

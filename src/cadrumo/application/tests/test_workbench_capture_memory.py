@@ -222,6 +222,133 @@ def test_a_slot_names_the_key_of_the_result_it_keeps() -> None:
     assert slot.kept_key() is None
 
 
+def test_a_refreshed_result_is_served_without_building_again() -> None:
+    slot: WorkbenchMemoSlot[str, str] = WorkbenchMemoSlot()
+    builds: list[str] = []
+
+    def build() -> str:
+        builds.append("next")
+        return "built"
+
+    assert slot.refresh("next", lambda: "refreshed", current=lambda: True)
+    assert slot.reuse("next", build) == "refreshed"
+    assert builds == []
+    assert not slot.refresh("next", lambda: "again", current=lambda: True), "a kept key was refreshed again"
+
+
+def test_a_refresh_overtaken_by_a_newer_input_keeps_nothing() -> None:
+    slot: WorkbenchMemoSlot[str, str] = WorkbenchMemoSlot()
+
+    assert not slot.refresh("next", lambda: "stale", current=lambda: False)
+    assert slot.kept_key() is None
+    assert slot.reuse("next", lambda: "built") == "built"
+
+
+def test_a_read_for_the_key_being_refreshed_joins_the_refresh() -> None:
+    slot: WorkbenchMemoSlot[str, str] = WorkbenchMemoSlot()
+    started, release = threading.Event(), threading.Event()
+    builds: list[str] = []
+
+    def refreshing() -> str:
+        started.set()
+        release.wait()
+        builds.append("refresh")
+        return "refreshed"
+
+    def read() -> str:
+        builds.append("read")
+        return "built"
+
+    refresh = threading.Thread(target=lambda: slot.refresh("next", refreshing, current=lambda: True))
+    refresh.start()
+    started.wait()
+    served: list[str] = []
+    joining = threading.Thread(target=lambda: served.append(slot.reuse("next", read)))
+    joining.start()
+    release.set()
+    joining.join()
+    refresh.join()
+
+    assert served == ["refreshed"]
+    assert builds == ["refresh"]
+
+
+def test_a_read_for_another_key_never_waits_for_a_refresh() -> None:
+    slot: WorkbenchMemoSlot[str, str] = WorkbenchMemoSlot()
+    started, release = threading.Event(), threading.Event()
+
+    def refreshing() -> str:
+        started.set()
+        release.wait()
+        return "refreshed"
+
+    refresh = threading.Thread(target=lambda: slot.refresh("next", refreshing, current=lambda: True))
+    refresh.start()
+    started.wait()
+    try:
+        assert slot.reuse("other", lambda: "built") == "built"
+        assert not slot.refresh("other", lambda: "second", current=lambda: True), "two refreshes ran at once"
+    finally:
+        release.set()
+        refresh.join()
+
+
+def test_a_read_joining_a_failed_refresh_builds_itself() -> None:
+    slot: WorkbenchMemoSlot[str, str] = WorkbenchMemoSlot()
+    started, release = threading.Event(), threading.Event()
+
+    def failing() -> str:
+        started.set()
+        release.wait()
+        raise RuntimeError("refresh failed")
+
+    def refresh() -> None:
+        with pytest.raises(RuntimeError):
+            slot.refresh("next", failing, current=lambda: True)
+
+    refreshing = threading.Thread(target=refresh)
+    refreshing.start()
+    started.wait()
+    served: list[str] = []
+    joining = threading.Thread(target=lambda: served.append(slot.reuse("next", lambda: "built")))
+    joining.start()
+    release.set()
+    joining.join()
+    refreshing.join()
+
+    assert served == ["built"]
+
+
+def test_a_closed_slot_keeps_no_refresh() -> None:
+    slot: WorkbenchMemoSlot[str, str] = WorkbenchMemoSlot()
+    slot.close()
+
+    assert not slot.refresh("next", lambda: "refreshed", current=lambda: True)
+    assert slot.kept_key() is None
+
+
+def test_an_ended_or_replaced_session_starts_no_form_refresh() -> None:
+    owner = WorkbenchCaptureMemoryOwner()
+    ran: list[str] = []
+    owner.for_profile("first").keep_form_refresh(lambda: ran.append("first"))
+    owner.for_profile("second")
+    assert owner.refresh_settled_form() is None
+
+    owner.for_profile("second").keep_form_refresh(lambda: ran.append("second"))
+    owner.close()
+    assert owner.refresh_settled_form() is None
+
+    memory = owner.for_profile("third")
+    memory.keep_form_refresh(lambda: ran.append("third"))
+    started = owner.refresh_settled_form()
+    assert started is not None
+    started.join()
+    memory.close()
+    memory.keep_form_refresh(lambda: ran.append("after close"))
+    assert memory.refresh_form() is None
+    assert ran == ["third"]
+
+
 def _kept(memory: WorkbenchCaptureMemory) -> bool:
     """Whether the memory still stores and serves work: a second reuse of one key builds nothing."""
     key = cast(Any, object())
