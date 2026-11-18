@@ -597,9 +597,9 @@ def _bucket_aggregation_channels(
         detail_rows=all_detail_rows,
     )
     detail_row_binding_values = detail_row_binding_values_for_calculation(
-        work_unit=preparation.work_unit,
+        resolver_rows=source_resolution.detail_rows,
         revision=preparation.snapshot.revision,
-        detail_rows=_caller_rows_beyond_resolver(detail_rows, source_resolution.detail_rows),
+        detail_rows=detail_rows,
     )
     backend_binding_values = _merge_detail_row_binding_values(
         source_resolution.binding_values,
@@ -1207,19 +1207,6 @@ def _credit_reconciliation_reason(
     if issue.reason == "credit_resolution_stale":
         return "credit_resolution_stale"
     return "credit_cross_check_absent"
-
-
-def _caller_rows_beyond_resolver(
-    caller_rows: tuple[ModeloDetailRow, ...],
-    resolver_rows: tuple[ModeloDetailRow, ...],
-) -> tuple[ModeloDetailRow, ...]:
-    """Return the caller rows the resolver does not itself supply.
-
-    The resolver's binding values already count its own rows, and a recalculation
-    replays the current revision's rows (resolver rows included) as caller rows, so
-    only the rows the identity union adds may be summed on top of that count.
-    """
-    return tuple(row for row in caller_rows if row not in resolver_rows)
 
 
 def _merge_detail_row_binding_values(
