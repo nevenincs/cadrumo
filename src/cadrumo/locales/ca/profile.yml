@@ -197,8 +197,9 @@ profile:
             B01: Activitat agrícola
             B02: Activitat ramadera dependent
             B03: Activitat forestal
-            B04: Producció de musclo en batea
-            B05: Activitat pesquera, excepte la producció de musclo en batea
+            B04: Producció de musclos en plataformes flotants
+            B05: Activitat pesquera, excepte la producció de musclos en plataformes
+              flotants
           label: Tipus d'activitat (Model 036)
       attribution_entity_socios:
         base_imponible_assigned:
@@ -698,7 +699,7 @@ profile:
         fecha_inicio:
           label: Data d'inici
         incumple_lau_17_6:
-          label: Incompleix l'art. 17.6 LAU (zona tensionada)
+          label: Incompleix l'art. 17.6 LAU (zona de mercat residencial tensat)
         inmueble:
           label: Immoble arrendat (clau de fila)
         inquilinos:
@@ -714,7 +715,7 @@ profile:
         uso_vivienda:
           label: Arrendament d'habitatge
         zona_tensionada:
-          label: Zona de mercat residencial tensionat
+          label: Zona de mercat residencial tensat
       renta_family:
         anualidades_alimentos_euros:
           label: Anualitats per aliments a favor dels fills per decisió judicial

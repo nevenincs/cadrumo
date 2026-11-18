@@ -810,7 +810,7 @@ application:
         claimed: Aquesta compra registra la transacció del llibre que indiques; aquesta
           fila queda fora de les despeses del Model 100 i la compra porta el seu cost
           al llibre d'inventari.
-        none: Indiques que cap transacció del llibre registra aquesta compra.
+        none: Has indicat que cap transacció del llibre registra aquesta compra.
         unstated: Encara no s'ha indicat res sobre la transacció del llibre que registra
           aquesta compra.
     labels:
@@ -2436,7 +2436,7 @@ application:
       renta_inmueble_letting_start_unstated: 'Immoble {record}: no indica quan es
         va arrendar per primera vegada, així que no se sap de quins exercicis anteriors
         pot arrossegar encara un excés d''interessos i reparació. Indica aquesta data
-        amb config profile inmueble edit.'
+        amb `config profile inmueble edit`.'
       renta_inmueble_naturaleza_unstated: 'Immoble {record}: no indica si és urbà
         o rústic.'
       renta_inmueble_pending_expenses_held_return_unstated: 'Immoble {record}: estava
@@ -2459,8 +2459,9 @@ application:
       renta_inmueble_record_unreadable: No es pot llegir un registre d'immoble o d'arrendament
         del teu perfil, així que no es calcula cap immoble arrendat.
       renta_inmueble_reduction_fact_unstated: 'Immoble {record}: un arrendament no
-        indica si és d''habitatge, si l''habitatge és en zona tensionada o si manté
-        l''art. 17.6 LAU, així que la reducció de l''art. 23.2 no es calcula.'
+        indica si és d''habitatge, si l''habitatge és en zona de mercat residencial
+        tensat o si manté l''art. 17.6 LAU, així que la reducció de l''art. 23.2 no
+        es calcula.'
       renta_inmueble_reduction_tenants_mixed: 'Immoble {record}: només alguns arrendataris
         d''un arrendament compleixen per edat la reducció de l''art. 23.2, que no
         es calcula.'
@@ -5120,8 +5121,8 @@ application:
           Inicia el Model 100 d'un d'aquests anys i torna a llegir-ho.
         refusal:
           lau_17_6_unstated: 'Exercici %{ejercicio}: no es pot derivar la reducció
-            perquè l''arrendament és en zona tensionada i falta aquesta dada: %{fact}.
-            Indica-la.'
+            perquè l''arrendament és en zona de mercat residencial tensat i falta
+            aquesta dada: %{fact}. Indica-la.'
           lease_unreadable: 'Exercici %{ejercicio}: les dades d''aquest arrendament
             no es poden llegir (%{fact}). Corregeix-les.'
           mixed_tenant_ages: 'Exercici %{ejercicio}: només alguns arrendataris tenen
@@ -5146,12 +5147,12 @@ application:
           tier_50: 'reducció del %{rate} %: qualsevol altre arrendament d''habitatge'
           tier_60: 'reducció del %{rate} %: habitatge rehabilitat en els anys anteriors
             al contracte'
-          tier_70: 'reducció del %{rate} %: primer arrendament en zona tensionada
-            a arrendataris de 18 a 35 anys, o arrendament a una administració pública
-            o entitat sense afany de lucre per a habitatge assequible o social'
-          tier_90: 'reducció del %{rate} %: zona de mercat residencial tensionat i
-            renda inicial rebaixada per sobre del llindar legal respecte de l''última
-            renda del contracte anterior'
+          tier_70: 'reducció del %{rate} %: primer arrendament en zona de mercat residencial
+            tensat a arrendataris de 18 a 35 anys, o arrendament a una administració
+            pública o entitat sense afany de lucre per a habitatge assequible o social'
+          tier_90: 'reducció del %{rate} %: zona de mercat residencial tensat i renda
+            inicial rebaixada per sobre del llindar legal respecte de l''última renda
+            del contracte anterior'
         title: Reducció de l'arrendament (art. 23.2 LIRPF)
         value:
           affirmative: sí

@@ -344,7 +344,7 @@ aggregation:
         no coinciden con el registro que quieres cambiar, así que no se ha guardado
         nada.
       not_found: No existe ningún registro de aportaciones con esa referencia de emisor,
-        --plan-ref, --clave y --subclave en este ejercicio. Ejecuta el comando list
+        --plan-ref, --clave y --subclave en este ejercicio. Ejecuta el comando `list`
         para ver los registros guardados.
       same_plan_split_unstated: La casilla de esta clave y subclave depende de si
         tu empleador también hizo contribuciones al mismo plan. Indícalo con --employer-same-plan

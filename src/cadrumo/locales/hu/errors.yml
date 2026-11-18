@@ -732,8 +732,9 @@ errors:
       is megad (%{bindings}). Mezősoronként egy értéket hagyj meg.
     filing_draft_casilla_claimed_twice: A bevallás ugyanahhoz a rovathoz több értéket
       is megad (%{casillas}). Rovatonként egy értéket hagyj meg.
-    filing_draft_modelo_differs: A bevallás a(z) %{modelo} Modelóra szól, de a nyilvántartási
-      pillanatképe a(z) %{snapshot_modelo} Modelóra. Építsd fel újra a bevallást.
+    filing_draft_modelo_differs: A bevallás a(z) %{modelo} nyomtatványra vonatkozik,
+      a hozzá tartozó nyilvántartási pillanatkép viszont a(z) %{snapshot_modelo} nyomtatványra.
+      Építsd fel újra a bevallást.
     filing_draft_period_token_differs: A bevallás a(z) %{period} időszakra szól, de
       a nyilvántartási pillanatképe a(z) %{snapshot_period} időszakra. Építsd fel
       újra a bevallást.
@@ -866,8 +867,8 @@ errors:
       megadása hiányos vagy megváltozott. Az alkalmazás ezt a saját exportálási tervéből
       származtatja, ezért az adataid módosítása nem javítja ki.
     filing_export_m190_component_wire: A 190-es modell egy aláírt összetevője érvénytelen
-      rekordbájtokat tartalmaz. Az alkalmazás ezt a saját exportálási tervéből származtatja,
-      ezért az adataid módosítása nem javítja ki.
+      bájtokat tartalmaz a rekordban. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
     filing_export_m190_context_differs: A 190-es modell aláírt feltételi környezete
       eltér az átvizsgált forrástól. Az alkalmazás ezt a saját exportálási tervéből
       származtatja, ezért az adataid módosítása nem javítja ki.
@@ -890,9 +891,9 @@ errors:
       terve nem a kiválasztott pillanatképhez tartozik. Az alkalmazás ezt a saját
       exportálási tervéből származtatja, ezért az adataid módosítása nem javítja ki.
     filing_export_m303_evidence_orden_mismatch: A 303-as modell beadási bizonyítékának
-      éves Ordenje nem egyezik a kiválasztott pillanatképpel. Az alkalmazás ezt a
-      saját exportálási tervéből származtatja, ezért az adataid módosítása nem javítja
-      ki.
+      éves rendelete (Orden) nem egyezik a kiválasztott pillanatképpel. Az alkalmazás
+      ezt a saját exportálási tervéből származtatja, ezért az adataid módosítása nem
+      javítja ki.
     filing_export_m303_projection_layout_unowned: A 303-as modell beadási vetületének
       terve nem a kiválasztott pillanatképhez tartozik. Az alkalmazás ezt a saját
       exportálási tervéből származtatja, ezért az adataid módosítása nem javítja ki.
@@ -1040,7 +1041,7 @@ errors:
       Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid
       módosítása nem javítja ki.
     filing_export_xsd_version_absent: A(z) %{source} XML-szótár XSD-forrása nem ad
-      meg versionxsd értéket. Az alkalmazás ezt a saját exportálási tervéből származtatja,
+      meg `versionxsd` értéket. Az alkalmazás ezt a saját exportálási tervéből származtatja,
       ezért az adataid módosítása nem javítja ki.
     filing_value_kind_contradicts_trace: 'A bevallás %{casilla_id} rovatának számítási
       nyoma ellentmond a típusának (%{kind}): csak a számított rovat hordoz ilyet.
@@ -2110,7 +2111,7 @@ errors:
       nem hordozhat üzleti adatokat, például költségkategóriát, adóalapot vagy áfát.
       Sorold a tételt Üzletinek vagy Vegyesnek, ha rögzíteni szeretnéd őket.
     transaction_iva_rate_not_fraction: 'Az ÁFA-kulcsot tizedes törtként kell megadni,
-      nem százalékként: ezt írtad be: {value}. A 21%-os ÁFÁ-t így írd: 0.21.'
+      nem százalékként: ezt írtad be: {value}. A 21%-os áfakulcsot így írd be: 0.21.'
     tui_modelo_lifecycle_action_unavailable: A kiválasztott Modelo-életciklusművelet
       nem érhető el.
     unsupported_currency: A megadott devizakód nem támogatott.

@@ -556,9 +556,9 @@ application:
         m193_pending_row_has_devengo: 'Semmi sem íródott ki: a 193-as modell függő
           sorához nem tartozhat esedékességi év is. Töröld az egyiket, és exportálj
           újra.'
-        m202_foral_territory_unstated: 'Semmi sem íródott ki: a profilod foral adóterületet
+        m202_foral_territory_unstated: 'Semmi sem íródott ki: a profilod forális adóterületet
           ad meg, de nem mondja meg, melyiket, pedig a 202-es nyomtatványon fel kell
-          tüntetni (Navarra, Gipuzkoa, Bizkaia vagy Álava). Foral adóterületet még
+          tüntetni (Navarra, Gipuzkoa, Bizkaia vagy Álava). Forális adóterületet még
           nem adhatsz meg a profilban, ezért ez az előleg nem exportálható.'
         m202_prior_periodo_turnover_disagrees: 'Semmi sem íródott ki: az adókulcsot
           a megelőző adómegállapítási időszak nettó árbevétele határozza meg, de az
@@ -1337,9 +1337,9 @@ application:
       tax_id_fails_check: A dokumentum „{printed}” értéket tüntet fel adóazonosítóként,
         de az nem felel meg az ellenőrző karakterének, ezért nem lett ellenőrzött
         azonosítóként elfogadva.
-      tier_cuota_not_rate_of_base: A(z) {rate}%-os kulcs {base} alapra {cuota} adót
-        tüntet fel, holott {expected} kellene. A 303-as nyomtatvány kulcsonként vallja
-        be az adót, így ez a kulcs rossz összeget vallana be.
+      tier_cuota_not_rate_of_base: A dokumentum a(z) {base} alapra {cuota} adót tüntet
+        fel {rate}% adókulcs mellett, holott {expected} kellene. A 303-as nyomtatvány
+        kulcsonként vallja be az adót, így ez a kulcs rossz összeget vallana be.
       total_not_closed: A nyomtatott végösszeg ({total}) nem egyezik az alap, az adó,
         a kiegyenlítő felár és a továbbszámlázott tételek összegével ({computed}).
         Valamelyik összetevő hibásan lett beolvasva, vagy a dokumentum olyat is tartalmaz,
@@ -2397,8 +2397,8 @@ application:
         hatályos, de nincs hozzá kapcsolt bérleti díj tétel.'
       renta_inmueble_letting_start_unstated: '{record}. ingatlan: nincs megadva, mikor
         adtad bérbe először, ezért nem tudható, mely korábbi adóévekből hozhat még
-        magával kamat- és javítási többletet. Add meg ezt a dátumot ezzel: config
-        profile inmueble edit.'
+        magával kamat- és javítási többletet. Add meg ezt a dátumot ezzel: `config
+        profile inmueble edit`.'
       renta_inmueble_naturaleza_unstated: '{record}. ingatlan: nem szerepel, hogy
         városi vagy külterületi (rústico) ingatlan-e.'
       renta_inmueble_pending_expenses_held_return_unstated: '{record}. ingatlan: már
@@ -2962,7 +2962,7 @@ application:
         beadáshoz rögzített justificante nem támasztja alá a módosítást. Hiányzik,
         többször szerepel, vagy nem egyezik a bevallás modelljével, időszakával és
         adózójával. Te döntöd el, melyik nyilvántartás téves: ellenőrizd a rögzített
-        beadást és a justificantét.'
+        beadást és a hozzá tartozó bizonylatot.'
       export_cross_bucket_refused: A megcímzett revízió nem az aktív profil bucketjéhez
         tartozik. Exportálás előtt váltson profilt.
       export_draft_approval_failed: Nem sikerült jóváhagyni a(z) %{calculation_revision_id}
@@ -3332,7 +3332,8 @@ application:
         Minden tételnek egyetlen összeget adj. Semmi sem változott.
       prior_carries_amount_invalid: A(z) %{filing_year}. évi %{modelo} modellben minden
         --amount <rovat>=<összeg> alakú legyen, 1234.56 formában írt pozitív összeggel
-        (legfeljebb két tizedes, előjel és ezerelválasztó nélkül). Semmi sem változott.
+        (legfeljebb két tizedes, előjel és az ezresek tagolása nélkül). Semmi sem
+        változott.
       prior_carries_amount_not_a_carry: A(z) %{filing_year}. évi %{modelo} modellben
         a(z) %{box} rovat nem nyitott, korábbi évekből származó összeg a --family
         által megnevezett családban. Ellenőrizd a rovatot és a családokat. Semmi sem
@@ -3460,8 +3461,8 @@ application:
         Modelo %{revision_id} változatához. A rendelkezésre álló időszakok: %{available}.
         Válassz közülük.'
       registry_revision_not_declared: 'A(z) %{revision_id} változat nincs megadva
-        a(z) %{modelo} Modelóhoz. A rendelkezésre álló változatok: %{available}. Válassz
-        közülük.'
+        a(z) %{modelo} nyomtatványhoz. A rendelkezésre álló változatok: %{available}.
+        Válassz közülük.'
       registry_revision_unreadable: A nyilvántartás nem tudja beolvasni a(z) %{modelo}
         Modelo %{revision_id} változatát. Ellenőrizd a modell számát és a változatot.
       review_package_envelope_file_unreadable: A fájl nem olvasható, titkosított felülvizsgálati
@@ -4240,8 +4241,8 @@ application:
         attest_no_amount:
           action: Jelezd, hogy nincs összeg
           effect: Általad kijelentett 0-ként rögzül.
-          statement: Kijelenti, hogy ebben a korábbi ejercicióból áthozott tételben
-            nincs összeg. Általad kijelentett 0-ként rögzül, elkülönítve a beírt számtól;
+          statement: Kijelenti, hogy ebben a korábbi adóévből áthozott tételben nincs
+            összeg. Általad kijelentett 0-ként rögzül, elkülönítve a beírt számtól;
             ha egy korábbi bevallás később összeget mutat, a bevallás jelzi az eltérést.
         attest_prior_value:
           action: Add meg a korábbi bevallás összegét
@@ -4429,7 +4430,7 @@ application:
         live_filed_pull_all: Töltsd le az összes benyújtott bevallást az AEAT-tól
         live_notifications_list: Nézd meg az AEAT-értesítéseidet
         modelo_bindings_list: Nézd át, honnan származnak a bevallás összegei
-        modelo_casillas: Nézd át a bevallás casilláit
+        modelo_casillas: Nézd át a bevallás rovatait
         modelo_describe: Olvasd el a modelo leírását
         modelo_export: Exportáld a bevallás fájlját
         modelo_filing_record_import: Rögzítsd a benyújtási igazolást
@@ -4987,7 +4988,7 @@ application:
         declaracion_propia:
           help: 'Akkor kérdezzük, ha a jövedelme meghaladja a törvényben megállapított
             összeget: ilyenkor a saját bevallás megszünteti a minimumot.'
-          label: Benyújtja ez a felmenő a saját személyijövedelemadó-bevallását?
+          label: Benyújtja ez a felmenő a saját bevallását a személyi jövedelemadóról?
         discapacidad:
           help: A minimális életkor alatti felmenőnél kérdezzük, aki után csak fogyatékosság
             esetén jár a minimum.
@@ -5080,17 +5081,17 @@ application:
           not_a_person: nem természetes személy
           other_ages: más korú
         tier:
-          legacy: '%{rate} %-os csökkentés a 2021. december 31-én hatályos szöveg
-            szerint, amely erre a bérletre vonatkozik'
-          tier_50: '%{rate} %-os csökkentés: bármely más lakásbérlet'
-          tier_60: '%{rate} %-os csökkentés: a szerződést megelőző években felújított
+          legacy: A csökkentés mértéke %{rate}% a 2021. december 31-én hatályos szöveg
+            szerint, amely erre a bérletre vonatkozik
+          tier_50: 'A csökkentés mértéke %{rate}%: bármely más lakásbérlet'
+          tier_60: 'A csökkentés mértéke %{rate}%: a szerződést megelőző években felújított
             lakás'
-          tier_70: '%{rate} %-os csökkentés: feszített övezetben az első bérbeadás
+          tier_70: 'A csökkentés mértéke %{rate}%: feszített övezetben az első bérbeadás
             18 és 35 év közötti bérlőknek, vagy bérbeadás közigazgatási szervnek vagy
             nonprofit szervezetnek megfizethető vagy szociális lakhatásra'
-          tier_90: '%{rate} %-os csökkentés: feszített lakáspiaci övezet, és a kezdő
-            bérleti díj a törvényi küszöbnél nagyobb mértékben alacsonyabb az előző
-            szerződés utolsó bérleti díjánál'
+          tier_90: 'A csökkentés mértéke %{rate}%: feszített lakáspiaci övezet, és
+            a kezdő bérleti díj a törvényi küszöbnél nagyobb mértékben alacsonyabb
+            az előző szerződés utolsó bérleti díjánál'
         title: Bérleti csökkentés (LIRPF 23.2. cikk)
         value:
           affirmative: igen

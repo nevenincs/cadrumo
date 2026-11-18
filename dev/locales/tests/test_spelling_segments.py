@@ -678,6 +678,9 @@ def test_preserved_spanish_tax_phrases_route_only_the_phrase(phrase: str, spanis
         ("per contribuyente", {"contribuyente"}),
         ("baja date", {"baja"}),
         ("dotación recorded", {"dotación"}),
+        ("Extinción de entidad", {"Extinción", "de", "entidad"}),
+        ("cifra de negocios", {"cifra", "de", "negocios"}),
+        ("labores del tabaco", {"labores", "del", "tabaco"}),
     ],
 )
 def test_tax_terms_in_mixed_language_context_route_only_the_spanish_word(text: str, spanish: set[str]) -> None:
@@ -735,6 +738,8 @@ def test_misspelled_or_unaccented_tax_terms_stay_in_english(text: str) -> None:
         "fichero BOEx",
         "csv cotejoo",
         "situación catastrall",
+        "Extincion de entidad",
+        "cifra de negosios",
     ],
 )
 def test_near_miss_aeat_terms_remain_english_spelling_input(term: str) -> None:

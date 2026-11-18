@@ -26,6 +26,7 @@ from ....domain.deadlines.profiles import (
 )
 from ..completeness import conditional_profile_missing_required
 from ..keys_validation import validate_profile_values
+from ..profile_read_recorder import ProfileReadRecorder, RecordedProfileView
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -120,6 +121,17 @@ def test_every_block_owned_path_claims_the_block_on_its_own() -> None:
     """No path in the claim set may be declarable without obliging the rest."""
     for path in sorted(MODELO_IVA_BLOCK_CLAIMING_PATHS):
         assert profile_claims_modelo_iva_block({path: "false"}) is True, path
+
+
+def test_iva_block_claim_reads_paths_in_a_stable_order() -> None:
+    """A claim against a tracked mapping records a repeatable profile read set."""
+    paths = sorted(MODELO_IVA_BLOCK_CLAIMING_PATHS)
+    for index, path in enumerate(paths):
+        recorder = ProfileReadRecorder()
+        values = RecordedProfileView({path: "false"}, recorder=recorder, key_paths={})
+
+        assert profile_claims_modelo_iva_block(values) is True
+        assert [entry.selector for entry in recorder.entries(())] == paths[: index + 1]
 
 
 def test_a_satisfied_block_leaves_nothing_outstanding() -> None:

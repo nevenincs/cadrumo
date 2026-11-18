@@ -86,6 +86,10 @@ REVIEWED_CATALAN_SPELLINGS: frozenset[str] = frozenset(
         "tipades",
         "bloquejants",
         "Subclau",
+        # Lowercase field label in Modelo 345 and 190, and the economic
+        # activity label for sales from a vehicle in the profile schema.
+        "subclau",
+        "autovenda",
         # Current Catalan prose attests inclusiva in cli.yml, tipat in
         # application.yml, idempotència in application.yml, and
         # subcomandament/coteig/indiques in cli.yml and wizard.yml.

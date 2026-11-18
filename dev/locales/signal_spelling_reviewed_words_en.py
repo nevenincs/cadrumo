@@ -424,5 +424,43 @@ REVIEWED_ENGLISH_SPELLINGS: frozenset[str] = frozenset(
         # Decreto 1007/2023 (written VERI*FACTU in the regulation):
         # https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840
         "Verifactu",
+        # Exact Spanish field names, shorter references and filing vocabulary
+        # retained beside the English text to match AEAT forms and certificates.
+        "recargo",
+        "clave",
+        "subclave",
+        "alta",
+        "mutualidad",
+        "reintegro",
+        "cuotas",
+        "retención",
+        "suplidos",
+        "Apartado",
+        "apartado",
+        "anexo",
+        "existencias",
+        "arrendamientos",
+        "ascendiente",
+        "ascendientes",
+        "descendientes",
+        "perceptor",
+        "Orden",
+        "Nota",
+        "administración",
+        "delegación",
+        "denominación",
+        "Regla",
+        "comunidad",
+        "período",
+        "SICAVs",
+        # English legal, business and technical forms in the same catalogue.
+        "usufruct",
+        "Usufruct",
+        "investee",
+        "mutuals",
+        "Computable",
+        "encodings",
+        "subkey",
+        "serialiser",
     }
 )
