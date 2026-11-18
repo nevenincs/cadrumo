@@ -271,6 +271,7 @@ def build_calculation_action_ports(
         ),
         calculation_repository=calculation_binding.calculation_repository(),
         verification_repository=calculation_binding.verification_repository(),
+        participation_index_repository=_participation_index(normalized_bucket_id, objects),
         bucket_event_repository=bucket_event_repository,
         transaction_repository=TransactionCatalogueRepository(
             bucket_id=normalized_bucket_id,
@@ -783,6 +784,13 @@ def extraction_draft_repository(*, bucket_id: str, settings: Settings) -> Extrac
     from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
 
     return ExtractionDraftRepository(bucket_id=bucket_id, settings=settings)
+
+
+def _participation_index(bucket_id: str, objects: SecureObjectRepository) -> TransactionParticipationIndexRepository:
+    """Compose the participation index over the calculation's own secure objects."""
+    from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+
+    return TransactionParticipationIndexRepository(bucket_id=bucket_id, objects=objects)
 
 
 def transaction_participation_index_repository(
