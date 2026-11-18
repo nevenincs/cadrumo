@@ -4,24 +4,19 @@ import {
   continuationFault,
 } from "../shell/agentClarification";
 import type {
-  AgentApproval,
-  AgentApprovalOption,
   AgentDropSignal,
-  AgentQuestionnaire,
   AgentQuestionnaireAnswer,
   AgentSendRequest,
   AgentServiceStatus,
   AgentSession,
   AgentStreamEvent,
+  AgentStreamToolCall,
   AgentToolRefusal,
 } from "../shell/agentSession";
 import {
   isLiveStatus,
   type AgentConversationRecord,
   type AgentDocumentRecord,
-  type AgentDocumentReference,
-  type AgentRanWith,
-  type AgentToolCall,
   type AgentViews,
 } from "../shell/agentViews";
 import type { ToolCallStatus } from "../shell/agentGatewayContract";
@@ -68,8 +63,6 @@ import {
   PERMISSION_OPTION_ID_MAX,
   PERMISSION_TARGETS,
   QUESTIONS,
-  REMEMBERED_OPTIONS,
-  REVIEW_OPTIONS,
   TOOL_OPTIONS,
   UNNAMED_OPTIONS,
   asked,
@@ -95,6 +88,13 @@ import {
   UNEXPECTED_PROVIDER_CONDITION,
 } from "./agentFixtureTriggers";
 import { pieces } from "./fixtures/textPieces";
+import type {
+  AgentApproval,
+  AgentApprovalOption,
+  AgentDocumentReference,
+  AgentQuestionnaire,
+  AgentRanWith,
+} from "../shell/agentSnapshotContract";
 
 // The scenario host's agent: its views over the fixture conversations, and
 // a session that answers every message with a made-up reply, streamed as
@@ -117,9 +117,9 @@ import { pieces } from "./fixtures/textPieces";
  * pending again and watching anew. */
 export type FixtureStream = "steady" | "gap";
 
-/** What every fixture reply stops to wait on, if anything: questions, a
- * tool the agent wants to use, or a Cadrumo operation to review. */
-export type FixtureAsks = "questions" | "approval" | "review";
+/** What every fixture reply stops to wait on, if anything: questions, or a
+ * tool the agent wants to use. */
+export type FixtureAsks = "questions" | "approval";
 
 /** What the conversations have stored: the fixture documents, nothing at
  * all, storage the host does not serve, or storage that cannot be read. */
@@ -508,19 +508,19 @@ export function fixtureAgent({
   const tool = (
     held: Reply,
     title: string,
-    tool_kind: AgentToolCall["tool_kind"],
+    tool_kind: AgentStreamToolCall["tool_kind"],
     states: readonly ToolCallStatus[],
     refusal?: AgentToolRefusal,
     details?: string[],
   ) => {
-    const call: AgentToolCall = {
+    const call: AgentStreamToolCall = {
       id: id("t"),
       title,
       tool_kind,
       status: "pending",
     };
     return states.map((state) => () => {
-      const now: AgentToolCall = { ...call, status: state };
+      const now: AgentStreamToolCall = { ...call, status: state };
       const at = held.run.tools.findIndex((held) => held.id === call.id);
       const recorded = details ? { ...now, details } : now;
       if (at < 0) held.run.tools.push(recorded);
@@ -644,20 +644,17 @@ export function fixtureAgent({
       ]);
       return;
     }
-    if (asks === "approval" || asks === "review") {
-      const review = asks === "review";
-      const title = review
-        ? "Registrar la factura 2026-031"
-        : "Leer los apuntes del libro";
+    if (asks === "approval") {
+      const title = "Leer los apuntes del libro";
       // A message asks for the permission the agent gives least to go on,
       // or the most it can.
-      const unnamed = !review && /sin nombres/i.test(text);
-      const most = !review && /extremos/i.test(text);
-      const remembered = !review && /solo recuerdos/i.test(text);
+      const unnamed = /sin nombres/i.test(text);
+      const most = /extremos/i.test(text);
       // The agent says a tool's name and a line that repeats it, and serves
-      // nothing of the call's input. A Cadrumo review words itself.
-      const canonical =
-        !review && /permission (status|file|attachment|operation)/.exec(text);
+      // nothing of the call's input.
+      const canonical = /permission (status|file|attachment|operation)/.exec(
+        text,
+      );
       const target = canonical ? PERMISSION_TARGETS[canonical[1]!] : undefined;
       const toolName = target?.tool ?? "ledger_list";
       schedule(held, [
@@ -668,40 +665,27 @@ export function fixtureAgent({
           approval: requested({
             request_id: id("p"),
             reply_id: held.run.id,
-            source: review ? "cadrumo_review" : "agent_tool",
-            tool_call: review
-              ? title
-              : unnamed
-                ? null
-                : most
-                  ? MOST_TOOL_CALL
-                  : toolName,
-            tool_kind: review || unnamed ? null : target ? "other" : "read",
+            source: "agent_tool",
+            tool_call: unnamed ? null : most ? MOST_TOOL_CALL : toolName,
+            tool_kind: unnamed ? null : target ? "other" : "read",
             tool_server:
-              review ||
               unnamed ||
               target?.tool === "write_file" ||
               target?.tool === "read_attachment"
                 ? null
                 : "cadrumo",
-            description: review
-              ? "Añade la factura al libro de ingresos del tercer trimestre."
-              : unnamed
-                ? null
-                : most
-                  ? MOST_DESCRIPTION
-                  : (target?.description ?? `Permission required: ${toolName}`),
-            options: review
-              ? REVIEW_OPTIONS
-              : unnamed
-                ? UNNAMED_OPTIONS
-                : most
-                  ? MOST_OPTIONS
-                  : remembered
-                    ? REMEMBERED_OPTIONS
-                    : target
-                      ? CANONICAL_OPTIONS
-                      : TOOL_OPTIONS,
+            description: unnamed
+              ? null
+              : most
+                ? MOST_DESCRIPTION
+                : (target?.description ?? `Permission required: ${toolName}`),
+            options: unnamed
+              ? UNNAMED_OPTIONS
+              : most
+                ? MOST_OPTIONS
+                : target
+                  ? CANONICAL_OPTIONS
+                  : TOOL_OPTIONS,
           }),
           then: (option) =>
             goOn(
@@ -710,7 +694,7 @@ export function fixtureAgent({
                     () => {
                       held.run.status = "running";
                     },
-                    ...tool(held, title, review ? "edit" : "read", [
+                    ...tool(held, title, "read", [
                       "pending",
                       "in_progress",
                       "completed",
@@ -900,7 +884,7 @@ export function fixtureAgent({
     );
     const entry = lane?.catalog.models?.find((held) => held.model === model);
     return {
-      provider,
+      provider: lane?.provider_id ?? null,
       transport,
       provider_display_name: lane?.display_name ?? null,
       model,

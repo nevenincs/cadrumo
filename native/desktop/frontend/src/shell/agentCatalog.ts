@@ -17,9 +17,9 @@ import type {
 import type { AgentEngineHealth, AgentSelectionRecord } from "./agentSession";
 import { parseEngineHealth } from "./agentSession";
 import type { LocalModelListEntry } from "./localModelsContract";
-import type { AgentRanWith } from "./agentViews";
 import { engineNotRunningWords } from "./engineHealth";
 import type { Translate } from "./strings";
+import type { AgentRanWith } from "./agentSnapshotContract";
 
 // The agent column's choices, deduced from cadrumo-agent's provider catalog
 // alone. The column adds only the words for the catalog's known values; it
@@ -598,11 +598,13 @@ export function readingSelection(
 
 /** The choice a run was made with, as the column holds it: the inverse of
  * `selectionRecord`. Null where the catalog no longer has its lane, or no
- * longer lists its model. */
+ * longer lists its model, or where the agent served no provider or model. */
 export function ranSelection(
   catalog: ServedCatalogAnswer,
-  ran: AgentRanWith,
+  ran: Pick<AgentRanWith, "provider" | "transport" | "model"> &
+    Partial<Pick<AgentRanWith, "effort">>,
 ): AgentSelection | null {
+  if (ran.provider === null || ran.model === null) return null;
   const lane = servedLanes(catalog).find(
     (held) =>
       understood(held) &&

@@ -31,9 +31,7 @@ import type {
 } from "../shell/agentGatewayContract";
 import type {
   AgentAnswerResult,
-  AgentApproval,
   AgentDropSignal,
-  AgentQuestionnaire,
   AgentQuestionnaireAnswer,
   AgentSendRequest,
   AgentSendResult,
@@ -46,8 +44,6 @@ import type {
   AgentConversationRecord,
   AgentDocumentPage,
   AgentDocumentsQuery,
-  AgentSnapshot,
-  AgentTurnRecord,
 } from "../shell/agentViews";
 import type {
   ProviderSettingsAnswer,
@@ -92,6 +88,12 @@ import type {
   TerminalResize,
   TerminalSize,
 } from "./terminalFrames";
+import type {
+  AgentApproval,
+  AgentQuestionnaire,
+  AgentSnapshot,
+  AgentTurnRecord,
+} from "../shell/agentSnapshotContract";
 
 // ---------------------------------------------------------------------------
 // Launch token
