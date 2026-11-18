@@ -218,10 +218,29 @@ def test_every_edition_with_an_export_layout_has_a_semantic_map() -> None:
 @pytest.mark.parametrize("revision", _mapped_revisions(), ids=lambda revision: str(revision.id))
 def test_every_cross_sheet_mapping_is_a_declared_echo(revision: ModeloRevision) -> None:
     semantic_map = _semantic_map(str(_design_source(revision).record_design_epoch))
-    expected = MODELO_200_ECHO_CELLS
-    assert set(foreign_sheet_cells(_semantic_map_cells(semantic_map), _casillas(revision))) == expected
+    mapped = set(foreign_sheet_cells(_semantic_map_cells(semantic_map), _casillas(revision)))
+    assert mapped <= MODELO_200_ECHO_CELLS, mapped - MODELO_200_ECHO_CELLS
     if revision.export_layouts:
-        assert set(foreign_sheet_cells(_layout_cells(revision), _casillas(revision))) == expected
+        assert set(foreign_sheet_cells(_layout_cells(revision), _casillas(revision))) == mapped
+
+
+def test_every_declared_echo_is_printed_by_some_edition() -> None:
+    """An echo cell no edition's design prints is a stale declaration, not a guard.
+
+    An edition prints only the echoes its own design carries: one design's DID
+    summary repeats the Liquidación IV Estado result [00621] where its successors
+    repeat [01586], so each edition maps a subset and only the union must cover
+    every declared echo.
+    """
+    printed = {
+        cell
+        for revision in _mapped_revisions()
+        for cell in foreign_sheet_cells(
+            _semantic_map_cells(_semantic_map(str(_design_source(revision).record_design_epoch))),
+            _casillas(revision),
+        )
+    }
+    assert printed == MODELO_200_ECHO_CELLS, MODELO_200_ECHO_CELLS - printed
 
 
 @pytest.mark.parametrize("revision", _mapped_revisions(), ids=lambda revision: str(revision.id))
@@ -671,12 +690,21 @@ def test_entity_flags_and_tax_adjustments_export_independently(filing_year: int,
     period = Period.from_year_and_code(filing_year, "0A")
     scenario = m200_export_scenario(period)
     numbers = ("00004", "00005", "00006")
-    adjustments = {f"DP200012:{number}": Decimal(123 + index) + Decimal("0.45") for index, number in enumerate(numbers)}
     with _writer_scope(period) as (revision, provider):
+        adjustments = {
+            f"DP200012:{number}": Decimal(123 + index) + Decimal("0.45")
+            for index, number in enumerate(numbers)
+            if _declares(revision, f"DP200012:{number}")
+        }
+        for number in numbers:
+            if f"DP200012:{number}" not in adjustments:
+                _assert_design_prints_no_box(revision, "DP200012", number)
         marked = {f"DP200001:{number}" for number in numbers} - _REFUSED_REGIME_FLAGS
         for flag_id in sorted({f"DP200001:{number}" for number in numbers} & _REFUSED_REGIME_FLAGS):
             _assert_marked_regime_refuses(provider, period, scenario, flag_id)
-            _assert_flag_cell_stands_alone(revision, flag_id, f"DP200012:{flag_id.split(':')[1]}")
+            amount_id = f"DP200012:{flag_id.split(':')[1]}"
+            if amount_id in adjustments:
+                _assert_flag_cell_stands_alone(revision, flag_id, amount_id)
         inputs: ModeloInputs = {
             **scenario.inputs,
             **(
@@ -713,6 +741,8 @@ def test_entity_flags_and_tax_adjustments_export_independently(filing_year: int,
         for number in numbers:
             for sheet in ("DP200001", "DP200012"):
                 cid = f"{sheet}:{number}"
+                if sheet == "DP200012" and cid not in adjustments:
+                    continue
                 field = fields[cid]
                 assert field.offset is not None and field.length is not None
                 expected = (
@@ -779,6 +809,27 @@ def _assert_marked_regime_refuses(
     assert isinstance(missing_items, list | tuple)
     missing = {str(item["casilla_id"]) for item in missing_items}
     assert str(_TIPO_GRAVAMEN) in missing
+
+
+def _declares(revision: ModeloRevision, casilla_id: str) -> bool:
+    return any(str(casilla.id) == casilla_id for casilla in revision.casillas)
+
+
+def _assert_design_prints_no_box(revision: ModeloRevision, sheet_name: str, number: str) -> None:
+    """An edition that declares no amount for a number on a sheet is one whose design prints none there.
+
+    The box number is then not reused on that sheet, so the flag keeps it alone
+    and there is no second cell for a value to leak into.
+    """
+    design = _design_source(revision)
+    printed = [
+        field.description
+        for sheet in extract_record_design(bundled_path() / design.corpus_path).require_complete()
+        if sheet.name.strip() == sheet_name
+        for field in sheet.fields
+        if number in _PRINTED_BOX.findall(field.description)
+    ]
+    assert not printed, (revision.id, sheet_name, number, printed)
 
 
 def _layout_field_and_record(revision: ModeloRevision, casilla_id: str):
@@ -1017,6 +1068,9 @@ def test_reused_flag_and_money_export_independently(
     period = Period.from_year_and_code(filing_year, "0A")
     scenario = m200_export_scenario(period)
     with _writer_scope(period) as (revision, provider):
+        if not _declares(revision, f"DP200014B:{number}"):
+            _assert_design_prints_no_box(revision, "DP200014B", number)
+            return
         money_design_field, flag_design_field = _printed_box_design_fields(revision, number, money_label, flag_label)
         money_field, flag_field = _layout_box_fields(revision, number)
         _assert_box_fields_match_the_design(
