@@ -60,5 +60,22 @@ export function useFullscreen(host: Host, onFailure: () => void) {
     },
     [host.window, fullscreen],
   );
-  return { fullscreen, pane, observe, toggle, reveal };
+  const leavePaneFullscreen = useCallback(async () => {
+    if (pending.current) return false;
+    if (!requested.current) return true;
+    pending.current = true;
+    try {
+      if (host.window) await host.window.action("leave_fullscreen");
+      else if (document.fullscreenElement) await document.exitFullscreen();
+      requested.current = null;
+      setPane(null);
+      return true;
+    } catch {
+      failed.current();
+      return false;
+    } finally {
+      pending.current = false;
+    }
+  }, [host.window]);
+  return { fullscreen, pane, observe, toggle, reveal, leavePaneFullscreen };
 }

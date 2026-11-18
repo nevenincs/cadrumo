@@ -116,6 +116,8 @@ GOLDEN_MASK_PATHS: frozenset[tuple[str, str]] = frozenset(
         # with every release while the rest of the envelope does not.
         ("modelo.export", "result.file_sha256"),
         ("modelo.export", "result.bucket_event_id"),
+        # The edit receipt id hashes the supervisor's per-invocation operation id.
+        ("modelo.work.attest_work_income", "result.receipt_id"),
     },
 )
 

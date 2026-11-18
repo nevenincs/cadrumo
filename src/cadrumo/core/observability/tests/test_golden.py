@@ -162,6 +162,7 @@ class TestCanonicaliseAndMask:
                     ("config.profile.delete", "result.fingerprint.digest"),
                     ("modelo.export", "result.file_sha256"),
                     ("modelo.export", "result.bucket_event_id"),
+                    ("modelo.work.attest_work_income", "result.receipt_id"),
                 },
             )
             == GOLDEN_MASK_PATHS

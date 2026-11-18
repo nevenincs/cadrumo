@@ -31,8 +31,8 @@ import type {
 } from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { JourneySteps } from "./JourneySteps";
+import { ClippedText } from "./ClippedText";
 import { AttentionMark, DEADLINE_TONE, GlyphMark } from "./Marks";
-import { useReservedSize } from "./useReservedSize";
 import { FormPanes, type WorkspacePanes } from "./WorkspacePanes";
 import type {
   ModeloFormNextAction,
@@ -86,6 +86,17 @@ const TAB_LEVELS: Partial<Record<WorkspaceView, ModeloFormAttention[]>> = {
   check: ["blocks", "check", "limitation"],
 };
 
+/** The rows of the header's result block: the line the figure and the step
+ * share, and the line of words under it. Fixed, so that what the result or
+ * the step says never changes the header's height. A sentence that may take
+ * both rows starts on the shared line, its first line centred on it. */
+const RESULT_ROWS = "grid grid-rows-[var(--spacing-control-md)_--spacing(4)]";
+
+/**
+ * The result's column of the header: the figure on the step's line with its
+ * words under it, or the result's sentence over both lines. Words longer
+ * than the room are cut and read whole from a tooltip.
+ */
 function ResultLine({
   result,
   stagedCount,
@@ -95,64 +106,79 @@ function ResultLine({
   stagedCount: number;
   t: Translate;
 }) {
+  const column = cn(
+    RESULT_ROWS,
+    "min-w-0 justify-items-start @3xl:justify-items-end",
+  );
   if (!result)
     return (
-      <span className="text-sm text-muted-foreground">
-        {t("workspace.modelo.header.result.no_result_box")}
+      <span data-header-result="" className={column}>
+        <ClippedText
+          text={t("workspace.modelo.header.result.no_result_box")}
+          className="max-w-full text-sm text-muted-foreground"
+        />
       </span>
     );
-  const help = result.help.length > 0 && (
-    <TooltipContent className="flex max-w-xs flex-col gap-1">
-      {result.help.map((line) => (
-        <span key={line}>{line}</span>
-      ))}
-    </TooltipContent>
+  const help =
+    result.help.length > 0
+      ? result.help.map((line) => <span key={line}>{line}</span>)
+      : undefined;
+  if (!(result.state === "stated" && result.amount_text))
+    return (
+      <span data-header-result="" className={column}>
+        <ClippedText
+          text={result.short_text}
+          lines={2}
+          help={help}
+          className="row-span-2 max-w-full self-start pt-1.5 text-left @3xl:text-right text-sm leading-5"
+          textClassName={
+            result.state === "failed"
+              ? "font-medium text-destructive"
+              : "text-muted-foreground"
+          }
+        />
+      </span>
+    );
+  const figure = (
+    <span
+      data-header-figure=""
+      className={cn(
+        "max-w-full truncate text-lg leading-8 font-semibold tabular-nums",
+        stagedCount > 0 ? "text-muted-foreground" : "text-foreground",
+      )}
+    >
+      {result.amount_text}
+    </span>
   );
-  const body =
-    result.state === "stated" && result.amount_text ? (
-      <span className="flex flex-col items-end">
-        <span
-          className={cn(
-            "text-lg font-semibold tabular-nums",
-            stagedCount > 0 ? "text-muted-foreground" : "text-foreground",
-          )}
-        >
-          {result.amount_text}
-        </span>
-        <span className="text-sm text-muted-foreground">
-          {facts(t, [
-            result.words,
-            stagedCount > 0
-              ? t("workspace.modelo.header.result.out_of_date_until_applied")
-              : result.out_of_date_words,
-          ])}
-        </span>
-      </span>
-    ) : (
-      <span
-        className={cn(
-          "text-base",
-          result.state === "failed"
-            ? "font-medium text-destructive"
-            : "text-muted-foreground",
-        )}
-      >
-        {result.short_text}
-      </span>
-    );
-  if (!help) return body;
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span
-          tabIndex={0}
-          className="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {body}
-        </span>
-      </TooltipTrigger>
-      {help}
-    </Tooltip>
+    <span data-header-result="" className={column}>
+      {help ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              tabIndex={0}
+              className="flex max-w-full rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {figure}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent className="flex max-w-xs flex-col gap-1">
+            {help}
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        figure
+      )}
+      <ClippedText
+        text={facts(t, [
+          result.words,
+          stagedCount > 0
+            ? t("workspace.modelo.header.result.out_of_date_until_applied")
+            : result.out_of_date_words,
+        ])}
+        className="max-w-full text-sm leading-4 text-muted-foreground"
+      />
+    </span>
   );
 }
 
@@ -312,48 +338,68 @@ export function ModeloWorkspace({
       if (target === "form") onJumpToFirstAttention();
     } else onRun(action);
   };
-  const recorded = action === "recorded" && (
-    <span className="max-w-xs text-sm text-muted-foreground">
-      {facts(t, [
-        t("workspace.modelo.next.recorded", {
-          date: day(next?.recorded_at ?? null),
-        }),
-        envelope.receipt?.words,
-      ])}
-    </span>
+  const recordedWords = facts(t, [
+    t("workspace.modelo.next.recorded", {
+      date: day(next?.recorded_at ?? null),
+    }),
+    envelope.receipt?.words,
+  ]);
+  // A step's button keeps the step's line and is cut to the step's room; its
+  // name stays whole for assistive technology.
+  const stepButton = (
+    label: string,
+    onClick: () => void,
+    props: { disabled?: boolean; "aria-busy"?: boolean; icon?: "loader" } = {},
+  ) => (
+    <Button
+      onClick={onClick}
+      disabled={props.disabled}
+      aria-busy={props["aria-busy"]}
+      className="max-w-full min-w-0 shrink"
+    >
+      <span className="truncate">{label}</span>
+      <Icon name={props.icon ?? "forward"} size="xs" />
+    </Button>
   );
   const step =
     action === "recorded" ? (
       next?.receipt_to_add && view !== "file" ? (
         <>
-          {recorded}
-          <Button onClick={() => openView("file")}>
-            {t("workspace.modelo.next_button.add_receipt")}
-            <Icon name="forward" size="xs" />
-          </Button>
+          {stepButton(t("workspace.modelo.next_button.add_receipt"), () =>
+            openView("file"),
+          )}
+          <ClippedText
+            text={recordedWords}
+            className="max-w-full text-sm leading-4 text-muted-foreground"
+          />
         </>
       ) : (
-        recorded
+        <ClippedText
+          text={recordedWords}
+          lines={2}
+          className="row-span-2 max-w-full self-start pt-1.5 text-right text-sm leading-5 text-muted-foreground"
+        />
       )
     ) : action && !(target && target === view && view !== "form") ? (
-      <Button
-        onClick={runNext}
-        disabled={(busy || writeHeld) && writesNext}
-        aria-busy={busy && writesNext}
-      >
-        {t(`workspace.modelo.next_button.${action}`)}
-        <Icon name={busy && writesNext ? "loader" : "forward"} size="xs" />
-      </Button>
+      stepButton(t(`workspace.modelo.next_button.${action}`), runNext, {
+        disabled: (busy || writeHeld) && writesNext,
+        "aria-busy": busy && writesNext,
+        icon: busy && writesNext ? "loader" : undefined,
+      })
     ) : null;
   // The step served before the window's own write is not offered while the
   // read that replaces it runs.
   const nextShown = reading ? (
     <span
       role="status"
-      className="flex items-center gap-1.5 text-sm text-muted-foreground"
+      className="row-span-2 flex max-w-full items-center self-start pt-1.5 text-sm leading-5 text-muted-foreground"
     >
-      <Spinner />
-      {t("desktop.navigation.busy")}
+      <ClippedText
+        text={t("desktop.navigation.busy")}
+        lines={2}
+        icon={<Spinner />}
+        className="max-w-full"
+      />
     </span>
   ) : (
     step
@@ -364,10 +410,6 @@ export function ModeloWorkspace({
       const entry = levels.get(level);
       return entry ? <AttentionMark key={level} entry={entry} /> : null;
     });
-  // The result and the step are swapped for each other as the declaration is
-  // calculated, written and read again; the room they have needed is kept so
-  // that the tabs below do not move under a press.
-  const reserved = useReservedSize<HTMLDivElement>();
   // A tab opens its view on the first pointer event that reaches it, and
   // again on the click that completes the press, so a press whose mouse
   // events are not all delivered to the tab still opens it. Opening the view
@@ -421,7 +463,12 @@ export function ModeloWorkspace({
         view === "form" && stagedCount > 0 && "scroll-pb-16",
       )}
     >
-      <header className="flex flex-wrap items-center gap-x-8 gap-y-3 px-6 pt-3 pb-3">
+      {/* Two columns while the workspace is wide enough, one under the
+          other below that: the choice follows the workspace's width only, and
+          every line keeps a fixed height, so no change of words moves the
+          tabs. The step keeps a column of its own width, so the figure
+          beside it stays where it is whatever the step says. */}
+      <header className="grid grid-cols-1 items-center gap-x-8 gap-y-2 px-6 pt-3 pb-3 @3xl:grid-cols-[minmax(0,1fr)_--spacing(108)]">
         <div className="flex min-w-0 flex-col gap-1">
           <Button
             variant="link"
@@ -432,65 +479,60 @@ export function ModeloWorkspace({
             <Icon name="back" size="xs" />
             {t("workspace.declarations.destination.overview")}
           </Button>
-          <div className="flex items-center gap-3">
-            <span className="flex h-8 min-w-12 items-center justify-center rounded-md border border-border-strong px-1.5 font-mono text-md font-semibold">
+          <div className="flex h-8 min-w-0 items-center gap-3">
+            <span className="flex h-8 min-w-12 shrink-0 items-center justify-center rounded-md border border-border-strong px-1.5 font-mono text-md font-semibold">
               {form.modelo}
             </span>
-            <h1 className="truncate font-serif text-lg">
-              {form.modelo_name ?? form.modelo_title ?? form.modelo}
+            <h1 className="flex min-w-0 font-serif text-lg">
+              <ClippedText
+                text={form.modelo_name ?? form.modelo_title ?? form.modelo}
+              />
             </h1>
             {form.period_words && (
-              <span className="text-md text-muted-foreground">
+              <span className="shrink-0 text-md whitespace-nowrap text-muted-foreground tabular-nums">
                 {form.period_words}
               </span>
             )}
             <AboutForm envelope={envelope} t={t} />
           </div>
           <JourneySteps steps={steps} />
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          <div className="flex h-5 min-w-0 items-center gap-x-3 text-sm tabular-nums">
             {header.deadline && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span
-                    tabIndex={header.deadline.help ? 0 : -1}
-                    className={cn(
-                      "flex items-center gap-1.5 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      DEADLINE_TONE[header.deadline.tone],
-                    )}
-                  >
-                    <Icon name="calendar" size="xs" />
-                    {header.deadline.text}
-                  </span>
-                </TooltipTrigger>
-                {header.deadline.help && (
-                  <TooltipContent className="max-w-xs">
-                    {header.deadline.help}
-                  </TooltipContent>
-                )}
-              </Tooltip>
+              <ClippedText
+                text={header.deadline.text}
+                help={header.deadline.help ?? undefined}
+                icon={<Icon name="calendar" size="xs" />}
+                className={cn("shrink", DEADLINE_TONE[header.deadline.tone])}
+              />
             )}
             {header.file && (
-              <span
+              <ClippedText
+                text={header.file.words}
+                icon={<Icon name="page" size="xs" />}
                 className={cn(
-                  "flex items-center gap-1.5",
+                  "shrink",
                   header.file.current
                     ? "text-muted-foreground"
                     : "text-warning",
                 )}
-              >
-                <Icon name="page" size="xs" />
-                {header.file.words}
-              </span>
+              />
             )}
           </div>
         </div>
         <div
-          ref={reserved.ref}
-          style={reserved.style}
-          className="ml-auto flex items-center justify-end gap-5"
+          data-header-status=""
+          className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,--spacing(56))] gap-x-5"
         >
           <ResultLine result={header.result} stagedCount={stagedCount} t={t} />
-          {nextShown}
+          <span
+            data-header-step=""
+            className={cn(
+              RESULT_ROWS,
+              "min-w-0 items-center justify-items-end",
+            )}
+          >
+            {nextShown}
+          </span>
         </div>
       </header>
       <div className="flex min-w-0 flex-none items-center gap-2 border-b border-border px-4">

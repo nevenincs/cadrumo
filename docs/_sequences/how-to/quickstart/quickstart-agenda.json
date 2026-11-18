@@ -43,8 +43,7 @@
         "aeat",
         "app",
         "overview",
-        "agenda",
-        "--allow-incomplete"
+        "agenda"
       ],
       "captures": [],
       "envelope": null,

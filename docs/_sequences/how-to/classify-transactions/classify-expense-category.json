@@ -32,7 +32,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "RECOGNISED SPENDING CATEGORIES\ncategory-id (pass this exact value)\tfamily\ncuotas_colegiales\tsocial_security\ncuotas_autonomos_ss\tsocial_security\nmutualidad_alternativa\tsocial_security\narrendamiento_local\tpremises\nibi_local_afecto\tpremises\nsuministros_local_afecto\tpremises\nsuministros_home_office_luz\thome_office_suministros\nsuministros_home_office_agua\thome_office_suministros\nsuministros_home_office_gas\thome_office_suministros\nsuministros_home_office_internet\thome_office_suministros\ntelefonia_fija\thome_office_suministros\namortizacion_vivienda_afecto\thome_office_ownership\nibi_vivienda_afecto\thome_office_ownership\ncomunidad_vivienda_afecto\thome_office_ownership\narrendamiento_vivienda_afecto\thome_office_ownership\ntelefonia_movil\ttelecoms\nmaterial_oficina\toffice\nsoftware_suscripcion\toffice\nhardware_amortizable\toffice\nmobiliario_amortizable\toffice\nreparaciones_conservacion\toffice\npublicidad_marketing\toffice\nformacion_profesional\toffice\nvehiculo_combustible\tvehicle\nvehiculo_mantenimiento\tvehicle\nvehiculo_seguro\tvehicle\nvehiculo_peaje\tvehicle\nvehiculo_parking\tvehicle\nmanutencion_dietas_nacional\tmeals\nmanutencion_dietas_extranjero\tmeals\nasesoria_fiscal\tprofessional_services\nasesoria_juridica\tprofessional_services\nasesoria_contable\tprofessional_services\nviajes_transporte\ttravel\nviajes_alojamiento\ttravel\nseguros_responsabilidad_civil\tinsurance\nseguros_salud_autonomo\tinsurance\ngastos_bancarios\tfinancial\ngastos_financieros\tfinancial\nsuministros_cliente_directos\tdirect_costs\nsubcontratacion\tdirect_costs\ntributos_fiscalmente_deducibles\ttaxes\nPass the bare id, e.g. --category-id cuotas_colegiales (not a family-prefixed or compound key).\nDeductible expenses only. Income (INCOMING) transactions are classified by direction and need no --category-id; `ledger check` and `ledger preflight` do not flag income as missing_category.\n\nIRPF CATEGORIES FOR --irpf-category\nirpf-category (pass this exact value)\tuse\nactividad_economica\tprofessional activity withholding (received or paid net)\narrendamiento_local\tnet-paid rent expense withholding\narrendamiento_vivienda_afecto\tnet-paid rent expense withholding\ntrabajo\temployment income (not for net-paid invoices)\nNet-paid rent example: --category-id arrendamiento_local --irpf-category arrendamiento_local. Net-paid professional service: --category-id asesoria_fiscal --irpf-category actividad_economica.\n"
+      "text": "RECOGNISED SPENDING CATEGORIES\ncategory-id (pass this exact value)\tfamily\ncuotas_colegiales\tsocial_security\ncuotas_autonomos_ss\tsocial_security\nmutualidad_alternativa\tsocial_security\narrendamiento_local\tpremises\nibi_local_afecto\tpremises\nsuministros_local_afecto\tpremises\nsuministros_home_office_luz\thome_office_suministros\nsuministros_home_office_agua\thome_office_suministros\nsuministros_home_office_gas\thome_office_suministros\nsuministros_home_office_internet\thome_office_suministros\ntelefonia_fija\thome_office_suministros\namortizacion_vivienda_afecto\thome_office_ownership\nibi_vivienda_afecto\thome_office_ownership\ncomunidad_vivienda_afecto\thome_office_ownership\narrendamiento_vivienda_afecto\thome_office_ownership\ntelefonia_movil\ttelecoms\nmaterial_oficina\toffice\nsoftware_suscripcion\toffice\nhardware_amortizable\toffice\nmobiliario_amortizable\toffice\nreparaciones_conservacion\toffice\npublicidad_marketing\toffice\nformacion_profesional\toffice\nvehiculo_combustible\tvehicle\nvehiculo_mantenimiento\tvehicle\nvehiculo_seguro\tvehicle\nvehiculo_peaje\tvehicle\nvehiculo_parking\tvehicle\nmanutencion_dietas_nacional\tmeals\nmanutencion_dietas_extranjero\tmeals\nasesoria_fiscal\tprofessional_services\nasesoria_juridica\tprofessional_services\nasesoria_contable\tprofessional_services\nviajes_transporte\ttravel\nviajes_alojamiento\ttravel\nseguros_responsabilidad_civil\tinsurance\nseguros_salud_autonomo\tinsurance\ngastos_bancarios\tfinancial\ngastos_financieros\tfinancial\nsuministros_cliente_directos\tdirect_costs\nsubcontratacion\tdirect_costs\ntributos_fiscalmente_deducibles\ttaxes\nPass the bare id, e.g. --category-id cuotas_colegiales (not a family-prefixed or compound key).\nDeductible expenses only. Income (INCOMING) transactions are classified by direction and need no --category-id; `ledger check` and `ledger preflight` do not flag income as missing_category.\n\nIRPF CATEGORIES FOR --irpf-category\nirpf-category (pass this exact value)\tuse\nactividad_economica\tprofessional activity withholding (received or paid net)\narrendamiento_local\tnet-paid rent expense withholding\narrendamiento_vivienda_afecto\tnet-paid rent expense withholding\ncapital_inmobiliario\trental income and expenses of a property\ncapital_mobiliario\tmovable capital yield (interest, dividends)\nganancias_patrimoniales\tcapital gain or loss (not computed yet)\ntrabajo\temployment income (not for net-paid invoices)\nNet-paid rent example: --category-id arrendamiento_local --irpf-category arrendamiento_local. Net-paid professional service: --category-id asesoria_fiscal --irpf-category actividad_economica.\n"
     },
     {
       "argv": [
@@ -83,6 +83,7 @@
           "transaction": {
             "accrual_date": null,
             "amount": "605",
+            "arrendamiento_ref": null,
             "attachment_ids": [],
             "booked_date": "2026-02-11",
             "business_classification": "BUSINESS",
@@ -102,6 +103,8 @@
             "description": "Compra de material de oficina",
             "direction": "OUTGOING",
             "fx_rate": null,
+            "gasto_capital_inmobiliario": null,
+            "inmueble_ref": null,
             "investment_asset_id": null,
             "invoice_id": null,
             "irpf_category": null,
@@ -109,13 +112,38 @@
             "iva_category": null,
             "iva_rate": null,
             "lifecycle_state": "ACTIVE",
+            "link_fields": [
+              {
+                "family": "rental_lease",
+                "field": "arrendamiento_ref",
+                "field_words": "Linked lease",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "rental_property",
+                "field": "inmueble_ref",
+                "field_words": "Linked property",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "gasto_capital_inmobiliario",
+                "field": "gasto_capital_inmobiliario",
+                "field_words": "Rental expense concept",
+                "field_words_language": "en",
+                "value": null
+              }
+            ],
             "m210_income_classification": null,
             "modified_at": "2026-04-01T09:00:00+00:00",
             "notes": "",
             "operation_date": null,
             "prorrata_reference": null,
             "purchase_invoice_evidence_id": null,
+            "recargo_amount": null,
             "source_jurisdiction": null,
+            "statement_reference": "ALT-MAT-01",
             "taxable_base": null,
             "transaction_id": "1703f84035f8f1b9e95d99784e08d3a3fd56d526fb555e3d71d59887f5082e3e",
             "usage_ratio_id": null,

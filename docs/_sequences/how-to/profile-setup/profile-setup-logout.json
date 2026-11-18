@@ -40,6 +40,8 @@
               ],
               "target_command_key": "config.login"
             },
+            "action_words": "Open your profile",
+            "action_words_language": "en",
             "argument_bindings": [
               {
                 "argument_name": "name",

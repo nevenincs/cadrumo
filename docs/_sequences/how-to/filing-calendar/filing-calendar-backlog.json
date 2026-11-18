@@ -34,8 +34,7 @@
         "aeat",
         "app",
         "overview",
-        "backlog",
-        "--allow-incomplete"
+        "backlog"
       ],
       "captures": [],
       "envelope": null,
@@ -56,8 +55,7 @@
         "--from",
         "2026-01-01",
         "--to",
-        "2026-06-30",
-        "--allow-incomplete"
+        "2026-06-30"
       ],
       "captures": [],
       "envelope": {
@@ -309,6 +307,7 @@
               "censo_enrolment_state": "not_checked",
               "closes_on": "2026-01-20",
               "days_overdue": 71,
+              "days_until_close": -71,
               "evaluated_on": "2026-04-01",
               "filing_evidence": {
                 "aeat_evidence_concerns": [],
@@ -330,6 +329,7 @@
                 "period": "2025 4T",
                 "verified_justificante_csv": null
               },
+              "filing_status": "overdue",
               "filing_year": 2025,
               "holiday_coverage": "national_only",
               "holiday_refs": [],
@@ -352,6 +352,48 @@
                 },
                 "still_filable": true
               },
+              "recovery_action": {
+                "action": {
+                  "action_id": "operator.modelo.work.create",
+                  "cli_path": [
+                    "app",
+                    "modelo",
+                    "work",
+                    "create"
+                  ],
+                  "target_command_key": "modelo.work.create"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "115"
+                  },
+                  {
+                    "argument_name": "period",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "period",
+                    "status": "resolved",
+                    "value": "4T"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
+              "scopes": [
+                "past",
+                "overdue"
+              ],
               "shift_reason": "business_day",
               "source": "registry_deadline",
               "status": "OVERDUE",
@@ -362,6 +404,7 @@
               "censo_enrolment_state": "not_checked",
               "closes_on": "2026-01-30",
               "days_overdue": 61,
+              "days_until_close": -61,
               "evaluated_on": "2026-04-01",
               "filing_evidence": {
                 "aeat_evidence_concerns": [],
@@ -383,6 +426,7 @@
                 "period": "2025 4T",
                 "verified_justificante_csv": null
               },
+              "filing_status": "overdue",
               "filing_year": 2025,
               "holiday_coverage": "national_only",
               "holiday_refs": [],
@@ -405,6 +449,48 @@
                 },
                 "still_filable": true
               },
+              "recovery_action": {
+                "action": {
+                  "action_id": "operator.modelo.work.create",
+                  "cli_path": [
+                    "app",
+                    "modelo",
+                    "work",
+                    "create"
+                  ],
+                  "target_command_key": "modelo.work.create"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "130"
+                  },
+                  {
+                    "argument_name": "period",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "period",
+                    "status": "resolved",
+                    "value": "4T"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
+              "scopes": [
+                "past",
+                "overdue"
+              ],
               "shift_reason": "business_day",
               "source": "registry_deadline",
               "status": "OVERDUE",
@@ -415,6 +501,7 @@
               "censo_enrolment_state": "not_checked",
               "closes_on": "2026-01-30",
               "days_overdue": 61,
+              "days_until_close": -61,
               "evaluated_on": "2026-04-01",
               "filing_evidence": {
                 "aeat_evidence_concerns": [],
@@ -436,6 +523,7 @@
                 "period": "2025 4T",
                 "verified_justificante_csv": null
               },
+              "filing_status": "overdue",
               "filing_year": 2025,
               "holiday_coverage": "national_only",
               "holiday_refs": [],
@@ -458,6 +546,48 @@
                 },
                 "still_filable": true
               },
+              "recovery_action": {
+                "action": {
+                  "action_id": "operator.modelo.work.create",
+                  "cli_path": [
+                    "app",
+                    "modelo",
+                    "work",
+                    "create"
+                  ],
+                  "target_command_key": "modelo.work.create"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "303"
+                  },
+                  {
+                    "argument_name": "period",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "period",
+                    "status": "resolved",
+                    "value": "4T"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
+              "scopes": [
+                "past",
+                "overdue"
+              ],
               "shift_reason": "business_day",
               "source": "registry_deadline",
               "status": "OVERDUE",
@@ -468,6 +598,7 @@
               "censo_enrolment_state": "not_checked",
               "closes_on": "2026-01-30",
               "days_overdue": 61,
+              "days_until_close": -61,
               "evaluated_on": "2026-04-01",
               "filing_evidence": {
                 "aeat_evidence_concerns": [],
@@ -489,6 +620,7 @@
                 "period": "2025 0A",
                 "verified_justificante_csv": null
               },
+              "filing_status": "overdue",
               "filing_year": 2025,
               "holiday_coverage": "national_only",
               "holiday_refs": [],
@@ -511,6 +643,48 @@
                 },
                 "still_filable": true
               },
+              "recovery_action": {
+                "action": {
+                  "action_id": "operator.modelo.work.create",
+                  "cli_path": [
+                    "app",
+                    "modelo",
+                    "work",
+                    "create"
+                  ],
+                  "target_command_key": "modelo.work.create"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "390"
+                  },
+                  {
+                    "argument_name": "period",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "period",
+                    "status": "resolved",
+                    "value": "0A"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
+              "scopes": [
+                "past",
+                "overdue"
+              ],
               "shift_reason": "business_day",
               "source": "registry_deadline",
               "status": "OVERDUE",
@@ -521,6 +695,7 @@
               "censo_enrolment_state": "not_checked",
               "closes_on": "2026-01-31",
               "days_overdue": 58,
+              "days_until_close": -58,
               "evaluated_on": "2026-04-01",
               "filing_evidence": {
                 "aeat_evidence_concerns": [],
@@ -542,6 +717,7 @@
                 "period": "2025 0A",
                 "verified_justificante_csv": null
               },
+              "filing_status": "overdue",
               "filing_year": 2025,
               "holiday_coverage": "national_only",
               "holiday_refs": [],
@@ -564,6 +740,48 @@
                 },
                 "still_filable": true
               },
+              "recovery_action": {
+                "action": {
+                  "action_id": "operator.modelo.work.create",
+                  "cli_path": [
+                    "app",
+                    "modelo",
+                    "work",
+                    "create"
+                  ],
+                  "target_command_key": "modelo.work.create"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "180"
+                  },
+                  {
+                    "argument_name": "period",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "period",
+                    "status": "resolved",
+                    "value": "0A"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
+              "scopes": [
+                "past",
+                "overdue"
+              ],
               "shift_reason": "sabado",
               "source": "registry_deadline",
               "status": "OVERDUE",
@@ -574,6 +792,7 @@
               "censo_enrolment_state": "not_checked",
               "closes_on": "2026-03-02",
               "days_overdue": 30,
+              "days_until_close": -30,
               "evaluated_on": "2026-04-01",
               "filing_evidence": {
                 "aeat_evidence_concerns": [],
@@ -595,6 +814,7 @@
                 "period": "2025 0A",
                 "verified_justificante_csv": null
               },
+              "filing_status": "overdue",
               "filing_year": 2025,
               "holiday_coverage": "national_only",
               "holiday_refs": [],
@@ -617,6 +837,48 @@
                 },
                 "still_filable": true
               },
+              "recovery_action": {
+                "action": {
+                  "action_id": "operator.modelo.work.create",
+                  "cli_path": [
+                    "app",
+                    "modelo",
+                    "work",
+                    "create"
+                  ],
+                  "target_command_key": "modelo.work.create"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "347"
+                  },
+                  {
+                    "argument_name": "period",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "period",
+                    "status": "resolved",
+                    "value": "0A"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
+              "scopes": [
+                "past",
+                "overdue"
+              ],
               "shift_reason": "business_day",
               "source": "registry_deadline",
               "status": "OVERDUE",
@@ -635,6 +897,20 @@
                 "720"
               ],
               "code": "bienes_extranjero_above_threshold",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.bienes_extranjero_unset"
             },
             {
@@ -642,6 +918,20 @@
                 "111"
               ],
               "code": "enrollment.public_administration_budget_gt_6000000",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.administracion_publica_unset"
             },
             {
@@ -649,6 +939,20 @@
                 "721"
               ],
               "code": "monedas_virtuales_extranjero_above_threshold",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.monedas_virtuales_extranjero_unset"
             },
             {
@@ -656,6 +960,20 @@
                 "714"
               ],
               "code": "patrimonio_declaration_threshold_met",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.patrimonio_umbral_unset"
             },
             {
@@ -664,6 +982,20 @@
                 "296"
               ],
               "code": "pays_non_resident_income_with_retencion",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.retencion_no_residentes_unset"
             },
             {
@@ -671,6 +1003,20 @@
                 "136"
               ],
               "code": "premio_loteria_gravamen_especial_sin_retencion",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.premio_loteria_unset"
             },
             {
@@ -678,6 +1024,20 @@
                 "136"
               ],
               "code": "premio_loteria_gravamen_especial_trimestres",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.premio_loteria_trimestres_unset"
             }
           ]

@@ -528,7 +528,7 @@
             {"binding":null,"casilla_id":"15","data_type":"money","form_number":null,"formula":null,"help_text":"Box 15: amount of the adjustment to bases and amounts of VAT accrued.","input_kind":"manual","label":"Adjustment of taxable bases and amounts, accrued VAT - Tax amount","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"15","required":false,"section":["iva","regimen_general","devengado"],"source_refs":["aeat-dr-303-2026"]},
             {"binding":null,"casilla_id":"16","data_type":"money","form_number":null,"formula":null,"help_text":"Box 16: taxable base for the equivalence surcharge.","input_kind":"manual","label":"Equivalence surcharge - Taxable base","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"16","required":false,"section":["iva","regimen_general","devengado"],"source_refs":["aeat-dr-303-2026"]},
             {"binding":null,"casilla_id":"17","data_type":"ratio","form_number":null,"formula":null,"help_text":"Box 17: rate percentage for the equivalence surcharge.","input_kind":"manual","label":"Equivalence surcharge - Rate (%)","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"17","required":false,"section":["iva","regimen_general","devengado"],"source_refs":["aeat-dr-303-2026"]},
-            {"binding":null,"casilla_id":"18","data_type":"money","form_number":null,"formula":null,"help_text":"Box 18: tax amount for the equivalence surcharge.","input_kind":"manual","label":"Equivalence surcharge - Tax amount","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"18","required":false,"section":["iva","regimen_general","devengado"],"source_refs":["aeat-dr-303-2026"]},
+            {"binding":null,"casilla_id":"18","data_type":"money","form_number":null,"formula":null,"help_text":"Box 18: tax amount for the equivalence surcharge.","input_kind":"manual","label":"Equivalence surcharge - Tax amount","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"18","required":false,"section":["iva","regimen_general","devengado"],"source_refs":["aeat-dr-303-2026"]},
             {"binding":null,"casilla_id":"19","data_type":"money","form_number":null,"formula":null,"help_text":"Box 19: taxable base of the equivalence surcharge at 1.4%.","input_kind":"manual","label":"Equivalence surcharge at 1.4% - Taxable base","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"19","required":false,"section":["iva","regimen_general","devengado"],"source_refs":["aeat-dr-303-2026"]},
             {"binding":null,"casilla_id":"20","data_type":"ratio","form_number":null,"formula":null,"help_text":"Box 20: percentage rate of the equivalence surcharge at 1.4%.","input_kind":"manual","label":"Equivalence surcharge at 1.4% - Rate percentage","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"20","required":false,"section":["iva","regimen_general","devengado"],"source_refs":["aeat-dr-303-2026"]},
             {"binding":"modelo-303-recargo-equivalencia-reducido-cuota","casilla_id":"21","data_type":"money","form_number":null,"formula":null,"help_text":"Box 21: amount of the equivalence surcharge at 1.4%.","input_kind":"bound","label":"Equivalence surcharge at 1.4% - Tax amount","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"21","required":false,"section":["iva","regimen_general","devengado"],"source_refs":["aeat-dr-303-2026"]},
@@ -694,7 +694,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "7c760953310ab8bb1d83bcbbc3e27038f7eca4bb168222602fb2af81faae62a8",
+          "calculation_revision_id": "9a08bcc2c5d24d29e55bf0ce85e4ebe713a524b3ae7952e018ba00589a1285f9",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -978,7 +978,7 @@
             {"absent_by_design":false,"casilla_id":"169","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"17","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"170","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"18","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"18","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"19","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"20","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"21","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
@@ -1261,7 +1261,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 7c760953310ab8bb1d83bcbbc3e27038f7eca4bb168222602fb2af81faae62a8 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 9a08bcc2c5d24d29e55bf0ce85e4ebe713a524b3ae7952e018ba00589a1285f9 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1297,10 +1297,32 @@
               "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
             },
             {
+              "contributor_binding_source": "bienes_inversion_regularizacion",
+              "contributor_source_kind": "bienes_inversion_regularizacion",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "bienes_inversion_regularizacion",
+              "resolver_id": "bienes_inversion_regularizacion",
+              "source_ref": "bound_input:43"
+            },
+            {
+              "contributor_binding_source": "prorrata_regularizacion",
+              "contributor_source_kind": "prorrata_regularizacion",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "prorrata_regularizacion",
+              "resolver_id": "prorrata_regularizacion",
+              "source_ref": "bound_input:44"
+            },
+            {
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",

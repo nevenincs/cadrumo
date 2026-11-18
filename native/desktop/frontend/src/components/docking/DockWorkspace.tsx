@@ -17,9 +17,18 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import { useStrings } from "../../shell/strings";
 import { SessionDot, type SessionPhase } from "../PaneHeader";
+import {
+  useDockTitleDrag,
+  hitTest,
+  type DockHit,
+  type DockTarget,
+} from "./useDockTitleDrag";
 import { DockedPane } from "./PaneChrome";
 import {
   activateDockPane,
@@ -36,7 +45,6 @@ import {
   type DockDivider,
   type DockPane,
   type DockRect,
-  type DockSide,
 } from "../../shell/docking";
 
 const position = (rect: DockRect): CSSProperties => ({
@@ -76,6 +84,8 @@ export function DockWorkspace({
   onExpand,
   onFullscreen,
   onNarrowed,
+  onResetLayout,
+  cancelDrag = false,
   empty,
 }: {
   layout: DockLayout;
@@ -101,6 +111,8 @@ export function DockWorkspace({
   /** The panes whose saved side-by-side split the window is too narrow to
    * draw, so it is drawn stacked; an arrangement choice there does nothing. */
   onNarrowed?: (panes: readonly DockPane[]) => void;
+  onResetLayout?: () => void;
+  cancelDrag?: boolean;
   empty: ReactNode;
 }) {
   const t = useStrings();
@@ -156,12 +168,27 @@ export function DockWorkspace({
     measure();
     return () => observer.disconnect();
   }, [minimumWidths, besideWidths, minimumHeights]);
-  const [dragged, setDragged] = useState<DockPane | null>(null);
-  const [externalDrag, setExternalDrag] = useState(false);
-  const [drop, setDrop] = useState<{
-    target: DockPane;
-    side: DockSide | "tab";
-  } | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  const [openMenu, setOpenMenu] = useState<DockPane | null>(null);
+  const menuFocus = useRef<DockPane | null>(null);
+  const [railPane, setRailPane] = useState<DockPane | null>(null);
+  const [railHit, setRailHit] = useState<DockHit | null>(null);
+  useEffect(() => {
+    const start = (event: DragEvent) => {
+      const source = event.dataTransfer?.getData(DROP_TYPE);
+      if (isDockPane(source)) setRailPane(source);
+    };
+    const end = () => {
+      setRailPane(null);
+      setRailHit(null);
+    };
+    document.addEventListener("dragstart", start);
+    document.addEventListener("dragend", end);
+    return () => {
+      document.removeEventListener("dragstart", start);
+      document.removeEventListener("dragend", end);
+    };
+  }, []);
   const { groups, dividers } = dockGeometry(layout, visible, fit);
   const narrowed = dividers
     .filter((divider) => divider.narrowed)
@@ -289,18 +316,61 @@ export function DockWorkspace({
       expanded ? { ...item, active: expanded, rect: FULL } : item,
     );
 
-  const move = (pane: DockPane, target: DockPane, side: DockSide | "tab") => {
-    if (expanded) onExpand(expanded);
-    onChange((current) =>
-      activateDockPane(moveDockPane(current, pane, target, side), pane),
-    );
-    onActivate(pane);
-    setDragged(null);
-    setDrop(null);
-    setExternalDrag(false);
+  const candidate = (
+    current: DockLayout,
+    pane: DockPane,
+    target: DockTarget,
+  ) => {
+    const moved =
+      target.intent === "empty"
+        ? returnDockPane(current, pane)
+        : moveDockPane(current, pane, target.pane, target.intent);
+    // A rail item can reopen at its existing position even if the move itself is a no-op.
+    if (moved === current && visible.includes(pane)) return current;
+    return activateDockPane(moved, pane);
   };
+  const commit = (pane: DockPane, target: DockTarget) => {
+    if (candidate(layout, pane, target) === layout) return;
+    if (expanded) onExpand(expanded);
+    onChange((current) => candidate(current, pane, target));
+    onActivate(pane);
+    setAnnouncement(t("desktop.dock.drag_moved", { pane: title(pane) }));
+    requestAnimationFrame(() =>
+      document.getElementById(`tab-${pane}`)?.focus({ preventScroll: true }),
+    );
+  };
+  const drag = useDockTitleDrag(
+    surface,
+    layout,
+    visible,
+    expanded,
+    cancelDrag,
+    commit,
+    (kind, pane) =>
+      setAnnouncement(
+        kind === "started"
+          ? t("desktop.dock.drag_started", { pane: title(pane) })
+          : t("desktop.dock.drag_cancelled"),
+      ),
+  );
+  const preview = drag.preview;
+  const hit = preview?.hit ?? railHit;
+  const incoming = preview?.pane ?? railPane;
+  const proposed =
+    incoming && hit ? candidate(layout, incoming, hit.target) : layout;
+  const previewRect =
+    incoming && proposed !== layout && !hit?.line
+      ? dockGeometry(
+          proposed,
+          visible.includes(incoming) ? visible : [...visible, incoming],
+          fit,
+        ).groups.find((item) => item.group.tabs.includes(incoming))?.rect
+      : undefined;
   const menus = (pane: DockPane, isFloating: boolean) => (
-    <DropdownMenu>
+    <DropdownMenu
+      open={openMenu === pane}
+      onOpenChange={(open) => setOpenMenu(open ? pane : null)}
+    >
       <DropdownMenuTrigger asChild>
         <IconButton label={t("desktop.dock.arrange")}>
           <Icon name="more" />
@@ -311,7 +381,17 @@ export function DockWorkspace({
         onCloseAutoFocus={(event) => {
           const held = document.activeElement;
           if (held && held !== document.body) event.preventDefault();
-          requestAnimationFrame(onMenuClosed);
+          const destination = menuFocus.current;
+          menuFocus.current = null;
+          requestAnimationFrame(() => {
+            if (document.querySelector('[role="dialog"],[role="alertdialog"]'))
+              return;
+            if (destination)
+              document
+                .getElementById(`tab-${destination}`)
+                ?.focus({ preventScroll: true });
+            else onMenuClosed();
+          });
         }}
       >
         <DropdownMenuItem icon="maximize" onSelect={() => onExpand(pane)}>
@@ -357,13 +437,54 @@ export function DockWorkspace({
               icon={side === "tab" ? "tabs" : "splitRow"}
               disabled={!target}
               onSelect={() => {
-                if (target) move(pane, target, side);
+                if (target) {
+                  menuFocus.current = pane;
+                  commit(pane, { pane: target, intent: side });
+                }
               }}
             >
               {t(`desktop.dock.${side}`)}
             </DropdownMenuItem>
           );
         })}
+        {dockPanes(layout.root)
+          .filter((target) => target !== pane && visible.includes(target))
+          .map((target) => (
+            <DropdownMenuSub key={target}>
+              <DropdownMenuSubTrigger
+                data-dock-target-menu={target}
+                icon="move"
+              >
+                {title(target)}
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {([...SIDES, "before", "after"] as const).map((intent) => (
+                  <DropdownMenuItem
+                    key={intent}
+                    data-dock-intent={intent}
+                    data-dock-target={target}
+                    disabled={
+                      candidate(layout, pane, { pane: target, intent }) ===
+                      layout
+                    }
+                    onSelect={() => {
+                      menuFocus.current = pane;
+                      commit(pane, { pane: target, intent });
+                    }}
+                  >
+                    {t(`desktop.dock.target_${intent}`, {
+                      target: title(target),
+                    })}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          ))}
+        {onResetLayout && (
+          <DropdownMenuItem onSelect={onResetLayout}>
+            {t("desktop.dock.reset_layout")}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem icon="close" onSelect={() => onClose(pane)}>
           {t("desktop.dock.close")}
         </DropdownMenuItem>
@@ -377,27 +498,76 @@ export function DockWorkspace({
       role="main"
       className="dock-workspace relative min-h-0 min-w-0 flex-1 overflow-hidden"
       data-dock-workspace=""
-      onDragEnter={(event) => {
-        if (event.dataTransfer.types.includes(DROP_TYPE)) setExternalDrag(true);
-      }}
+      data-empty-dock={groups.length === 0 ? "" : undefined}
       onDragOver={(event) => {
-        if (event.dataTransfer.types.includes(DROP_TYPE)) {
-          event.preventDefault();
-          event.dataTransfer.dropEffect = "move";
-        }
+        if (!railPane || !event.dataTransfer.types.includes(DROP_TYPE)) return;
+        event.preventDefault();
+        const hit = hitTest(
+          event.currentTarget,
+          event.clientX,
+          event.clientY,
+          railPane,
+          true,
+        );
+        event.dataTransfer.dropEffect = hit ? "move" : "none";
+        setRailHit(hit);
       }}
       onDragLeave={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-          setExternalDrag(false);
-          setDrop(null);
-        }
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null))
+          setRailHit(null);
       }}
-      onDragEnd={() => {
-        setDragged(null);
-        setDrop(null);
-        setExternalDrag(false);
+      onDrop={(event) => {
+        const pane = event.dataTransfer.getData(DROP_TYPE);
+        if (!isDockPane(pane)) return;
+        event.preventDefault();
+        const hit = hitTest(
+          event.currentTarget,
+          event.clientX,
+          event.clientY,
+          pane,
+          false,
+        );
+        if (hit) commit(pane, hit.target);
+        setRailPane(null);
+        setRailHit(null);
       }}
     >
+      <div role="status" className="sr-only">
+        {announcement}
+      </div>
+      {previewRect && hit && (
+        <div
+          aria-hidden="true"
+          data-dock-drop-preview={
+            hit.target.intent === "tab" || hit.target.intent === "empty"
+              ? "center"
+              : hit.target.intent
+          }
+          className="pointer-events-none absolute z-(--layer-popover) border-2 border-ring bg-selected/50"
+          style={position(previewRect)}
+        />
+      )}
+      {hit?.line && proposed !== layout && (
+        <div
+          aria-hidden="true"
+          data-dock-insertion={hit.target.intent}
+          className="pointer-events-none fixed z-(--layer-popover) w-0.5 bg-ring"
+          style={{ left: hit.line.x, top: hit.line.y, height: hit.line.height }}
+        />
+      )}
+      {preview && (
+        <div
+          aria-hidden="true"
+          data-dock-drag-ghost=""
+          className="pointer-events-none fixed z-(--layer-menu) flex items-center gap-1.5 rounded border bg-popover px-3 py-1 text-popover-foreground shadow-overlay"
+          style={{ left: preview.x + 12, top: preview.y + 12 }}
+        >
+          {status(preview.pane) && (
+            <SessionDot phase={status(preview.pane)!.phase} />
+          )}
+          {title(preview.pane)}
+        </div>
+      )}
       {placements.length === 0 && empty}
       {panes.map((pane) => {
         const placement = placements.find((item) => item.active === pane.id);
@@ -406,6 +576,17 @@ export function DockWorkspace({
             key={pane.id}
             id={`dock-content-${pane.id}`}
             data-dock-pane={pane.id}
+            data-floating={placement?.floating ? "" : undefined}
+            role={
+              ["docs", "agent", "tui"].includes(pane.id)
+                ? "tabpanel"
+                : undefined
+            }
+            aria-labelledby={
+              ["docs", "agent", "tui"].includes(pane.id)
+                ? `tab-${pane.id}`
+                : undefined
+            }
             hidden={!placement}
             onPointerDownCapture={() => {
               if (placement?.floating && floating.at(-1)?.pane !== pane.id)
@@ -455,6 +636,7 @@ export function DockWorkspace({
           <div
             className="pointer-events-auto flex h-control-lg min-w-0 items-center border-b bg-chrome"
             data-dock-header={item.active}
+            data-floating={item.floating ? "" : undefined}
             onDoubleClick={(event) => {
               if (!(event.target as Element).closest("button"))
                 onExpand(item.active);
@@ -566,9 +748,10 @@ export function DockWorkspace({
                         ? `panel-${pane}`
                         : `dock-content-${pane}`
                     }
-                    draggable
+                    data-dock-tab={pane}
+                    {...drag.handlers(pane)}
                     // The active title keeps its width; the others give way.
-                    className="data-[state=active]:shrink-0"
+                    className="touch-pan-x cursor-grab data-[state=active]:shrink-0"
                     title={[title(pane), status(pane)?.note]
                       .filter(Boolean)
                       .join(" · ")}
@@ -577,32 +760,24 @@ export function DockWorkspace({
                       event.stopPropagation();
                       onExpand(pane);
                     }}
-                    onClick={() => {
+                    onClick={(event) => {
+                      if (event.detail && drag.takeClick()) return;
+                      event.currentTarget.focus({ preventScroll: true });
+                      onActivate(pane);
+                      if (expanded && expanded !== pane) onExpand(pane);
                       onChange((current) => activateDockPane(current, pane));
                       onFocusPane(pane);
                     }}
                     onKeyDown={(event) => {
+                      if (event.shiftKey && event.key === "F10") {
+                        event.preventDefault();
+                        setOpenMenu(item.active);
+                        return;
+                      }
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
                         onFocusPane(pane);
                       }
-                    }}
-                    onDragStart={(event) => {
-                      event.dataTransfer.setData(DROP_TYPE, pane);
-                      event.dataTransfer.effectAllowed = "move";
-                      setDragged(pane);
-                    }}
-                    onDragOver={(event) => {
-                      if (event.dataTransfer.types.includes(DROP_TYPE)) {
-                        event.preventDefault();
-                        setDrop({ target: pane, side: "tab" });
-                      }
-                    }}
-                    onDrop={(event) => {
-                      const source = event.dataTransfer.getData(DROP_TYPE);
-                      if (!isDockPane(source)) return;
-                      event.preventDefault();
-                      move(source, pane, "tab");
                     }}
                   >
                     {status(pane) && <SessionDot phase={status(pane)!.phase} />}
@@ -644,49 +819,11 @@ export function DockWorkspace({
               </>
             )}
           </div>
-          {!item.floating && !expanded && (
+          {!item.floating && (railPane || preview) && (
             <div
-              className={cn(
-                "absolute inset-0 top-control-lg",
-                (dragged || drop || externalDrag) && "pointer-events-auto",
-              )}
-              onDragOver={(event) => {
-                if (!event.dataTransfer.types.includes(DROP_TYPE)) return;
-                event.preventDefault();
-                const rect = event.currentTarget.getBoundingClientRect();
-                const x = (event.clientX - rect.left) / rect.width,
-                  y = (event.clientY - rect.top) / rect.height;
-                const side =
-                  x < 0.25
-                    ? "left"
-                    : x > 0.75
-                      ? "right"
-                      : y < 0.25
-                        ? "top"
-                        : y > 0.75
-                          ? "bottom"
-                          : "tab";
-                setDrop({ target: item.active, side });
-              }}
-              onDrop={(event) => {
-                const source = event.dataTransfer.getData(DROP_TYPE);
-                if (!isDockPane(source)) return;
-                event.preventDefault();
-                move(
-                  source,
-                  item.active,
-                  drop?.target === item.active ? drop.side : "tab",
-                );
-              }}
-            >
-              {drop?.target === item.active && (
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center border-2 border-ring bg-selected opacity-80">
-                  <span className="rounded bg-popover p-2 text-popover-foreground">
-                    {t(`desktop.dock.${drop.side}`)}
-                  </span>
-                </div>
-              )}
-            </div>
+              data-dock-body={item.active}
+              className="pointer-events-auto absolute inset-0 top-control-lg"
+            />
           )}
           {item.floating &&
             !expanded &&
