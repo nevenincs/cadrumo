@@ -45,10 +45,7 @@ from ....application.modelo.edit_models import (
 )
 from ....application.modelo.incn_periodo_anterior import (
     INCN_PERIODO_ANTERIOR_BINDING_ID,
-    IncnPeriodoAnterior,
     IncnPeriodoAnteriorOrigin,
-    IncnPeriodoAnteriorStores,
-    resolve_incn_periodo_anterior,
 )
 from ....application.modelo.work_form_service import modelo_form_snapshot
 from ....core.authority_grade import RegistryAuthorityGrade
@@ -58,6 +55,7 @@ from ....domain.calculations.registry.binding_prior_value_rules import set_aside
 from ....domain.user_profile.values import UserProfileFact
 from ...adapter_composition import profile_adapter_composition
 from ..modelo_operator_work_storage import SeededOperatorWork, seeded_operator_work
+from .incn_reader_support import read_seeded_incn
 from .observation_seeding_support import save_preceding_m200_turnover
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -190,17 +188,6 @@ def _clean_state(work: SeededOperatorWork, *, stated: bool) -> CrossPeriodDepend
     return evidence
 
 
-def _read(work: SeededOperatorWork, *, twelve_month_statement: Decimal | None = None) -> IncnPeriodoAnterior:
-    """The preceding turnover as every consumer reads it, through the canonical reader."""
-    return resolve_incn_periodo_anterior(
-        work.work_unit.bucket_id,
-        work.work_unit.filing_year,
-        stores=IncnPeriodoAnteriorStores.from_calculation_ports(work.ports),
-        activity_start_date=None,
-        twelve_month_statement=twelve_month_statement,
-    )
-
-
 @pytest.mark.parametrize("year", _YEARS)
 def test_unmarked_the_held_return_supplies_the_turnover_and_a_statement_over_it_is_refused(
     tmp_path: Path, year: int
@@ -214,7 +201,7 @@ def test_unmarked_the_held_return_supplies_the_turnover_and_a_statement_over_it_
             work.require_head().casilla_values,
         )
         evidence = _clean_state(work, stated=True)
-        read = _read(work)
+        read = read_seeded_incn(work)
 
     assert stated_over_held.refusal is not None
     assert read.origin is IncnPeriodoAnteriorOrigin.HELD_RETURN
@@ -250,7 +237,7 @@ def test_marked_the_statement_is_admitted_over_the_held_return_and_settles_the_c
         settled = _clean_state(work, stated=True)
         unstated = _clean_state(work, stated=False)
         # The entity's own twelve months are not the group's turnover either, so they never stand in.
-        read = _read(work, twelve_month_statement=_HELD)
+        read = read_seeded_incn(work, twelve_month_statement=_HELD)
 
     assert set_aside == frozenset({INCN_PERIODO_ANTERIOR_BINDING_ID})
     assert Decimal(operator_value_attestations(head)[INCN_PERIODO_ANTERIOR_BINDING_ID].value) == _GROUP

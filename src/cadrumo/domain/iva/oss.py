@@ -107,17 +107,6 @@ class OssIossRegimeCatalogue:
         """Return transaction-kind values admitted by one registry regime."""
         return frozenset(self.definition(value).transaction_kinds)
 
-    def regime_for_transaction_kind(self, transaction_kind: str) -> OssIossRegime:
-        """Return the unique registry regime admitting a transaction kind."""
-        matches = tuple(
-            definition.token for definition in self.definitions if transaction_kind in definition.transaction_kinds
-        )
-        if len(matches) != 1:
-            raise RegistryValidationError(
-                f"transaction kind {transaction_kind!r} must map to exactly one OSS/IOSS regime",
-            )
-        return matches[0]
-
 
 _ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 

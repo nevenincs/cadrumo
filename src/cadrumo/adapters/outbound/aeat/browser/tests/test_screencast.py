@@ -9,11 +9,12 @@ from __future__ import annotations
 
 import asyncio
 import io
+from collections.abc import Callable
 from typing import Final
 
 import pytest
 from PIL import Image
-from playwright.async_api import Browser
+from playwright.async_api import Browser, BrowserContext, CDPSession, Frame, Page
 from playwright.async_api import Error as PlaywrightError
 
 from cadrumo_client.contracts.view_stream import (
@@ -35,6 +36,25 @@ _ANIMATED_PAGE: Final[str] = (
     "<style>@keyframes pulse{from{background:#f00}to{background:#00f}}"
     "body{margin:0;animation:pulse .1s infinite alternate}</style>"
 )
+
+
+@pytest.fixture
+def received_frames(monkeypatch: pytest.MonkeyPatch) -> Callable[[], int]:
+    """Count incoming frames on the same CDP session as the real screencast."""
+    open_session = BrowserContext.new_cdp_session
+    count = 0
+
+    def frame_arrived(_frame: object) -> None:
+        nonlocal count
+        count += 1
+
+    async def open_observed_session(context: BrowserContext, page: Page | Frame) -> CDPSession:
+        session = await open_session(context, page)
+        session.on("Page.screencastFrame", frame_arrived)
+        return session
+
+    monkeypatch.setattr(BrowserContext, "new_cdp_session", open_observed_session)
+    return lambda: count
 
 
 class _Sink:
@@ -138,17 +158,19 @@ async def test_screencast_caps_the_image_below_the_viewport(chromium: Browser) -
 
 
 @pytest.mark.asyncio(loop_scope="module")
-async def test_screencast_sends_no_image_without_credit_and_resumes_with_the_newest(chromium: Browser) -> None:
+async def test_screencast_sends_no_image_without_credit_and_resumes_with_the_newest(
+    chromium: Browser, received_frames: Callable[[], int]
+) -> None:
     sink = _Sink()
     async with view_browser(chromium) as (context, page):
         await page.set_content(_paint(_RED))
         screencast = await ViewScreencast.start(context, page, _VIEWPORT, sink)
         try:
-            await until(lambda: screencast.received_frames >= 1)
+            await until(lambda: received_frames() >= 1)
             for color in (_GREEN, _BLUE):
-                received = screencast.received_frames
+                received = received_frames()
                 await page.set_content(_paint(color))
-                await until(lambda received=received: screencast.received_frames > received)
+                await until(lambda received=received: received_frames() > received)
             await asyncio.sleep(_QUIET_SECONDS)
             assert sink.images == []
 
@@ -156,9 +178,9 @@ async def test_screencast_sends_no_image_without_credit_and_resumes_with_the_new
             await sink.wait_for(1)
             assert _is_color(sink.images[0], _BLUE)
 
-            received = screencast.received_frames
+            received = received_frames()
             await page.set_content(_paint(_RED))
-            await until(lambda: screencast.received_frames > received)
+            await until(lambda: received_frames() > received)
             await asyncio.sleep(_QUIET_SECONDS)
             assert len(sink.images) == 1
 
@@ -171,7 +193,9 @@ async def test_screencast_sends_no_image_without_credit_and_resumes_with_the_new
 
 
 @pytest.mark.asyncio(loop_scope="module")
-async def test_screencast_acknowledges_every_frame_though_none_can_be_drawn(chromium: Browser) -> None:
+async def test_screencast_acknowledges_every_frame_though_none_can_be_drawn(
+    chromium: Browser, received_frames: Callable[[], int]
+) -> None:
     sink = _Sink()
     async with view_browser(chromium) as (context, page):
         await page.set_content(_ANIMATED_PAGE)
@@ -179,10 +203,10 @@ async def test_screencast_acknowledges_every_frame_though_none_can_be_drawn(chro
         try:
             # Chromium stops sending after a few unacknowledged frames, so a count this high
             # shows each frame was acknowledged on arrival although the sink had no credit.
-            await until(lambda: screencast.received_frames >= 8)
+            await until(lambda: received_frames() >= 8)
             assert sink.images == []
 
-            received = screencast.received_frames
+            received = received_frames()
             screencast.grant_credit(1)
             await sink.wait_for(1)
             assert sink.images[0].announcement.sequence >= received - 1
@@ -191,13 +215,15 @@ async def test_screencast_acknowledges_every_frame_though_none_can_be_drawn(chro
 
 
 @pytest.mark.asyncio(loop_scope="module")
-async def test_screencast_credit_never_exceeds_two_outstanding_images(chromium: Browser) -> None:
+async def test_screencast_credit_never_exceeds_two_outstanding_images(
+    chromium: Browser, received_frames: Callable[[], int]
+) -> None:
     sink = _Sink()
     async with view_browser(chromium) as (context, page):
         await page.set_content(_ANIMATED_PAGE)
         screencast = await ViewScreencast.start(context, page, _VIEWPORT, sink)
         try:
-            await until(lambda: screencast.received_frames >= 2)
+            await until(lambda: received_frames() >= 2)
             screencast.grant_credit(VIEW_CREDIT_MAX_IMAGES)
             screencast.grant_credit(VIEW_CREDIT_MAX_IMAGES)
             await sink.wait_for(VIEW_CREDIT_MAX_IMAGES)
@@ -249,7 +275,9 @@ async def test_screencast_resize_lays_the_page_out_at_the_new_size(chromium: Bro
 
 
 @pytest.mark.asyncio(loop_scope="module")
-async def test_screencast_discards_an_image_scaled_below_the_contract_minimum(chromium: Browser) -> None:
+async def test_screencast_discards_an_image_scaled_below_the_contract_minimum(
+    chromium: Browser, received_frames: Callable[[], int]
+) -> None:
     sink = _Sink()
     async with view_browser(chromium) as (context, page):
         await page.set_content(_paint(_RED))
@@ -258,14 +286,17 @@ async def test_screencast_discards_an_image_scaled_below_the_contract_minimum(ch
         )
         try:
             screencast.grant_credit(1)
-            await until(lambda: screencast.unusable_frames >= 1)
+            await until(lambda: received_frames() >= 1)
+            await asyncio.sleep(_QUIET_SECONDS)
             assert sink.images == []
         finally:
             await screencast.stop()
 
 
 @pytest.mark.asyncio(loop_scope="module")
-async def test_screencast_discards_an_image_over_its_byte_cap_and_keeps_acknowledging(chromium: Browser) -> None:
+async def test_screencast_discards_an_image_over_its_byte_cap_and_keeps_acknowledging(
+    chromium: Browser, received_frames: Callable[[], int]
+) -> None:
     sink = _Sink()
     async with view_browser(chromium) as (context, page):
         await page.set_content(_paint(_RED))
@@ -274,30 +305,33 @@ async def test_screencast_discards_an_image_over_its_byte_cap_and_keeps_acknowle
         )
         try:
             screencast.grant_credit(1)
-            await until(lambda: screencast.unusable_frames >= 1)
+            await until(lambda: received_frames() >= 1)
+            await asyncio.sleep(_QUIET_SECONDS)
             assert sink.images == []
             await page.set_content(_paint(_BLUE))
-            await until(lambda: screencast.received_frames >= 2)
+            await until(lambda: received_frames() >= 2)
         finally:
             await screencast.stop()
 
 
 @pytest.mark.asyncio(loop_scope="module")
-async def test_screencast_stop_ends_delivery_and_is_repeatable(chromium: Browser) -> None:
+async def test_screencast_stop_ends_delivery_and_is_repeatable(
+    chromium: Browser, received_frames: Callable[[], int]
+) -> None:
     sink = _Sink()
     async with view_browser(chromium) as (context, page):
         await page.set_content(_ANIMATED_PAGE)
         screencast = await ViewScreencast.start(context, page, _VIEWPORT, sink)
-        await until(lambda: screencast.received_frames >= 2)
+        await until(lambda: received_frames() >= 2)
         await screencast.stop()
         await screencast.stop()
         await screencast.wait_ended()
-        received = screencast.received_frames
+        received = received_frames()
 
         screencast.grant_credit(2)
         await asyncio.sleep(_QUIET_SECONDS)
         assert sink.images == []
-        assert screencast.received_frames == received
+        assert received_frames() == received
         await screencast.resize(ViewResize(css_width=500, css_height=500, scale=1.0))
         assert page.viewport_size == {"width": 400, "height": 300}
 

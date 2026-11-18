@@ -53,18 +53,14 @@ from .....domain.modelos.m232_related_party import (
     Modelo232OperationKind,
     Modelo232TurnoverSource,
     Modelo232TurnoverStatement,
-    Modelo232YearGuard,
 )
+from ...storage.crypto.encrypted_columns import secure_object_key_digest
 from ...storage.profile_custody_carry import collect_profile_custody_carry
 from ...storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...storage.secure_object_namespaces import MODELO_232_RELATED_PARTY_NAMESPACE
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..m232_related_party_records import (
-    Modelo232GuardRepositoryAdapter,
-    Modelo232NoneRepositoryAdapter,
-    Modelo232OperationRepositoryAdapter,
     Modelo232RelatedPartyStoreAdapter,
-    Modelo232TurnoverRepositoryAdapter,
     m232_related_party_row_kind,
 )
 
@@ -493,17 +489,7 @@ def test_the_row_keys_name_the_year_and_never_a_counterparty() -> None:
     assert _TAX_ID not in m232_operation_key(stated.identity)
 
 
-def _key_of(row: Modelo232Operation | Modelo232NoneStatement | Modelo232TurnoverStatement | Modelo232YearGuard) -> str:
-    if isinstance(row, Modelo232Operation):
-        return m232_operation_key(row.identity)
-    if isinstance(row, Modelo232NoneStatement):
-        return m232_none_key(row.identity)
-    if isinstance(row, Modelo232TurnoverStatement):
-        return m232_turnover_key(row.identity)
-    return m232_guard_key(row.identity)
-
-
-def test_every_carried_row_kind_decodes_back_into_its_payload_under_its_own_key(
+def test_every_m232_row_is_carried_under_its_own_key_with_the_stored_payload(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     stated = _operation()
@@ -519,32 +505,25 @@ def test_every_carried_row_kind_decodes_back_into_its_payload_under_its_own_key(
             profile=StorageCustodyProfile.STRUCTURED,
             profile_decode_context=operation.profile_decode_context(),
         )
-        objects = secure_object_repository_for_active_bucket()
-        decoders = (
-            Modelo232OperationRepositoryAdapter(objects=objects),
-            Modelo232NoneRepositoryAdapter(objects=objects),
-            Modelo232TurnoverRepositoryAdapter(objects=objects),
-            Modelo232GuardRepositoryAdapter(objects=objects),
+        namespace = MODELO_232_RELATED_PARTY_NAMESPACE
+        records = secure_object_repository_for_active_bucket().list_records(
+            namespace.namespace,
+            expected_class=namespace.sensitivity,
+            max_supported_version=namespace.schema_version,
         )
-        carried = [
-            item for item in material.carried_objects if item.namespace == MODELO_232_RELATED_PARTY_NAMESPACE.namespace
-        ]
-        restored: dict[str, object] = {}
-        for item in carried:
-            payload = base64.b64decode(item.payload_b64)
-            kind = m232_related_party_row_kind(payload)
-            (decoder,) = [candidate for candidate in decoders if candidate.row_kind == kind]
-            decoded = decoder.decode_row(payload)
-            assert _key_of(decoded) == item.object_key
-            restored[item.object_key] = decoded
+        store = _store()
+        assert store.load_operations(_EJERCICIO) == (stated,)
+        assert store.load_none_statements(_EJERCICIO - 1) == (none_statement,)
 
     guards = {m232_guard_key(_EJERCICIO), m232_guard_key(_EJERCICIO - 1)}
-    assert set(restored) == {
+    carried = {item.object_key: item for item in material.carried_objects if item.namespace == namespace.namespace}
+    assert set(carried) == {
         m232_operation_key(stated.identity),
         m232_turnover_key(turnover.identity),
         m232_none_key(none_statement.identity),
         *guards,
     }
-    assert restored[m232_operation_key(stated.identity)] == stated
-    assert restored[m232_none_key(none_statement.identity)] == none_statement
-    assert MODELO_232_RELATED_PARTY_NAMESPACE.namespace in material.carried_namespaces
+    assert {secure_object_key_digest(key): base64.b64decode(item.payload_b64) for key, item in carried.items()} == {
+        record.object_key: record.payload for record in records
+    }
+    assert namespace.namespace in material.carried_namespaces

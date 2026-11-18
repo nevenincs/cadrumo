@@ -393,10 +393,6 @@ class WorkbenchEditSession:
             )
         return None
 
-    def stages_prior_figures(self, family_id: str) -> bool:
-        """Whether figures stated for ``family_id``'s earlier returns are staged."""
-        return bool(self._prior_figure_keys(family_id))
-
     def prior_figures(self, family_id: str) -> dict[str, tuple[ModeloFormScalar, str]]:
         """The figures staged for ``family_id``'s earlier returns by carry: each a value and how it reads."""
         return {

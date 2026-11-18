@@ -193,7 +193,6 @@ class ViewScreencast:
         self._credit = 0
         self._pending: _RetainedFrame | None = None
         self._next_sequence = 0
-        self._unusable_frames = 0
         self._ready = asyncio.Event()
         self._lock = asyncio.Lock()
         self._stopped = False
@@ -224,21 +223,6 @@ class ViewScreencast:
             await screencast.stop()
             raise
         return screencast
-
-    @property
-    def received_frames(self) -> int:
-        """How many frames Chromium has sent, each acknowledged on arrival."""
-        return self._next_sequence
-
-    @property
-    def unusable_frames(self) -> int:
-        """How many frames were discarded instead of announced.
-
-        A frame is discarded when it exceeds the byte cap, is not a readable
-        JPEG, depicts a layout other than the page's current CSS size, or was
-        scaled below the contract's smallest scale.
-        """
-        return self._unusable_frames
 
     def grant_credit(self, images: int) -> None:
         """Allow ``images`` more images, never more than two outstanding at once.
@@ -334,7 +318,6 @@ class ViewScreencast:
         self._next_sequence += 1
         css_size = _css_size(metadata)
         if not isinstance(encoded, str) or css_size is None:
-            self._unusable_frames += 1
             return
         self._pending = _RetainedFrame(sequence, encoded, css_size[0], css_size[1])
         self._ready.set()
@@ -354,7 +337,6 @@ class ViewScreencast:
                 self._pending = None
                 image = self._announce(frame)
                 if image is None:
-                    self._unusable_frames += 1
                     continue
                 self._credit -= 1
                 await self._sink(image)
