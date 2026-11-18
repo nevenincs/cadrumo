@@ -19,6 +19,7 @@ const CAUSE_WORDS = {
   home_in_git_project: "desktop.providers.sign_in_cause.home_in_git_project",
   home_unavailable: "desktop.providers.sign_in_cause.home_unavailable",
   cli_not_found: "desktop.providers.sign_in_cause.cli_not_found",
+  browser_not_offered: "desktop.providers.sign_in_cause.browser_not_offered",
   browser_relay_unavailable:
     "desktop.providers.sign_in_cause.browser_relay_unavailable",
   cli_start_failed: "desktop.providers.sign_in_cause.cli_start_failed",
