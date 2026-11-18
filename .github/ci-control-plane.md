@@ -83,7 +83,8 @@ checks to no pull request.
 | `checks` | Check: Security, registry and import boundaries (Linux) | authority | semgrep, registry gate, import linter |
 | `fixtures` | Check: Fixtures and personas (Linux) | authority | validates the personas, produces the generated window projections a fresh runner lacks, runs every fixture producer check (`just fixtures-gate`) |
 | `goldens` | Check: Committed sequence goldens (Linux) | plan, authority | replays the documented CLI sequences a change can alter |
-| `tests` | Test: Scoped tests (Linux, shard i/n) | plan, authority | one shard of the selected tests, parallel then serial |
+| `window` | Build: Window projections (Linux) | authority | seeds the window projections once (`just fixtures-seed-window`) and uploads them for the shards |
+| `tests` | Test: Scoped tests (Linux, shard i/n) | plan, authority, window | one shard of the selected tests, parallel then serial |
 | `contracts` | Test: CI contracts (Linux) | plan, authority | the workflow, deployment and release contracts |
 | `harness` | Test: Verification harness (Linux) | authority | the harness proofs, outside every worker pool |
 | `verdict` | **Check: Merge gate (Linux)** | all of the above | fails unless every job succeeded |
@@ -153,9 +154,10 @@ The tests remain the step's last command, so their exit status is the step's.
 A shard that fails on a runner that survives also prints the kernel's kill
 records. The shards provision Chromium (the setup action's `browser` input),
 because their population holds the tests that drive a real browser, and
-produce the window projections (`just fixtures-seed-window`) before the tests,
-because the population bundles frontend sources whose `@fixtures` imports
-resolve only into a build tree.
+place the window projections the `window` job seeded and uploaded before the
+tests, because the population bundles frontend sources whose `@fixtures`
+imports resolve only into a build tree. Seeding them took about ten minutes,
+once per shard until the `window` job took it over.
 
 **Speed.** The expected critical path for a pull request is `authority`
 (toolchain, then compiling the registry) followed by the longest of `tests`,
