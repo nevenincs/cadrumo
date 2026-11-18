@@ -727,11 +727,12 @@
      *      the display-class ladder (doc 1.0 > modelo 0.9 > casilla 0.8 > cli
      *      0.7) - these are the term/navigation card tiers, guaranteed above the
      *      full text;
-     *   2. a normal relevance search yields the full-text page hits (third
-     *      tier). Each page carries a path-derived `display_class` (but NO
-     *      `weight` key, so pass 1 still drops it), which orders pages within
-     *      the full-text band (user docs above dev machinery). A page
-     *      that is also a card is deduped away in compose(). */
+     *   2. a normal relevance search narrowed to `kind` `page` yields the
+     *      full-text page hits (third tier); without that filter the records
+     *      outrank the pages and compose() would dedupe the tier away.
+     *      Each page carries a path-derived `display_class` (but NO `weight`
+     *      key, so pass 1 still drops it), which orders pages within the
+     *      full-text band (user docs above dev machinery). */
     function searchPagefind(query) {
       return loadPagefind()
         .then(function (pf) {
@@ -748,7 +749,7 @@
               pf.search(query, { sort: { weight: "desc" }, filters: withLanguage(null) })
             ).then(function (cardRes) {
               return Promise.resolve(
-                pf.search(query, { filters: withLanguage(null) })
+                pf.search(query, { filters: withLanguage({ kind: ["page"] }) })
               ).then(function (pageRes) {
                 var cardResults = cardRes && cardRes.results ? cardRes.results : [];
                 var pageResults = pageRes && pageRes.results ? pageRes.results : [];

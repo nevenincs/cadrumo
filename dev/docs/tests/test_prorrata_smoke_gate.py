@@ -213,7 +213,7 @@ def test_prorrata_end_to_end_palette_smoke(tmp_path: Path) -> None:
                     """async (q) => {
                       const pf = await import('/pagefind/pagefind.js');
                       const cards = await pf.search(q, { sort: { weight: 'desc' } });
-                      const pages = await pf.search(q);
+                      const pages = await pf.search(q, { filters: { kind: ["page"] } });
                       const cardData = await Promise.all(
                         cards.results.slice(0, 12).map((r) => r.data())
                       );
