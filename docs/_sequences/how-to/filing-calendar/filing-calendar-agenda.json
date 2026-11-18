@@ -27,8 +27,7 @@
         "aeat",
         "app",
         "overview",
-        "agenda",
-        "--allow-incomplete"
+        "agenda"
       ],
       "captures": [],
       "envelope": null,
@@ -45,8 +44,7 @@
         "overview",
         "agenda",
         "--date",
-        "2026-04-15",
-        "--allow-incomplete"
+        "2026-04-15"
       ],
       "captures": [],
       "envelope": null,
@@ -67,8 +65,7 @@
         "--date",
         "2026-04-15",
         "--horizon",
-        "30",
-        "--allow-incomplete"
+        "30"
       ],
       "captures": [],
       "envelope": {
@@ -316,6 +313,7 @@
               "censo_enrolment_state": "not_checked",
               "closes_on": "2026-04-20",
               "days_overdue": null,
+              "days_until_close": 5,
               "evaluated_on": "2026-04-15",
               "filing_evidence": {
                 "aeat_evidence_concerns": [],
@@ -337,6 +335,7 @@
                 "period": "2026 1T",
                 "verified_justificante_csv": null
               },
+              "filing_status": "due",
               "filing_year": 2026,
               "holiday_coverage": "national_only",
               "holiday_refs": [],
@@ -349,6 +348,11 @@
               "payment_cutoff_on": "2026-04-15",
               "period": "2026 1T",
               "recovery": null,
+              "recovery_action": null,
+              "scopes": [
+                "ahead",
+                "upcoming"
+              ],
               "shift_reason": "business_day",
               "source": "registry_deadline",
               "status": "DUE_SOON",
@@ -359,6 +363,7 @@
               "censo_enrolment_state": "not_checked",
               "closes_on": "2026-04-20",
               "days_overdue": null,
+              "days_until_close": 5,
               "evaluated_on": "2026-04-15",
               "filing_evidence": {
                 "aeat_evidence_concerns": [],
@@ -380,6 +385,7 @@
                 "period": "2026 1T",
                 "verified_justificante_csv": null
               },
+              "filing_status": "due",
               "filing_year": 2026,
               "holiday_coverage": "national_only",
               "holiday_refs": [],
@@ -392,6 +398,11 @@
               "payment_cutoff_on": "2026-04-15",
               "period": "2026 1T",
               "recovery": null,
+              "recovery_action": null,
+              "scopes": [
+                "ahead",
+                "upcoming"
+              ],
               "shift_reason": "business_day",
               "source": "registry_deadline",
               "status": "DUE_SOON",
@@ -407,6 +418,7 @@
             "censo_enrolment_state": "not_checked",
             "closes_on": "2026-04-20",
             "days_overdue": null,
+            "days_until_close": 5,
             "evaluated_on": "2026-04-15",
             "filing_evidence": {
               "aeat_evidence_concerns": [],
@@ -428,6 +440,7 @@
               "period": "2026 1T",
               "verified_justificante_csv": null
             },
+            "filing_status": "due",
             "filing_year": 2026,
             "holiday_coverage": "national_only",
             "holiday_refs": [],
@@ -440,6 +453,11 @@
             "payment_cutoff_on": "2026-04-15",
             "period": "2026 1T",
             "recovery": null,
+            "recovery_action": null,
+            "scopes": [
+              "ahead",
+              "upcoming"
+            ],
             "shift_reason": "business_day",
             "source": "registry_deadline",
             "status": "DUE_SOON",
@@ -453,6 +471,20 @@
                 "720"
               ],
               "code": "bienes_extranjero_above_threshold",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.bienes_extranjero_unset"
             },
             {
@@ -460,6 +492,20 @@
                 "111"
               ],
               "code": "enrollment.public_administration_budget_gt_6000000",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.administracion_publica_unset"
             },
             {
@@ -467,6 +513,20 @@
                 "721"
               ],
               "code": "monedas_virtuales_extranjero_above_threshold",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.monedas_virtuales_extranjero_unset"
             },
             {
@@ -474,6 +534,20 @@
                 "714"
               ],
               "code": "patrimonio_declaration_threshold_met",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.patrimonio_umbral_unset"
             },
             {
@@ -482,6 +556,20 @@
                 "296"
               ],
               "code": "pays_non_resident_income_with_retencion",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.retencion_no_residentes_unset"
             },
             {
@@ -489,6 +577,20 @@
                 "136"
               ],
               "code": "premio_loteria_gravamen_especial_sin_retencion",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.premio_loteria_unset"
             },
             {
@@ -496,6 +598,20 @@
                 "136"
               ],
               "code": "premio_loteria_gravamen_especial_trimestres",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.premio_loteria_trimestres_unset"
             },
             {
@@ -503,6 +619,20 @@
                 "347"
               ],
               "code": "third_party_transactions_above_347_threshold",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.terceros_threshold_unset"
             }
           ]

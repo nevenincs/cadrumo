@@ -213,6 +213,35 @@
             },
             {
               "directions": [
+                "INCOMING",
+                "OUTGOING"
+              ],
+              "id": "capital_inmobiliario",
+              "net_paid_invoice": false,
+              "purpose": "rental_property_income",
+              "related_category_ids": []
+            },
+            {
+              "directions": [
+                "INCOMING"
+              ],
+              "id": "capital_mobiliario",
+              "net_paid_invoice": false,
+              "purpose": "capital_mobiliario_yield",
+              "related_category_ids": []
+            },
+            {
+              "directions": [
+                "INCOMING",
+                "OUTGOING"
+              ],
+              "id": "ganancias_patrimoniales",
+              "net_paid_invoice": false,
+              "purpose": "capital_gain",
+              "related_category_ids": []
+            },
+            {
+              "directions": [
                 "INCOMING"
               ],
               "id": "trabajo",
@@ -225,6 +254,9 @@
             "actividad_economica",
             "arrendamiento_local",
             "arrendamiento_vivienda_afecto",
+            "capital_inmobiliario",
+            "capital_mobiliario",
+            "ganancias_patrimoniales",
             "trabajo"
           ],
           "net_paid_withholding_irpf_category_ids": [

@@ -59,6 +59,7 @@
           "transaction": {
             "accrual_date": null,
             "amount": "121",
+            "arrendamiento_ref": null,
             "attachment_ids": [],
             "booked_date": "2026-03-21",
             "business_classification": "NOT_YET_PROCESSED",
@@ -78,6 +79,8 @@
             "description": "Office supplies",
             "direction": "OUTGOING",
             "fx_rate": null,
+            "gasto_capital_inmobiliario": null,
+            "inmueble_ref": null,
             "investment_asset_id": null,
             "invoice_id": null,
             "irpf_category": null,
@@ -85,13 +88,38 @@
             "iva_category": null,
             "iva_rate": "0.21",
             "lifecycle_state": "ACTIVE",
+            "link_fields": [
+              {
+                "family": "rental_lease",
+                "field": "arrendamiento_ref",
+                "field_words": "Linked lease",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "rental_property",
+                "field": "inmueble_ref",
+                "field_words": "Linked property",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "gasto_capital_inmobiliario",
+                "field": "gasto_capital_inmobiliario",
+                "field_words": "Rental expense concept",
+                "field_words_language": "en",
+                "value": null
+              }
+            ],
             "m210_income_classification": null,
             "modified_at": "2026-04-01T09:00:00+00:00",
             "notes": "Receipt filed",
             "operation_date": null,
             "prorrata_reference": null,
             "purchase_invoice_evidence_id": null,
+            "recargo_amount": null,
             "source_jurisdiction": "ES",
+            "statement_reference": null,
             "taxable_base": "100",
             "transaction_id": "aebcbdf126dab613bfff9204b98d9bdce07dd43b900d9b0e1c00e24c709a2618",
             "usage_ratio_id": null,
@@ -138,6 +166,7 @@
           "transaction": {
             "accrual_date": null,
             "amount": "121",
+            "arrendamiento_ref": null,
             "attachment_ids": [],
             "booked_date": "2026-03-21",
             "business_classification": "NOT_YET_PROCESSED",
@@ -157,6 +186,8 @@
             "description": "Office supplies",
             "direction": "OUTGOING",
             "fx_rate": null,
+            "gasto_capital_inmobiliario": null,
+            "inmueble_ref": null,
             "investment_asset_id": null,
             "invoice_id": null,
             "irpf_category": null,
@@ -164,13 +195,38 @@
             "iva_category": null,
             "iva_rate": "0.21",
             "lifecycle_state": "ACTIVE",
+            "link_fields": [
+              {
+                "family": "rental_lease",
+                "field": "arrendamiento_ref",
+                "field_words": "Linked lease",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "rental_property",
+                "field": "inmueble_ref",
+                "field_words": "Linked property",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "gasto_capital_inmobiliario",
+                "field": "gasto_capital_inmobiliario",
+                "field_words": "Rental expense concept",
+                "field_words_language": "en",
+                "value": null
+              }
+            ],
             "m210_income_classification": null,
             "modified_at": "2026-04-01T09:00:00+00:00",
             "notes": "Receipt filed",
             "operation_date": null,
             "prorrata_reference": null,
             "purchase_invoice_evidence_id": null,
+            "recargo_amount": null,
             "source_jurisdiction": "ES",
+            "statement_reference": null,
             "taxable_base": "100",
             "transaction_id": "aebcbdf126dab613bfff9204b98d9bdce07dd43b900d9b0e1c00e24c709a2618",
             "usage_ratio_id": null,
