@@ -4,6 +4,7 @@ binding_source_refs = ["aeat-modelo-200-manual-2022"]
 formula_source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
 parameter_source_refs = ["aeat-modelo-200-manual-2022"]
 dependency_classification_source_refs = ["aeat-modelo-200-manual-2022"]
+live_cross_reference_source_refs = ["aeat-modelo-200-manual-2022"]
 application_link_source_refs = ["boe-modelo-200-2022-form", "aeat-dr-200-2022"]
 filing_schedule_source_refs = ["boe-modelo-200-2022-form", "aeat-modelo-200-manual-2022"]
 authority_grade = "calculation"

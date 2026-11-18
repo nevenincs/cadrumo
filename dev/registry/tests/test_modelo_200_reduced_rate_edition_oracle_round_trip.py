@@ -18,30 +18,45 @@ Sources (line numbers of ``corpus/manuals/sociedades/<edition>/
 source.pdf.extracted.md`` for the edition selected; the record design is the
 ``aeat-dr-200`` workbook the edition's layout cites):
 
-    L320-L331: "Con efectos para los periodos impositivos que se inicien a
+    L327-L330: "Con efectos para los periodos impositivos que se inicien a
       partir de 1 de enero de [the edition], la Ley 31/2022 ... introduce en el
       articulo 29 de la LIS un tipo de gravamen reducido del 23 por ciento para
       las entidades cuyo importe neto de la cifra de negocios del periodo
       impositivo inmediato anterior sea inferior a 1 millon de euros."
-    L13570 "Tipo general 25 por 100"; L13582-13583 "Entidades INCN < 1 millon
+    L13575 "Tipo general 25 por 100"; L13587-13588 "Entidades INCN < 1 millon
       de euros en el periodo impositivo inmediato anterior (no siendo aplicable
       a aquellas entidades que tengan la consideracion de entidad patrimonial)
       23 por 100".
     L7103 "[00550] = [00501] + ([00417] - [00418])".
-    L13021 "[00552] = [00550] - [01032] - [00547]".
-    L13272-13283 BIN compensation: limit 70 por ciento of the base previa, "en
+    L13026 "[00552] = [00550] - [01032] - [00547]".
+    L13273-13277, L13287-13288 BIN compensation: limit 70 por ciento of the base previa, "en
       todo caso ... hasta el importe de 1 millon de euros" (LIS art. 26.1).
-    L13510 "[01330] = [00552] + [01033] - [01034]"; L23762 "el importe de la
+    L13515 "[01330] = [00552] + [01033] - [01034]"; L23767 "el importe de la
       casilla [01330] coincidira con el de la casilla [00552]".
-    L13553-13556 "[00562] = [00552] x [00558]/100", never negative.
-    L13697-13703 "[00582] = ([00562] + [01038]) - (...)".
-    L14611-14624 cuota liquida minima [00619]: art. 30 bis applies only to an
+    L13559 "[00562] = [00552] x [00558]/100"; L13561 positive or zero.
+    L13702 "[00582] = ([00562] + [01038]) - (...)".
+    L14611-14626 cuota liquida minima [00619]: art. 30 bis applies only to an
       INCN "al menos de 20 millones" or consolidacion fiscal.
-    L15172-15174 "[00592] = [00582] - (...)", positive or zero.
+    L15177 "[00592] = [00582] - (...)"; L15179 positive or zero.
     L19199 "[00599] = ([00625]/100]) x ([00592] - [01766] - [01784])".
-    L19436 "[00611] = [00599] - ([00601] + [00603] + [00605])".
+    L19441 "[00611] = [00599] - ([00601] + [00603] + [00605])".
     LIS art. 40.2 (BOE-A-2014-12328, consolidated text): each instalment is
       18 % of the cuota of the last period whose plazo had ended.
+
+The edition reads no twelve-month INCN. Earlier and later editions declare the
+binding modelo-200-profile-incn-prior-12-months (profile fact
+incn_prior_12_months, legal ref LIS DA 15a) only for the DA 15a limits on the
+compensation of bases imponibles negativas: 50 % from 20 millones and 25 % from
+60 millones of INCN in the twelve months before the period (the preceding
+manual's DA 15a passage; the following manual's restored DA 15a). This
+edition's manual records at L576-L586 that the Tribunal Constitucional, in the
+judgment it dates there, annulled DA 15a and DT 16a.3 LIS, and at
+L13273-13277 prints the 70 % limit alone, so its revision removes the binding
+and the DA 15a parameters and the oracle supplies no such input. The same
+manual still asks for the twelve-month INCN on page 1 for the art. 30 bis
+minimum (L13403-13405) and the art. 11.12 limits (L9466-9469); neither is read
+through that binding, and the cuota liquida minima [00619] is supplied as 0
+because art. 30 bis reaches neither scenario.
 
 Scenario ``persona``: the sociedad-limitada persona's return for the exercise
 (dev/fixtures/personas/sociedad-limitada). Resultado contable 25400.00, no
