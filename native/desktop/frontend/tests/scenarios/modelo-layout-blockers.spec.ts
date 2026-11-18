@@ -43,7 +43,7 @@ for (const size of [
     await target.setViewportSize(size);
     await openDeclaration(target);
     await workspace(target)
-      .locator("[data-year-projection]")
+      .locator("aside[data-form-gives-way] > div")
       .evaluate((element, height) => {
         const offer = document.createElement("span");
         offer.style.display = "block";

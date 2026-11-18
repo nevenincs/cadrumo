@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixRole as Role,
 )
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-from cadrumo.domain.filing.errors import FilingExportValidationError
+from cadrumo.domain.filing.errors import FilingExportCasillaValueRefusedError
 from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -86,7 +86,7 @@ def test_exact_language_prefix_from_approved_casilla(
         assert rendered[96:100] == b" " * 4
         assert rendered[109:322] == b" " * 213
     for value in (None, "", "X", "e", "EC"):
-        with pytest.raises(FilingExportValidationError, match="language"):
+        with pytest.raises(FilingExportCasillaValueRefusedError) as refused:
             render_declared_prefix(
                 fields,
                 prefix_extent=328,
@@ -95,6 +95,7 @@ def test_exact_language_prefix_from_approved_casilla(
                 product_software_identity=identity,
                 casilla_values={} if value is None else {"decl.idioma": value},
             )
+        assert refused.value.casilla_id == "decl.idioma"
 
 
 def test_language_casilla_cannot_be_relabelled_or_put_on_filler() -> None:

@@ -256,13 +256,27 @@ export const ProjectedYear: Story = {
     ).toBeGreaterThan(0);
     for (const served of years) {
       await choose(canvasElement, served);
+      const toggle = await waitFor(() =>
+        one(canvasElement, "[data-pane-toggle=details]"),
+      );
+      if (toggle.getAttribute("aria-pressed") !== "true")
+        await userEvent.click(toggle);
       // A year past the newest authored edition is carried forward from it.
       if (served.projection.direction !== "authored")
         expect(served.projection.direction).toBe("forward");
       const line = await waitFor(
-        () => one(canvasElement, "[data-year-projection]"),
+        () => {
+          const details = one(
+            canvasElement,
+            `aside[aria-label="${translator(language(globals))("desktop.modelo.details.label")}"]`,
+          );
+          return one(details, "[data-year-projection]");
+        },
         { timeout: 30_000 },
       );
+      expect(
+        canvasElement.querySelectorAll("[data-year-projection]"),
+      ).toHaveLength(1);
       expect(line).toHaveAttribute(
         "data-year-projection",
         served.projection.direction,
