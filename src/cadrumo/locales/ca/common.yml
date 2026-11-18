@@ -341,11 +341,11 @@ aggregation:
       identity_mismatch: L'emissor, el pla, la clau o l'exercici del registre no coincideixen
         amb el registre que vols canviar, així que no s'ha desat res.
       not_found: No existeix cap registre d'aportacions amb aquesta referència d'emissor,
-        --plan-ref, --clave i --subclave en aquest exercici. Executa l'ordre list
+        --plan-ref, --clave i --subclave en aquest exercici. Executa l'ordre `list`
         per veure els registres desats.
       same_plan_split_unstated: La casella d'aquesta clau i subclau depèn de si el
         teu ocupador també va fer contribucions al mateix pla. Indica-ho amb --employer-same-plan
-        yes o no, o introdueix tu la casella com a valor de l'operador.
+        `yes` o `no`, o introdueix tu la casella com a valor de l'operador.
       stale_revision: El registre d'aportacions ha canviat des que el vas llegir.
         Torna a llegir-lo i repeteix el canvi.
       validation: 'Un valor no és vàlid: comprova el NIF de l''emissor, el --plan-nif,
