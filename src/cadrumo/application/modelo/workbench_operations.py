@@ -24,7 +24,6 @@ import asyncio
 import logging
 from collections.abc import Callable, Mapping
 from contextvars import copy_context
-from functools import partial
 from time import perf_counter
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
@@ -485,7 +484,8 @@ class ModeloWorkbenchFormExecutor:
             served = held.form_read.reuse(key, lambda: fresh(bucket_id, ports, contracts, admission, spent))
             _log_form_memo_read(kept, key, spent)
             # The refresh runs in this read's context, so it reads the same profile's settings and storage.
-            held.keep_form_refresh(partial(copy_context().run, refresh, held))
+            context, memo = copy_context(), held
+            memo.keep_form_refresh(lambda: context.run(refresh, memo))
             return with_fresh_admission(served, admission)
 
         def refresh(memo: WorkbenchCaptureMemory) -> None:

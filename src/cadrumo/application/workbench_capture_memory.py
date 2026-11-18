@@ -131,17 +131,21 @@ class WorkbenchMemoSlot[KeyT: Hashable, ValueT]:
         try:
             value = build()
             flight.built = (value,)
-            fresh = current()
-            with self._lock:
-                if fresh and not self._closed:
-                    self._entry = (key, value)
-                    kept = True
+            kept = current() and self._keep(key, value)
         finally:
             with self._lock:
                 if self._flight is flight:
                     self._flight = None
             flight.done.set()
         return kept
+
+    def _keep(self, key: KeyT, value: ValueT) -> bool:
+        """Keep ``value`` for ``key`` unless the slot was closed meanwhile; answer whether it was kept."""
+        with self._lock:
+            if self._closed:
+                return False
+            self._entry = (key, value)
+            return True
 
     def close(self) -> None:
         """Drop the stored result and store nothing further."""
