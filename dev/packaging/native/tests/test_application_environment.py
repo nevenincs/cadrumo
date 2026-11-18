@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.package_interpreter import ROLE_IMAGE_OPTION, isolated_interpreter_command
+from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV
 from dev.paths import REPO_ROOT
 
 from ..application_environment import load_for_build, parse
@@ -20,6 +21,7 @@ from ..environment_declaration_primitives import DECLARATION, ApplicationEnviron
 from ..environment_reference import LaunchRefusedError, reference_define, reference_select
 from ..generate import generate
 from ..layout import load_layout
+from .google_identity import PUBLISHER_CLIENT_JSON
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -325,6 +327,50 @@ def test_generation_fails_on_a_malformed_declaration(tmp_path: Path) -> None:
     with pytest.raises(ApplicationEnvironmentError):
         generate(bad, tmp_path / "bad-out", target="windows-x86-64")
     assert not (tmp_path / "bad-out" / "contract.rs").exists()
+
+
+def _package_fixed_line(contract_rs: str) -> str:
+    (line,) = (line for line in contract_rs.splitlines() if line.startswith("pub const LAUNCH_PACKAGE_FIXED:"))
+    return line
+
+
+def test_only_the_package_contract_requires_publisher_provisioning(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The source tree has no env/.env and no embedded client, and the build environment none.
+    monkeypatch.delenv(GOOGLE_OAUTH_ENV, raising=False)
+    root = _source_tree(tmp_path, _SOURCE)
+    assert not (root / "env/.env").exists()
+    unprovisioned = tmp_path / "unprovisioned"
+    generate(root, unprovisioned, target="windows-x86-64", provisioned=False)
+    contract = json.loads((unprovisioned / "contract.json").read_text(encoding="utf-8"))
+    assert contract["application_environment"]["package_fixed"] == {}
+    rust = (unprovisioned / "contract.rs").read_text(encoding="utf-8")
+    assert _package_fixed_line(rust) == "pub const LAUNCH_PACKAGE_FIXED: &[(&str, &str)] = &[];"
+    package = tmp_path / "package"
+    with pytest.raises(
+        ValueError, match=f"Set {GOOGLE_OAUTH_ENV} in the build environment or env/.env before packaging"
+    ):
+        generate(root, package, target="windows-x86-64")
+    assert not package.exists()
+
+
+def test_the_unprovisioned_contract_binds_no_value_even_where_provisioning_exists(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A source tree of its own, so only the synthetic client can be selected.
+    monkeypatch.setenv(GOOGLE_OAUTH_ENV, PUBLISHER_CLIENT_JSON)
+    root = _source_tree(tmp_path, _SOURCE)
+    unprovisioned, package = tmp_path / "unprovisioned", tmp_path / "package"
+    generate(root, unprovisioned, target="windows-x86-64", provisioned=False)
+    generate(root, package, target="windows-x86-64")
+    bound = json.loads((package / "contract.json").read_text(encoding="utf-8"))["application_environment"]
+    assert bound["package_fixed"] == {GOOGLE_OAUTH_ENV: PUBLISHER_CLIENT_JSON}
+    client_id = json.loads(PUBLISHER_CLIENT_JSON)["installed"]["client_id"]
+    assert client_id in (package / "contract.rs").read_text(encoding="utf-8")
+    for name in ("contract.json", "contract.rs", "contract_vectors.rs"):
+        assert client_id not in (unprovisioned / name).read_text(encoding="utf-8"), name
+    assert (unprovisioned / "contract.h").read_bytes() == (package / "contract.h").read_bytes()
 
 
 _PROFILE_LINE = re.compile(r'^    LaunchProfile \{ name: "([^"]+)", image: "([^"]+)", (.*) \},$')

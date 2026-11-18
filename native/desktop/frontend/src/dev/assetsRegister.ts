@@ -245,9 +245,8 @@ if (firstKind === undefined)
 const anyKind = opening(firstKind);
 
 /** What the registry admits per asset kind in the register's opening year. */
-export const TABLE_GROUPS: Record<string, readonly ActivityAssetTableGroup[]> = byKind(
-  (options) => options.table_groups,
-);
+export const TABLE_GROUPS: Record<string, readonly ActivityAssetTableGroup[]> =
+  byKind((options) => options.table_groups);
 export const ADMITTED_METHODS: Record<string, FormOptions["methods"]> = byKind(
   (options) => options.methods,
 );
@@ -263,7 +262,8 @@ export const DECLARED_ACTIVITIES: FormOptions["declared_activities"] =
   anyKind.declared_activities;
 export const DISPOSAL_REASONS: readonly ActivityAssetDisposalReasonOption[] =
   anyKind.disposal_reasons;
-export const BASIS_STAGES: readonly ActivityAssetBasisStageOption[] = anyKind.basis_stages;
+export const BASIS_STAGES: readonly ActivityAssetBasisStageOption[] =
+  anyKind.basis_stages;
 export const OPENING_STATUSES: readonly ActivityAssetOpeningStatusOption[] =
   anyKind.opening_statuses;
 export const ACQUIRED_CONDITIONS: readonly ActivityAssetConditionOption[] =

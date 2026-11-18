@@ -284,29 +284,15 @@ def resources(
     *,
     shared: Path | None = None,
 ) -> None:
-    """Render the icon, one PE version resource per native executable and the process manifests.
+    """Render the icon and one PE version resource per native executable.
 
-    The version resources carry the build identity and go to ``destination``; the icon and
-    manifests carry none and go to ``shared`` (``destination`` when omitted).
+    The version resources carry the build identity and go to ``destination``; the icon
+    carries none and goes to ``shared`` (``destination`` when omitted), where
+    :func:`unstamped_resources` has written the application manifests.
     """
     shared = destination if shared is None else shared
     if not 0 <= stamp.build_sequence <= 65535:
         raise ValueError("Windows resource build sequence must be between 0 and 65535")
-    for image, source in APPLICATION_MANIFESTS.items():
-        authored = source.read_bytes()
-        for build_kind, publisher in (
-            ("release", product.windows_package_publisher),
-            ("development", product.windows_package_development_publisher),
-        ):
-            write_bytes(
-                shared / application_manifest_name(image, build_kind),
-                identity_manifest(
-                    authored,
-                    package_name=product.windows_package_name,
-                    publisher=publisher,
-                    application=product.windows_package_application,
-                ),
-            )
     metadata = json.loads((destination / "build.json").read_text(encoding="utf-8"))
     publisher = _rc_string(metadata["publisher"])
     sys.path.insert(0, str(tools))
@@ -325,6 +311,25 @@ def resources(
     for stem, description in descriptions.items():
         resource = version_resource(shared, numeric, version, stamp, publisher, _rc_string(description))
         write_text(destination / f"{stem}.rc", resource)
+
+
+def unstamped_resources(shared: Path, product: DistributionIdentity) -> None:
+    """Render each application image's manifest of both build kinds with the package identity claim."""
+    for image, source in APPLICATION_MANIFESTS.items():
+        authored = source.read_bytes()
+        for build_kind, publisher in (
+            ("release", product.windows_package_publisher),
+            ("development", product.windows_package_development_publisher),
+        ):
+            write_bytes(
+                shared / application_manifest_name(image, build_kind),
+                identity_manifest(
+                    authored,
+                    package_name=product.windows_package_name,
+                    publisher=publisher,
+                    application=product.windows_package_application,
+                ),
+            )
 
 
 def application_manifest_name(image: str, build_kind: str) -> str:

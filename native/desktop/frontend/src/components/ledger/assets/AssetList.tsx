@@ -47,7 +47,10 @@ export function callRefusal(
 
 /** How serious each kind of count reads; colour only reinforces the glyph
  * and the words. */
-const COUNT_LEVEL: Record<keyof ActivityAssetFindingCounts, ModeloFormAttention> = {
+const COUNT_LEVEL: Record<
+  keyof ActivityAssetFindingCounts,
+  ModeloFormAttention
+> = {
   missing: "missing",
   incomplete: "confirm",
   conflict: "blocks",

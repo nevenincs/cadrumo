@@ -116,7 +116,8 @@ export function ClaimFlow({
   const nothingOpen =
     row !== null && spans.length === 0 ? nothingOpenWords(t, row) : null;
   const form = useFieldsDraft(draftOf(fields));
-  const [forecast, setForecast] = useState<ScheduledAmortizationChargeSnapshot | null>(null);
+  const [forecast, setForecast] =
+    useState<ScheduledAmortizationChargeSnapshot | null>(null);
   const [forecastCall, setForecastCall] =
     useState<SetupCall<ActivityAssetForecastProjection> | null>(null);
   const [reading, setReading] = useState(false);

@@ -40,6 +40,8 @@ _LIFECYCLE_FIELDS = tuple(
             "projection_pair_reused",
             "queued_ms",
             "recheck_ms",
+            "refresh_kept",
+            "refresh_ms",
             "total_ms",
             "checked_out_count",
             "child_process_id",

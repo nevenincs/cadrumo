@@ -146,7 +146,10 @@ export const unlabelledFacts = (
 ];
 
 /** Whether the form can state every fact the method requires. */
-const methodDrawable = (options: ActivityAssetFormOptionsView | null, method: string) =>
+const methodDrawable = (
+  options: ActivityAssetFormOptionsView | null,
+  method: string,
+) =>
   factsOf(options, method).every(
     (fact) =>
       !fact.required ||
@@ -306,7 +309,10 @@ const kindOf = (
 };
 
 /** What a revision states at a path, as the text a form field starts from. */
-function stated(revision: ActivityAssetRevisionSnapshot, path: readonly string[]) {
+function stated(
+  revision: ActivityAssetRevisionSnapshot,
+  path: readonly string[],
+) {
   let at: unknown = revision;
   for (const step of path) {
     if (typeof at !== "object" || at === null) return null;
@@ -362,7 +368,9 @@ export function revisionDraft(
 }
 
 /** The text a change of a baja starts from: the baja the revision records. */
-export function disposalDraft(revision: ActivityAssetRevisionSnapshot): FormDraft {
+export function disposalDraft(
+  revision: ActivityAssetRevisionSnapshot,
+): FormDraft {
   const found = revision.disposal;
   if (typeof found !== "object" || found === null) return {};
   const baja = found as Record<string, unknown>;
@@ -635,7 +643,9 @@ const OPENING_FACT: Record<
 
 /** The names of the basis and opening facts the options serve that the form
  * has no control for. */
-export const undrawableFacts = (options: ActivityAssetFormOptionsView | null): string[] => [
+export const undrawableFacts = (
+  options: ActivityAssetFormOptionsView | null,
+): string[] => [
   ...new Set([
     ...(options?.basis_stages ?? [])
       .flatMap((stage) => stage.facts)

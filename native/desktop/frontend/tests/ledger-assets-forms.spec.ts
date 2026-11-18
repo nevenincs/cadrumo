@@ -350,7 +350,10 @@ test("a cleared fact is taken out of the corrected revision, and the baja the re
 });
 
 test("each act's fields and requests come from the backend's choices", () => {
-  const methods: ActivityAssetFormOptionsView["methods"] = ["linear", "low_value_free"];
+  const methods: ActivityAssetFormOptionsView["methods"] = [
+    "linear",
+    "low_value_free",
+  ];
   const options: ActivityAssetFormOptionsView = {
     tax_year: servedSupport.horizon,
     asset_kind: "material",
@@ -459,7 +462,10 @@ test("each act's fields and requests come from the backend's choices", () => {
 test("the add form offers the methods the options serve, each with the facts they serve, and a correction keeps the element's own", async () => {
   const port = portOf();
   for (const kind of ["material", "intangible"] as const) {
-    const options = (await optionsOf(port, kind)) as ActivityAssetFormOptionsView;
+    const options = (await optionsOf(
+      port,
+      kind,
+    )) as ActivityAssetFormOptionsView;
     // Every served fact has a word, and no method is offered without its facts.
     expect(unlabelledFacts(options)).toEqual([]);
     // Every fact a basis stage or an opening status serves has a control.
@@ -926,7 +932,11 @@ test("a method with a fact that has no form is not offered, and its repeated row
     edition: servedEditionOf(servedSupport.horizon)!,
     disposal_reasons: [],
     // Methods the registry does not define: they exercise facts with no form.
-    methods: ["plain", "rows", "unworded"] as unknown as ActivityAssetFormOptionsView["methods"],
+    methods: [
+      "plain",
+      "rows",
+      "unworded",
+    ] as unknown as ActivityAssetFormOptionsView["methods"],
     acquisition_shapes: [...ACQUISITION_SHAPES],
     declared_activities: [...DECLARED_ACTIVITIES],
     method_facts: [

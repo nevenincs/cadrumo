@@ -111,7 +111,10 @@ function descriptorOf(values: FormValues): ActivityAssetDescriptorFacts | null {
  * serve for the stage, and none of the facts only another stage states. The
  * date the building was built is a fact of an element bought used. Without
  * the options, nothing is judged. */
-function tidyBasis(revision: Tree, options: ActivityAssetFormOptionsView | null): void {
+function tidyBasis(
+  revision: Tree,
+  options: ActivityAssetFormOptionsView | null,
+): void {
   const basis = revision.basis as Tree | undefined;
   if (basis === undefined) return;
   const stages = options?.basis_stages ?? [];
@@ -126,7 +129,10 @@ function tidyBasis(revision: Tree, options: ActivityAssetFormOptionsView | null)
 /** The facts only another condition states, taken out: the options name them,
  * those of the election and those beside it. Without the options, or with a
  * condition they do not list, nothing is judged. */
-function tidyCondition(revision: Tree, options: ActivityAssetFormOptionsView | null): void {
+function tidyCondition(
+  revision: Tree,
+  options: ActivityAssetFormOptionsView | null,
+): void {
   const elsewhere = factsOfOtherConditions(
     options,
     String(revision.acquired_condition ?? ""),
@@ -140,7 +146,10 @@ function tidyCondition(revision: Tree, options: ActivityAssetFormOptionsView | n
 
 /** The vehicle declaration a class that is not charged on one cannot state.
  * A class the options do not list is not judged. */
-function tidyVehicle(revision: Tree, options: ActivityAssetFormOptionsView | null): void {
+function tidyVehicle(
+  revision: Tree,
+  options: ActivityAssetFormOptionsView | null,
+): void {
   const election = revision.amortization as Tree | undefined;
   const chosen = String(election?.authority_class_key ?? "");
   if (requiresVehicle(options, chosen) === false)
@@ -149,7 +158,10 @@ function tidyVehicle(revision: Tree, options: ActivityAssetFormOptionsView | nul
 
 /** The opening history without the facts its status cannot state, as the
  * options serve them. */
-function tidyOpening(revision: Tree, options: ActivityAssetFormOptionsView | null): void {
+function tidyOpening(
+  revision: Tree,
+  options: ActivityAssetFormOptionsView | null,
+): void {
   const opening = revision.opening_history as Tree | undefined;
   if (opening === undefined) return;
   const statuses = options?.opening_statuses ?? [];
