@@ -21,6 +21,7 @@ from collections.abc import Callable, Hashable, Iterator
 from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
+from time import perf_counter
 from typing import Any, cast, override
 from uuid import UUID, uuid4
 
@@ -373,3 +374,107 @@ def test_the_namespace_the_store_epoch_leaves_out_is_one_no_form_read_queries(re
     assert reader.builds == 1
     assert read_queries == []
     assert queried, "a load of that namespace is seen, so the empty read above is evidence"
+
+
+# A page return in the window allows 3000 ms end to end, of which the host and window take part.
+_PAGE_RETURN_WORKER_BUDGET_SECONDS = 1.0
+
+
+def _write_06(reader: _Reader, value: str) -> None:
+    intent = _SET_06.model_copy(update={"value": value})
+    assert reader.work.apply(scalar=(intent,)).refusal is None
+
+
+def _refreshed(owner: WorkbenchCaptureMemoryOwner) -> None:
+    thread = owner.refresh_settled_form()
+    assert thread is not None, "a session that was served a form must refresh it"
+    thread.join()
+
+
+def test_a_form_returned_to_after_a_write_settles_is_served_from_its_refresh(reader: _Reader) -> None:
+    before = reader.read()
+    # An export's bucket event moves the epoch just as this write does.
+    _write_06(reader, "100")
+    _refreshed(reader.owner)
+
+    began = perf_counter()
+    returned = reader.read()
+    elapsed = perf_counter() - began
+
+    assert reader.builds == 1, "the read returning to the form built it again instead of serving the refresh"
+    assert reader.keys[0].store_epoch != reader.keys[1].store_epoch
+    assert returned.calculation_revision_id != before.calculation_revision_id
+    fresh = _execute(reader.work, None, OutputLanguage.EN)
+    assert returned.model_dump_json(exclude={"admitted_baseline"}) == fresh.model_dump_json(
+        exclude={"admitted_baseline"}
+    )
+    assert elapsed <= _PAGE_RETURN_WORKER_BUDGET_SECONDS, elapsed
+
+
+class _WritingSlot(_RecordingSlot):
+    """The session's form slot, writing to the profile while a refresh builds."""
+
+    def __init__(self, write: Callable[[], None]) -> None:
+        super().__init__()
+        self._write = write
+
+    @override
+    def refresh(
+        self,
+        key: WorkbenchFormReadKey,
+        build: Callable[[], ModeloWorkbenchFormProjectionV1],
+        *,
+        current: Callable[[], bool],
+    ) -> bool:
+        def writing() -> ModeloWorkbenchFormProjectionV1:
+            self._write()
+            return build()
+
+        return super().refresh(key, writing, current=current)
+
+
+def test_a_write_while_the_form_is_refreshed_makes_the_returning_read_build_it(tmp_path: Path) -> None:
+    with seeded_operator_work(tmp_path) as work:
+        work.recalculate()
+        owner = WorkbenchCaptureMemoryOwner()
+        reader = _Reader(work=work, owner=owner)
+        reader.read()
+        _write_06(reader, "100")
+        writing = _WritingSlot(lambda: _write_06(reader, "200"))
+        owner.for_profile(work.work_unit.bucket_id).form_read = writing
+        reader.recorder = writing
+        _refreshed(owner)
+
+        assert writing.kept_key() is None, "a refresh overtaken by a write kept its form"
+        returned = reader.read()
+        fresh = _execute(work, None, OutputLanguage.EN)
+        owner.close()
+
+    assert writing.builds == 1
+    assert returned.model_dump_json(exclude={"admitted_baseline"}) == fresh.model_dump_json(
+        exclude={"admitted_baseline"}
+    )
+
+
+def test_an_ended_session_refreshes_nothing_and_serves_nothing_refreshed(reader: _Reader) -> None:
+    reader.read()
+    _write_06(reader, "100")
+    reader.owner.close()
+
+    assert reader.owner.refresh_settled_form() is None
+    reader.recorder = _RecordingSlot()
+    reader.owner.for_profile(reader.work.work_unit.bucket_id).form_read = reader.recorder
+    reader.read()
+
+    assert reader.builds == 1
+
+
+def test_another_profile_is_handed_no_refresh_of_this_profiles_form(reader: _Reader) -> None:
+    reader.read()
+    _write_06(reader, "100")
+    held = reader.owner.for_profile(reader.work.work_unit.bucket_id)
+    other = reader.owner.for_profile(str(uuid4()))
+
+    assert reader.owner.refresh_settled_form() is None
+    assert held.refresh_form() is None
+    assert other.form_read.kept_key() is None
