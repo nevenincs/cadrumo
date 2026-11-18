@@ -432,6 +432,11 @@ fixtures-seed FAMILY="":
 fixtures-seed-window:
     @uv run --no-sync python -m dev.fixture_projections seed --window
 
+[doc('Print the window projections directory of the host preset, where fixtures-seed-window writes.')]
+[group('generate')]
+fixtures-window-directory:
+    @uv run --no-sync python -c "from dev.fixture_projections.location import window_projections; print(window_projections())"
+
 [doc('Produce every fixture projection, or FAMILY, whatever its stamp says.')]
 [group('generate')]
 fixtures-seed-force FAMILY="":
