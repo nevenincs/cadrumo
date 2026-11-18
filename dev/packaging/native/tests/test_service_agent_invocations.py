@@ -11,12 +11,8 @@ from __future__ import annotations
 
 import dataclasses
 import json
-import os
-import shutil
-import sys
-import tempfile
 import time
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast, get_args
@@ -25,7 +21,7 @@ from uuid import UUID
 import pytest
 
 from cadrumo_agent_service import service_startup
-from cadrumo_agent_service.adapters import agent_provider_auth_status
+from cadrumo_agent_service.adapters import agent_provider_auth_status, provider_login
 from cadrumo_agent_service.adapters.agent_programs import (
     AGENT_COMMAND_LINE,
     PACKAGE_AGENT_VARIABLE,
@@ -273,18 +269,6 @@ def _console_sign_ins(tmp_path: Path, *, device: bool) -> list[Sent]:
     ]
 
 
-@pytest.fixture
-def outside_git() -> Iterator[Path]:
-    """A folder with no Git project above it: the console sign-in refuses an agent root inside one."""
-    system = Path(os.environ["LOCALAPPDATA"]) / "Temp" if sys.platform == "win32" else Path(os.sep, "tmp")
-    folder = Path(tempfile.mkdtemp(prefix="cadrumo-invocations-", dir=system)).resolve()
-    try:
-        assert not any((parent / ".git").exists() for parent in (folder, *folder.parents))
-        yield folder
-    finally:
-        shutil.rmtree(folder, ignore_errors=True)
-
-
 def test_the_gateway_and_store_invocations_are_declared_for_the_gateway_profile(tmp_path: Path) -> None:
     findings = _undeclared(load_for_build(REPO_ROOT), _gateway_and_stores(tmp_path))
     assert not findings, findings
@@ -317,8 +301,13 @@ def test_every_window_sign_in_method_is_declared_for_the_auth_profile(
 
 
 @pytest.mark.parametrize("device", [False, True], ids=["browser", "device"])
-def test_the_console_sign_in_is_declared_for_the_auth_profile(outside_git: Path, *, device: bool) -> None:
-    findings = _undeclared(load_for_build(REPO_ROOT), _console_sign_ins(outside_git, device=device))
+def test_the_console_sign_in_is_declared_for_the_auth_profile(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, device: bool
+) -> None:
+    # The session pins every test folder inside the checkout, and the console sign-in refuses an agent root inside
+    # a Git project. That refusal is not what this guard checks: what it checks is the command line it then sends.
+    monkeypatch.setattr(provider_login, "_inside_git_project", lambda _path: False)
+    findings = _undeclared(load_for_build(REPO_ROOT), _console_sign_ins(tmp_path, device=device))
     assert not findings, findings
 
 
