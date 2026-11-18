@@ -384,16 +384,36 @@ def _rendering_was_reused(revision: CalculationRevision, rendering_bodies: Mappi
     return rendering is None or rendering.rendering_digest in rendering_bodies
 
 
+def _catalogue_validation_context(
+    aggregate_context: CalculationRevisionAggregateContext, rendering_bodies: Mapping[str, SavedRenderingBody]
+) -> dict[str, object]:
+    """The validation context a stored catalogue is decoded under, whole or merged from reused revisions."""
+    return {
+        CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: aggregate_context,
+        "secure_calculation_revision": True,
+        SAVED_RENDERING_BODIES_CONTEXT: rendering_bodies,
+    }
+
+
 def _with_reused_revisions(
-    validated: CalculationRevisionCatalogue, reused: Mapping[str, CalculationRevision], order: tuple[str, ...]
+    validated: CalculationRevisionCatalogue,
+    reused: Mapping[str, CalculationRevision],
+    order: tuple[str, ...],
+    *,
+    context: Mapping[str, object],
 ) -> CalculationRevisionCatalogue:
-    """``validated`` with ``reused`` put back in the stored ``order``, its key invariant checked again."""
+    """``validated`` with ``reused`` put back in the stored ``order``, its key invariant checked again.
+
+    The merge is validated under the context the stored payload was decoded with:
+    an amendment revision is only valid when validated against the joined authority.
+    """
     if not reused:
         return validated
     merged: CalculationRevisionCatalogue | None = None
     with contextlib.suppress(ValidationError, KeyError):
-        merged = CalculationRevisionCatalogue(
-            revisions={key: reused[key] if key in reused else validated.revisions[key] for key in order}
+        merged = CalculationRevisionCatalogue.model_validate(
+            {"revisions": {key: reused[key] if key in reused else validated.revisions[key] for key in order}},
+            context=context,
         )
     if merged is None or len(merged) != len(order):
         raise _persistence_refusal("calculation-revision catalogue payload is invalid", "invalid_payload")
@@ -758,11 +778,7 @@ class CalculationRevisionCatalogueRepository:
         try:
             envelope = Envelope[CalculationRevisionCatalogue].model_validate_json(
                 payload,
-                context={
-                    CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: aggregate_context,
-                    "secure_calculation_revision": True,
-                    SAVED_RENDERING_BODIES_CONTEXT: rendering_bodies or {},
-                },
+                context=_catalogue_validation_context(aggregate_context, rendering_bodies or {}),
             )
         except ValidationError:
             validation_failed = True
@@ -814,7 +830,11 @@ class CalculationRevisionCatalogueRepository:
         # ledger evidence must cover the same contributor set as its
         # fingerprint snapshot. A row silently dropped after persistence
         # surfaces here on load rather than shipping an unexplainable casilla.
-        catalogue = _with_reused_revisions(envelope.payload, *reused_revisions)
+        catalogue = _with_reused_revisions(
+            envelope.payload,
+            *reused_revisions,
+            context=_catalogue_validation_context(aggregate_context, rendering_bodies or {}),
+        )
         for revision in catalogue.values():
             assert_revision_snapshot_evidence_coverage(revision)
         self._require_parent_coordinates(catalogue, work_units=aggregate_context.work_units)
