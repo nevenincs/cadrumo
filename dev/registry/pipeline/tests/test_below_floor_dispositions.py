@@ -16,7 +16,6 @@ import rtoml
 from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
@@ -32,10 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _declared_floor() -> int:
-    payload = parse_toml(
-        bundled_path("registry", "aeat", "legal", "supported-filing-years.toml").read_text("utf-8"),
-    )
-    return int(payload["supported_filing_years"]["floor"])
+    return compiled_bundled_authority().supported_filing_years().floor
 
 
 def _row(**overrides: object) -> dict[str, object]:
@@ -45,8 +41,8 @@ def _row(**overrides: object) -> dict[str, object]:
         "revision": "2016-2017",
         "source_ref": "aeat-dr-232-2016",
         "source_sha256": "a" * 64,
-        "supported_filing_years_floor": 2022,
-        "revision_last_filing_year": 2017,
+        "supported_filing_years_floor": _declared_floor(),
+        "revision_last_filing_year": _declared_floor() - 1,
         "reason": "every declared filing year lies below the floor",
         "reconsideration_condition": "the floor is lowered or the revision is retired",
     }
@@ -58,7 +54,7 @@ def test_a_row_whose_revision_reaches_the_floor_is_refused() -> None:
     """The tooth: an exclusion that no longer holds cannot be declared."""
     with pytest.raises(ValidationError, match="is not below supported_filing_years_floor"):
         GeneratedTreeBelowSupportedFilingYearsDisposition.model_validate(
-            _row(revision_last_filing_year=2022),
+            _row(revision_last_filing_year=_declared_floor()),
         )
 
 
@@ -72,7 +68,9 @@ def test_a_dormant_row_is_refused_through_the_ledger_loader(tmp_path: Path) -> N
     """The refusal reaches the ledger boundary, proven on an isolated fixture."""
     fixture = tmp_path / "generated_tree_dispositions.toml"
     fixture.write_text(
-        rtoml.dumps({"schema_version": 4, "dispositions": [_row(revision_last_filing_year=2030)]}, pretty=True),
+        rtoml.dumps(
+            {"schema_version": 4, "dispositions": [_row(revision_last_filing_year=_declared_floor() + 1)]}, pretty=True
+        ),
         encoding="utf-8",
     )
     with pytest.raises(ValidationError, match="is not below supported_filing_years_floor"):
@@ -107,16 +105,18 @@ def test_repaired_m232_static_target_needs_no_drift_row_or_runtime_filing_admiss
     """The enrolled static tree reproduces its source while private filing stays below floor."""
     from ..generated_tree_inventory import generated_export_trees
 
-    assert _declared_floor() == 2022
+    m232 = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "232"))
+    assert max(m232.revisions["2016-2017"].period_selector.years) < _declared_floor()
     assert all(row.subject != "232/2016-2017" for row in below_floor_dispositions())
     trees = [tree for tree in generated_export_trees() if (tree.modelo, tree.revision) == ("232", "2016-2017")]
     assert len(trees) == 1
-    assert (trees[0].filing_year, trees[0].period, trees[0].historical_static) == (2016, "0A", True)
+    assert (trees[0].period, trees[0].historical_static) == ("0A", True)
+    assert trees[0].filing_year < _declared_floor()
     authority = compiled_bundled_authority()
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         select_revision(
             authority.modelo("232"),
-            filing_year=2016,
+            filing_year=trees[0].filing_year,
             period="0A",
             support=authority.catalogues.supported_filing_years,
         )

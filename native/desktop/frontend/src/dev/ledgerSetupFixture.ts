@@ -51,6 +51,10 @@ const ENTRY_OPTION_FAMILIES = {
 import { assetOperations } from "./assetsFixture";
 import { RECORDED_DEFAULT_LANGUAGE, answerPeriods } from "./periodRecording";
 import { withholdingOperations } from "./ledgerWithholdingFixture";
+import {
+  servedMinimumAcquisitionYear,
+  servedYearBounds,
+} from "./servedYearAuthority";
 import { RATIO_ELIGIBLE_FIXTURE, ratioWording } from "./fixtures/ledgerRatios";
 import type {
   FixtureLedger,
@@ -712,7 +716,8 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
 
   const yearOf = (request: JsonObject) => {
     const year = whole(request.year);
-    if (year < 1900 || year > 9999) invalid();
+    if (year < servedYearBounds.first || year > servedYearBounds.last)
+      invalid();
     return year;
   };
   const ratioRows = () =>
@@ -1319,7 +1324,8 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     ]);
     const identifier = required(request.identifier);
     const year = whole(request.acquisition_year);
-    if (year < 1 || year > 2099) invalid();
+    if (year < servedMinimumAcquisitionYear || year > servedYearBounds.last)
+      invalid();
     const cuota = decimalOf(request.cuota_soportada);
     const pct = decimalOf(request.prorrata_inicial_pct);
     const kind = required(request.kind);
@@ -2238,15 +2244,17 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
 
   // ---- Health and reset ----------------------------------------------------
 
+  // A sealed movement belongs to a declaration filed in the scenario's year.
+  const sealedYear = Number(today.slice(0, 4));
   const sealedBlockers = () =>
     ledger.movements.some((movement) => movement.sealed)
       ? [
           {
-            work_unit_id: hex64("work-unit:303:2026:1T"),
-            calculation_revision_id: hex64("revision:303:2026:1T"),
+            work_unit_id: hex64(`work-unit:303:${sealedYear}:1T`),
+            calculation_revision_id: hex64(`revision:303:${sealedYear}:1T`),
             revision_state: "PRESENTADO",
             modelo: "303",
-            filing_year: 2026,
+            filing_year: sealedYear,
             period: "1T",
           },
         ]
@@ -2294,14 +2302,15 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       period && typeof period === "object" && !Array.isArray(period)
         ? period.filing_year
         : null;
-    if (year !== null && year !== 2026) return [];
+    const staleYear = Number(today.slice(0, 4));
+    if (year !== null && year !== staleYear) return [];
     return [
       {
         modelo: "303",
-        filing_year: 2026,
+        filing_year: staleYear,
         period: "3T",
-        calculation_revision_id: hex64("revision:303:2026:3T"),
-        work_unit_id: hex64("work-unit:303:2026:3T"),
+        calculation_revision_id: hex64(`revision:303:${staleYear}:3T`),
+        work_unit_id: hex64(`work-unit:303:${staleYear}:3T`),
         changed_count: 6,
         removed_count: 0,
         covers_current_fact_set: false,

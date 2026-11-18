@@ -23,6 +23,7 @@ import {
   LINE_RATES,
   MONTH_LABEL,
   pct,
+  TODAY,
 } from "./vocab";
 
 /* ── Synthetic data: one autónomo's 2026, deterministic. No real person,
@@ -348,7 +349,7 @@ export function buildData(): Ledger {
     const [base, iva] = splitGross(cents, rate);
     return { base, ivaRate: rate, ivaAmount: iva };
   };
-  const Y = 2026;
+  const Y = +TODAY.slice(0, 4);
   const lastMonth = 10;
 
   for (let m = 1; m <= lastMonth; m++) {
@@ -1257,17 +1258,16 @@ export function buildData(): Ledger {
   // Earlier years (R21): a ledger can go back decades.
   (
     [
-      [2003, 3],
-      [2011, 6],
-      [2019, 10],
-      [2024, 24],
-      [2025, 36],
-    ] as [number, number][]
-  ).forEach(([oy, n]) => {
+      [2003, 3, true],
+      [2011, 6, true],
+      [2019, 10, false],
+      [2024, 24, false],
+      [2025, 36, false],
+    ] as [number, number, boolean][]
+  ).forEach(([oy, n, old]) => {
     for (let i = 0; i < n; i++) {
       const om = 1 + ((i * 5) % 12),
         od = 3 + ((i * 7) % 24);
-      const old = oy < 2016;
       const kind = i % 3;
       if (kind === 0) {
         const c = 60000 + ((i * 7919) % 180000);
@@ -1341,7 +1341,7 @@ export function buildData(): Ledger {
     )
       return;
     const yr = +d.slice(0, 4);
-    if (yr < 2026) {
+    if (yr < +TODAY.slice(0, 4)) {
       r.uses.push({
         modelo: "303",
         period: `${yr} ${q}T`,

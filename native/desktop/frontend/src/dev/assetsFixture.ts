@@ -34,10 +34,8 @@ import {
   ACQUIRED_CONDITIONS,
   ADMITTED_METHODS,
   BASIS_STAGES,
-  BOX_NAMES,
   DISPOSAL_REASONS,
   FURTHER_ACQUISITION_SHAPES,
-  M130_PERIODS,
   NO_TABLE_MINIMUM_KEY,
   NOT_APPLICABLE_ABSENCES,
   OPENING_STATUSES,
@@ -47,6 +45,17 @@ import {
   TIMELINE_FACT_PATHS,
   type SeedElement,
 } from "./assetsSeed";
+import {
+  recordsEditionFor,
+  servedAdmits,
+  servedBeyondLastAdmitted,
+  servedEditionOf,
+  servedEditionYears,
+  servedHandoffOf,
+  servedM130PeriodsOf,
+  servedSupport,
+  type ServedEdition,
+} from "./servedYearAuthority";
 
 type Handler = (request: JsonObject) => JsonObject;
 
@@ -550,7 +559,7 @@ type Tools = {
 };
 
 /** The scenario's date: the register reads as of it. */
-const TODAY = "2026-10-30";
+export const TODAY = "2026-10-30";
 const REGIME = "normal";
 const VALIDATION = "REFUSED_ACTIVIDAD_ASSET_VALIDATION";
 const INCOMPLETE = "REFUSED_ACTIVIDAD_ASSET_INCOMPLETE";
@@ -560,9 +569,8 @@ const ERRORS = "ledger.actividad_asset.errors.";
 const STATE = "ledger.actividad_asset.non_deductible_iva_state.";
 const FINDING = "ledger.actividad_asset.disposal_finding.";
 const FAMILY = "ledger.actividad_asset.";
-const FIRST_SUPPORTED_YEAR = 2022;
-/** The last year the registry carries official tables for; later years are estimates. */
-const LAST_ADMITTED_YEAR = 2026;
+/** The scenario clock's year: the register reads plans through it. */
+const todayYear = Number(TODAY.slice(0, 4));
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 const json = <T>(value: T): JsonObject => value as unknown as JsonObject;
@@ -800,14 +808,9 @@ export function assetOperations(tools: Tools) {
   };
   const find = (id: string): Element | undefined => elements.get(id);
 
-  const editionOf = (year: number) =>
-    year < FIRST_SUPPORTED_YEAR
-      ? null
-      : {
-          revision_id: String(Math.min(year, 2025)),
-          authored_filing_year: Math.min(year, 2025),
-          projected: year > 2025,
-        };
+  // The recording spans every year a plan can reach; one before it has no edition.
+  const editionOf = (year: number): ServedEdition | null =>
+    recordsEditionFor(year) ? servedEditionOf(year) : null;
 
   const SHARE_FIELDS = [
     "basis.business_use_share",
@@ -1145,7 +1148,7 @@ export function assetOperations(tools: Tools) {
           opening_statuses: OPENING_STATUSES,
           acquired_conditions: ACQUIRED_CONDITIONS,
           further_acquisition_shapes: FURTHER_ACQUISITION_SHAPES,
-          m130_periods: M130_PERIODS[year] ?? [],
+          m130_periods: servedM130PeriodsOf(year),
         },
       });
     },
@@ -1712,7 +1715,7 @@ export function assetOperations(tools: Tools) {
     if (left === null) {
       for (
         let year = first;
-        year <= Math.max(first, 2026) && rows.length < 6;
+        year <= Math.max(first, todayYear) && rows.length < 6;
         year++
       ) {
         const row = base(year, null);
@@ -1736,7 +1739,11 @@ export function assetOperations(tools: Tools) {
       rows.push(row);
       return rows;
     }
-    for (let year = first; rows.length < 15 && year <= 2032; year++) {
+    for (
+      let year = first;
+      rows.length < 15 && year <= servedEditionYears.last;
+      year++
+    ) {
       const start = later(inService, `${year}-01-01`);
       const end = `${year + 1}-01-01`;
       const days = daysBetween(start, end);
@@ -1874,11 +1881,11 @@ export function assetOperations(tools: Tools) {
       years: rows
         .map((row) => row.tax_year)
         .filter(
-          (year) => year >= FIRST_SUPPORTED_YEAR && year <= LAST_ADMITTED_YEAR,
+          (year) => servedAdmits(year) && !servedBeyondLastAdmitted(year),
         ),
       projected_years: rows
         .map((row) => row.tax_year)
-        .filter((year) => year > LAST_ADMITTED_YEAR),
+        .filter((year) => servedAdmits(year) && servedBeyondLastAdmitted(year)),
     };
     const element: Element = {
       id,
@@ -2119,10 +2126,6 @@ export function assetOperations(tools: Tools) {
     "3T": "09-30",
     "4T": "12-31",
   };
-  const M100_CASILLA: Record<string, string> = {
-    material: "0208",
-    intangible: "0227",
-  };
 
   /** Where the claims of a year go: Modelo 100 from the effective claims, and
    * Modelo 130 from the year's accrual through the quarter, each element by
@@ -2143,14 +2146,14 @@ export function assetOperations(tools: Tools) {
       return invalid();
     const through = `${year}-${PERIOD_END[period ?? "4T"]}`;
     const until = dayAfter(through);
-    const language = request.output_language;
-    const names =
-      BOX_NAMES[
-        String(
-          Math.max(FIRST_SUPPORTED_YEAR, Math.min(year, LAST_ADMITTED_YEAR)),
-        )
-      ]?.[String(language)];
-    if (names === undefined) return invalid();
+    const language = String(request.output_language);
+    const boxes = recordsEditionFor(year) ? servedHandoffOf(year) : null;
+    if (boxes === null) return invalid();
+    const quarter =
+      period === null
+        ? null
+        : boxes.m130.find((found) => found.period === period);
+    if (quarter === undefined) return invalid();
     const sorted = [...elements.values()].sort((a, b) =>
       a.id.localeCompare(b.id),
     );
@@ -2163,8 +2166,8 @@ export function assetOperations(tools: Tools) {
             .flatMap((row) => row.claims.filter((claim) => claim.effective)),
         );
       return {
-        target_casilla_id: M100_CASILLA[kind]!,
-        box_name: names[`${kind}_m100`]!,
+        target_casilla_id: boxes.m100[kind]!.casilla,
+        box_name: boxes.m100[kind]!.names[language]!,
         tax_year: year,
         claim_ids: claims.map((claim) => claim.claim_id),
         amount: dec(
@@ -2288,8 +2291,8 @@ export function assetOperations(tools: Tools) {
       }
       return {
         asset_kind: kind,
-        target_casilla_id: "02",
-        box_name: names[`${kind}_m130`]!,
+        target_casilla_id: quarter!.casilla,
+        box_name: quarter!.names[kind]![language]!,
         tax_year: year,
         amount: dec(
           fromCents(
@@ -2757,13 +2760,13 @@ export function assetOperations(tools: Tools) {
         {},
         { claim_result: null, claim_id: null },
       );
-    if (!again && given.tax_year > LAST_ADMITTED_YEAR)
+    if (!again && servedBeyondLastAdmitted(given.tax_year))
       return refuse(
         UNSUPPORTED,
         "claim_year_beyond_registry",
         {
           tax_year: asCount(given.tax_year),
-          last_admitted_year: asCount(LAST_ADMITTED_YEAR),
+          last_admitted_year: asCount(servedSupport.horizon),
         },
         { claim_result: null, claim_id: null },
       );

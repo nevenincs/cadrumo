@@ -1,6 +1,7 @@
 import { requireServed } from "./servedFixtures";
 import { modeloFixture, type ModeloShape } from "./modeloFixture";
 import type {
+  ModeloFormYearProjection,
   ModeloWorkbenchFormProjectionV1,
   OutputLanguage,
 } from "../shell/modeloContract";
@@ -41,9 +42,8 @@ export type ServedYear = {
   year: number;
   /** The registry edition its form was built from. */
   revision: string;
-  /** Whether no edition of its own year exists, so the form was projected
-   * from another. */
-  projected: boolean;
+  /** How the registry carried an edition to its year, as the form states it. */
+  projection: ModeloFormYearProjection;
   form: ModeloWorkbenchFormProjectionV1;
 };
 
@@ -74,7 +74,7 @@ async function readYears(locale: OutputLanguage): Promise<ServedYear[]> {
         shape,
         year: form.form.form.filing_year,
         revision,
-        projected: revision !== String(form.form.form.filing_year),
+        projection: form.form.form.year_projection,
         form,
       };
     }),

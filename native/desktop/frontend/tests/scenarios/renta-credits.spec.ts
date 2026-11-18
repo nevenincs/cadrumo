@@ -15,8 +15,6 @@ import { MODELO_FIXTURES } from "../support/windowFixtures";
 
 const LANGUAGES = ["en", "es", "ca", "hu"] as const;
 type Language = (typeof LANGUAGES)[number];
-const YEAR = 2025;
-
 const workspace = (target: Page) => target.locator(".declarations-workspace");
 
 /** Opens the filer's Modelo 100 the way the list offers it, then its
@@ -123,21 +121,22 @@ async function servedEstimate(
   language: Language,
 ): Promise<ModeloProjectOperationProjection> {
   return target.evaluate(
-    async ([asked, year]) => {
+    async (asked) => {
       const port = window.__fixtureModelo!;
       // The estimate is worded in the language the form was last read in.
       const list = await port.declarations(asked);
-      const unit = list.creation_targets.find(
+      const target = list.creation_targets.find(
         (entry) => entry.modelo === "100" && entry.existing,
-      )!.existing!.work_unit_id;
-      await port.form(unit, asked);
+      )!;
+      await port.form(target.existing!.work_unit_id, asked);
+      // The estimate is for the year of the return the scenario serves.
       const outcome = await port.submit("modelo.project", {
-        year: Number(year),
+        year: target.filing_year,
       });
       if (outcome.kind !== "settled") throw new Error("the estimate refused");
       return outcome.result;
     },
-    [language, YEAR] as const,
+    language,
   );
 }
 

@@ -59,11 +59,16 @@ from .legal_citations import ResolvedLegalCitations
 from .ports import ActivityAssetForecastOperation
 from .schedule_walk import NOT_APPLICABLE_ABSENCES, PlanFigureAbsence, WalkedYear, error_reason_facts, walk_element
 
-_WALK_YEARS_LIMIT = 100
+WALK_YEARS_LIMIT = 100
 """How far a plan looks ahead; every method settles long before this."""
 
 _NOT_ACCRUING = frozenset({PlanFigureAbsence.PERIOD_ELAPSED, PlanFigureAbsence.BASIS_EXHAUSTED})
 """Absences meaning the element has nothing left, as distinct from a figure that cannot be worked out."""
+
+
+def beyond_last_admitted_year(tax_year: int, last_admitted_year: int) -> bool:
+    """Whether a year lies past the last one the registry admits a claim for, so it is read only as projected."""
+    return tax_year > last_admitted_year
 
 
 def _amount(value: Decimal) -> PublicDecimal:
@@ -94,7 +99,7 @@ def _walk_to_settlement(revision: ActivityAssetRevision, context: RegisterReadCo
         revision,
         context.history,
         forecast=context.forecast,
-        through_year=revision.in_service_date.year + _WALK_YEARS_LIMIT,
+        through_year=revision.in_service_date.year + WALK_YEARS_LIMIT,
         settled_after=max([context.today.year, *claim_years]),
     )
 
@@ -442,8 +447,8 @@ def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> 
         pending_applies=not _left_service(revision, context.today),
         findings=_finding_counts(plan, claims, revision, context),
         default_claim_year=default_claim_year(plan, today=context.today),
-        years=tuple(year for year in readable if year <= context.last_admitted_year),
-        projected_years=tuple(year for year in readable if year > context.last_admitted_year),
+        years=tuple(year for year in readable if not beyond_last_admitted_year(year, context.last_admitted_year)),
+        projected_years=tuple(year for year in readable if beyond_last_admitted_year(year, context.last_admitted_year)),
         disposal=_list_disposal(revision),
     )
 
