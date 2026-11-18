@@ -440,7 +440,8 @@ def rendered_edition(request: pytest.FixtureRequest):
             return sink.payload
 
         renders = tuple((half, render(half)) for half in halves)
-    return groups, values, renders
+        declared = frozenset(_casillas(revision))
+    return groups, values, renders, declared
 
 
 def _record_tag(revision: ModeloRevision, sheet: str) -> str:
@@ -478,9 +479,12 @@ def _wire(amount: Decimal, length: int) -> bytes:
 
 
 def test_the_render_covers_the_insurer_and_bank_of_spain_equity_cells(rendered_edition) -> None:
-    groups, _values, renders = rendered_edition
+    groups, _values, renders, declared = rendered_edition
     covered = {slot[3] for slots in groups.values() for slot in slots}
-    assert {
+    # Each edition declares the cells its own design prints: one design prints the
+    # liquidación's [00547] on DP200013 rather than DP200014, so the expected set is
+    # the members the edition declares, and every one of them must be covered.
+    expected = {
         "DP200042:00547",
         "DP200014:00547",
         "DP200010:00592",
@@ -491,7 +495,9 @@ def test_the_render_covers_the_insurer_and_bank_of_spain_equity_cells(rendered_e
         "DP200043:00501",
         "DP200014:00573",
         "DP200042:00573",
-    } <= covered
+    } & declared
+    assert expected, "the edition declares none of the insurer and Banco de España cells, so this proves nothing"
+    assert expected <= covered
     assert all(half for half, _payload in renders)
 
 
@@ -1046,7 +1052,9 @@ def _assert_money_and_flag_slots(
         ),
         pytest.param(
             "00083",
-            ("tipo gravamen reducido", "empresa emergente"),
+            # The words every edition's design prints on this caracter; the earliest
+            # exporting edition prints "Empresa emergente" without the rate wording.
+            ("empresa emergente",),
             ("abono deducciones i+d+i por insuficiencia de cuota", "estado"),
             "Num",
             False,
@@ -1125,7 +1133,7 @@ def test_reused_flag_and_money_export_independently(
 
 
 def test_an_absent_cell_does_not_borrow_the_box_sharing_its_number(rendered_edition) -> None:
-    groups, _values, renders = rendered_edition
+    groups, _values, renders, _declared = rendered_edition
     borrowed = [
         (casilla, _slot(payload, tag, offset, length))
         for supplied, payload in renders
@@ -1137,7 +1145,7 @@ def test_an_absent_cell_does_not_borrow_the_box_sharing_its_number(rendered_edit
 
 
 def test_a_supplied_cell_exports_its_own_amount(rendered_edition) -> None:
-    groups, values, renders = rendered_edition
+    groups, values, renders, _declared = rendered_edition
     wrong = [
         (casilla, _slot(payload, tag, offset, length))
         for supplied, payload in renders

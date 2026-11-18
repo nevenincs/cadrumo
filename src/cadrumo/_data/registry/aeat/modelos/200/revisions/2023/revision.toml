@@ -2679,6 +2679,8 @@ continuidad_evidence = "Canonical parser evidence: aeat-dr-200-2022 DP200054 row
 [[revisions."2023".casilla_removals]]
 selector = { revision = "2022", id = "DP200013:00550" }
 [[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020D:00659" }
+[[revisions."2023".casilla_removals]]
 selector = { revision = "2022", id = "DP200013:00547" }
 [[revisions."2023".casilla_removals]]
 selector = { revision = "2022", id = "DP200013:00552" }
@@ -3681,6 +3683,3029 @@ selector = { revision = "2022", id = "01021" }
 fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 1557 (DP200014B field 73): 'Liquidación IV - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Compensación por conversión de activos por impuesto diferido en crédito exigible frente a la admon.tribut. (art. 130 LIS) - Estado [01021]'; aeat-dr-200-2023 line 1591 (DP200015 field 10): 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Compensación por conversión de activos por impuesto diferido en crédito exigible frente a la admon.tribut. (art. 130 LIS) - Estado [01021]'. Both designs print box [01021] with the same concept, width and type; the 2023 design moves the cell from DP200014B to DP200015, so the 2022 member continues with its 2023 sheet and section." }
 removed_fields = []
 restate_provenance = true
+
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200024:pos-193" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200024:pos-210" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200024:pos-227" }
+
+# The 2022 cooperativa lines DP200022:C1 to DP200022:E11 continue in substance as boxes 02827 to
+# 02849; each 2022 lineage ends only because the identifier changes grammar. The per-field
+# justification is in casilla_continuidad_evolutions/0007-printed-tokens-take-box-numbers.toml.
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:C1" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:E1" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:C2" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:E2" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:C3" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:E3" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:C4" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:E4" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:E5" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:C6" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:E6" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:C7" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:E7" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:C8" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:E8" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:C9" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:E9" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:C10" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:E10" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:C11" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:E11" }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200024:pos-105" }
+fields = { id = "DP200024:00021", number = "00021", section = ["agrup_interes_economico_y_utes", "b_datos_economicos"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3837 (DP200024 field 12): 'Agrup. interés económico y UTES - Modelo de información - Deduc. evitar doble imposición 1. Base deducción'; aeat-dr-200-2023 line 4001 (DP200024 field 12): 'Agrup. interés económico y UTES - B) Datos económicos - 6.- Deduc. evitar doble imposición: Base de la deducción [00021]'. Both captions name the same amount of the agrupación de interés económico or U.T.E. information model; the 2023 design files it under 'B) Datos económicos' with a list number and prints box [00021] where the 2022 design prints no box, so the amount continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200024:pos-127" }
+fields = { id = "DP200024:00035", number = "00035", section = ["agrup_interes_economico_y_utes", "b_datos_economicos"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3839 (DP200024 field 14): 'Agrup. interés económico y UTES - Modelo de información - Deduc. evitar doble imposición 2. Base deducción'; aeat-dr-200-2023 line 4004 (DP200024 field 15): 'Agrup. interés económico y UTES - B) Datos económicos - 6.- Deduc. evitar doble imposición: Base de la deducción [00035]'. Both captions name the same amount of the agrupación de interés económico or U.T.E. information model; the 2023 design files it under 'B) Datos económicos' with a list number and prints box [00035] where the 2022 design prints no box, so the amount continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200024:pos-149" }
+fields = { id = "DP200024:00043", number = "00043", section = ["agrup_interes_economico_y_utes", "b_datos_economicos"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3841 (DP200024 field 16): 'Agrup. interés económico y UTES - Modelo de información - Deduc. evitar doble imposición 3. Base deducción'; aeat-dr-200-2023 line 4007 (DP200024 field 18): 'Agrup. interés económico y UTES - B) Datos económicos - 6.- Deduc. evitar doble imposición: Base de la deducción [00043]'. Both captions name the same amount of the agrupación de interés económico or U.T.E. information model; the 2023 design files it under 'B) Datos económicos' with a list number and prints box [00043] where the 2022 design prints no box, so the amount continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200024:pos-171" }
+fields = { id = "DP200024:00049", number = "00049", section = ["agrup_interes_economico_y_utes", "b_datos_economicos"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3843 (DP200024 field 18): 'Agrup. interés económico y UTES - Modelo de información - Deduc. evitar doble imposición 4. Base deducción'; aeat-dr-200-2023 line 4010 (DP200024 field 21): 'Agrup. interés económico y UTES - B) Datos económicos - 6.- Deduc. evitar doble imposición: Base de la deducción [00049]'. Both captions name the same amount of the agrupación de interés económico or U.T.E. information model; the 2023 design files it under 'B) Datos económicos' with a list number and prints box [00049] where the 2022 design prints no box, so the amount continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200024:pos-261" }
+fields = { id = "DP200024:00070", number = "00070", section = ["agrup_interes_economico_y_utes", "b_datos_economicos"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3849 (DP200024 field 24): 'Agrup. interés económico y UTES - Modelo de información - Dividendos y participaciones. a) Ejercicios que no haya tributado en régimen especial'; aeat-dr-200-2023 line 4076 (DP200024 field 87): 'Agrup. interés económico y UTES - B) Datos económicos - 10.- Dividendos y participaciones. a) Ejercicios que no haya tributado en régimen especial [00070]'. Both captions name the same amount of the agrupación de interés económico or U.T.E. information model; the 2023 design files it under 'B) Datos económicos' with a list number and prints box [00070] where the 2022 design prints no box, so the amount continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200024:pos-278" }
+fields = { id = "DP200024:00072", number = "00072", section = ["agrup_interes_economico_y_utes", "b_datos_economicos"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 line 3850 (DP200024 field 25): 'Agrup. interés económico y UTES - Modelo de información - Dividendos y participaciones. b) Ejercicios que haya tributado en régimen especial'; aeat-dr-200-2023 line 4077 (DP200024 field 88): 'Agrup. interés económico y UTES - B) Datos económicos - 10.- Dividendos y participaciones. b) Ejercicios que haya tributado en régimen especial [00072]'. Both captions name the same amount of the agrupación de interés económico or U.T.E. information model; the 2023 design files it under 'B) Datos económicos' with a list number and prints box [00072] where the 2022 design prints no box, so the amount continues and only the label evolves." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-nif.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-forma-juridica.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-representante.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-apellidos-nombre-razon-social.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-domicilio-fiscal.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-codigo-provincia.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-nif.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-forma-juridica.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-representante.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-apellidos-nombre-razon-social.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-domicilio-fiscal.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-codigo-provincia.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-nif.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-forma-juridica.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-representante.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-apellidos-nombre-razon-social.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-domicilio-fiscal.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-codigo-provincia.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-nif.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-forma-juridica.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-representante.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-apellidos-nombre-razon-social.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-domicilio-fiscal.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-codigo-provincia.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-nif.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-forma-juridica.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-representante.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-apellidos-nombre-razon-social.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-domicilio-fiscal.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-administrador:field-codigo-provincia.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nif.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nif.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nif.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nif.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nif.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nif.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nif.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nif.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nif.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nif.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-11"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-11"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-11"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-11"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-11"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-11"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-12"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-12"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-12"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-12"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-12"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-12"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-13"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-13"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-13"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-13"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-13"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-13"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-14"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-14"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-14"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-14"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-14"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-14"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-15"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-15"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-15"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-15"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-15"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-15"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-16"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-16"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-16"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-16"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-16"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-16"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-17"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-17"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-17"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-17"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-17"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-17"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-identificacion.slot-18"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-18"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-18"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-18"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-18"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-18"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-establecimiento-permanente:field-nif.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-establecimiento-permanente:field-nif.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-establecimiento-permanente:field-nif.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-establecimiento-permanente:field-nif.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-establecimiento-permanente:field-nif.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-11"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-11"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-12"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-12"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-tipo-operacion.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-transmitente-nif.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-transmitente-denominacion-social.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-adquirente-nif.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-adquirente-denominacion-social.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-fecha-inscripcion-registro-mercantil.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-fecha-comunicacion-operacion.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-valor-acciones-entregadas.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-valor-acciones-recibidas.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-importe-rentas-no-integradas.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-tipo-operacion.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-transmitente-nif.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-transmitente-denominacion-social.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-adquirente-nif.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-adquirente-denominacion-social.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-fecha-inscripcion-registro-mercantil.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-fecha-comunicacion-operacion.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-valor-acciones-entregadas.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-valor-acciones-recibidas.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-importe-rentas-no-integradas.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-tipo-operacion.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-transmitente-nif.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-transmitente-denominacion-social.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-adquirente-nif.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-adquirente-denominacion-social.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-fecha-inscripcion-registro-mercantil.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-fecha-comunicacion-operacion.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-valor-acciones-entregadas.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-valor-acciones-recibidas.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-importe-rentas-no-integradas.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-tipo-operacion.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-transmitente-nif.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-transmitente-denominacion-social.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-adquirente-nif.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-adquirente-denominacion-social.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-fecha-inscripcion-registro-mercantil.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-fecha-comunicacion-operacion.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-valor-acciones-entregadas.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-valor-acciones-recibidas.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-importe-rentas-no-integradas.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-tipo-operacion.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-transmitente-nif.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-transmitente-denominacion-social.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-adquirente-nif.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-adquirente-denominacion-social.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-fecha-inscripcion-registro-mercantil.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-fecha-comunicacion-operacion.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-valor-acciones-entregadas.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-valor-acciones-recibidas.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-operacion-reestructuracion:field-importe-rentas-no-integradas.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-nif.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-nombre-o-razon-social.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-codigo-provincia-pais.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-porcentaje-participacion.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-valor-nominal-total.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-valor-en-libros.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-ingresos-por-dividendos.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-correccion-valor-perdidas-ganancias.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-eliminacion-deterioro-contable.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-eliminacion-deterioro-valores-participacion.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-ajuste-valor-razonable.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-efecto-correccion-valorativa-base-imponible.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-saldo-correcciones-fiscales-pendientes.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-capital.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-reservas-y-otras-partidas-fondos-propios.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-otras-partidas-patrimonio-neto.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-resultado-ultimo-ejercicio.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-nif.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-nombre-o-razon-social.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-codigo-provincia-pais.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-porcentaje-participacion.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-valor-nominal-total.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-valor-en-libros.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-ingresos-por-dividendos.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-correccion-valor-perdidas-ganancias.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-eliminacion-deterioro-contable.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-eliminacion-deterioro-valores-participacion.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-ajuste-valor-razonable.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-efecto-correccion-valorativa-base-imponible.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-saldo-correcciones-fiscales-pendientes.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-capital.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-reservas-y-otras-partidas-fondos-propios.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-otras-partidas-patrimonio-neto.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-resultado-ultimo-ejercicio.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-nif.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-nombre-o-razon-social.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-codigo-provincia-pais.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-porcentaje-participacion.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-valor-nominal-total.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-valor-en-libros.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-ingresos-por-dividendos.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-correccion-valor-perdidas-ganancias.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-eliminacion-deterioro-contable.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-eliminacion-deterioro-valores-participacion.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-ajuste-valor-razonable.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-efecto-correccion-valorativa-base-imponible.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-saldo-correcciones-fiscales-pendientes.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-capital.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-reservas-y-otras-partidas-fondos-propios.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-otras-partidas-patrimonio-neto.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-directa:field-resultado-ultimo-ejercicio.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-nif.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-representante.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-forma-juridica.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-apellidos-nombre-razon-social.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-codigo-provincia-pais.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-nominal.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-porcentaje-participacion.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-nif.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-representante.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-forma-juridica.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-apellidos-nombre-razon-social.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-codigo-provincia-pais.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-nominal.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-porcentaje-participacion.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-nif.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-representante.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-forma-juridica.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-apellidos-nombre-razon-social.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-codigo-provincia-pais.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-nominal.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-porcentaje-participacion.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-nif.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-representante.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-forma-juridica.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-apellidos-nombre-razon-social.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-codigo-provincia-pais.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-nominal.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-porcentaje-participacion.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-nif.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-representante.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-forma-juridica.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-apellidos-nombre-razon-social.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-codigo-provincia-pais.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-nominal.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-porcentaje-participacion.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-nif.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-representante.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-forma-juridica.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-apellidos-nombre-razon-social.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-codigo-provincia-pais.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-nominal.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participacion-socio:field-porcentaje-participacion.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-nif.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-representante.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-forma-juridica.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-residencia.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-apellidos-nombre-razon-social.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-codigo-provincia-pais.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-base-imponible.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-porcentaje-participacion.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-nif.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-representante.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-forma-juridica.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-residencia.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-apellidos-nombre-razon-social.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-codigo-provincia-pais.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-base-imponible.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-porcentaje-participacion.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-nif.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-representante.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-forma-juridica.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-residencia.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-apellidos-nombre-razon-social.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-codigo-provincia-pais.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-base-imponible.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-porcentaje-participacion.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-nif.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-representante.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-forma-juridica.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-residencia.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-apellidos-nombre-razon-social.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-codigo-provincia-pais.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-base-imponible.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-porcentaje-participacion.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-nif.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-representante.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-forma-juridica.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-residencia.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-apellidos-nombre-razon-social.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-codigo-provincia-pais.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-base-imponible.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-porcentaje-participacion.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-nif.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-representante.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-forma-juridica.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-residencia.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-apellidos-nombre-razon-social.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-codigo-provincia-pais.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-base-imponible.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-porcentaje-participacion.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-nif.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-representante.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-forma-juridica.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-residencia.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-apellidos-nombre-razon-social.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-codigo-provincia-pais.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-base-imponible.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-porcentaje-participacion.slot-7"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-nif.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-representante.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-forma-juridica.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-residencia.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-apellidos-nombre-razon-social.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-codigo-provincia-pais.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-base-imponible.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-porcentaje-participacion.slot-8"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-nif.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-representante.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-forma-juridica.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-residencia.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-apellidos-nombre-razon-social.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-codigo-provincia-pais.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-base-imponible.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-porcentaje-participacion.slot-9"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-nif.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-representante.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-forma-juridica.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-residencia.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-apellidos-nombre-razon-social.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-codigo-provincia-pais.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-base-imponible.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-participe-aie-ute:field-porcentaje-participacion.slot-10"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-representante-legal:field-apellidos-y-nombre.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-representante-legal:field-nif.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-representante-legal:field-fecha-poder.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-representante-legal:field-notaria-otros.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-representante-legal:field-apellidos-y-nombre.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-representante-legal:field-nif.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-representante-legal:field-fecha-poder.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-representante-legal:field-notaria-otros.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-representante-legal:field-apellidos-y-nombre.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-representante-legal:field-nif.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-representante-legal:field-fecha-poder.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-representante-legal:field-notaria-otros.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-secretario-consejo:field-apellidos-y-nombre.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-secretario-consejo:field-nif.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-socio-sicav-disolucion:field-nif-sociedad-disuelta.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-socio-sicav-disolucion:field-nif-iic-reinversion.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-socio-sicav-disolucion:field-nif-sociedad-disuelta.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-socio-sicav-disolucion:field-nif-iic-reinversion.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-socio-sicav-disolucion:field-nif-sociedad-disuelta.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-socio-sicav-disolucion:field-nif-iic-reinversion.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-socio-sicav-disolucion:field-nif-sociedad-disuelta.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-socio-sicav-disolucion:field-nif-iic-reinversion.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-socio-sicav-disolucion:field-nif-sociedad-disuelta.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-socio-sicav-disolucion:field-nif-iic-reinversion.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-nombre-o-razon-social.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-domicilio-social.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-clave-pais-territorio.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-importe-renta.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-1.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-2.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-3.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-4.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-5.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-nombre-o-razon-social.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-domicilio-social.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-clave-pais-territorio.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-importe-renta.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-1.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-2.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-3.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-4.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-5.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-nombre-o-razon-social.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-domicilio-social.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-clave-pais-territorio.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-importe-renta.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-1.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-2.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-3.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-4.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-5.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-nombre-o-razon-social.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-domicilio-social.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-clave-pais-territorio.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-importe-renta.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-1.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-2.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-3.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-4.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-5.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-nombre-o-razon-social.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-domicilio-social.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-clave-pais-territorio.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-importe-renta.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-1.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-2.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-3.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-4.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-5.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-nombre-o-razon-social.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-domicilio-social.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-clave-pais-territorio.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-importe-renta.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-1.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-2.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-3.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-4.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m200-transparencia-fiscal-internacional:field-administradores-linea-5.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-200-export"}
+sequence_additions = {source_refs = ["aeat-dr-200-2023"]}
+sequence_removals = {source_refs = [0]}
 
 [[revisions."2023".family_overrides]]
 family = "live_cross_references"

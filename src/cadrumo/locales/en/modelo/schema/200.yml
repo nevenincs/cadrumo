@@ -12134,6 +12134,10 @@ modelo:
           is-aplicacion-de-resultados-aplicacion-a-dotaciones-voluntarias-fondo-de-educacion-y-pro:
             label: Allocation of results - Allocation -To voluntary allocations to
               the Education and Promotion Fund (Cooperatives) [00092]
+          is-aplicacion-de-resultados-aplicacion-a-f-r-o-y-dotaciones-voluntarias-al-f-e-p-cooperativas:
+            label: Allocation of results - Allocation - To the mandatory reserve fund
+              (F.R.O) and voluntary allocations to the Education and Promotion Fund
+              (F.E.P) (Cooperatives) [00659]
           is-aplicacion-de-resultados-aplicacion-a-fondo-de-reserva-obligatoria-cooperativas:
             label: Allocation of results - Allocation - To the mandatory reserve fund
               (Cooperatives) [00091]
@@ -16657,6 +16661,69 @@ modelo:
             label: Special regime for the Canary Islands investment reserve - Advance
               investments 2023 - Canary Islands investment reserve pending allocation
               at period-end [02826]
+          is-m200-dp200022-c1:
+            label: Cooperative regime - Determination of the taxable base - Computable
+              income - Cooperative results [C1]
+          is-m200-dp200022-c10:
+            label: Cooperative regime - Determination of the taxable base - Canary
+              Islands investment reserve - Cooperative results [C10]
+          is-m200-dp200022-c11:
+            label: Cooperative regime - Determination of the taxable base - Depletion
+              allowance - Cooperative results [C11]
+          is-m200-dp200022-c2:
+            label: Cooperative regime - Determination of the taxable base - Specific
+              expenses - Cooperative results [C2]
+          is-m200-dp200022-c3:
+            label: Cooperative regime - Determination of the taxable base - Attributed
+              general expenses - Cooperative results [C3]
+          is-m200-dp200022-c4:
+            label: Cooperative regime - Determination of the taxable base - Education
+              and Promotion Fund expenses - Cooperative results [C4]
+          is-m200-dp200022-c6:
+            label: Cooperative regime - Determination of the taxable base - Result
+              - Cooperative results [C6]
+          is-m200-dp200022-c7:
+            label: Cooperative regime - Determination of the taxable base - Increases
+              - Cooperative results [C7]
+          is-m200-dp200022-c8:
+            label: Cooperative regime - Determination of the taxable base - Decreases
+              - Cooperative results [C8]
+          is-m200-dp200022-c9:
+            label: Cooperative regime - Determination of the taxable base - 50% mandatory
+              allocation - Cooperative results [C9]
+          is-m200-dp200022-e1:
+            label: Cooperative regime - Determination of the taxable base - Computable
+              income - Non-cooperative results [E1]
+          is-m200-dp200022-e10:
+            label: Cooperative regime - Determination of the taxable base - Canary
+              Islands investment reserve - Non-cooperative results [E10]
+          is-m200-dp200022-e11:
+            label: Cooperative regime - Determination of the taxable base - Depletion
+              allowance - Non-cooperative results [E11]
+          is-m200-dp200022-e2:
+            label: Cooperative regime - Determination of the taxable base - Specific
+              expenses - Non-cooperative results [E2]
+          is-m200-dp200022-e3:
+            label: Cooperative regime - Determination of the taxable base - Attributed
+              general expenses - Non-cooperative results [E3]
+          is-m200-dp200022-e4:
+            label: Cooperative regime - Determination of the taxable base - Education
+              and Promotion Fund expenses - Non-cooperative results [E4]
+          is-m200-dp200022-e5:
+            label: Cooperative regime - Determination of the taxable base - Capital
+              gains and losses - Non-cooperative results [E5]
+          is-m200-dp200022-e6:
+            label: Cooperative regime - Determination of the taxable base - Result
+              - Non-cooperative results [E6]
+          is-m200-dp200022-e7:
+            label: Cooperative regime - Determination of the taxable base - Increases
+              - Non-cooperative results [E7]
+          is-m200-dp200022-e8:
+            label: Cooperative regime - Determination of the taxable base - Decreases
+              - Non-cooperative results [E8]
+          is-m200-dp200022-e9:
+            label: Cooperative regime - Determination of the taxable base - 50% mandatory
+              allocation - Non-cooperative results [E9]
           is-m200-dp200022b-02916:
             label: Special regime for the Balearic Islands investment reserve - Balearic
               Islands investment reserve 2023 - Applied/materialised in this settlement
@@ -16670,6 +16737,15 @@ modelo:
             label: Special regime for the Balearic Islands investment reserve - Advance
               investments 2023 - Investments provided for in letter C, Additional
               Provision 70.4, Law 31/2022 [02920]
+          is-m200-dp200024-pos-193:
+            label: Economic interest grouping and UTEs - Information return - Allowances
+              base
+          is-m200-dp200024-pos-210:
+            label: Economic interest grouping and UTEs - Information return - Deductions
+              base - a) Total base
+          is-m200-dp200024-pos-227:
+            label: Economic interest grouping and UTEs - Information return - Deductions
+              base - b) Investment deductions base
           is-mineria-hidrocarburos-factor-agotamiento-aumento:
             label: 'Mining and hydrocarbons: depletion allowance (arts. 91 and 95
               LIS) - Increase - Adjustments for the tax year - Temporary (originating
@@ -20263,6 +20339,25 @@ modelo:
               label: Detail of adjustments to the profit and loss result - Adjustments
                 to the profit and loss account result for the tax year - Temporary
                 adjustment originating in prior tax years - Decreases [02308]
+            x-8h834c1g60p38ejgdtpiqc9g6k:
+              label: Economic interest grouping and UTEs - Information return - Deductions
+                to avoid double taxation 1. Deduction base
+            x-8h834c1g60p38ejgdtpiqc9i6s:
+              label: Economic interest grouping and UTEs - Information return - Deductions
+                to avoid double taxation 2. Deduction base
+            x-8h834c1g60p38ejgdtpiqc9k74:
+              label: Economic interest grouping and UTEs - Information return - Deductions
+                to avoid double taxation 3. Deduction base
+            x-8h834c1g60p38ejgdtpiqc9n64:
+              label: Economic interest grouping and UTEs - Information return - Deductions
+                to avoid double taxation 4. Deduction base
+            x-8h834c1g60p38ejgdtpiqchm64:
+              label: Economic interest grouping and UTEs - Information return - Dividends
+                and shareholdings. a) Periods in which the special regime did not
+                apply
+            x-8h834c1g60p38ejgdtpiqchn70:
+              label: Economic interest grouping and UTEs - Information return - Dividends
+                and shareholdings. b) Periods in which the special regime applied
             x-8h834c1g60p3cehg60q38do:
               label: Joint taxation of State and provincial tax administrations -
                 Instalment payments 2 - Vizcaya [00447]

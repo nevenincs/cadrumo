@@ -1,0 +1,71 @@
+[[revisions.2022.export_layouts]]
+id = "generated-modelo-200-2022-fichero"
+
+[[revisions.2022.export_layouts.records]]
+id = "m200-page-014"
+record_type = "page-014"
+order = 14
+encoding = "iso-8859-1"
+line_ending = "crlf"
+required = true
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200014.f0065"
+offset = 1003
+length = 1
+kind = "header"
+producer_key = "m200.inoperatividad_del_orden_de_cumplimentacion"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200014.f0066"
+offset = 1004
+length = 165
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[[revisions.2022.export_layouts.records.fields]]
+id = "m200-2022.dp200014.f0067"
+offset = 1169
+length = 12
+kind = "literal"
+literal = "</T20014000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = [
+    "ley-27-2014:art-41",
+    "ley-27-2014:art-39",
+    "ley-27-2014:art-19",
+    "ley-27-2014:art-100",
+    "rd-634-2015:art-3",
+]
+source_refs = ["aeat-dr-200-2022"]
+
+[revisions.2022.export_layouts.records.row_field_casilla_ids]

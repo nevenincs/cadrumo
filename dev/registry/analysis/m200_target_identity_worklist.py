@@ -35,6 +35,7 @@ from ..pipeline.record_design_intermediate import (
 )
 from ..pipeline.semantic_map import SemanticMap, SemanticMapEntry, load_semantic_map_for_revision, semantic_anchor_key
 from ..pipeline.semantic_map_validation import resolve_semantic_map_casilla_tokens
+from .casilla_id_grammar import classify_casilla_id
 from .m200_record_design_support import record_design_field_index, record_design_source
 
 if TYPE_CHECKING:
@@ -48,15 +49,19 @@ __all__ = [
     "M200SharedOwner",
     "M200SharedOwnerCell",
     "M200TargetIdentityWorklist",
+    "M200UnnumberedDesignRow",
+    "M200UnnumberedDesignRowDisposition",
     "classify_m200_target_identities",
     "load_bundled_m200_target_identity_worklists",
     "main",
     "render_m200_target_identity_worklists_toml",
+    "unnumbered_design_row_disposition",
 ]
 
 
 _MODELO = "200"
 _PRINTED_NUMBER = re.compile(r"\[([0-9]+)\]")
+_BRACKETED_LABEL = re.compile(r"\[([^\[\]]*)\]")
 
 
 class M200MapOwnerIdentityDisposition(StrEnum):
@@ -75,6 +80,12 @@ class M200OrphanDisposition(StrEnum):
     UNMAPPED_DECLARATION = "unmapped_declaration"
     DECLARED_UNPLACED = "declared_unplaced"
     DECLARED_WORKING_FIGURE = "declared_working_figure"
+
+
+class M200UnnumberedDesignRowDisposition(StrEnum):
+    """Why a design row that prints no box number still has a proven map owner."""
+
+    SEGMENT_IDENTITY_OF_UNNUMBERED_ROW = "segment_identity_of_unnumbered_row"
 
 
 class M200PrintedIdentityState(StrEnum):
@@ -125,6 +136,24 @@ class M200PrintedIdentityDiagnostic:
 
 
 @dataclass(frozen=True, slots=True)
+class M200UnnumberedDesignRow:
+    """A design row with no printed box number, owned by its edition's own segment identity.
+
+    The design cannot prove a box number it does not print, so such a row is
+    never a printed-identity match; it is admitted only when its owner is a
+    declared casilla of the row's own segment, in a non-numeric tail grammar,
+    placed on the form with no box number either.
+    """
+
+    export_field_id: str
+    anchor: tuple[object, ...]
+    declared_map_owner: str
+    disposition: M200UnnumberedDesignRowDisposition
+    source_ref: str
+    source_sha256: str
+
+
+@dataclass(frozen=True, slots=True)
 class M200SharedOwnerCell:
     """One design cell that writes a casilla also written by another cell."""
 
@@ -160,6 +189,7 @@ class M200TargetIdentityWorklist:
     map_owner_mismatches: tuple[M200MapOwnerIdentity, ...]
     orphaned_declarations: tuple[M200OrphanedDeclaration, ...]
     printed_identity_diagnostics: tuple[M200PrintedIdentityDiagnostic, ...]
+    unnumbered_design_rows: tuple[M200UnnumberedDesignRow, ...]
     shared_owners: tuple[M200SharedOwner, ...]
 
 
@@ -171,6 +201,7 @@ def classify_m200_target_identities(
     target_declarations: Mapping[CasillaId, CasillaDefinition],
     target_candidate_ids: frozenset[CasillaId],
     declared_placements: Mapping[CasillaId, FormPlacementKind] | None = None,
+    unnumbered_on_form_ids: frozenset[CasillaId] = frozenset(),
 ) -> M200TargetIdentityWorklist:
     """Classify target map-owner identity drift without changing ownership.
 
@@ -189,6 +220,7 @@ def classify_m200_target_identities(
     source_sha256 = target_design.source.source_sha256
     mismatches: list[M200MapOwnerIdentity] = []
     diagnostics: list[M200PrintedIdentityDiagnostic] = []
+    unnumbered_rows: list[M200UnnumberedDesignRow] = []
     map_owner_ids: set[CasillaId] = set()
     cells_by_owner: dict[CasillaId, list[M200SharedOwnerCell]] = {}
 
@@ -214,7 +246,20 @@ def classify_m200_target_identities(
                 )
             )
         if diagnostic is not None:
-            diagnostics.append(diagnostic)
+            unnumbered = (
+                None
+                if mismatch is not None
+                else _unnumbered_design_row(
+                    field,
+                    diagnostic,
+                    declared_ids=declared_ids,
+                    unnumbered_on_form_ids=unnumbered_on_form_ids,
+                )
+            )
+            if unnumbered is None:
+                diagnostics.append(diagnostic)
+            else:
+                unnumbered_rows.append(unnumbered)
         if mismatch is not None:
             mismatches.append(mismatch)
 
@@ -237,8 +282,76 @@ def classify_m200_target_identities(
         map_owner_mismatches=tuple(sorted(mismatches, key=lambda item: item.export_field_id)),
         orphaned_declarations=orphaned,
         printed_identity_diagnostics=tuple(sorted(diagnostics, key=lambda item: item.export_field_id)),
+        unnumbered_design_rows=tuple(sorted(unnumbered_rows, key=lambda item: item.export_field_id)),
         shared_owners=_shared_owners(cells_by_owner),
     )
+
+
+def _unnumbered_design_row(
+    field: RecordDesignIntermediateField,
+    diagnostic: M200PrintedIdentityDiagnostic,
+    *,
+    declared_ids: frozenset[CasillaId],
+    unnumbered_on_form_ids: frozenset[CasillaId],
+) -> M200UnnumberedDesignRow | None:
+    """Return the admitted unnumbered row for ``diagnostic``, or None when it stays a diagnostic."""
+    disposition = unnumbered_design_row_disposition(
+        field, diagnostic, declared_ids=declared_ids, unnumbered_on_form_ids=unnumbered_on_form_ids
+    )
+    if disposition is None:
+        return None
+    return M200UnnumberedDesignRow(
+        export_field_id=diagnostic.export_field_id,
+        anchor=diagnostic.anchor,
+        declared_map_owner=diagnostic.declared_map_owner,
+        disposition=disposition,
+        source_ref=diagnostic.source_ref,
+        source_sha256=diagnostic.source_sha256,
+    )
+
+
+def unnumbered_design_row_disposition(
+    field: RecordDesignIntermediateField,
+    diagnostic: M200PrintedIdentityDiagnostic,
+    *,
+    declared_ids: frozenset[CasillaId],
+    unnumbered_on_form_ids: frozenset[CasillaId],
+) -> M200UnnumberedDesignRowDisposition | None:
+    """Admit a missing printed identity only where the design itself prints no number at all.
+
+    Every condition is read from the inputs, never from a list of rows: the
+    row's own description carries no bracketed box number, its resolved owner
+    is a declared casilla qualified by the row's own segment with a non-numeric
+    tail, and the form places that casilla with no box number. A bracketed
+    label the row does print must be exactly that tail, so a design that prints
+    a non-numeric label names the owner itself. A row the design numbers, a
+    label that names another identity, or an owner in the numeric grammar
+    stays a diagnostic.
+    """
+    if diagnostic.state is not M200PrintedIdentityState.MISSING_OFFICIAL_PRINTED_IDENTITY:
+        return None
+    if _PRINTED_NUMBER.search(field.normalized_description):
+        return None
+    owner = diagnostic.declared_map_owner
+    if owner not in declared_ids or owner not in unnumbered_on_form_ids:
+        return None
+    tail = _own_segment_tail(owner, field.record_identity)
+    if tail is None:
+        return None
+    labels = _BRACKETED_LABEL.findall(field.normalized_description)
+    if labels and labels != [tail]:
+        return None
+    return M200UnnumberedDesignRowDisposition.SEGMENT_IDENTITY_OF_UNNUMBERED_ROW
+
+
+def _own_segment_tail(owner: CasillaId, record_identity: str) -> str | None:
+    """Return the non-numeric tail of ``owner`` when it is qualified by ``record_identity``, else None."""
+    segment, separator, tail = owner.partition(":")
+    if not separator or segment != record_identity or classify_casilla_id(owner) != "page_qualified":
+        return None
+    if classify_casilla_id(tail) == "numeric":
+        return None
+    return tail
 
 
 def _shared_owners(cells_by_owner: Mapping[CasillaId, list[M200SharedOwnerCell]]) -> tuple[M200SharedOwner, ...]:
@@ -349,12 +462,14 @@ def render_m200_target_identity_worklists_toml(worklists: tuple[M200TargetIdenti
                         "map_owner_mismatches": len(worklist.map_owner_mismatches),
                         "orphaned_declarations": len(worklist.orphaned_declarations),
                         "printed_identity_diagnostics": len(worklist.printed_identity_diagnostics),
+                        "unnumbered_design_rows": len(worklist.unnumbered_design_rows),
                         "shared_owners": len(worklist.shared_owners),
                         "shared_owner_cells": sum(len(row.cells) for row in worklist.shared_owners),
                     },
                     "map_owner_mismatch": [_serialise(row) for row in worklist.map_owner_mismatches],
                     "orphaned_declaration": [_serialise(row) for row in worklist.orphaned_declarations],
                     "printed_identity_diagnostic": [_serialise(row) for row in worklist.printed_identity_diagnostics],
+                    "unnumbered_design_row": [_serialise(row) for row in worklist.unnumbered_design_rows],
                     "shared_owner": [_serialise(row) for row in worklist.shared_owners],
                 }
                 for worklist in worklists
@@ -420,6 +535,12 @@ def _load_revision_worklist(
         declared_placements={
             placement.casilla_id: placement.kind for layout in revision.form_layouts for placement in layout.placements
         },
+        unnumbered_on_form_ids=frozenset(
+            placement.casilla_id
+            for layout in revision.form_layouts
+            for placement in layout.placements
+            if placement.kind is FormPlacementKind.ON_FORM and placement.box_number is None
+        ),
     )
 
 

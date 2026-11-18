@@ -1,0 +1,873 @@
+schema_version = 1
+fragment_id = "singletons-002"
+width_17_rules = []
+
+[design_identity]
+modelo = "200"
+design_epoch = "2022"
+source_ref = "aeat-dr-200-2022"
+source_sha256 = "a69d73692c40f8be07005e2df8add251f9949a2d6780f3816189372bdd98f69d"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 57
+source_cell = "A57"
+ordinal = "52"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 57. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00015] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 58
+source_cell = "A58"
+ordinal = "53"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 58. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00079] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 59
+source_cell = "A59"
+ordinal = "54"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 59. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00022] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 60
+source_cell = "A60"
+ordinal = "55"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 60. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00028] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 61
+source_cell = "A61"
+ordinal = "56"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 61. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00047] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 62
+source_cell = "A62"
+ordinal = "57"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 62. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00049] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 63
+source_cell = "A63"
+ordinal = "58"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 63. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00035] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 64
+source_cell = "A64"
+ordinal = "59"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 64. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00029] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 65
+source_cell = "A65"
+ordinal = "60"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 65. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00069] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 66
+source_cell = "A66"
+ordinal = "61"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 66. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00033] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 67
+source_cell = "A67"
+ordinal = "62"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 67. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00034] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 68
+source_cell = "A68"
+ordinal = "63"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 68. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00038] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 69
+source_cell = "A69"
+ordinal = "64"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 69. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00046] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 70
+source_cell = "A70"
+ordinal = "65"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 70. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00012] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 71
+source_cell = "A71"
+ordinal = "66"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 71. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00064] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 72
+source_cell = "A72"
+ordinal = "67"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 72. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00057] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 73
+source_cell = "A73"
+ordinal = "68"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 73. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00062] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 74
+source_cell = "A74"
+ordinal = "69"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 74. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00020] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 75
+source_cell = "A75"
+ordinal = "70"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 75. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00007] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 76
+source_cell = "A76"
+ordinal = "71"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 76. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00009] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 77
+source_cell = "A77"
+ordinal = "72"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 77. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00010] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 78
+source_cell = "A78"
+ordinal = "73"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 78. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00081] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 79
+source_cell = "A79"
+ordinal = "74"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 79. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00082] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 81
+source_cell = "A81"
+ordinal = "76"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 81. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00026] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 82
+source_cell = "A82"
+ordinal = "77"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 82. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00027] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 83
+source_cell = "A83"
+ordinal = "78"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 83. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00030] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 84
+source_cell = "A84"
+ordinal = "79"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 84. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00039] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 85
+source_cell = "A85"
+ordinal = "80"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 85. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00043] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 86
+source_cell = "A86"
+ordinal = "81"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 86. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00045] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 87
+source_cell = "A87"
+ordinal = "82"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 87. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00063] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 88
+source_cell = "A88"
+ordinal = "83"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 88. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00071] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 89
+source_cell = "A89"
+ordinal = "84"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 89. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00070] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 90
+source_cell = "A90"
+ordinal = "85"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 90. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00059] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 91
+source_cell = "A91"
+ordinal = "86"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 91. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00065] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 92
+source_cell = "A92"
+ordinal = "87"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 92. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00084] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 93
+source_cell = "A93"
+ordinal = "88"
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "G104"
+expected_normalized_statement = "\"0\" o \"1\""
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 93. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00072] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."

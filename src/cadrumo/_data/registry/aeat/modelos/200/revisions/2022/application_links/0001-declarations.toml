@@ -1,6 +1,6 @@
 # When the modelo is due, that it is filed and the workflow around it, plus the
 # calculation, review, approval and reconciliation surfaces the cuota chain of this
-# edition backs. No export surface is linked: no export layout backs it.
+# edition backs, and the export surface its generated export layout backs.
 [[revisions."2022".application_links]]
 id = "modelo-200-deadline"
 surface = "deadline"
@@ -59,3 +59,11 @@ surface = "reconciliation"
 consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+[[revisions."2022".application_links]]
+id = "modelo-200-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2022"]

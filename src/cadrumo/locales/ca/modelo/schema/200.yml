@@ -12059,6 +12059,9 @@ modelo:
           is-aplicacion-de-resultados-aplicacion-a-dotaciones-voluntarias-fondo-de-educacion-y-pro:
             label: Aplicació de resultats - Aplicació -A dotacions voluntàries Fons
               d'Educació i Promoció (Cooperatives) [00092]
+          is-aplicacion-de-resultados-aplicacion-a-f-r-o-y-dotaciones-voluntarias-al-f-e-p-cooperativas:
+            label: Aplicació de resultats - Aplicació - A F.R.O i dotacions voluntàries
+              al F.E.P (Cooperatives) [00659]
           is-aplicacion-de-resultados-aplicacion-a-fondo-de-reserva-obligatoria-cooperativas:
             label: Aplicació de resultats - Aplicació - A Fons de Reserva Obligatori
               (Cooperatives) [00091]
@@ -16495,6 +16498,69 @@ modelo:
           is-m200-dp200022-02826:
             label: Règ. especial reserva per a inversions a Canàries - Inversions
               anticipades 2023 - Pendent de dotar la RIC al final del període [02826]
+          is-m200-dp200022-c1:
+            label: Règ. cooperatives - Determ. base imposable - Ingressos computables
+              - Resultats cooperatius [C1]
+          is-m200-dp200022-c10:
+            label: Règ. cooperatives - Determ. base imposable - Reserva per a inversions
+              a Canàries - Resultats cooperatius [C10]
+          is-m200-dp200022-c11:
+            label: Règ. cooperatives - Determ. base imposable - Factor d'esgotament
+              - Resultats cooperatius [C11]
+          is-m200-dp200022-c2:
+            label: Règ. cooperatives - Determ. base imposable - Despeses específiques
+              - Resultats cooperatius [C2]
+          is-m200-dp200022-c3:
+            label: Règ. cooperatives - Determ. base imposable - Despeses generals
+              imputades - Resultats cooperatius [C3]
+          is-m200-dp200022-c4:
+            label: Règ. cooperatives - Determ. base imposable - Despeses Fons d'Educació
+              i Promoció - Resultats cooperatius [C4]
+          is-m200-dp200022-c6:
+            label: Règ. cooperatives - Determ. base imposable - Resultat - Resultats
+              cooperatius [C6]
+          is-m200-dp200022-c7:
+            label: Règ. cooperatives - Determ. base imposable - Augments - Resultats
+              cooperatius [C7]
+          is-m200-dp200022-c8:
+            label: Règ. cooperatives - Determ. base imposable - Disminucions - Resultats
+              cooperatius [C8]
+          is-m200-dp200022-c9:
+            label: Règ. cooperatives - Determ. base imposable - 50% Dotació obligatòria
+              - Resultats cooperatius [C9]
+          is-m200-dp200022-e1:
+            label: Règ. cooperatives - Determ. base imposable - Ingressos computables
+              - Resultats extracooperatius [E1]
+          is-m200-dp200022-e10:
+            label: Règ. cooperatives - Determ. base imposable - Reserva per a inversions
+              a Canàries - Resultats extracooperatius [E10]
+          is-m200-dp200022-e11:
+            label: Règ. cooperatives - Determ. base imposable - Factor d'esgotament
+              - Resultats extracooperatius [E11]
+          is-m200-dp200022-e2:
+            label: Règ. cooperatives - Determ. base imposable - Despeses específiques
+              - Resultats extracooperatius [E2]
+          is-m200-dp200022-e3:
+            label: Règ. cooperatives - Determ. base imposable - Despeses generals
+              imputades - Resultats extracooperatius [E3]
+          is-m200-dp200022-e4:
+            label: Règ. cooperatives - Determ. base imposable - Despeses Fons d'Educació
+              i Promoció - Resultats extracooperatius [E4]
+          is-m200-dp200022-e5:
+            label: Règ. cooperatives - Determ. base imposable - Increments i disminucions
+              patrimonials - Resultats extracooperatius [E5]
+          is-m200-dp200022-e6:
+            label: Règ. cooperatives - Determ. base imposable - Resultat - Resultats
+              extracooperatius [E6]
+          is-m200-dp200022-e7:
+            label: Règ. cooperatives - Determ. base imposable - Augments - Resultats
+              extracooperatius [E7]
+          is-m200-dp200022-e8:
+            label: Règ. cooperatives - Determ. base imposable - Disminucions - Resultats
+              extracooperatius [E8]
+          is-m200-dp200022-e9:
+            label: Règ. cooperatives - Determ. base imposable - 50% Dotació obligatòria
+              - Resultats extracooperatius [E9]
           is-m200-dp200022b-02916:
             label: Règ. especial reserva per a inversions a les Illes Balears - RIIB
               2023 - Aplicat/materialitzat en aquesta liquidació - Inversions anticipades
@@ -16507,6 +16573,14 @@ modelo:
             label: Règ. especial reserva per a inversions a les Illes Balears - Inversions
               anticipades 2023 - Inversions previstes lletra C DA 70.4 Llei 31/2022
               [02920]
+          is-m200-dp200024-pos-193:
+            label: Agrup. d'interès econòmic i UTES - Model d'informació - Base bonificacions
+          is-m200-dp200024-pos-210:
+            label: Agrup. d'interès econòmic i UTES - Model d'informació - Base de
+              deduccions - a) Base total
+          is-m200-dp200024-pos-227:
+            label: Agrup. d'interès econòmic i UTES - Model d'informació - Base de
+              deduccions - b) Base deduccions per inversions
           is-mineria-hidrocarburos-factor-agotamiento-aumento:
             label: 'Mineria i hidrocarburs: factor esgotament (arts. 91 i 95 LIS)
               - Augment - Correccions de l''exercici - Temporànies (amb origen en
@@ -19971,6 +20045,24 @@ modelo:
               label: Detall de correccions del resultat de pèrdues i guanys - Correccions
                 al resultat del compte de pèrdues i guanys de l'exercici - Correcció
                 temporània amb origen en exercicis anteriors - Disminucions [02308]
+            x-8h834c1g60p38ejgdtpiqc9g6k:
+              label: Agrup. d'interès econòmic i UTES - Model d'informació - Deduc.
+                per evitar doble imposició 1. Base deducció
+            x-8h834c1g60p38ejgdtpiqc9i6s:
+              label: Agrup. d'interès econòmic i UTES - Model d'informació - Deduc.
+                per evitar doble imposició 2. Base deducció
+            x-8h834c1g60p38ejgdtpiqc9k74:
+              label: Agrup. d'interès econòmic i UTES - Model d'informació - Deduc.
+                per evitar doble imposició 3. Base deducció
+            x-8h834c1g60p38ejgdtpiqc9n64:
+              label: Agrup. d'interès econòmic i UTES - Model d'informació - Deduc.
+                per evitar doble imposició 4. Base deducció
+            x-8h834c1g60p38ejgdtpiqchm64:
+              label: Agrup. d'interès econòmic i UTES - Model d'informació - Dividends
+                i participacions. a) Exercicis que no hagi tributat en règim especial
+            x-8h834c1g60p38ejgdtpiqchn70:
+              label: Agrup. d'interès econòmic i UTES - Model d'informació - Dividends
+                i participacions. b) Exercicis que hagi tributat en règim especial
             x-8h834c1g60p3cehg60q38do:
               label: Tributació conjunta Estat i Adm. forals - Pagaments fraccionats
                 2 - Biscaia [00447]

@@ -84,10 +84,44 @@ required_text = [
 # euros enters with Ley 31/2022 art. 39 for periods initiated from 2023, so the 2023
 # edition states its own member with the INCN lanes. Here the rate depends only on the
 # new-entity flag and the legal form, and the INCN is not read.
+#
+# A declaration that marks a régimen this registry does not author has no tipo here, so
+# the casilla is left without a value under m200-tax-regime-unsupported rather than
+# given the general 25. The 2022 design prints each of these caracteres on DP200001:
+# entidad de crédito 00024 and régimen especial hidrocarburos 00034 (30 por 100 in the
+# table), the DT 22ª nueva creación scale 00063 (15/20 por 100 by tramo), empresa
+# emergente 00083, ZEC 00015 / 00079 (4 por 100 on part of the base), the art. 29.4
+# instituciones 00003 / 00004 / 00008 (1 por 100), SOCIMI 00012 (0, 19 and 15 por 100),
+# fondos de pensiones 00048 (0 por 100), entidades parcialmente exentas 00002 and uniones
+# de cooperativas 00080 (manuals/sociedades/2022 L13040-13100). Empresa emergente has a
+# printed rate, "Empresas emergentes 15 por 100", but Ley 28/2022 grants it only in the
+# first período impositivo with a positive base while the condition holds and the three
+# following (L529-536), facts this registry does not hold, so it is refused, not given
+# the rate.
 [[revisions."2022".formulas]]
 id = "modelo-200-tipo-gravamen-por-forma-juridica"
 target_casilla_id = "DP200014:00558"
 expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [
+        { op = "add", args = [
+            { casilla_id = "DP200001:00024" },
+            { casilla_id = "DP200001:00034" },
+            { casilla_id = "DP200001:00063" },
+            { casilla_id = "DP200001:00083" },
+            { casilla_id = "DP200001:00015" },
+            { casilla_id = "DP200001:00079" },
+            { casilla_id = "DP200001:00003" },
+            { casilla_id = "DP200001:00004" },
+            { casilla_id = "00008" },
+            { casilla_id = "DP200001:00012" },
+            { casilla_id = "DP200001:00048" },
+            { casilla_id = "DP200001:00002" },
+            { casilla_id = "DP200001:00080" },
+        ] },
+        { literal = "0" },
+    ] },
+    { op = "unresolved_outcome", args = [{ text_literal = "m200-tax-regime-unsupported" }] },
+    { op = "if_then_else", args = [
     { binding = "modelo-200-profile-new-entity-flag" },
     { op = "lookup_parameter_by_entity_type", args = [
         { literal = "0" },
@@ -117,6 +151,7 @@ expression = { op = "if_then_else", args = [
             { key = "sin_fines_lucrativos", parameter = "is.modelo-200.tipo-gravamen-non-profit-special-regime" },
         ] },
     ] },
+    ] },
 ] }
 legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-49-2002:art-10"]
 source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
@@ -127,6 +162,10 @@ required_text = [
     "tipo de gravamen",
     "cuota integra (casilla 00562)",
     "tipos de gravamen 2022 tipo general 25 por 100",
+    "se hará constar el tipo de gravamen que corresponda de acuerdo con el régimen de tributación aplicable a la entidad declarante",
+    "Fondo de inversión de carácter financiero con determinadas condiciones del artículo 29.4 de la LIS 1 por 100",
+    "Empresas emergentes 15 por 100",
+    "en el primer período impositivo en que, teniendo la condición de empresa emergente, la base imponible resulte positiva y en los tres siguientes",
 ]
 
 # Cuota íntegra [00562] (aeat-dr-200-2022 DP200014 field 30, offset 408) applies the 2022
@@ -135,10 +174,44 @@ required_text = [
 # cooperativa fiscalmente protegida 20 %, Ley 49/2002 10 %), per the Manual práctico de
 # Sociedades 2022 "Tipos de gravamen vigentes" table. No INCN lane exists for 2022 (see
 # the tipo de gravamen member above).
+#
+# The cuota íntegra "siempre deberá ser una cantidad positiva o cero" (manuals/
+# sociedades/2022 L13035), so a base that is zero or negative gives zero. A cooperativa
+# states its cuota íntegra from the cuota íntegra previa of its resultados cooperativos
+# and extracooperativos, "[00562] = [00560] + [00210] - [00480] + [00408] - [01037] -
+# [00561]" (L24503-24509), which this registry does not author, so it is refused; so is
+# every régimen the tipo de gravamen member above refuses.
 [[revisions."2022".formulas]]
 id = "modelo-200-cuota-integra"
 target_casilla_id = "DP200014:00562"
 expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [
+        { op = "add", args = [
+            { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "cooperativa" }] },
+            { casilla_id = "DP200001:00017" },
+            { casilla_id = "DP200001:00018" },
+            { casilla_id = "DP200001:00019" },
+            { casilla_id = "DP200001:00024" },
+            { casilla_id = "DP200001:00034" },
+            { casilla_id = "DP200001:00063" },
+            { casilla_id = "DP200001:00083" },
+            { casilla_id = "DP200001:00015" },
+            { casilla_id = "DP200001:00079" },
+            { casilla_id = "DP200001:00003" },
+            { casilla_id = "DP200001:00004" },
+            { casilla_id = "00008" },
+            { casilla_id = "DP200001:00012" },
+            { casilla_id = "DP200001:00048" },
+            { casilla_id = "DP200001:00002" },
+            { casilla_id = "DP200001:00080" },
+        ] },
+        { literal = "0" },
+    ] },
+    { op = "unresolved_outcome", args = [{ text_literal = "m200-tax-regime-unsupported" }] },
+    { op = "if_then_else", args = [
+    { op = "less_equal", args = [{ casilla_id = "DP200014:01330" }, { literal = "0" }] },
+    { literal = "0" },
+    { op = "if_then_else", args = [
     { binding = "modelo-200-profile-new-entity-flag" },
     { op = "lookup_bracket_by_entity_type", args = [
         { casilla_id = "DP200014:01330" },
@@ -168,6 +241,8 @@ expression = { op = "if_then_else", args = [
             { key = "sin_fines_lucrativos", parameter = "is.modelo-200.cuota-integra-bracket-non-profit-special-regime" },
         ] },
     ] },
+    ] },
+    ] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-29", "ley-49-2002:art-10"]
@@ -178,6 +253,8 @@ source_ref = "aeat-modelo-200-manual-2022"
 required_text = [
     "cuota integra (casilla 00562)",
     "tipo de gravamen",
+    "El contenido de la casilla [00562] «Cuota íntegra» siempre deberá ser una cantidad positiva o cero",
+    "La cuota íntegra de las sociedades cooperativas es la suma algebraica de las cantidades",
 ]
 
 # Cuota íntegra ajustada positiva [00582] (aeat-dr-200-2022 DP200014 field 47, offset 697).

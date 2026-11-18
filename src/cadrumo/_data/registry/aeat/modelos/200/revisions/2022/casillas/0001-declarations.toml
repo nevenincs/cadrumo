@@ -6801,9 +6801,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1606 DP200015 25|336|17|Num
 [[revisions."2022".casillas]]
-id = "00659"
+id = "DP200015:00659"
 continuidad_id = "00659"
 number = "00659"
+segmento = "DP200015"
 section = ["detalle_compensacion_bases_imponibles_negativas", "2003"]
 semantic_role = "is_compensacion_bases_negativas"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -12797,6 +12798,15 @@ number = "00658"
 segmento = "DP200020D"
 section = ["aplicacion_de_resultados", "aplicacion"]
 semantic_role = "is_aplicacion_de_resultados_aplicacion_a_dotacion_o_s_cajas_de_ahorro_y_fundaciones_bancarias"
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3466 DP200020D field 17, offset 200, length 17, type Num: Aplicación de resultados - Aplicación - A F.R.O y dotaciones voluntarias al F.E.P (Cooperativas) [00659]. Box [00659] on DP200015 is the bases imponibles negativas cell, another field.
+[[revisions."2022".casillas]]
+id = "DP200020D:00659"
+continuidad_id = "is-aplicacion-de-resultados-aplicacion-a-f-r-o-y-dotaciones-voluntarias-al-f-e-p-cooperativas"
+number = "00659"
+segmento = "DP200020D"
+section = ["aplicacion_de_resultados", "aplicacion"]
+semantic_role = "is_aplicacion_de_resultados_aplicacion_a_f_r_o_y_dotaciones_voluntarias_al_f_e_p_cooperativas"
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3467 DP200020D 18|217|17|Num
 [[revisions."2022".casillas]]
@@ -48914,3 +48924,360 @@ number = "01908"
 segmento = "DP200018"
 section = ["deducc_para_incentivar_determ_actividades", "2022_ano_santo_jacobeo_2021_j21"]
 semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
+
+# The cooperativa base-imponible lines the 2022 record design prints as letter tokens [C1] to [E11]
+# (aeat-dr-200-2022 lines 3652 to 3672). They are qualified by their sheet and keep their own lineage.
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3652 DP200022 46|693|17|Num
+# aeat-dr-200-2023 prints the same amount as box [02827] at line 3786; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02827.
+[[revisions."2022".casillas]]
+id = "DP200022:C1"
+continuidad_id = "is-m200-dp200022-c1"
+number = "C1"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3653 DP200022 47|710|17|Num
+# aeat-dr-200-2023 prints the same amount as box [02828] at line 3787; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02828.
+[[revisions."2022".casillas]]
+id = "DP200022:E1"
+continuidad_id = "is-m200-dp200022-e1"
+number = "E1"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3654 DP200022 48|727|17|Num
+# aeat-dr-200-2023 prints the same amount as box [02829] at line 3788; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02829.
+[[revisions."2022".casillas]]
+id = "DP200022:C2"
+continuidad_id = "is-m200-dp200022-c2"
+number = "C2"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3655 DP200022 49|744|17|Num
+# aeat-dr-200-2023 prints the same amount as box [02830] at line 3789; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02830.
+[[revisions."2022".casillas]]
+id = "DP200022:E2"
+continuidad_id = "is-m200-dp200022-e2"
+number = "E2"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3656 DP200022 50|761|17|Num
+# aeat-dr-200-2023 prints the same amount as box [02832] at line 3790; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02832.
+[[revisions."2022".casillas]]
+id = "DP200022:C3"
+continuidad_id = "is-m200-dp200022-c3"
+number = "C3"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3657 DP200022 51|778|17|Num
+# aeat-dr-200-2023 prints the same amount as box [02833] at line 3791; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02833.
+[[revisions."2022".casillas]]
+id = "DP200022:E3"
+continuidad_id = "is-m200-dp200022-e3"
+number = "E3"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3658 DP200022 52|795|17|Num
+# aeat-dr-200-2023 prints the same amount as box [02834] at line 3792; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02834.
+[[revisions."2022".casillas]]
+id = "DP200022:C4"
+continuidad_id = "is-m200-dp200022-c4"
+number = "C4"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3659 DP200022 53|812|17|Num
+# aeat-dr-200-2023 prints the same amount as box [02835] at line 3793; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02835.
+[[revisions."2022".casillas]]
+id = "DP200022:E4"
+continuidad_id = "is-m200-dp200022-e4"
+number = "E4"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3660 DP200022 54|829|17|N
+# aeat-dr-200-2023 prints the same amount as box [02836] at line 3794; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02836.
+[[revisions."2022".casillas]]
+id = "DP200022:E5"
+continuidad_id = "is-m200-dp200022-e5"
+number = "E5"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3661 DP200022 55|846|17|N
+# aeat-dr-200-2023 prints the same amount as box [02837] at line 3795; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02837.
+[[revisions."2022".casillas]]
+id = "DP200022:C6"
+continuidad_id = "is-m200-dp200022-c6"
+number = "C6"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3662 DP200022 56|863|17|N
+# aeat-dr-200-2023 prints the same amount as box [02838] at line 3796; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02838.
+[[revisions."2022".casillas]]
+id = "DP200022:E6"
+continuidad_id = "is-m200-dp200022-e6"
+number = "E6"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3663 DP200022 57|880|17|Num
+# aeat-dr-200-2023 prints the same amount as box [02839] at line 3797; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02839.
+[[revisions."2022".casillas]]
+id = "DP200022:C7"
+continuidad_id = "is-m200-dp200022-c7"
+number = "C7"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3664 DP200022 58|897|17|Num
+# aeat-dr-200-2023 prints the same amount as box [02840] at line 3798; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02840.
+[[revisions."2022".casillas]]
+id = "DP200022:E7"
+continuidad_id = "is-m200-dp200022-e7"
+number = "E7"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3665 DP200022 59|914|17|Num
+# aeat-dr-200-2023 prints the same amount as box [02841] at line 3799; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02841.
+[[revisions."2022".casillas]]
+id = "DP200022:C8"
+continuidad_id = "is-m200-dp200022-c8"
+number = "C8"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3666 DP200022 60|931|17|Num
+# aeat-dr-200-2023 prints the same amount as box [02842] at line 3800; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02842.
+[[revisions."2022".casillas]]
+id = "DP200022:E8"
+continuidad_id = "is-m200-dp200022-e8"
+number = "E8"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3667 DP200022 61|948|17|Num
+# aeat-dr-200-2023 prints the same amount as box [02843] at line 3801; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02843.
+[[revisions."2022".casillas]]
+id = "DP200022:C9"
+continuidad_id = "is-m200-dp200022-c9"
+number = "C9"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3668 DP200022 62|965|17|Num
+# aeat-dr-200-2023 prints the same amount as box [02845] at line 3802; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02845.
+[[revisions."2022".casillas]]
+id = "DP200022:E9"
+continuidad_id = "is-m200-dp200022-e9"
+number = "E9"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3669 DP200022 63|982|17|N
+# aeat-dr-200-2023 prints the same amount as box [02846] at line 3803; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02846.
+[[revisions."2022".casillas]]
+id = "DP200022:C10"
+continuidad_id = "is-m200-dp200022-c10"
+number = "C10"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3670 DP200022 64|999|17|N
+# aeat-dr-200-2023 prints the same amount as box [02847] at line 3804; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02847.
+[[revisions."2022".casillas]]
+id = "DP200022:E10"
+continuidad_id = "is-m200-dp200022-e10"
+number = "E10"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3671 DP200022 65|1016|17|N
+# aeat-dr-200-2023 prints the same amount as box [02848] at line 3807; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02848.
+[[revisions."2022".casillas]]
+id = "DP200022:C11"
+continuidad_id = "is-m200-dp200022-c11"
+number = "C11"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3672 DP200022 66|1033|17|N
+# aeat-dr-200-2023 prints the same amount as box [02849] at line 3808; a box number is
+# a different identifier grammar, so the 2023 edition starts lineage 02849.
+[[revisions."2022".casillas]]
+id = "DP200022:E11"
+continuidad_id = "is-m200-dp200022-e11"
+number = "E11"
+segmento = "DP200022"
+section = ["reg_cooperativas", "determ_base_imponible"]
+semantic_role = "is_cooperativa_base_imponible"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# Cells of the agrupación de interés económico or U.T.E. information model, which the 2022 record design
+# prints without a box number; each is named here by its record position.
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3837 DP200024 12|105|17|Num
+# aeat-dr-200-2023 prints this cell as box [00021] at line 4001; the 2023 edition renumbers it and records the label change.
+[[revisions."2022".casillas]]
+id = "DP200024:pos-105"
+continuidad_id = "dp200024-00021"
+number = "pos-105"
+segmento = "DP200024"
+section = ["agrup_interes_economico_y_utes", "modelo_de_informacion"]
+semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3839 DP200024 14|127|17|Num
+# aeat-dr-200-2023 prints this cell as box [00035] at line 4004; the 2023 edition renumbers it and records the label change.
+[[revisions."2022".casillas]]
+id = "DP200024:pos-127"
+continuidad_id = "dp200024-00035"
+number = "pos-127"
+segmento = "DP200024"
+section = ["agrup_interes_economico_y_utes", "modelo_de_informacion"]
+semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3841 DP200024 16|149|17|Num
+# aeat-dr-200-2023 prints this cell as box [00043] at line 4007; the 2023 edition renumbers it and records the label change.
+[[revisions."2022".casillas]]
+id = "DP200024:pos-149"
+continuidad_id = "dp200024-00043"
+number = "pos-149"
+segmento = "DP200024"
+section = ["agrup_interes_economico_y_utes", "modelo_de_informacion"]
+semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3843 DP200024 18|171|17|Num
+# aeat-dr-200-2023 prints this cell as box [00049] at line 4010; the 2023 edition renumbers it and records the label change.
+[[revisions."2022".casillas]]
+id = "DP200024:pos-171"
+continuidad_id = "dp200024-00049"
+number = "pos-171"
+segmento = "DP200024"
+section = ["agrup_interes_economico_y_utes", "modelo_de_informacion"]
+semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3849 DP200024 24|261|17|Num
+# aeat-dr-200-2023 prints this cell as box [00070] at line 4076; the 2023 edition renumbers it and records the label change.
+[[revisions."2022".casillas]]
+id = "DP200024:pos-261"
+continuidad_id = "is-agrup-interes-economico-y-utes-b-datos-economicos-10-dividendos-y-participaciones-a-ejercicios-que-no-haya-tri"
+number = "pos-261"
+segmento = "DP200024"
+section = ["agrup_interes_economico_y_utes", "modelo_de_informacion"]
+semantic_role = "is_agrup_interes_economico_y_utes_b_datos_economicos_10_dividendos_y_participaciones_a_ejercicios_que_no_haya_tri"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3850 DP200024 25|278|17|Num
+# aeat-dr-200-2023 prints this cell as box [00072] at line 4077; the 2023 edition renumbers it and records the label change.
+[[revisions."2022".casillas]]
+id = "DP200024:pos-278"
+continuidad_id = "is-agrup-interes-economico-y-utes-b-datos-economicos-10-dividendos-y-participaciones-b-ejercicios-que-haya-tribut"
+number = "pos-278"
+segmento = "DP200024"
+section = ["agrup_interes_economico_y_utes", "modelo_de_informacion"]
+semantic_role = "is_agrup_interes_economico_y_utes_b_datos_economicos_10_dividendos_y_participaciones_b_ejercicios_que_haya_tribut"
+
+# Information-model totals the 2022 record design prints and the 2023 design splits by bonificación and
+# deducción: the 2023 edition removes each row and retires its lineage.
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3845 DP200024 20|193|17|Num
+# aeat-dr-200-2023 splits the bonificaciones and deducciones of 'B) Datos económicos' into a base and an
+# amount per bonificación and deducción (lines 4015 to 4074) and prints no single total, so the 2023
+# edition removes the row and retires its lineage.
+[[revisions."2022".casillas]]
+id = "DP200024:pos-193"
+continuidad_id = "is-m200-dp200024-pos-193"
+number = "pos-193"
+segmento = "DP200024"
+section = ["agrup_interes_economico_y_utes", "modelo_de_informacion"]
+semantic_role = "is_base_bonificaciones"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3846 DP200024 21|210|17|Num
+# aeat-dr-200-2023 splits the bonificaciones and deducciones of 'B) Datos económicos' into a base and an
+# amount per bonificación and deducción (lines 4015 to 4074) and prints no single total, so the 2023
+# edition removes the row and retires its lineage.
+[[revisions."2022".casillas]]
+id = "DP200024:pos-210"
+continuidad_id = "is-m200-dp200024-pos-210"
+number = "pos-210"
+segmento = "DP200024"
+section = ["agrup_interes_economico_y_utes", "modelo_de_informacion"]
+semantic_role = "is_base_de_deducciones_a_base_total"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3847 DP200024 22|227|17|Num
+# aeat-dr-200-2023 splits the bonificaciones and deducciones of 'B) Datos económicos' into a base and an
+# amount per bonificación and deducción (lines 4015 to 4074) and prints no single total, so the 2023
+# edition removes the row and retires its lineage.
+[[revisions."2022".casillas]]
+id = "DP200024:pos-227"
+continuidad_id = "is-m200-dp200024-pos-227"
+number = "pos-227"
+segmento = "DP200024"
+section = ["agrup_interes_economico_y_utes", "modelo_de_informacion"]
+semantic_role = "is_base_de_deducciones_b_base_deducciones_por_inversiones"

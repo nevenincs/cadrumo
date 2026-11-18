@@ -348,3 +348,82 @@ number = "00545"
 [[revisions."2022".completeness_manifest.casillas]]
 casilla_id = "01509"
 number = "01509"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "00008"
+number = "00008"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00002"
+segmento = "DP200001"
+number = "00002"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00003"
+segmento = "DP200001"
+number = "00003"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00004"
+segmento = "DP200001"
+number = "00004"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00012"
+segmento = "DP200001"
+number = "00012"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00015"
+segmento = "DP200001"
+number = "00015"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00017"
+segmento = "DP200001"
+number = "00017"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00018"
+segmento = "DP200001"
+number = "00018"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00019"
+segmento = "DP200001"
+number = "00019"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00024"
+segmento = "DP200001"
+number = "00024"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00034"
+segmento = "DP200001"
+number = "00034"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00048"
+segmento = "DP200001"
+number = "00048"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00063"
+segmento = "DP200001"
+number = "00063"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00079"
+segmento = "DP200001"
+number = "00079"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00080"
+segmento = "DP200001"
+number = "00080"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00083"
+segmento = "DP200001"
+number = "00083"

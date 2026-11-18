@@ -12217,6 +12217,10 @@ modelo:
           is-aplicacion-de-resultados-aplicacion-a-dotaciones-voluntarias-fondo-de-educacion-y-pro:
             label: Eredmény felosztása - Felosztás - Az Oktatási és Támogatási Alap
               önkéntes dotációira (szövetkezetek) [00092]
+          is-aplicacion-de-resultados-aplicacion-a-f-r-o-y-dotaciones-voluntarias-al-f-e-p-cooperativas:
+            label: Eredmény felosztása - Felosztás - Kötelező tartalékalapba (F.R.O)
+              és az Oktatási és Támogatási Alap (F.E.P) önkéntes dotációira (szövetkezetek)
+              [00659]
           is-aplicacion-de-resultados-aplicacion-a-fondo-de-reserva-obligatoria-cooperativas:
             label: Eredmény felosztása - Felosztás - Kötelező tartalékalapba (szövetkezetek)
               [00091]
@@ -16684,6 +16688,69 @@ modelo:
           is-m200-dp200022-02826:
             label: Kanári-szigeteki beruházási tartalék különös rendszere - Előzetes
               beruházások 2023 - Az időszak végén képzésre váró RIC [02826]
+          is-m200-dp200022-c1:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Számításba vehető
+              bevételek - Szövetkezeti eredmények [C1]
+          is-m200-dp200022-c10:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Kanári-szigeteki
+              beruházási tartalék - Szövetkezeti eredmények [C10]
+          is-m200-dp200022-c11:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Kimerülési tényező
+              - Szövetkezeti eredmények [C11]
+          is-m200-dp200022-c2:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Egyedi ráfordítások
+              - Szövetkezeti eredmények [C2]
+          is-m200-dp200022-c3:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Tulajdonított általános
+              ráfordítások - Szövetkezeti eredmények [C3]
+          is-m200-dp200022-c4:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Oktatási és Promóciós
+              Alap ráfordításai - Szövetkezeti eredmények [C4]
+          is-m200-dp200022-c6:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Eredmény - Szövetkezeti
+              eredmények [C6]
+          is-m200-dp200022-c7:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Növekedések - Szövetkezeti
+              eredmények [C7]
+          is-m200-dp200022-c8:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Csökkenések - Szövetkezeti
+              eredmények [C8]
+          is-m200-dp200022-c9:
+            label: Szövetkezeti rendszer - adóalap meghatározása - 50%-os kötelező
+              képzés - Szövetkezeti eredmények [C9]
+          is-m200-dp200022-e1:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Számításba vehető
+              bevételek - szövetkezeten kívüli eredmények [E1]
+          is-m200-dp200022-e10:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Kanári-szigeteki
+              beruházási tartalék - szövetkezeten kívüli eredmények [E10]
+          is-m200-dp200022-e11:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Kimerülési tényező
+              - szövetkezeten kívüli eredmények [E11]
+          is-m200-dp200022-e2:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Egyedi ráfordítások
+              - szövetkezeten kívüli eredmények [E2]
+          is-m200-dp200022-e3:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Tulajdonított általános
+              ráfordítások - szövetkezeten kívüli eredmények [E3]
+          is-m200-dp200022-e4:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Oktatási és Promóciós
+              Alap ráfordításai - szövetkezeten kívüli eredmények [E4]
+          is-m200-dp200022-e5:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Vagyoni növekedések
+              és csökkenések - szövetkezeten kívüli eredmények [E5]
+          is-m200-dp200022-e6:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Eredmény - szövetkezeten
+              kívüli eredmények [E6]
+          is-m200-dp200022-e7:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Növekedések - szövetkezeten
+              kívüli eredmények [E7]
+          is-m200-dp200022-e8:
+            label: Szövetkezeti rendszer - adóalap meghatározása - Csökkenések - szövetkezeten
+              kívüli eredmények [E8]
+          is-m200-dp200022-e9:
+            label: Szövetkezeti rendszer - adóalap meghatározása - 50%-os kötelező
+              képzés - szövetkezeten kívüli eredmények [E9]
           is-m200-dp200022b-02916:
             label: Baleár-szigeteki beruházási tartalék különleges rendszere - RIIB
               2023 - Ebben az elszámolásban alkalmazva/materializálva - Az ebben az
@@ -16697,6 +16764,15 @@ modelo:
             label: Baleár-szigeteki beruházási tartalék különleges rendszere - Előzetes
               beruházások 2023 - A 31/2022. törvény DA 70.4. cikkének c) pontjában
               előírt beruházások [02920]
+          is-m200-dp200024-pos-193:
+            label: Gazdasági érdekközösségek és UTE-k - Információs nyomtatvány -
+              Kedvezmények alapja
+          is-m200-dp200024-pos-210:
+            label: Gazdasági érdekközösségek és UTE-k - Információs nyomtatvány -
+              Levonások alapja - a) Teljes alap
+          is-m200-dp200024-pos-227:
+            label: Gazdasági érdekközösségek és UTE-k - Információs nyomtatvány -
+              Levonások alapja - b) Beruházási levonások alapja
           is-mineria-hidrocarburos-factor-agotamiento-aumento:
             label: 'Bányászat és szénhidrogének: kimerülési tényező (LIS 91. és 95.
               cikk) - Növekedés - Évi korrekciók - Időleges (az évben keletkezett)
@@ -20285,6 +20361,26 @@ modelo:
               label: Az eredmény korrekcióinak részletezése - Az adóévi eredménykimutatás
                 eredményének korrekciói - Korábbi évekből eredő átmeneti korrekció
                 - Csökkentések [02308]
+            x-8h834c1g60p38ejgdtpiqc9g6k:
+              label: Gazdasági érdekközösségek és UTE-k - Információs nyomtatvány
+                - Kettős adóztatás elkerülésére szolgáló levonások 1. Levonási alap
+            x-8h834c1g60p38ejgdtpiqc9i6s:
+              label: Gazdasági érdekközösségek és UTE-k - Információs nyomtatvány
+                - Kettős adóztatás elkerülésére szolgáló levonások 2. Levonási alap
+            x-8h834c1g60p38ejgdtpiqc9k74:
+              label: Gazdasági érdekközösségek és UTE-k - Információs nyomtatvány
+                - Kettős adóztatás elkerülésére szolgáló levonások 3. Levonási alap
+            x-8h834c1g60p38ejgdtpiqc9n64:
+              label: Gazdasági érdekközösségek és UTE-k - Információs nyomtatvány
+                - Kettős adóztatás elkerülésére szolgáló levonások 4. Levonási alap
+            x-8h834c1g60p38ejgdtpiqchm64:
+              label: Gazdasági érdekközösségek és UTE-k - Információs nyomtatvány
+                - Osztalékok és részesedések. a) Olyan időszakok, amelyekben nem a
+                különleges rendszer szerint adóztak
+            x-8h834c1g60p38ejgdtpiqchn70:
+              label: Gazdasági érdekközösségek és UTE-k - Információs nyomtatvány
+                - Osztalékok és részesedések. b) Olyan időszakok, amelyekben a különleges
+                rendszer szerint adóztak
             x-8h834c1g60p3cehg60q38do:
               label: Állami és tartományi adóhatóságok együttes adóztatása - 2. részletfizetések
                 - Vizcaya [00447]

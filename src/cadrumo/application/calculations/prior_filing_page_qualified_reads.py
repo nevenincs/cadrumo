@@ -6,7 +6,9 @@ ganancias page and also, for example, a Banco de España line on another page, a
 ``[00017]`` is the cooperativa protegida flag on the identification page and also a
 cooperativas cuota-compensation cohort on another page, and ``[00088]``, ``[00089]``
 and ``[00090]`` are identification flags on that page and also the three cells of the
-Festival Porta Ferrada deduction row on the deducciones page. The registry therefore
+Festival Porta Ferrada deduction row on the deducciones page, and ``[00659]`` is a
+bases imponibles negativas cell and also, in an earlier design, a cooperativas
+aplicación de resultados line. The registry therefore
 names each such box by its page-qualified id (``DP200007:00255``,
 ``DP200001:00017``). Before that rename it declared the box under the bare number
 and declared no other page's box of that number, so a bare id in a row written
@@ -63,6 +65,7 @@ MODELO_200_PAGE_QUALIFIED_CASILLAS: Final[MappingProxyType[CasillaId, CasillaId]
         "00280": "DP200007:00280",
         "00296": "DP200007:00296",
         "00325": "DP200008:00325",
+        "00659": "DP200015:00659",
     },
 )
 """Each retired bare casilla id and the page-qualified id that replaced it. Frozen product data."""

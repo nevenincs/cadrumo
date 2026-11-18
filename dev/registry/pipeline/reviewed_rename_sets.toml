@@ -775,3 +775,24 @@ manifest_sha256 = "11e79d314a2ad811f90bfc94784698c3a8cbd49d1b76498f3cbf6fc58a9cd
 source_ref = "aeat-dr-200-2025"
 source_sha256 = "92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509"
 manifest_sha256 = "46f7606988e2d81a8dee9223a7780af7522799cc7f6c899b711935c2365005fc"
+
+[[sets]]
+modelo = "200"
+renamed_casilla_ids = [
+    "00659",
+]
+
+[[sets.members]]
+source_ref = "aeat-dr-200-2023"
+source_sha256 = "07ab6b44ac6b46317d965ef59680aeb0a3380f197f55f94af824383d228190b6"
+manifest_sha256 = "2ae0ac88d5e6fd3c303c782744e9a0573a520a9dd917bf96914522676af9e140"
+
+[[sets.members]]
+source_ref = "aeat-dr-200-2024"
+source_sha256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
+manifest_sha256 = "3e75bf2002b5df21861d75652c6655c6e45e3d15ecae95caff23033e8e8fd76e"
+
+[[sets.members]]
+source_ref = "aeat-dr-200-2025"
+source_sha256 = "92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509"
+manifest_sha256 = "e38a8da834250659015949cdae9444ef8fc63581235e242d78dccc250c0aea8a"

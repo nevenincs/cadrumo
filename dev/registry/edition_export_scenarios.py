@@ -124,6 +124,7 @@ from cadrumo.application.filing.producer_snapshot_m296 import (
     Modelo296PerceptorRow,
     Modelo296ProfileFacts,
 )
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
 from cadrumo.core.modelo import Modelo
@@ -896,6 +897,7 @@ def m200_export_scenario(
             # ganancias": the edition declares it required, and the base
             # determination starts from it, so no draft can omit it.
             "DP200012:00501": Decimal("0.00"),
+            **_m200_incn_prior_12_months_input(period),
         },
         producer_snapshot=partial(
             _m200_producer_snapshot,
@@ -905,6 +907,32 @@ def m200_export_scenario(
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
         product_software_identity_factory=partial(_scenario_software_identity, "200"),
     )
+
+
+#: The profile binding for the INCN of the twelve months before the period,
+#: which an edition declares while its formulas apply the DA 15ª LIS tramos.
+_M200_INCN_PRIOR_12_MONTHS_BINDING: Final = "modelo-200-profile-incn-prior-12-months"
+
+
+def _m200_incn_prior_12_months_input(period: Period) -> dict[str, Decimal]:
+    """The scenario's twelve-month INCN, stated only where the period's edition declares that binding.
+
+    The draft refuses an input key its edition does not declare, and an edition
+    that declares the binding can read it in its bases imponibles negativas
+    ceiling, so the edition's own snapshot decides. The zero is this synthetic
+    scenario's stated fact for its newly created entity, which had no turnover
+    in the twelve months before the period; it is not a default for an unknown
+    INCN.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        snapshot = operation.snapshot(
+            str(Modelo("200")),
+            filing_year=period.filing_year,
+            period=period.registry_token,
+            grade=RegistryAuthorityGrade.CALCULATION,
+        )
+    declared = any(str(binding.id) == _M200_INCN_PRIOR_12_MONTHS_BINDING for binding in snapshot.revision.bindings)
+    return {_M200_INCN_PRIOR_12_MONTHS_BINDING: Decimal("0")} if declared else {}
 
 
 #: The synthetic NIF every Modelo 200 projected party is identified by. Nine
