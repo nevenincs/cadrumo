@@ -36,6 +36,8 @@ from ...application.ledger.operator_iva_contracts import (
     LedgerOperatorIvaResult,
 )
 from ...application.operations.schema_identity import OperationSchemaIdentityV1
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.operations import OperationEffect, OperationTerminalCondition
@@ -83,6 +85,7 @@ def _run_review(
     try:
         request = LedgerLlmReviewRequest(
             profile_id=client.profile_id,
+            output_language=OutputLanguage(active_output_language()),
             transaction_id=transaction_id,
             mode=mode,
             origin=origin,

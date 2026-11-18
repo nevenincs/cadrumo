@@ -619,6 +619,7 @@ arguments = [
   { literal = "auth" },
   { literal = "status" },
   { literal = "--json" },
+  { literal = "--causes" },
 ]
 
 [[invocations]]
@@ -629,6 +630,31 @@ arguments = [
   { literal = "cadrumo_agent.cli.main" },
   { literal = "auth" },
   { literal = "login" },
+  { literal = "--provider" },
+  { slot = "provider", kind = "identifier" },
+]
+
+[[invocations]]
+profile = "agent-auth"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "auth" },
+  { literal = "login" },
+  { literal = "--provider" },
+  { slot = "provider", kind = "identifier" },
+  { literal = "--device" },
+]
+
+[[invocations]]
+profile = "agent-auth"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "auth" },
+  { literal = "logout" },
   { literal = "--provider" },
   { slot = "provider", kind = "identifier" },
 ]
@@ -671,6 +697,7 @@ arguments = [
   { literal = "browser" },
   { literal = "--timeout" },
   { literal = "300" },
+  { literal = "--causes" },
 ]
 
 [[invocations]]
@@ -687,6 +714,7 @@ arguments = [
   { literal = "device" },
   { literal = "--timeout" },
   { literal = "300" },
+  { literal = "--causes" },
 ]
 
 [[invocations]]
@@ -703,6 +731,7 @@ arguments = [
   { literal = "browser-code" },
   { literal = "--timeout" },
   { literal = "300" },
+  { literal = "--causes" },
 ]
 
 # The Windows supervisor starts the worker without site (-S): that is the exact
@@ -1431,7 +1460,7 @@ path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bi
 name = "windows-agent-auth-admits-browser-connect-in-its-profile"
 platform = "windows"
 image = "cadrumo-agent"
-arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "browser", "--timeout", "300"]
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "browser", "--timeout", "300", "--causes"]
 ambient = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "C:\\profile\\browser.exe", CADRUMO_STORAGE_ROOT = "C:\\elsewhere", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", TEMP = "C:\\elsewhere", PATH = "C:\\elsewhere" }
 profile = "agent-auth"
 environment = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "C:\\profile\\browser.exe", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp" }
@@ -1441,7 +1470,7 @@ path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Wi
 name = "posix-agent-auth-admits-device-connect-in-its-profile"
 platform = "posix"
 image = "cadrumo-agent"
-arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "device", "--timeout", "300"]
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "device", "--timeout", "300", "--causes"]
 ambient = { HOME = "/home/ada", LANG = "C.UTF-8", CADRUMO_AGENT_HOSTED_ROOT = "/profile/agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "/profile/browser", CADRUMO_STORAGE_ROOT = "/elsewhere", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", TMPDIR = "/elsewhere", PATH = "/elsewhere" }
 profile = "agent-auth"
 environment = { HOME = "/home/ada", LANG = "C.UTF-8", CADRUMO_AGENT_HOSTED_ROOT = "/profile/agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "/profile/browser", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp" }
@@ -1451,7 +1480,7 @@ path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bi
 name = "windows-agent-auth-admits-browser-code-connect-in-its-profile"
 platform = "windows"
 image = "cadrumo-agent"
-arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "antigravity", "--method", "browser-code", "--timeout", "300"]
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "antigravity", "--method", "browser-code", "--timeout", "300", "--causes"]
 ambient = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "C:\\profile\\browser.exe", CADRUMO_STORAGE_ROOT = "C:\\elsewhere", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", TEMP = "C:\\elsewhere", PATH = "C:\\elsewhere" }
 profile = "agent-auth"
 environment = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "C:\\profile\\browser.exe", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp" }
@@ -1461,7 +1490,7 @@ path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Wi
 name = "posix-agent-auth-admits-browser-code-connect-in-its-profile"
 platform = "posix"
 image = "cadrumo-agent"
-arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "antigravity", "--method", "browser-code", "--timeout", "300"]
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "antigravity", "--method", "browser-code", "--timeout", "300", "--causes"]
 ambient = { HOME = "/home/ada", LANG = "C.UTF-8", CADRUMO_AGENT_HOSTED_ROOT = "/profile/agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "/profile/browser", CADRUMO_STORAGE_ROOT = "/elsewhere", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", TMPDIR = "/elsewhere", PATH = "/elsewhere" }
 profile = "agent-auth"
 environment = { HOME = "/home/ada", LANG = "C.UTF-8", CADRUMO_AGENT_HOSTED_ROOT = "/profile/agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "/profile/browser", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp" }
@@ -1545,7 +1574,7 @@ refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
 name = "windows-agent-refuses-provider-connect-with-an-unlisted-method"
 platform = "windows"
 image = "cadrumo-agent"
-arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "terminal", "--timeout", "300"]
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "terminal", "--timeout", "300", "--causes"]
 ambient = { SYSTEMROOT = "C:\\Windows" }
 refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
 
@@ -1577,7 +1606,7 @@ refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
 name = "posix-agent-refuses-browser-code-connect-with-an-unsafe-provider"
 platform = "posix"
 image = "cadrumo-agent"
-arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "../other", "--method", "browser-code", "--timeout", "300"]
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "../other", "--method", "browser-code", "--timeout", "300", "--causes"]
 ambient = { HOME = "/home/ada" }
 refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
 

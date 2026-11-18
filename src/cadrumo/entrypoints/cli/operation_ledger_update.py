@@ -26,6 +26,8 @@ from ...application.ledger.update_contracts import (
     LedgerUpdatePatchField,
     LedgerUpdateRequest,
 )
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as active_output_language
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 
 
@@ -103,6 +105,7 @@ def run_ledger_update(
     )
     request = LedgerUpdateRequest(
         profile_id=client.profile_id,
+        output_language=OutputLanguage(active_output_language()),
         transaction_id=transaction_id,
         patch=worker_patch,
         patch_fields=patch_fields,

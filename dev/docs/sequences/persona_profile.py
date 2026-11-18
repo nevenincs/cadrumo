@@ -17,8 +17,10 @@ from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.application.wizard.patch_edit import validate_profile_patch
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.entrypoints.tests.persona_materialisation import patch_answers, submitted_answer, year_envelope
-from cadrumo.tests.personas import Persona, PersonaDate, ProfileAnswer, YearEnvelope, YearToken, read_persona
+from cadrumo.entrypoints.tests.persona_replay_requests import patch_answers, submitted_answer
+from cadrumo.entrypoints.tests.persona_world import year_envelope
+from cadrumo.tests.persona_types import Persona, PersonaDate, ProfileAnswer, YearEnvelope, YearToken
+from cadrumo.tests.personas import read_persona
 
 __all__ = ["SANDBOX_PERSONA_ID", "pinned_persona", "profile_option_arguments", "sandbox_profile_facts"]
 

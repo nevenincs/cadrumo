@@ -52,6 +52,7 @@ from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -67,7 +68,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.binding_targets import revision_bindings_by_id
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from cadrumo.domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 from cadrumo.domain.calculations.registry.tests.published_authority import (
@@ -460,6 +461,17 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     Art. 99 BOE-A-2006-20764); cumulative inputs stated above.
     """
 
+    _calculate_four_quarters(runtime_profile)
+    _attest_no_withholding_on_every_class()
+    proj_payload = _project_and_assert_accumulated()
+    oracle_result = _calculate_m100_oracle()
+    _assert_projected_casillas(proj_payload, oracle_result)
+    _assert_projection_provenance(proj_payload, oracle_result)
+
+
+def _calculate_four_quarters(runtime_profile: TestRuntimeProfile) -> None:
+    """Seed one cobro per quarter and calculate the four cumulative M130 work units."""
+
     _seed_autónomo_profile(runtime_profile)
     quarter_dates = {
         "1T": date(_FILING_YEAR, 2, 15),
@@ -513,6 +525,10 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             f"{quarter_payload['casilla_values'][resultado_key]!r}"
         )
 
+
+def _attest_no_withholding_on_every_class() -> None:
+    """Attest that no class of income suffered withholding."""
+
     # -- Attest that no class of income suffered withholding ---------------
     # A credit with no payer record and no attestation stays unresolved, and so does every box
     # computed from it; the attestation is the operator's proven zero.
@@ -527,6 +543,10 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             ],
         )  # fmt: skip
         assert attested.exit_code == 0, attested.output
+
+
+def _project_and_assert_accumulated() -> dict[str, Any]:
+    """Run the project verb and check the accumulated M130 totals."""
 
     # -- Run the projection verb -------------------------------------------
     project_result = invoke_cached_cli(
@@ -553,6 +573,12 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         f"Accumulated pagos fraccionados: expected {_TOTAL_PAGOS_FRACCIONADOS}, "
         f"got {proj_payload['m130_accumulated']['pagos_fraccionados']!r}"
     )
+
+    return proj_payload
+
+
+def _calculate_m100_oracle() -> RegistryCalculationResult:
+    """Calculate the M100 annual result directly from the registry engine."""
 
     # -- Oracle: direct M100 registry calculation --------------------------
     # This is the independent entry path that proves the projection verb
@@ -694,6 +720,12 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         },
     )
 
+    return oracle_result
+
+
+def _assert_projected_casillas(proj_payload: dict[str, Any], oracle_result: RegistryCalculationResult) -> None:
+    """Check each projected M100 casilla equals the direct registry calculation."""
+
     # Assert projected M100 casilla values equal oracle values.
     proj_m100 = proj_payload["m100_projection"]
 
@@ -715,6 +747,10 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             f"rel-130-pagos-fraccionados={_TOTAL_PAGOS_FRACCIONADOS}; "
             f"ccaa={_CCAA!r}."
         )
+
+
+def _assert_projection_provenance(proj_payload: dict[str, Any], oracle_result: RegistryCalculationResult) -> None:
+    """Check the projection payload carries formula, legal and source provenance."""
 
     # -- Provenance: casilla_observations carries legal_refs / source_refs -----
     # The grounding rule requires every CLI JSON emit of a calculated casilla

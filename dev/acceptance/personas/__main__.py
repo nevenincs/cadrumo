@@ -20,7 +20,7 @@ from pathlib import Path
 
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
-from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
+from cadrumo.entrypoints.tests.persona_world import year_envelope
 from cadrumo.tests.personas import persona_ids, read_persona
 from dev.acceptance.installed_cli import InstalledCli, authority_generation, build_installed_cli_environment
 from dev.packaging.installed_runtime import installed_cli_runtime

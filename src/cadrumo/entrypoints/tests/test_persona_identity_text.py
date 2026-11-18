@@ -6,8 +6,10 @@ import dataclasses
 
 import pytest
 
-from ...tests.personas import IdentityRef, YearEnvelope, read_persona
-from .persona_materialisation import PersonaMaterialisationError, identity_text
+from ...tests.persona_types import IdentityRef, YearEnvelope
+from ...tests.personas import read_persona
+from .persona_replay_requests import identity_text
+from .persona_world import PersonaMaterialisationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -10,7 +10,8 @@ from ...application.overview.read_payload import OverviewCalendarRead
 from ...application.overview.read_request import OVERVIEW_READ_DEFINITION_IDS, OverviewReadKind, OverviewReadRequest
 from ...application.overview.read_result import OverviewReadProjection
 from ...core.external_constants import OutputLanguage
-from .persona_materialisation import PersonaWorld, run_operation
+from .persona_operations import run_operation
+from .persona_world import PersonaWorld
 
 PERSONA = "autonomo-fontanero"
 

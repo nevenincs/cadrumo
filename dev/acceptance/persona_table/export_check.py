@@ -13,7 +13,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.export_shared_owner import unadjudicated_shared_owners
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.domain.filing.errors import ModeloBuilderError
-from cadrumo.tests.personas import ExpectedValue
+from cadrumo.tests.persona_types import ExpectedValue
 
 from .export_carriers import cross_page_reuse_mismatches, foreign_carrier_mismatches
 from .export_readback import read_fields, readback_mismatches, readback_reason, unreadable_reason

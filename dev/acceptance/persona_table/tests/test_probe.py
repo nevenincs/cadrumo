@@ -10,7 +10,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2
 from cadrumo.core.decimal.coercion import coerce_decimal_strict
-from cadrumo.entrypoints.tests.persona_materialisation import PersonaMaterialisationError
+from cadrumo.entrypoints.tests.persona_world import PersonaMaterialisationError
 
 from ..probe import (
     EXECUTOR_LOGGER,

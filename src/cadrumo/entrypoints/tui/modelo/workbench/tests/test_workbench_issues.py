@@ -32,6 +32,7 @@ from ......application.modelo.work_form_field_vocabulary import (
     address_key,
 )
 from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
+from ......application.modelo.work_form_header import attention_counts
 from ......application.modelo.work_form_models import (
     ModeloFormCounts,
     ModeloFormField,
@@ -43,6 +44,7 @@ from ......application.modelo.work_form_models import (
 )
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
+from ......core.i18n.render import output_language
 from ......domain.calculations.registry.schema_form_layouts import FormPageCondition
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -57,7 +59,6 @@ from ..header import attention_chips, status_line
 from ..issue_projection import issue_lines
 from ..issue_scale import (
     ASSUMED_BOXES_BEFORE_SECTIONS,
-    level_counts,
     levels_marked,
     title_text,
     unentered_boxes,
@@ -203,6 +204,12 @@ def _list_text(screen: WorkbenchIssuesScreen) -> str:
     return "\n".join(options.render_line(y).text.rstrip() for y in range(options.size.height))
 
 
+def _served_title(form: ModeloWorkForm) -> str:
+    """The issue list's title as the screen builds it, from the counts the form serves."""
+    counts = attention_counts(form, OutputLanguage(output_language()), recorded=False)
+    return title_text({count.level: count.count for count in counts})
+
+
 def _words(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
@@ -211,7 +218,7 @@ def test_findings_sit_on_one_scale_with_where_what_and_what_to_do() -> None:
     with override_settings(cadrumo_output_language="en"):
         lines = issue_lines(_checked())
         assumed = unentered_boxes(_checked(), ModeloFormAttention.CONFIRM)
-        title = title_text(level_counts(lines, unentered_levels(_checked())))
+        title = _served_title(_recounted(_checked()))
 
     assert [(line.level, line.box, line.where) for line in lines] == [
         (ModeloFormAttention.BLOCKS, "06", "[06] Retenciones e ingresos a cuenta"),
@@ -235,12 +242,13 @@ def test_a_finding_the_form_marks_as_an_explanation_is_for_information_and_asks_
     form = _checked(assumed=False).model_copy(update={"issues": (_explanation(),)})
     with override_settings(cadrumo_output_language="en"):
         lines = issue_lines(form)
-        title = title_text(level_counts(lines))
+        title = _served_title(form)
 
     assert [line.level for line in lines] == [ModeloFormAttention.INFO]
     assert lines[0].action == "What to do: Nothing to do. It explains what the calculation did."
     assert lines[0].message == "2 modelos were not used, because they do not apply to you."
-    assert title == "Issues to look at   i 1"
+    # The served counts leave information out: nothing there is asked of the filer.
+    assert title == "Issues to look at"
 
 
 def test_the_verdict_says_what_the_check_concluded_and_leaves_the_counting_to_the_title() -> None:
@@ -467,7 +475,7 @@ def test_without_findings_or_assumed_values_the_list_says_there_is_nothing_to_lo
     )
     with override_settings(cadrumo_output_language="en"):
         lines = issue_lines(form)
-        title = title_text(level_counts(lines, unentered_levels(form)))
+        title = _served_title(form)
 
     assert lines == ()
     assert unentered_levels(form) == ()
@@ -538,7 +546,7 @@ async def test_the_missing_boxes_the_header_counts_are_listed_at_their_own_level
     form = _recounted(synthetic_form(needs_input=True))
     with override_settings(cadrumo_output_language="en"):
         missing = unentered_boxes(form, ModeloFormAttention.MISSING)
-        title = title_text(level_counts(issue_lines(form), unentered_levels(form)))
+        title = _served_title(form)
         chips = _chips(form)
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)

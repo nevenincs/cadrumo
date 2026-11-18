@@ -21,7 +21,8 @@ from cadrumo.application.wizard.imputation_election import YEAR_QUESTION_ID
 from cadrumo.application.wizard.patch_edit import validate_profile_patch
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, compose_legal_full_name
-from cadrumo.tests.personas import IdentityRef, Persona, ProfileValue, YearEnvelope, read_persona
+from cadrumo.tests.persona_types import IdentityRef, Persona, ProfileValue, YearEnvelope
+from cadrumo.tests.personas import read_persona
 
 
 def _submitted(persona: Persona, value: ProfileValue, envelope: YearEnvelope) -> str:

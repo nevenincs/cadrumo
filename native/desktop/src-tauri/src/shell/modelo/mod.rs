@@ -23,6 +23,7 @@ use super::settle::{self, Decision, Operations, Outcome, ReviewDocument, Tracked
 use super::user_profile::ProfileHost;
 use crate::agent::person::{self, HeldPerson, PersonEvent};
 use admitted::{Definition, Subject, admitted};
+use cadrumo_application::diagnostics::Diagnostics;
 use serde::Deserialize;
 use serde_json::{Map, Value, json};
 use std::{sync::Arc, time::Duration};
@@ -439,13 +440,13 @@ async fn submit_on(
 ) -> Result<Outcome> {
     operations.room(&identity)?;
     let operation = relay::submit_wiping(person, request, definition.mutation()).await?;
-    let tracked = Tracked::new(
+    let tracked = operations.timed(Tracked::new(
         operation,
         definition.settling(),
         subject,
         identity,
         Vec::new(),
-    );
+    ));
     operations.track(tracked.clone());
     settle::settle(events, &tracked, person).await
 }
@@ -477,10 +478,10 @@ pub struct ModeloHost {
     files: Files,
 }
 impl ModeloHost {
-    pub fn new(profile: Arc<ProfileHost>) -> Self {
+    pub fn new(profile: Arc<ProfileHost>, diagnostics: Arc<Diagnostics>) -> Self {
         Self {
             profile,
-            operations: Operations::default(),
+            operations: Operations::measured(diagnostics),
             files: Files::default(),
         }
     }
@@ -589,13 +590,13 @@ impl ModeloHost {
             serial.operation(&operation);
             serial.stage("submitted");
             // A named read is followed here, never by the window.
-            let tracked = Tracked::new(
+            let tracked = self.operations.timed(Tracked::new(
                 operation,
                 definition.settling(),
                 subject,
                 identity,
                 Vec::new(),
-            );
+            ));
             let answered = settle::settle(&mut events, &tracked, &person).await?;
             serial.stage("settled");
             settle::still_holding(&self.profile, &person).await?;

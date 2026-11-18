@@ -9,6 +9,7 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.errors.error_codes import resolve_error_message
+from ...core.external_constants import OutputLanguage
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.models import OperationTerminalReceipt
@@ -50,6 +51,7 @@ def build_ledger_add_operation_result(
     advisory_sector_unmatched: bool,
     advisory_input_classification: str | None,
     advisory_sector_id: str | None,
+    language: OutputLanguage,
 ) -> LedgerAddOperationResult:
     """Project the canonical writer result with exact profile and advisory facts."""
     from .models import ManualLedgerTransactionResult
@@ -68,7 +70,7 @@ def build_ledger_add_operation_result(
         raise TransactionValidationError("ledger add returned too many event identifiers")
     return LedgerAddOperationResult.created(
         profile_id,
-        transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
+        transaction=LedgerTransactionProjection.from_payload(canonical.transaction, language=language),
         review_status=canonical.review_status,
         bucket_event_ids=result.bucket_event_ids,
         advisory_input_classification=advisory_input_classification,

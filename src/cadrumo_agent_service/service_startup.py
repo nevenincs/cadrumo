@@ -23,6 +23,7 @@ from cadrumo_client.contracts.deadline_budget import (
     TimeoutDeadline,
 )
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SessionRequest
+from cadrumo_client.contracts.service_access import ServiceLease
 
 from .adapters.agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher
 from .adapters.agent_programs import (
@@ -68,6 +69,11 @@ from .service_support import (
 )
 
 _LOGGER = get_logger("cadrumo_agent_service.service")
+
+
+def _renewal_of(lease: ServiceLease, current: ServiceLease | None) -> bool:
+    """Whether ``current`` is ``lease`` itself or its renewal: the same approval and person session, a new session."""
+    return current is not None and current.model_copy(update={"session_id": lease.session_id}) == lease
 
 
 class AgentServiceStartup(AgentServiceAdministration):
@@ -147,7 +153,7 @@ class AgentServiceStartup(AgentServiceAdministration):
             return refuse(dumped["code"], cause="settings_refused", provider=provider, base=dumped)
         # A browser or device login retires the tree on its own attempt,
         # before its helper starts, so its request is answered at once.
-        if self._closing.is_set() or self.client.lease != lease:
+        if self._closing.is_set() or not _renewal_of(lease, self.client.lease):
             return refuse(ServiceRefusalCode.SIGNED_OUT, cause="profile_signed_out", provider=provider)
         environment = self._sign_in_environment(root, gui=gui)
         return {
@@ -176,14 +182,15 @@ class AgentServiceStartup(AgentServiceAdministration):
         if prepared.get("kind") != "sign_in_prepared":
             return prepared
         generations = self._credentials.current_generations()
-        if lease is None or generations is None or self.client.lease != lease:
+        if lease is None or generations is None or not _renewal_of(lease, self.client.lease):
             return refuse(ServiceRefusalCode.SIGNED_OUT, cause="profile_signed_out", provider=provider)
 
         def valid() -> bool:
-            if self._closing.is_set() or self.client.lease != lease:
+            # The runtime reissues the attended session every few minutes; only a different approval ends the attempt.
+            if self._closing.is_set() or not _renewal_of(lease, self.client.lease):
                 return False
             current = self._credentials.current_generations()
-            return current == generations and self.client.lease == lease and not self._closing.is_set()
+            return current == generations and _renewal_of(lease, self.client.lease) and not self._closing.is_set()
 
         root = profile_agent_root(self._root, lease.profile_id)
         helper_provider = prepared["entry"]["provider"]

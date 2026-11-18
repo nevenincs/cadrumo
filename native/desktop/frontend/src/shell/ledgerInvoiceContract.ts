@@ -628,6 +628,9 @@ export type InvoiceViewSuccess = {
  * profile. `actor` is recorded as sent for a person's session. An automation's
  * session is recorded under its own session label, whatever the request
  * carries.
+ *
+ * `output_language` is the language the result's transaction link fields are
+ * named in.
  */
 export type LedgerAttachRequest = {
   profile_id: string;
@@ -635,6 +638,7 @@ export type LedgerAttachRequest = {
   purchase_invoice_evidence_id?: string | null;
   attachment_ids?: string[];
   actor?: string | null;
+  output_language?: OutputLanguage;
 };
 
 /**
@@ -708,12 +712,16 @@ export type LedgerCheckRequest = {
  *
  * `actor` is recorded as sent for a person's session. An automation's session
  * is recorded under its own session label, whatever the request carries.
+ *
+ * `output_language` is the language the result's transaction link fields are
+ * named in.
  */
 export type LedgerDetachRequest = {
   profile_id: string;
   transaction_id: string;
   attachment_ids: string[];
   actor?: string | null;
+  output_language?: OutputLanguage;
 };
 
 /**
@@ -885,12 +893,16 @@ export type LedgerLinkProjection = {
  *
  * `actor` is recorded as sent for a person's session. An automation's session
  * is recorded under its own session label, whatever the request carries.
+ *
+ * `output_language` is the language the result's transaction link fields are
+ * named in.
  */
 export type LedgerLinkRequest = {
   profile_id: string;
   transaction_id: string;
   invoice_id: string;
   actor?: string | null;
+  output_language?: OutputLanguage;
 };
 
 /**

@@ -29,6 +29,8 @@ from ...application.ledger.attachment_mutation_operation import (
 )
 from ...application.ledger.notices import stale_finalized_revision_notices
 from ...application.ledger.transaction_projection import LedgerTransactionProjection
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
 from ...core.json_contract import OutputSchema
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -50,6 +52,7 @@ def run_ledger_attach(
     try:
         request = LedgerAttachRequest(
             profile_id=client.profile_id,
+            output_language=OutputLanguage(active_output_language()),
             transaction_id=transaction_id,
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,
             attachment_ids=attachment_ids,
@@ -76,6 +79,7 @@ def run_ledger_detach(
     try:
         request = LedgerDetachRequest(
             profile_id=client.profile_id,
+            output_language=OutputLanguage(active_output_language()),
             transaction_id=transaction_id,
             attachment_ids=attachment_ids,
             actor=actor if (actor is not None and actor) else None,

@@ -14,7 +14,9 @@ from ...application.ledger.own_account_operation import (
 from ...core.iban import mask_iban
 from ...domain.transactions.own_accounts import OwnAccountHolding, OwnAccountRole
 from ...tests.personas import persona_ids
-from .persona_materialisation import ReplayScope, materialised_persona, run_operation
+from .persona_materialisation import materialised_persona
+from .persona_operations import run_operation
+from .persona_world import ReplayScope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
