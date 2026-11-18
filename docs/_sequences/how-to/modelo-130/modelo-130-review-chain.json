@@ -382,7 +382,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "a66ff2b96bd4543c3e5330438325833ff83e4e211b0bfb8b58966c5a2ff49e77",
+          "calculation_revision_id": "06ab6e15da627123f0ac01af3465cbd3e49b09bc85f1be2ad934a4e58e36f49a",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",
@@ -532,7 +532,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision a66ff2b96bd4543c3e5330438325833ff83e4e211b0bfb8b58966c5a2ff49e77 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 06ab6e15da627123f0ac01af3465cbd3e49b09bc85f1be2ad934a4e58e36f49a (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -650,7 +650,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "a66ff2b96bd4543c3e5330438325833ff83e4e211b0bfb8b58966c5a2ff49e77",
+          "calculation_revision_id": "06ab6e15da627123f0ac01af3465cbd3e49b09bc85f1be2ad934a4e58e36f49a",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",
@@ -926,7 +926,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "a66ff2b96bd4543c3e5330438325833ff83e4e211b0bfb8b58966c5a2ff49e77",
+          "calculation_revision_id": "06ab6e15da627123f0ac01af3465cbd3e49b09bc85f1be2ad934a4e58e36f49a",
           "completeness_status": "complete",
           "findings": [
             {
@@ -972,7 +972,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "4d6201c71d96057237875b0055634a0e0a24d11cb21579245e511e1dd7ce38e6",
+          "verification_report_id": "e827a72072785fc24613c1c87d8057bbc6ce5807029cb8e8ce22446d57ad1773",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

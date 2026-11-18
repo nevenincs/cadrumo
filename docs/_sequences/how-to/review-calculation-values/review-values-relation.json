@@ -465,7 +465,7 @@
             "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": "0",
             "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": "0"
           },
-          "calculation_revision_id": "a03f6bf6f0f5042ee8a6c8e646735baaeb6d997546f0ed7668aa9af87faf1395",
+          "calculation_revision_id": "663cb53344f18138979e2eae8f36860b6f15bcb0b443d738977bc2a567120a6f",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -4364,7 +4364,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision a03f6bf6f0f5042ee8a6c8e646735baaeb6d997546f0ed7668aa9af87faf1395 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 663cb53344f18138979e2eae8f36860b6f15bcb0b443d738977bc2a567120a6f (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {"contributor_binding_source":"retencion_soportada","contributor_source_kind":"retencion_soportada","dependency_treatment":"","fingerprint":null,"lineage_role":"primary","parent_source_ref":null,"resolved_binding_source":"retencion_soportada","resolver_id":"retencion_soportada","source_ref":"retencion-soportada:2025:trabajo:03db3aff10f31f9bc6be483d4dae776ac1f39a4bc8b5139b29a5592c96bf7e47"},
             {"contributor_binding_source":"retencion_soportada","contributor_source_kind":"retencion_soportada","dependency_treatment":"","fingerprint":null,"lineage_role":"primary","parent_source_ref":null,"resolved_binding_source":"retencion_soportada","resolver_id":"retencion_soportada","source_ref":"profile:<profile-id>:taxpayer_type.irpf_income_categories:2025:capital_mobiliario"},

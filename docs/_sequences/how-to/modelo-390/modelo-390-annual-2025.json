@@ -154,22 +154,22 @@
     {"argv":["aeat","app","ledger","attach","778fc3f6dfc0f99e33146ab6db8e10f9234ef7066fd7ae581beefa862299be81","--purchase-invoice-evidence-id","22f934e3cfa077ef"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","--format","json","app","modelo","iva-wallet","seed","--filing-year","2024","--period","4T","--amount","0","--confirm"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","--format","json","app","modelo","work","create","--modelo","303","--year","2025","--period","1T"],"captures":[{"json_path":"result.work_unit_id","name":"m303_1t_work_unit_id","value":"09420aa5c5d838d4a8a8b9198fa2adc02ff2573a0983d696a225f0269e6476b3"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","calculate","09420aa5c5d838d4a8a8b9198fa2adc02ff2573a0983d696a225f0269e6476b3","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"m303_1t_calculation_revision_id","value":"ceabbd9973b82fddf4bc444d18d86adc060a2ead548ad2ee3777ab16eb4614d8"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","verify","ceabbd9973b82fddf4bc444d18d86adc060a2ead548ad2ee3777ab16eb4614d8"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","file","ceabbd9973b82fddf4bc444d18d86adc060a2ead548ad2ee3777ab16eb4614d8"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","calculate","09420aa5c5d838d4a8a8b9198fa2adc02ff2573a0983d696a225f0269e6476b3","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"m303_1t_calculation_revision_id","value":"f136b68e191a7a99a39acb31be5d885aef2d0574eed34ff804c8955613877db9"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","verify","f136b68e191a7a99a39acb31be5d885aef2d0574eed34ff804c8955613877db9"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","file","f136b68e191a7a99a39acb31be5d885aef2d0574eed34ff804c8955613877db9"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","--format","json","app","modelo","work","create","--modelo","303","--year","2025","--period","2T"],"captures":[{"json_path":"result.work_unit_id","name":"m303_2t_work_unit_id","value":"af6d15eead73e8acebfb6efaefcbde65819a23082408d091b4947d5697fb590c"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","calculate","af6d15eead73e8acebfb6efaefcbde65819a23082408d091b4947d5697fb590c","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"m303_2t_calculation_revision_id","value":"91ed84abcdbc59300630a61e91b1b136a3f5c56e096b3f04b14a3a72203d7728"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","verify","91ed84abcdbc59300630a61e91b1b136a3f5c56e096b3f04b14a3a72203d7728"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","file","91ed84abcdbc59300630a61e91b1b136a3f5c56e096b3f04b14a3a72203d7728"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","calculate","af6d15eead73e8acebfb6efaefcbde65819a23082408d091b4947d5697fb590c","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"m303_2t_calculation_revision_id","value":"3fcacf9839e65d3789116ccd8424fdab85f2cccc2e58018276b2f8e342e0d4c0"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","verify","3fcacf9839e65d3789116ccd8424fdab85f2cccc2e58018276b2f8e342e0d4c0"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","file","3fcacf9839e65d3789116ccd8424fdab85f2cccc2e58018276b2f8e342e0d4c0"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","--format","json","app","modelo","work","create","--modelo","303","--year","2025","--period","3T"],"captures":[{"json_path":"result.work_unit_id","name":"m303_3t_work_unit_id","value":"e214f91933b3bae05a0b032a61021b63be883fd5836372825eb06adc206d0a2c"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","calculate","e214f91933b3bae05a0b032a61021b63be883fd5836372825eb06adc206d0a2c","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"m303_3t_calculation_revision_id","value":"d598d3b94859e7052c66bf6b5f7333d4d186cca4285553614e042995aa25b01d"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","verify","d598d3b94859e7052c66bf6b5f7333d4d186cca4285553614e042995aa25b01d"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","file","d598d3b94859e7052c66bf6b5f7333d4d186cca4285553614e042995aa25b01d"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","calculate","e214f91933b3bae05a0b032a61021b63be883fd5836372825eb06adc206d0a2c","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"m303_3t_calculation_revision_id","value":"38d594db61ac60263d3509d11769c9445cba859d0044c226e88dac07a88f08f5"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","verify","38d594db61ac60263d3509d11769c9445cba859d0044c226e88dac07a88f08f5"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","file","38d594db61ac60263d3509d11769c9445cba859d0044c226e88dac07a88f08f5"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","--format","json","app","modelo","work","create","--modelo","303","--year","2025","--period","4T"],"captures":[{"json_path":"result.work_unit_id","name":"m303_4t_work_unit_id","value":"16b8f7f898fc8458c8dc67f8cdaf35f8382fc22e9f2e0742869ef82ef1b8e138"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","--format","json","app","modelo","work","attest-m303-exonerado-390","--year","2025","--period","4T","--observed-at","2025-12-31T12:00:00+00:00"],"captures":[{"json_path":"result.attachment_id","name":"m303_4t_attestation","value":"bcd2132f44cbdf761a26fea584e975f8c3db80aae2eb4893a5859d77796182b3"},{"json_path":"result.sha256","name":"m303_4t_attestation_sha256","value":"bcd2132f44cbdf761a26fea584e975f8c3db80aae2eb4893a5859d77796182b3"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","calculate","16b8f7f898fc8458c8dc67f8cdaf35f8382fc22e9f2e0742869ef82ef1b8e138","--no-joint-return-elected","--m303-exonerado-390-attachment-id","bcd2132f44cbdf761a26fea584e975f8c3db80aae2eb4893a5859d77796182b3","--m303-exonerado-390-sha256","bcd2132f44cbdf761a26fea584e975f8c3db80aae2eb4893a5859d77796182b3"],"captures":[{"json_path":"result.calculation_revision_id","name":"m303_4t_calculation_revision_id","value":"d16fa042efe1ac5e80c16185a6ed4f228201afd2fb8b04c8b9a72d4b6c0632e8"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","verify","d16fa042efe1ac5e80c16185a6ed4f228201afd2fb8b04c8b9a72d4b6c0632e8"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","file","d16fa042efe1ac5e80c16185a6ed4f228201afd2fb8b04c8b9a72d4b6c0632e8"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","calculate","16b8f7f898fc8458c8dc67f8cdaf35f8382fc22e9f2e0742869ef82ef1b8e138","--no-joint-return-elected","--m303-exonerado-390-attachment-id","bcd2132f44cbdf761a26fea584e975f8c3db80aae2eb4893a5859d77796182b3","--m303-exonerado-390-sha256","bcd2132f44cbdf761a26fea584e975f8c3db80aae2eb4893a5859d77796182b3"],"captures":[{"json_path":"result.calculation_revision_id","name":"m303_4t_calculation_revision_id","value":"4924dcd67989a4ac8c5e249c9aaf29773521401c23f8bbc3ff84b1baa21654f9"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","verify","4924dcd67989a4ac8c5e249c9aaf29773521401c23f8bbc3ff84b1baa21654f9"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","file","4924dcd67989a4ac8c5e249c9aaf29773521401c23f8bbc3ff84b1baa21654f9"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {
       "argv": [
         "aeat",
@@ -259,7 +259,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "f3637c1e9c0288cc91d2acab9a6a9282f7e814a59c832210c081fef97f70620e"
+          "value": "d63f51754e5db97c3b7cec3b4ca8e237e29049a7a802c324c5b069e2c7f5e85a"
         }
       ],
       "envelope": {
@@ -470,7 +470,7 @@
             "modelo-390-volumen-exportaciones-exentas-base": "0",
             "modelo-390-volumen-regimen-general-base": "30000"
           },
-          "calculation_revision_id": "f3637c1e9c0288cc91d2acab9a6a9282f7e814a59c832210c081fef97f70620e",
+          "calculation_revision_id": "d63f51754e5db97c3b7cec3b4ca8e237e29049a7a802c324c5b069e2c7f5e85a",
           "casilla_values": {
             "decl.ejercicio": "2025",
             "iva.anual.aic.bienes.general.base": "0",
@@ -2195,7 +2195,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision f3637c1e9c0288cc91d2acab9a6a9282f7e814a59c832210c081fef97f70620e (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision d63f51754e5db97c3b7cec3b4ca8e237e29049a7a802c324c5b069e2c7f5e85a (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {"contributor_binding_source":"ledger_iva_aggregation","contributor_source_kind":"ledger_iva_aggregation","dependency_treatment":"","fingerprint":null,"lineage_role":"primary","parent_source_ref":null,"resolved_binding_source":"ledger_iva_aggregation","resolver_id":"ledger_iva_aggregation","source_ref":"transaction:3d9adf6c43c021bddfe7784631d9c297ed8f3ee00af0fd0da202f64717caeca8"},
             {"contributor_binding_source":"ledger_iva_aggregation","contributor_source_kind":"ledger_iva_aggregation","dependency_treatment":"","fingerprint":null,"lineage_role":"primary","parent_source_ref":null,"resolved_binding_source":"ledger_iva_aggregation","resolver_id":"ledger_iva_aggregation","source_ref":"transaction:407f534d9d16e65042c762737fb68fcd0548824b8cf5287cbe3173c3dc0610b0"},
@@ -2282,7 +2282,7 @@
         "modelo",
         "work",
         "verify",
-        "f3637c1e9c0288cc91d2acab9a6a9282f7e814a59c832210c081fef97f70620e"
+        "d63f51754e5db97c3b7cec3b4ca8e237e29049a7a802c324c5b069e2c7f5e85a"
       ],
       "captures": [],
       "envelope": {
@@ -2330,7 +2330,7 @@
           {"action":null,"code":"config.login.session_not_persisted","context":null,"message":"Profile authentication supplied to this command applies to this process only; supply it again to the next process.","severity":"warning"}
         ],
         "result": {
-          "calculation_revision_id": "f3637c1e9c0288cc91d2acab9a6a9282f7e814a59c832210c081fef97f70620e",
+          "calculation_revision_id": "d63f51754e5db97c3b7cec3b4ca8e237e29049a7a802c324c5b069e2c7f5e85a",
           "completeness_status": "complete",
           "findings": [
             {"action":null,"casilla_id":null,"expectation_id":null,"kind":"advisory","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","orden-eha-3111-2009:art-1"],"message":"A built-in check flagged this declaration for a closer look.","severity":"warning","source_refs":[]},
@@ -2383,7 +2383,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "661e32d72b29417ffe499ddcff0223f23e1b3f498a98a7ff5f22d74787fcf442",
+          "verification_report_id": "46e6972edc583049b855a7f738a11d1563a004818f87c6371957432527babf22",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
