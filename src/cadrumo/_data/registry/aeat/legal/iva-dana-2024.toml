@@ -144,6 +144,7 @@ article = "11.2"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-23422#a1-3"
 published_at = 2024-11-12
 effective_from = 2024-11-13
+effective_to = 2024-12-31
 consolidated_as_of = 2026-08-13
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
@@ -163,7 +164,12 @@ dos lecturas. GEOGRAFIA. El apartado no enumera municipios: se remite al anexo d
 required_text exige literalmente, de modo que esta entrada no puede satisfacerse si la remisión \
 desapareciera del texto. APLICABILIDAD. Cuando la reducción rige no lo dice este articulo sino la \
 disposición final decimocuarta de la misma norma; la entrada real-decreto-ley-7-2024:df-14 la cita, \
-y effective_from se toma de allí en lugar de deducirse. PROVENANCIA DE LA REVISION. Entrada \
+y effective_from se toma de allí en lugar de deducirse. FIN. El apartado limita su efecto a las \
+cuotas devengadas "en el año 2024" y a "la cuota anual del régimen especial simplificado \
+correspondiente al año 2024", las dos frases que required_text exige; effective_to es por eso \
+2024-12-31, el mismo fin que declaran real-decreto-ley-7-2024:art-11 para el apartado 1 y la \
+variante del hecho rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada que este \
+apartado fundamenta. PROVENANCIA DE LA REVISION. Entrada \
 preparada por agente sobre el texto consolidado empaquetado (documento BOE integro, sha256 \
 13615f1354c9644aeccd62170c60a147e2b18a3d8211bea33c7d387bd63e6eb6), cotejada contra el texto en vigor \
 servido por boe.es el 2026-08-13. No la ha revisado un operador humano."""
