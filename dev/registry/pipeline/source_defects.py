@@ -613,6 +613,32 @@ def _m490_territorio_comun(source_ref: str) -> NoteGovernedAmountDeclaration:
 
 
 _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ...]] = {
+    "aeat-dr-200-2023": (
+        NoteGovernedAmountDeclaration(
+            source_ref="aeat-dr-200-2023",
+            source_sha256="07ab6b44ac6b46317d965ef59680aeb0a3380f197f55f94af824383d228190b6",
+            sheet="DP200019",
+            published_content="Nota 1",
+            note_cell="A221",
+            note_statement=(
+                "A cumplimentar exclusivamente por entidades que pertenezcan a grupos mercantiles (carácter 00039)"
+            ),
+            integer_digits=15,
+            decimal_digits=2,
+            sign_policy=_UNSIGNED_SIGN_POLICY,
+            mandated_values=None,
+            evidence=(
+                "Twenty-two 'Deducción resto del grupo' slots on DP200019 (G103 to G208, every fifth row) carry "
+                "the bare pointer 'Nota 1'; each is Tipo 'Num' at length 17, like the 'Importe abonado por "
+                "insuficiencia de cuota' and other deduction amounts beside it, which carry no Contenido. The "
+                "note, defined at A220/A221, limits who fills the slot to entities of a grupo mercantil and "
+                "states no scale, sign or decimal count. The representation is the one this design states in "
+                "DP200001!A131, 'NOTA: Los importes son de 15 enteros (o N + 14) y 2 decimales', which the "
+                "reviewed 2023 width-17 render profile cites for the unsigned width-17 amounts of this digest. "
+                "Read as an unscaled integer the slot would emit euros into a cents field."
+            ),
+        ),
+    ),
     "aeat-dr-200-2024": (
         NoteGovernedAmountDeclaration(
             source_ref="aeat-dr-200-2024",
