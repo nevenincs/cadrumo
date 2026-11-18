@@ -532,23 +532,3 @@ class RentaFamilyProfile(BaseModel):
                 second_filer_indicated=second_filer_indicated,
             )
         return total
-
-    # ------------------------------------------------------------------
-    # Comunidad de Madrid "Por nacimiento o adopción de hijos" deducción
-    # autonómica (DL 1/2010 arts. 4 y 18.1) — casilla 1039 framework primitives
-    # ------------------------------------------------------------------
-
-    def unidad_familiar_otros_miembros_base(self) -> Decimal:
-        """Base imponible of unidad-familiar members OTHER than the filer.
-
-        Framework primitive for the autonomic double income-limit gate (the
-        unidad-familiar 61.860 € límite). For a monoparental/single filer the
-        other members are the filer's cohabiting children, whose own base
-        imponible the profile does not hold and is treated as zero; the filer's
-        own base (casillas 0435 + 0460) is added by the registry formula. A
-        conyugal unit's spouse base is not persisted, so the derived-fact
-        injector supplies this term only for the determinable single-filer case
-        and the trigger stays advisory-only otherwise (fail-closed, no
-        over-claim).
-        """
-        return Decimal()

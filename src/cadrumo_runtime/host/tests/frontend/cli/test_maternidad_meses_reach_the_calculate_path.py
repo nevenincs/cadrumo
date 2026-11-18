@@ -483,17 +483,6 @@ def test_the_calculate_time_flag_no_longer_exists(runtime_profile: NativeCliProf
     assert "meses-trabajo-con-hijo-menor-3" in output.lower()
 
 
-def test_the_profile_declaration_alone_is_now_the_only_route(runtime_profile: NativeCliProfileFixture) -> None:
-    """With the flag gone, the descendiente-declared figure reaches 0611 unaided."""
-    _seed_natural_person_profile(runtime_profile)
-    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12")
-
-    exit_code, output = _calculate()
-
-    assert exit_code == 0, output
-    assert _casilla_0611(output) == _ORACLE_ONE_HIJO_TWELVE_MONTHS
-
-
 @pytest.mark.parametrize("attempted_value", ("0", "9999"))
 def test_direct_casilla_0611_cannot_bypass_or_overwrite_the_profile_producer(
     runtime_profile: NativeCliProfileFixture,

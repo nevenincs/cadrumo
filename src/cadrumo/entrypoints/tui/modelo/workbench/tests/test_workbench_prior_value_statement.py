@@ -380,9 +380,8 @@ def test_the_session_states_a_family_whole_and_refuses_a_part_a_held_family_or_a
     assert session.changes == ()
 
     assert session.stage_prior_figures(form, _FAMILY, both) is None
-    assert session.stages_prior_figures(_FAMILY)
-    assert not session.stages_prior_figures(_OTHER_FAMILY)
     assert session.prior_figures(_FAMILY) == both
+    assert not session.prior_figures(_OTHER_FAMILY)
 
     held = _form(
         (_attestation(_FIRST, _FAMILY, stated=True), _attestation(_SECOND, _FAMILY)), carries=(_FIRST, _SECOND)

@@ -140,10 +140,6 @@ class _M232RowRepository[PayloadT: BaseModel](SecureBoundRepository[PayloadT]):
 
         return _translate_storage_failure(f"modelo_232_list_{self.row_kind}", scan)
 
-    def decode_row(self, stored_payload: bytes) -> PayloadT:
-        """Return the payload of one decrypted envelope of this kind, through the shared envelope gates."""
-        return self._validate_envelope(stored_payload, subject=f"{self.namespace} carried row").payload
-
     def revision_of(self, payload: PayloadT) -> str:
         """Return the revision the stored row of ``payload`` is at."""
 

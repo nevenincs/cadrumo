@@ -3397,6 +3397,7 @@
         "cadrumo.entrypoints.cli.modelo_results",
         "cadrumo.entrypoints.cli.modelo_results_m036",
         "cadrumo.entrypoints.cli.modelo_results_m145",
+        "cadrumo.entrypoints.cli.modelo_reused_sealed_notice",
         "cadrumo.entrypoints.cli.modelo_review_package_commands",
         "cadrumo.entrypoints.cli.modelo_review_package_rendering",
         "cadrumo.entrypoints.cli.modelo_review_package_results",
