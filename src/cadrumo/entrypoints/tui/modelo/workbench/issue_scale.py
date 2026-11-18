@@ -247,18 +247,6 @@ def unentered_levels(form: ModeloWorkForm) -> tuple[UnenteredBoxes, ...]:
     return tuple(boxes for level in _UNENTERED_ORIGINS if (boxes := unentered_boxes(form, level)) is not None)
 
 
-def level_counts(
-    lines: tuple[IssueLine, ...], unentered: tuple[UnenteredBoxes, ...] = ()
-) -> Mapping[ModeloFormAttention, int]:
-    """How many things sit at each level; missing and assumed values count one per box."""
-    counts = dict.fromkeys(ModeloFormAttention, 0)
-    for line in lines:
-        counts[line.level] += 1
-    for boxes in unentered:
-        counts[boxes.level] += len(boxes.keys)
-    return MappingProxyType(counts)
-
-
 def level_words(level: ModeloFormAttention) -> str:
     """One level's glyph and words, as every surface shows it."""
     mark = LEVEL_MARKS[level]
@@ -303,7 +291,6 @@ __all__ = (
     "UnenteredBoxes",
     "UnenteredSection",
     "blocks_marked",
-    "level_counts",
     "level_words",
     "levels_marked",
     "title_text",
