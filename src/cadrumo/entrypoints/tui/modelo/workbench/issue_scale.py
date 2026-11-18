@@ -16,13 +16,15 @@ from .....application.modelo.work_form_field_vocabulary import (
     address_key,
 )
 from .....application.modelo.work_form_findings import ModeloFormAttention
+from .....application.modelo.work_form_header import attention_counts
 from .....application.modelo.work_form_issue_lines import ModeloFormVerdict
 from .....application.modelo.work_form_models import (
     ModeloWorkForm,
     section_fields,
 )
 from .....application.modelo.work_form_next_step import applicable_fields
-from .....core.i18n.render import tr
+from .....core.external_constants import OutputLanguage
+from .....core.i18n.render import output_language, tr
 from .casilla_list_models import AddressKey
 from .navigator import presented_form
 from .page_items import workbench_pages
@@ -247,18 +249,6 @@ def unentered_levels(form: ModeloWorkForm) -> tuple[UnenteredBoxes, ...]:
     return tuple(boxes for level in _UNENTERED_ORIGINS if (boxes := unentered_boxes(form, level)) is not None)
 
 
-def level_counts(
-    lines: tuple[IssueLine, ...], unentered: tuple[UnenteredBoxes, ...] = ()
-) -> Mapping[ModeloFormAttention, int]:
-    """How many things sit at each level; missing and assumed values count one per box."""
-    counts = dict.fromkeys(ModeloFormAttention, 0)
-    for line in lines:
-        counts[line.level] += 1
-    for boxes in unentered:
-        counts[boxes.level] += len(boxes.keys)
-    return MappingProxyType(counts)
-
-
 def level_words(level: ModeloFormAttention) -> str:
     """One level's glyph and words, as every surface shows it."""
     mark = LEVEL_MARKS[level]
@@ -270,6 +260,12 @@ def title_text(counts: Mapping[ModeloFormAttention, int]) -> str:
     chips = "   ".join(f"{LEVEL_MARKS[level].glyph} {count}" for level, count in counts.items() if count)
     title = tr("workspace.modelo.issues.title")
     return f"{title}   {chips}" if chips else title
+
+
+def served_title(form: ModeloWorkForm, *, recorded: bool) -> str:
+    """The list's name with the counts the form serves for each level, in the page's language."""
+    counts = attention_counts(form, OutputLanguage(output_language()), recorded=recorded)
+    return title_text({count.level: count.count for count in counts})
 
 
 def verdict_text(verdict: ModeloFormVerdict, *, changes_unapplied: bool = False) -> str:
@@ -303,9 +299,9 @@ __all__ = (
     "UnenteredBoxes",
     "UnenteredSection",
     "blocks_marked",
-    "level_counts",
     "level_words",
     "levels_marked",
+    "served_title",
     "title_text",
     "unentered_boxes",
     "unentered_levels",

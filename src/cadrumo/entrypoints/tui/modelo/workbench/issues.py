@@ -17,10 +17,9 @@ from textual.widgets.option_list import Option
 
 from .....application.modelo.source_policy import SourceSurface
 from .....application.modelo.work_form_findings import ModeloFormAttention
-from .....application.modelo.work_form_header import attention_counts, form_recorded
+from .....application.modelo.work_form_header import form_recorded
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
-from .....core.external_constants import OutputLanguage
-from .....core.i18n.render import output_language, tr
+from .....core.i18n.render import tr
 from ...components.language import localized, refresh_localized_widgets
 from ...components.theme import tokenised
 from ...refusal.panel import RefusalPanel, RefusalSlot
@@ -44,7 +43,7 @@ from .issue_scale import (
     UnenteredBoxes,
     UnenteredSection,
     levels_marked,
-    title_text,
+    served_title,
     unentered_levels,
     verdict_text,
 )
@@ -211,14 +210,7 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         with Container(id="issues-backdrop"), Vertical(id="issues-panel"):
             if self._status_line is not None:
                 yield StatusBar(self._status_line, id="issues-status")
-            title = title_text(
-                {
-                    count.level: count.count
-                    for count in attention_counts(
-                        self._form, OutputLanguage(output_language()), recorded=self._recorded
-                    )
-                }
-            )
+            title = served_title(self._form, recorded=self._recorded)
             yield Static(levels_marked(title), id="issues-title", markup=False)
             yield Static(
                 verdict_text(self._verdict, changes_unapplied=self._changes_unapplied),

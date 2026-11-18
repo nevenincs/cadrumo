@@ -57,9 +57,8 @@ from ..header import attention_chips, status_line
 from ..issue_projection import issue_lines
 from ..issue_scale import (
     ASSUMED_BOXES_BEFORE_SECTIONS,
-    level_counts,
     levels_marked,
-    title_text,
+    served_title,
     unentered_boxes,
     unentered_levels,
     verdict_text,
@@ -211,7 +210,7 @@ def test_findings_sit_on_one_scale_with_where_what_and_what_to_do() -> None:
     with override_settings(cadrumo_output_language="en"):
         lines = issue_lines(_checked())
         assumed = unentered_boxes(_checked(), ModeloFormAttention.CONFIRM)
-        title = title_text(level_counts(lines, unentered_levels(_checked())))
+        title = served_title(_recounted(_checked()), recorded=False)
 
     assert [(line.level, line.box, line.where) for line in lines] == [
         (ModeloFormAttention.BLOCKS, "06", "[06] Retenciones e ingresos a cuenta"),
@@ -235,12 +234,13 @@ def test_a_finding_the_form_marks_as_an_explanation_is_for_information_and_asks_
     form = _checked(assumed=False).model_copy(update={"issues": (_explanation(),)})
     with override_settings(cadrumo_output_language="en"):
         lines = issue_lines(form)
-        title = title_text(level_counts(lines))
+        title = served_title(form, recorded=False)
 
     assert [line.level for line in lines] == [ModeloFormAttention.INFO]
     assert lines[0].action == "What to do: Nothing to do. It explains what the calculation did."
     assert lines[0].message == "2 modelos were not used, because they do not apply to you."
-    assert title == "Issues to look at   i 1"
+    # An explanation asks nothing, so the served counts carry no level for it.
+    assert title == "Issues to look at"
 
 
 def test_the_verdict_says_what_the_check_concluded_and_leaves_the_counting_to_the_title() -> None:
@@ -467,7 +467,7 @@ def test_without_findings_or_assumed_values_the_list_says_there_is_nothing_to_lo
     )
     with override_settings(cadrumo_output_language="en"):
         lines = issue_lines(form)
-        title = title_text(level_counts(lines, unentered_levels(form)))
+        title = served_title(form, recorded=False)
 
     assert lines == ()
     assert unentered_levels(form) == ()
@@ -538,7 +538,7 @@ async def test_the_missing_boxes_the_header_counts_are_listed_at_their_own_level
     form = _recounted(synthetic_form(needs_input=True))
     with override_settings(cadrumo_output_language="en"):
         missing = unentered_boxes(form, ModeloFormAttention.MISSING)
-        title = title_text(level_counts(issue_lines(form), unentered_levels(form)))
+        title = served_title(form, recorded=False)
         chips = _chips(form)
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
