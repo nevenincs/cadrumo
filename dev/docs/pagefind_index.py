@@ -138,7 +138,8 @@ _HTML_LANG_RE: Final[re.Pattern[str]] = re.compile(r"<html\b[^>]*\blang=\"([A-Za
 #: attributes are stamped, and the stamps a previous pass left on it.
 _BODY_OPEN_RE: Final[re.Pattern[str]] = re.compile(r"<body\b[^>]*>")
 _EXISTING_STAMP_RE: Final[re.Pattern[str]] = re.compile(
-    r'\s+data-pagefind-(?:meta="display_class:[^"]*"|filter="language:[^"]*")'
+    r'\s+(?:data-pagefind-(?:meta="display_class:[^"]*"|filter="(?:kind\[data-cadrumo-kind\], )?language:[^"]*")'
+    r'|data-cadrumo-kind="[^"]*")'
 )
 
 #: The injected record kinds a shipped index must carry.
@@ -301,7 +302,7 @@ def _mark_indexed_pages(html_root: Path, language: str) -> int:
     Runs AFTER :func:`_mark_excluded_pages` and BEFORE the directory pass, so a
     page already tagged ``data-pagefind-ignore`` (the injected-record-covered
     casilla pages) is skipped by the regex lookahead and gains neither
-    attribute. Every other built page carries two body attributes into the
+    attribute. Every other built page carries these body attributes into the
     index:
 
     - ``data-pagefind-meta="display_class:<class>"``, its path-derived display
@@ -316,6 +317,10 @@ def _mark_indexed_pages(html_root: Path, language: str) -> int:
       pages is this filter and not a separate index. A page carrying no value
       is reachable by no language, so the stamping is what makes a root
       searchable at all.
+    - ``kind:page``, captured from ``data-cadrumo-kind`` because Pagefind
+      accepts only one inline filter per element and it must come last. The
+      injected records carry their own ``kind``, so the palette's full-text pass
+      filters to the ``page`` record kind and records cannot crowd the pages out of it.
 
     A stamp a previous pass left is REPLACED rather than treated as already
     correct. Sphinx rewrites only the pages a build changed, so an incremental
@@ -336,6 +341,9 @@ def _mark_indexed_pages(html_root: Path, language: str) -> int:
         PagefindLanguageMismatchError: When a page declares an ``<html lang>``
             other than ``language``.
     """
+    from .terminology.search_record import SearchRecordKind
+
+    page_kind = SearchRecordKind.PAGE.value
     tagged = 0
     for page in scan_directory(html_root, pattern="*.html", recursive=True):
         html = page.read_text(encoding=_UTF_8, newline="")
@@ -347,7 +355,8 @@ def _mark_indexed_pages(html_root: Path, language: str) -> int:
         attributes = _EXISTING_STAMP_RE.sub("", body.group(0))[:-1].rstrip()
         stamped = (
             f'{attributes} data-pagefind-meta="display_class:{display_class}"'
-            f' data-pagefind-filter="language:{language}">'
+            f' data-cadrumo-kind="{page_kind}"'
+            f' data-pagefind-filter="kind[data-cadrumo-kind], language:{language}">'
         )
         if stamped == body.group(0):
             continue
