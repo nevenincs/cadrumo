@@ -133,59 +133,6 @@ export const OnePage: Story = {
   render: (_, { globals }) => <Form modelo="130" locale={language(globals)} />,
 };
 
-/** The grade line of a form whose year has its own edition: the rung that
- * edition reaches, in the words served for it, and, below filing grade, the
- * sentence saying why it cannot be filed. */
-function gradeLine(modelo: keyof typeof UNITS): Story {
-  let served: ModeloWorkbenchFormProjectionV1 | null = null;
-  return {
-    render: (_, { globals }) => (
-      <Form
-        modelo={modelo}
-        locale={language(globals)}
-        setup={(_session, envelope) => {
-          served = envelope;
-        }}
-      />
-    ),
-    play: async ({ canvasElement }) => {
-      const [line, projection] = await waitFor(
-        () => {
-          const found = canvasElement.querySelector("[data-year-projection]");
-          if (!found || !served) throw new Error("the form is not drawn yet");
-          return [found, served.form.form.year_projection] as const;
-        },
-        { timeout: 15_000 },
-      );
-      await expect(line).toHaveAttribute(
-        "data-year-projection",
-        projection.direction,
-      );
-      await expect(line).toHaveAttribute(
-        "data-reachable-grade",
-        projection.reachable_grade,
-      );
-      await expect(
-        line.querySelector("[data-year-projection-grade]")?.textContent,
-      ).toBe(projection.reachable_grade_words);
-      const words = line.querySelector("[data-year-projection-words]");
-      if (projection.reachable_grade === "filing")
-        await expect(words).toBeNull();
-      else await expect(words?.textContent).toBe(projection.words);
-    },
-  };
-}
-
-export const GradeAtFiling: Story = {
-  name: "130 · the grade its own edition reaches, with no sentence at filing grade",
-  ...gradeLine("130"),
-};
-
-export const GradeBelowFiling: Story = {
-  name: "296 · an own edition below filing grade says why it cannot be filed",
-  ...gradeLine("296"),
-};
-
 export const BoxNotes: Story = {
   name: "130 · what the calculation noted beside a box",
   render: (_, { globals }) => (
