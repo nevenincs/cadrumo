@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { expect, waitFor } from "storybook/test";
 import { modeloFixture, type ModeloShape } from "../../../dev/modeloFixture";
 import { ModeloEnvelope } from "../../../dev/ModeloEnvelope";
 import { formatAmount } from "../../../shared/numbers";
@@ -182,6 +183,62 @@ export const NothingChosen: Story = {
   render: (_, { globals }) => (
     <Panel declaration={M130} locale={globals.locale} />
   ),
+};
+
+/** The edition's served grade and any pre-check warning in the summary. */
+function gradeLine(declaration: string, filing: boolean): Story {
+  let served: ModeloWorkbenchFormProjectionV1 | null = null;
+  return {
+    render: (_, { globals }) => (
+      <StorySession declaration={declaration} locale={globals.locale}>
+        {(props) => {
+          served = props.envelope;
+          return <Details {...props} openLink={() => undefined} />;
+        }}
+      </StorySession>
+    ),
+    play: async ({ canvasElement }) => {
+      const [line, projection] = await waitFor(
+        () => {
+          const found = canvasElement.querySelector("[data-year-projection]");
+          if (!found || !served)
+            throw new Error("the summary is not drawn yet");
+          return [found, served.form.form.year_projection] as const;
+        },
+        { timeout: 15_000 },
+      );
+      expect(projection.direction).toBe("authored");
+      expect(projection.reachable_grade === "filing").toBe(filing);
+      expect(projection.words === null).toBe(filing);
+      await expect(
+        canvasElement.querySelectorAll("[data-year-projection]"),
+      ).toHaveLength(1);
+      await expect(line).toHaveAttribute(
+        "data-year-projection",
+        projection.direction,
+      );
+      await expect(line).toHaveAttribute(
+        "data-reachable-grade",
+        projection.reachable_grade,
+      );
+      await expect(
+        line.querySelector("[data-year-projection-grade]")?.textContent,
+      ).toBe(projection.reachable_grade_words);
+      const words = line.querySelector("[data-year-projection-words]");
+      if (projection.words === null) await expect(words).toBeNull();
+      else await expect(words?.textContent).toBe(projection.words);
+    },
+  };
+}
+
+export const GradeAtFiling: Story = {
+  name: "130 · the grade its own edition reaches, with no sentence at filing grade",
+  ...gradeLine(M130, true),
+};
+
+export const GradeBelowFiling: Story = {
+  name: "296 · an own edition below filing grade says why it cannot be filed",
+  ...gradeLine("modelo-296-0A", false),
 };
 
 export const FormulaAndCitations: Story = {
