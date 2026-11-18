@@ -43,13 +43,16 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
-from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from ..formula_runtime_ops import RegistryUnresolvedOutcomeReason
-from .authored_editions import authored_revisions_where, manual_editions_printing
-from .modelo_200_casilla_ids import (
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions_where,
+    manual_editions_printing,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_200_casilla_ids import (
     M200_BIN_APLICADA_CASILLA,
     M200_CORRECCIONES_AUMENTO_CASILLA,
     M200_CORRECCIONES_DISMINUCION_CASILLA,
@@ -58,8 +61,11 @@ from .modelo_200_casilla_ids import (
     M200_RESULTADO_CONTABLE_CASILLA,
     edition_casilla_id,
 )
-from .modelo_200_turnover import turnover_binding_values
-from .published_authority import published_snapshot, published_source_reference
+from cadrumo.domain.calculations.registry.tests.modelo_200_turnover import turnover_binding_values
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_source_reference,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
