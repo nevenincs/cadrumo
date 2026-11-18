@@ -612,49 +612,58 @@ def _m490_territorio_comun(source_ref: str) -> NoteGovernedAmountDeclaration:
     )
 
 
+def _m200_grupo_mercantil_deduction(
+    source_ref: str, source_sha256: str, note_cell: str, evidence: str
+) -> NoteGovernedAmountDeclaration:
+    """Read one Modelo 200 DP200019 'Deducción resto del grupo' Nota 1 run as unsigned cents."""
+    return NoteGovernedAmountDeclaration(
+        source_ref=source_ref,
+        source_sha256=source_sha256,
+        sheet="DP200019",
+        published_content="Nota 1",
+        note_cell=note_cell,
+        note_statement=(
+            "A cumplimentar exclusivamente por entidades que pertenezcan a grupos mercantiles (carácter 00039)"
+        ),
+        integer_digits=15,
+        decimal_digits=2,
+        sign_policy=_UNSIGNED_SIGN_POLICY,
+        mandated_values=None,
+        evidence=evidence,
+    )
+
+
 _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ...]] = {
+    "aeat-dr-200-2022": (
+        _m200_grupo_mercantil_deduction(
+            "aeat-dr-200-2022",
+            "a69d73692c40f8be07005e2df8add251f9949a2d6780f3816189372bdd98f69d",
+            "A212",
+            "DP200019 G95-G190 (20 'Deducción resto del grupo' slots, Num, length 17) hold only 'Nota 1'; "
+            "A211/A212 limit them to grupo mercantil entities, no scale. DP200001!A128 gives '15 enteros (o "
+            "N + 14) y 2 decimales', as the reviewed 2022 width-17 profile cites; unscaled they emit euros.",
+        ),
+    ),
     "aeat-dr-200-2023": (
-        NoteGovernedAmountDeclaration(
-            source_ref="aeat-dr-200-2023",
-            source_sha256="07ab6b44ac6b46317d965ef59680aeb0a3380f197f55f94af824383d228190b6",
-            sheet="DP200019",
-            published_content="Nota 1",
-            note_cell="A221",
-            note_statement=(
-                "A cumplimentar exclusivamente por entidades que pertenezcan a grupos mercantiles (carácter 00039)"
-            ),
-            integer_digits=15,
-            decimal_digits=2,
-            sign_policy=_UNSIGNED_SIGN_POLICY,
-            mandated_values=None,
-            evidence=(
-                "DP200019 G103-G208 (22 'Deducción resto del grupo' slots, Num, length 17) hold only 'Nota 1'; "
-                "A220/A221 limit them to grupo mercantil entities, no scale. DP200001!A131 gives '15 enteros (o "
-                "N + 14) y 2 decimales', as the reviewed 2023 width-17 profile cites; unscaled they emit euros."
-            ),
+        _m200_grupo_mercantil_deduction(
+            "aeat-dr-200-2023",
+            "07ab6b44ac6b46317d965ef59680aeb0a3380f197f55f94af824383d228190b6",
+            "A221",
+            "DP200019 G103-G208 (22 'Deducción resto del grupo' slots, Num, length 17) hold only 'Nota 1'; "
+            "A220/A221 limit them to grupo mercantil entities, no scale. DP200001!A131 gives '15 enteros (o "
+            "N + 14) y 2 decimales', as the reviewed 2023 width-17 profile cites; unscaled they emit euros.",
         ),
     ),
     "aeat-dr-200-2024": (
-        NoteGovernedAmountDeclaration(
-            source_ref="aeat-dr-200-2024",
-            source_sha256="ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218",
-            sheet="DP200019",
-            published_content="Nota 1",
-            note_cell="A239",
-            note_statement=(
-                "A cumplimentar exclusivamente por entidades que pertenezcan a grupos mercantiles (carácter 00039)"
-            ),
-            integer_digits=15,
-            decimal_digits=2,
-            sign_policy=_UNSIGNED_SIGN_POLICY,
-            mandated_values=None,
-            evidence=(
-                "The 2024 workbook's DP200019!A238/A239 defines Nota 1 as an applicability condition for "
-                "grupo mercantil entities. It states no wire representation. The referenced deduction amounts "
-                "are Tipo Num, length 17; DP200001!A121 explicitly gives unsigned amounts 15 integer digits "
-                "and 2 decimals. The reviewed 2024 width-17 profile cites that same statement for the adjacent "
-                "deduction amounts. The note does not change their scale."
-            ),
+        _m200_grupo_mercantil_deduction(
+            "aeat-dr-200-2024",
+            "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218",
+            "A239",
+            "The 2024 workbook's DP200019!A238/A239 defines Nota 1 as an applicability condition for "
+            "grupo mercantil entities. It states no wire representation. The referenced deduction amounts "
+            "are Tipo Num, length 17; DP200001!A121 explicitly gives unsigned amounts 15 integer digits "
+            "and 2 decimals. The reviewed 2024 width-17 profile cites that same statement for the adjacent "
+            "deduction amounts. The note does not change their scale.",
         ),
         *(
             NoteGovernedAmountDeclaration(
@@ -698,34 +707,23 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
         ),
     ),
     "aeat-dr-200-2025": (
-        NoteGovernedAmountDeclaration(
-            source_ref="aeat-dr-200-2025",
-            source_sha256="92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509",
-            sheet="DP200019",
-            published_content="Nota 1",
-            note_cell="A254",
-            note_statement=(
-                "A cumplimentar exclusivamente por entidades que pertenezcan a grupos mercantiles (carácter 00039)"
-            ),
-            integer_digits=15,
-            decimal_digits=2,
-            sign_policy=_UNSIGNED_SIGN_POLICY,
-            mandated_values=None,
-            evidence=(
-                "Twenty-six 'Deducción resto del grupo' slots on DP200019 carry the bare pointer 'Nota 1' where "
-                "their four siblings in each I+D+i year block -- 'Deducción pendiente/generada', 'Deducción "
-                "reducida', 'Aplicado en esta liquidación' and 'Importe abonado por insuficiencia de cuota' -- "
-                "carry no Contenido at all. Read from the workbook itself, every one of the twenty-six is "
-                "aeat_type 'Num' at length 17, exactly like those siblings. The note the pointer names is "
-                "defined at A253/A254 and says who fills the slot, not how a value is written: it withholds "
-                "APPLICABILITY to entities in a grupo mercantil and states no scale, sign or decimal count. "
-                "The representation therefore stands unchanged from the surrounding run, which this design "
-                "settles for itself in DP200001!A121 -- 'NOTA: Los importes son de 15 enteros (o N + 14) y 2 "
-                "decimales' -- the same cell the reviewed width-17 render profile for this modelo, revision and "
-                "digest already cites when it assigns 15 enteros and 2 decimales to every unsigned width-17 "
-                "amount of this design, the untagged siblings of these very rows included. Reading the pointer "
-                "as an unscaled integer instead would emit euros into a cents field."
-            ),
+        _m200_grupo_mercantil_deduction(
+            "aeat-dr-200-2025",
+            "92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509",
+            "A254",
+            "Twenty-six 'Deducción resto del grupo' slots on DP200019 carry the bare pointer 'Nota 1' where "
+            "their four siblings in each I+D+i year block -- 'Deducción pendiente/generada', 'Deducción "
+            "reducida', 'Aplicado en esta liquidación' and 'Importe abonado por insuficiencia de cuota' -- "
+            "carry no Contenido at all. Read from the workbook itself, every one of the twenty-six is "
+            "aeat_type 'Num' at length 17, exactly like those siblings. The note the pointer names is "
+            "defined at A253/A254 and says who fills the slot, not how a value is written: it withholds "
+            "APPLICABILITY to entities in a grupo mercantil and states no scale, sign or decimal count. "
+            "The representation therefore stands unchanged from the surrounding run, which this design "
+            "settles for itself in DP200001!A121 -- 'NOTA: Los importes son de 15 enteros (o N + 14) y 2 "
+            "decimales' -- the same cell the reviewed width-17 render profile for this modelo, revision and "
+            "digest already cites when it assigns 15 enteros and 2 decimales to every unsigned width-17 "
+            "amount of this design, the untagged siblings of these very rows included. Reading the pointer "
+            "as an unscaled integer instead would emit euros into a cents field.",
         ),
         NoteGovernedAmountDeclaration(
             source_ref="aeat-dr-200-2025",

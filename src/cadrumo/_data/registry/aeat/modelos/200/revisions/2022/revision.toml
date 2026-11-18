@@ -83,7 +83,9 @@ source_refs = [
     "aeat-dr-200-2022",
     "aeat-modelo-200-manual-2022",
 ]
-review_status = "pending_review"
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-11-18
 
 [revisions."2022".family_dispositions.credit_reconciliation]
 reason = """

@@ -12,6 +12,7 @@ import rtoml
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.schema_form_layouts import FormPlacementKind
 
 from ..analysis import m200_semantic_casilla_candidates as subject
 from ..analysis import m200_target_identity_worklist as identity_subject
@@ -135,6 +136,7 @@ def test_cli_stdout_exports_one_proposal_only_table_per_screened_revision(
         "map_owner_mismatches": "map_owner_mismatch",
         "orphaned_declarations": "orphaned_declaration",
         "printed_identity_diagnostics": "printed_identity_diagnostic",
+        "unnumbered_design_rows": "unnumbered_design_row",
         "shared_owners": "shared_owner",
     }
     assert set(table["counts"]) == {*sections, "shared_owner_cells"}
@@ -480,3 +482,125 @@ def test_target_identity_classifier_proposes_only_the_unique_segment_qualified_o
         identity_subject.classify_noncanonical_map_owner(
             entry, target_map, field=field, known_ids=frozenset({"DP200014B:00588"})
         )
+
+
+# The edition whose design prints rows with no box number; the registry's own
+# worklists name it, so no edition is spelled here.
+_UNNUMBERED_REVISION = next(
+    worklist.revision
+    for worklist in identity_subject.load_bundled_m200_target_identity_worklists()
+    if worklist.unnumbered_design_rows
+)
+
+
+@pytest.fixture(scope="module")
+def unnumbered_identity_inputs():
+    authority = compiled_bundled_authority()
+    target = authority.modelo("200").revisions[_UNNUMBERED_REVISION]
+    sources = authority.catalogues.sources
+    source_ref = record_design_source(target.source_refs, sources)
+    epoch = sources[source_ref].record_design_epoch
+    assert epoch is not None
+    placements = tuple(placement for layout in target.form_layouts for placement in layout.placements)
+    return (
+        load_semantic_map_for_revision(Path("dev/registry/mappings/modelo_200") / epoch, target.id),
+        load_record_design_intermediate(
+            bundled_path(),
+            sources,
+            source_ref=source_ref,
+            filing_year=target.valid_from.year,
+            design_epoch=epoch,
+        ),
+        {declaration.id: declaration for declaration in target.casillas},
+        {placement.casilla_id: placement.kind for placement in placements},
+        frozenset(
+            placement.casilla_id
+            for placement in placements
+            if placement.kind is FormPlacementKind.ON_FORM and placement.box_number is None
+        ),
+    )
+
+
+def _classify_unnumbered(target_map, target_design, declarations, placements, unnumbered_on_form_ids):
+    return identity_subject.classify_m200_target_identities(
+        target_map,
+        target_design,
+        revision_id=_UNNUMBERED_REVISION,
+        target_declarations=declarations,
+        target_candidate_ids=frozenset(),
+        declared_placements=placements,
+        unnumbered_on_form_ids=unnumbered_on_form_ids,
+    )
+
+
+def test_unnumbered_design_rows_are_admitted_only_by_their_segment_identity(unnumbered_identity_inputs) -> None:
+    target_map, target_design, declarations, placements, unnumbered_on_form = unnumbered_identity_inputs
+    fields = record_design_field_index(target_design)
+    unprinted = {
+        str(entry.export_field_id)
+        for entry in _casilla_entries(target_map)
+        if not re.search(r"\[[0-9]+\]", fields[semantic_anchor_key(entry.anchor)].normalized_description)
+    }
+
+    worklist = _classify_unnumbered(target_map, target_design, declarations, placements, unnumbered_on_form)
+
+    assert not worklist.printed_identity_diagnostics
+    assert {row.export_field_id for row in worklist.unnumbered_design_rows} == unprinted
+    assert {row.disposition for row in worklist.unnumbered_design_rows} == {
+        identity_subject.M200UnnumberedDesignRowDisposition.SEGMENT_IDENTITY_OF_UNNUMBERED_ROW
+    }
+    # Teeth: without the form's unnumbered placement every admitted row is a diagnostic again.
+    without_form = _classify_unnumbered(target_map, target_design, declarations, placements, frozenset())
+    assert not without_form.unnumbered_design_rows
+    assert {row.export_field_id for row in without_form.printed_identity_diagnostics} == unprinted
+
+
+def test_a_numbered_design_row_owned_by_a_segment_identity_stays_a_diagnostic(unnumbered_identity_inputs) -> None:
+    target_map, target_design, declarations, placements, unnumbered_on_form = unnumbered_identity_inputs
+    fields = record_design_field_index(target_design)
+    admitted = _classify_unnumbered(
+        target_map, target_design, declarations, placements, unnumbered_on_form
+    ).unnumbered_design_rows[0]
+    segment = admitted.declared_map_owner.partition(":")[0]
+    numbered = next(
+        entry
+        for entry in _casilla_entries(target_map)
+        if fields[semantic_anchor_key(entry.anchor)].record_identity == segment
+        and re.search(r"\[[0-9]+\]", fields[semantic_anchor_key(entry.anchor)].normalized_description)
+    )
+    planted = numbered.model_copy(update={"casilla_id": admitted.declared_map_owner})
+
+    worklist = _classify_unnumbered(
+        _with_entry(target_map, numbered, planted), target_design, declarations, placements, unnumbered_on_form
+    )
+
+    (diagnostic,) = [
+        row for row in worklist.printed_identity_diagnostics if row.export_field_id == str(numbered.export_field_id)
+    ]
+    assert diagnostic.declared_map_owner == admitted.declared_map_owner
+    assert str(numbered.export_field_id) not in {row.export_field_id for row in worklist.unnumbered_design_rows}
+
+
+def test_an_unnumbered_design_row_owned_by_a_numeric_casilla_stays_a_diagnostic(unnumbered_identity_inputs) -> None:
+    target_map, target_design, declarations, placements, unnumbered_on_form = unnumbered_identity_inputs
+    admitted = _classify_unnumbered(
+        target_map, target_design, declarations, placements, unnumbered_on_form
+    ).unnumbered_design_rows[0]
+    victim = next(entry for entry in target_map.entries if str(entry.export_field_id) == admitted.export_field_id)
+    numeric_owner = next(casilla_id for casilla_id in sorted(declarations) if str(casilla_id).isdecimal())
+    planted = victim.model_copy(update={"casilla_id": numeric_owner})
+
+    # The numeric owner is also offered as an unnumbered form placement, so only its grammar refuses it.
+    worklist = _classify_unnumbered(
+        _with_entry(target_map, victim, planted),
+        target_design,
+        declarations,
+        placements,
+        unnumbered_on_form | {numeric_owner},
+    )
+
+    (diagnostic,) = [
+        row for row in worklist.printed_identity_diagnostics if row.export_field_id == admitted.export_field_id
+    ]
+    assert diagnostic.declared_map_owner == numeric_owner
+    assert diagnostic.state is identity_subject.M200PrintedIdentityState.MISSING_OFFICIAL_PRINTED_IDENTITY
