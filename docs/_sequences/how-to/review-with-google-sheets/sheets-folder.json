@@ -30,13 +30,15 @@
             ],
             "failed_condition_id": "google.auth.client_metadata.available",
             "missing_argument_names": [],
-            "no_recovery_outcome": "safety"
+            "no_recovery_outcome": "safety",
+            "no_recovery_words": "This was stopped to protect your data, so no action is offered.",
+            "no_recovery_words_language": "en"
           },
           "category": "REFUSED",
           "code": "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE",
           "context": {
             "effect": "none",
-            "operation_id": "190da57a84935bdf5772c6444a5f413f1455303ab51ad66c0974a836f3a3c1fe",
+            "operation_id": "4008ce24fa47ed1dcace563ad502974628a602d6a8ba7805ac541ccdaeb61740",
             "profile": "<profile-id>",
             "refusal_code": "REFUSED_GOOGLE_CONFIGURATION",
             "terminal_condition": "refused"
