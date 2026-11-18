@@ -258,7 +258,7 @@ class ActivityAssetDisposalCalculation(BaseModel):
 
     @property
     def net_transmission_value(self) -> Decimal | None:
-        """Return what the form calls the value of transmission: the amount less its costs (LIRPF art. 35.2)."""
+        """Return what the form calls the value of transmission, being the amount less its costs (LIRPF art. 35.2)."""
         if self.transmission_value is None or self.transmission_costs is None:
             return None
         return self.transmission_value - self.transmission_costs

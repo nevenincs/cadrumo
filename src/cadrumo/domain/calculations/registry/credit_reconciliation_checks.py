@@ -17,6 +17,7 @@ casilla numbers or modelos:
 * a filed-observation cross-check must name a casilla that records withholding
   suffered (:func:`filed_observation_source_failures`, run over the whole tree);
 * an operand must be an operand of the value source's formula;
+
 :class:`ModeloRevision`, the registry revision a modelo is calculated against.
 """
 

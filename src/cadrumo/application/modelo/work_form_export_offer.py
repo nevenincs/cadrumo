@@ -193,27 +193,27 @@ class ModeloFormElectionReason(StrEnum):
     NOTHING_TO_PAY = "nothing_to_pay"
     #: Not applicable: the result is not a refund.
     NOTHING_TO_REFUND = "nothing_to_refund"
-    #: Unavailable: the declaration has no calculated result yet.
+    #: Not available: the declaration has no calculated result yet.
     RESULT_UNKNOWN = "result_unknown"
-    #: Unavailable: a corrective declaration cannot be paid in two instalments.
+    #: Not available: a corrective declaration cannot be paid in two instalments.
     AMENDMENT = "amendment"
-    #: Unavailable: the filing period has ended, and two instalments need the return filed within it.
+    #: Not available: the filing period has ended, and two instalments need the return filed within it.
     PAST_FILING_WINDOW = "past_filing_window"
-    #: Unavailable: the filing period is not known, so filing within it cannot be established.
+    #: Not available: the filing period is not known, so filing within it cannot be established.
     FILING_WINDOW_UNKNOWN = "filing_window_unknown"
-    #: Unavailable: no own account is open to receive a refund.
+    #: Not available: no own account is open to receive a refund.
     NO_OPEN_ACCOUNT = "no_open_account"
-    #: Unavailable: no open Spanish own account can be debited.
+    #: Not available: no open Spanish own account can be debited.
     NO_SPANISH_ACCOUNT = "no_spanish_account"
-    #: Unavailable: the amount the declaration settles goes another way than its result, such as a
+    #: Not available: the amount the declaration settles goes another way than its result, such as a
     #: result to pay of which nothing remains to pay, and the official design gives no settlement for it.
     SETTLEMENT_UNSUPPORTED = "settlement_unsupported"
-    #: Unavailable: the second instalment of the amount to pay would be nothing, so it is paid at once.
+    #: Not available: the second instalment of the amount to pay would be nothing, so it is paid at once.
     SECOND_INSTALMENT_NOTHING = "second_instalment_nothing"
     #: Not applicable: the negative IVA result may only be carried forward, because the period is not
     #: the year's last and the filer is not inscribed in the Registro de devolución mensual.
     CARRY_FORWARD_ONLY = "carry_forward_only"
-    #: Unavailable: outside the year's last period the refund needs the filer's REDEME inscription,
+    #: Not available: outside the year's last period the refund needs the filer's REDEME inscription,
     #: which their profile does not state.
     REDEME_UNSTATED = "redeme_unstated"
 

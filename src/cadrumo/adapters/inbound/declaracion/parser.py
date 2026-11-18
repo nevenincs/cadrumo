@@ -1004,7 +1004,7 @@ def numeric_casilla_anchors(
     same accident that hid the defect in the blank-box guard, and it would end the
     moment a semantically-named casilla is given this strategy.
 
-    Unlike :func:`printed_box_numbers` this refuses rather than degrading. A
+    Unlike :func:`parser_printed_box_numbers` this refuses rather than degrading. A
     missing printed number leaves the guard without a safety net, which is
     tolerable; here it means the target cannot be addressed at all, which is a
     registry-integrity error of the same kind as a target naming a casilla that
