@@ -77,7 +77,7 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
             "--casilla", "DP200012:00501=100000",
             "--casilla", "DP200013:00417=0",
             "--casilla", "DP200013:00418=0",
-            "--casilla", "01032=0",
+            "--casilla", "DP200014:01032=0",
             "--casilla", "DP200014:00547=0",
             "--casilla", "DP200014:01033=0",
             "--casilla", "DP200014:01034=0",
