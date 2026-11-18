@@ -352,6 +352,50 @@ def test_modelo_200_account_fields_follow_the_selected_account_role(
     assert {key: values[key] for key in expected} == expected
 
 
+def test_modelo_200_slots_a_later_design_reshapes_resolve_only_from_their_own_facts() -> None:
+    """DR200-2023 Cuota Cero, matriz NIF o equivalente and INCN bands stay apart from DR200-2024's reshaped slots."""
+    profile = Modelo200ProfileFacts(
+        cuota_cero="1",
+        datos_de_la_sociedad_matriz_ultima_nif_o_equivalente="FR123456789",
+        datos_de_la_sociedad_matriz_ultima_codigo_pais="FR",
+        datos_de_la_sociedad_matriz_ultima_pais_o_jurisdiccion="FR",
+        importe_neto_de_la_cifra_de_negocios_de_al_menos_20_millones="1",
+        regimen_de_cooperativas_incn_de_al_menos_60_millones="1",
+    )
+    snapshot = build_filing_producer_snapshot(
+        modelo=Modelo("200"),
+        taxpayer_tax_id=TAXPAYER_TAX_ID,
+        taxpayer_identity=taxpayer_identity(),
+        presenter=producer_snapshot_presenter(),
+        model_profile=profile,
+        elections=elections(ResultDisposition.NEGATIVA),
+        amendment_evidence=None,
+        refund_account=None,
+        charge_account=None,
+        m303_filing_facts=None,
+    )
+
+    values = filing_producer_values(snapshot)
+
+    assert values[FilingProducerKey.M200_CUOTA_CERO] == "1"
+    assert values[FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NIF_O_EQUIVALENTE] == "FR123456789"
+    assert values[FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_CODIGO_PAIS] == "FR"
+    assert values[FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_PAIS_O_JURISDICCION] == "FR"
+    assert values[FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_AL_MENOS_20_MILLONES] == "1"
+    assert values[FilingProducerKey.M200_REGIMEN_DE_COOPERATIVAS_INCN_DE_AL_MENOS_60_MILLONES] == "1"
+    assert (
+        values[FilingProducerKey.M200_REGIMEN_DE_COOPERATIVAS_INCN_DE_AL_MENOS_20_MILLONES_PERO_INFERIOR_A_60] is None
+    )
+    for reshaped in (
+        FilingProducerKey.M200_RESULTADO_CERO,
+        FilingProducerKey.M200_DATOS_DE_LA_SOCIEDAD_MATRIZ_ULTIMA_NIF,
+        FilingProducerKey.M200_PAIS_DE_RESIDENCIA,
+        FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS_2,
+        FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS_3,
+    ):
+        assert values[reshaped] is None
+
+
 def test_missing_required_account_refuses_and_unneeded_accounts_are_not_retained() -> None:
     with pytest.raises(FilingProducerSnapshotError, match="charge account"):
         build_filing_producer_snapshot(
