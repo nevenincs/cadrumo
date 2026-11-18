@@ -129,9 +129,4 @@ def field_label(name: str) -> str:
     return labels.get(name, name)
 
 
-def yes_no(value: bool) -> str:
-    """Render a boolean as the word the person reads."""
-    return tr("flows.confirm.yes") if value else tr("flows.confirm.no")
-
-
-__all__ = ["act_label", "act_summary", "family_label", "field_label", "worded_in", "yes_no"]
+__all__ = ["act_label", "act_summary", "family_label", "field_label", "worded_in"]
