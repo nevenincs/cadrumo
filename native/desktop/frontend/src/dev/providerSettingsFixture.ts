@@ -228,6 +228,9 @@ export type ProviderSignInFixtureControls = {
   /** The current attempt turns failed, with `detail` beside its reason
    * (`provider_unavailable` unless given). */
   failCurrentAttempt: (detail?: ProviderSignInFixtureRefusal) => void;
+  /** The service ends the current attempt as cancelled, with `detail`
+   * beside it, as it does when the profile's authority ends under it. */
+  cancelCurrentAttempt: (detail?: ProviderSignInFixtureRefusal) => void;
   /** The current attempt succeeds; `signedIn` also leaves the lane signed
    * in, as the next settings read reports it. */
   succeedCurrentAttempt: (signedIn?: boolean) => void;
@@ -509,6 +512,16 @@ export function providerSettingsFixture({
         reason: reason as ProviderSignInSnapshot["reason"],
       };
       say(`providerSignInAttemptFailed ${reason}`);
+    },
+    cancelCurrentAttempt(detail = {}) {
+      if (!fixtureAttempt) return;
+      fixtureAttempt = {
+        attempt_id: fixtureAttempt.attempt_id,
+        provider: fixtureAttempt.provider,
+        event: "cancelled",
+        ...(detail as Partial<ProviderSignInSnapshot>),
+      };
+      say(`providerSignInAttemptCancelled ${detail.reason ?? "none"}`);
     },
     succeedCurrentAttempt(signedIn = false) {
       if (!fixtureAttempt) return;

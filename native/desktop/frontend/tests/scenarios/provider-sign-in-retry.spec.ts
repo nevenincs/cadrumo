@@ -278,6 +278,47 @@ for (const shape of SHAPES) {
       ).toHaveAttribute("data-status", "ready");
     });
 
+    test("an attempt the service cancels because the profile signed out says so, never as the person's own cancel", async ({
+      page: target,
+    }) => {
+      await prepare(target, shape);
+      const dialog = await startSignIn(target, shape);
+      const dead = await observedAttempt(target);
+      await target.evaluate(
+        (logRef) =>
+          window.__scenarioProviderSignIn!.cancelCurrentAttempt({
+            reason: "profile_required",
+            cause: "profile_signed_out",
+            next_step: "retry",
+            log_ref: logRef,
+          }),
+        LOG_REF,
+      );
+      await expect(dialog.getByRole("alert").first()).toContainText(
+        label("desktop.providers.sign_in_profile_required", {
+          provider: shape.displayName,
+        }),
+      );
+      await expect(dialog).toContainText(
+        label("desktop.providers.sign_in_cause.profile_signed_out"),
+      );
+      await expect(dialog).not.toContainText(
+        label("desktop.providers.sign_in_cancelled"),
+      );
+      await expect(dialog.locator('[data-slot="sign-in-attempt"]')).toHaveCount(
+        0,
+      );
+      await expectLogRef(dialog);
+      await expect(
+        dialog.getByRole("button", {
+          name: label("desktop.providers.sign_in_retry"),
+        }),
+      ).toBeVisible();
+      const from = (await signInCalls(target)).length;
+      await target.waitForTimeout(2_500);
+      expect(asked((await signInCalls(target)).slice(from), dead)).toEqual([]);
+    });
+
     test("status reads that keep failing end the attempt with their cause instead of waiting it out", async ({
       page: target,
     }) => {

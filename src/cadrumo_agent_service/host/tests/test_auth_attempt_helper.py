@@ -316,8 +316,8 @@ def test_success_after_authority_was_withdrawn_is_cancelled_and_never_confirmed(
     assert sentinel.exists()
     assert (settled["event"], settled["reason"], settled["cause"], settled["status_cause"]) == (
         "cancelled",
-        "none",
-        "none",
+        "profile_required",
+        "profile_signed_out",
         "none",
     )
     assert reads == []
@@ -336,8 +336,8 @@ def test_authority_withdrawn_during_the_confirmation_cancels_and_keeps_the_statu
     settled = _settlement(attempt, caplog)
     assert (settled["event"], settled["reason"], settled["cause"], settled["status_cause"]) == (
         "cancelled",
-        "none",
-        "none",
+        "profile_required",
+        "profile_signed_out",
         "probe_timed_out",
     )
 
@@ -352,7 +352,12 @@ def test_authority_withdrawn_by_the_preparation_cancels_before_the_helper_starts
 
     attempt, _sentinel = _withdrawing_attempt(tmp_path, "succeeded", prepare=prepare)
     settled = _settlement(attempt, caplog)
-    assert (settled["event"], settled["reason"], settled["cause"]) == ("cancelled", "none", "none")
+    assert (settled["event"], settled["reason"], settled["cause"]) == (
+        "cancelled",
+        "profile_required",
+        "profile_signed_out",
+    )
+    assert settled["reached"] == "starting"
     assert settled["cleanup_confirmed"] == "True"
 
 
@@ -370,14 +375,41 @@ def test_a_failing_preparation_is_a_failed_cleanup_before_the_helper_starts(
     assert "PRIVATE-DETAIL" not in str(answer)
 
 
-def test_an_event_published_after_authority_was_withdrawn_cancels_without_a_cause(
+def test_an_event_published_after_authority_was_withdrawn_cancels_as_signed_out(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     attempt, sentinel = _withdrawing_attempt(tmp_path, "withdrawn_before_started")
     settled = _settlement(attempt, caplog)
     assert sentinel.exists()
-    assert (settled["event"], settled["reason"], settled["cause"]) == ("cancelled", "none", "none")
+    assert (settled["event"], settled["reason"], settled["cause"]) == (
+        "cancelled",
+        "profile_required",
+        "profile_signed_out",
+    )
     assert settled["cleanup_confirmed"] == "True"
+    # The withdrawn event was never published, so the attempt last stood at its start.
+    assert settled["reached"] == "starting"
+    answer = attempt.observe()
+    assert (answer["event"], answer["reason"], answer["cause"], answer["next_step"]) == (
+        "cancelled",
+        "profile_required",
+        "profile_signed_out",
+        "retry",
+    )
+    assert answer["log_ref"] == attempt.log_ref
+
+
+def test_the_settled_line_names_the_last_step_the_attempt_reached(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level(logging.DEBUG, logger=_LOGGER):
+        _settled(_attempt(tmp_path, "failed"))
+        ((_level, message),) = _messages(caplog)
+    fields = dict(field.split("=", 1) for field in message.split(" ") if "=" in field)
+    assert fields["reached"] == "started"
+    assert re.fullmatch(r"\d+\.\d", fields["reached_after_s"])
+    assert re.fullmatch(r"\d+\.\d", fields["lasted_s"])
+    assert float(fields["reached_after_s"]) <= float(fields["lasted_s"])
 
 
 def test_a_failure_logs_the_helper_exit_and_the_size_of_its_error_output_never_its_content(
