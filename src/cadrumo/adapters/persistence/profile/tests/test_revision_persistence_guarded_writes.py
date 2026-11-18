@@ -436,7 +436,9 @@ def test_duplicate_publication_reports_actual_transaction(
             assert receipt is not None and receipt.bucket_event_id is None
 
 
-def _verify_directly(calculation_repository: CalculationRevisionCatalogueRepository, revision_id: str) -> None:
+def _verify_directly(
+    calculation_repository: CalculationRevisionCatalogueRepository, revision_id: str, verified_at: datetime
+) -> None:
     """Seal a revision as verification would, without running the verification gates."""
     catalogue = calculation_repository.load()
     revision = catalogue.get(revision_id)
@@ -444,7 +446,7 @@ def _verify_directly(calculation_repository: CalculationRevisionCatalogueReposit
     sealed = revision.model_copy(
         update={
             "state": CalculationRevisionState.VERIFICADO_COMPLETO,
-            "verified_at": datetime(2026, 1, 10, 2, 30, tzinfo=UTC),
+            "verified_at": verified_at,
             "verified_by": _ACTOR,
         }
     )
@@ -484,13 +486,17 @@ def test_restating_a_verified_revision_on_a_later_draft_makes_it_current_again(
                 bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
                 participation_index_repository=TransactionParticipationIndexRepository(objects=profile.repository),
                 operation=operation,
-                now=datetime(2026, 1, 10, hour, 0, tzinfo=UTC),
+                now=unit.created_at.replace(hour=hour),
                 input_value=value,
                 profile_read=reads,
             )
 
         verified = publish("100.00", sealed_reads, 2)
-        _verify_directly(calculation_repository, verified.revision.calculation_revision_id)
+        _verify_directly(
+            calculation_repository,
+            verified.revision.calculation_revision_id,
+            unit.created_at.replace(hour=2, minute=30),
+        )
         draft = publish("200.00", sealed_reads, 3)
         assert draft.revision.calculation_revision_id != verified.revision.calculation_revision_id
 
