@@ -47,6 +47,7 @@
           "transaction": {
             "accrual_date": null,
             "amount": "49.99",
+            "arrendamiento_ref": null,
             "attachment_ids": [],
             "booked_date": "2026-03-15",
             "business_classification": "NOT_YET_PROCESSED",
@@ -66,6 +67,8 @@
             "description": "Software subscription",
             "direction": "OUTGOING",
             "fx_rate": null,
+            "gasto_capital_inmobiliario": null,
+            "inmueble_ref": null,
             "investment_asset_id": null,
             "invoice_id": null,
             "irpf_category": null,
@@ -73,13 +76,38 @@
             "iva_category": null,
             "iva_rate": null,
             "lifecycle_state": "ACTIVE",
+            "link_fields": [
+              {
+                "family": "rental_lease",
+                "field": "arrendamiento_ref",
+                "field_words": "Linked lease",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "rental_property",
+                "field": "inmueble_ref",
+                "field_words": "Linked property",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "gasto_capital_inmobiliario",
+                "field": "gasto_capital_inmobiliario",
+                "field_words": "Rental expense concept",
+                "field_words_language": "en",
+                "value": null
+              }
+            ],
             "m210_income_classification": null,
             "modified_at": "2026-04-01T09:00:00+00:00",
             "notes": "",
             "operation_date": null,
             "prorrata_reference": null,
             "purchase_invoice_evidence_id": null,
+            "recargo_amount": null,
             "source_jurisdiction": "ES",
+            "statement_reference": null,
             "taxable_base": null,
             "transaction_id": "bbdc3ab706b04e3f0afcc53616b99d697a76b4c8678f1e2817dcbe675913a1d5",
             "usage_ratio_id": null,
@@ -138,6 +166,7 @@
           "transaction": {
             "accrual_date": null,
             "amount": "121",
+            "arrendamiento_ref": null,
             "attachment_ids": [],
             "booked_date": "2026-03-20",
             "business_classification": "NOT_YET_PROCESSED",
@@ -157,6 +186,8 @@
             "description": "Client payment",
             "direction": "INCOMING",
             "fx_rate": null,
+            "gasto_capital_inmobiliario": null,
+            "inmueble_ref": null,
             "investment_asset_id": null,
             "invoice_id": null,
             "irpf_category": null,
@@ -164,13 +195,38 @@
             "iva_category": null,
             "iva_rate": null,
             "lifecycle_state": "ACTIVE",
+            "link_fields": [
+              {
+                "family": "rental_lease",
+                "field": "arrendamiento_ref",
+                "field_words": "Linked lease",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "rental_property",
+                "field": "inmueble_ref",
+                "field_words": "Linked property",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "gasto_capital_inmobiliario",
+                "field": "gasto_capital_inmobiliario",
+                "field_words": "Rental expense concept",
+                "field_words_language": "en",
+                "value": null
+              }
+            ],
             "m210_income_classification": null,
             "modified_at": "2026-04-01T09:00:00+00:00",
             "notes": "",
             "operation_date": null,
             "prorrata_reference": null,
             "purchase_invoice_evidence_id": null,
+            "recargo_amount": null,
             "source_jurisdiction": "ES",
+            "statement_reference": null,
             "taxable_base": null,
             "transaction_id": "2314a0fb896fe26934f274d57ced8417a0881f7e3f286b34f8c300efd1a6e6d8",
             "usage_ratio_id": null,
@@ -229,6 +285,7 @@
           "transaction": {
             "accrual_date": null,
             "amount": "60.5",
+            "arrendamiento_ref": null,
             "attachment_ids": [],
             "booked_date": "2026-03-21",
             "business_classification": "NOT_YET_PROCESSED",
@@ -248,6 +305,8 @@
             "description": "Office supplies",
             "direction": "OUTGOING",
             "fx_rate": null,
+            "gasto_capital_inmobiliario": null,
+            "inmueble_ref": null,
             "investment_asset_id": null,
             "invoice_id": null,
             "irpf_category": null,
@@ -255,13 +314,38 @@
             "iva_category": null,
             "iva_rate": null,
             "lifecycle_state": "ACTIVE",
+            "link_fields": [
+              {
+                "family": "rental_lease",
+                "field": "arrendamiento_ref",
+                "field_words": "Linked lease",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "rental_property",
+                "field": "inmueble_ref",
+                "field_words": "Linked property",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "gasto_capital_inmobiliario",
+                "field": "gasto_capital_inmobiliario",
+                "field_words": "Rental expense concept",
+                "field_words_language": "en",
+                "value": null
+              }
+            ],
             "m210_income_classification": null,
             "modified_at": "2026-04-01T09:00:00+00:00",
             "notes": "",
             "operation_date": null,
             "prorrata_reference": null,
             "purchase_invoice_evidence_id": null,
+            "recargo_amount": null,
             "source_jurisdiction": "ES",
+            "statement_reference": null,
             "taxable_base": null,
             "transaction_id": "8e9e36e8f65629149767b0a95c06a08c79cd61e03c3586aa66273419ec9ca43d",
             "usage_ratio_id": null,
@@ -308,6 +392,7 @@
           "transaction": {
             "accrual_date": null,
             "amount": "49.99",
+            "arrendamiento_ref": null,
             "attachment_ids": [],
             "booked_date": "2026-03-15",
             "business_classification": "NOT_YET_PROCESSED",
@@ -327,6 +412,8 @@
             "description": "Software subscription",
             "direction": "OUTGOING",
             "fx_rate": null,
+            "gasto_capital_inmobiliario": null,
+            "inmueble_ref": null,
             "investment_asset_id": null,
             "invoice_id": null,
             "irpf_category": null,
@@ -334,13 +421,38 @@
             "iva_category": null,
             "iva_rate": null,
             "lifecycle_state": "ACTIVE",
+            "link_fields": [
+              {
+                "family": "rental_lease",
+                "field": "arrendamiento_ref",
+                "field_words": "Linked lease",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "rental_property",
+                "field": "inmueble_ref",
+                "field_words": "Linked property",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "gasto_capital_inmobiliario",
+                "field": "gasto_capital_inmobiliario",
+                "field_words": "Rental expense concept",
+                "field_words_language": "en",
+                "value": null
+              }
+            ],
             "m210_income_classification": null,
             "modified_at": "2026-04-01T09:00:00+00:00",
             "notes": "",
             "operation_date": null,
             "prorrata_reference": null,
             "purchase_invoice_evidence_id": null,
+            "recargo_amount": null,
             "source_jurisdiction": "ES",
+            "statement_reference": null,
             "taxable_base": null,
             "transaction_id": "bbdc3ab706b04e3f0afcc53616b99d697a76b4c8678f1e2817dcbe675913a1d5",
             "usage_ratio_id": null,

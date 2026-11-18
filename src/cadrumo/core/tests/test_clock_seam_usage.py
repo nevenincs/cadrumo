@@ -299,6 +299,7 @@ _RUNTIME_CLASSIFICATION.update(
             "host/frontend/tui/bound_session.py::BoundSession.lifetime_ended",
             "host/frontend/tui/runtime_session.py::RuntimeRestrictedSessionApp._status_is_current",
             "host/frontend/tui/runtime_session.py::RuntimeRestrictedSessionApp._arm_lapse",
+            "commands/runtime_access_management.py::profile_sessions",
         ),
         (_WALL, _AUTHORITY_MINT),
     ),
@@ -306,7 +307,6 @@ _RUNTIME_CLASSIFICATION.update(
 _RUNTIME_CLASSIFICATION.update(
     dict.fromkeys(
         (
-            "commands/runtime_access_management.py::profile_sessions",
             "host/frontend/tui/aeat_sync/runtime_handoff.py::_select_handoff_action",
             "host/frontend/tui/runtime_access_management.py::RuntimeAccessManagementScreen._retain_self_lock_after_human_refusal",
             "host/frontend/tui/runtime_account_session.py::read_runtime_account_session",

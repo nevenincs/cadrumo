@@ -376,7 +376,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3"
+          "value": "f749449a22137c07dce140b436f6ad3cc3896872f5812a6d39e7d777b9ac026e"
         }
       ],
       "envelope": {
@@ -460,7 +460,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3",
+          "calculation_revision_id": "f749449a22137c07dce140b436f6ad3cc3896872f5812a6d39e7d777b9ac026e",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -744,7 +744,7 @@
             {"absent_by_design":false,"casilla_id":"169","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"17","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"170","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"18","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"18","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"19","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"20","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"21","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
@@ -1027,7 +1027,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision f749449a22137c07dce140b436f6ad3cc3896872f5812a6d39e7d777b9ac026e (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1063,10 +1063,32 @@
               "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
             },
             {
+              "contributor_binding_source": "bienes_inversion_regularizacion",
+              "contributor_source_kind": "bienes_inversion_regularizacion",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "bienes_inversion_regularizacion",
+              "resolver_id": "bienes_inversion_regularizacion",
+              "source_ref": "bound_input:43"
+            },
+            {
+              "contributor_binding_source": "prorrata_regularizacion",
+              "contributor_source_kind": "prorrata_regularizacion",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "prorrata_regularizacion",
+              "resolver_id": "prorrata_regularizacion",
+              "source_ref": "bound_input:44"
+            },
+            {
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",
@@ -1102,13 +1124,13 @@
         "modelo",
         "work",
         "verify",
-        "52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3"
+        "f749449a22137c07dce140b436f6ad3cc3896872f5812a6d39e7d777b9ac026e"
       ],
       "captures": [
         {
           "json_path": "result.verification_report_id",
           "name": "verification_report_id",
-          "value": "1f7f478855f9be4603ab3a8fce9ebc002fb862c8c3544d3bf6b8d1d2f2f6e088"
+          "value": "063b4c7db5b280fc7647e31128d0d8eaf0df6633f5a0dd8bcb64c2d1e34c5d0d"
         }
       ],
       "envelope": {
@@ -1157,7 +1179,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3",
+          "calculation_revision_id": "f749449a22137c07dce140b436f6ad3cc3896872f5812a6d39e7d777b9ac026e",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1201,7 +1223,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "1f7f478855f9be4603ab3a8fce9ebc002fb862c8c3544d3bf6b8d1d2f2f6e088",
+          "verification_report_id": "063b4c7db5b280fc7647e31128d0d8eaf0df6633f5a0dd8bcb64c2d1e34c5d0d",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1223,7 +1245,7 @@
         "verification-report",
         "list",
         "--calculation-revision-id",
-        "52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3"
+        "f749449a22137c07dce140b436f6ad3cc3896872f5812a6d39e7d777b9ac026e"
       ],
       "captures": [],
       "envelope": {
@@ -1239,12 +1261,12 @@
           }
         ],
         "result": {
-          "calculation_revision_id_filter": "52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3",
+          "calculation_revision_id_filter": "f749449a22137c07dce140b436f6ad3cc3896872f5812a6d39e7d777b9ac026e",
           "operation": "modelo.verification_report.list",
           "report_count": 1,
           "reports": [
             {
-              "calculation_revision_id": "52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3",
+              "calculation_revision_id": "f749449a22137c07dce140b436f6ad3cc3896872f5812a6d39e7d777b9ac026e",
               "completeness_status": "complete",
               "findings": [
                 {
@@ -1287,7 +1309,7 @@
               },
               "resolved_casilla_ids": [],
               "run_at": "2026-04-01T09:00:00+00:00",
-              "verification_report_id": "1f7f478855f9be4603ab3a8fce9ebc002fb862c8c3544d3bf6b8d1d2f2f6e088",
+              "verification_report_id": "063b4c7db5b280fc7647e31128d0d8eaf0df6633f5a0dd8bcb64c2d1e34c5d0d",
               "verified_by": "docs-sequence-sandbox"
             }
           ]
@@ -1310,7 +1332,7 @@
         "modelo",
         "verification-report",
         "view",
-        "1f7f478855f9be4603ab3a8fce9ebc002fb862c8c3544d3bf6b8d1d2f2f6e088"
+        "063b4c7db5b280fc7647e31128d0d8eaf0df6633f5a0dd8bcb64c2d1e34c5d0d"
       ],
       "captures": [],
       "envelope": {
@@ -1326,7 +1348,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "52eaf16243c090935b61da7c89c6af1dbca97aee0fe896d451d39cb710fbcbd3",
+          "calculation_revision_id": "f749449a22137c07dce140b436f6ad3cc3896872f5812a6d39e7d777b9ac026e",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1370,7 +1392,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "1f7f478855f9be4603ab3a8fce9ebc002fb862c8c3544d3bf6b8d1d2f2f6e088",
+          "verification_report_id": "063b4c7db5b280fc7647e31128d0d8eaf0df6633f5a0dd8bcb64c2d1e34c5d0d",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

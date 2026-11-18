@@ -11,7 +11,7 @@
     {"argv":["aeat","app","ledger","attach","c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860","--purchase-invoice-evidence-id","0021fb5b1e7a777c"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","--format","json","app","modelo","work","create","--modelo","303","--year","2026","--period","1T"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","app","ledger","add","--date","2026-03-20","--amount","121","--direction","INCOMING","--description","Selector transition sale","--classification","BUSINESS","--taxable-base","100","--iva-rate","0.21","--iva-amount","21","--iva-category","domestic_general","--idempotency-key","filing-spine-selector-transition"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","calculate","--modelo","303","--year","2026","--period","1T","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"selected_revision_id","value":"3208912dcb5dc6aafa784caf22b4842d75d2b08eafd4b51e30ebb55bd17a1d60"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","calculate","--modelo","303","--year","2026","--period","1T","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"selected_revision_id","value":"e2c63e03219b54ccdb89a40749d0b4e13bd1db8f67711900bccd1e5dfb6af48d"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {
       "argv": [
         "aeat",
@@ -96,7 +96,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "3208912dcb5dc6aafa784caf22b4842d75d2b08eafd4b51e30ebb55bd17a1d60",
+          "calculation_revision_id": "e2c63e03219b54ccdb89a40749d0b4e13bd1db8f67711900bccd1e5dfb6af48d",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -372,7 +372,7 @@
             {"absent_by_design":false,"casilla_id":"169","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"17","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"170","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"18","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"18","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"19","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"20","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"21","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
@@ -700,10 +700,32 @@
               "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
             },
             {
+              "contributor_binding_source": "bienes_inversion_regularizacion",
+              "contributor_source_kind": "bienes_inversion_regularizacion",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "bienes_inversion_regularizacion",
+              "resolver_id": "bienes_inversion_regularizacion",
+              "source_ref": "bound_input:43"
+            },
+            {
+              "contributor_binding_source": "prorrata_regularizacion",
+              "contributor_source_kind": "prorrata_regularizacion",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "prorrata_regularizacion",
+              "resolver_id": "prorrata_regularizacion",
+              "source_ref": "bound_input:44"
+            },
+            {
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",
@@ -812,7 +834,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "3208912dcb5dc6aafa784caf22b4842d75d2b08eafd4b51e30ebb55bd17a1d60",
+          "calculation_revision_id": "e2c63e03219b54ccdb89a40749d0b4e13bd1db8f67711900bccd1e5dfb6af48d",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1088,7 +1110,7 @@
             {"absent_by_design":false,"casilla_id":"169","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"17","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"170","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"18","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"18","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"19","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"20","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"21","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
@@ -1416,10 +1438,32 @@
               "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
             },
             {
+              "contributor_binding_source": "bienes_inversion_regularizacion",
+              "contributor_source_kind": "bienes_inversion_regularizacion",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "bienes_inversion_regularizacion",
+              "resolver_id": "bienes_inversion_regularizacion",
+              "source_ref": "bound_input:43"
+            },
+            {
+              "contributor_binding_source": "prorrata_regularizacion",
+              "contributor_source_kind": "prorrata_regularizacion",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "prorrata_regularizacion",
+              "resolver_id": "prorrata_regularizacion",
+              "source_ref": "bound_input:44"
+            },
+            {
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",
@@ -1453,7 +1497,7 @@
         "modelo",
         "work",
         "revision",
-        "3208912dcb5dc6aafa784caf22b4842d75d2b08eafd4b51e30ebb55bd17a1d60"
+        "e2c63e03219b54ccdb89a40749d0b4e13bd1db8f67711900bccd1e5dfb6af48d"
       ],
       "captures": [],
       "envelope": {
@@ -1521,7 +1565,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "3208912dcb5dc6aafa784caf22b4842d75d2b08eafd4b51e30ebb55bd17a1d60",
+          "calculation_revision_id": "e2c63e03219b54ccdb89a40749d0b4e13bd1db8f67711900bccd1e5dfb6af48d",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1797,7 +1841,7 @@
             {"absent_by_design":false,"casilla_id":"169","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"17","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"170","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"18","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"18","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"19","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"20","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"21","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
@@ -2125,10 +2169,32 @@
               "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
             },
             {
+              "contributor_binding_source": "bienes_inversion_regularizacion",
+              "contributor_source_kind": "bienes_inversion_regularizacion",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "bienes_inversion_regularizacion",
+              "resolver_id": "bienes_inversion_regularizacion",
+              "source_ref": "bound_input:43"
+            },
+            {
+              "contributor_binding_source": "prorrata_regularizacion",
+              "contributor_source_kind": "prorrata_regularizacion",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "prorrata_regularizacion",
+              "resolver_id": "prorrata_regularizacion",
+              "source_ref": "bound_input:44"
+            },
+            {
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",
@@ -2236,7 +2302,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "3208912dcb5dc6aafa784caf22b4842d75d2b08eafd4b51e30ebb55bd17a1d60",
+          "calculation_revision_id": "e2c63e03219b54ccdb89a40749d0b4e13bd1db8f67711900bccd1e5dfb6af48d",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -2512,7 +2578,7 @@
             {"absent_by_design":false,"casilla_id":"169","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"17","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"170","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"18","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"18","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"19","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"20","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"21","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
@@ -2840,10 +2906,32 @@
               "source_ref": "303:2026:1T:prorrata-regularizacion-settlement-only"
             },
             {
+              "contributor_binding_source": "bienes_inversion_regularizacion",
+              "contributor_source_kind": "bienes_inversion_regularizacion",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "bienes_inversion_regularizacion",
+              "resolver_id": "bienes_inversion_regularizacion",
+              "source_ref": "bound_input:43"
+            },
+            {
+              "contributor_binding_source": "prorrata_regularizacion",
+              "contributor_source_kind": "prorrata_regularizacion",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "prorrata_regularizacion",
+              "resolver_id": "prorrata_regularizacion",
+              "source_ref": "bound_input:44"
+            },
+            {
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:0fbdf43bc27dbc137ad9c0add124533a9205ca3c04822dce48706b126ef135c3",
+              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",
