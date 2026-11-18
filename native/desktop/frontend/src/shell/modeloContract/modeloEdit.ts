@@ -11,6 +11,7 @@
 
 import type {
   CalculationRevisionId,
+  CalculationRevisionState,
   CasillaId,
   ModeloDetailRowWireV1,
   OutputLanguage,
@@ -136,11 +137,15 @@ export type ModeloEditApplyPrerequisiteV1 = {
  * through the ModeloEditReceiptRepositoryPort capability, and this result
  * exists to confirm which one a submission produced. `calculation_revision_id`
  * is `None` when the edit withdrew the work unit's calculation.
+ * `reused_sealed_revision` names the checked or filed calculation the edit
+ * reproduced exactly, which it left as it stands, and the calculation that
+ * stays current.
  */
 export type ModeloEditApplyPublicResultV1 = {
   result_version: number;
   receipt_id: string;
   calculation_revision_id: string | null;
+  reused_sealed_revision: ModeloEditReusedSealedRevisionV1 | null;
 };
 
 /**
@@ -352,6 +357,21 @@ export type ModeloEditRenewalProjectionV1 = {
   renewed_baseline: ModeloEditApplyBaselineV1 | null;
   refusal: ModeloEditRefusedV1 | null;
   refusal_words: string | null;
+};
+
+/**
+ * The checked or filed calculation an applied edit reproduced exactly, left as
+ * it stands.
+ *
+ * A calculation is content addressed, so an edit whose values equal a sealed
+ * revision's yields that revision rather than a new draft. The sealed revision
+ * is never reopened or rewritten, and the declaration's current calculation is
+ * left where it was, which `current_calculation_revision_id` names.
+ */
+export type ModeloEditReusedSealedRevisionV1 = {
+  calculation_revision_id: CalculationRevisionId;
+  state: CalculationRevisionState;
+  current_calculation_revision_id: CalculationRevisionId | null;
 };
 
 /**

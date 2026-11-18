@@ -40,7 +40,7 @@ from cadrumo.application.modelo.edit_admission import (
     admit_modelo_edit_baseline,
     renew_modelo_edit_baseline,
 )
-from cadrumo.application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
+from cadrumo.application.modelo.edit_apply_contracts import ModeloEditApplyPublicResultV1, ModeloEditApplySubmissionV1
 from cadrumo.application.modelo.edit_contract import ModeloEditMutationFamily
 from cadrumo.application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
@@ -163,6 +163,7 @@ class AppliedEdit:
     calculation_revision_id: str | None
     refusal: CadrumoError | None
     effects: tuple[OperationEffect, ...]
+    public_result: ModeloEditApplyPublicResultV1 | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -294,6 +295,7 @@ class SeededOperatorWork:
             receipt_repository_factory=self.receipt_repository_factory,
         )
         events = _RecordedEvents()
+        operands = _RecordedOperands()
         identity = OperationIdentity(
             operation_id=operation_id,
             definition_id=request.definition_id,
@@ -312,6 +314,7 @@ class SeededOperatorWork:
                     identity=identity,
                     authority_operation=self.operation,
                     events=events,
+                    operands=operands,
                     typed_financial_operand=access,
                 )
                 await executor.execute(typed_request, cast(OperationExecutorContext, context))
@@ -328,6 +331,9 @@ class SeededOperatorWork:
             calculation_revision_id=None if head is None else head.calculation_revision_id,
             refusal=None,
             effects=tuple(events.effects),
+            public_result=next(
+                (result for result in operands.results if isinstance(result, ModeloEditApplyPublicResultV1)), None
+            ),
         )
 
     def recalculate(self) -> CalculationRevision:

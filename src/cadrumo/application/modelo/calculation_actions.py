@@ -552,7 +552,6 @@ def _persist_trusted_evaluation(
         calculation_repository=ports.calculation_repository,
         work_unit_repository=ports.work_unit_repository,
         bucket_event_repository=ports.bucket_event_repository,
-        participation_index_repository=ports.participation_index_repository,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
     return TrustedMeshCalculation(

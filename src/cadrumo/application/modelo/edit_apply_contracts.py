@@ -27,6 +27,7 @@ from .edit_models import (
     ModeloEditDetailRowIntentKind,
     ModeloEditHeldChangeV1,
     ModeloEditParseRequestV1,
+    ModeloEditReusedSealedRevisionV1,
     ModeloEditSubmissionV1,
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
@@ -243,6 +244,9 @@ class ModeloEditApplyPublicResultV1(BaseModel):
     through the ModeloEditReceiptRepositoryPort capability, and this result exists to confirm
     which one a submission produced. ``calculation_revision_id`` is ``None``
     when the edit withdrew the work unit's calculation.
+    ``reused_sealed_revision`` names the checked or filed calculation the edit
+    reproduced exactly, which it left as it stands, and the calculation that
+    stays current.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
@@ -250,3 +254,4 @@ class ModeloEditApplyPublicResultV1(BaseModel):
     result_version: int = 1
     receipt_id: Annotated[str, Field(min_length=1, max_length=128)]
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)] | None
+    reused_sealed_revision: ModeloEditReusedSealedRevisionV1 | None = None

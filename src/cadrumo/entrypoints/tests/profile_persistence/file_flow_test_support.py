@@ -41,7 +41,6 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.prevision_social_contribution_records import (
     PrevisionSocialContributionRecordRepositoryAdapter,
@@ -218,9 +217,6 @@ def calculation_ports_for_test(
             ),
             calculation_repository=resolved_calculation_repository,
             verification_repository=VerificationReportCatalogueRepository(
-                bucket_id=normalized_bucket_id, objects=objects
-            ),
-            participation_index_repository=TransactionParticipationIndexRepository(
                 bucket_id=normalized_bucket_id, objects=objects
             ),
             bucket_event_repository=resolved_bucket_event_repository,

@@ -21,7 +21,6 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_edit_receipts import ModeloEditReceiptRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from cadrumo.adapters.persistence.storage.errors import SecureObjectRevisionConflictError
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
@@ -32,11 +31,8 @@ from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.calculations.record_row_membership import ClosedRecordRowSet, RecordRowMembership
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.errors import ModeloValidationError
-from cadrumo.domain.modelos.profile_read_fingerprint import ProfileReadFingerprint, profile_read_fingerprint
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 
@@ -91,12 +87,10 @@ def _persist(
     calculation_repository: CalculationRevisionCatalogueRepository,
     work_unit_repository: WorkUnitCatalogueRepository,
     bucket_event_repository: BucketEventHistoryRepository,
-    participation_index_repository: TransactionParticipationIndexRepository,
     operation: PinnedAuthorityOperation,
     now: datetime,
     input_value: str,
     closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
-    profile_read: ProfileReadFingerprint | None = None,
     additional_secure_object_writes_for_revision: (
         Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None
     ) = None,
@@ -133,8 +127,6 @@ def _persist(
         calculation_repository=calculation_repository,
         work_unit_repository=work_unit_repository,
         bucket_event_repository=bucket_event_repository,
-        participation_index_repository=participation_index_repository,
-        profile_read_fingerprint=profile_read,
         operation=operation,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
@@ -182,7 +174,6 @@ def test_publisher_preserves_closed_rows_only_in_the_admitted_scope(
                 calculation_repository=calculations,
                 work_unit_repository=work_units_repository,
                 bucket_event_repository=events,
-                participation_index_repository=TransactionParticipationIndexRepository(objects=profile.repository),
                 operation=operation,
                 now=datetime(2026, 1, 10, 2, 0, tzinfo=UTC),
                 input_value="100.00",
@@ -225,7 +216,6 @@ def test_new_revision_co_commits_additional_writes_atomically(
             calculation_repository=calculation_repository,
             work_unit_repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
-            participation_index_repository=TransactionParticipationIndexRepository(objects=profile.repository),
             operation=operation,
             now=datetime(2026, 1, 10, 2, 0, tzinfo=UTC),
             input_value="100.00",
@@ -273,7 +263,6 @@ def test_duplicate_branch_confirms_pointer_under_guard_and_co_commits(
             calculation_repository=calculation_repository,
             work_unit_repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
-            participation_index_repository=TransactionParticipationIndexRepository(objects=profile.repository),
             operation=operation,
             now=datetime(2026, 1, 10, 2, 0, tzinfo=UTC),
             input_value="100.00",
@@ -289,7 +278,6 @@ def test_duplicate_branch_confirms_pointer_under_guard_and_co_commits(
             calculation_repository=calculation_repository,
             work_unit_repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
-            participation_index_repository=TransactionParticipationIndexRepository(objects=profile.repository),
             operation=operation,
             now=datetime(2026, 1, 10, 3, 0, tzinfo=UTC),
             input_value="100.00",
@@ -337,7 +325,6 @@ def test_duplicate_branch_refuses_a_real_conflicting_pointer_write(
             calculation_repository=calculation_repository,
             work_unit_repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
-            participation_index_repository=TransactionParticipationIndexRepository(objects=profile.repository),
             operation=operation,
             now=datetime(2026, 1, 10, 2, 0, tzinfo=UTC),
             input_value="100.00",
@@ -364,7 +351,6 @@ def test_duplicate_branch_refuses_a_real_conflicting_pointer_write(
                 calculation_repository=calculation_repository,
                 work_unit_repository=work_unit_repository,
                 bucket_event_repository=bucket_event_repository,
-                participation_index_repository=TransactionParticipationIndexRepository(objects=profile.repository),
                 operation=operation,
                 now=datetime(2026, 1, 10, 4, 0, tzinfo=UTC),
                 input_value="100.00",
@@ -395,7 +381,6 @@ def test_duplicate_publication_reports_actual_transaction(
                 calculation_repository=calculation_repository,
                 work_unit_repository=work_repository,
                 bucket_event_repository=event_repository,
-                participation_index_repository=TransactionParticipationIndexRepository(objects=profile.repository),
                 operation=operation,
                 now=datetime(2026, 1, 10, 4, 0, tzinfo=UTC),
                 input_value=value,
@@ -434,86 +419,3 @@ def test_duplicate_publication_reports_actual_transaction(
         else:
             receipt = receipt_repository.load("3" * 64)
             assert receipt is not None and receipt.bucket_event_id is None
-
-
-def _verify_directly(
-    calculation_repository: CalculationRevisionCatalogueRepository, revision_id: str, verified_at: datetime
-) -> None:
-    """Seal a revision as verification would, without running the verification gates."""
-    catalogue = calculation_repository.load()
-    revision = catalogue.get(revision_id)
-    assert revision is not None
-    sealed = revision.model_copy(
-        update={
-            "state": CalculationRevisionState.VERIFICADO_COMPLETO,
-            "verified_at": verified_at,
-            "verified_by": _ACTOR,
-        }
-    )
-    calculation_repository.save(upsert_calculation_revision(catalogue, sealed))
-
-
-@pytest.mark.parametrize("profile_reads", ["unchanged", "moved"])
-def test_restating_a_verified_revision_on_a_later_draft_makes_it_current_again(
-    tmp_path: Path, operation: PinnedAuthorityOperation, profile_reads: str
-) -> None:
-    """A recalculation that reproduces a verified revision re-points to it.
-
-    Its verification stands only while what it read is unchanged; when a read moved,
-    the revision reopens as a draft on the new reads and must be verified again.
-    """
-    unit = _work_unit()
-    sealed_reads = profile_read_fingerprint(profile_present=False, entries=())
-    later_reads = (
-        sealed_reads if profile_reads == "unchanged" else profile_read_fingerprint(profile_present=True, entries=())
-    )
-    assert (later_reads == sealed_reads) is (profile_reads == "unchanged")
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
-        work_repository.save(build_work_unit_catalogue((unit,)))
-
-        def publish(value: str, reads: ProfileReadFingerprint, hour: int):
-            catalogue, revision_id = work_repository.load_revisioned()
-            current = catalogue.get(unit.work_unit_id)
-            assert current is not None
-            return _persist(
-                work_unit=current,
-                work_units=catalogue,
-                work_units_revision_id=revision_id,
-                calculation_repository=calculation_repository,
-                work_unit_repository=work_repository,
-                bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
-                participation_index_repository=TransactionParticipationIndexRepository(objects=profile.repository),
-                operation=operation,
-                now=unit.created_at.replace(hour=hour),
-                input_value=value,
-                profile_read=reads,
-            )
-
-        verified = publish("100.00", sealed_reads, 2)
-        _verify_directly(
-            calculation_repository,
-            verified.revision.calculation_revision_id,
-            unit.created_at.replace(hour=2, minute=30),
-        )
-        draft = publish("200.00", sealed_reads, 3)
-        assert draft.revision.calculation_revision_id != verified.revision.calculation_revision_id
-
-        restated = publish("100.00", later_reads, 4)
-        current = work_repository.load().get(unit.work_unit_id)
-        stored = calculation_repository.load().get(verified.revision.calculation_revision_id)
-
-    assert current is not None and stored is not None
-    assert restated.published
-    assert current.current_calculation_revision_id == verified.revision.calculation_revision_id
-    assert restated.work_unit == current
-    if profile_reads == "unchanged":
-        assert stored.state is CalculationRevisionState.VERIFICADO_COMPLETO
-        assert stored.verified_by == _ACTOR
-        assert stored.profile_read_fingerprint == sealed_reads
-    else:
-        assert stored.state is CalculationRevisionState.BORRADOR
-        assert stored.verified_at is None and stored.verified_by is None
-        assert stored.profile_read_fingerprint == later_reads
-    assert restated.revision == stored

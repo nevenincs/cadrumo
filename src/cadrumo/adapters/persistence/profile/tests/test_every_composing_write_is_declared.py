@@ -96,12 +96,6 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     ): "per-TRANSACTION participation rows, not a singleton catalogue, so the exposure narrows to two writers "
     "touching the same transaction (verify and file both build them here); unclassified beyond that",
     (
-        "src/cadrumo/application/modelo/participation_writes.py",
-        "build_participation_removals",
-    ): "the same per-TRANSACTION rows as build_participation_writes, rewritten without the reopened revision; "
-    "the participation repository offers no revisioned load, so the exposure is the same two writers touching "
-    "one transaction, and the index stays rebuildable from the revision catalogue",
-    (
         "src/cadrumo/application/modelo/filed_revision_observation.py",
         "filed_revision_observation_writes",
     ): "the observation row and the IVA history row are each PER COORDINATE rather than one singleton "

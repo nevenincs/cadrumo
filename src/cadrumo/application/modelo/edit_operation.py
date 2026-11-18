@@ -144,6 +144,7 @@ class ModeloEditApplyExecutor:
                     ModeloEditApplyPublicResultV1(
                         receipt_id=outcome.receipt.receipt_id,
                         calculation_revision_id=outcome.receipt.calculation_revision_id,
+                        reused_sealed_revision=outcome.reused_sealed_revision,
                     ),
                     written_at=now(),
                 )

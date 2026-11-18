@@ -40,7 +40,8 @@ from ....core.external_constants import OutputLanguage
 from ....core.retencion_soportada import RetencionSoportadaClase
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
-from ....domain.modelos.calculation_revision import CalculationRevision
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ....domain.modelos.calculation_revision_operator_layer import ATTESTED_ZERO
 from ....domain.modelos.verification_report import ModeloVerificationFindingSeverity
 from ....domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
@@ -391,3 +392,59 @@ def test_the_work_income_statement_is_offered_only_once_the_open_carries_are_sta
             )
         )
         assert withdrawn.refusal is not None
+
+
+@pytest.mark.parametrize("year", _renta_years()[-1:])
+def test_restating_the_values_of_a_checked_calculation_names_it_and_leaves_the_current_draft(
+    tmp_path: Path, year: int
+) -> None:
+    """An edit that reproduces a sealed revision's content names it; the sealed revision and the pointer stay."""
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as work,
+    ):
+        _record_certificate(work, year)
+        assert work.apply(binding=tuple(_attest(binding_id) for binding_id in _CARRIES)).refusal is None
+        offered = {attestation.family: attestation for attestation in _form(work).carry_attestations}
+        stated = work.apply(
+            binding=absence_statement_submission(work.baseline(), offered.values(), family=_TRABAJO).binding_intents
+        )
+        assert stated.refusal is None and stated.calculation_revision_id is not None
+        head = work.require_head()
+        sealed = head.model_copy(
+            update={
+                "state": CalculationRevisionState.VERIFICADO_COMPLETO,
+                "verified_at": head.updated_at,
+                "verified_by": "operator:test",
+            }
+        )
+        catalogue = work.ports.calculation_repository.load()
+        work.ports.calculation_repository.save(upsert_calculation_revision(catalogue, sealed))
+
+        typed = _STATEMENT_BINDINGS["0008"]
+        retyped = work.apply(
+            binding=(
+                ModeloBindingEditIntentV1(
+                    address=ModeloEditBindingAddressV1(binding_id=typed),
+                    kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+                    value=Decimal("1500"),
+                ),
+            )
+        )
+        # New content is a new draft: nothing is named.
+        assert retyped.refusal is None and retyped.public_result is not None
+        assert retyped.public_result.reused_sealed_revision is None
+        draft_id = retyped.calculation_revision_id
+        assert draft_id is not None and draft_id != sealed.calculation_revision_id
+
+        restated = work.apply(binding=(_attest(typed),))
+
+        assert restated.refusal is None and restated.public_result is not None
+        reused = restated.public_result.reused_sealed_revision
+        assert reused is not None
+        assert reused.calculation_revision_id == sealed.calculation_revision_id
+        assert reused.state is CalculationRevisionState.VERIFICADO_COMPLETO
+        assert reused.current_calculation_revision_id == draft_id
+        # The pointer stays on the draft and the sealed revision is left exactly as it was.
+        assert work.require_head().calculation_revision_id == draft_id
+        assert work.ports.calculation_repository.load().get(sealed.calculation_revision_id) == sealed

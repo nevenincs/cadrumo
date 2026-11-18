@@ -86,6 +86,7 @@ export function answeredRentalCarry(
       result_version: 1,
       receipt_id: "rental-carry-receipt",
       calculation_revision_id: baseline.current_calculation_revision_id,
+      reused_sealed_revision: null,
     };
   return {
     result_version: 1,
