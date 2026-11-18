@@ -969,7 +969,7 @@ export function AgentColumn({
           />
           {conversationId !== null && (
             <ReplyFacts
-              state={newest ? runStateWords(t, newest.status) : null}
+              state={newest?.status ? runStateWords(t, newest.status) : null}
               queued={
                 newest?.queued_messages
                   ? queuedWords(t, newest.queued_messages)

@@ -101,9 +101,8 @@ function readParams() {
     // The agent's reply with a piece of its stream missing, for how the
     // column recovers it.
     agentStream: params.get("stream") === "gap" ? ("gap" as const) : undefined,
-    // What every agent reply stops to ask: questions, a tool's approval or
-    // a Cadrumo review.
-    agentAsks: (["questions", "approval", "review"] as const).find(
+    // What every agent reply stops to ask: questions or a tool's approval.
+    agentAsks: (["questions", "approval"] as const).find(
       (asks) => asks === params.get("asks"),
     ),
     // What the conversations have stored for `@` to name.

@@ -9,13 +9,13 @@ import type {
 } from "./agentCatalogContract";
 import type {
   AttachmentPolicyResponse,
-  ClarificationQuestion,
   ModelLicenceResponse,
   Provider,
   ProviderCondition,
   SkillDetailRecord,
   SkillListResponse,
   SkillVerificationRecord,
+  ToolCallStatus,
   ToolKind,
 } from "./agentGatewayContract";
 import type {
@@ -33,9 +33,13 @@ import type {
   LocalPlacement,
 } from "./localModelsContract";
 import type {
+  AgentApproval,
+  AgentPending,
+  AgentQuestionnaire,
+} from "./agentSnapshotContract";
+import type {
   AgentConversationRecord,
   AgentDocumentRecord,
-  AgentToolCall,
 } from "./agentViews";
 
 // What a host offers for working with the agent, beside the reads in
@@ -47,7 +51,7 @@ import type {
 //
 // Sending a message is the person's own act and is never asked about again.
 // What waits on the person's decision is what the agent would do: a tool
-// call, or a Cadrumo operation's review, each an approval.
+// call, an approval.
 //
 // A conversation is a chain of cadrumo-agent runs, and its id is the first
 // run's. A reply is one run: its id is the reply's handle, and a message that
@@ -213,20 +217,11 @@ export type AgentSendResult = {
   reply_id: string;
 };
 
-// A questionnaire and an approval are cadrumo-agent's own, field for field as
-// it serves them: a run's `pending_clarification`, and its `permission_request`
-// frame. Their bounds are the agent's (see agentClarification); the host maps
-// what the agent serves onto these, and the column holds to them.
-
-/** One to four questions the agent asks together; the reply waits until the
- * person answers them, sends a new message instead, or declines.
- * `request_id` is cadrumo-agent's `ClarificationRequest.request_id`;
- * `reply_id` is the run it belongs to, which an answer is addressed to. */
-export type AgentQuestionnaire = {
-  request_id: string;
-  reply_id: string;
-  questions: ClarificationQuestion[];
-};
+// A questionnaire and an approval are cadrumo-agent's own, as the host maps
+// them from a run's `pending_clarification` and its `permission_request`
+// frame: their types are generated in agentSnapshotContract. Their bounds are
+// the agent's (see agentClarification), and the column holds to them. A
+// questionnaire's `reply_id` is the run an answer is addressed to.
 
 /** How the person resolves a questionnaire: one of cadrumo-agent's three
  * resolutions. */
@@ -248,49 +243,6 @@ export type AgentQuestionnaireAnswer =
  * history has it, as a send is. */
 export type AgentAnswerResult = Record<string, never>;
 
-/** One way of deciding an approval, as the agent offers it: cadrumo-agent's
- * permission option. */
-export type AgentApprovalOption = {
-  /** What a decision names; at most 64 characters. */
-  option_id: string;
-  /** The option's own name, at most 128 characters. It may be empty. */
-  name?: string | null;
-  /** What choosing the option does, which decides its place and emphasis:
-   * allowing or refusing, this call or later ones too. The agent offers an
-   * option it would remember only when it offers nothing else; the column
-   * leaves such an option out beside any that answers this call alone. */
-  kind:
-    | "allow_once"
-    | "allow_session"
-    | "allow_always"
-    | "reject_once"
-    | "reject_always";
-};
-
-/** Something the reply cannot do until the person decides: a tool the agent
- * wants to call, or a Cadrumo operation's review before it commits. Only a
- * deliberate gesture of the person answers it; no tool the model can call
- * does. `source` is Cadrumo's own; the rest is cadrumo-agent's
- * `permission_request`. */
-export type AgentApproval = {
-  request_id: string;
-  reply_id: string;
-  source: "agent_tool" | "cadrumo_review";
-  /** The tool the agent wants to call, as the agent names it, or the
-   * operation under review. Absent when its source names none. */
-  tool_call?: string | null;
-  /** The declared server that owns the requested tool. */
-  tool_server?: string | null;
-  /** What kind of tool it is, one of cadrumo-agent's ten. The card words it. */
-  tool_kind?: ToolKind | null;
-  /** Bounded description supplied by the service, including supported targets.
-   * It is not the call's full argument document. */
-  description?: string | null;
-  /** What the person can decide, one to sixteen options. A decision is the id
-   * of one of them. */
-  options: AgentApprovalOption[];
-};
-
 /** One change to a conversation while it is watched, per reply (a run of
  * cadrumo-agent). A reply's text and tool calls are listed by the same ids
  * history() lists them under. A reply's text is one message, however many tool
@@ -307,6 +259,16 @@ export type AgentApproval = {
 export type AgentToolRefusal = {
   code: string;
   recovery_action_id?: string;
+};
+
+/** A tool call as the stream reports it: its `tool_call_id`, its `title`
+ * (the tool's name), its `kind` and its `status`. The stream carries nothing
+ * of its input or result; only the history says more. */
+export type AgentStreamToolCall = {
+  id: string;
+  title: string;
+  tool_kind: ToolKind;
+  status: ToolCallStatus;
 };
 
 export type AgentStreamEvent =
@@ -340,7 +302,7 @@ export type AgentStreamEvent =
       reply_id: string;
       /** The tool call, whole, each time it changes; `refusal` only on a
        * call that has failed because the product refused it. */
-      tool: AgentToolCall & { refusal?: AgentToolRefusal };
+      tool: AgentStreamToolCall & { refusal?: AgentToolRefusal };
     }
   /** The agent's own frame (`clarification_pending`) is only a nudge that
    * names the request; the host reads the questionnaire from the run's
@@ -489,10 +451,7 @@ export interface AgentSession {
   rename?(conversationId: string, title: string): Promise<void>;
   /** What the conversation's unfinished reply waits on, so a reload shows
    * the same questions and approvals the stream raised. */
-  pending(conversationId: string): Promise<{
-    questionnaires: AgentQuestionnaire[];
-    approvals: AgentApproval[];
-  }>;
+  pending(conversationId: string): Promise<AgentPending>;
   /** Resolves a questionnaire. An answer the agent would not take is refused
    * with the status it answered with (`agent_gateway_422`), and a question
    * that is no longer pending with `agent_gateway_404`: the agent explains a

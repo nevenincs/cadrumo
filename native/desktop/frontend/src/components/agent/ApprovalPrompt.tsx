@@ -1,24 +1,26 @@
 import { useId } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
-import type {
-  AgentApproval,
-  AgentApprovalOption,
-} from "../../shell/agentSession";
-import { offeredOptions } from "../../shell/agentPermission";
 import { toolKindWords } from "../../shell/agentWords";
 import { useStrings, type Translate } from "../../shell/strings";
 import { AgentTextAction } from "./AgentAction";
+import type {
+  AgentApproval,
+  AgentApprovalOption,
+} from "../../shell/agentSnapshotContract";
 
 /** Refusals first, and allowing once last, nearest the hand. The kind of an
  * option decides this, never its name or where the agent lists it. */
 const ORDER: readonly AgentApprovalOption["kind"][] = [
-  "reject_always",
   "reject_once",
-  "allow_always",
   "allow_session",
   "allow_once",
 ];
+
+/** Whose decision the card puts: a tool the agent wants to call, or, from
+ * the window's own attendance requests, a Cadrumo review. The host's
+ * approvals are only ever the agent's. */
+export type ApprovalPromptSource = AgentApproval["source"] | "cadrumo_review";
 
 /** Localized labels for the agent's canonical choices and unnamed options. */
 function kindWords(t: Translate, kind: AgentApprovalOption["kind"]): string {
@@ -27,12 +29,8 @@ function kindWords(t: Translate, kind: AgentApprovalOption["kind"]): string {
       return t("desktop.agent.approval_allow_once");
     case "allow_session":
       return t("desktop.agent.approval_allow_session");
-    case "allow_always":
-      return t("desktop.agent.approval_allow_always");
     case "reject_once":
       return t("desktop.agent.approval_reject_once");
-    case "reject_always":
-      return t("desktop.agent.approval_reject_always");
   }
 }
 
@@ -40,7 +38,7 @@ function kindWords(t: Translate, kind: AgentApprovalOption["kind"]): string {
  * supplied wording; their scope cannot safely be inferred from English prose. */
 function optionWords(
   t: Translate,
-  source: AgentApproval["source"],
+  source: ApprovalPromptSource,
   option: AgentApprovalOption,
 ): string {
   if (source === "agent_tool" && option.option_id === option.kind)
@@ -52,7 +50,7 @@ function optionWords(
  * complete targets, including the agent's escaped file/attachment names. */
 function descriptionWords(
   t: Translate,
-  source: AgentApproval["source"],
+  source: ApprovalPromptSource,
   tool: string | null | undefined,
   description: string | null | undefined,
 ): string | null | undefined {
@@ -80,9 +78,7 @@ function descriptionWords(
 /**
  * A decision a reply waits on: a tool the agent wants to use, or a Cadrumo
  * operation to review before it commits. It says what would run, and offers
- * the options the agent offers, each under its own name; an option that would
- * persist beyond the run is left out while a bounded option is
- * offered. Only a press of one of them decides: none is chosen beforehand,
+ * the options the agent offers, each under its own name. Only a press of one of them decides: none is chosen beforehand,
  * none has the focus, and no key answers for the person. The kind of an
  * option decides its place and its emphasis: refusals come first and allowing
  * once is the primary action. Of the call, the agent says its name and little
@@ -98,7 +94,7 @@ export function ApprovalPrompt({
   onDecide,
   title,
 }: {
-  source: AgentApproval["source"];
+  source: ApprovalPromptSource;
   /** What would run, as the agent names it. */
   toolCall?: string | null;
   toolServer?: string | null;
@@ -116,7 +112,7 @@ export function ApprovalPrompt({
   const detail = descriptionWords(t, source, toolCall, description);
   const showKind = toolKind && toolKind !== "other";
   // A stable sort: options of one kind keep the order the agent gave them.
-  const ordered = offeredOptions(options).sort(
+  const ordered = [...options].sort(
     (a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind),
   );
   return (
