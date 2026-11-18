@@ -331,7 +331,9 @@ export const COUNT_ICON: Record<keyof ActivityAssetFindingCounts, IconName> = {
 };
 
 /** The kinds of count a list row can carry, in the order they are shown. */
-export const COUNT_KINDS = Object.keys(COUNT) as (keyof ActivityAssetFindingCounts)[];
+export const COUNT_KINDS = Object.keys(
+  COUNT,
+) as (keyof ActivityAssetFindingCounts)[];
 
 /** What a count of `kind` says in a tooltip or an accessible name. */
 export const countWord = (
