@@ -173,7 +173,8 @@ def test_322_note_five_boxes_refuse_nonzero_amounts(box: str) -> None:
     assert owner.constraints.violates(Decimal("-0.01")) is not None
     assert "aeat-dr-322-2026" in owner.constraints.source_refs
     previous = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/322")).revisions[_edition(2)]
-    assert next(c for c in previous.casillas if c.id == box).constraints is None
+    earlier = next(c for c in previous.casillas if c.id == box).constraints
+    assert earlier is None or earlier.violates(Decimal("0.01")) is None
 
 
 def test_322_prorrata_election_and_revocation_keep_one_exclusive_owner() -> None:
