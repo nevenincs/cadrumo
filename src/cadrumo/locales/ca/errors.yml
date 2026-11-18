@@ -1120,7 +1120,7 @@ errors:
       XML %{source}. L'aplicació ho deriva del seu propi disseny d'exportació, així
       que cap canvi a les teves dades ho corregeix.
     filing_export_xsd_version_absent: L'origen XSD del diccionari XML %{source} no
-      declara cap valor de versionxsd. L'aplicació ho deriva del seu propi disseny
+      declara cap valor de `versionxsd`. L'aplicació ho deriva del seu propi disseny
       d'exportació, així que cap canvi a les teves dades ho corregeix.
     filing_value_kind_contradicts_trace: 'La declaració té a la casella %{casilla_id}
       un rastre de càlcul que contradiu el seu tipus (%{kind}): només una casella

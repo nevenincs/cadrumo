@@ -623,8 +623,9 @@ cli:
       prevision_social:
         amount_help: Importe de la aportación en euros que indica el certificado,
           por ejemplo 1500.00.
-        beneficiary_help: 'A qué sistema fue la aportación: taxpayer, spouse o disabled_person.
-          En esta versión solo se calcula taxpayer.'
+        beneficiary_help: 'Destino de la aportación: tu sistema (`taxpayer`), el de
+          tu cónyuge (`spouse`) o el de una persona con discapacidad (`disabled_person`).
+          Por ahora solo se calculan las aportaciones a tu sistema.'
         certificate_file_help: Archivo del certificado (PDF o imagen) que se guarda
           cifrado en tu almacenamiento; su SHA-256 pasa a ser la prueba del registro.
         clave_help: Clave del modelo 345 que indica el certificado, de la A a la M.
@@ -2853,7 +2854,7 @@ cli:
         help: Registra los arrendamientos de tus inmuebles.
         list_help: Lista los arrendamientos guardados con su clave de fila.
         remove_help: Elimina un arrendamiento.
-        row_help: Clave de fila del arrendamiento, la que muestra «list».
+        row_help: Clave de fila del arrendamiento, la que muestra `list`.
         value_help: Un dato HECHO=VALOR; repite la opción para varios datos.
       ascendiente:
         add_flag_help: NACIMIENTO=AAAA-MM-DD[,NIF=<NIF o NIE>][,APELLIDOS_NOMBRE=<apellidos
@@ -2867,14 +2868,14 @@ cli:
           como FALLECIMIENTO. Repetible; NACIMIENTO no se puede quitar.
         edit_empty: Indica al menos un dato que cambiar con --ascendiente CLAVE=VALOR
           o que quitar con --clear CLAVE.
-        edit_flag_help: 'Pares CLAVE=VALOR que se sustituyen, con las claves de add:
-          NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO, CONVIVIENTES, CONVIVENCIA_MITAD_PERIODO,
+        edit_flag_help: 'Pares CLAVE=VALOR que se sustituyen, con las claves del comando
+          `add`: NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO, CONVIVIENTES, CONVIVENCIA_MITAD_PERIODO,
           RENTAS, DECLARACION_PROPIA, DISCAPACIDAD, DISCAPACIDAD_ASISTENCIA e INCAPACIDAD_JUDICIAL.
           Repetible; cada clave como máximo una vez.'
         edit_help: Cambia los datos declarados de un ascendiente del perfil activo
           por índice (base 0); los datos que no indiques se quedan como están.
         edit_index_help: Índice (base 0) del ascendiente que quieres cambiar, tal
-          como lo muestra list.
+          como lo muestra `list`.
         help: Declara los ascendientes del contribuyente para la sección de familia
           del modelo 100.
         index_out_of_range: Índice %{index} fuera de rango; el perfil tiene %{total}
@@ -3096,7 +3097,7 @@ cli:
           a una fila y mientras haya filas guardadas.
         none_with_stored_rows: El perfil ya contiene este grupo familiar (%{rows}
           fila(s) guardadas, recuento declarado %{stated_count}). Elimina primero
-          las filas con el comando remove.
+          las filas con el comando `remove`.
         rows_or_none_required: Indica al menos una fila %{flag}, o %{none} para declarar
           que no hay ninguna.
       inmueble:
@@ -3109,7 +3110,7 @@ cli:
         list_help: Lista los inmuebles guardados con su clave de fila.
         remove_help: Elimina un inmueble; se rechaza mientras un arrendamiento lo
           nombre.
-        row_help: Clave de fila del inmueble, la que muestra «list».
+        row_help: Clave de fila del inmueble, la que muestra `list`.
         value_help: Un dato HECHO=VALOR; repite la opción para varios datos.
       list:
         incoherent_observation_advisory: 'No se pudo obtener un listado fiable de
@@ -3176,7 +3177,7 @@ cli:
         help: Registra tus cuentas bancarias, depósitos a plazo y cuentas de valores.
         list_help: Lista las posiciones guardadas con su clave de fila.
         remove_help: Elimina una posición.
-        row_help: Clave de fila de la posición, la que muestra «list».
+        row_help: Clave de fila de la posición, la que muestra `list`.
         value_help: Un dato HECHO=VALOR; repite la opción para varios datos.
       recovery:
         channel_absent: Un código de recuperación solo puede mostrarse en un terminal.

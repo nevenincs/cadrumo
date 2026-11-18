@@ -586,8 +586,8 @@ application:
           con ceros bajo cualquier otra clave. Corrige el registro y vuelve a exportar.'
         m303_definitive_prorrata_missing: 'No se ha escrito nada: la regularización
           de bienes de inversión del modelo 303 necesita el porcentaje definitivo
-          de prorrata y tu registro de prorrata no lo tiene para el año. Liquídalo
-          en tu registro y vuelve a exportar.'
+          de prorrata y tu registro de prorrata no lo tiene para el año. Liquida la
+          prorrata en tu registro y vuelve a exportar.'
         m303_filing_facts_unsupplied: 'No se ha escrito nada: la exportación del Modelo
           303 necesita un conjunto completo de hechos de presentación para esta declaración,
           y no hay ninguno disponible.'
@@ -2441,7 +2441,7 @@ application:
       renta_inmueble_letting_start_unstated: 'Inmueble {record}: no indica cuándo
         se arrendó por primera vez, así que no se sabe de qué ejercicios anteriores
         puede arrastrar todavía un exceso de intereses y reparación. Indica esa fecha
-        con config profile inmueble edit.'
+        con `config profile inmueble edit`.'
       renta_inmueble_naturaleza_unstated: 'Inmueble {record}: no indica si es urbano
         o rústico.'
       renta_inmueble_pending_expenses_held_return_unstated: 'Inmueble {record}: estaba
@@ -3030,7 +3030,7 @@ application:
         %{period}, que no se puede asignar a un periodo de presentación del modelo.
       export_profile_read_drift: El cálculo guardado %{calculation_revision_id} se
         basa en datos del perfil que has cambiado desde entonces (%{changed_count}
-        cambiados). Vuelve a calcularlo y verifícalo antes de exportarlo.
+        cambiados). Vuelve a calcularlo y verifica el resultado antes de exportarlo.
       export_revision_state_refused: El cálculo guardado %{calculation_revision_id}
         no está comprobado y completo, ni registrado como presentado, y no se puede
         exportar.
@@ -3953,11 +3953,11 @@ application:
         trabajador activo.
       trabajo_expense_above_limit:
         colegio_profesional: La casilla [%{casilla_id}] (cuotas de colegios profesionales)
-          indica %{stated} EUR, por encima del límite legal de %{limit} EUR. Redúcela
-          al límite o menos.
+          indica %{stated} EUR, por encima del límite legal de %{limit} EUR. Reduce
+          el importe hasta el límite o por debajo.
         defensa_juridica: La casilla [%{casilla_id}] (gastos de defensa jurídica)
-          indica %{stated} EUR, por encima del límite legal de %{limit} EUR. Redúcela
-          al límite o menos.
+          indica %{stated} EUR, por encima del límite legal de %{limit} EUR. Reduce
+          el importe hasta el límite o por debajo.
       trabajo_income_unstated:
         decision_trabajador: La casilla [%{casilla_id}] (aportaciones de la empresa
           por decisión tuya) es un ingreso del trabajo que ningún certificado del
@@ -5252,7 +5252,7 @@ application:
             help: Año del recibo del IBI al que corresponde este valor (cuatro cifras).
             label: Ejercicio del IBI
       invalid: El valor guardado no tiene la forma esperada, así que no se puede mostrar
-        por partes. Corrígelo como texto o bórralo y vuelve a indicarlo.
+        por partes. Corrígelo como texto o elimina el valor y vuelve a indicarlo.
       kind:
         inquilino: Arrendatario
         mejora: Mejora

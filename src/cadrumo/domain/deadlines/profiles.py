@@ -540,8 +540,9 @@ def profile_claims_modelo_iva_block(values: Mapping[str, object]) -> bool:
     Presence is value-bearing, not truth-bearing: answering "no" to an IVA
     enrolment still claims the block, because declining a regime is a
     declaration about IVA. Only an absent or blank path leaves it unclaimed.
+    A stable order gives tracked mappings the same reads before the first declaration.
     """
-    return any(_declared(values.get(path)) for path in MODELO_IVA_BLOCK_CLAIMING_PATHS)
+    return any(_declared(values.get(path)) for path in sorted(MODELO_IVA_BLOCK_CLAIMING_PATHS))
 
 
 def modelo_iva_profile_required_paths(values: Mapping[str, object]) -> tuple[str, ...]:

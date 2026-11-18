@@ -699,7 +699,7 @@ profile:
         fecha_inicio:
           label: Start date
         incumple_lau_17_6:
-          label: Breaches art. 17.6 LAU (tensioned zone)
+          label: Breaches art. 17.6 LAU (designated housing stress area)
         inmueble:
           label: Let property (row key)
         inquilinos:
@@ -715,7 +715,7 @@ profile:
         uso_vivienda:
           label: Dwelling lease
         zona_tensionada:
-          label: Tensioned residential market zone
+          label: Designated area of housing market stress
       renta_family:
         anualidades_alimentos_euros:
           label: Court-ordered child maintenance annuities paid

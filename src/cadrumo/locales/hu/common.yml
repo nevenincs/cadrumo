@@ -336,11 +336,11 @@ aggregation:
       identity_mismatch: A rekord kibocsátója, terve, kulcsa vagy éve nem egyezik
         azzal a rekorddal, amelyet módosítani szeretnél, ezért semmi sem lett mentve.
       not_found: Ebben az évben nincs hozzájárulási rekord ezzel a kibocsátói hivatkozással,
-        --plan-ref, --clave és --subclave értékkel. Futtasd a list parancsot a tárolt
+        --plan-ref, --clave és --subclave értékkel. Futtasd a `list` parancsot a tárolt
         rekordokért.
       same_plan_split_unstated: Ennek a kulcsnak és alkulcsnak a mezője attól függ,
         hogy a munkáltatód is fizetett-e hozzájárulást ugyanabba a tervbe. Add meg
-        a --employer-same-plan yes vagy no értékkel, vagy add meg te a mezőt operátori
+        a --employer-same-plan `yes` vagy `no` értékkel, vagy add meg te a mezőt operátori
         értékként.
       stale_revision: A hozzájárulási rekord megváltozott, mióta elolvastad. Olvasd
         el újra, és ismételd meg a módosítást.

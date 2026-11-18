@@ -924,8 +924,8 @@ errors:
       duplicated: %{addresses}. The application derives this from its own export design,
       so no change to your data repairs it.'
     filing_export_projection_address_unpreflighted: The export projection address
-      %{address} has no preflighted value. The application derives this from its own
-      export design, so no change to your data repairs it.
+      %{address} has no value from the preflight check. The application derives this
+      from its own export design, so no change to your data repairs it.
     filing_export_projection_duplicate_values: The projection record %{record} emitted
       duplicate typed projection values. The application derives this from its own
       export design, so no change to your data repairs it.
@@ -1018,7 +1018,7 @@ errors:
       be parsed. The application derives this from its own export design, so no change
       to your data repairs it.
     filing_export_xsd_version_absent: The XML dictionary XSD source %{source} declares
-      no versionxsd values. The application derives this from its own export design,
+      no `versionxsd` values. The application derives this from its own export design,
       so no change to your data repairs it.
     filing_value_kind_contradicts_trace: 'The declaration holds a calculation trace
       for box %{casilla_id} that contradicts its kind (%{kind}): only a calculated

@@ -536,11 +536,11 @@ application:
           Modelo 200, and export again.'
         m202_prior_periodo_turnover_unreadable: 'Nothing was written: the período
           impositivo before this one lasted less than twelve months, so the turnover
-          that decides the tipo de gravamen is that período''s own, as its Modelo
-          200 declares it. No Modelo 200 of that período is held and no figure for
-          it has been stated, so this instalment cannot be exported. Capture or record
-          that Modelo 200, or state its turnover on this ejercicio''s Modelo 200,
-          and export again.'
+          that decides the tipo de gravamen is the turnover for that period, as its
+          Modelo 200 declares it. No Modelo 200 of that período is held and no figure
+          for it has been stated, so this instalment cannot be exported. Capture or
+          record that Modelo 200, or state its turnover on this ejercicio''s Modelo
+          200, and export again.'
         m280_negative_imputation_key_invalid: 'Nothing was written: a negative imputation
           in Modelo 280 needs key 2 with the negative sign N, or zero fill under any
           other key. Correct the record and export again.'
@@ -2321,7 +2321,7 @@ application:
         and has no rent entry linked to it.'
       renta_inmueble_letting_start_unstated: 'Property {record}: it does not say when
         it was first let, so the earlier years whose interest and repair excess it
-        may still carry are unknown. Add that date with config profile inmueble edit.'
+        may still carry are unknown. Add that date with `config profile inmueble edit`.'
       renta_inmueble_naturaleza_unstated: 'Property {record}: it does not say whether
         it is urban or rustic.'
       renta_inmueble_pending_expenses_held_return_unstated: 'Property {record}: it
@@ -2342,8 +2342,9 @@ application:
       renta_inmueble_record_unreadable: A property or lease record of your profile
         cannot be read, so no let property is calculated.
       renta_inmueble_reduction_fact_unstated: 'Property {record}: a lease does not
-        say whether it is for a dwelling, whether the dwelling is in a tensioned zone
-        or whether it keeps art. 17.6 LAU, so the art. 23.2 reduction is not calculated.'
+        say whether it is for a dwelling, whether the dwelling is in a designated
+        housing stress area or whether it keeps art. 17.6 LAU, so the art. 23.2 reduction
+        is not calculated.'
       renta_inmueble_reduction_tenants_mixed: 'Property {record}: only some tenants
         of a lease qualify by age for the art. 23.2 reduction, which is not calculated.'
       renta_inmueble_regime_not_pleno_dominio: 'Property {record}: you hold it in
@@ -4881,8 +4882,8 @@ application:
           100 of such a year and read this again.
         refusal:
           lau_17_6_unstated: 'Tax year %{ejercicio}: the reduction cannot be derived
-            because the lease is in a tensioned zone and this fact is not stated:
-            %{fact}. State it.'
+            because the lease is in a designated housing stress area and this fact
+            is not stated: %{fact}. State it.'
           lease_unreadable: 'Tax year %{ejercicio}: the facts of this lease cannot
             be read (%{fact}). Correct them.'
           mixed_tenant_ages: 'Tax year %{ejercicio}: only some of the tenants are
@@ -4907,11 +4908,12 @@ application:
           tier_50: '%{rate} % reduction: any other dwelling lease'
           tier_60: '%{rate} % reduction: dwelling rehabilitated in the years before
             the contract'
-          tier_70: '%{rate} % reduction: first letting in a tensioned zone to tenants
-            aged 18 to 35, or a letting to a public administration or non-profit entity
-            for affordable or social housing'
-          tier_90: '%{rate} % reduction: tensioned zone and an initial rent cut by
-            more than the legal threshold below the last rent of the previous contract'
+          tier_70: '%{rate} % reduction: first letting in a designated housing stress
+            area to tenants aged 18 to 35, or a letting to a public administration
+            or non-profit entity for affordable or social housing'
+          tier_90: '%{rate} % reduction: designated housing stress area and an initial
+            rent cut by more than the legal threshold below the last rent of the previous
+            contract'
         title: Rental reduction (art. 23.2 LIRPF)
         value:
           affirmative: 'yes'

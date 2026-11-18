@@ -610,14 +610,16 @@ cli:
       prevision_social:
         amount_help: Az igazoláson szereplő hozzájárulás összege euróban, például
           1500.00.
-        beneficiary_help: 'Kinek a rendszerébe került a hozzájárulás: taxpayer, spouse
-          vagy disabled_person. Ebben a verzióban csak a taxpayer számítódik.'
+        beneficiary_help: 'A hozzájárulás célja: a saját rendszered (`taxpayer`),
+          a házastársad rendszere (`spouse`) vagy egy fogyatékossággal élő személy
+          rendszere (`disabled_person`). A számítás jelenleg csak a saját rendszeredbe
+          fizetett hozzájárulásokat veszi figyelembe.'
         certificate_file_help: Az igazolás fájlja (PDF vagy kép), amelyet titkosítva
           tárolsz; az SHA-256 értéke lesz a rekord bizonyítéka.
         clave_help: Az igazoláson szereplő 345-ös modell szerinti kulcs, A-tól M-ig.
         ejercicio_help: Az adóév (`ejercicio`), amelyben a hozzájárulást befizették.
         employer_same_plan_help: A munkáltatód is fizetett-e hozzájárulást ugyanabba
-          a tervbe (yes vagy no). Kötelező annál a kulcsnál és alkulcsnál, amelynek
+          a tervbe (`yes` vagy `no`). Kötelező annál a kulcsnál és alkulcsnál, amelynek
           mezője ettől függ.
         evidence_sha256_help: Egy már tárolt igazolás SHA-256 értéke, vagy ellenőrzés
           a --certificate-file fájllal szemben. A rekordhoz a kettő közül az egyik
@@ -723,8 +725,8 @@ cli:
           vagy elszámoljuk.
         seed_help: Az adóév ideiglenes arányosítási százalékának átvezetése az előző
           év végleges százalékából (LIVA 105.Uno cikk), a tárolt előző évi Modelo
-          390-ből, vagy ha mentesülsz alóla, az előző év utolsó időszakának Modelo
-          303-ából olvasva.
+          390-ből, vagy ha mentesülsz alóla, az előző év utolsó időszakának 303-as
+          nyomtatványából olvasva.
         seed_local_authority: Az ideiglenes százalék helyben, a tárolt {modelo} {period}
           {filing_year} elszámolási megfigyelésedből lett átvezetve (LIVA 105.Uno
           cikk). Ez nem az AEAT által erre az adóévre kiadott százalék.
@@ -1969,7 +1971,7 @@ cli:
         entry_casilla_unknown: '%{casilla} nem mezőazonosító.'
         entry_confirm: 'Még semmit sem rögzítettél. Futtasd: `%{command}`, hogy rögzítsd.'
         entry_row_help: A sor, amelyre a nyilatkozat vonatkozik, a számítás által
-          mutatott forrássor-azonosítóval (például inmueble:1). Csak soronként megadott
+          mutatott forrássor-azonosítóval (például `inmueble:1`). Csak soronként megadott
           adatoknál.
         entry_value_help: Az érték, a kimeneti nyelvednek megfelelően írva (például
           1 234,56 magyarul vagy 1,234.56 angolul).
@@ -2816,13 +2818,13 @@ cli:
         help: Rögzítsd az ingatlanaid bérleti szerződéseit.
         list_help: Listázd a mentett bérleti szerződéseket a sorkulcsukkal.
         remove_help: Töröld a bérleti szerződést.
-        row_help: A bérleti szerződés sorkulcsa, ahogy a «list» mutatja.
+        row_help: A bérleti szerződés sorkulcsa, ahogy a `list` mutatja.
         value_help: Egy TÉNY=ÉRTÉK adat; több adathoz ismételd az opciót.
       ascendiente:
         add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,NIF=<NIF vagy NIE>][,APELLIDOS_NOMBRE=<vezeték-
           és utónév>][,FALLECIMIENTO=ÉÉÉÉ-HH-NN][,CONVIVIENTES=<azon leszármazottak
-          száma, akikkel a felmenő együtt él>][,CONVIVENCIA_MITAD_PERIODO=true|false][,RENTAS=<éves
-          jövedelem a mentes jövedelmek nélkül, euróban>][,DECLARACION_PROPIA=true|false][,DISCAPACIDAD=0|33|65][,DISCAPACIDAD_ASISTENCIA=true|false][,INCAPACIDAD_JUDICIAL=true|false].
+          száma, akikkel a felmenő együtt él>][,CONVIVENCIA_MITAD_PERIODO=`true|false`][,RENTAS=<éves
+          jövedelem a mentes jövedelmek nélkül, euróban>][,DECLARACION_PROPIA=`true|false`][,DISCAPACIDAD=0|33|65][,DISCAPACIDAD_ASISTENCIA=`true|false`][,INCAPACIDAD_JUDICIAL=`true|false`].
           Ismételhető; a NACIMIENTO minden sorban kötelező.
         add_help: Egy vagy több felmenő hozzáadása az aktív profilhoz, vagy a --none
           megadásával annak rögzítése, hogy nincs egy sem.
@@ -2836,7 +2838,7 @@ cli:
           Ismételhető; minden kulcs legfeljebb egyszer.'
         edit_help: Az aktív profil egy felmenőjének megadott adatait módosítja 0-tól
           kezdődő index alapján; a meg nem nevezett adatok változatlanok maradnak.
-        edit_index_help: A módosítandó felmenő 0-tól kezdődő indexe, ahogy a list
+        edit_index_help: A módosítandó felmenő 0-tól kezdődő indexe, ahogy a `list`
           mutatja.
         help: A adózó felmenőinek megadása a 100-as modell családi szakaszához.
         index_out_of_range: A(z) %{index} index tartományon kívül esik; a profilon
@@ -3058,7 +3060,7 @@ cli:
           Ez válasz, nem ismeretlen adat. Sor mellett és tárolt sorok esetén elutasítja.
         none_with_stored_rows: 'A profil már tartalmazza ezt a háztartási csoportot
           (%{rows} tárolt sor, megadott darabszám: %{stated_count}). Előbb távolítsd
-          el a sorokat a remove paranccsal.'
+          el a sorokat a `remove` paranccsal.'
         rows_or_none_required: Adj meg legalább egy %{flag} sort, vagy a(z) %{none}
           értéket annak rögzítésére, hogy nincs egy sem.
       inmueble:
@@ -3071,7 +3073,7 @@ cli:
         list_help: Listázd a mentett ingatlanokat a sorkulcsukkal.
         remove_help: Töröld az ingatlant; amíg egy bérleti szerződés hivatkozik rá,
           elutasítjuk.
-        row_help: Az ingatlan sorkulcsa, ahogy a «list» mutatja.
+        row_help: Az ingatlan sorkulcsa, ahogy a `list` mutatja.
         value_help: Egy TÉNY=ÉRTÉK adat; több adathoz ismételd az opciót.
       list:
         incoherent_observation_advisory: 'A profillista nem volt megbízhatóan beolvasható
@@ -3139,7 +3141,7 @@ cli:
         help: Rögzítsd a bankszámláidat, lekötött betéteidet és értékpapírszámláidat.
         list_help: Listázd a mentett pozíciókat a sorkulcsukkal.
         remove_help: Töröld a pozíciót.
-        row_help: A pozíció sorkulcsa, ahogy a «list» mutatja.
+        row_help: A pozíció sorkulcsa, ahogy a `list` mutatja.
         value_help: Egy TÉNY=ÉRTÉK adat; több adathoz ismételd az opciót.
       recovery:
         channel_absent: A helyreállítási kód csak terminálon jeleníthető meg. Terminál
