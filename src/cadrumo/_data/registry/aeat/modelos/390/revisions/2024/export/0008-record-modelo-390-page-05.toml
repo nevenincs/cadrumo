@@ -431,6 +431,7 @@ design_type = "Num"
 legal_refs = [
     "ley-37-1992:art-122",
     "ley-37-1992:art-123",
+    "orden-hfp-1359-2023:da-5",
     "orden-eha-3111-2009:art-1",
     "rd-1624-1992:art-71",
 ]
@@ -931,6 +932,7 @@ design_type = "Num"
 legal_refs = [
     "ley-37-1992:art-122",
     "ley-37-1992:art-123",
+    "orden-hfp-1359-2023:da-5",
     "orden-eha-3111-2009:art-1",
     "rd-1624-1992:art-71",
 ]
