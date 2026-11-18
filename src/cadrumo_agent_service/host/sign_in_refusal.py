@@ -65,12 +65,21 @@ def log_settlement(
     stderr_bytes: int,
     errors: Sequence[str],
     log_ref: str,
+    reached: str,
+    reached_after: float,
+    lasted: float,
 ) -> None:
-    """One line per settled attempt on the attempt's own logger, at warning when it failed; no helper output."""
+    """One line per settled attempt on the attempt's own logger, at warning when it failed; no helper output.
+
+    ``reached`` is the last step the attempt stood at before it settled, ``reached_after`` the seconds from
+    its start to that step and ``lasted`` its whole life, so an attempt that ended unfinished says whether
+    it ever offered the browser.
+    """
     logger.log(
         logging.WARNING if outcome == "failed" else logging.INFO,
         "provider sign-in settled provider=%s event=%s reason=%s cause=%s status_cause=%s "
-        "cleanup_confirmed=%s helper_exit_status=%s helper_stderr_bytes=%d errors=%s log_ref=%s",
+        "cleanup_confirmed=%s helper_exit_status=%s helper_stderr_bytes=%d errors=%s "
+        "reached=%s reached_after_s=%.1f lasted_s=%.1f log_ref=%s",
         lane,
         outcome,
         reason or "none",
@@ -80,6 +89,9 @@ def log_settlement(
         "none" if exit_status is None else exit_status,
         stderr_bytes,
         ",".join(errors) or "none",
+        reached,
+        reached_after,
+        lasted,
         log_ref,
     )
 

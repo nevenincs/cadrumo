@@ -31,6 +31,11 @@ EXCHANGE_SECONDS = 305
 _Settlement = tuple[str, str | None, HelperCause | ServiceCause | None]
 """An outcome event, its reason and its cause."""
 
+_WITHDRAWN: _Settlement = ("cancelled", "profile_required", "profile_signed_out")
+"""An attempt whose profile authority ended under it: said as such, never as the person's own cancellation."""
+
+_ACTIVE_EVENTS = frozenset({"starting", "started", "browser_action", "authorization_code_required"})
+
 
 class HelperStreamError(ValueError):
     """The helper's stream broke the protocol; carries only the service's closed cause word."""
@@ -88,12 +93,15 @@ class AuthAttempt:
         self._confirm = confirm
         self._lock = Lock()
         self._cancel = Event()
+        self._withdrawn = False
         self._done = Event()
         self._clean = False
         self._scope: WindowsProcessScope | None = None
         self._input: BinaryIO | None = None
         self._readers: list[Thread] = []
         self._observed = time.monotonic()
+        self._began = self._reached_at = self._observed
+        self._reached = "starting"
         self._deadline: float | None = None
         self._snapshot = snapshot(self.id, lane, "starting")
         self._thread = Thread(target=self._run, name="provider-sign-in", daemon=True)
@@ -112,8 +120,9 @@ class AuthAttempt:
     def observe(self) -> dict[str, JsonValue]:
         """A live dialog renews only its helper watchdog, never person authority."""
         if not self._valid():
-            self.cancel()
-            return snapshot(self.id, self._lane, "cancelled")
+            self._withdraw()
+            event, reason, cause = _WITHDRAWN
+            return snapshot(self.id, self._lane, event, reason=reason, cause=cause, log_ref=self.log_ref)
         with self._lock:
             self._observed = time.monotonic()
             return dict(self._snapshot)
@@ -124,6 +133,27 @@ class AuthAttempt:
             self._cancel.set()
             self._snapshot.pop("url", None)
             self._snapshot.pop("user_code", None)
+
+    def _withdraw(self) -> None:
+        """Cancel because the profile authority the attempt was started under has ended."""
+        with self._lock:
+            self._withdrawn = True
+        self.cancel()
+
+    def _cancelled(self) -> _Settlement:
+        """The cancellation as it happened: lost authority names itself; the person's own has no reason."""
+        with self._lock:
+            withdrawn = self._withdrawn
+        return _WITHDRAWN if withdrawn else ("cancelled", None, None)
+
+    def _held(self) -> bool:
+        """Whether neither a cancellation nor lost authority has ended the attempt; lost authority is noted."""
+        if self._cancel.is_set():
+            return False
+        if not self._valid():
+            self._withdraw()
+            return False
+        return True
 
     def submit_code(self, code: bytearray) -> dict[str, JsonValue]:
         """Submit once to this live attempt, never retaining or returning the code."""
@@ -204,6 +234,10 @@ class AuthAttempt:
                 value.pop("url", None)
                 value.pop("user_code", None)
             self._snapshot = value
+            event = value.get("event")
+            if isinstance(event, str) and event in _ACTIVE_EVENTS and event != self._reached:
+                self._reached = event
+                self._reached_at = time.monotonic()
 
     def _discard(self, stream: BinaryIO) -> None:
         """Drain the helper's error output unread: it may hold secrets, so only its size is kept."""
@@ -266,13 +300,13 @@ class AuthAttempt:
         if event.event in TERMINAL_EVENTS:
             return event.event, event.reason, event.cause
         if not self._publish_action(event):
-            return "cancelled", None, None
+            return self._cancelled()
         return None
 
     def _recheck_scope(self, now: float, checked: float) -> float:
         if now >= checked:
             if not self._valid():
-                self.cancel()
+                self._withdraw()
             return now + 1
         return checked
 
@@ -281,7 +315,7 @@ class AuthAttempt:
             input_stream.write(b'{"version":1,"action":"cancel"}\n')
             input_stream.flush()
         if self._cancel.is_set():
-            return "cancelled", None, None
+            return self._cancelled()
         return "cancelled", "host_disconnected", "host_disconnected"
 
     def _read_event(self, raw: bytes | None) -> AuthEvent:
@@ -311,7 +345,7 @@ class AuthAttempt:
                 value["url"] = url
         # Never disclose a stale profile action, including a queued one.
         if not self._valid():
-            self.cancel()
+            self._withdraw()
             return False
         self._publish(value)
         return True
@@ -348,16 +382,16 @@ class AuthAttempt:
 
     def _refused_before_launch(self) -> _Settlement | None:
         """Run the preparation unless authority is gone; a settlement means the helper must not start."""
-        if not self._valid() or self._cancel.is_set():
-            return "cancelled", None, None
+        if not self._held():
+            return self._cancelled()
         if self._prepare is not None:
             try:
                 self._prepare()
             except BaseException as error:
                 self._note("prepare", error)
                 return "failed", "cleanup_failed", "agent_stop_failed"
-            if not self._valid() or self._cancel.is_set():
-                return "cancelled", None, None
+            if not self._held():
+                return self._cancelled()
         return None
 
     def _open_scope(self) -> WindowsProcessScope:
@@ -438,15 +472,15 @@ class AuthAttempt:
         """Serve a success only while authority holds and the provider confirms it, with the status cause."""
         if settlement[0] != "succeeded":
             return settlement, None
-        if self._cancel.is_set() or not self._valid():
-            return ("cancelled", None, None), None
+        if not self._held():
+            return self._cancelled(), None
         if self._confirm is None:
             return settlement, None
         signed_in, status_cause = self._confirmed()
         if not signed_in:
             return ("failed", "provider_error", "status_not_confirmed"), status_cause
-        if self._cancel.is_set() or not self._valid():
-            return ("cancelled", None, None), status_cause
+        if not self._held():
+            return self._cancelled(), status_cause
         return settlement, status_cause
 
     def _finish_run(
@@ -473,6 +507,9 @@ class AuthAttempt:
                 stderr_bytes=self._stderr_bytes,
                 errors=self._errors,
                 log_ref=self.log_ref,
+                reached=self._reached,
+                reached_after=self._reached_at - self._began,
+                lasted=time.monotonic() - self._began,
             )
             self._publish(
                 snapshot(
@@ -482,7 +519,7 @@ class AuthAttempt:
                     reason=reason,
                     cause=cause,
                     status_cause=status_cause,
-                    log_ref=self.log_ref if outcome == "failed" else None,
+                    log_ref=self.log_ref if outcome == "failed" or reason is not None else None,
                 )
             )
         except BaseException as error:

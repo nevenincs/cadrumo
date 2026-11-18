@@ -35,7 +35,16 @@ def test_revoked_attempt_closes_without_creating_a_process_or_profile(tmp_path: 
     attempt.close()
     assert not attempt.active
     assert settled.is_set()
-    assert attempt.observe() == {"attempt_id": attempt.id, "provider": "example_cli", "event": "cancelled"}
+    # Lost authority is not the person's own cancellation: it says why, with a retry.
+    assert attempt.observe() == {
+        "attempt_id": attempt.id,
+        "provider": "example_cli",
+        "event": "cancelled",
+        "reason": "profile_required",
+        "cause": "profile_signed_out",
+        "next_step": "retry",
+        "log_ref": attempt.log_ref,
+    }
     assert list(tmp_path.iterdir()) == []
 
 
@@ -47,6 +56,9 @@ def _exchange_attempt(valid: Event) -> AuthAttempt:
     attempt._valid = valid.is_set
     attempt._lock = Lock()
     attempt._cancel = Event()
+    attempt._withdrawn = False
+    attempt._began = attempt._reached_at = time.monotonic()
+    attempt._reached = "starting"
     attempt._observed = time.monotonic()
     attempt._deadline = time.monotonic() + 305
     attempt._snapshot = snapshot(attempt.id, attempt._lane, "starting")
@@ -328,3 +340,17 @@ def test_a_failed_preparation_is_an_agent_stop_failure(tmp_path: Path) -> None:
         "next_step": "retry",
         "log_ref": attempt.log_ref,
     }
+
+
+def test_authority_lost_during_the_exchange_cancels_as_signed_out() -> None:
+    valid = Event()
+    attempt = _exchange_attempt(valid)
+    assert attempt._exchange(io.BytesIO(), Queue()) == ("cancelled", "profile_required", "profile_signed_out")
+
+
+def test_the_persons_own_cancellation_stays_without_a_reason() -> None:
+    valid = Event()
+    valid.set()
+    attempt = _exchange_attempt(valid)
+    attempt.cancel()
+    assert attempt._exchange(io.BytesIO(), Queue()) == ("cancelled", None, None)
