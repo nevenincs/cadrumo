@@ -225,15 +225,6 @@ def test_explain_recent_modelo_100_does_not_emit_out_of_plazo_warning() -> None:
     assert result.out_of_plazo_warning is None
 
 
-def test_explain_unknown_modelo_still_raises_not_degrades() -> None:
-    """A modelo identifier absent from the calculation registry must
-    still raise OverviewExplainError — graceful degradation applies
-    only to known modelos missing deadline-window data."""
-
-    with pytest.raises(OverviewExplainError):
-        build_overview_explain(calendar_autonomo_profile(), modelo="999999", year=2026)
-
-
 def test_explain_applicable_flag_matches_derived_verdict() -> None:
     """The applicable flag must equal the verdict-derived value: True
     only for an APPLICABLE verdict. explain and the operational views

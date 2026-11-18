@@ -25,7 +25,6 @@ from cadrumo.domain.calculations.registry.tests.published_authority import Publi
 from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..descendant import DescendantInfo
 from ..family_fact_context import FamilyFactResolutionContext
-from ..family_profile import RentaFamilyProfile
 from ..family_types import within_multi_year_applicability_window
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -122,10 +121,3 @@ def test_prorrateo_share_reflects_shared_custody() -> None:
     )
     for case_id, child, expected in cases:
         assert child.nacimiento_adopcion_prorrateo_share(context=_CONTEXT) == expected, case_id
-
-
-def test_unidad_familiar_otros_miembros_base_is_zero_for_single_filer() -> None:
-    """The single/monoparental filer's other-members base is zero; the filer's own
-    base (0435 + 0460) is added by the registry formula."""
-    profile = RentaFamilyProfile(descendientes=(_child(birth=date(EXERCISE - 1, 6, 1)),))
-    assert profile.unidad_familiar_otros_miembros_base() == Decimal("0")

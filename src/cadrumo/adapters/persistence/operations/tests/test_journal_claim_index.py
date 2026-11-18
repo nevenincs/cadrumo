@@ -48,6 +48,10 @@ _DEFINITION_ID = "test.operation"
 type Outcome = tuple[str, str | None]
 
 
+def _claim_index_path(storage_root: Path) -> Path:
+    return SnapshotJournalRepository(storage_root=storage_root).root / "idempotency-claims"
+
+
 def _operation_id(index: int) -> str:
     return sha256(f"operation-{index}".encode()).hexdigest()
 
@@ -245,7 +249,7 @@ def _create(storage_root: Path, snapshot: OperationPersistedSnapshot, lease: Ope
 
 
 def _index_entries(storage_root: Path) -> dict[str, tuple[str, ...]]:
-    index_root = SnapshotJournalRepository(storage_root=storage_root).claim_index_root
+    index_root = _claim_index_path(storage_root)
     entries: dict[str, tuple[str, ...]] = {}
     for path in scan_directory(index_root, pattern="*.json"):
         payload = json.loads(path.read_text(encoding="utf-8"))
@@ -456,7 +460,7 @@ def test_an_unindexed_journal_is_rebuilt_from_its_records_once(tmp_path: Path) -
     target = _created(7, subject="s-7", key="key-7", request="7")
     claim = target.idempotency_claim
     assert claim is not None
-    assert not SnapshotJournalRepository(storage_root=tmp_path).claim_index_root.exists()
+    assert not _claim_index_path(tmp_path).exists()
 
     first, first_decoded = _indexed_outcome(tmp_path, claim)
     second, second_decoded = _indexed_outcome(tmp_path, claim)
@@ -478,7 +482,7 @@ def test_an_unreadable_record_refuses_the_rebuild_exactly_as_the_scan_did(tmp_pa
         outcome, _decoded = _indexed_outcome(tmp_path, claim)
         assert outcome == _full_scan_outcome(tmp_path, claim)
         assert outcome[0] == "refused"
-    index_root = SnapshotJournalRepository(storage_root=tmp_path).claim_index_root
+    index_root = _claim_index_path(tmp_path)
     assert not (index_root / "complete").exists()
 
 
@@ -511,7 +515,7 @@ def test_damaged_index_state_falls_back_to_the_records(tmp_path: Path, damage: s
     _create(tmp_path, created, _lease(1, subject="s"))
     claim = created.idempotency_claim
     assert claim is not None
-    index_root = SnapshotJournalRepository(storage_root=tmp_path).claim_index_root
+    index_root = _claim_index_path(tmp_path)
     entry = index_root / f"{claim.key_digest}.json"
     if damage == "witness_removed":
         (index_root / "complete").unlink()
@@ -607,7 +611,7 @@ def test_one_key_bound_to_two_records_is_refused_like_the_full_scan(tmp_path: Pa
         _write_record(tmp_path, _created(index, subject="s", key="k", request="r"))
     if indexed_before:
         # A second writer outside create is out of contract; a rebuild is what reconciles it.
-        (SnapshotJournalRepository(storage_root=tmp_path).claim_index_root / "complete").unlink()
+        (_claim_index_path(tmp_path) / "complete").unlink()
     claim = _claim(3, subject="s", key="k", request="r")
 
     outcome, decoded = _indexed_outcome(tmp_path, claim)
@@ -650,7 +654,7 @@ def test_random_journals_resolve_identically_to_the_full_scan(tmp_path: Path, se
             tmp_path,
             _created(index, subject=draws.choice(subjects), key=key, request=draws.choice(requests)),
         )
-    index_root = SnapshotJournalRepository(storage_root=tmp_path).claim_index_root
+    index_root = _claim_index_path(tmp_path)
     queries = [
         _claim(
             1000 + query,

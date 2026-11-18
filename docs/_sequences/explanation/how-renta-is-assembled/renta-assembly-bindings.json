@@ -30,7 +30,7 @@
           }
         ],
         "result": {
-          "authority_generation": "f60c4f170d4ac06893eddf980e203c0a35c8dcc79eeb36c60d4f30ccf77bc565",
+          "authority_generation": "fb1b5eff102ca122b8a2d01fcb61c69a1f1bf3d4daa64c48ae0c748e3d59fd13",
           "binding_count": 214,
           "bindings": [
             {"binding_id":"renta-modelo-100-estimacion-directa-modalidad-clave","borrador_capable":false,"filing_year":2025,"input_channel":"decimal","legal_refs":["ley-35-2006:art-30"],"modelo":"100","period":"0A","readiness":"profile fact","relation_inputs":[],"revision":"2025","source":"profile","source_refs":["aeat-dr-100-2020-dictionary","aeat-dr-100-2020-xsd","aeat-renta-2020-manual-parte1"],"typed_enum":null},

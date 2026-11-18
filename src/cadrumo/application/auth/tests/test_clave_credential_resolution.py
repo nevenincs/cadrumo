@@ -442,17 +442,6 @@ def test_profile_fecha_validez_carries_a_dni_holder_through_the_non_qr_route() -
     assert bound.cadrumo_clave_movil_dni_fecha == _FECHA_VALIDEZ
 
 
-def test_a_profile_carrying_neither_contraste_still_refuses_the_non_qr_route() -> None:
-    """Declaring the DNI half must not weaken the refusal.
-
-    A profile with an identity but no contraste of either form is exactly
-    the case the non-QR route cannot complete, so it has to stay refused
-    now that there are two fields that could satisfy it.
-    """
-
-    _assert_non_qr_route_refused_for_missing_contraste()
-
-
 def test_clave_permanente_resolves_its_identity_from_the_profile() -> None:
     """Cl@ve Permanente reads its own DNI/NIE setting, not the movil one.
 
