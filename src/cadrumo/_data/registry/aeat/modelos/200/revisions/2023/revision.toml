@@ -2678,6 +2678,8 @@ continuidad_evidence = "Canonical parser evidence: aeat-dr-200-2022 DP200054 row
 [[revisions."2023".casilla_removals]]
 selector = { revision = "2022", id = "DP200013:00550" }
 [[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200020D:00659" }
+[[revisions."2023".casilla_removals]]
 selector = { revision = "2022", id = "DP200013:00547" }
 [[revisions."2023".casilla_removals]]
 selector = { revision = "2022", id = "DP200013:00552" }

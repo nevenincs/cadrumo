@@ -6801,9 +6801,10 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1606 DP200015 25|336|17|Num
 [[revisions."2022".casillas]]
-id = "00659"
+id = "DP200015:00659"
 continuidad_id = "00659"
 number = "00659"
+segmento = "DP200015"
 section = ["detalle_compensacion_bases_imponibles_negativas", "2003"]
 semantic_role = "is_compensacion_bases_negativas"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -12797,6 +12798,15 @@ number = "00658"
 segmento = "DP200020D"
 section = ["aplicacion_de_resultados", "aplicacion"]
 semantic_role = "is_aplicacion_de_resultados_aplicacion_a_dotacion_o_s_cajas_de_ahorro_y_fundaciones_bancarias"
+
+# aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3466 DP200020D field 17, offset 200, length 17, type Num: Aplicación de resultados - Aplicación - A F.R.O y dotaciones voluntarias al F.E.P (Cooperativas) [00659]. Box [00659] on DP200015 is the bases imponibles negativas cell, another field.
+[[revisions."2022".casillas]]
+id = "DP200020D:00659"
+continuidad_id = "is-aplicacion-de-resultados-aplicacion-a-f-r-o-y-dotaciones-voluntarias-al-f-e-p-cooperativas"
+number = "00659"
+segmento = "DP200020D"
+section = ["aplicacion_de_resultados", "aplicacion"]
+semantic_role = "is_aplicacion_de_resultados_aplicacion_a_f_r_o_y_dotaciones_voluntarias_al_f_e_p_cooperativas"
 
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3467 DP200020D 18|217|17|Num
 [[revisions."2022".casillas]]

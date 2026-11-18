@@ -9,6 +9,7 @@ operator's live calculate path, this suite proves that:
 * a prior return written under an earlier authority generation, holding the bare
   id, gives exactly the calculation a prior holding the qualified id gives;
 * a prior holding the box under both ids with different values is refused;
+* a shared box an earlier generation stored bare reads under its qualified id;
 * a prior the current generation stamped is read as stored, so its bare id is
   not aliased and the turnover stays unread;
 * the reads leave a verified revision's saved rendering byte-for-byte as stored.
@@ -37,7 +38,10 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....application.calculations.errors import PriorFilingPageQualifiedConflictError
 from ....application.calculations.observations_repository import ObservationEnvelopePayload
-from ....application.calculations.prior_filing_page_qualified_reads import MODELO_200_PAGE_QUALIFIED_CASILLAS
+from ....application.calculations.prior_filing_page_qualified_reads import (
+    MODELO_200_PAGE_QUALIFIED_CASILLAS,
+    page_qualified_prior_observation,
+)
 from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -241,18 +245,28 @@ def test_prior_holding_the_turnover_under_both_ids_with_different_values_is_refu
     assert str(_PRIOR_TURNOVER) not in str(context)
 
 
-def test_prior_holding_an_identification_flag_under_both_ids_with_different_values_is_refused(
-    secure_objects: SecureObjectRepository,
+# Boxes whose number another page prints with another meaning: the cooperativa
+# protegida flag, and the bases imponibles negativas cell an earlier design also prints
+# as a cooperativas aplicación de resultados line.
+_SHARED_BOXES = (
+    pytest.param("00017", "DP200001:00017", id="00017-cooperativa-protegida"),
+    pytest.param("00659", "DP200015:00659", id="00659-bases-imponibles-negativas"),
+)
+
+
+@pytest.mark.parametrize(("bare_text", "qualified_text"), _SHARED_BOXES)
+def test_prior_holding_a_shared_box_under_both_ids_with_different_values_is_refused(
+    secure_objects: SecureObjectRepository, bare_text: str, qualified_text: str
 ) -> None:
     profile = _Profile()
     year = max(_turnover_reading_years())
     stored = profile.qualified_prior(year)
-    flag_bare = validated_casilla_id("00017", surface="flag_bare")
-    flag = MODELO_200_PAGE_QUALIFIED_CASILLAS[flag_bare]
+    bare = validated_casilla_id(bare_text, surface="bare")
+    qualified = MODELO_200_PAGE_QUALIFIED_CASILLAS[bare]
     profile.replace_prior(
         stored,
         generation=_EARLIER_GENERATION,
-        box=lambda _key: ((_TURNOVER, _PRIOR_TURNOVER), (flag_bare, Decimal("1")), (flag, Decimal("0"))),
+        box=lambda _key: ((_TURNOVER, _PRIOR_TURNOVER), (bare, Decimal("1")), (qualified, Decimal("0"))),
     )
 
     with pytest.raises(PriorFilingPageQualifiedConflictError) as refusal:
@@ -260,8 +274,33 @@ def test_prior_holding_an_identification_flag_under_both_ids_with_different_valu
 
     context = refusal.value.context
     assert context is not None
-    assert context["casilla_ids"] == flag == "DP200001:00017"
+    assert context["casilla_ids"] == qualified == qualified_text
     assert context["source_filing_year"] == year - 1
+
+
+@pytest.mark.parametrize(("bare_text", "qualified_text"), _SHARED_BOXES)
+def test_a_shared_box_an_earlier_generation_stored_bare_reads_under_its_qualified_id(
+    secure_objects: SecureObjectRepository, bare_text: str, qualified_text: str
+) -> None:
+    profile = _Profile()
+    year = max(_turnover_reading_years())
+    stored = profile.qualified_prior(year)
+    bare = validated_casilla_id(bare_text, surface="bare")
+    amount = Decimal("4321.09")
+    profile.replace_prior(
+        stored,
+        generation=_EARLIER_GENERATION,
+        box=lambda _key: ((_TURNOVER, _PRIOR_TURNOVER), (bare, amount)),
+    )
+    reread = profile.observations.load_observation(_MODELO, Period.from_year_and_code(year - 1, "0A"))
+    assert reread is not None
+
+    with bundled_indexed_authority().operation() as operation:
+        read = page_qualified_prior_observation(reread, operation=operation)
+
+    values = {str(item.casilla_id): item.value for item in read.observation.observations}
+    assert bare_text not in values
+    assert values[qualified_text] == amount
 
 
 def test_identical_values_under_both_ids_read_once(secure_objects: SecureObjectRepository) -> None:

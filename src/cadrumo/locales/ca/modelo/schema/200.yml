@@ -12059,6 +12059,9 @@ modelo:
           is-aplicacion-de-resultados-aplicacion-a-dotaciones-voluntarias-fondo-de-educacion-y-pro:
             label: Aplicació de resultats - Aplicació -A dotacions voluntàries Fons
               d'Educació i Promoció (Cooperatives) [00092]
+          is-aplicacion-de-resultados-aplicacion-a-f-r-o-y-dotaciones-voluntarias-al-f-e-p-cooperativas:
+            label: Aplicació de resultats - Aplicació - A F.R.O i dotacions voluntàries
+              al F.E.P (Cooperatives) [00659]
           is-aplicacion-de-resultados-aplicacion-a-fondo-de-reserva-obligatoria-cooperativas:
             label: Aplicació de resultats - Aplicació - A Fons de Reserva Obligatori
               (Cooperatives) [00091]

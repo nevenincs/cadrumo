@@ -659,3 +659,15 @@ to_revision = "2023"
 evolution_kind = "retired"
 legal_refs = ["orden-hac-495-2024:modelo-200"]
 source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]
+# DP200020D:00659 ends here. aeat-dr-200-2022 line 3466 (DP200020D field 17): 'Aplicación de resultados - Aplicación - A F.R.O y dotaciones voluntarias al F.E.P (Cooperativas) [00659]'. aeat-dr-200-2023 lines 3582
+# and 3583 print the two destinations as their own boxes, 'A Fondo de Reserva Obligatoria (Cooperativas) [00091]'
+# and 'A dotaciones voluntarias Fondo de Educación y Promoción (Cooperativas) [00092]', and print no [00659] on
+# DP200020D. One 2022 figure covers both destinations, so no value carries to either 2023 box.
+[[revisions.2023.casilla_continuidad_evolutions]]
+id = "m200-dp200020d-00659-2022-2023-retired"
+continuidad_id = "is-aplicacion-de-resultados-aplicacion-a-f-r-o-y-dotaciones-voluntarias-al-f-e-p-cooperativas"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-495-2024:modelo-200"]
+source_refs = ["aeat-dr-200-2022", "aeat-dr-200-2023"]

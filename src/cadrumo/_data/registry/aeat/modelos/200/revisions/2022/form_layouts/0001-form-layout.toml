@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "design_box_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "8fbe9b1ba3d474d5b7df627768873f1aa66909a7857dbf538ddf69aaf8f1f2c5"
+source_state_digest = "d13eabe1534527c71b0af8fbfd7d614f9e7e455d87144efccc7ce7877c1e1834"
 design_sources = [
     { source_ref = "aeat-dr-200-2022", sha256 = "8c9fa09e5713dc19ed9235757c314a1afee24108bccee4e39031f0df9a75fae6" },
 ]
@@ -27,7 +27,6 @@ placements = [
     { casilla_id = "00648", kind = "on_form", box_number = "00648" },
     { casilla_id = "00649", kind = "on_form", box_number = "00649" },
     { casilla_id = "00657", kind = "on_form", box_number = "00657" },
-    { casilla_id = "00659", kind = "on_form", box_number = "00659" },
     { casilla_id = "00661", kind = "on_form", box_number = "00661" },
     { casilla_id = "00663", kind = "on_form", box_number = "00663" },
     { casilla_id = "00667", kind = "on_form", box_number = "00667" },
@@ -3039,6 +3038,7 @@ placements = [
     { casilla_id = "DP200015:00655", kind = "on_form", box_number = "00655" },
     { casilla_id = "DP200015:00656", kind = "on_form", box_number = "00656" },
     { casilla_id = "DP200015:00658", kind = "on_form", box_number = "00658" },
+    { casilla_id = "DP200015:00659", kind = "on_form", box_number = "00659" },
     { casilla_id = "DP200015:00660", kind = "on_form", box_number = "00660" },
     { casilla_id = "DP200015:00662", kind = "on_form", box_number = "00662" },
     { casilla_id = "DP200015:00664", kind = "on_form", box_number = "00664" },
@@ -3583,6 +3583,7 @@ placements = [
     { casilla_id = "DP200020D:00655", kind = "on_form", box_number = "00655" },
     { casilla_id = "DP200020D:00656", kind = "on_form", box_number = "00656" },
     { casilla_id = "DP200020D:00658", kind = "on_form", box_number = "00658" },
+    { casilla_id = "DP200020D:00659", kind = "on_form", box_number = "00659" },
     { casilla_id = "DP200020D:00660", kind = "on_form", box_number = "00660" },
     { casilla_id = "DP200020D:00662", kind = "on_form", box_number = "00662" },
     { casilla_id = "DP200020D:00664", kind = "on_form", box_number = "00664" },
@@ -6645,7 +6646,7 @@ id = "detalle-compensacion-bases-imponibles-negativas"
 heading_key = "modelo.schema.200.form.section.detalle-compensacion-bases-imponibles-negativas.heading"
 official_heading = "Detalle compensación bases imponibles negativas"
 blocks = [
-    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Pendiente aplicación a principio del período/generada en el período" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente aplicación en períodos futuros" }], rows = [{ key = "1997", heading_key = "modelo.schema.200.form.row.1997.heading", official_heading = "1997", cells = [{ kind = "casilla", casilla_id = "DP200015:00640" }, { kind = "casilla", casilla_id = "DP200015:00641" }, { kind = "casilla", casilla_id = "DP200015:00548" }] }, { key = "1998", heading_key = "modelo.schema.200.form.row.1998.heading", official_heading = "1998", cells = [{ kind = "casilla", casilla_id = "DP200015:00643" }, { kind = "casilla", casilla_id = "DP200015:00644" }, { kind = "casilla", casilla_id = "DP200015:00645" }] }, { key = "1999", heading_key = "modelo.schema.200.form.row.1999.heading", official_heading = "1999", cells = [{ kind = "casilla", casilla_id = "DP200015:00646" }, { kind = "casilla", casilla_id = "00647" }, { kind = "casilla", casilla_id = "00648" }] }, { key = "2000", heading_key = "modelo.schema.200.form.row.2000.heading", official_heading = "2000", cells = [{ kind = "casilla", casilla_id = "00649" }, { kind = "casilla", casilla_id = "DP200015:00650" }, { kind = "casilla", casilla_id = "DP200015:00651" }] }, { key = "2001", heading_key = "modelo.schema.200.form.row.2001.heading", official_heading = "2001", cells = [{ kind = "casilla", casilla_id = "DP200015:00652" }, { kind = "casilla", casilla_id = "DP200015:00653" }, { kind = "casilla", casilla_id = "DP200015:00654" }] }, { key = "2002", heading_key = "modelo.schema.200.form.row.2002.heading", official_heading = "2002", cells = [{ kind = "casilla", casilla_id = "DP200015:00655" }, { kind = "casilla", casilla_id = "DP200015:00656" }, { kind = "casilla", casilla_id = "00657" }] }, { key = "2003", heading_key = "modelo.schema.200.form.row.2003.heading", official_heading = "2003", cells = [{ kind = "casilla", casilla_id = "DP200015:00658" }, { kind = "casilla", casilla_id = "00659" }, { kind = "casilla", casilla_id = "DP200015:00660" }] }, { key = "2004", heading_key = "modelo.schema.200.form.row.2004.heading", official_heading = "2004", cells = [{ kind = "casilla", casilla_id = "00661" }, { kind = "casilla", casilla_id = "DP200015:00662" }, { kind = "casilla", casilla_id = "00663" }] }, { key = "2005", heading_key = "modelo.schema.200.form.row.2005.heading", official_heading = "2005", cells = [{ kind = "casilla", casilla_id = "DP200015:00664" }, { kind = "casilla", casilla_id = "DP200015:00665" }, { kind = "casilla", casilla_id = "DP200015:00666" }] }, { key = "2006", heading_key = "modelo.schema.200.form.row.2006.heading", official_heading = "2006", cells = [{ kind = "casilla", casilla_id = "00667" }, { kind = "casilla", casilla_id = "00668" }, { kind = "casilla", casilla_id = "00669" }] }, { key = "2007", heading_key = "modelo.schema.200.form.row.2007.heading", official_heading = "2007", cells = [{ kind = "casilla", casilla_id = "00743" }, { kind = "casilla", casilla_id = "00747" }, { kind = "casilla", casilla_id = "00748" }] }, { key = "2008", heading_key = "modelo.schema.200.form.row.2008.heading", official_heading = "2008", cells = [{ kind = "casilla", casilla_id = "DP200015:00275" }, { kind = "casilla", casilla_id = "DP200015:00276" }, { kind = "casilla", casilla_id = "DP200015:00277" }] }] },
+    { kind = "grid", id = "grid", columns = [{ key = "pendiente_generada", heading_key = "modelo.form.column.pendiente_generada", official_heading = "Pendiente aplicación a principio del período/generada en el período" }, { key = "aplicado", heading_key = "modelo.form.column.aplicado", official_heading = "Aplicado en esta liquidación" }, { key = "pendiente_futuro", heading_key = "modelo.form.column.pendiente_futuro", official_heading = "Pendiente aplicación en períodos futuros" }], rows = [{ key = "1997", heading_key = "modelo.schema.200.form.row.1997.heading", official_heading = "1997", cells = [{ kind = "casilla", casilla_id = "DP200015:00640" }, { kind = "casilla", casilla_id = "DP200015:00641" }, { kind = "casilla", casilla_id = "DP200015:00548" }] }, { key = "1998", heading_key = "modelo.schema.200.form.row.1998.heading", official_heading = "1998", cells = [{ kind = "casilla", casilla_id = "DP200015:00643" }, { kind = "casilla", casilla_id = "DP200015:00644" }, { kind = "casilla", casilla_id = "DP200015:00645" }] }, { key = "1999", heading_key = "modelo.schema.200.form.row.1999.heading", official_heading = "1999", cells = [{ kind = "casilla", casilla_id = "DP200015:00646" }, { kind = "casilla", casilla_id = "00647" }, { kind = "casilla", casilla_id = "00648" }] }, { key = "2000", heading_key = "modelo.schema.200.form.row.2000.heading", official_heading = "2000", cells = [{ kind = "casilla", casilla_id = "00649" }, { kind = "casilla", casilla_id = "DP200015:00650" }, { kind = "casilla", casilla_id = "DP200015:00651" }] }, { key = "2001", heading_key = "modelo.schema.200.form.row.2001.heading", official_heading = "2001", cells = [{ kind = "casilla", casilla_id = "DP200015:00652" }, { kind = "casilla", casilla_id = "DP200015:00653" }, { kind = "casilla", casilla_id = "DP200015:00654" }] }, { key = "2002", heading_key = "modelo.schema.200.form.row.2002.heading", official_heading = "2002", cells = [{ kind = "casilla", casilla_id = "DP200015:00655" }, { kind = "casilla", casilla_id = "DP200015:00656" }, { kind = "casilla", casilla_id = "00657" }] }, { key = "2003", heading_key = "modelo.schema.200.form.row.2003.heading", official_heading = "2003", cells = [{ kind = "casilla", casilla_id = "DP200015:00658" }, { kind = "casilla", casilla_id = "DP200015:00659" }, { kind = "casilla", casilla_id = "DP200015:00660" }] }, { key = "2004", heading_key = "modelo.schema.200.form.row.2004.heading", official_heading = "2004", cells = [{ kind = "casilla", casilla_id = "00661" }, { kind = "casilla", casilla_id = "DP200015:00662" }, { kind = "casilla", casilla_id = "00663" }] }, { key = "2005", heading_key = "modelo.schema.200.form.row.2005.heading", official_heading = "2005", cells = [{ kind = "casilla", casilla_id = "DP200015:00664" }, { kind = "casilla", casilla_id = "DP200015:00665" }, { kind = "casilla", casilla_id = "DP200015:00666" }] }, { key = "2006", heading_key = "modelo.schema.200.form.row.2006.heading", official_heading = "2006", cells = [{ kind = "casilla", casilla_id = "00667" }, { kind = "casilla", casilla_id = "00668" }, { kind = "casilla", casilla_id = "00669" }] }, { key = "2007", heading_key = "modelo.schema.200.form.row.2007.heading", official_heading = "2007", cells = [{ kind = "casilla", casilla_id = "00743" }, { kind = "casilla", casilla_id = "00747" }, { kind = "casilla", casilla_id = "00748" }] }, { key = "2008", heading_key = "modelo.schema.200.form.row.2008.heading", official_heading = "2008", cells = [{ kind = "casilla", casilla_id = "DP200015:00275" }, { kind = "casilla", casilla_id = "DP200015:00276" }, { kind = "casilla", casilla_id = "DP200015:00277" }] }] },
     { kind = "field", id = "field", casilla_id = "DP200015:00608" },
     { kind = "field", id = "field-2", casilla_id = "DP200015:00609" },
     { kind = "field", id = "field-3", casilla_id = "DP200015:00610" },
@@ -8295,11 +8296,12 @@ blocks = [
     { kind = "field", id = "field", casilla_id = "DP200020D:00655" },
     { kind = "field", id = "field-2", casilla_id = "DP200020D:00656" },
     { kind = "field", id = "field-3", casilla_id = "DP200020D:00658" },
-    { kind = "field", id = "field-4", casilla_id = "DP200020D:00660" },
-    { kind = "field", id = "field-5", casilla_id = "DP200020D:00662" },
-    { kind = "field", id = "field-6", casilla_id = "DP200020D:00664" },
-    { kind = "field", id = "field-7", casilla_id = "DP200020D:00665" },
-    { kind = "field", id = "field-8", casilla_id = "DP200020D:00666" },
+    { kind = "field", id = "field-4", casilla_id = "DP200020D:00659" },
+    { kind = "field", id = "field-5", casilla_id = "DP200020D:00660" },
+    { kind = "field", id = "field-6", casilla_id = "DP200020D:00662" },
+    { kind = "field", id = "field-7", casilla_id = "DP200020D:00664" },
+    { kind = "field", id = "field-8", casilla_id = "DP200020D:00665" },
+    { kind = "field", id = "field-9", casilla_id = "DP200020D:00666" },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]

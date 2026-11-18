@@ -3862,7 +3862,7 @@ removed_fields = []
 restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2024", id = "00659" }
+selector = { revision = "2024", id = "DP200015:00659" }
 fields = { continuidad_origin = "seeded" }
 removed_fields = []
 restate_provenance = true

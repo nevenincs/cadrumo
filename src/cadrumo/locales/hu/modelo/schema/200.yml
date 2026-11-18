@@ -12217,6 +12217,10 @@ modelo:
           is-aplicacion-de-resultados-aplicacion-a-dotaciones-voluntarias-fondo-de-educacion-y-pro:
             label: Eredmény felosztása - Felosztás - Az Oktatási és Támogatási Alap
               önkéntes dotációira (szövetkezetek) [00092]
+          is-aplicacion-de-resultados-aplicacion-a-f-r-o-y-dotaciones-voluntarias-al-f-e-p-cooperativas:
+            label: Eredmény felosztása - Felosztás - Kötelező tartalékalapba (F.R.O)
+              és az Oktatási és Támogatási Alap (F.E.P) önkéntes dotációira (szövetkezetek)
+              [00659]
           is-aplicacion-de-resultados-aplicacion-a-fondo-de-reserva-obligatoria-cooperativas:
             label: Eredmény felosztása - Felosztás - Kötelező tartalékalapba (szövetkezetek)
               [00091]
