@@ -70,7 +70,9 @@ _BATCH_COUNT = 2
 #: (cached settings, engines, registered ports) can still send a later leaf's
 #: writes to an earlier root, where a scan of the new root would miss them, so
 #: after each leaf every earlier root -- including the one live during import --
-#: is rescanned and any change is reported as a stray write.
+#: is rescanned and any change is reported as a stray write. Diagnostic delivery
+#: is drained after each leaf first, so a log record still in flight is charged
+#: to the leaf that wrote it rather than surfacing during the next one.
 _PROBE = textwrap.dedent(
     """
     import json
@@ -90,6 +92,7 @@ _PROBE = textwrap.dedent(
     import typer.main
     from click.testing import CliRunner
 
+    from cadrumo.core.logging import flush_logging
     from cadrumo.entrypoints.cli.main import cli_app
     app = cli_app()
 
@@ -101,6 +104,10 @@ _PROBE = textwrap.dedent(
         before = scan(root)
         os.environ["CADRUMO_STORAGE_ROOT"] = str(root)
         CliRunner().invoke(command, argv)
+        # Diagnostics reach their file on a delivery thread; scanning before
+        # it drains would charge this leaf's log to the next leaf as a stray.
+        if not flush_logging(timeout=60.0):
+            raise SystemExit(f"diagnostic delivery did not drain after {argv}")
         strayed = {}
         for earlier, seen in observed.items():
             now = scan(earlier)

@@ -15,6 +15,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from ...core.period import Period, PeriodError
+from ...domain.calculations.registry.period_selector_match import selector_token_for_request
 from .registry_discovery import declared_modelo_period_tokens
 from .work_create_policy import modelo_work_create_refusal_locale_key
 
@@ -68,7 +69,7 @@ def admit_modelo_period(
     """
     code = token.strip()
     declared = declared_modelo_period_tokens(modelo, operation=operation)
-    is_declared = any(code.casefold() == candidate.casefold() for candidate in declared)
+    is_declared = selector_token_for_request(declared, code) is not None
     try:
         period = Period.from_year_and_code(filing_year, code)
     except PeriodError:

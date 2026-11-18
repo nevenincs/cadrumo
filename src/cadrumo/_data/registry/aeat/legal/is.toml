@@ -1797,7 +1797,7 @@ retrieved_at = 2026-09-10
 applies_from = 2023-01-01
 applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2023.pdf"
-review_status = "pending_review"
+review_status = "agent_reviewed"
 
 [sources."aeat-modelo-200-manual-2024"]
 evidence_tier = "official_source_guidance"
@@ -3043,7 +3043,7 @@ retrieved_at = 2026-05-03
 applies_from = 2023-01-01
 applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR200-2023.xls"
-review_status = "pending_review"
+review_status = "agent_reviewed"
 
 [sources."aeat-dr-202-2008"]
 evidence_tier = "layout_authority"
