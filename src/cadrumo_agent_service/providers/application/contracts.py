@@ -98,6 +98,7 @@ HelperCause = Literal[
     "home_unavailable",
     "cli_not_found",
     "browser_relay_unavailable",
+    "browser_not_offered",
     "cli_start_failed",
     "cli_exited_early",
     "cli_protocol_mismatch",
