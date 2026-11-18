@@ -427,6 +427,7 @@ desktop:
       agent_stop_failed: No s'ha pogut aturar l'agent per acabar l'inici de sessió.
       agent_tree_running: L'agent encara s'estava executant, així que no s'ha pogut
         iniciar la sessió.
+      browser_not_offered: Claude no ha ofert cap pàgina d'inici de sessió a temps.
       browser_relay_unavailable: No s'ha pogut passar la pàgina d'inici de sessió
         al navegador.
       cleanup_unconfirmed: No s'ha pogut confirmar que l'inici de sessió s'hagi tancat
