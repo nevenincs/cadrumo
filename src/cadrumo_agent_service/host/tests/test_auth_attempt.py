@@ -16,6 +16,7 @@ from pydantic import JsonValue
 from .. import auth_attempt as auth_attempt_module
 from ..auth_attempt import AuthAttempt
 from ..auth_protocol import AuthEvent, AuthProtocol, snapshot
+from ..sign_in_refusal import SignInProgress
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -57,8 +58,7 @@ def _exchange_attempt(valid: Event) -> AuthAttempt:
     attempt._lock = Lock()
     attempt._cancel = Event()
     attempt._withdrawn = False
-    attempt._began = attempt._reached_at = time.monotonic()
-    attempt._reached = "starting"
+    attempt._progress = SignInProgress()
     attempt._observed = time.monotonic()
     attempt._deadline = time.monotonic() + 305
     attempt._snapshot = snapshot(attempt.id, attempt._lane, "starting")

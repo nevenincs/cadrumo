@@ -1,10 +1,12 @@
-"""A failed or refused sign-in is logged with its cause and reference, and a retry always starts afresh."""
+"""A failed or refused sign-in is logged with its cause and reference, a retry always starts afresh, and a live
+attempt outlives its lease's routine renewal but never the person's sign-out."""
 
 from __future__ import annotations
 
 import logging
 import re
 import time
+from collections.abc import Callable
 from pathlib import Path
 from threading import Event, Thread
 from types import SimpleNamespace
@@ -12,10 +14,12 @@ from typing import Any, cast
 from uuid import uuid4
 
 import pytest
+from pydantic import JsonValue
 
 from cadrumo.core.redaction.rules import redact_for_log
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo.tests.log_records import delivered_records, delivered_text
+from cadrumo_client.contracts.service_access import ServiceLease
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ... import service_startup as service_module
@@ -30,6 +34,7 @@ from ...providers.application.tests.synthetic_catalog import synthetic_catalog
 from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 from ..auth_attempt import AuthAttempt
+from ..controller import AgentGenerations
 from ..sign_in_refusal import new_log_ref
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -74,7 +79,7 @@ def _wait_finished(attempt: AuthAttempt) -> None:
     assert attempt.finished
 
 
-def _absent_helper(tmp_path: Path, **keywords: Any) -> AuthAttempt:
+def _absent_helper(tmp_path: Path, valid: Callable[[], bool] = lambda: True, **keywords: Any) -> AuthAttempt:
     """An attempt whose helper cannot be started, which is a genuine launch failure."""
     return AuthAttempt(
         provider="example",
@@ -83,7 +88,7 @@ def _absent_helper(tmp_path: Path, **keywords: Any) -> AuthAttempt:
         arguments=(),
         directory=tmp_path,
         environment={},
-        valid=lambda: True,
+        valid=valid,
         **keywords,
     )
 
@@ -139,8 +144,21 @@ def test_a_settled_callback_that_raises_still_ends_the_attempt(
     assert "PRIVATE-DETAIL" not in text
 
 
+def _lease() -> ServiceLease:
+    return ServiceLease(
+        lease_id=uuid4(),
+        session_id=uuid4(),
+        profile_id=uuid4(),
+        parent_session_id=uuid4(),
+        descriptor_digest="2" * 64,
+        service_id="cadrumo-agent-service",
+        runtime_boot_id=uuid4(),
+        connection_id=uuid4(),
+    )
+
+
 def _service(tmp_path: Path) -> tuple[AgentService, SimpleNamespace]:
-    client = SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()), connection=SimpleNamespace(close=lambda: None))
+    client = SimpleNamespace(lease=_lease(), connection=SimpleNamespace(close=lambda: None))
     service = AgentService(
         local_engine_default=LocalEngine.LLAMACPP,
         client=cast(InstalledServiceClient, client),
@@ -298,3 +316,83 @@ def test_a_minted_log_reference_survives_the_log_scrubber() -> None:
     for log_ref in (new_log_ref() for _ in range(_SCRUBBER_SAMPLES)):
         line = f"provider sign-in refused cause=prepare_failed log_ref={log_ref}"
         assert redact_for_log(line) == line, log_ref
+
+
+def _renewing_service(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, claimed: list[ServiceLease | None]
+) -> tuple[AgentService, SimpleNamespace]:
+    """A service whose generation reads claim as the real store does, taking the runtime's next lease from ``claimed``."""
+    service, client = _service(tmp_path)
+    _connectable(service, tmp_path, monkeypatch)
+    _entry_accepted(service, monkeypatch)
+    generations = AgentGenerations(sign_in="a" * 64, provider_settings="b" * 64)
+
+    def current_generations(**_keywords: object) -> AgentGenerations | None:
+        if claimed:
+            client.lease = claimed.pop(0)
+        return None if client.lease is None else generations
+
+    monkeypatch.setattr(service._credentials, "current_generations", current_generations)
+    return service, client
+
+
+def _served_under(valid: Callable[[], bool], tmp_path: Path) -> dict[str, JsonValue]:
+    """What a live attempt held by ``valid`` serves; its helper waits until the observation is taken."""
+    release = Event()
+    attempt = _absent_helper(tmp_path, valid=valid, prepare=release.wait)
+    try:
+        return attempt.observe()
+    finally:
+        release.set()
+        _wait_finished(attempt)
+        attempt.close()
+
+
+def test_a_live_attempt_outlives_the_routine_renewal_of_its_attended_lease(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The runtime restores a lapsed attended child under the same approval: only the session changes.
+    claimed: list[ServiceLease | None] = []
+    service, client = _renewing_service(tmp_path, monkeypatch, claimed)
+    first = _connect(service)
+    assert first.get("kind") != "refused"
+    valid = service._auth_resume_valid
+    assert valid is not None
+    claimed.append(client.lease.model_copy(update={"session_id": uuid4()}))
+    assert valid()
+    assert not claimed
+    served = _served_under(valid, tmp_path)
+    assert served["event"] == "starting"
+    assert service._auth_attempt is not None
+    _wait_finished(service._auth_attempt)
+    service._auth_attempt.close()
+
+
+@pytest.mark.parametrize("change", ["signed_out", "another_person_session", "another_profile"])
+def test_a_lease_that_is_not_a_renewal_withdraws_the_attempt_as_signed_out(
+    change: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    claimed: list[ServiceLease | None] = []
+    service, client = _renewing_service(tmp_path, monkeypatch, claimed)
+    _connect(service)
+    valid = service._auth_resume_valid
+    assert valid is not None
+    held = client.lease
+    replacement = {
+        "signed_out": None,
+        "another_person_session": held.model_copy(
+            update={"session_id": uuid4(), "parent_session_id": uuid4(), "lease_id": uuid4()}
+        ),
+        "another_profile": held.model_copy(update={"session_id": uuid4(), "profile_id": uuid4(), "lease_id": uuid4()}),
+    }[change]
+    claimed.append(replacement)
+    assert not valid()
+    served = _served_under(valid, tmp_path)
+    assert (served["event"], served["reason"], served["cause"]) == (
+        "cancelled",
+        "profile_required",
+        "profile_signed_out",
+    )
+    assert service._auth_attempt is not None
+    _wait_finished(service._auth_attempt)
+    service._auth_attempt.close()

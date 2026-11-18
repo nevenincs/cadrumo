@@ -13,6 +13,7 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo_client.contracts.service_access import ServiceLease
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ... import service_startup as service_module
@@ -32,6 +33,19 @@ from ..auth_attempt import AuthAttempt
 from ..launch_environment import EXTERNAL_BIN_DIRECTORIES_VARIABLE, HOSTED_ROOT_VARIABLE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _lease() -> ServiceLease:
+    return ServiceLease(
+        lease_id=uuid4(),
+        session_id=uuid4(),
+        profile_id=uuid4(),
+        parent_session_id=uuid4(),
+        descriptor_digest="2" * 64,
+        service_id="cadrumo-agent-service",
+        runtime_boot_id=uuid4(),
+        connection_id=uuid4(),
+    )
 
 
 def _served(answer: dict[str, Any]) -> dict[str, Any]:
@@ -84,7 +98,7 @@ def _entry() -> ProviderStatusEntry:
 def test_sign_in_preparation_preserves_authority_and_never_claims_login(
     outcome: str, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    client = SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()), connection=SimpleNamespace(close=lambda: None))
+    client = SimpleNamespace(lease=_lease(), connection=SimpleNamespace(close=lambda: None))
     service = AgentService(
         local_engine_default=LocalEngine.LLAMACPP,
         client=cast(InstalledServiceClient, client),
@@ -242,7 +256,7 @@ def test_status_preserves_refusal_without_adding_success_metadata(
         local_engine_default=LocalEngine.LLAMACPP,
         client=cast(
             InstalledServiceClient,
-            SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()), connection=SimpleNamespace(close=lambda: None)),
+            SimpleNamespace(lease=_lease(), connection=SimpleNamespace(close=lambda: None)),
         ),
         storage_root=tmp_path,
         gateway_bearer=bytearray(),
@@ -265,7 +279,7 @@ class _CountingProbe(AgentProviderAuthStatusProbe):
 
 
 def _service(tmp_path: Path, *, woken: list[str] | None = None) -> AgentService:
-    client = SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()), connection=SimpleNamespace(close=lambda: None))
+    client = SimpleNamespace(lease=_lease(), connection=SimpleNamespace(close=lambda: None))
     return AgentService(
         local_engine_default=LocalEngine.LLAMACPP,
         client=cast(InstalledServiceClient, client),
