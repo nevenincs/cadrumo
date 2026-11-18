@@ -716,19 +716,17 @@ async fn provider_settings_status_before_the_first_observation_answers_busy_neve
 
 #[test]
 fn provider_settings_status_without_a_starting_service_is_refused_at_once() {
-    for state in [State::Refused {
-        code: Refusal::SignedOut,
-    }] {
-        let supervisor = starting_supervisor(Duration::from_secs(60));
-        super::publish(&supervisor.shared, state.clone());
-        let asked = std::time::Instant::now();
-        assert_eq!(supervisor.await_admin(), super::AdminWait::NotStarting);
-        assert!(
-            admin_unavailable(provider_settings_status(&supervisor)),
-            "{state:?}"
-        );
-        assert!(asked.elapsed() < Duration::from_secs(10), "{state:?}");
-    }
+    let supervisor = starting_supervisor(Duration::from_secs(60));
+    super::publish(
+        &supervisor.shared,
+        State::Refused {
+            code: Refusal::SignedOut,
+        },
+    );
+    let asked = std::time::Instant::now();
+    assert_eq!(supervisor.await_admin(), super::AdminWait::NotStarting);
+    assert!(admin_unavailable(provider_settings_status(&supervisor)));
+    assert!(asked.elapsed() < Duration::from_secs(10));
 }
 
 #[test]
