@@ -3,7 +3,7 @@
 Declares the schema materialised by the storage engine. Intentionally kept
 out of the :mod:`adapters.persistence.storage` public API: repositories
 bridge between these rows and their typed records. The tables are plain Core
-:class:`~sqlalchemy.Table` objects because no repository maps rows onto
+:class:`~sqlalchemy.schema.Table` objects because no repository maps rows onto
 objects; every read and write is an explicit statement over a connection.
 """
 
@@ -86,22 +86,23 @@ correctness never depends on it being present or fresh -- a missing or
 incomplete index falls back to the full encrypted scan.
 
 Columns:
-    id: Surrogate integer primary key.
-    bucket_id: Owning profile bucket, so a shared database never mixes two
-        buckets' routing rows.
-    transaction_id: The ledger transaction's stable content-derived id.
-    filing_date: ``value_date`` or ``booked_date`` (whichever the ledger
-        aggregation layer would use) as a plain SQL ``Date``.
-    filing_year: ``filing_date.year``, indexed separately so a year-scoped
-        candidate-id query does not need a date-range predicate at all.
-    eligible_from: Earliest date this row can file an observation under, per
-        :func:`~domain.transactions.dates.transaction_eligible_date_span`.
-        Equal to ``filing_date`` unless an IVA criterio-de-caja timing
-        override moves the row's devengo or collection dates off it.
-    eligible_to: Latest such date, inclusive. A period-scoped partition
-        selects on span OVERLAP rather than on ``filing_date``, so a row
-        booked in one quarter that carries a prior-quarter cash-accounting
-        devengo is never dropped from the candidate set.
+
+- ``id``: Surrogate integer primary key.
+- ``bucket_id``: Owning profile bucket, so a shared database never mixes two
+  buckets' routing rows.
+- ``transaction_id``: The ledger transaction's stable content-derived id.
+- ``filing_date``: ``value_date`` or ``booked_date`` (whichever the ledger
+  aggregation layer would use) as a plain SQL ``Date``.
+- ``filing_year``: ``filing_date.year``, indexed separately so a year-scoped
+  candidate-id query does not need a date-range predicate at all.
+- ``eligible_from``: Earliest date this row can file an observation under, per
+  :func:`~domain.transactions.dates.transaction_eligible_date_span`.
+  Equal to ``filing_date`` unless an IVA criterio-de-caja timing
+  override moves the row's devengo or collection dates off it.
+- ``eligible_to``: Latest such date, inclusive. A period-scoped partition
+  selects on span OVERLAP rather than on ``filing_date``, so a row
+  booked in one quarter that carries a prior-quarter cash-accounting
+  devengo is never dropped from the candidate set.
 """
 
 secure_objects_table = Table(

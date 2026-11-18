@@ -79,6 +79,7 @@ from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
 from ..invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ..invoices.catalogue_creation_ports import CatalogueCreationPorts
+from .confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
 from .confirm_party_identity import (
     agreed_counterparty_tax_id,
     refuse_a_counterparty_that_is_the_filer,
@@ -115,7 +116,6 @@ from .invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, Fin
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.iva.regime_legend import RegimeLegend
-    from .confirm_establishment import ConfirmedEstablishment
     from .confirmation_gate import ConfirmationBlocker, FindingResolution
     from .confirmation_record import InvoiceConfirmationRecord
 
@@ -618,12 +618,8 @@ def prepare_invoice_confirmation(
     legends: tuple[RegimeLegend, ...],
 ) -> InvoiceConfirmationPreparation:
     """Extract, gate, and resolve the document-side confirmation authorities."""
-    from .confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
     from .confirmation_gate import resolved_blockers
 
-    # The result's establishment annotation is a forward reference because the
-    # review gate imports this module. Rebuild it at the same deferred boundary.
-    InvoiceConfirmationResult.model_rebuild(_types_namespace={"ConfirmedEstablishment": ConfirmedEstablishment})
     resolved_settings = settings or load_settings()
     draft = extract_invoice_draft_from_evidence(
         bucket_id=bucket_id,

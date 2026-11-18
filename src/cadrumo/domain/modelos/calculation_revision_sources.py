@@ -603,7 +603,7 @@ class CalculationSourceIssue(BaseModel):
 
 
 CAPITAL_MOBILIARIO_POSITION_REF_PREFIX: Final = "capital-mobiliario-position:"
-"""Prefix of the source reference naming one savings occurrence: ``{position_ref}:{detail_record}``."""
+"""Prefix of the source reference naming one savings occurrence, in the form ``{position_ref}:{detail_record}``."""
 
 
 ACTIVITY_ASSET_CLAIM_REF_PREFIX: Final = "activity-asset-claim:"
