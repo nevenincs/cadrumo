@@ -1049,9 +1049,6 @@ modelo:
           00695:
             label: Cooperative regime - Detail of tax liability offset. Total. Pending
               application in future periods [00695]
-          00697:
-            label: Deductions under Transitional Provision 24.7 LIS - Deduction DT
-              24.7 LIS 2023 - Applied in this settlement [00697]
           00698:
             help: Applied in this settlement - Technological innovation (IT)
             label: Technological innovation (IT). Applied in this settlement
@@ -2129,15 +2126,6 @@ modelo:
           01294:
             label: Deduction for investments and expenses made by port authorities
               (art. 38 bis LIS) - 2022 - Pending application in future periods [01294]
-          01295:
-            label: Deduction for investments and expenses made by port authorities
-              (art. 38 bis LIS) - 2023 - Pending/generated deduction [01295]
-          01296:
-            label: Deduction for investments and expenses made by port authorities
-              (art. 38 bis LIS) - 2023 - Applied in this settlement [01296]
-          01297:
-            label: Deduction for investments and expenses made by port authorities
-              (art. 38 bis LIS) - 2023 - Pending application in future periods [01297]
           01298:
             label: Deduction for investments and expenses made by port authorities
               (art. 38 bis LIS) - Total - Pending/generated deduction [01298]
@@ -2147,10 +2135,6 @@ modelo:
           '01304':
             label: Deduction for investments and expenses made by port authorities
               (art. 38 bis LIS) - Total - Pending application in future periods [01304]
-          01309:
-            label: Deductions for foreign cinematographic productions in the Canary
-              Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2022) - Pending/generated
-              deduction [01309]
           '01310':
             label: Deductions for foreign cinematographic productions in the Canary
               Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2022 - Applied in
@@ -2163,22 +2147,6 @@ modelo:
             label: Deductions for foreign cinematographic productions in the Canary
               Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2022 - Pending application
               in future periods [01312]
-          '01313':
-            label: Deductions for foreign cinematographic productions in the Canary
-              Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2023 - Pending/generated
-              deduction [01313]
-          '01314':
-            label: Deductions for foreign cinematographic productions in the Canary
-              Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2023 - Applied in
-              this settlement [01314]
-          '01315':
-            label: Deductions for foreign cinematographic productions in the Canary
-              Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2023 - Amount paid
-              due to insufficient tax liability [01315]
-          '01316':
-            label: Deductions for foreign cinematographic productions in the Canary
-              Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2023 - Pending application
-              in future periods [01316]
           01318:
             label: Internal double taxation deductions (Transitional Provision 23.1
               LIS) - Internal D.T. 2023 - Applied in this settlement [01318]
@@ -2198,30 +2166,6 @@ modelo:
             label: Deductions for foreign film productions in the Canary Islands (art.
               36.2 LIS and Additional Provision 14 Law 19/1994) - Total - Pending
               application in future periods [01322]
-          '01323':
-            label: Deduction for donations to non-profit entities - General donations
-              - 2023 - without repeated donations to the same entity- Pending/generated
-              deduction [01323]
-          '01324':
-            label: Deduction for donations to non-profit entities - General donations
-              - 2023 - without repeated donations to the same entity - Applied in
-              this settlement [01324]
-          '01325':
-            label: Deduction for donations to non-profit entities - General donations
-              - 2023 - without repeated donations to the same entity - Pending application
-              in future periods [01325]
-          '01326':
-            label: Deduction for donations to non-profit entities - General donations
-              - 2023 - with repeated donations to the same entity- Pending/generated
-              deduction [01326]
-          '01327':
-            label: Deduction for donations to non-profit entities - General donations
-              - 2023 - with repeated donations to the same entity - Applied in this
-              settlement [01327]
-          01328:
-            label: Deduction for donations to non-profit entities - General donations
-              - 2023 - with repeated donations to the same entity - Pending application
-              in future periods [01328]
           '01332':
             label: Settlement IV - Self-assessment result - Credit of R&D&I deductions
               due to insufficient tax liability - Provincial tax administrations/Navarre
@@ -2309,42 +2253,6 @@ modelo:
           01368:
             label: Deductions to incentivise certain activities - {year}(*) Technological
               innovation (IT) - Pending application in future periods [01368]
-          '01374':
-            label: Deduction for donations to non-profit entities - Donations for
-              priority patronage activities and others entitled to increased deduction
-              - 2023 - With repeated donations to the same entity - Deduction carried
-              forward/generated [01374]
-          '01375':
-            label: Deduction for donations to non-profit entities - Donations for
-              priority patronage activities and others entitled to increased deduction
-              - 2023 - With repeated donations to the same entity - Applied in this
-              settlement [01375]
-          '01376':
-            label: Deduction for donations to non-profit entities - Donations for
-              priority patronage activities and others entitled to increased deduction
-              - 2023 - With repeated donations to the same entity - Carried forward
-              for application in future periods [01376]
-          '01377':
-            label: Deduction for reversal of temporary measures (Transitional Provision
-              37.1 LIS) - 2023 - Deduction base [01377]
-          01378:
-            label: Deduction for reversal of temporary measures (Transitional Provision
-              37.1 LIS) - 2023 - Amount generated/pending at start of period [01378]
-          01379:
-            label: Deduction for reversal of temporary measures (Transitional Provision
-              37.1 LIS) - 2023 - Amount applied [01379]
-          01380:
-            label: Deduction for reversal of temporary measures (Transitional Provision
-              37.1 LIS) - 2023 - Pending amount [01380]
-          01381:
-            label: Deduction for reversal of temporary measures (Transitional Provision
-              37.2 LIS) - 2023 - Deduction base [01381]
-          01382:
-            label: Deduction for reversal of temporary measures (Transitional Provision
-              37.2 LIS) - 2023 - Amount generated/pending at start of period [01382]
-          01384:
-            label: Deduction for reversal of temporary measures (Transitional Provision
-              37.2 LIS) - 2023 - Pending amount [01384]
           01385:
             label: R&D&i deductions excluded from the limit - 2022 Research and development
               - Pending/generated deduction [01385]
@@ -2377,34 +2285,6 @@ modelo:
             label: Limitation on deductibility of financial expenses. Financial expenses
               pending deduction - Generation year 2022 - Pending application at the
               start of the period - Remainder [01394]
-          01395:
-            label: Limitation on deductibility of financial expenses. Financial expenses
-              pending deduction - Year of generation 2023 - Applied in this settlement
-              [01395]
-          01396:
-            label: Limitation on deductibility of financial expenses. Financial expenses
-              pending deduction - Year of generation 2023 - Pending application in
-              future periods - By limit [01396]
-          01397:
-            label: Limitation on deductibility of financial expenses. Financial expenses
-              pending deduction - Year of generation 2023 - Pending application in
-              future periods - Remainder [01397]
-          01398:
-            label: Carried forward for addition due to unapplied operating-profit
-              limit - Year of generation 2023 - Pending application at start of period
-              [01398]
-          01399:
-            label: Carried forward for addition due to unapplied operating-profit
-              limit - Year of generation 2023 - Applied in this settlement [01399]
-          '01400':
-            label: Carried forward for addition due to unapplied operating-profit
-              limit - Year of generation 2023 - Pending application in future periods
-              [01400]
-          '01401':
-            label: Capitalization reserve - 2023 - Right to reduce tax base generated
-              in period/pending application at start of period [01401]
-          '01402':
-            label: Capitalization reserve - 2023 - Tax base reduction applied [01402]
           '01405':
             label: Levelling reserve - Reduction of the taxable base - Generation
               year 2022 - Amount included in the return due to non-compliance with
@@ -2412,78 +2292,10 @@ modelo:
           '01407':
             label: Levelling reserve - Reduction of the taxable base - Generation
               year 2022 - Amount pending addition in future periods [01407]
-          '01410':
-            label: Levelling reserve - Reserve allocation - Year of generation 2023
-              - Allocated reserve amount [01410]
-          '01411':
-            label: Levelling reserve - Reserve allocation - Year of generation 2023
-              - Reserve amount pending allocation [01411]
-          '01412':
-            label: Levelling reserve - Reserve allocation - Year of generation 2023
-              - Reserve used [01412]
           '01413':
             label: Conversion of deferred tax assets into enforceable credit against
               the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS - Generation
               year - 2022 - DTA applied in the period [01413]
-          '01414':
-            label: Conversion of deferred tax assets into enforceable credit against
-              the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS - Generation
-              year - 2023 - Total DTAs (art. 130.6 a) pending application at the start
-              of the period [01414]
-          '01415':
-            label: Conversion of deferred tax assets into enforceable credit against
-              the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS - Generation
-              year - 2023 - Positive net tax liability [01415]
-          '01416':
-            label: Conversion of deferred tax assets into enforceable credit against
-              the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS - Generation
-              year - 2023 - DTAs pending application at the start of the period -
-              With a right of conversion into a claimable credit [01416]
-          '01417':
-            label: Conversion of deferred tax assets into enforceable credit against
-              the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS - Generation
-              year - 2023 - DTAs pending application at the start of the period -
-              With a right of conversion into a claimable credit for excess tax due
-              [01417]
-          01418:
-            label: Conversion of deferred tax assets into enforceable credit against
-              the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS - Generation
-              year - 2023 - DTAs pending application at the start of the period -
-              Without a right of conversion into a claimable credit [01418]
-          01419:
-            label: Conversion of deferred tax assets into enforceable credit against
-              the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS - Generation
-              year - 2023 - DTAs converted into a claimable credit in the period [01419]
-          '01420':
-            label: Conversion of deferred tax assets into enforceable credit against
-              the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS - Generation
-              year - 2023 - DTAs pending application in future periods - With a right
-              of conversion into a claimable credit [01420]
-          '01421':
-            label: Conversion of deferred tax assets into enforceable credit against
-              the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS - Generation
-              year - 2023 - DTAs pending application in future periods - With a right
-              of conversion into a claimable credit, excess tax due [01421]
-          '01422':
-            label: Conversion of deferred tax assets into enforceable credit against
-              the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS - Generation
-              year - 2023 - DTAs pending application in future periods - Without a
-              right of conversion into a claimable credit [01422]
-          '01423':
-            label: Conversion of deferred tax assets into enforceable credit against
-              the Tax Administration - Excess positive net tax liability - Generation
-              year - 2023 - Excess positive net tax due outstanding at the start of
-              the period [01423]
-          '01424':
-            label: Conversion of deferred tax assets into enforceable credit against
-              the Tax Administration - Excess positive net tax liability - Generation
-              year - 2023 - Excess positive net tax due applied in tax periods 2008
-              to 2015 [01424]
-          '01425':
-            label: Conversion of deferred tax assets into enforceable credit against
-              the Tax Administration - Excess positive net tax liability - Generation
-              year - 2023 - Excess positive net tax due applied in tax periods beginning
-              from 2016 [01425]
           '01426':
             label: R&D&i deductions excluded from the limit - 2016 Research and development
               - Pending/generated deduction [01426]
@@ -2627,14 +2439,6 @@ modelo:
             label: Impairment allowances for receivables or other assets - Generation
               year - 2008 a 2015 - Allowances pending integration at start of period
               - That have met tax deductibility conditions [01478]
-          01479:
-            label: Impairment allowances for receivables or other assets - Generation
-              year - 2023 - Allowances pending integration at start of period - That
-              have not met tax deductibility conditions [01479]
-          01480:
-            label: Impairment allowances for receivables or other assets - Generation
-              year - 2023 - Allowances applied to conversion of deferred tax assets
-              [01480]
           01481:
             label: Impairment allowances for receivables or other assets - Generation
               year - 2008 a 2015 - Allowances integrated in this settlement [01481]
@@ -2707,10 +2511,6 @@ modelo:
             label: Impairment allowances for receivables or other assets - Total -
               Allowances pending integration in future periods - That have met tax
               deductibility conditions [01499]
-          '01500':
-            label: Impairment allowances for receivables or other assets - Generation
-              year - 2023 - Allowances pending integration in future periods - That
-              have not met tax deductibility conditions [01500]
           '01505':
             label: International double taxation deductions (LIS) - International
               D.T. 2023 - Pending application in future periods [01505]
@@ -3146,14 +2946,6 @@ modelo:
             label: Deductions for investment in the Canary Islands - Fixed assets
               in La Palma, La Gomera and El Hierro 2023 - Deduction carried forward/generated
               [01763]
-          '01764':
-            label: Settlement II - Detail of adjustments to the profit and loss account
-              result - Exemption on dividends or profit-sharing income from resident
-              entities (art. 21.11 LIS) - Decreases [01764]
-          '01765':
-            label: Settlement II - Detail of adjustments to the profit and loss account
-              result - Exemption on dividends or profit-sharing income from non-resident
-              entities (art. 21.11 LIS) - Decreases [01765]
           '01767':
             label: Cooperative regime - Detail of offset of tax liabilities. 2017
               Carried forward at the start of the period [01767]
@@ -3482,9 +3274,6 @@ modelo:
               y Cajal 2022 (RC)
             label: Año de Investigación Santiago Ramón y Cajal 2022 (RC). Deduction
               pending or generated
-          01872:
-            label: Levelling reserve - Reserve allocation - Year of generation 2023
-              - Amount of reserve to be allocated [01872]
           01873:
             label: Deductions to incentivise certain activities - 2022 Sum of deductions
               under Chapter IV Title VI Law 43/95, RDLeg. 4/2004 and LIS (excluding
@@ -3569,9 +3358,6 @@ modelo:
               deduction bases not mentioned above'
             label: 'Amounts attributed: Remaining deductions generated from attributed
               deduction bases not mentioned above'
-          01913:
-            label: Deductions for investment in the Canary Islands - Fixed assets
-              in La Palma, La Gomera and El Hierro 2023 - Applied in this return [01913]
           01915:
             label: Provisions for impairment of receivables or other assets - Year
               of generation - 2022 - Provisions carried forward for integration in
@@ -3937,13 +3723,6 @@ modelo:
             label: Internal double taxation deductions (Transitional Provision 23.1
               LIS) - Internal DT 2022 - Carried forward for application in future
               periods [02076]
-          '02077':
-            label: Deductions for investment in the Canary Islands - Fixed assets
-              2023 - Carried forward for application in future periods [02077]
-          02078:
-            label: Deductions for investment in the Canary Islands - Fixed assets
-              in La Palma, La Gomera and El Hierro 2023 - Deduction carried forward/generated
-              [02078]
           02080:
             label: 'Additional information for calculating deduction limits - {year}:
               financier: deduction for live performing arts and musical shows in the
@@ -4114,18 +3893,6 @@ modelo:
           02139:
             label: Deductions for foreign film productions (art. 36.2 LIS) - 2022
               - Carried forward for application in future periods [02139]
-          '02140':
-            label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
-              - Deduction carried forward/generated [02140]
-          '02141':
-            label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
-              - Applied in this return [02141]
-          '02142':
-            label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
-              - Amount paid due to insufficient tax liability [02142]
-          '02143':
-            label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
-              - Carried forward for application in future periods [02143]
           '02145':
             label: Deductions to incentivise certain activities - 2021 Sum of deductions
               under Chapter IV Title VI Law 43/95, RDLeg. 4/2004 and LIS (excluding
@@ -5118,14 +4885,6 @@ modelo:
           '02620':
             label: Free depreciation of new tangible fixed assets (art. 12.3 e) LIS)
               - Decrease - Balance carried forward at year-end [02620]
-          02629:
-            label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
-              Provisions 16 and 17 LIS) - Decrease - Balance carried forward at start
-              of year [02629]
-          '02630':
-            label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
-              Provisions 16 and 17 LIS) - Decrease - Balance carried forward at year-end
-              [02630]
           02639:
             label: Free depreciation with employment maintenance (RDL 6/2010 and Transitional
               Provision 13.2 LIS) - Decrease - Balance carried forward at start of
@@ -6500,9 +6259,6 @@ modelo:
           capitalization-reserve-2022-generated:
             label: Capitalization reserve - 2022 - Right to reduce tax base generated
               in period/pending application at start of period [01106]
-          capitalization-reserve-2023-remaining:
-            label: Capitalization reserve - 2023 - Taxable-base reduction carried
-              forward for application in future periods [01403]
           credit-institution-temporary-levy-correction:
             label: Settlement I - Detail of adjustments to the profit and loss account
               result - Correction for the temporary levy on credit institutions and
@@ -6522,11 +6278,6 @@ modelo:
               the Tax Administration - Excess positive net tax liability - Generation
               year - 2022 - Excess positive net tax due outstanding at the start of
               the period [01134]
-          deferred-tax-excess-quota-2023-remaining:
-            label: Conversion of deferred tax assets into enforceable credit against
-              the Tax Administration - Excess positive net tax liability - Generation
-              year - 2023 - Excess positive net tax due pending application in future
-              periods [01469]
           dp200012-00225:
             label: Settlement I - Detail of adjustments to the profit and loss account
               result - Negative income (art. 11.9 and 11.10 LIS) - Increases [00225]
@@ -7659,20 +7410,6 @@ modelo:
           dp200016b-00712:
             label: Deductions for investment in the Canary Islands - Fixed assets
               - Applied in this settlement [00712]
-          dp200016b-00767:
-            label: Deductions for investment in the Canary Islands - Canary Islands
-              investments 2023 - Deduction carried forward/generated [00767]
-          dp200016b-00768:
-            label: Deductions for investment in the Canary Islands - Canary Islands
-              investments 2023 - Applied in this settlement [00768]
-          dp200016b-00770:
-            label: Deductions for investment in the Canary Islands - Investments in
-              La Palma, La Gomera and El Hierro 2023 - Deduction carried forward/generated
-              [00770]
-          dp200016b-00771:
-            label: Deductions for investment in the Canary Islands - Investments in
-              La Palma, La Gomera and El Hierro 2023 - Applied in this settlement
-              [00771]
           dp200016b-00785:
             label: Deductions for investment in the Canary Islands - Fixed assets
               2015 - Deduction carried forward/generated [00785]
@@ -12285,19 +12022,15 @@ modelo:
               and payments on account [00062]
           is-agrupacion-de-interes-economico-espanola:
             help: Flag indicating a Spanish economic interest grouping [00013].
-            label: Spanish economic interest grouping [00013]
           is-agrupacion-europea-de-interes-economico:
             help: Flag indicating a European economic interest grouping [00014].
             label: European economic interest grouping [00014]
           is-agrupacion-interes-econo-2-gastos-financieros-netos-no-deducidos-por-la-e:
             help: 2.- Net finance costs not deducted by the entity - B) Financial
               data
-            label: B) Economic data. 2.- Net finance costs not deducted by the entity
           is-agrupacion-interes-econo-3-reserva-capitaliz-no-aplicada-por-la-entidad:
             help: 3.- Capitalisation reserve not applied by the entity - B) Financial
               data
-            label: B) Economic data. 3.- Capitalisation reserve not applied by the
-              entity
           is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-base-de-la-deduc:
             help: '6.- Double taxation relief: deduction base - B) Financial data'
             label: 'B) Economic data. 6.- Double taxation relief: deduction base'
@@ -13814,38 +13547,6 @@ modelo:
             label: Free depreciation with employment maintenance (RDL 6/2010 and Transitional
               Provision 13.2 LIS) - Decrease - Adjustments for the tax year - Temporary
               (originating in this tax year) [02637]
-          is-correccion-libertad-amortizacion-otros-art12-permanente-aumento:
-            label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
-              Provisions 16 and 17 LIS) - Increase - Adjustments for the tax year
-              - Permanent [02621]
-          is-correccion-libertad-amortizacion-otros-art12-permanente-disminucion:
-            label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
-              Provisions 16 and 17 LIS) - Decrease - Adjustments for the tax year
-              - Permanent [02626]
-          is-correccion-libertad-amortizacion-otros-art12-saldo-final-neto:
-            label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
-              Provisions 16 and 17 LIS) - Increase - Balance carried forward at year-end
-              [02625]
-          is-correccion-libertad-amortizacion-otros-art12-saldo-inicial:
-            label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
-              Provisions 16 and 17 LIS) - Increase - Balance carried forward at start
-              of year [02624]
-          is-correccion-libertad-amortizacion-otros-art12-temporaria-anteriores-aumento:
-            label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
-              Provisions 16 and 17 LIS) - Increase - Adjustments for the tax year
-              - Temporary (originating in prior tax years) [02623]
-          is-correccion-libertad-amortizacion-otros-art12-temporaria-anteriores-disminucion:
-            label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
-              Provisions 16 and 17 LIS) - Decrease - Adjustments for the tax year
-              - Temporary (originating in prior tax years) [02628]
-          is-correccion-libertad-amortizacion-otros-art12-temporaria-ejercicio-aumento:
-            label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
-              Provisions 16 and 17 LIS) - Increase - Adjustments for the tax year
-              - Temporary (originating in this tax year) [02622]
-          is-correccion-libertad-amortizacion-otros-art12-temporaria-ejercicio-disminucion:
-            label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
-              Provisions 16 and 17 LIS) - Decrease - Adjustments for the tax year
-              - Temporary (originating in this tax year) [02627]
           is-correccion-libertad-amortizacion-sin-mantenimiento-empleo-permanente-aumento:
             label: Free depreciation without employment maintenance (RDL 13/2010 and
               Transitional Provision 13.2 LIS) - Increase - Adjustments for the tax
@@ -14790,31 +14491,6 @@ modelo:
             label: Deduction for donations to non-profit entities - General donations
               - 2024 Without repeated donations to the same entity - Pending/generated
               deduction [00369]
-          is-deduccion-donativos-general-subtotal-2013-2014-aplicado-periodo:
-            label: Deduction for donations to non-profit entities - General donations
-              - Donations subtotal 2013 and 2014 - Applied in this settlement [01690]
-          is-deduccion-donativos-general-subtotal-2013-2014-pendiente-futuro:
-            label: Deduction for donations to non-profit entities - General donations
-              - Donations subtotal 2013 and 2014 - Pending application in future periods
-              [01691]
-          is-deduccion-donativos-general-subtotal-2013-2014-pendiente-generada:
-            label: Deduction for donations to non-profit entities - General donations
-              - Donations subtotal 2013 and 2014 - Deduction carried forward/generated
-              [01689]
-          is-deduccion-donativos-prioritarias-subtotal-2013-2014-aplicado-periodo:
-            label: Deduction for donations to non-profit entities - Donations for
-              priority patronage activities and others entitled to increased deduction
-              - Donations subtotal 2013 and 2014 - Applied in this settlement [01702]
-          is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-futuro:
-            label: Deduction for donations to non-profit entities - Donations for
-              priority patronage activities and others entitled to increased deduction
-              - Donations subtotal 2013 and 2014 - Pending application in future periods
-              [01703]
-          is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-generada:
-            label: Deduction for donations to non-profit entities - Donations for
-              priority patronage activities and others entitled to increased deduction
-              - Donations subtotal 2013 and 2014 - Deduction carried forward/generated
-              [01701]
           is-deduccion-donativos-total:
             label: Deduction for donations to non-profit entities - Total deductions
               for donations to non-profit entities - Pending application in future
@@ -14915,10 +14591,6 @@ modelo:
           is-deduccion-inversion-canarias-2009-aplicado:
             label: Deductions for investment in the Canary Islands - Canary Islands
               investments 2009 - Applied in this return [00257]
-          is-deduccion-inversion-canarias-importe:
-            label: Deductions for investment in the Canary Islands - Investments in
-              La Palma, La Gomera and El Hierro 2023 - Pending application in future
-              periods [00774]
           is-deduccion-inversion-canarias-islas-menores-2024-pendiente-futuros:
             label: Deductions for investment in the Canary Islands - Investments for
               the year in La Palma, La Gomera and El Hierro - Pending application
@@ -15024,9 +14696,6 @@ modelo:
           is-deduccion-produccion-extranjera-cinematografica-pendiente-generada:
             label: Deductions for foreign film productions (art. 36.2 LIS) - 2024
               - Deduction carried forward/generated [00315]
-          is-deduccion-reinversion-beneficios-dt24a7-periodo:
-            label: Deductions under Transitional Provision 24.7 LIS - Deduction DT
-              24.7 LIS 2023 - Pending/generated deduction [00696]
           is-deduccion-reversion-medidas-dt1-pendiente:
             label: Deduction for reversal of temporary measures (D.T.37th. 1 LIS)
               - {year} - Pending amount [00905]
@@ -15045,9 +14714,6 @@ modelo:
           is-deduccion-reversion-medidas-dt2-pendiente:
             label: Deduction for reversal of temporary measures (Transitional Provision
               37.2 LIS) - 2015 - Pending amount [01181]
-          is-deduccion-reversion-medidas-dt2-periodo:
-            label: Deduction for reversal of temporary measures (Transitional Provision
-              37.2 LIS) - 2023 - Amount applied [01383]
           is-deduccion-reversion-medidas-dt2-total:
             label: Deduction for reversal of temporary measures (Transitional Provision
               37.2 LIS) - Total - Deduction base [01182]
@@ -15106,10 +14772,6 @@ modelo:
           : label: Deductions for investment in the Canary Islands - Fixed assets
               in La Palma, La Gomera and El Hierro {year} - Carried forward for application
               in future periods [00270]
-          ? is-deducciones-inversion-canarias-activos-fijos-en-la-palma-la-gomera-y-el-pendiente-de-aplicacion-en-periodos-futuros-00766
-          : label: Deductions for investment in the Canary Islands - Fixed assets
-              in La Palma, La Gomera and El Hierro 2023 - Carried forward for application
-              in future periods [00766]
           is-deducciones-inversion-canarias-activos-fijos-y-pendiente-de-aplicacion-en-periodos-futuros-00239:
             label: Deductions for investment in the Canary Islands - Fixed assets
               2022 - Carried forward for application in future periods [00239]
@@ -15163,10 +14825,6 @@ modelo:
             label: Deductions for investment in the Canary Islands - Canary Islands
               investments 2008 - Carried forward for application in future periods
               [00701]
-          is-deducciones-inversion-canarias-inversiones-canarias-y-pendiente-de-aplicacion-en-periodos-futuros-00769:
-            label: Deductions for investment in the Canary Islands - Canary Islands
-              investments 2023 - Carried forward for application in future periods
-              [00769]
           is-deducciones-inversion-canarias-inversiones-en-la-palma-la-gomera-y-el-h-pendiente-de-aplicacion-en-periodos-futuros:
             label: Deductions for investment in the Canary Islands - Investments in
               La Palma, La Gomera and El Hierro 2022 - Carried forward for application
@@ -16471,6 +16129,9 @@ modelo:
           is-m200-dp200017-00467:
             label: Deductions to incentivise certain activities - 2005 Sum of deductions
               - Applied in this settlement [00467]
+          is-m200-dp200017-00468:
+            label: Deductions to incentivise certain activities - 2005 Sum of deductions
+              - Carried forward for application in future periods [00468]
           is-m200-dp200017-00586:
             label: Deductions to incentivise certain activities - 2006 Sum of deductions
               - Carried forward for application in future periods [00586]
@@ -16762,6 +16423,12 @@ modelo:
             label: Deductions to incentivise certain activities - {year} Milliarium
               Montserrat Decade Plan 1025-2025 (PDMM) - Carried forward for application
               in future periods [01709]
+          is-m200-dp200018-01907:
+            label: Deductions to incentivise certain activities - 2022 Jacobean Holy
+              Year 2021 (J21) - Deduction carried forward/generated [01907]
+          is-m200-dp200018-01908:
+            label: Deductions to incentivise certain activities - 2022 Jacobean Holy
+              Year 2021 (J21) - Applied in this settlement [01908]
           is-m200-dp200018-02362:
             label: Deductions to incentivise certain activities - {year} Berlanga
               Plan (PB) - Deduction carried forward/generated [02362]
@@ -17840,8 +17507,6 @@ modelo:
               under Transitional Provision 22 of the Corporate Income Tax Law [00063].
             label: Reduced tax rate for newly created entities (Transitional Provision
               22 LIS) [00063]
-          is-tipo-gravamen-reducido-para-empresa-emergente:
-            label: Reduced tax rate for a start-up company [00083]
           is-tipo-gravamen-reducido-para-entidades-con-incn-periodo-anterior-inferior-a-1-millon-euros-art-29-1-lis:
             label: Reduced tax rate for entities with net turnover in the previous
               period below EUR 1 million (art. 29.1 LIS) [00088]
@@ -18493,6 +18158,16 @@ modelo:
             '00054':
               label: Joint taxation of State and provincial tax administrations -
                 Economic Agreement - volume of transactions in Vizcaya [00054]
+            00696:
+              label: Deductions under Transitional Provision 24.7 LIS - Deduction
+                DT 24.7 LIS 2022 - Pending/generated deduction [00696]
+            00697:
+              label: Deductions under Transitional Provision 24.7 LIS - Deduction
+                DT 24.7 LIS 2022 - Applied in this settlement [00697]
+            '00774':
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2022 - Pending application in
+                future periods [00774]
             00913:
               label: Joint taxation of State and provincial tax administrations -
                 Increase for non-compliance with SOCIMI requirements - Álava [00913]
@@ -18676,6 +18351,16 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2021 Without repeated donations to the same entity - Applied in
                 this settlement [01017]
+            '01020':
+              label: Settlement IV - Conversion of deferred tax assets into a credit
+                claimable from the Tax Administration (art. 130 LIS) - Payment for
+                conversion of deferred tax assets into receivable credit against the
+                tax administration (art. 130 LIS) - State [01020]
+            '01021':
+              label: Settlement IV - Conversion of deferred tax assets into a credit
+                claimable from the Tax Administration (art. 130 LIS) - Compensation
+                for conversion of deferred tax assets into receivable credit against
+                the tax administration (art. 130 LIS) - State [01021]
             '01022':
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Temporary business consortium, adjustments for income
@@ -18784,6 +18469,12 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation year - 2022(*) - DTAs pending application in future periods
                 - Without a right of conversion into a claimable credit [01133]
+            '01227':
+              label: Economic interest grouping and UTEs - Information return - Net
+                finance costs not deducted by the entity [01227]
+            01228:
+              label: Economic interest grouping and UTEs - Information return - Capitalisation
+                reserve not applied by the entity [01228]
             '01240':
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.5 and/or 83 LIS - a) Finance costs of the tax period arising from
@@ -18825,6 +18516,15 @@ modelo:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - Total non-deductible financial expenses of the
                 tax period (= [c2+k2]) [01260]
+            01295:
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2022 - Pending/generated deduction [01295]
+            01296:
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2022 - Applied in this settlement [01296]
+            01297:
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2022 - Pending application in future periods [01297]
             '01300':
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
@@ -18865,6 +18565,55 @@ modelo:
                 Conversion of deferred tax assets into a credit claimable from the
                 Tax Administration (art. 130 LIS) - Offset for asset conversion -
                 Navarre [01308]
+            01309:
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2022(*) - Pending/generated
+                deduction [01309]
+            '01313':
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2022 - Pending/generated
+                deduction [01313]
+            '01314':
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2022 - Applied in
+                this settlement [01314]
+            '01315':
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2022 - Amount paid
+                due to insufficient tax liability [01315]
+            '01316':
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2022 - Pending application
+                in future periods [01316]
+            '01323':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2022 without repeated donations to the same entity - Deduction carried
+                forward/generated [01323]
+            '01324':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2022 without repeated donations to the same entity - Applied in
+                this settlement [01324]
+            '01325':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2022 without repeated donations to the same entity - Carried forward
+                for application in future periods [01325]
+            '01326':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2022 - with repeated donations to the same entity - Pending/generated
+                deduction [01326]
+            '01327':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2022 - with repeated donations to the same entity - Applied in this
+                settlement [01327]
+            01328:
+              label: Deduction for donations to non-profit entities - General donations
+                - 2022 - with repeated donations to the same entity - Pending application
+                in future periods [01328]
+            01329:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 without repeated donations to the same entity - Deduction carried
+                forward/generated [01329]
             '01331':
               label: Settlement III - Taxable base - Only cooperative companies -
                 Prior gross tax liability after the equalization reserve - Decreases
@@ -18890,6 +18639,86 @@ modelo:
             '01340':
               label: Joint taxation of State and provincial tax administrations -
                 Payment of foreign-production deductions - Vizcaya [01340]
+            '01372':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 without repeated donations to the same entity - Applied in
+                this settlement [01372]
+            '01373':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 without repeated donations to the same entity - Carried forward
+                for application in future periods [01373]
+            '01374':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 - With repeated donations to the same entity - Deduction carried
+                forward/generated [01374]
+            '01375':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 - With repeated donations to the same entity - Applied in this
+                settlement [01375]
+            '01376':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2022 - With repeated donations to the same entity - Carried forward
+                for application in future periods [01376]
+            '01377':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2022 - Deduction base [01377]
+            01378:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2022 - Amount generated/pending at start of period [01378]
+            01379:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2022 - Amount applied [01379]
+            01380:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2022 - Pending amount [01380]
+            01381:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2022 - Deduction base [01381]
+            01382:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2022 - Amount generated/pending at start of period [01382]
+            01383:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2022 - Amount applied [01383]
+            01384:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2022 - Pending amount [01384]
+            01395:
+              label: Limitation on deductibility of financial expenses. Financial
+                expenses pending deduction - Year of generation 2022(**) - Applied
+                in this settlement [01395]
+            01396:
+              label: Limitation on deductibility of financial expenses. Financial
+                expenses pending deduction - Year of generation 2022(**) - Pending
+                application in future periods - By limit [01396]
+            01397:
+              label: Limitation on deductibility of financial expenses. Financial
+                expenses pending deduction - Year of generation 2022(**) - Pending
+                application in future periods - Remainder [01397]
+            01398:
+              label: Carried forward for addition due to unapplied operating-profit
+                limit - Year of generation 2022(**) - Pending application at start
+                of period [01398]
+            01399:
+              label: Carried forward for addition due to unapplied operating-profit
+                limit - Year of generation 2022(**) - Applied in this settlement [01399]
+            '01400':
+              label: Carried forward for addition due to unapplied operating-profit
+                limit - Year of generation 2022(**) - Pending application in future
+                periods [01400]
+            '01401':
+              label: Capitalization reserve - 2022 - Right to reduce tax base generated
+                in period/pending application at start of period [01401]
+            '01402':
+              label: Capitalization reserve - 2022 - Tax base reduction applied [01402]
+            '01403':
+              label: Capitalization reserve - 2022 - Taxable-base reduction carried
+                forward for application in future periods [01403]
             01408:
               label: Impairment allowances for receivables or other assets - Generation
                 year - 2007 and earlier - Allowances pending integration at start
@@ -18898,6 +18727,82 @@ modelo:
               label: Impairment allowances for receivables or other assets - Generation
                 year - 2007 and earlier - Allowances pending integration at start
                 of period - That have met tax deductibility conditions [01409]
+            '01410':
+              label: Levelling reserve - Reserve allocation - Generation year 2022
+                - Allocated reserve amount [01410]
+            '01411':
+              label: Levelling reserve - Reserve allocation - Generation year 2022
+                - Reserve amount pending allocation [01411]
+            '01412':
+              label: Levelling reserve - Reserve allocation - Generation year 2022
+                - Reserve used [01412]
+            '01414':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - Total DTAs (art. 130.6 a) pending application
+                at the start of the period [01414]
+            '01415':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - Positive net tax liability [01415]
+            '01416':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit [01416]
+            '01417':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit for
+                excess tax due [01417]
+            01418:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application at the start of
+                the period - Without a right of conversion into a claimable credit
+                [01418]
+            01419:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs converted into a claimable credit in
+                the period [01419]
+            '01420':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit [01420]
+            '01421':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit, excess tax due
+                [01421]
+            '01422':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2022 - DTAs pending application in future periods
+                - Without a right of conversion into a claimable credit [01422]
+            '01423':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2022 - Excess positive net tax due outstanding at the start
+                of the period [01423]
+            '01424':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2022 - Excess positive net tax due applied in tax periods 2008
+                to 2015 [01424]
+            '01425':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2022 - Excess positive net tax due applied in tax periods beginning
+                from 2016 [01425]
+            01469:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2022 - Excess positive net tax due pending application in future
+                periods [01469]
             '01473':
               label: Impairment allowances for receivables or other assets - Generation
                 year - 2007 and earlier - Allowances pending integration at start
@@ -18906,6 +18811,18 @@ modelo:
               label: Impairment allowances for receivables or other assets - Generation
                 year - 2007 and earlier - Allowances pending integration in future
                 periods - That have not met tax deductibility conditions [01476]
+            01479:
+              label: Impairment allowances for receivables or other assets - Generation
+                year - 2022 - Allowances pending integration at start of period -
+                That have not met tax deductibility conditions [01479]
+            01480:
+              label: Impairment allowances for receivables or other assets - Generation
+                year - 2022 - Allowances applied to conversion of deferred tax assets
+                [01480]
+            '01500':
+              label: Impairment allowances for receivables or other assets - Generation
+                year - 2022 - Allowances pending integration in future periods - That
+                have not met tax deductibility conditions [01500]
             '01510':
               label: Settlement III - Taxable base - Only cooperative companies -
                 Income corresponding to reversal of cooperative impairments (at tax-liability
@@ -19419,6 +19336,14 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation year - 2018 - DTAs pending application in future periods
                 - Without a right of conversion into a claimable credit [01762]
+            '01764':
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Exemption on dividends or profit-sharing income from resident
+                entities (art. 21.11 LIS) - Decreases [01764]
+            '01765':
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Exemption on dividends or profit-sharing income from non-resident
+                entities (art. 21.11 LIS) - Decreases [01765]
             01793:
               label: Settlement IV - Tax due for the year, payable or refundable -
                 Withholdings on items other than investment income or urban property
@@ -19434,6 +19359,9 @@ modelo:
                 account result - Income from the transfer of fixed assets obtained
                 by Port Authorities (Additional Provision 68, Law 6/2018) - Decreases
                 [01824]
+            01872:
+              label: Levelling reserve - Reserve allocation - Generation year 2022
+                - Amount of reserve to be allocated [01872]
             01877:
               label: Joint taxation of State and provincial tax administrations -
                 Payment of deductions for foreign productions in the Canary Islands
@@ -19466,6 +19394,10 @@ modelo:
                 Islands: breakdown of the offsetting of negative taxable bases - Subtotal
                 of the other-activities taxable base offset - Pending application
                 in future periods [01891]'
+            01913:
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2022 - Applied in this return
+                [01913]
             01918:
               label: Deductions to incentivise certain activities - 2018 Investments
                 in Western Africa territory and advertising and promotion expenses
@@ -19486,6 +19418,13 @@ modelo:
                 in Western Africa territory and advertising and promotion expenses
                 (art. 27 bis Law 19/1994) (TAP) - Carried forward for application
                 in future periods [01927]
+            '02077':
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                2022 - Carried forward for application in future periods [02077]
+            02078:
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2022 - Deduction carried forward/generated
+                [02078]
             02083:
               label: Deductions to incentivise certain activities - 2015 Investments
                 in Western Africa territory and advertising and promotion expenses
@@ -19544,6 +19483,31 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation year - 2019 - DTAs pending application in future periods
                 - Without a right of conversion into a claimable credit [02108]
+            02181:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Exemption on dividends or profit-sharing income from non-resident
+                entities (art. 21.1, 21.10 and Transitional Provision 40 LIS) - Decreases
+                [02181]
+            02182:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Exemption on income obtained from the transfer of securities
+                of resident entities (art. 21.3, 21.10 and Transitional Provision
+                40 LIS) - Increases [02182]
+            02183:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Exemption on income obtained from the transfer of securities
+                of resident entities (art. 21.3, 21.10 and Transitional Provision
+                40 LIS) - Decreases [02183]
+            02184:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Exemption on income obtained from the transfer of securities
+                of non-resident entities (art. 21.3, 21.10 and Transitional Provision
+                40 LIS) - Increases [02184]
+            02185:
+              label: Settlement I - Detail of adjustments to the profit and loss account
+                result - Exemption on income obtained from the transfer of securities
+                of non-resident entities (art. 21.3, 21.10 and Transitional Provision
+                40 LIS) - Decreases [02185]
             02186:
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Exemption on income obtained in the cases of art.
@@ -19698,6 +19662,40 @@ modelo:
                 LIS) and amortization under Transitional Provision 13.1 LIS - Decrease
                 - Adjustments for the tax year - Temporary (originating in prior tax
                 years) [02588]
+            '02621':
+              label: Other cases of free depreciation (art. 12.3 a) and d) LIS) -
+                Increase - Adjustments for the tax year - Permanent [02621]
+            '02622':
+              label: Other cases of free depreciation (art. 12.3 a) and d) LIS) -
+                Increase - Adjustments for the tax year - Temporary (originating in
+                this tax year) [02622]
+            '02623':
+              label: Other cases of free depreciation (art. 12.3 a) and d) LIS) -
+                Increase - Adjustments for the tax year - Temporary (originating in
+                prior tax years) [02623]
+            '02624':
+              label: Other cases of free depreciation (art. 12.3 a) and d) LIS) -
+                Increase - Balance carried forward at start of year [02624]
+            '02625':
+              label: Other cases of free depreciation (art. 12.3 a) and d) LIS) -
+                Increase - Balance carried forward at year-end [02625]
+            '02626':
+              label: Other cases of free depreciation (art. 12.3 a) and d) LIS) -
+                Decrease - Adjustments for the tax year - Permanent [02626]
+            '02627':
+              label: Other cases of free depreciation (art. 12.3 a) and d) LIS) -
+                Decrease - Adjustments for the tax year - Temporary (originating in
+                this tax year) [02627]
+            02628:
+              label: Other cases of free depreciation (art. 12.3 a) and d) LIS) -
+                Decrease - Adjustments for the tax year - Temporary (originating in
+                prior tax years) [02628]
+            02629:
+              label: Other cases of free depreciation (art. 12.3 a) and d) LIS) -
+                Decrease - Balance carried forward at start of year [02629]
+            '02630':
+              label: Other cases of free depreciation (art. 12.3 a) and d) LIS) -
+                Decrease - Balance carried forward at year-end [02630]
             '02662':
               label: Impairment losses under art. 13.1 LIS and provisions and expenses
                 (art. 14.1 and 14.2 LIS) referred to in art. 11.12 and Transitional
@@ -20068,6 +20066,8 @@ modelo:
               label: Direct holdings in other entities. Valuation corrections. d)
                 Adjustment for the decrease in value arising from the fair-value criterion
                 (art. 15.l LIS)
+            x-8h834c1g60o32ehg60o32co:
+              label: Spanish economic interest grouping or U.T.E. [00013]
             x-8h834c1g60o32ehg60o36d8:
               label: Application of the special regime for mergers, spin-offs, asset
                 contributions and share exchanges (Chapter VII, Title VII) [00035]
@@ -20080,6 +20080,8 @@ modelo:
               label: Subsidiary of a multinational group [00081]
             x-8h834c1g60o32ehg60o3gcg:
               label: Ultimate parent company of a multinational group [00082]
+            x-8h834c1g60o32ehg60o3gco:
+              label: Start-up company [00083]
             x-8h834c1g60oj0ehg60q3idg:
               label: Statement of changes in equity (II) - Income and expenses recognized
                 in equity - Other income and expenses recognized in equity - Own shares
@@ -20180,6 +20182,65 @@ modelo:
                 claimable from the Tax Administration (art. 130 LIS) - Net amount
                 payable or refundable - DTA conversion result after regularisation:
                 credit - Regional (foral) administrations/Navarre (Totals) [03319]'
+            x-8h834c1g60ojcghq60o3edhm:
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2022 - Carried forward for application
+                in future periods [00766]
+            x-8h834c1g60ojcghq60o3edhn:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2022 - Deduction carried forward/generated [00767]
+            x-8h834c1g60ojcghq60o3edho:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2022 - Applied in this settlement [00768]
+            x-8h834c1g60ojcghq60o3edhp:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2022 - Carried forward for application in future periods
+                [00769]
+            x-8h834c1g60ojcghq60o3edpg:
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2022 - Deduction carried forward/generated
+                [00770]
+            x-8h834c1g60ojcghq60o3edph:
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2022 - Applied in this settlement
+                [00771]
+            x-8h834c1g60ojgghq60p32d1g:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2022
+                - Deduction carried forward/generated [02140]
+            x-8h834c1g60ojgghq60p32d1h:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2022
+                - Applied in this return [02141]
+            x-8h834c1g60ojgghq60p32d1i:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2022
+                - Amount paid due to insufficient tax liability [02142]
+            x-8h834c1g60ojgghq60p32d1j:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2022
+                - Carried forward for application in future periods [02143]
+            x-8h834c1g60ojggpq60ojce1p:
+              label: Deduction for donations to non-profit entities - General donations
+                - Donations subtotal 2012 to 2014 - Deduction carried forward/generated
+                [01689]
+            x-8h834c1g60ojggpq60ojce9g:
+              label: Deduction for donations to non-profit entities - General donations
+                - Donations subtotal 2012 to 2014 - Applied in this settlement [01690]
+            x-8h834c1g60ojggpq60ojce9h:
+              label: Deduction for donations to non-profit entities - General donations
+                - Donations subtotal 2012 to 2014 - Pending application in future
+                periods [01691]
+            x-8h834c1g60ojggpq60ojec1h:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - Donations subtotal 2012 to 2014 - Deduction carried forward/generated
+                [01701]
+            x-8h834c1g60ojggpq60ojec1i:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - Donations subtotal 2012 to 2014 - Applied in this settlement [01702]
+            x-8h834c1g60ojggpq60ojec1j:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - Donations subtotal 2012 to 2014 - Pending application in future
+                periods [01703]
             x-8h834c1g60ojiehg68pj0c8:
               label: Detail of adjustments to the profit and loss result - Adjustments
                 to the profit and loss account result for the tax year - Permanent
@@ -20244,6 +20305,16 @@ modelo:
               label: Accelerated depreciation of certain vehicles and new charging
                 infrastructure (Additional Provision 18 LIS) - Increase - Adjustments
                 for the tax year - Temporary (originating in this tax year) [00077]
+            00696:
+              label: Deductions under Transitional Provision 24.7 LIS - Deduction
+                DT 24.7 LIS 2023 - Pending/generated deduction [00696]
+            00697:
+              label: Deductions under Transitional Provision 24.7 LIS - Deduction
+                DT 24.7 LIS 2023 - Applied in this settlement [00697]
+            '00774':
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2023 - Pending application in
+                future periods [00774]
             '00775':
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Accelerated depreciation of certain vehicles and new charging
@@ -20335,6 +20406,64 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation year - 2022 - DTAs pending application in future periods
                 - Without a right of conversion into a claimable credit [01133]
+            '01227':
+              label: B) Economic data. 2.- Net finance costs not deducted by the entity
+            01228:
+              label: B) Economic data. 3.- Capitalisation reserve not applied by the
+                entity
+            01295:
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2023 - Pending/generated deduction [01295]
+            01296:
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2023 - Applied in this settlement [01296]
+            01297:
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2023 - Pending application in future periods [01297]
+            01309:
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2022) - Pending/generated
+                deduction [01309]
+            '01313':
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2023 - Pending/generated
+                deduction [01313]
+            '01314':
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2023 - Applied in
+                this settlement [01314]
+            '01315':
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2023 - Amount paid
+                due to insufficient tax liability [01315]
+            '01316':
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2023 - Pending application
+                in future periods [01316]
+            '01323':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - without repeated donations to the same entity- Pending/generated
+                deduction [01323]
+            '01324':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - without repeated donations to the same entity - Applied in
+                this settlement [01324]
+            '01325':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - without repeated donations to the same entity - Pending application
+                in future periods [01325]
+            '01326':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - with repeated donations to the same entity- Pending/generated
+                deduction [01326]
+            '01327':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - with repeated donations to the same entity - Applied in this
+                settlement [01327]
+            01328:
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - with repeated donations to the same entity - Pending application
+                in future periods [01328]
             01329:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
@@ -20350,17 +20479,197 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2023(*) Without repeated donations to the same entity - Carried
                 forward for application in future periods [01373]
+            '01374':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023 - With repeated donations to the same entity - Deduction carried
+                forward/generated [01374]
+            '01375':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023 - With repeated donations to the same entity - Applied in this
+                settlement [01375]
+            '01376':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023 - With repeated donations to the same entity - Carried forward
+                for application in future periods [01376]
+            '01377':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2023 - Deduction base [01377]
+            01378:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2023 - Amount generated/pending at start of period [01378]
+            01379:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2023 - Amount applied [01379]
+            01380:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2023 - Pending amount [01380]
+            01381:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2023 - Deduction base [01381]
+            01382:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2023 - Amount generated/pending at start of period [01382]
+            01383:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2023 - Amount applied [01383]
+            01384:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2023 - Pending amount [01384]
+            01395:
+              label: Limitation on deductibility of financial expenses. Financial
+                expenses pending deduction - Year of generation 2023 - Applied in
+                this settlement [01395]
+            01396:
+              label: Limitation on deductibility of financial expenses. Financial
+                expenses pending deduction - Year of generation 2023 - Pending application
+                in future periods - By limit [01396]
+            01397:
+              label: Limitation on deductibility of financial expenses. Financial
+                expenses pending deduction - Year of generation 2023 - Pending application
+                in future periods - Remainder [01397]
+            01398:
+              label: Carried forward for addition due to unapplied operating-profit
+                limit - Year of generation 2023 - Pending application at start of
+                period [01398]
+            01399:
+              label: Carried forward for addition due to unapplied operating-profit
+                limit - Year of generation 2023 - Applied in this settlement [01399]
+            '01400':
+              label: Carried forward for addition due to unapplied operating-profit
+                limit - Year of generation 2023 - Pending application in future periods
+                [01400]
+            '01401':
+              label: Capitalization reserve - 2023 - Right to reduce tax base generated
+                in period/pending application at start of period [01401]
+            '01402':
+              label: Capitalization reserve - 2023 - Tax base reduction applied [01402]
+            '01403':
+              label: Capitalization reserve - 2023 - Taxable-base reduction carried
+                forward for application in future periods [01403]
+            '01410':
+              label: Levelling reserve - Reserve allocation - Year of generation 2023
+                - Allocated reserve amount [01410]
+            '01411':
+              label: Levelling reserve - Reserve allocation - Year of generation 2023
+                - Reserve amount pending allocation [01411]
+            '01412':
+              label: Levelling reserve - Reserve allocation - Year of generation 2023
+                - Reserve used [01412]
+            '01414':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - Total DTAs (art. 130.6 a) pending application
+                at the start of the period [01414]
+            '01415':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - Positive net tax liability [01415]
+            '01416':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit [01416]
+            '01417':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit for
+                excess tax due [01417]
+            01418:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application at the start of
+                the period - Without a right of conversion into a claimable credit
+                [01418]
+            01419:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs converted into a claimable credit in
+                the period [01419]
+            '01420':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit [01420]
+            '01421':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit, excess tax due
+                [01421]
+            '01422':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application in future periods
+                - Without a right of conversion into a claimable credit [01422]
+            '01423':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2023 - Excess positive net tax due outstanding at the start
+                of the period [01423]
+            '01424':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2023 - Excess positive net tax due applied in tax periods 2008
+                to 2015 [01424]
+            '01425':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2023 - Excess positive net tax due applied in tax periods beginning
+                from 2016 [01425]
+            01469:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2023 - Excess positive net tax due pending application in future
+                periods [01469]
+            01479:
+              label: Impairment allowances for receivables or other assets - Generation
+                year - 2023 - Allowances pending integration at start of period -
+                That have not met tax deductibility conditions [01479]
+            01480:
+              label: Impairment allowances for receivables or other assets - Generation
+                year - 2023 - Allowances applied to conversion of deferred tax assets
+                [01480]
+            '01500':
+              label: Impairment allowances for receivables or other assets - Generation
+                year - 2023 - Allowances pending integration in future periods - That
+                have not met tax deductibility conditions [01500]
+            '01764':
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on dividends or profit-sharing income from
+                resident entities (art. 21.11 LIS) - Decreases [01764]
+            '01765':
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on dividends or profit-sharing income from
+                non-resident entities (art. 21.11 LIS) - Decreases [01765]
+            01872:
+              label: Levelling reserve - Reserve allocation - Year of generation 2023
+                - Amount of reserve to be allocated [01872]
             01899:
               label: Deductions to incentivise certain activities - 2022 Investments
                 in Western Africa territory and advertising and promotion expenses
                 (art. 27 bis Law 19/1994) (TAP) - Carried forward for application
                 in future periods [01899]
+            01913:
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2023 - Applied in this return
+                [01913]
             01935:
               label: R&D&i deductions excluded from the limit - Additional information
                 for calculating deduction limits - Commercial group (only for entities
                 that have marked code 00039 of the characteristics of the return)
                 - Annual amount of the research and development expenses deduction
                 applied or paid by the rest of the group [01935]
+            '02077':
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                2023 - Carried forward for application in future periods [02077]
+            02078:
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2023 - Deduction carried forward/generated
+                [02078]
             02181:
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Exemption on dividends or profit-sharing income from
@@ -20390,6 +20699,46 @@ modelo:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Net amount payable or refundable
                 - DTA conversion result after regularisation: payable - Total [02492]'
+            '02621':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Increase - Adjustments for the tax year
+                - Permanent [02621]
+            '02622':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Increase - Adjustments for the tax year
+                - Temporary (originating in this tax year) [02622]
+            '02623':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Increase - Adjustments for the tax year
+                - Temporary (originating in prior tax years) [02623]
+            '02624':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Increase - Balance carried forward at
+                start of year [02624]
+            '02625':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Increase - Balance carried forward at
+                year-end [02625]
+            '02626':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Decrease - Adjustments for the tax year
+                - Permanent [02626]
+            '02627':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Decrease - Adjustments for the tax year
+                - Temporary (originating in this tax year) [02627]
+            02628:
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Decrease - Adjustments for the tax year
+                - Temporary (originating in prior tax years) [02628]
+            02629:
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Decrease - Balance carried forward at
+                start of year [02629]
+            '02630':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Decrease - Balance carried forward at
+                year-end [02630]
             02694:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
@@ -20484,6 +20833,10 @@ modelo:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Net amount payable or refundable
                 - DTA conversion result after regularisation: offset - Total [03320]'
+            x-8h834c1g60o32ehg60o32co:
+              label: Spanish economic interest grouping [00013]
+            x-8h834c1g60o32ehg60o3gco:
+              label: Reduced tax rate for a start-up company [00083]
             x-8h834c1g60oj4ehg60pj0e8:
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Other cases of free depreciation (art. 12.3 a) and d) and
@@ -20539,6 +20892,28 @@ modelo:
                 the Tax Administration (art. 130 LIS) - Net amount payable or refundable
                 - DTA conversion result after regularisation: credit - Regional (foral)
                 administrations/Navarre (Totals) [03319]'
+            x-8h834c1g60ojcghq60o3edhm:
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2023 - Carried forward for application
+                in future periods [00766]
+            x-8h834c1g60ojcghq60o3edhn:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2023 - Deduction carried forward/generated [00767]
+            x-8h834c1g60ojcghq60o3edho:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2023 - Applied in this settlement [00768]
+            x-8h834c1g60ojcghq60o3edhp:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2023 - Carried forward for application in future periods
+                [00769]
+            x-8h834c1g60ojcghq60o3edpg:
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2023 - Deduction carried forward/generated
+                [00770]
+            x-8h834c1g60ojcghq60o3edph:
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2023 - Applied in this settlement
+                [00771]
             x-8h834c1g60ojgehg60pj2d8:
               label: Deductions to incentivise certain activities - 2023 Centenary
                 of Rugby in Spain and of the Unió Esportiva Santboiana (CRE) - Deduction
@@ -20547,6 +20922,43 @@ modelo:
               label: Deductions to incentivise certain activities - 2023 Centenary
                 of Rugby in Spain and of the Unió Esportiva Santboiana (CRE) - Applied
                 in this return [00316]
+            x-8h834c1g60ojgghq60p32d1g:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
+                - Deduction carried forward/generated [02140]
+            x-8h834c1g60ojgghq60p32d1h:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
+                - Applied in this return [02141]
+            x-8h834c1g60ojgghq60p32d1i:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
+                - Amount paid due to insufficient tax liability [02142]
+            x-8h834c1g60ojgghq60p32d1j:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
+                - Carried forward for application in future periods [02143]
+            x-8h834c1g60ojggpq60ojce1p:
+              label: Deduction for donations to non-profit entities - General donations
+                - Donations subtotal 2013 and 2014 - Deduction carried forward/generated
+                [01689]
+            x-8h834c1g60ojggpq60ojce9g:
+              label: Deduction for donations to non-profit entities - General donations
+                - Donations subtotal 2013 and 2014 - Applied in this settlement [01690]
+            x-8h834c1g60ojggpq60ojce9h:
+              label: Deduction for donations to non-profit entities - General donations
+                - Donations subtotal 2013 and 2014 - Pending application in future
+                periods [01691]
+            x-8h834c1g60ojggpq60ojec1h:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - Donations subtotal 2013 and 2014 - Deduction carried forward/generated
+                [01701]
+            x-8h834c1g60ojggpq60ojec1i:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - Donations subtotal 2013 and 2014 - Applied in this settlement [01702]
+            x-8h834c1g60ojggpq60ojec1j:
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - Donations subtotal 2013 and 2014 - Pending application in future
+                periods [01703]
             x-8h834c1g60p30ghq60p36c1h:
               label: Detail of adjustments to the profit and loss result - Adjustments
                 to the profit and loss account result for the tax year - Permanent
@@ -20597,6 +21009,16 @@ modelo:
                 Islands: breakdown of the offsetting of negative taxable bases - Offset
                 of the taxable base for other activities for 2024 - Pending application
                 in future periods [00098]'
+            00696:
+              label: Deductions under Transitional Provision 24.7 LIS - Deduction
+                DT 24.7 LIS 2023 - Pending/generated deduction [00696]
+            00697:
+              label: Deductions under Transitional Provision 24.7 LIS - Deduction
+                DT 24.7 LIS 2023 - Applied in this settlement [00697]
+            '00774':
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2023 - Pending application in
+                future periods [00774]
             '00775':
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Accelerated depreciation of certain vehicles and new charging
@@ -20663,6 +21085,16 @@ modelo:
                 Income from the reversal of impairment losses on securities representing
                 holdings in capital or equity, cooperatives (at tax-due level) (TP
                 16.3 LIS) -decreases [00932]
+            '01020':
+              label: Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Credit for converting deferred
+                tax assets into a credit claimable against the tax administration
+                (art. 130 LIS) - State [01020]
+            '01021':
+              label: Conversion of deferred tax assets into a credit claimable from
+                the Tax Administration (art. 130 LIS) - Offset for converting deferred
+                tax assets into a credit claimable against the tax administration
+                (art. 130 LIS) - State [01021]
             '01061':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
@@ -20736,6 +21168,11 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation year - 2022 - DTAs pending application in future periods
                 - Without a right of conversion into a claimable credit [01133]
+            '01227':
+              label: B) Economic data. 2.- Net finance costs not deducted by the entity
+            01228:
+              label: B) Economic data. 3.- Capitalisation reserve not applied by the
+                entity
             01249:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - i) Limit on deduction of net financial expenses
@@ -20761,6 +21198,15 @@ modelo:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - Total non-deductible financial expenses of the
                 tax period (= [c2+l2]) [01260]
+            01295:
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2023 - Pending/generated deduction [01295]
+            01296:
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2023 - Applied in this settlement [01296]
+            01297:
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2023 - Pending application in future periods [01297]
             '01300':
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
@@ -20791,6 +21237,50 @@ modelo:
                 Conversion of deferred tax assets into a credit claimable from the
                 Tax Administration (art. 130 LIS) - Offset for asset conversion -
                 Bizkaia [01307]
+            01309:
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2022) - Pending/generated
+                deduction [01309]
+            '01313':
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2023 - Pending/generated
+                deduction [01313]
+            '01314':
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2023 - Applied in
+                this settlement [01314]
+            '01315':
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2023 - Amount paid
+                due to insufficient tax liability [01315]
+            '01316':
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2023 - Pending application
+                in future periods [01316]
+            '01323':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - without repeated donations to the same entity- Pending/generated
+                deduction [01323]
+            '01324':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - without repeated donations to the same entity - Applied in
+                this settlement [01324]
+            '01325':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - without repeated donations to the same entity - Pending application
+                in future periods [01325]
+            '01326':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - with repeated donations to the same entity- Pending/generated
+                deduction [01326]
+            '01327':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - with repeated donations to the same entity - Applied in this
+                settlement [01327]
+            01328:
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - with repeated donations to the same entity - Pending application
+                in future periods [01328]
             01329:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
@@ -20830,6 +21320,164 @@ modelo:
                 priority patronage activities and others entitled to increased deduction
                 - 2023 - Without repeated donations to the same entity - Carried forward
                 for application in future periods [01373]
+            '01374':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023 - With repeated donations to the same entity - Deduction carried
+                forward/generated [01374]
+            '01375':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023 - With repeated donations to the same entity - Applied in this
+                settlement [01375]
+            '01376':
+              label: Deduction for donations to non-profit entities - Donations for
+                priority patronage activities and others entitled to increased deduction
+                - 2023 - With repeated donations to the same entity - Carried forward
+                for application in future periods [01376]
+            '01377':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2023 - Deduction base [01377]
+            01378:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2023 - Amount generated/pending at start of period [01378]
+            01379:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2023 - Amount applied [01379]
+            01380:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2023 - Pending amount [01380]
+            01381:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2023 - Deduction base [01381]
+            01382:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2023 - Amount generated/pending at start of period [01382]
+            01383:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2023 - Amount applied [01383]
+            01384:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2023 - Pending amount [01384]
+            01395:
+              label: Limitation on deductibility of financial expenses. Financial
+                expenses pending deduction - Year of generation 2023 - Applied in
+                this settlement [01395]
+            01396:
+              label: Limitation on deductibility of financial expenses. Financial
+                expenses pending deduction - Year of generation 2023 - Pending application
+                in future periods - By limit [01396]
+            01397:
+              label: Limitation on deductibility of financial expenses. Financial
+                expenses pending deduction - Year of generation 2023 - Pending application
+                in future periods - Remainder [01397]
+            01398:
+              label: Carried forward for addition due to unapplied operating-profit
+                limit - Year of generation 2023 - Pending application at start of
+                period [01398]
+            01399:
+              label: Carried forward for addition due to unapplied operating-profit
+                limit - Year of generation 2023 - Applied in this settlement [01399]
+            '01400':
+              label: Carried forward for addition due to unapplied operating-profit
+                limit - Year of generation 2023 - Pending application in future periods
+                [01400]
+            '01401':
+              label: Capitalization reserve - 2023 - Right to reduce tax base generated
+                in period/pending application at start of period [01401]
+            '01402':
+              label: Capitalization reserve - 2023 - Tax base reduction applied [01402]
+            '01403':
+              label: Capitalization reserve - 2023 - Taxable-base reduction carried
+                forward for application in future periods [01403]
+            '01410':
+              label: Levelling reserve - Reserve allocation - Year of generation 2023
+                - Allocated reserve amount [01410]
+            '01411':
+              label: Levelling reserve - Reserve allocation - Year of generation 2023
+                - Reserve amount pending allocation [01411]
+            '01412':
+              label: Levelling reserve - Reserve allocation - Year of generation 2023
+                - Reserve used [01412]
+            '01414':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - Total DTAs (art. 130.6 a) pending application
+                at the start of the period [01414]
+            '01415':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - Positive net tax liability [01415]
+            '01416':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit [01416]
+            '01417':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application at the start of
+                the period - With a right of conversion into a claimable credit for
+                excess tax due [01417]
+            01418:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application at the start of
+                the period - Without a right of conversion into a claimable credit
+                [01418]
+            01419:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs converted into a claimable credit in
+                the period [01419]
+            '01420':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit [01420]
+            '01421':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application in future periods
+                - With a right of conversion into a claimable credit, excess tax due
+                [01421]
+            '01422':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - DTAs pending application in future periods
+                - Without a right of conversion into a claimable credit [01422]
+            '01423':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2023 - Excess positive net tax due outstanding at the start
+                of the period [01423]
+            '01424':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2023 - Excess positive net tax due applied in tax periods 2008
+                to 2015 [01424]
+            '01425':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2023 - Excess positive net tax due applied in tax periods beginning
+                from 2016 [01425]
+            01469:
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Excess positive net tax liability - Generation
+                year - 2023 - Excess positive net tax due pending application in future
+                periods [01469]
+            01479:
+              label: Impairment allowances for receivables or other assets - Generation
+                year - 2023 - Allowances pending integration at start of period -
+                That have not met tax deductibility conditions [01479]
+            01480:
+              label: Impairment allowances for receivables or other assets - Generation
+                year - 2023 - Allowances applied to conversion of deferred tax assets
+                [01480]
+            '01500':
+              label: Impairment allowances for receivables or other assets - Generation
+                year - 2023 - Allowances pending integration in future periods - That
+                have not met tax deductibility conditions [01500]
             '01510':
               label: Settlement III - Taxable base - Only cooperative companies -
                 Income corresponding to reversal of cooperative impairments (at tax-liability
@@ -21061,6 +21709,14 @@ modelo:
               label: Deductions for investment in the Canary Islands - Fixed assets
                 in La Palma, La Gomera and El Hierro 2024 - Deduction carried forward/generated
                 [01763]
+            '01764':
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on dividends or profit-sharing income from
+                resident entities (art. 21.11 LIS) - Decreases [01764]
+            '01765':
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on dividends or profit-sharing income from
+                non-resident entities (art. 21.11 LIS) - Decreases [01765]
             01800:
               label: Deductions for investment in the Canary Islands - Fixed assets
                 in La Palma, La Gomera and El Hierro 2024 - Applied in this return
@@ -21095,6 +21751,9 @@ modelo:
               label: Deductions for investment in the Canary Islands - Investments
                 in La Palma, La Gomera and El Hierro 2024 - Carried forward for application
                 in future periods [01847]
+            01872:
+              label: Levelling reserve - Reserve allocation - Year of generation 2023
+                - Amount of reserve to be allocated [01872]
             01877:
               label: Joint taxation of State and provincial tax administrations -
                 Payment of deductions for foreign productions in the Canary Islands
@@ -21107,6 +21766,10 @@ modelo:
               label: Joint taxation of State and provincial tax administrations -
                 Payment of deductions for foreign productions in the Canary Islands
                 - Bizkaia [01879]
+            01913:
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2023 - Applied in this return
+                [01913]
             01961:
               label: Free depreciation of certain vehicles and new charging infrastructure
                 (Additional Provision 18 LIS, RDL 4/2024) - Decrease - Adjustments
@@ -21123,6 +21786,38 @@ modelo:
             '02031':
               label: Open Barcelona-Trofeo Conde de Godó (OB). Pending application
                 in future periods
+            '02077':
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                2023 - Carried forward for application in future periods [02077]
+            02078:
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2023 - Deduction carried forward/generated
+                [02078]
+            02181:
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on dividends or profit-sharing income from
+                non-resident entities (art. 21.1, 21.10 and Transitional Provision
+                40 LIS) - Decreases [02181]
+            02182:
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on income obtained from the transfer of
+                securities of resident entities (art. 21.3, 21.10 and Transitional
+                Provision 40 LIS) - Increases [02182]
+            02183:
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on income obtained from the transfer of
+                securities of resident entities (art. 21.3, 21.10 and Transitional
+                Provision 40 LIS) - Decreases [02183]
+            02184:
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on income obtained from the transfer of
+                securities of non-resident entities (art. 21.3, 21.10 and Transitional
+                Provision 40 LIS) - Increases [02184]
+            02185:
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on income obtained from the transfer of
+                securities of non-resident entities (art. 21.3, 21.10 and Transitional
+                Provision 40 LIS) - Decreases [02185]
             '02312':
               label: Deduction for investments and expenses made by port authorities
                 (art. 38 bis LIS) - 2024(*) - Deduction carried forward/generated
@@ -21183,6 +21878,46 @@ modelo:
               label: Deduction for donations to non-profit entities - General donations
                 - 2024(*) without repeated donations to the same entity - Carried
                 forward for application in future periods [02577]
+            '02621':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Increase - Adjustments for the tax year
+                - Permanent [02621]
+            '02622':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Increase - Adjustments for the tax year
+                - Temporary (originating in this tax year) [02622]
+            '02623':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Increase - Adjustments for the tax year
+                - Temporary (originating in prior tax years) [02623]
+            '02624':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Increase - Balance carried forward at
+                start of year [02624]
+            '02625':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Increase - Balance carried forward at
+                year-end [02625]
+            '02626':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Decrease - Adjustments for the tax year
+                - Permanent [02626]
+            '02627':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Decrease - Adjustments for the tax year
+                - Temporary (originating in this tax year) [02627]
+            02628:
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Decrease - Adjustments for the tax year
+                - Temporary (originating in prior tax years) [02628]
+            02629:
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Decrease - Balance carried forward at
+                start of year [02629]
+            '02630':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Decrease - Balance carried forward at
+                year-end [02630]
             02691:
               label: Deduction for donations to non-profit entities - General donations
                 - 2024(*) - with repeated donations to the same entity- Pending/generated
@@ -21388,6 +22123,8 @@ modelo:
               label: Direct holdings in other entities. Valuation corrections. e)
                 Adjustment for the decrease in value arising from the fair-value criterion
                 (art. 15.l LIS)
+            x-8h834c1g60o32ehg60o32co:
+              label: Spanish economic interest grouping [00013]
             x-8h834c1g60o32ehg60o36d8:
               label: Special regime for mergers, spin-offs, asset contributions and
                 share exchanges (Chapter VII, Title VII) [00035]
@@ -21396,6 +22133,8 @@ modelo:
                 with financing by other taxpayers [00044]
             x-8h834c1g60o32ehg60o3ae8:
               label: Option under article 39.2 LIS [00059]
+            x-8h834c1g60o32ehg60o3gco:
+              label: Reduced tax rate for a start-up company [00083]
             x-8h834c1g60o3gehg60rjidg:
               label: Profit and loss account (II) - Continuing operations - Interest
                 and compulsory return on contributions to share capital and other
@@ -21483,6 +22222,40 @@ modelo:
             x-8h834c1g60ojcehg64qj4cg:
               label: Deductions under Transitional Provision 24.7 LIS - D.T. 24.7
                 LIS 2024 deductions - Applied in this settlement [01522]
+            x-8h834c1g60ojcghq60o3edhm:
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2023 - Carried forward for application
+                in future periods [00766]
+            x-8h834c1g60ojcghq60o3edhn:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2023 - Deduction carried forward/generated [00767]
+            x-8h834c1g60ojcghq60o3edho:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2023 - Applied in this settlement [00768]
+            x-8h834c1g60ojcghq60o3edhp:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2023 - Carried forward for application in future periods
+                [00769]
+            x-8h834c1g60ojcghq60o3edpg:
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2023 - Deduction carried forward/generated
+                [00770]
+            x-8h834c1g60ojcghq60o3edph:
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2023 - Applied in this settlement
+                [00771]
+            x-8h834c1g60ojgghq60p32d1g:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
+                - Deduction carried forward/generated [02140]
+            x-8h834c1g60ojgghq60p32d1h:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
+                - Applied in this return [02141]
+            x-8h834c1g60ojgghq60p32d1i:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
+                - Amount paid due to insufficient tax liability [02142]
+            x-8h834c1g60ojgghq60p32d1j:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
+                - Carried forward for application in future periods [02143]
             x-8h834c1g60p30ghq60p36c1h:
               label: Detail of adjustments to the profit and loss result - Adjustments
                 to the profit and loss account result for the tax year - Permanent
@@ -21555,6 +22328,16 @@ modelo:
                 Islands: breakdown of the offsetting of negative taxable bases - Offset
                 of the taxable base for other activities for 2024 - Pending application
                 in future periods'
+            00696:
+              label: Deductions under Transitional Provision 24.7 LIS - Deduction
+                DT 24.7 LIS 2023 - Pending/generated deduction [00696]
+            00697:
+              label: Deductions under Transitional Provision 24.7 LIS - Deduction
+                DT 24.7 LIS 2023 - Applied in this settlement [00697]
+            '00774':
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2023 - Pending application in
+                future periods [00774]
             '00775':
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Accelerated depreciation of certain vehicles and new charging
@@ -21923,6 +22706,11 @@ modelo:
                 Islands: breakdown of the offsetting of negative taxable bases - Offset
                 of the taxable base for other activities for 2023 - Pending application
                 in future periods'
+            '01227':
+              label: B) Economic data. 2.- Net finance costs not deducted by the entity
+            01228:
+              label: B) Economic data. 3.- Capitalisation reserve not applied by the
+                entity
             '01240':
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.5 and/or 83 LIS - a) Financial expenses of the tax period arising
@@ -21963,6 +22751,15 @@ modelo:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - Total non-deductible financial expenses of the
                 tax period (= [c2+l2]) [01260]
+            01295:
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2023 - Pending/generated deduction [01295]
+            01296:
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2023 - Applied in this settlement [01296]
+            01297:
+              label: Deduction for investments and expenses made by port authorities
+                (art. 38 bis LIS) - 2023 - Pending application in future periods [01297]
             '01300':
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
@@ -22003,6 +22800,50 @@ modelo:
                 Conversion of deferred tax assets into a credit claimable from the
                 Tax Administration (art. 130 LIS) - Offset for asset conversion -
                 Navarre
+            01309:
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2022) - Pending/generated
+                deduction [01309]
+            '01313':
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2023 - Pending/generated
+                deduction [01313]
+            '01314':
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2023 - Applied in
+                this settlement [01314]
+            '01315':
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2023 - Amount paid
+                due to insufficient tax liability [01315]
+            '01316':
+              label: Deductions for foreign cinematographic productions in the Canary
+                Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2023 - Pending application
+                in future periods [01316]
+            '01323':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - without repeated donations to the same entity- Pending/generated
+                deduction [01323]
+            '01324':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - without repeated donations to the same entity - Applied in
+                this settlement [01324]
+            '01325':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - without repeated donations to the same entity - Pending application
+                in future periods [01325]
+            '01326':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - with repeated donations to the same entity- Pending/generated
+                deduction [01326]
+            '01327':
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - with repeated donations to the same entity - Applied in this
+                settlement [01327]
+            01328:
+              label: Deduction for donations to non-profit entities - General donations
+                - 2023 - with repeated donations to the same entity - Pending application
+                in future periods [01328]
             01329:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
@@ -22057,6 +22898,58 @@ modelo:
                 priority patronage activities and other donations eligible for increased
                 deduction - 2023 - With repeat donations to the same entity - Pending
                 application in future periods
+            '01377':
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2023 - Deduction base [01377]
+            01378:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2023 - Amount generated/pending at start of period [01378]
+            01379:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2023 - Amount applied [01379]
+            01380:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.1 LIS) - 2023 - Pending amount [01380]
+            01381:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2023 - Deduction base [01381]
+            01382:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2023 - Amount generated/pending at start of period [01382]
+            01383:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2023 - Amount applied [01383]
+            01384:
+              label: Deduction for reversal of temporary measures (Transitional Provision
+                37.2 LIS) - 2023 - Pending amount [01384]
+            01395:
+              label: Limitation on deductibility of financial expenses. Financial
+                expenses pending deduction - Year of generation 2023 - Applied in
+                this settlement [01395]
+            01396:
+              label: Limitation on deductibility of financial expenses. Financial
+                expenses pending deduction - Year of generation 2023 - Pending application
+                in future periods - By limit [01396]
+            01397:
+              label: Limitation on deductibility of financial expenses. Financial
+                expenses pending deduction - Year of generation 2023 - Pending application
+                in future periods - Remainder [01397]
+            01398:
+              label: Carried forward for addition due to unapplied operating-profit
+                limit - Year of generation 2023 - Pending application at start of
+                period [01398]
+            01399:
+              label: Carried forward for addition due to unapplied operating-profit
+                limit - Year of generation 2023 - Applied in this settlement [01399]
+            '01400':
+              label: Carried forward for addition due to unapplied operating-profit
+                limit - Year of generation 2023 - Pending application in future periods
+                [01400]
+            '01401':
+              label: Capitalization reserve - 2023 - Right to reduce tax base generated
+                in period/pending application at start of period [01401]
+            '01402':
+              label: Capitalization reserve - 2023 - Tax base reduction applied [01402]
             01408:
               label: Impairment allowances for receivables or other assets - Generation
                 year - 2007 and earlier - Allowances pending integration at start
@@ -22065,11 +22958,24 @@ modelo:
               label: Impairment allowances for receivables or other assets - Generation
                 year - 2007 and earlier - Allowances pending integration at start
                 of period - That have met tax deductibility conditions
+            '01410':
+              label: Levelling reserve - Reserve allocation - Year of generation 2023
+                - Allocated reserve amount [01410]
+            '01411':
+              label: Levelling reserve - Reserve allocation - Year of generation 2023
+                - Reserve amount pending allocation [01411]
+            '01412':
+              label: Levelling reserve - Reserve allocation - Year of generation 2023
+                - Reserve used [01412]
             '01414':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation year - 2023 - Total DTA amount (art. 130.6 a) pending application
                 at start of period
+            '01415':
+              label: Conversion of deferred tax assets into enforceable credit against
+                the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
+                Generation year - 2023 - Positive net tax liability [01415]
             '01416':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
@@ -22130,6 +23036,18 @@ modelo:
               label: Impairment allowances for receivables or other assets - Generation
                 year - 2007 and earlier - Allowances pending integration in future
                 periods - That have not met tax deductibility conditions
+            01479:
+              label: Impairment allowances for receivables or other assets - Generation
+                year - 2023 - Allowances pending integration at start of period -
+                That have not met tax deductibility conditions [01479]
+            01480:
+              label: Impairment allowances for receivables or other assets - Generation
+                year - 2023 - Allowances applied to conversion of deferred tax assets
+                [01480]
+            '01500':
+              label: Impairment allowances for receivables or other assets - Generation
+                year - 2023 - Allowances pending integration in future periods - That
+                have not met tax deductibility conditions [01500]
             '01510':
               label: Settlement III - Taxable base - Only cooperative companies -
                 Income corresponding to reversal of cooperative impairments (at tax-liability
@@ -22696,6 +23614,14 @@ modelo:
               label: Deductions for investment in the Canary Islands - Fixed assets
                 in La Palma, La Gomera and El Hierro 2024 - Deduction carried forward/generated
                 [01763]
+            '01764':
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on dividends or profit-sharing income from
+                resident entities (art. 21.11 LIS) - Decreases [01764]
+            '01765':
+              label: Settlement II - Detail of adjustments to the profit and loss
+                account result - Exemption on dividends or profit-sharing income from
+                non-resident entities (art. 21.11 LIS) - Decreases [01765]
             01793:
               label: Settlement IV - Tax due for the year, payable or refundable -
                 Withholdings on items other than investment income or urban property
@@ -22743,6 +23669,9 @@ modelo:
               label: Deductions for investment in the Canary Islands - Investments
                 in La Palma, La Gomera and El Hierro 2024 - Carried forward for application
                 in future periods [01847]
+            01872:
+              label: Levelling reserve - Reserve allocation - Year of generation 2023
+                - Amount of reserve to be allocated [01872]
             01877:
               label: Joint taxation of State and provincial tax administrations -
                 Payment of deductions for foreign productions in the Canary Islands
@@ -22779,6 +23708,10 @@ modelo:
               label: Deductions to incentivise certain activities - 2022 Investments
                 in Western Africa territory and advertising and promotion expenses
                 (art. 27 bis Law 19/1994) (TAP) - Pending application in future periods
+            01913:
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2023 - Applied in this return
+                [01913]
             01918:
               label: Deductions to incentivise certain activities - 2018 Investments
                 in Western Africa territory and advertising and promotion expenses
@@ -22821,6 +23754,13 @@ modelo:
             '02031':
               label: Open Barcelona-Trofeo Conde de Godó (OB). Pending application
                 in future periods
+            '02077':
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                2023 - Carried forward for application in future periods [02077]
+            02078:
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2023 - Deduction carried forward/generated
+                [02078]
             02079:
               label: 'Additional information for calculating deduction limits - 2025:
                 Financier: deduction for Spanish film productions in the Canary Islands
@@ -23134,6 +24074,46 @@ modelo:
                 LIS) and amortization under Transitional Provision 13.1 LIS - Decrease
                 - Adjustments for the tax year - Temporary (originating in previous
                 tax years)
+            '02621':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Increase - Adjustments for the tax year
+                - Permanent [02621]
+            '02622':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Increase - Adjustments for the tax year
+                - Temporary (originating in this tax year) [02622]
+            '02623':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Increase - Adjustments for the tax year
+                - Temporary (originating in prior tax years) [02623]
+            '02624':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Increase - Balance carried forward at
+                start of year [02624]
+            '02625':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Increase - Balance carried forward at
+                year-end [02625]
+            '02626':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Decrease - Adjustments for the tax year
+                - Permanent [02626]
+            '02627':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Decrease - Adjustments for the tax year
+                - Temporary (originating in this tax year) [02627]
+            02628:
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Decrease - Adjustments for the tax year
+                - Temporary (originating in prior tax years) [02628]
+            02629:
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Decrease - Balance carried forward at
+                start of year [02629]
+            '02630':
+              label: Other cases of free depreciation (art. 12.3 a) and d) and Additional
+                Provisions 16 and 17 LIS) - Decrease - Balance carried forward at
+                year-end [02630]
             '02662':
               label: Impairment losses under art. 13.1 LIS and provisions and expenses
                 (art. 14.1 and 14.2 LIS) referred to in art. 11.12 and Transitional
@@ -24637,6 +25617,8 @@ modelo:
               label: Direct holdings in other entities. Valuation corrections. e)
                 Adjustment for the decrease in value arising from the fair-value criterion
                 (art. 15.l LIS)
+            x-8h834c1g60o32ehg60o32co:
+              label: Spanish economic interest grouping [00013]
             x-8h834c1g60o32ehg60o36d8:
               label: Special regime for mergers, spin-offs, asset contributions and
                 share exchanges (Chapter VII, Title VII) [00035]
@@ -24651,6 +25633,8 @@ modelo:
             x-8h834c1g60o32ehg60o3gcg:
               label: Ultimate parent company of a multinational group or large-scale
                 domestic group [00082]
+            x-8h834c1g60o32ehg60o3gco:
+              label: Reduced tax rate for a start-up company [00083]
             x-8h834c1g60o3gehg60rjidg:
               label: Profit and loss account (II) - Continuing operations - Interest
                 and mandatory return on contributions to share capital and other funds
@@ -24784,12 +25768,46 @@ modelo:
             x-8h834c1g60ojcehg64qj4cg:
               label: Deductions under Transitional Provision 24.7 LIS - D.T. 24.7
                 LIS 2024 deductions - Applied in this settlement [01522]
+            x-8h834c1g60ojcghq60o3edhm:
+              label: Deductions for investment in the Canary Islands - Fixed assets
+                in La Palma, La Gomera and El Hierro 2023 - Carried forward for application
+                in future periods [00766]
+            x-8h834c1g60ojcghq60o3edhn:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2023 - Deduction carried forward/generated [00767]
+            x-8h834c1g60ojcghq60o3edho:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2023 - Applied in this settlement [00768]
+            x-8h834c1g60ojcghq60o3edhp:
+              label: Deductions for investment in the Canary Islands - Canary Islands
+                investments 2023 - Carried forward for application in future periods
+                [00769]
+            x-8h834c1g60ojcghq60o3edpg:
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2023 - Deduction carried forward/generated
+                [00770]
+            x-8h834c1g60ojcghq60o3edph:
+              label: Deductions for investment in the Canary Islands - Investments
+                in La Palma, La Gomera and El Hierro 2023 - Applied in this settlement
+                [00771]
             x-8h834c1g60ojgghq60o36c9l:
               label: Deductions for foreign film productions (art. 36.2 LIS) - 2025(*)
                 - Deduction carried forward/generated [00315]
             x-8h834c1g60ojgghq60o36c9m:
               label: Deductions for foreign film productions (art. 36.2 LIS) - 2025(*)
                 - Applied in this return [00316]
+            x-8h834c1g60ojgghq60p32d1g:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
+                - Deduction carried forward/generated [02140]
+            x-8h834c1g60ojgghq60p32d1h:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
+                - Applied in this return [02141]
+            x-8h834c1g60ojgghq60p32d1i:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
+                - Amount paid due to insufficient tax liability [02142]
+            x-8h834c1g60ojgghq60p32d1j:
+              label: Deductions for foreign film productions (art. 36.2 LIS) - 2023
+                - Carried forward for application in future periods [02143]
             x-8h834c1g60p30ghq60p36c1h:
               label: Detail of adjustments to the profit and loss result - Adjustments
                 to the profit and loss account result for the tax year - Permanent

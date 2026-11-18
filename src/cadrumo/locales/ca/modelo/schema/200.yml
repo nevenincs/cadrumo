@@ -1053,9 +1053,6 @@ modelo:
           00695:
             label: Règ. cooperatives - Detall compensació quotes. Total. Pendent d'aplicació
               en períodes futurs [00695]
-          00697:
-            label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2023
-              - Aplicat en aquesta liquidació [00697]
           00698:
             help: Aplicat en aquesta liquidació - Innovació tecnològica (IT)
             label: Innovación tecnológica (IT). Aplicat en aquesta liquidació
@@ -2152,17 +2149,6 @@ modelo:
             label: Deducció per inversions i despeses realitzades per les autoritats
               portuàries (art. 38 bis LIS) - 2022 - Pendent d'aplicació en períodes
               futurs [01294]
-          01295:
-            label: Deducció per inversions i despeses realitzades per les autoritats
-              portuàries (art. 38 bis LIS) - 2023 - Deducció pendent/generada [01295]
-          01296:
-            label: Deducció per inversions i despeses realitzades per les autoritats
-              portuàries (art. 38 bis LIS) - 2023 - Aplicat en aquesta liquidació
-              [01296]
-          01297:
-            label: Deducció per inversions i despeses realitzades per les autoritats
-              portuàries (art. 38 bis LIS) - 2023 - Pendent d'aplicació en períodes
-              futurs [01297]
           01298:
             label: Deducció per inversions i despeses realitzades per les autoritats
               portuàries (art. 38 bis LIS) - Total - Deducció pendent/generada [01298]
@@ -2173,10 +2159,6 @@ modelo:
             label: Deducció per inversions i despeses realitzades per les autoritats
               portuàries (art. 38 bis LIS) - Total - Pendent d'aplicació en períodes
               futurs [01304]
-          01309:
-            label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
-              (art. 36.2 LIS i DA 14a Llei 19/1994) - 2022) - Deducció pendent/generada
-              [01309]
           '01310':
             label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
               (art. 36.2 LIS i DA 14a Llei 19/1994) - 2022 - Aplicat en aquesta liquidació
@@ -2189,22 +2171,6 @@ modelo:
             label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
               (art. 36.2 LIS i DA 14a Llei 19/1994) - 2022 - Pendent d'aplicació en
               períodes futurs [01312]
-          '01313':
-            label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
-              (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Deducció pendent/generada
-              [01313]
-          '01314':
-            label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
-              (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Aplicat en aquesta liquidació
-              [01314]
-          '01315':
-            label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
-              (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Import abonat per insuficiència
-              de quota [01315]
-          '01316':
-            label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
-              (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Pendent d'aplicació en
-              períodes futurs [01316]
           01318:
             label: Deduccions per doble imposició interna (DT 23.1 LIS) - DI interna
               2023 - Aplicat en aquesta liquidació [01318]
@@ -2224,30 +2190,6 @@ modelo:
             label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
               (art. 36.2 LIS i DA 14a Llei 19/1994) - Total - Pendent d'aplicació
               en períodes futurs [01322]
-          '01323':
-            label: Deducció donatius entitats sense fins lucratius - Donacions de
-              caràcter general - 2023 - Sense reiteració de donacions a una mateixa
-              entitat- Deducció pendent/generada [01323]
-          '01324':
-            label: Deducció donatius entitats sense fins lucratius - Donacions de
-              caràcter general - 2023 - Sense reiteració de donacions a una mateixa
-              entitat - Aplicat en aquesta liquidació [01324]
-          '01325':
-            label: Deducció donatius entitats sense fins lucratius - Donacions de
-              caràcter general - 2023 - Sense reiteració de donacions a una mateixa
-              entitat - Pendent d'aplicació en períodes futurs [01325]
-          '01326':
-            label: Deducció donatius entitats sense fins lucratius - Donacions de
-              caràcter general - 2023 - Amb reiteració de donacions a una mateixa
-              entitat- Deducció pendent/generada [01326]
-          '01327':
-            label: Deducció donatius entitats sense fins lucratius - Donacions de
-              caràcter general - 2023 - Amb reiteració de donacions a una mateixa
-              entitat - Aplicat en aquesta liquidació [01327]
-          01328:
-            label: Deducció donatius entitats sense fins lucratius - Donacions de
-              caràcter general - 2023 - Amb reiteració de donacions a una mateixa
-              entitat - Pendent d'aplicació en períodes futurs [01328]
           '01332':
             label: Liquidació IV - Resultat de l'autoliquidació - Abonament deduccions
               I+D+i per insuficiència de quota - Adm. forals/Navarra (Totals) [01332]
@@ -2334,42 +2276,6 @@ modelo:
           01368:
             label: Deduccions per incentivar determ. activitats - {year}(*) Innovació
               tecnològica (IT) - Pendent aplicació en períodes futurs [01368]
-          '01374':
-            label: Deducció donatius entitats sense fins lucratius - Donacions per
-              a activitats prioritàries de mecenatge i altres amb dret a deducció
-              incrementada - 2023 - Amb reiteració de donacions a una mateixa entitat
-              - Deducció pendent/generada [01374]
-          '01375':
-            label: Deducció donatius entitats sense fins lucratius - Donacions per
-              a activitats prioritàries de mecenatge i altres amb dret a deducció
-              incrementada - 2023 - Amb reiteració de donacions a una mateixa entitat
-              - Aplicat en aquesta liquidació [01375]
-          '01376':
-            label: Deducció donatius entitats sense fins lucratius - Donacions per
-              a activitats prioritàries de mecenatge i altres amb dret a deducció
-              incrementada - 2023 - Amb reiteració de donacions a una mateixa entitat
-              - Pendent d'aplicació en períodes futurs [01376]
-          '01377':
-            label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) - 2023
-              - Base deducció [01377]
-          01378:
-            label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) - 2023
-              - Import generat/pendent principi període [01378]
-          01379:
-            label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) - 2023
-              - Import aplicat [01379]
-          01380:
-            label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) - 2023
-              - Import pendent [01380]
-          01381:
-            label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) - 2023
-              - Base deducció [01381]
-          01382:
-            label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) - 2023
-              - Import generat/pendent principi període [01382]
-          01384:
-            label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) - 2023
-              - Import pendent [01384]
           01385:
             label: Deduccions I+D+i excloses de límit - 2022 Recerca i desenvolupament
               - Deducció pendent/generada [01385]
@@ -2402,32 +2308,6 @@ modelo:
             label: Limitació de la deduïbilitat de despeses financeres. Despeses financeres
               pendents de deduir - Exercici generació 2022 - Pendent d'aplicació a
               principi del període - Resta [01394]
-          01395:
-            label: Limitació de la deduïbilitat de despeses financeres. Despeses financeres
-              pendents de deduir - Exercici de generació 2023 - Aplicat en aquesta
-              liquidació [01395]
-          01396:
-            label: Limitació de la deduïbilitat de despeses financeres. Despeses financeres
-              pendents de deduir - Exercici de generació 2023 - Pendent d'aplicació
-              en períodes futurs - Per límit [01396]
-          01397:
-            label: Limitació de la deduïbilitat de despeses financeres. Despeses financeres
-              pendents de deduir - Exercici de generació 2023 - Pendent d'aplicació
-              en períodes futurs - Resta [01397]
-          01398:
-            label: Pendent d'addició per límit de benefici operatiu no aplicat - Exercici
-              de generació 2023 - Pendent aplicació a principi del període [01398]
-          01399:
-            label: Pendent d'addició per límit de benefici operatiu no aplicat - Exercici
-              de generació 2023 - Aplicat en aquesta liquidació [01399]
-          '01400':
-            label: Pendent d'addició per límit de benefici operatiu no aplicat - Exercici
-              de generació 2023 - Pendent aplicació períodes futurs [01400]
-          '01401':
-            label: Reserva Capitalització - 2023 - Dret reduir B.I. generat període/pendent
-              aplicar inici període [01401]
-          '01402':
-            label: Reserva Capitalització - 2023 - Reducció B.I. aplicada [01402]
           '01405':
             label: Reserva de nivellació - Reducció base imposable - Exercici generació
               2022 - Import integrat en la declaració per incompliment de requisits
@@ -2435,75 +2315,10 @@ modelo:
           '01407':
             label: Reserva de nivellació - Reducció base imposable - Exercici generació
               2022 - Import pendent addicionar en períodes futurs [01407]
-          '01410':
-            label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
-              2023 - Import reserva dotada [01410]
-          '01411':
-            label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
-              2023 - Import reserva pendent dotació [01411]
-          '01412':
-            label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
-              2023 - Reserva disposada [01412]
           '01413':
             label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
               - Actius impost diferit (AID). Art. 130 LIS - Exercici generació - 2022
               - AID aplicats en el període [01413]
-          '01414':
-            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
-              - Actius impost diferit (AID). Art. 130 LIS - Exercici generació - 2023
-              - Import total d'AID (art. 130.6 a) pendent d'aplicació a l'inici del
-              període [01414]
-          '01415':
-            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
-              - Actius impost diferit (AID). Art. 130 LIS - Exercici generació - 2023
-              - Quota líquida positiva [01415]
-          '01416':
-            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
-              - Actius impost diferit (AID). Art. 130 LIS - Exercici generació - 2023
-              - AID pendents d'aplicació a l'inici del període - Amb dret de conversió
-              en crèdit exigible [01416]
-          '01417':
-            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
-              - Actius impost diferit (AID). Art. 130 LIS - Exercici generació - 2023
-              - AID pendents d'aplicació a l'inici del període - Amb dret de conversió
-              en crèdit exigible per excés de quota [01417]
-          01418:
-            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
-              - Actius impost diferit (AID). Art. 130 LIS - Exercici generació - 2023
-              - AID pendents d'aplicació a l'inici del període - Sense dret de conversió
-              en crèdit exigible [01418]
-          01419:
-            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
-              - Actius impost diferit (AID). Art. 130 LIS - Exercici generació - 2023
-              - AID convertits en crèdit exigible en el període [01419]
-          '01420':
-            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
-              - Actius impost diferit (AID). Art. 130 LIS - Exercici generació - 2023
-              - AID pendents d'aplicació en períodes futurs - Amb dret de conversió
-              en crèdit exigible [01420]
-          '01421':
-            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
-              - Actius impost diferit (AID). Art. 130 LIS - Exercici generació - 2023
-              - AID pendents d'aplicació en períodes futurs - Amb dret de conversió
-              en crèdit exigible, excés de quota [01421]
-          '01422':
-            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
-              - Actius impost diferit (AID). Art. 130 LIS - Exercici generació - 2023
-              - AID pendents d'aplicació en períodes futurs - Sense dret de conversió
-              en crèdit exigible [01422]
-          '01423':
-            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
-              - Excés quota líquida positiva - Exercici generació - 2023 - Excés de
-              quota líquida positiva pendent a l'inici del període [01423]
-          '01424':
-            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
-              - Excés quota líquida positiva - Exercici generació - 2023 - Excés de
-              quota líquida positiva aplicat en períodes impositius 2008 a 2015 [01424]
-          '01425':
-            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
-              - Excés quota líquida positiva - Exercici generació - 2023 - Excés de
-              quota líquida positiva aplicat en períodes impositius iniciats a partir
-              de 2016 [01425]
           '01426':
             label: Deduccions I+D+i excloses de límit - 2016 Recerca i desenvolupament
               - Deducció pendent/generada [01426]
@@ -2647,13 +2462,6 @@ modelo:
             label: Dotacions deteriorament crèdits o altres actius - Exercici generació
               - 2008 a 2015 - Dotacions pendents integració a principi període - Que
               han complert condicions deduïbilitat fiscal [01478]
-          01479:
-            label: Dotacions deteriorament crèdits o altres actius - Exercici generació
-              - 2023 - Dotacions pendents integració a principi període - Que no han
-              complert condicions deduïbilitat fiscal [01479]
-          01480:
-            label: Dotacions deteriorament crèdits o altres actius - Exercici generació
-              - 2023 - Dotacions aplicades conversió actius imp. diferit [01480]
           01481:
             label: Dotacions deteriorament crèdits o altres actius - Exercici generació
               - 2008 a 2015 - Dotacions integrades en aquesta liquidació [01481]
@@ -2723,10 +2531,6 @@ modelo:
             label: Dotacions deteriorament crèdits o altres actius - Total - Dotacions
               pendents integració períodes futurs - Que han complert condicions deduïbilitat
               fiscal [01499]
-          '01500':
-            label: Dotacions deteriorament crèdits o altres actius - Exercici generació
-              - 2023 - Dotacions pendents integració períodes futurs - Que no han
-              complert condicions deduïbilitat fiscal [01500]
           '01505':
             label: Deduccions per doble imposició internacional LIS - DI internacional
               2023 - Pendent aplic. en períodes futurs [01505]
@@ -3154,14 +2958,6 @@ modelo:
           '01763':
             label: Deduccions per inversió a Canàries - Actius fixos a La Palma, la
               Gomera i el Ferro 2023 - Deducció pendent/generada [01763]
-          '01764':
-            label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
-              - Exempció sobre dividends o participacions en beneficis d'entitats
-              residents (art. 21.11 LIS) - Disminucions [01764]
-          '01765':
-            label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
-              - Exempció sobre dividends o participacions en beneficis d'entitats
-              no residents (art. 21.11 LIS) - Disminucions [01765]
           '01767':
             label: Règ. cooperatives - Detall de compensació de quotes. 2017 Pendent
               d'aplicació al principi del període [01767]
@@ -3472,9 +3268,6 @@ modelo:
               y Cajal 2022 (RC)
             label: Año de Investigación Santiago Ramón y Cajal 2022 (RC). Deducció
               pendent/generada
-          01872:
-            label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
-              2023 - Import de la reserva a dotar [01872]
           01873:
             label: Deduccions per incentivar determ. activitats - 2022 Suma de deduccions
               Cap. IV Tít. VI Llei 43/95, RDLeg. 4/2004 i LIS (excepte I+D+i i TAP)
@@ -3555,9 +3348,6 @@ modelo:
               bases de deducció imputades no esmentades anteriorment'
             label: 'Imports imputats: Import de la resta de deduccions generades per
               bases de deducció imputades no esmentades anteriorment'
-          01913:
-            label: Deduccions per inversió a Canàries - Actius fixos a La Palma, la
-              Gomera i el Ferro 2023 - Aplicat en aquesta liquidació [01913]
           01915:
             label: Dotacions per deteriorament de crèdits o altres actius - Exercici
               de generació - 2022 - Dotacions pendents d'integració en períodes futurs
@@ -3914,12 +3704,6 @@ modelo:
           '02076':
             label: Deduccions per doble imposició interna (DT 23.1 LIS) - DI interna
               2022 - Pendent d'aplic. en períodes futurs [02076]
-          '02077':
-            label: Deduccions per inversió a Canàries - Actius fixos 2023 - Pendent
-              d'aplicació en períodes futurs [02077]
-          02078:
-            label: Deduccions per inversió a Canàries - Actius fixos a La Palma, la
-              Gomera i el Ferro 2023 - Deducció pendent/generada [02078]
           02080:
             label: 'Informació addicional per al càlcul de límits de deduccions -
               {year}: finançador: deducció per espectacles en viu d''arts escèniques
@@ -4085,18 +3869,6 @@ modelo:
           02139:
             label: Deduccions per produccions cinematogràfiques estrangeres (art.
               36.2 LIS) - 2022 - Pendent d'aplicació en períodes futurs [02139]
-          '02140':
-            label: Deduccions per produccions cinematogràfiques estrangeres (art.
-              36.2 LIS) - 2023 - Deducció pendent/generada [02140]
-          '02141':
-            label: Deduccions per produccions cinematogràfiques estrangeres (art.
-              36.2 LIS) - 2023 - Aplicat en aquesta liquidació [02141]
-          '02142':
-            label: Deduccions per produccions cinematogràfiques estrangeres (art.
-              36.2 LIS) - 2023 - Import abonat per insuficiència de quota [02142]
-          '02143':
-            label: Deduccions per produccions cinematogràfiques estrangeres (art.
-              36.2 LIS) - 2023 - Pendent d'aplicació en períodes futurs [02143]
           '02145':
             label: Deduccions per incentivar determ. activitats - 2021 Suma de deduccions
               Cap. IV Tít. VI Llei 43/95, RDLeg. 4/2004 i LIS (excepte I+D+i i TAP)
@@ -5052,13 +4824,6 @@ modelo:
           '02620':
             label: Llibertat d'amortització de l'immobilitzat material nou (art. 12.3
               e) LIS) - Disminució - Saldo pendent a fi d'exercici [02620]
-          02629:
-            label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
-              i DA 16a i 17a LIS) - Disminució - Saldo pendent a principi d'exercici
-              [02629]
-          '02630':
-            label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
-              i DA 16a i 17a LIS) - Disminució - Saldo pendent a fi d'exercici [02630]
           02639:
             label: Llibertat d'amortització amb manteniment d'ocupació (RDL 6/2010
               i DT 13a.2 LIS) - Disminució - Saldo pendent a principi d'exercici [02639]
@@ -6406,9 +6171,6 @@ modelo:
           capitalization-reserve-2022-generated:
             label: Reserva capitalització - 2022 - Dret a reduir B.I. generat període/pendent
               aplicar inici període [01106]
-          capitalization-reserve-2023-remaining:
-            label: Reserva capitalització - 2023 - Reducció de la B.I. pdt. d'aplicar
-              en períodes futurs [01403]
           credit-institution-temporary-levy-correction:
             label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
               - Correcció pel Gravamen temporal d'entitats de crèdit i establiments
@@ -6426,10 +6188,6 @@ modelo:
             label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
               - Excés quota líquida positiva - Exercici generació - 2022 - Excés de
               quota líquida positiva pendent a l'inici del període [01134]
-          deferred-tax-excess-quota-2023-remaining:
-            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
-              - Excés quota líquida positiva - Exercici generació - 2023 - Excés de
-              quota líquida positiva pendent d'aplicació en períodes futurs [01469]
           dp200012-00225:
             label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
               - Rendes negatives (art. 11.9 i 11.10 LIS) - Augments [00225]
@@ -7520,18 +7278,6 @@ modelo:
           dp200016b-00712:
             label: Deduccions per inversió a Canàries - Actius fixos - Aplicat en
               aquesta liquidació [00712]
-          dp200016b-00767:
-            label: Deduccions per inversió a Canàries - Inversions Canàries 2023 -
-              Deducció pendent/generada [00767]
-          dp200016b-00768:
-            label: Deduccions per inversió a Canàries - Inversions Canàries 2023 -
-              Aplicat en aquesta liquidació [00768]
-          dp200016b-00770:
-            label: Deduccions per inversió a Canàries - Inversions a La Palma, La
-              Gomera i El Hierro 2023 - Deducció pendent/generada [00770]
-          dp200016b-00771:
-            label: Deduccions per inversió a Canàries - Inversions a La Palma, La
-              Gomera i El Hierro 2023 - Aplicat en aquesta liquidació [00771]
           dp200016b-00785:
             label: Deduccions per inversió a Canàries - Actius fixos 2015 - Deducció
               pendent/generada [00785]
@@ -12197,20 +11943,15 @@ modelo:
               i ingressos a compte [00062]
           is-agrupacion-de-interes-economico-espanola:
             help: Indicador d'agrupació d'interès econòmic espanyola [00013].
-            label: Agrupació d'interès econòmic espanyola [00013]
           is-agrupacion-europea-de-interes-economico:
             help: Indicador d'agrupació europea d'interès econòmic [00014].
             label: Agrupació europea d'interès econòmic [00014]
           is-agrupacion-interes-econo-2-gastos-financieros-netos-no-deducidos-por-la-e:
             help: 2.- Despeses financeres netes no deduïdes per l'entitat - B) Dades
               econòmiques
-            label: B) Datos económicos. 2.- Despeses financeres netes no deduïdes
-              per l'entitat
           is-agrupacion-interes-econo-3-reserva-capitaliz-no-aplicada-por-la-entidad:
             help: 3.- Reserva de capitalització no aplicada per l'entitat - B) Dades
               econòmiques
-            label: B) Datos económicos. 3.- Reserva de capitalització no aplicada
-              per l'entitat
           is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-base-de-la-deduc:
             help: '6.- Deduc. evitar doble imposició: base de la deducció - B) Dades
               econòmiques'
@@ -13717,37 +13458,6 @@ modelo:
             label: Llibertat d'amortització amb manteniment d'ocupació (RDL 6/2010
               i DT 13a.2 LIS) - Disminució - Correccions de l'exercici - Temporànies
               (amb origen en l'exercici) [02637]
-          is-correccion-libertad-amortizacion-otros-art12-permanente-aumento:
-            label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
-              i DA 16a i 17a LIS) - Augment - Correccions de l'exercici - Permanents
-              [02621]
-          is-correccion-libertad-amortizacion-otros-art12-permanente-disminucion:
-            label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
-              i DA 16a i 17a LIS) - Disminució - Correccions de l'exercici - Permanents
-              [02626]
-          is-correccion-libertad-amortizacion-otros-art12-saldo-final-neto:
-            label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
-              i DA 16a i 17a LIS) - Augment - Saldo pendent a fi d'exercici [02625]
-          is-correccion-libertad-amortizacion-otros-art12-saldo-inicial:
-            label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
-              i DA 16a i 17a LIS) - Augment - Saldo pendent a principi d'exercici
-              [02624]
-          is-correccion-libertad-amortizacion-otros-art12-temporaria-anteriores-aumento:
-            label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
-              i DA 16a i 17a LIS) - Augment - Correccions de l'exercici - Temporànies
-              (amb origen en exercicis anteriors) [02623]
-          is-correccion-libertad-amortizacion-otros-art12-temporaria-anteriores-disminucion:
-            label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
-              i DA 16a i 17a LIS) - Disminució - Correccions de l'exercici - Temporànies
-              (amb origen en exercicis anteriors) [02628]
-          is-correccion-libertad-amortizacion-otros-art12-temporaria-ejercicio-aumento:
-            label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
-              i DA 16a i 17a LIS) - Augment - Correccions de l'exercici - Temporànies
-              (amb origen en l'exercici) [02622]
-          is-correccion-libertad-amortizacion-otros-art12-temporaria-ejercicio-disminucion:
-            label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
-              i DA 16a i 17a LIS) - Disminució - Correccions de l'exercici - Temporànies
-              (amb origen en l'exercici) [02627]
           is-correccion-libertad-amortizacion-sin-mantenimiento-empleo-permanente-aumento:
             label: Llibertat d'amortització sense manteniment d'ocupació (RDL 13/2010
               i DT 13a.2 LIS) - Augment - Correccions de l'exercici - Permanents [02641]
@@ -14670,33 +14380,6 @@ modelo:
             label: Deducció donatius entitats sense fins lucratius - Donacions de
               caràcter general - 2024 Sense reiteració de donacions a una mateixa
               entitat - Deducció pendent/generada [00369]
-          is-deduccion-donativos-general-subtotal-2013-2014-aplicado-periodo:
-            label: Deducció donatius entitats sense fins lucratius - Donacions de
-              caràcter general - Subtotal de donacions 2013 i 2014 - Aplicat en aquesta
-              liquidació [01690]
-          is-deduccion-donativos-general-subtotal-2013-2014-pendiente-futuro:
-            label: Deducció donatius entitats sense fins lucratius - Donacions de
-              caràcter general - Subtotal de donacions 2013 i 2014 - Pendent d'aplicació
-              en períodes futurs [01691]
-          is-deduccion-donativos-general-subtotal-2013-2014-pendiente-generada:
-            label: Deducció donatius entitats sense fins lucratius - Donacions de
-              caràcter general - Subtotal de donacions 2013 i 2014 - Deducció pendent/generada
-              [01689]
-          is-deduccion-donativos-prioritarias-subtotal-2013-2014-aplicado-periodo:
-            label: Deducció donatius entitats sense fins lucratius - Donacions per
-              a activitats prioritàries de mecenatge i altres amb dret a deducció
-              incrementada - Subtotal de donacions 2013 i 2014 - Aplicat en aquesta
-              liquidació [01702]
-          is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-futuro:
-            label: Deducció donatius entitats sense fins lucratius - Donacions per
-              a activitats prioritàries de mecenatge i altres amb dret a deducció
-              incrementada - Subtotal de donacions 2013 i 2014 - Pendent d'aplicació
-              en períodes futurs [01703]
-          is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-generada:
-            label: Deducció donatius entitats sense fins lucratius - Donacions per
-              a activitats prioritàries de mecenatge i altres amb dret a deducció
-              incrementada - Subtotal de donacions 2013 i 2014 - Deducció pendent/generada
-              [01701]
           is-deduccion-donativos-total:
             label: Deducció donatius entitats sense fins lucratius - Total deduccions
               donacions a entitats sense fins lucratius - Pendent d'aplicació en períodes
@@ -14796,9 +14479,6 @@ modelo:
           is-deduccion-inversion-canarias-2009-aplicado:
             label: Deduccions per inversió a Canàries - Inversions Canàries 2009 -
               Aplicat en aquesta liquidació [00257]
-          is-deduccion-inversion-canarias-importe:
-            label: Deduccions per inversió a Canàries - Inversions a La Palma, La
-              Gomera i El Hierro 2023 - Pendent d'aplicació en períodes futurs [00774]
           is-deduccion-inversion-canarias-islas-menores-2024-pendiente-futuros:
             label: Deduccions per inversió a Canàries - Inversions de l'exercici a
               La Palma, La Gomera i El Hierro - Pendent d'aplicació en períodes futurs
@@ -14907,9 +14587,6 @@ modelo:
           is-deduccion-produccion-extranjera-cinematografica-pendiente-generada:
             label: Deduccions per produccions cinematogràfiques estrangeres (art.
               36.2 LIS) - 2024 - Deducció pendent/generada [00315]
-          is-deduccion-reinversion-beneficios-dt24a7-periodo:
-            label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2023
-              - Deducció pendent/generada [00696]
           is-deduccion-reversion-medidas-dt1-pendiente:
             label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) - {year}
               - Import pendent [00905]
@@ -14928,9 +14605,6 @@ modelo:
           is-deduccion-reversion-medidas-dt2-pendiente:
             label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) - 2015
               - Import pendent [01181]
-          is-deduccion-reversion-medidas-dt2-periodo:
-            label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) - 2023
-              - Import aplicat [01383]
           is-deduccion-reversion-medidas-dt2-total:
             label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) - Total
               - Base deducció [01182]
@@ -14988,9 +14662,6 @@ modelo:
           ? is-deducciones-inversion-canarias-activos-fijos-en-la-palma-la-gomera-y-el-pendiente-de-aplicacion-en-periodos-futuros-00270
           : label: Deduccions per inversió a Canàries - Actius fixos a La Palma, la
               Gomera i el Ferro {year} - Pendent d'aplicació en períodes futurs [00270]
-          ? is-deducciones-inversion-canarias-activos-fijos-en-la-palma-la-gomera-y-el-pendiente-de-aplicacion-en-periodos-futuros-00766
-          : label: Deduccions per inversió a Canàries - Actius fixos a La Palma, la
-              Gomera i el Ferro 2023 - Pendent d'aplicació en períodes futurs [00766]
           is-deducciones-inversion-canarias-activos-fijos-y-pendiente-de-aplicacion-en-periodos-futuros-00239:
             label: Deduccions per inversió a Canàries - Actius fixos 2022 - Pendent
               d'aplicació en períodes futurs [00239]
@@ -15033,9 +14704,6 @@ modelo:
           is-deducciones-inversion-canarias-inversiones-canarias-y-pendiente-de-aplicacion-en-periodos-futuros-00701:
             label: Deduccions per inversió a Canàries - Inversions Canàries 2008 -
               Pendent d'aplicació en períodes futurs [00701]
-          is-deducciones-inversion-canarias-inversiones-canarias-y-pendiente-de-aplicacion-en-periodos-futuros-00769:
-            label: Deduccions per inversió a Canàries - Inversions Canàries 2023 -
-              Pendent d'aplicació en períodes futurs [00769]
           is-deducciones-inversion-canarias-inversiones-en-la-palma-la-gomera-y-el-h-pendiente-de-aplicacion-en-periodos-futuros:
             label: Deduccions per inversió a Canàries - Inversions a La Palma, la
               Gomera i El Hierro 2022 - Pendent d'aplicació en períodes futurs [00222]
@@ -16330,6 +15998,9 @@ modelo:
           is-m200-dp200017-00467:
             label: Deduccions per incentivar determ. activitats - 2005 Suma deduccions
               - Aplicat en aquesta liquidació [00467]
+          is-m200-dp200017-00468:
+            label: Deduccions per incentivar determ. activitats - 2005 Suma deduccions
+              - Pendent d'aplicació en períodes futurs [00468]
           is-m200-dp200017-00586:
             label: Deduccions per incentivar determ. activitats - 2006 Suma deduccions
               - Pendent d'aplicació en períodes futurs [00586]
@@ -16613,6 +16284,12 @@ modelo:
             label: Deduccions per incentivar determ. activitats - {year} Pla Decenni
               Milliarium Montserrat 1025-2025 (PDMM) - Pendent d'aplicació en períodes
               futurs [01709]
+          is-m200-dp200018-01907:
+            label: Deduccions per incentivar determ. activitats - 2022 Any Sant Jacobeu
+              2021 (J21) - Deducció pendent/generada [01907]
+          is-m200-dp200018-01908:
+            label: Deduccions per incentivar determ. activitats - 2022 Any Sant Jacobeu
+              2021 (J21) - Aplicat en aquesta liquidació [01908]
           is-m200-dp200018-02362:
             label: Deduccions per incentivar determ. activitats - {year} Pla Berlanga
               (PB) - Deducció pendent/generada [02362]
@@ -17676,8 +17353,6 @@ modelo:
               segons la disposició transitòria 22a de la LIS [00063].
             label: Tipus de gravamen reduït per a entitats de nova creació (DT 22a
               LIS) [00063]
-          is-tipo-gravamen-reducido-para-empresa-emergente:
-            label: Tipus de gravamen reduït per a empresa emergent [00083]
           is-tipo-gravamen-reducido-para-entidades-con-incn-periodo-anterior-inferior-a-1-millon-euros-art-29-1-lis:
             label: Tipus de gravamen reduït per a entitats amb INCN del període anterior
               inferior a 1 milió d'euros (art. 29.1 LIS) [00088]
@@ -18312,6 +17987,15 @@ modelo:
             '00054':
               label: Tributació conjunta Estat i Adm. forals - concert econòmic -
                 volum d'operacions a Biscaia [00054]
+            00696:
+              label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2022
+                - Deducció pendent/generada [00696]
+            00697:
+              label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2022
+                - Aplicat en aquesta liquidació [00697]
+            '00774':
+              label: Deduccions per inversió a Canàries - Inversions a La Palma, la
+                Gomera i El Hierro 2022 - Pendent d'aplicació en períodes futurs [00774]
             00913:
               label: Tributació conjunta Estat i Adm. forals - Increment per incompliment
                 de requisits SOCIMI - Àlaba [00913]
@@ -18494,6 +18178,16 @@ modelo:
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2021 Sense reiteració de donacions a una mateixa entitat
                 - Aplicat en aquesta liquidació [01017]
+            '01020':
+              label: Liquidació IV - Conversió d'actius per impost diferit en crèdit
+                exigible davant l'Administració tributària (art. 130 LIS) - Abonament
+                per conversió d'actius per impost diferit en crèdit exigible davant
+                l'Admó. tributària (art. 130 LIS) - Estat [01020]
+            '01021':
+              label: Liquidació IV - Conversió d'actius per impost diferit en crèdit
+                exigible davant l'Administració tributària (art. 130 LIS) - Compensació
+                per conversió d'actius per impost diferit en crèdit exigible davant
+                l'Admó. tributària (art. 130 LIS) - Estat [01021]
             '01022':
               label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
                 - Unió temporal d'empreses, ajustos per rendes exemptes per participar
@@ -18597,6 +18291,12 @@ modelo:
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
                 2022(*) - AID pendents d'aplicació en períodes futurs - Sense dret
                 de conversió en crèdit exigible [01133]
+            '01227':
+              label: Agrup. d'interès econòmic i UTES - Model d'informació - Despeses
+                financeres netes no deduïdes per l'entitat [01227]
+            01228:
+              label: Agrup. d'interès econòmic i UTES - Model d'informació - Reserva
+                de capitalització no aplicada per l'entitat [01228]
             '01240':
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.5
                 i/o 83 LIS - a) Despeses financeres del període impositiu derivades
@@ -18639,6 +18339,17 @@ modelo:
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
                 i 16.2 LIS - Total despeses financeres del període impositiu no deduïbles
                 (= [c2+k2]) [01260]
+            01295:
+              label: Deducció per inversions i despeses realitzades per les autoritats
+                portuàries (art. 38 bis LIS) - 2022 - Deducció pendent/generada [01295]
+            01296:
+              label: Deducció per inversions i despeses realitzades per les autoritats
+                portuàries (art. 38 bis LIS) - 2022 - Aplicat en aquesta liquidació
+                [01296]
+            01297:
+              label: Deducció per inversions i despeses realitzades per les autoritats
+                portuàries (art. 38 bis LIS) - 2022 - Pendent d'aplicació en períodes
+                futurs [01297]
             '01300':
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
@@ -18671,6 +18382,55 @@ modelo:
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
                 (art. 130 LIS) - Compensació per conversió d'actius - Navarra [01308]
+            01309:
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2022(*) - Deducció pendent/generada
+                [01309]
+            '01313':
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2022 - Deducció pendent/generada
+                [01313]
+            '01314':
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2022 - Aplicat en aquesta
+                liquidació [01314]
+            '01315':
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2022 - Import abonat per insuficiència
+                de quota [01315]
+            '01316':
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2022 - Pendent d'aplicació
+                en períodes futurs [01316]
+            '01323':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2022 Sense reiteració de donacions a una mateixa
+                entitat - Deducció pendent/generada [01323]
+            '01324':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2022 Sense reiteració de donacions a una mateixa
+                entitat - Aplicat en aquesta liquidació [01324]
+            '01325':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2022 Sense reiteració de donacions a una mateixa
+                entitat - Pendent d'aplicació en períodes futurs [01325]
+            '01326':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2022 - Amb reiteració de donacions a una mateixa
+                entitat - Deducció pendent/generada [01326]
+            '01327':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2022 - Amb reiteració de donacions a una mateixa
+                entitat - Aplicat en aquesta liquidació [01327]
+            01328:
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2022 - Amb reiteració de donacions a una mateixa
+                entitat - Pendent d'aplicació en períodes futurs [01328]
+            01329:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022 Sense reiteració de donacions a una mateixa entitat
+                - Deducció pendent/generada [01329]
             '01331':
               label: Liquidació III - base imposable - Només societats cooperatives
                 - Quota íntegra prèvia després de la reserva de nivellació - Disminucions
@@ -18693,6 +18453,86 @@ modelo:
             '01340':
               label: Tributació conjunta Estat i Adm. forals - Abonament deduccions
                 produccions estrangeres - Biscaia [01340]
+            '01372':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022 Sense reiteració de donacions a una mateixa entitat
+                - Aplicat en aquesta liquidació [01372]
+            '01373':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022 Sense reiteració de donacions a una mateixa entitat
+                - Pendent d'aplicació en períodes futurs [01373]
+            '01374':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022 - Amb reiteració de donacions a una mateixa entitat
+                - Deducció pendent/generada [01374]
+            '01375':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022 - Amb reiteració de donacions a una mateixa entitat
+                - Aplicat en aquesta liquidació [01375]
+            '01376':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2022 - Amb reiteració de donacions a una mateixa entitat
+                - Pendent d'aplicació en períodes futurs [01376]
+            '01377':
+              label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
+                2022 - Base deducció [01377]
+            01378:
+              label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
+                2022 - Import generat/pendent principi període [01378]
+            01379:
+              label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
+                2022 - Import aplicat [01379]
+            01380:
+              label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
+                2022 - Import pendent [01380]
+            01381:
+              label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
+                2022 - Base deducció [01381]
+            01382:
+              label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
+                2022 - Import generat/pendent principi període [01382]
+            01383:
+              label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
+                2022 - Import aplicat [01383]
+            01384:
+              label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
+                2022 - Import pendent [01384]
+            01395:
+              label: Limitació de la deduïbilitat de despeses financeres. Despeses
+                financeres pendents de deduir - Exercici de generació 2022(**) - Aplicat
+                en aquesta liquidació [01395]
+            01396:
+              label: Limitació de la deduïbilitat de despeses financeres. Despeses
+                financeres pendents de deduir - Exercici de generació 2022(**) - Pendent
+                d'aplicació en períodes futurs - Per límit [01396]
+            01397:
+              label: Limitació de la deduïbilitat de despeses financeres. Despeses
+                financeres pendents de deduir - Exercici de generació 2022(**) - Pendent
+                d'aplicació en períodes futurs - Resta [01397]
+            01398:
+              label: Pendent d'addició per límit de benefici operatiu no aplicat -
+                Exercici de generació 2022(**) - Pendent aplicació a principi del
+                període [01398]
+            01399:
+              label: Pendent d'addició per límit de benefici operatiu no aplicat -
+                Exercici de generació 2022(**) - Aplicat en aquesta liquidació [01399]
+            '01400':
+              label: Pendent d'addició per límit de benefici operatiu no aplicat -
+                Exercici de generació 2022(**) - Pendent aplicació períodes futurs
+                [01400]
+            '01401':
+              label: Reserva Capitalització - 2022 - Dret reduir B.I. generat període/pendent
+                aplicar inici període [01401]
+            '01402':
+              label: Reserva Capitalització - 2022 - Reducció B.I. aplicada [01402]
+            '01403':
+              label: Reserva capitalització - 2022 - Reducció de la B.I. pdt. d'aplicar
+                en períodes futurs [01403]
             01408:
               label: Dotacions deteriorament crèdits o altres actius - Exercici generació
                 - 2007 i anteriors - Dotacions pendents integració a principi període
@@ -18701,6 +18541,76 @@ modelo:
               label: Dotacions deteriorament crèdits o altres actius - Exercici generació
                 - 2007 i anteriors - Dotacions pendents integració a principi període
                 - Que han complert condicions deduïbilitat fiscal [01409]
+            '01410':
+              label: Reserva de nivellació - Dotació de la reserva - Exercici generació
+                2022 - Import reserva dotada [01410]
+            '01411':
+              label: Reserva de nivellació - Dotació de la reserva - Exercici generació
+                2022 - Import reserva pendent dotació [01411]
+            '01412':
+              label: Reserva de nivellació - Dotació de la reserva - Exercici generació
+                2022 - Reserva disposada [01412]
+            '01414':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - Import total d'AID (art. 130.6 a) pendent d'aplicació a l'inici
+                del període [01414]
+            '01415':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - Quota líquida positiva [01415]
+            '01416':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - AID pendents d'aplicació a l'inici del període - Amb dret de
+                conversió en crèdit exigible [01416]
+            '01417':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - AID pendents d'aplicació a l'inici del període - Amb dret de
+                conversió en crèdit exigible per excés de quota [01417]
+            01418:
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - AID pendents d'aplicació a l'inici del període - Sense dret
+                de conversió en crèdit exigible [01418]
+            01419:
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - AID convertits en crèdit exigible en el període [01419]
+            '01420':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - AID pendents d'aplicació en períodes futurs - Amb dret de conversió
+                en crèdit exigible [01420]
+            '01421':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - AID pendents d'aplicació en períodes futurs - Amb dret de conversió
+                en crèdit exigible, excés de quota [01421]
+            '01422':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2022 - AID pendents d'aplicació en períodes futurs - Sense dret de
+                conversió en crèdit exigible [01422]
+            '01423':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Excés quota líquida positiva - Exercici generació - 2022 - Excés
+                de quota líquida positiva pendent a l'inici del període [01423]
+            '01424':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Excés quota líquida positiva - Exercici generació - 2022 - Excés
+                de quota líquida positiva aplicat en períodes impositius 2008 a 2015
+                [01424]
+            '01425':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Excés quota líquida positiva - Exercici generació - 2022 - Excés
+                de quota líquida positiva aplicat en períodes impositius iniciats
+                a partir de 2016 [01425]
+            01469:
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Excés quota líquida positiva - Exercici generació - 2022 - Excés
+                de quota líquida positiva pendent d'aplicació en períodes futurs [01469]
             '01473':
               label: Dotacions deteriorament crèdits o altres actius - Exercici generació
                 - 2007 i anteriors - Dotacions pendents integració a principi període
@@ -18709,6 +18619,17 @@ modelo:
               label: Dotacions deteriorament crèdits o altres actius - Exercici generació
                 - 2007 i anteriors - Dotacions pendents integració períodes futurs
                 - Que no han complert condicions deduïbilitat fiscal [01476]
+            01479:
+              label: Dotacions deteriorament crèdits o altres actius - Exercici generació
+                - 2022 - Dotacions pendents integració a principi període - Que no
+                han complert condicions deduïbilitat fiscal [01479]
+            01480:
+              label: Dotacions deteriorament crèdits o altres actius - Exercici generació
+                - 2022 - Dotacions aplicades conversió actius imp. diferit [01480]
+            '01500':
+              label: Dotacions deteriorament crèdits o altres actius - Exercici generació
+                - 2022 - Dotacions pendents integració períodes futurs - Que no han
+                complert condicions deduïbilitat fiscal [01500]
             '01510':
               label: Liquidació III - base imposable - Només societats cooperatives
                 - Rendes corresponents a la reversió de deterioraments cooperatives
@@ -19158,6 +19079,14 @@ modelo:
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
                 2018 - AID pendents d'aplicació en períodes futurs - Sense dret de
                 conversió en crèdit exigible [01762]
+            '01764':
+              label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre dividends o participacions en beneficis d'entitats
+                residents (art. 21.11 LIS) - Disminucions [01764]
+            '01765':
+              label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre dividends o participacions en beneficis d'entitats
+                no residents (art. 21.11 LIS) - Disminucions [01765]
             01793:
               label: Liquidació IV - Quota de l'exercici a ingressar o a retornar
                 - Retencions per altres conceptes diferents dels rendiments del capital
@@ -19172,6 +19101,9 @@ modelo:
               label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
                 - Rendes procedents de la transmissió d'immobilitzat obtingudes per
                 les Autoritats Portuàries (DA 68a Llei 6/2018) - Disminucions [01824]
+            01872:
+              label: Reserva de nivellació - Dotació de la reserva - Exercici generació
+                2022 - Import de la reserva a dotar [01872]
             01877:
               label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
                 per produccions estrangeres a Canàries - Àlaba [01877]
@@ -19201,6 +19133,9 @@ modelo:
                 desglossament de la compensació de bases imposables negatives - Subtotal
                 de compensació de base imposable de la resta d''activitats - Pendent
                 d''aplicació en períodes futurs [01891]'
+            01913:
+              label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
+                la Gomera i el Ferro 2022 - Aplicat en aquesta liquidació [01913]
             01918:
               label: Deduccions per incentivar determ. activitats - 2018 Inversions
                 en territ. Àfrica Occidental i despeses de propaganda i publicitat
@@ -19221,6 +19156,12 @@ modelo:
                 en territ. Àfrica Occidental i despeses de propaganda i publicitat
                 (art. 27 bis Llei 19/1994) (TAP) - Pendent d'aplicació en períodes
                 futurs [01927]
+            '02077':
+              label: Deduccions per inversió a Canàries - Actius fixos 2022 - Pendent
+                d'aplicació en períodes futurs [02077]
+            02078:
+              label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
+                la Gomera i el Ferro 2022 - Deducció pendent/generada [02078]
             02083:
               label: Deduccions per incentivar determ. activitats - 2015 Inversions
                 en territ. Àfrica Occidental i despeses de propaganda i publicitat
@@ -19275,6 +19216,26 @@ modelo:
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
                 2019 - AID pendents d'aplicació en períodes futurs - Sense dret de
                 conversió en crèdit exigible [02108]
+            02181:
+              label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre dividends o participacions en beneficis d'entitats
+                no residents (art. 21.1, 21.10 i DT 40a LIS) - Disminucions [02181]
+            02182:
+              label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre la renda obtinguda en la transmissió de valors d'entitats
+                residents (art. 21.3, 21.10 i DT 40a LIS) - Augments [02182]
+            02183:
+              label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre la renda obtinguda en la transmissió de valors d'entitats
+                residents (art. 21.3, 21.10 i DT 40a LIS) - Disminucions [02183]
+            02184:
+              label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre la renda obtinguda en la transmissió de valors d'entitats
+                no residents (art. 21.3, 21.10 i DT 40a LIS) - Augments [02184]
+            02185:
+              label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre la renda obtinguda en la transmissió de valors d'entitats
+                no residents (art. 21.3, 21.10 i DT 40a LIS) - Disminucions [02185]
             02186:
               label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
                 - Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
@@ -19420,6 +19381,40 @@ modelo:
               label: Amortització de l'immobilitzat intangible i fons de comerç (art.
                 12.2 LIS) i amortització de la DT 13a.1 LIS - Disminució - Correccions
                 de l'exercici - Temporànies (amb origen en exercicis anteriors) [02588]
+            '02621':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                LIS) - Augment - Correccions de l'exercici - Permanents [02621]
+            '02622':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                LIS) - Augment - Correccions de l'exercici - Temporànies (amb origen
+                en l'exercici) [02622]
+            '02623':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                LIS) - Augment - Correccions de l'exercici - Temporànies (amb origen
+                en exercicis anteriors) [02623]
+            '02624':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                LIS) - Augment - Saldo pendent a principi d'exercici [02624]
+            '02625':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                LIS) - Augment - Saldo pendent a fi d'exercici [02625]
+            '02626':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                LIS) - Disminució - Correccions de l'exercici - Permanents [02626]
+            '02627':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                LIS) - Disminució - Correccions de l'exercici - Temporànies (amb origen
+                en l'exercici) [02627]
+            02628:
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                LIS) - Disminució - Correccions de l'exercici - Temporànies (amb origen
+                en exercicis anteriors) [02628]
+            02629:
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                LIS) - Disminució - Saldo pendent a principi d'exercici [02629]
+            '02630':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                LIS) - Disminució - Saldo pendent a fi d'exercici [02630]
             '02662':
               label: Pèrdues per deteriorament de l'art. 13.1 LIS i provisions i despeses
                 (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
@@ -19780,6 +19775,8 @@ modelo:
               label: Participacions directes en altres entitats. Correccions valoratives.
                 d) Ajust per la disminució de valor originada pel criteri de valor
                 raonable (art. 15.l LIS)
+            x-8h834c1g60o32ehg60o32co:
+              label: Agrupació d'interès econòmic espanyola o U.T.E. [00013]
             x-8h834c1g60o32ehg60o36d8:
               label: Aplicació del règim especial de fusions, escissions, aportacions
                 d'actius i bescanvis de valors (cap. VII, tít. VII) [00035]
@@ -19792,6 +19789,8 @@ modelo:
               label: Filial d'un grup multinacional [00081]
             x-8h834c1g60o32ehg60o3gcg:
               label: Societat matriu última d'un grup multinacional [00082]
+            x-8h834c1g60o32ehg60o3gco:
+              label: Empresa emergent [00083]
             x-8h834c1g60oj0ehg60q3idg:
               label: Estat de canvis en el patrimoni net (II) - Ingressos i despeses
                 reconeguts en patrimoni net - Altres ingressos i despeses reconeguts
@@ -19892,6 +19891,64 @@ modelo:
                 exigible davant l''Administració tributària (art. 130 LIS) - Líquid
                 a ingressar o a retornar - Resultat de conversió d''AID després de
                 regularització: Abonament - D. Forals/Navarra (Totals) [03319]'
+            x-8h834c1g60ojcghq60o3edhm:
+              label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
+                la Gomera i el Ferro 2022 - Pendent d'aplicació en períodes futurs
+                [00766]
+            x-8h834c1g60ojcghq60o3edhn:
+              label: Deduccions per inversió a Canàries - Inversions Canàries 2022
+                - Deducció pendent/generada [00767]
+            x-8h834c1g60ojcghq60o3edho:
+              label: Deduccions per inversió a Canàries - Inversions Canàries 2022
+                - Aplicat en aquesta liquidació [00768]
+            x-8h834c1g60ojcghq60o3edhp:
+              label: Deduccions per inversió a Canàries - Inversions Canàries 2022
+                - Pendent d'aplicació en períodes futurs [00769]
+            x-8h834c1g60ojcghq60o3edpg:
+              label: Deduccions per inversió a Canàries - Inversions a La Palma, la
+                Gomera i El Hierro 2022 - Deducció pendent/generada [00770]
+            x-8h834c1g60ojcghq60o3edph:
+              label: Deduccions per inversió a Canàries - Inversions a La Palma, la
+                Gomera i El Hierro 2022 - Aplicat en aquesta liquidació [00771]
+            x-8h834c1g60ojgghq60p32d1g:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2022 - Deducció pendent/generada [02140]
+            x-8h834c1g60ojgghq60p32d1h:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2022 - Aplicat en aquesta liquidació [02141]
+            x-8h834c1g60ojgghq60p32d1i:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2022 - Import abonat per insuficiència de quota [02142]
+            x-8h834c1g60ojgghq60p32d1j:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2022 - Pendent d'aplicació en períodes futurs [02143]
+            x-8h834c1g60ojggpq60ojce1p:
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - Subtotal de donacions 2012 a 2014 - Deducció pendent/generada
+                [01689]
+            x-8h834c1g60ojggpq60ojce9g:
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - Subtotal de donacions 2012 a 2014 - Aplicat en
+                aquesta liquidació [01690]
+            x-8h834c1g60ojggpq60ojce9h:
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - Subtotal de donacions 2012 a 2014 - Pendent d'aplicació
+                en períodes futurs [01691]
+            x-8h834c1g60ojggpq60ojec1h:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - Subtotal de donacions 2012 a 2014 - Deducció pendent/generada
+                [01701]
+            x-8h834c1g60ojggpq60ojec1i:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - Subtotal de donacions 2012 a 2014 - Aplicat en aquesta
+                liquidació [01702]
+            x-8h834c1g60ojggpq60ojec1j:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - Subtotal de donacions 2012 a 2014 - Pendent d'aplicació
+                en períodes futurs [01703]
             x-8h834c1g60ojiehg68pj0c8:
               label: Detall de correccions del resultat de pèrdues i guanys - Correccions
                 al resultat del compte de pèrdues i guanys de l'exercici - Correcció
@@ -19951,6 +20008,15 @@ modelo:
               label: Amortització accelerada de determinats vehicles i de noves infraestructures
                 de recàrrega (DA 18a LIS) - Augment - Correccions de l'exercici -
                 Temporànies (amb origen en l'exercici) [00077]
+            00696:
+              label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2023
+                - Deducció pendent/generada [00696]
+            00697:
+              label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2023
+                - Aplicat en aquesta liquidació [00697]
+            '00774':
+              label: Deduccions per inversió a Canàries - Inversions a La Palma, La
+                Gomera i El Hierro 2023 - Pendent d'aplicació en períodes futurs [00774]
             '00775':
               label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
                 - Amortització accelerada de determinats vehicles i de noves infraestructures
@@ -20038,6 +20104,67 @@ modelo:
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
                 2022 - AID pendents d'aplicació en períodes futurs - Sense dret de
                 conversió en crèdit exigible [01133]
+            '01227':
+              label: B) Datos económicos. 2.- Despeses financeres netes no deduïdes
+                per l'entitat
+            01228:
+              label: B) Datos económicos. 3.- Reserva de capitalització no aplicada
+                per l'entitat
+            01295:
+              label: Deducció per inversions i despeses realitzades per les autoritats
+                portuàries (art. 38 bis LIS) - 2023 - Deducció pendent/generada [01295]
+            01296:
+              label: Deducció per inversions i despeses realitzades per les autoritats
+                portuàries (art. 38 bis LIS) - 2023 - Aplicat en aquesta liquidació
+                [01296]
+            01297:
+              label: Deducció per inversions i despeses realitzades per les autoritats
+                portuàries (art. 38 bis LIS) - 2023 - Pendent d'aplicació en períodes
+                futurs [01297]
+            01309:
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2022) - Deducció pendent/generada
+                [01309]
+            '01313':
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Deducció pendent/generada
+                [01313]
+            '01314':
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Aplicat en aquesta
+                liquidació [01314]
+            '01315':
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Import abonat per insuficiència
+                de quota [01315]
+            '01316':
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Pendent d'aplicació
+                en períodes futurs [01316]
+            '01323':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Sense reiteració de donacions a una mateixa
+                entitat- Deducció pendent/generada [01323]
+            '01324':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Sense reiteració de donacions a una mateixa
+                entitat - Aplicat en aquesta liquidació [01324]
+            '01325':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Sense reiteració de donacions a una mateixa
+                entitat - Pendent d'aplicació en períodes futurs [01325]
+            '01326':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Amb reiteració de donacions a una mateixa
+                entitat- Deducció pendent/generada [01326]
+            '01327':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Amb reiteració de donacions a una mateixa
+                entitat - Aplicat en aquesta liquidació [01327]
+            01328:
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Amb reiteració de donacions a una mateixa
+                entitat - Pendent d'aplicació en períodes futurs [01328]
             01329:
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
@@ -20053,17 +20180,187 @@ modelo:
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2023(*) Sense reiteració de donacions a una mateixa
                 entitat - Pendent d'aplicació en períodes futurs [01373]
+            '01374':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2023 - Amb reiteració de donacions a una mateixa entitat
+                - Deducció pendent/generada [01374]
+            '01375':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2023 - Amb reiteració de donacions a una mateixa entitat
+                - Aplicat en aquesta liquidació [01375]
+            '01376':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2023 - Amb reiteració de donacions a una mateixa entitat
+                - Pendent d'aplicació en períodes futurs [01376]
+            '01377':
+              label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
+                2023 - Base deducció [01377]
+            01378:
+              label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
+                2023 - Import generat/pendent principi període [01378]
+            01379:
+              label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
+                2023 - Import aplicat [01379]
+            01380:
+              label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
+                2023 - Import pendent [01380]
+            01381:
+              label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
+                2023 - Base deducció [01381]
+            01382:
+              label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
+                2023 - Import generat/pendent principi període [01382]
+            01383:
+              label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
+                2023 - Import aplicat [01383]
+            01384:
+              label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
+                2023 - Import pendent [01384]
+            01395:
+              label: Limitació de la deduïbilitat de despeses financeres. Despeses
+                financeres pendents de deduir - Exercici de generació 2023 - Aplicat
+                en aquesta liquidació [01395]
+            01396:
+              label: Limitació de la deduïbilitat de despeses financeres. Despeses
+                financeres pendents de deduir - Exercici de generació 2023 - Pendent
+                d'aplicació en períodes futurs - Per límit [01396]
+            01397:
+              label: Limitació de la deduïbilitat de despeses financeres. Despeses
+                financeres pendents de deduir - Exercici de generació 2023 - Pendent
+                d'aplicació en períodes futurs - Resta [01397]
+            01398:
+              label: Pendent d'addició per límit de benefici operatiu no aplicat -
+                Exercici de generació 2023 - Pendent aplicació a principi del període
+                [01398]
+            01399:
+              label: Pendent d'addició per límit de benefici operatiu no aplicat -
+                Exercici de generació 2023 - Aplicat en aquesta liquidació [01399]
+            '01400':
+              label: Pendent d'addició per límit de benefici operatiu no aplicat -
+                Exercici de generació 2023 - Pendent aplicació períodes futurs [01400]
+            '01401':
+              label: Reserva Capitalització - 2023 - Dret reduir B.I. generat període/pendent
+                aplicar inici període [01401]
+            '01402':
+              label: Reserva Capitalització - 2023 - Reducció B.I. aplicada [01402]
+            '01403':
+              label: Reserva capitalització - 2023 - Reducció de la B.I. pdt. d'aplicar
+                en períodes futurs [01403]
+            '01410':
+              label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+                2023 - Import reserva dotada [01410]
+            '01411':
+              label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+                2023 - Import reserva pendent dotació [01411]
+            '01412':
+              label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+                2023 - Reserva disposada [01412]
+            '01414':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - Import total d'AID (art. 130.6 a) pendent d'aplicació a l'inici
+                del període [01414]
+            '01415':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - Quota líquida positiva [01415]
+            '01416':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - AID pendents d'aplicació a l'inici del període - Amb dret de
+                conversió en crèdit exigible [01416]
+            '01417':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - AID pendents d'aplicació a l'inici del període - Amb dret de
+                conversió en crèdit exigible per excés de quota [01417]
+            01418:
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - AID pendents d'aplicació a l'inici del període - Sense dret
+                de conversió en crèdit exigible [01418]
+            01419:
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - AID convertits en crèdit exigible en el període [01419]
+            '01420':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - AID pendents d'aplicació en períodes futurs - Amb dret de conversió
+                en crèdit exigible [01420]
+            '01421':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - AID pendents d'aplicació en períodes futurs - Amb dret de conversió
+                en crèdit exigible, excés de quota [01421]
+            '01422':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - AID pendents d'aplicació en períodes futurs - Sense dret de
+                conversió en crèdit exigible [01422]
+            '01423':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Excés quota líquida positiva - Exercici generació - 2023 - Excés
+                de quota líquida positiva pendent a l'inici del període [01423]
+            '01424':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Excés quota líquida positiva - Exercici generació - 2023 - Excés
+                de quota líquida positiva aplicat en períodes impositius 2008 a 2015
+                [01424]
+            '01425':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Excés quota líquida positiva - Exercici generació - 2023 - Excés
+                de quota líquida positiva aplicat en períodes impositius iniciats
+                a partir de 2016 [01425]
+            01469:
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Excés quota líquida positiva - Exercici generació - 2023 - Excés
+                de quota líquida positiva pendent d'aplicació en períodes futurs [01469]
+            01479:
+              label: Dotacions deteriorament crèdits o altres actius - Exercici generació
+                - 2023 - Dotacions pendents integració a principi període - Que no
+                han complert condicions deduïbilitat fiscal [01479]
+            01480:
+              label: Dotacions deteriorament crèdits o altres actius - Exercici generació
+                - 2023 - Dotacions aplicades conversió actius imp. diferit [01480]
+            '01500':
+              label: Dotacions deteriorament crèdits o altres actius - Exercici generació
+                - 2023 - Dotacions pendents integració períodes futurs - Que no han
+                complert condicions deduïbilitat fiscal [01500]
+            '01764':
+              label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre dividends o participacions en beneficis d'entitats
+                residents (art. 21.11 LIS) - Disminucions [01764]
+            '01765':
+              label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre dividends o participacions en beneficis d'entitats
+                no residents (art. 21.11 LIS) - Disminucions [01765]
+            01872:
+              label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+                2023 - Import de la reserva a dotar [01872]
             01899:
               label: Deduccions per incentivar determ. activitats - 2022 Inversions
                 en territ. Àfrica Occidental i despeses de propaganda i publicitat
                 (art. 27 bis Llei 19/1994) (TAP) - Pendent d'aplicació en períodes
                 futurs [01899]
+            01913:
+              label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
+                la Gomera i el Ferro 2023 - Aplicat en aquesta liquidació [01913]
             01935:
               label: Deduccions I+D+i excloses de límit - Informació addicional per
                 al càlcul de límits de deduccions - Grup mercantil (només per a entitats
                 que hagin marcat la clau 00039 de caràcters de la declaració) - Import
                 anual de la deducció per despeses de recerca i desenvolupament aplicada
                 o abonada per la resta del grup [01935]
+            '02077':
+              label: Deduccions per inversió a Canàries - Actius fixos 2023 - Pendent
+                d'aplicació en períodes futurs [02077]
+            02078:
+              label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
+                la Gomera i el Ferro 2023 - Deducció pendent/generada [02078]
             02181:
               label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
                 - Exempció sobre dividends o participacions en beneficis d'entitats
@@ -20089,6 +20386,44 @@ modelo:
                 l''Administració tributària (art. 130 LIS) - Líquid a ingressar o
                 a retornar - Resultat de conversió d''AID després de regularització:
                 a ingressar - Total [02492]'
+            '02621':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Augment - Correccions de l'exercici - Permanents
+                [02621]
+            '02622':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Augment - Correccions de l'exercici - Temporànies
+                (amb origen en l'exercici) [02622]
+            '02623':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Augment - Correccions de l'exercici - Temporànies
+                (amb origen en exercicis anteriors) [02623]
+            '02624':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Augment - Saldo pendent a principi d'exercici
+                [02624]
+            '02625':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Augment - Saldo pendent a fi d'exercici [02625]
+            '02626':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Disminució - Correccions de l'exercici - Permanents
+                [02626]
+            '02627':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Disminució - Correccions de l'exercici - Temporànies
+                (amb origen en l'exercici) [02627]
+            02628:
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Disminució - Correccions de l'exercici - Temporànies
+                (amb origen en exercicis anteriors) [02628]
+            02629:
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Disminució - Saldo pendent a principi d'exercici
+                [02629]
+            '02630':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Disminució - Saldo pendent a fi d'exercici [02630]
             02694:
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
@@ -20181,6 +20516,10 @@ modelo:
                 l''Administració tributària (art. 130 LIS) - Líquid a ingressar o
                 a retornar - Resultat de conversió d''AID després de regularització:
                 Compensació - Total [03320]'
+            x-8h834c1g60o32ehg60o32co:
+              label: Agrupació d'interès econòmic espanyola [00013]
+            x-8h834c1g60o32ehg60o3gco:
+              label: Tipus de gravamen reduït per a empresa emergent [00083]
             x-8h834c1g60oj4ehg60pj0e8:
               label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
                 - Altres supòsits de llibertat d'amortització (art. 12.3 a) i d) i
@@ -20238,6 +20577,25 @@ modelo:
                 l''Administració tributària (art. 130 LIS) - Líquid a ingressar o
                 a retornar - Resultat de conversió d''AID després de regularització:
                 Abonament - D. Forals/Navarra (Totals) [03319]'
+            x-8h834c1g60ojcghq60o3edhm:
+              label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
+                la Gomera i el Ferro 2023 - Pendent d'aplicació en períodes futurs
+                [00766]
+            x-8h834c1g60ojcghq60o3edhn:
+              label: Deduccions per inversió a Canàries - Inversions Canàries 2023
+                - Deducció pendent/generada [00767]
+            x-8h834c1g60ojcghq60o3edho:
+              label: Deduccions per inversió a Canàries - Inversions Canàries 2023
+                - Aplicat en aquesta liquidació [00768]
+            x-8h834c1g60ojcghq60o3edhp:
+              label: Deduccions per inversió a Canàries - Inversions Canàries 2023
+                - Pendent d'aplicació en períodes futurs [00769]
+            x-8h834c1g60ojcghq60o3edpg:
+              label: Deduccions per inversió a Canàries - Inversions a La Palma, La
+                Gomera i El Hierro 2023 - Deducció pendent/generada [00770]
+            x-8h834c1g60ojcghq60o3edph:
+              label: Deduccions per inversió a Canàries - Inversions a La Palma, La
+                Gomera i El Hierro 2023 - Aplicat en aquesta liquidació [00771]
             x-8h834c1g60ojgehg60pj2d8:
               label: Deduccions per incentivar determ. activitats - 2023 Centenari
                 del Rugby a Espanya i de la Unió Esportiva Santboiana (CRE) - Deducció
@@ -20246,6 +20604,45 @@ modelo:
               label: Deduccions per incentivar determ. activitats - 2023 Centenari
                 del Rugby a Espanya i de la Unió Esportiva Santboiana (CRE) - Aplicat
                 en aquesta liquidació [00316]
+            x-8h834c1g60ojgghq60p32d1g:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2023 - Deducció pendent/generada [02140]
+            x-8h834c1g60ojgghq60p32d1h:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2023 - Aplicat en aquesta liquidació [02141]
+            x-8h834c1g60ojgghq60p32d1i:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2023 - Import abonat per insuficiència de quota [02142]
+            x-8h834c1g60ojgghq60p32d1j:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2023 - Pendent d'aplicació en períodes futurs [02143]
+            x-8h834c1g60ojggpq60ojce1p:
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - Subtotal de donacions 2013 i 2014 - Deducció pendent/generada
+                [01689]
+            x-8h834c1g60ojggpq60ojce9g:
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - Subtotal de donacions 2013 i 2014 - Aplicat en
+                aquesta liquidació [01690]
+            x-8h834c1g60ojggpq60ojce9h:
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - Subtotal de donacions 2013 i 2014 - Pendent d'aplicació
+                en períodes futurs [01691]
+            x-8h834c1g60ojggpq60ojec1h:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - Subtotal de donacions 2013 i 2014 - Deducció pendent/generada
+                [01701]
+            x-8h834c1g60ojggpq60ojec1i:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - Subtotal de donacions 2013 i 2014 - Aplicat en aquesta
+                liquidació [01702]
+            x-8h834c1g60ojggpq60ojec1j:
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - Subtotal de donacions 2013 i 2014 - Pendent d'aplicació
+                en períodes futurs [01703]
             x-8h834c1g60p30ghq60p36c1h:
               label: Detall de correccions del resultat de pèrdues i guanys - Correccions
                 al resultat del compte de pèrdues i guanys de l'exercici - Correcció
@@ -20295,6 +20692,15 @@ modelo:
                 desglossament de la compensació de bases imposables negatives - Compensació
                 de base imposable de la resta d''activitats any 2024 - Pendent d''aplicació
                 en períodes futurs [00098]'
+            00696:
+              label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2023
+                - Deducció pendent/generada [00696]
+            00697:
+              label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2023
+                - Aplicat en aquesta liquidació [00697]
+            '00774':
+              label: Deduccions per inversió a Canàries - Inversions a La Palma, La
+                Gomera i El Hierro 2023 - Pendent d'aplicació en períodes futurs [00774]
             '00775':
               label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
                 - Amortització accelerada de determinats vehicles i de noves infraestructures
@@ -20356,6 +20762,16 @@ modelo:
                 de valors representatius de la participació en el capital o en els
                 fons propis, cooperatives (a nivell de quota) (DT 16a.3 LIS) -disminucions
                 [00932]
+            '01020':
+              label: Conversió d'actius per impost diferit en crèdit exigible davant
+                l'Administració tributària (art. 130 LIS) - Abonament per conversió
+                d'actius per impost diferit en crèdit exigible davant l'administració
+                tributària (art. 130 LIS) - Estat [01020]
+            '01021':
+              label: Conversió d'actius per impost diferit en crèdit exigible davant
+                l'Administració tributària (art. 130 LIS) - Compensació per conversió
+                d'actius per impost diferit en crèdit exigible davant l'administració
+                tributària (art. 130 LIS) - Estat [01021]
             '01061':
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
@@ -20425,6 +20841,12 @@ modelo:
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
                 2022 - AID pendents d'aplicació en períodes futurs - Sense dret de
                 conversió en crèdit exigible [01133]
+            '01227':
+              label: B) Datos económicos. 2.- Despeses financeres netes no deduïdes
+                per l'entitat
+            01228:
+              label: B) Datos económicos. 3.- Reserva de capitalització no aplicada
+                per l'entitat
             01249:
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
                 i 16.2 LIS - i) Límit a la deducció de despeses financeres netes (=
@@ -20451,6 +20873,17 @@ modelo:
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
                 i 16.2 LIS - Total despeses financeres del període impositiu no deduïbles
                 (= [c2+l2]) [01260]
+            01295:
+              label: Deducció per inversions i despeses realitzades per les autoritats
+                portuàries (art. 38 bis LIS) - 2023 - Deducció pendent/generada [01295]
+            01296:
+              label: Deducció per inversions i despeses realitzades per les autoritats
+                portuàries (art. 38 bis LIS) - 2023 - Aplicat en aquesta liquidació
+                [01296]
+            01297:
+              label: Deducció per inversions i despeses realitzades per les autoritats
+                portuàries (art. 38 bis LIS) - 2023 - Pendent d'aplicació en períodes
+                futurs [01297]
             '01300':
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
@@ -20476,6 +20909,50 @@ modelo:
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
                 (art. 130 LIS) - Compensació per conversió d'actius - Bizkaia [01307]
+            01309:
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2022) - Deducció pendent/generada
+                [01309]
+            '01313':
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Deducció pendent/generada
+                [01313]
+            '01314':
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Aplicat en aquesta
+                liquidació [01314]
+            '01315':
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Import abonat per insuficiència
+                de quota [01315]
+            '01316':
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Pendent d'aplicació
+                en períodes futurs [01316]
+            '01323':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Sense reiteració de donacions a una mateixa
+                entitat- Deducció pendent/generada [01323]
+            '01324':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Sense reiteració de donacions a una mateixa
+                entitat - Aplicat en aquesta liquidació [01324]
+            '01325':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Sense reiteració de donacions a una mateixa
+                entitat - Pendent d'aplicació en períodes futurs [01325]
+            '01326':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Amb reiteració de donacions a una mateixa
+                entitat- Deducció pendent/generada [01326]
+            '01327':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Amb reiteració de donacions a una mateixa
+                entitat - Aplicat en aquesta liquidació [01327]
+            01328:
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Amb reiteració de donacions a una mateixa
+                entitat - Pendent d'aplicació en períodes futurs [01328]
             01329:
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
@@ -20512,6 +20989,156 @@ modelo:
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2023 - Sense reiteració de donacions a una mateixa
                 entitat - Pendent d'aplicació en períodes futurs [01373]
+            '01374':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2023 - Amb reiteració de donacions a una mateixa entitat
+                - Deducció pendent/generada [01374]
+            '01375':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2023 - Amb reiteració de donacions a una mateixa entitat
+                - Aplicat en aquesta liquidació [01375]
+            '01376':
+              label: Deducció donatius entitats sense fins lucratius - Donacions per
+                a activitats prioritàries de mecenatge i altres amb dret a deducció
+                incrementada - 2023 - Amb reiteració de donacions a una mateixa entitat
+                - Pendent d'aplicació en períodes futurs [01376]
+            '01377':
+              label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
+                2023 - Base deducció [01377]
+            01378:
+              label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
+                2023 - Import generat/pendent principi període [01378]
+            01379:
+              label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
+                2023 - Import aplicat [01379]
+            01380:
+              label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
+                2023 - Import pendent [01380]
+            01381:
+              label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
+                2023 - Base deducció [01381]
+            01382:
+              label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
+                2023 - Import generat/pendent principi període [01382]
+            01383:
+              label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
+                2023 - Import aplicat [01383]
+            01384:
+              label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
+                2023 - Import pendent [01384]
+            01395:
+              label: Limitació de la deduïbilitat de despeses financeres. Despeses
+                financeres pendents de deduir - Exercici de generació 2023 - Aplicat
+                en aquesta liquidació [01395]
+            01396:
+              label: Limitació de la deduïbilitat de despeses financeres. Despeses
+                financeres pendents de deduir - Exercici de generació 2023 - Pendent
+                d'aplicació en períodes futurs - Per límit [01396]
+            01397:
+              label: Limitació de la deduïbilitat de despeses financeres. Despeses
+                financeres pendents de deduir - Exercici de generació 2023 - Pendent
+                d'aplicació en períodes futurs - Resta [01397]
+            01398:
+              label: Pendent d'addició per límit de benefici operatiu no aplicat -
+                Exercici de generació 2023 - Pendent aplicació a principi del període
+                [01398]
+            01399:
+              label: Pendent d'addició per límit de benefici operatiu no aplicat -
+                Exercici de generació 2023 - Aplicat en aquesta liquidació [01399]
+            '01400':
+              label: Pendent d'addició per límit de benefici operatiu no aplicat -
+                Exercici de generació 2023 - Pendent aplicació períodes futurs [01400]
+            '01401':
+              label: Reserva Capitalització - 2023 - Dret reduir B.I. generat període/pendent
+                aplicar inici període [01401]
+            '01402':
+              label: Reserva Capitalització - 2023 - Reducció B.I. aplicada [01402]
+            '01403':
+              label: Reserva capitalització - 2023 - Reducció de la B.I. pdt. d'aplicar
+                en períodes futurs [01403]
+            '01410':
+              label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+                2023 - Import reserva dotada [01410]
+            '01411':
+              label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+                2023 - Import reserva pendent dotació [01411]
+            '01412':
+              label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+                2023 - Reserva disposada [01412]
+            '01414':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - Import total d'AID (art. 130.6 a) pendent d'aplicació a l'inici
+                del període [01414]
+            '01415':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - Quota líquida positiva [01415]
+            '01416':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - AID pendents d'aplicació a l'inici del període - Amb dret de
+                conversió en crèdit exigible [01416]
+            '01417':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - AID pendents d'aplicació a l'inici del període - Amb dret de
+                conversió en crèdit exigible per excés de quota [01417]
+            01418:
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - AID pendents d'aplicació a l'inici del període - Sense dret
+                de conversió en crèdit exigible [01418]
+            01419:
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - AID convertits en crèdit exigible en el període [01419]
+            '01420':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - AID pendents d'aplicació en períodes futurs - Amb dret de conversió
+                en crèdit exigible [01420]
+            '01421':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - AID pendents d'aplicació en períodes futurs - Amb dret de conversió
+                en crèdit exigible, excés de quota [01421]
+            '01422':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - AID pendents d'aplicació en períodes futurs - Sense dret de
+                conversió en crèdit exigible [01422]
+            '01423':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Excés quota líquida positiva - Exercici generació - 2023 - Excés
+                de quota líquida positiva pendent a l'inici del període [01423]
+            '01424':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Excés quota líquida positiva - Exercici generació - 2023 - Excés
+                de quota líquida positiva aplicat en períodes impositius 2008 a 2015
+                [01424]
+            '01425':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Excés quota líquida positiva - Exercici generació - 2023 - Excés
+                de quota líquida positiva aplicat en períodes impositius iniciats
+                a partir de 2016 [01425]
+            01469:
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Excés quota líquida positiva - Exercici generació - 2023 - Excés
+                de quota líquida positiva pendent d'aplicació en períodes futurs [01469]
+            01479:
+              label: Dotacions deteriorament crèdits o altres actius - Exercici generació
+                - 2023 - Dotacions pendents integració a principi període - Que no
+                han complert condicions deduïbilitat fiscal [01479]
+            01480:
+              label: Dotacions deteriorament crèdits o altres actius - Exercici generació
+                - 2023 - Dotacions aplicades conversió actius imp. diferit [01480]
+            '01500':
+              label: Dotacions deteriorament crèdits o altres actius - Exercici generació
+                - 2023 - Dotacions pendents integració períodes futurs - Que no han
+                complert condicions deduïbilitat fiscal [01500]
             '01510':
               label: Liquidació III - base imposable - Només societats cooperatives
                 - Rendes corresponents a la reversió de deterioraments cooperatives
@@ -20732,6 +21359,14 @@ modelo:
             '01763':
               label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
                 la Gomera i el Ferro 2024 - Deducció pendent/generada [01763]
+            '01764':
+              label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre dividends o participacions en beneficis d'entitats
+                residents (art. 21.11 LIS) - Disminucions [01764]
+            '01765':
+              label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre dividends o participacions en beneficis d'entitats
+                no residents (art. 21.11 LIS) - Disminucions [01765]
             01800:
               label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
                 la Gomera i el Ferro 2024 - Aplicat en aquesta liquidació [01800]
@@ -20761,6 +21396,9 @@ modelo:
             01847:
               label: Deduccions per inversió a Canàries - Inversions a La Palma, La
                 Gomera i El Hierro 2024 - Pendent d'aplicació en períodes futurs [01847]
+            01872:
+              label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+                2023 - Import de la reserva a dotar [01872]
             01877:
               label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
                 per produccions estrangeres a Canàries - Araba/Àlaba [01877]
@@ -20770,6 +21408,9 @@ modelo:
             01879:
               label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
                 per produccions estrangeres a Canàries - Bizkaia [01879]
+            01913:
+              label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
+                la Gomera i el Ferro 2023 - Aplicat en aquesta liquidació [01913]
             01961:
               label: Llibertat d'amortització de determinats vehicles i de noves infraestructures
                 de recàrrega (DA 18a LIS RDL 4/2024) - Disminució - Correccions de
@@ -20786,6 +21427,32 @@ modelo:
             '02031':
               label: Open Barcelona-Trofeo Conde de Godó (OB). Pendent d'aplicació
                 en períodes futurs
+            '02077':
+              label: Deduccions per inversió a Canàries - Actius fixos 2023 - Pendent
+                d'aplicació en períodes futurs [02077]
+            02078:
+              label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
+                la Gomera i el Ferro 2023 - Deducció pendent/generada [02078]
+            02181:
+              label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre dividends o participacions en beneficis d'entitats
+                no residents (art. 21.1, 21.10 i DT 40a LIS) - Disminucions [02181]
+            02182:
+              label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre la renda obtinguda en la transmissió de valors d'entitats
+                residents (art. 21.3, 21.10 i DT 40a LIS) - Augments [02182]
+            02183:
+              label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre la renda obtinguda en la transmissió de valors d'entitats
+                residents (art. 21.3, 21.10 i DT 40a LIS) - Disminucions [02183]
+            02184:
+              label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre la renda obtinguda en la transmissió de valors d'entitats
+                no residents (art. 21.3, 21.10 i DT 40a LIS) - Augments [02184]
+            02185:
+              label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre la renda obtinguda en la transmissió de valors d'entitats
+                no residents (art. 21.3, 21.10 i DT 40a LIS) - Disminucions [02185]
             '02312':
               label: Deducció per inversions i despeses realitzades per les autoritats
                 portuàries (art. 38 bis LIS) - 2024(*) - Deducció pendent/generada
@@ -20847,6 +21514,44 @@ modelo:
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - 2024(*) sense reiteració de donacions a una mateixa
                 entitat - Pendent d'aplicació en períodes futurs [02577]
+            '02621':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Augment - Correccions de l'exercici - Permanents
+                [02621]
+            '02622':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Augment - Correccions de l'exercici - Temporànies
+                (amb origen en l'exercici) [02622]
+            '02623':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Augment - Correccions de l'exercici - Temporànies
+                (amb origen en exercicis anteriors) [02623]
+            '02624':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Augment - Saldo pendent a principi d'exercici
+                [02624]
+            '02625':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Augment - Saldo pendent a fi d'exercici [02625]
+            '02626':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Disminució - Correccions de l'exercici - Permanents
+                [02626]
+            '02627':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Disminució - Correccions de l'exercici - Temporànies
+                (amb origen en l'exercici) [02627]
+            02628:
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Disminució - Correccions de l'exercici - Temporànies
+                (amb origen en exercicis anteriors) [02628]
+            02629:
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Disminució - Saldo pendent a principi d'exercici
+                [02629]
+            '02630':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Disminució - Saldo pendent a fi d'exercici [02630]
             02691:
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - 2024(*) - Amb reiteració de donacions a una mateixa
@@ -21045,6 +21750,8 @@ modelo:
               label: Participacions directes en altres entitats. Correccions valoratives.
                 e) Ajust per la disminució de valor originada pel criteri de valor
                 raonable (art. 15.l LIS)
+            x-8h834c1g60o32ehg60o32co:
+              label: Agrupació d'interès econòmic espanyola [00013]
             x-8h834c1g60o32ehg60o36d8:
               label: Règim especial de fusions, escissions, aportacions d'actius i
                 bescanvis de valors (cap. VII, tít. VII) [00035]
@@ -21053,6 +21760,8 @@ modelo:
                 finançament realitzat per altres contribuents [00044]
             x-8h834c1g60o32ehg60o3ae8:
               label: Opció art. 39.2 LIS [00059]
+            x-8h834c1g60o32ehg60o3gco:
+              label: Tipus de gravamen reduït per a empresa emergent [00083]
             x-8h834c1g60o3gehg60rjidg:
               label: Compte de pèrdues i guanys (II) - Operacions continuades - Interessos
                 i retorn obligatori de les aportacions al capital social i d'altres
@@ -21142,6 +21851,37 @@ modelo:
             x-8h834c1g60ojcehg64qj4cg:
               label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2024
                 - Aplicat en aquesta liquidació [01522]
+            x-8h834c1g60ojcghq60o3edhm:
+              label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
+                la Gomera i el Ferro 2023 - Pendent d'aplicació en períodes futurs
+                [00766]
+            x-8h834c1g60ojcghq60o3edhn:
+              label: Deduccions per inversió a Canàries - Inversions Canàries 2023
+                - Deducció pendent/generada [00767]
+            x-8h834c1g60ojcghq60o3edho:
+              label: Deduccions per inversió a Canàries - Inversions Canàries 2023
+                - Aplicat en aquesta liquidació [00768]
+            x-8h834c1g60ojcghq60o3edhp:
+              label: Deduccions per inversió a Canàries - Inversions Canàries 2023
+                - Pendent d'aplicació en períodes futurs [00769]
+            x-8h834c1g60ojcghq60o3edpg:
+              label: Deduccions per inversió a Canàries - Inversions a La Palma, La
+                Gomera i El Hierro 2023 - Deducció pendent/generada [00770]
+            x-8h834c1g60ojcghq60o3edph:
+              label: Deduccions per inversió a Canàries - Inversions a La Palma, La
+                Gomera i El Hierro 2023 - Aplicat en aquesta liquidació [00771]
+            x-8h834c1g60ojgghq60p32d1g:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2023 - Deducció pendent/generada [02140]
+            x-8h834c1g60ojgghq60p32d1h:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2023 - Aplicat en aquesta liquidació [02141]
+            x-8h834c1g60ojgghq60p32d1i:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2023 - Import abonat per insuficiència de quota [02142]
+            x-8h834c1g60ojgghq60p32d1j:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2023 - Pendent d'aplicació en períodes futurs [02143]
             x-8h834c1g60p30ghq60p36c1h:
               label: Detall de correccions del resultat de pèrdues i guanys - Correccions
                 al resultat del compte de pèrdues i guanys de l'exercici - Correcció
@@ -21212,6 +21952,15 @@ modelo:
                 desglossament de la compensació de bases imposables negatives - Compensació
                 de base imposable de la resta d''activitats any 2024 - Pendent d''aplicació
                 en períodes futurs'
+            00696:
+              label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2023
+                - Deducció pendent/generada [00696]
+            00697:
+              label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2023
+                - Aplicat en aquesta liquidació [00697]
+            '00774':
+              label: Deduccions per inversió a Canàries - Inversions a La Palma, La
+                Gomera i El Hierro 2023 - Pendent d'aplicació en períodes futurs [00774]
             '00775':
               label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
                 - Amortització accelerada de determinats vehicles i de noves infraestructures
@@ -21572,6 +22321,12 @@ modelo:
                 desglossament de la compensació de bases imposables negatives - Compensació
                 de base imposable de la resta d''activitats any 2023 - Pendent d''aplicació
                 en períodes futurs'
+            '01227':
+              label: B) Datos económicos. 2.- Despeses financeres netes no deduïdes
+                per l'entitat
+            01228:
+              label: B) Datos económicos. 3.- Reserva de capitalització no aplicada
+                per l'entitat
             '01240':
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.5
                 i/o 83 LIS - a) Despeses financeres del període impositiu derivades
@@ -21611,6 +22366,17 @@ modelo:
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
                 i 16.2 LIS - Total despeses financeres del període impositiu no deduïbles
                 (= [c2+l2]) [01260]
+            01295:
+              label: Deducció per inversions i despeses realitzades per les autoritats
+                portuàries (art. 38 bis LIS) - 2023 - Deducció pendent/generada [01295]
+            01296:
+              label: Deducció per inversions i despeses realitzades per les autoritats
+                portuàries (art. 38 bis LIS) - 2023 - Aplicat en aquesta liquidació
+                [01296]
+            01297:
+              label: Deducció per inversions i despeses realitzades per les autoritats
+                portuàries (art. 38 bis LIS) - 2023 - Pendent d'aplicació en períodes
+                futurs [01297]
             '01300':
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
@@ -21644,6 +22410,50 @@ modelo:
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
                 (art. 130 LIS) - Compensació per conversió d'actius - Navarra
+            01309:
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2022) - Deducció pendent/generada
+                [01309]
+            '01313':
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Deducció pendent/generada
+                [01313]
+            '01314':
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Aplicat en aquesta
+                liquidació [01314]
+            '01315':
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Import abonat per insuficiència
+                de quota [01315]
+            '01316':
+              label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
+                (art. 36.2 LIS i DA 14a Llei 19/1994) - 2023 - Pendent d'aplicació
+                en períodes futurs [01316]
+            '01323':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Sense reiteració de donacions a una mateixa
+                entitat- Deducció pendent/generada [01323]
+            '01324':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Sense reiteració de donacions a una mateixa
+                entitat - Aplicat en aquesta liquidació [01324]
+            '01325':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Sense reiteració de donacions a una mateixa
+                entitat - Pendent d'aplicació en períodes futurs [01325]
+            '01326':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Amb reiteració de donacions a una mateixa
+                entitat- Deducció pendent/generada [01326]
+            '01327':
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Amb reiteració de donacions a una mateixa
+                entitat - Aplicat en aquesta liquidació [01327]
+            01328:
+              label: Deducció donatius entitats sense fins lucratius - Donacions de
+                caràcter general - 2023 - Amb reiteració de donacions a una mateixa
+                entitat - Pendent d'aplicació en períodes futurs [01328]
             01329:
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
@@ -21695,6 +22505,57 @@ modelo:
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
                 incrementada - 2023 - Amb reiteració de donacions a una mateixa entitat
                 - Pendent d'aplicació en períodes futurs
+            '01377':
+              label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
+                2023 - Base deducció [01377]
+            01378:
+              label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
+                2023 - Import generat/pendent principi període [01378]
+            01379:
+              label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
+                2023 - Import aplicat [01379]
+            01380:
+              label: Deducció per reversió de mesures temporals (D.T.37a. 1 LIS) -
+                2023 - Import pendent [01380]
+            01381:
+              label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
+                2023 - Base deducció [01381]
+            01382:
+              label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
+                2023 - Import generat/pendent principi període [01382]
+            01383:
+              label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
+                2023 - Import aplicat [01383]
+            01384:
+              label: Deducció per reversió de mesures temporals (DT 37a. 2 LIS) -
+                2023 - Import pendent [01384]
+            01395:
+              label: Limitació de la deduïbilitat de despeses financeres. Despeses
+                financeres pendents de deduir - Exercici de generació 2023 - Aplicat
+                en aquesta liquidació [01395]
+            01396:
+              label: Limitació de la deduïbilitat de despeses financeres. Despeses
+                financeres pendents de deduir - Exercici de generació 2023 - Pendent
+                d'aplicació en períodes futurs - Per límit [01396]
+            01397:
+              label: Limitació de la deduïbilitat de despeses financeres. Despeses
+                financeres pendents de deduir - Exercici de generació 2023 - Pendent
+                d'aplicació en períodes futurs - Resta [01397]
+            01398:
+              label: Pendent d'addició per límit de benefici operatiu no aplicat -
+                Exercici de generació 2023 - Pendent aplicació a principi del període
+                [01398]
+            01399:
+              label: Pendent d'addició per límit de benefici operatiu no aplicat -
+                Exercici de generació 2023 - Aplicat en aquesta liquidació [01399]
+            '01400':
+              label: Pendent d'addició per límit de benefici operatiu no aplicat -
+                Exercici de generació 2023 - Pendent aplicació períodes futurs [01400]
+            '01401':
+              label: Reserva Capitalització - 2023 - Dret reduir B.I. generat període/pendent
+                aplicar inici període [01401]
+            '01402':
+              label: Reserva Capitalització - 2023 - Reducció B.I. aplicada [01402]
             01408:
               label: Dotacions deteriorament crèdits o altres actius - Exercici generació
                 - 2007 i anteriors - Dotacions pendents integració a principi període
@@ -21703,11 +22564,24 @@ modelo:
               label: Dotacions deteriorament crèdits o altres actius - Exercici generació
                 - 2007 i anteriors - Dotacions pendents integració a principi període
                 - Que han complert condicions deduïbilitat fiscal
+            '01410':
+              label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+                2023 - Import reserva dotada [01410]
+            '01411':
+              label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+                2023 - Import reserva pendent dotació [01411]
+            '01412':
+              label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+                2023 - Reserva disposada [01412]
             '01414':
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
                 2023 - Import total AID (art. 130.6 a) pendent aplicació a principi
                 de període
+            '01415':
+              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+                - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
+                2023 - Quota líquida positiva [01415]
             '01416':
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
@@ -21763,6 +22637,17 @@ modelo:
               label: Dotacions deteriorament crèdits o altres actius - Exercici generació
                 - 2007 i anteriors - Dotacions pendents integració períodes futurs
                 - Que no han complert condicions deduïbilitat fiscal
+            01479:
+              label: Dotacions deteriorament crèdits o altres actius - Exercici generació
+                - 2023 - Dotacions pendents integració a principi període - Que no
+                han complert condicions deduïbilitat fiscal [01479]
+            01480:
+              label: Dotacions deteriorament crèdits o altres actius - Exercici generació
+                - 2023 - Dotacions aplicades conversió actius imp. diferit [01480]
+            '01500':
+              label: Dotacions deteriorament crèdits o altres actius - Exercici generació
+                - 2023 - Dotacions pendents integració períodes futurs - Que no han
+                complert condicions deduïbilitat fiscal [01500]
             '01510':
               label: Liquidació III - base imposable - Només societats cooperatives
                 - Rendes corresponents a la reversió de deterioraments cooperatives
@@ -22303,6 +23188,14 @@ modelo:
             '01763':
               label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
                 la Gomera i el Ferro 2024 - Deducció pendent/generada [01763]
+            '01764':
+              label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre dividends o participacions en beneficis d'entitats
+                residents (art. 21.11 LIS) - Disminucions [01764]
+            '01765':
+              label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
+                - Exempció sobre dividends o participacions en beneficis d'entitats
+                no residents (art. 21.11 LIS) - Disminucions [01765]
             01793:
               label: Liquidació IV - Quota de l'exercici a ingressar o a retornar
                 - Retencions per altres conceptes diferents dels rendiments del capital
@@ -22346,6 +23239,9 @@ modelo:
             01847:
               label: Deduccions per inversió a Canàries - Inversions a La Palma, La
                 Gomera i El Hierro 2024 - Pendent d'aplicació en períodes futurs [01847]
+            01872:
+              label: Reserva de nivellació - Dotació de la reserva - Exercici de generació
+                2023 - Import de la reserva a dotar [01872]
             01877:
               label: Tributació conjunta Estat i Adm. forals - Abonament de deduccions
                 per produccions estrangeres a Canàries - Araba/Àlaba [01877]
@@ -22380,6 +23276,9 @@ modelo:
                 en territ. Àfrica Occidental i despeses de propaganda i publicitat
                 (art. 27 bis Llei 19/1994) (TAP) - Pendent d'aplicació en períodes
                 futurs
+            01913:
+              label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
+                la Gomera i el Ferro 2023 - Aplicat en aquesta liquidació [01913]
             01918:
               label: Deduccions per incentivar determ. activitats - 2018 Inversions
                 en territ. Àfrica Occidental i despeses de propaganda i publicitat
@@ -22427,6 +23326,12 @@ modelo:
             '02031':
               label: Open Barcelona-Trofeo Conde de Godó (OB). Pendent d'aplicació
                 en períodes futurs
+            '02077':
+              label: Deduccions per inversió a Canàries - Actius fixos 2023 - Pendent
+                d'aplicació en períodes futurs [02077]
+            02078:
+              label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
+                la Gomera i el Ferro 2023 - Deducció pendent/generada [02078]
             02079:
               label: 'Informació addicional per al càlcul de límits de deduccions
                 - 2025: Finançador: deducció per produccions cinematogràfiques espanyoles
@@ -22727,6 +23632,44 @@ modelo:
               label: Amortització de l'immobilitzat intangible i fons de comerç (art.
                 12.2 LIS) i amortització de la DT 13a.1 LIS - Disminució - Correccions
                 de l'exercici - Temporànies (amb origen en exercicis anteriors)
+            '02621':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Augment - Correccions de l'exercici - Permanents
+                [02621]
+            '02622':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Augment - Correccions de l'exercici - Temporànies
+                (amb origen en l'exercici) [02622]
+            '02623':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Augment - Correccions de l'exercici - Temporànies
+                (amb origen en exercicis anteriors) [02623]
+            '02624':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Augment - Saldo pendent a principi d'exercici
+                [02624]
+            '02625':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Augment - Saldo pendent a fi d'exercici [02625]
+            '02626':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Disminució - Correccions de l'exercici - Permanents
+                [02626]
+            '02627':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Disminució - Correccions de l'exercici - Temporànies
+                (amb origen en l'exercici) [02627]
+            02628:
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Disminució - Correccions de l'exercici - Temporànies
+                (amb origen en exercicis anteriors) [02628]
+            02629:
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Disminució - Saldo pendent a principi d'exercici
+                [02629]
+            '02630':
+              label: Altres supòsits de llibertat d'amortització (art. 12.3 a) i d)
+                i DA 16a i 17a LIS) - Disminució - Saldo pendent a fi d'exercici [02630]
             '02662':
               label: Pèrdues per deteriorament de l'art. 13.1 LIS i provisions i despeses
                 (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
@@ -24173,6 +25116,8 @@ modelo:
               label: Participacions directes en altres entitats. Correccions valoratives.
                 e) Ajust per la disminució de valor originada pel criteri de valor
                 raonable (art. 15.l LIS)
+            x-8h834c1g60o32ehg60o32co:
+              label: Agrupació d'interès econòmic espanyola [00013]
             x-8h834c1g60o32ehg60o36d8:
               label: Règim especial de fusions, escissions, aportacions d'actius i
                 bescanvis de valors (cap. VII, tít. VII) [00035]
@@ -24187,6 +25132,8 @@ modelo:
             x-8h834c1g60o32ehg60o3gcg:
               label: Societat matriu última d'un grup multinacional o grup nacional
                 de gran magnitud [00082]
+            x-8h834c1g60o32ehg60o3gco:
+              label: Tipus de gravamen reduït per a empresa emergent [00083]
             x-8h834c1g60o3gehg60rjidg:
               label: Compte de pèrdues i guanys (II) - Operacions continuades - Interessos
                 i retorn obligatori de les aportacions al capital social i d'altres
@@ -24319,12 +25266,43 @@ modelo:
             x-8h834c1g60ojcehg64qj4cg:
               label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2024
                 - Aplicat en aquesta liquidació [01522]
+            x-8h834c1g60ojcghq60o3edhm:
+              label: Deduccions per inversió a Canàries - Actius fixos a La Palma,
+                la Gomera i el Ferro 2023 - Pendent d'aplicació en períodes futurs
+                [00766]
+            x-8h834c1g60ojcghq60o3edhn:
+              label: Deduccions per inversió a Canàries - Inversions Canàries 2023
+                - Deducció pendent/generada [00767]
+            x-8h834c1g60ojcghq60o3edho:
+              label: Deduccions per inversió a Canàries - Inversions Canàries 2023
+                - Aplicat en aquesta liquidació [00768]
+            x-8h834c1g60ojcghq60o3edhp:
+              label: Deduccions per inversió a Canàries - Inversions Canàries 2023
+                - Pendent d'aplicació en períodes futurs [00769]
+            x-8h834c1g60ojcghq60o3edpg:
+              label: Deduccions per inversió a Canàries - Inversions a La Palma, La
+                Gomera i El Hierro 2023 - Deducció pendent/generada [00770]
+            x-8h834c1g60ojcghq60o3edph:
+              label: Deduccions per inversió a Canàries - Inversions a La Palma, La
+                Gomera i El Hierro 2023 - Aplicat en aquesta liquidació [00771]
             x-8h834c1g60ojgghq60o36c9l:
               label: Deduccions per produccions cinematogràfiques estrangeres (art.
                 36.2 LIS) - 2025(*) - Deducció pendent/generada [00315]
             x-8h834c1g60ojgghq60o36c9m:
               label: Deduccions per produccions cinematogràfiques estrangeres (art.
                 36.2 LIS) - 2025(*) - Aplicat en aquesta liquidació [00316]
+            x-8h834c1g60ojgghq60p32d1g:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2023 - Deducció pendent/generada [02140]
+            x-8h834c1g60ojgghq60p32d1h:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2023 - Aplicat en aquesta liquidació [02141]
+            x-8h834c1g60ojgghq60p32d1i:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2023 - Import abonat per insuficiència de quota [02142]
+            x-8h834c1g60ojgghq60p32d1j:
+              label: Deduccions per produccions cinematogràfiques estrangeres (art.
+                36.2 LIS) - 2023 - Pendent d'aplicació en períodes futurs [02143]
             x-8h834c1g60p30ghq60p36c1h:
               label: Detall de correccions del resultat de pèrdues i guanys - Correccions
                 al resultat del compte de pèrdues i guanys de l'exercici - Correcció

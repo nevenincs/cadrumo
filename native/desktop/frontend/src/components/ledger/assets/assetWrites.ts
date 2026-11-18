@@ -53,9 +53,9 @@ export const describeRequest = (
     name: textOf(values.name) ?? "",
     serial_number: textOf(values.serial_number),
     description: textOf(values.description),
-    document_kind: tokenOf<NonNullable<ActivityAssetDescriptorFacts["document_kind"]>>(
-      values.document_kind,
-    ),
+    document_kind: tokenOf<
+      NonNullable<ActivityAssetDescriptorFacts["document_kind"]>
+    >(values.document_kind),
     document_number: textOf(values.document_number),
     supplier_name: textOf(values.supplier_name),
     supplier_tax_id: textOf(values.supplier_tax_id),
@@ -78,7 +78,9 @@ export function purchaseValues(
 }
 
 /** The movement a revision names as its acquisition, if it names one. */
-export function purchaseOf(revision: ActivityAssetRevisionSnapshot): string | null {
+export function purchaseOf(
+  revision: ActivityAssetRevisionSnapshot,
+): string | null {
   const acquisition = revision.acquisition;
   if (
     typeof acquisition !== "object" ||
@@ -117,9 +119,13 @@ export function purchaseInvoiceFacts(
 /** What a baja states, from the form: the last day of service, the reason, the
  * amounts and the optional facts. Null while a fact every baja states is
  * missing: none is read as zero. The backend judges the rest by the reason. */
-export function disposalOf(values: FormValues): ActivityAssetDisposalSnapshot | null {
+export function disposalOf(
+  values: FormValues,
+): ActivityAssetDisposalSnapshot | null {
   const date = textOf(values.date);
-  const reason = tokenOf<ActivityAssetDisposalSnapshot["reason"]>(values.reason);
+  const reason = tokenOf<ActivityAssetDisposalSnapshot["reason"]>(
+    values.reason,
+  );
   const proceeds = amountOf(values.proceeds);
   const costs = amountOf(values.transmission_costs);
   if (date === null || reason === null || proceeds === null || costs === null)
@@ -131,7 +137,9 @@ export function disposalOf(values: FormValues): ActivityAssetDisposalSnapshot | 
     transmission_costs: costs,
     market_value: amountOf(values.market_value),
     prior_free_depreciation_regime: tokenOf<
-      NonNullable<ActivityAssetDisposalSnapshot["prior_free_depreciation_regime"]>
+      NonNullable<
+        ActivityAssetDisposalSnapshot["prior_free_depreciation_regime"]
+      >
     >(values.prior_free_depreciation_regime),
     later_affectation_on: textOf(values.later_affectation_on),
   };

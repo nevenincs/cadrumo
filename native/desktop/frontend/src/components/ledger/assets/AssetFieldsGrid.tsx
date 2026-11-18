@@ -23,7 +23,11 @@ const NO_NOTES: Readonly<Record<string, string | null>> = {};
 const NO_KEYS: ReadonlySet<string> = new Set();
 /** What the registry allows a table class, as one line: the corridor of its
  * coefficient and its maximum period. */
-const corridorText = (t: Translate, locale: string, group: ActivityAssetTableGroup) => {
+const corridorText = (
+  t: Translate,
+  locale: string,
+  group: ActivityAssetTableGroup,
+) => {
   const text = ASSET_KEYS.plan.limits;
   return facts(t, [
     labelled(
