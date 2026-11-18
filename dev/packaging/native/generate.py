@@ -231,9 +231,15 @@ def _entrypoint_names(layout: dict[str, object]) -> list[str]:
     return entrypoints
 
 
-def _build_contract(root: Path, layout: dict[str, Any], channel: str) -> tuple[dict[str, Any], ApplicationEnvironment]:
+def _build_contract(
+    root: Path, layout: dict[str, Any], channel: str, *, provisioned: bool
+) -> tuple[dict[str, Any], ApplicationEnvironment]:
     """Resolve authored build inputs and assemble the shared generated contract."""
-    declaration = application_environment.load_for_build(root)
+    declaration = (
+        application_environment.load_for_build(root)
+        if provisioned
+        else application_environment.load_unprovisioned(root)
+    )
     launch = environment_compile.compile_section(declaration, layout)
     release = identity(distribution_target(layout), channel, project_file=root / "pyproject.toml")
     build_channel = release.channel
@@ -342,15 +348,17 @@ def generate(
     *,
     target: str | None = None,
     manager_strings: Path | None = None,
+    provisioned: bool = True,
 ) -> None:
     """Write C, Rust and inspection projections from their authored owners in one run.
 
     ``channel`` is the release channel the identity projection validated for this build.
     ``manager_strings`` is a :func:`project_manager_strings` output; without it the
-    strings are projected in this process.
+    strings are projected in this process. An unprovisioned contract binds no
+    package-fixed value, so no package may embed it; host unit tests and lints use it.
     """
     layout = load_layout(target, root=root)
-    contract, declaration = _build_contract(root, layout, channel)
+    contract, declaration = _build_contract(root, layout, channel, provisioned=provisioned)
     components, temporary = declaration.components, declaration.temporary_member
     version = contract["python"]
     launch = contract["application_environment"]
@@ -417,6 +425,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--project-manager-strings", action="store_true", help="write only the manager strings projection"
     )
+    parser.add_argument(
+        "--unprovisioned", action="store_true", help="bind no package-fixed value: a contract no package embeds"
+    )
     args = parser.parse_args()
     record_discovered_inputs()
     if args.project_manager_strings:
@@ -428,4 +439,5 @@ if __name__ == "__main__":
             args.channel,
             target=args.target,
             manager_strings=args.manager_strings,
+            provisioned=not args.unprovisioned,
         )
