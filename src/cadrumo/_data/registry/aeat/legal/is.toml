@@ -3031,6 +3031,20 @@ applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_22/DR200-2022.xls"
 review_status = "agent_reviewed"
 
+[sources."boe-2023-12416-modelo-200-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2023-12416-modelos-200-220.pdf"
+sha256 = "eeb7c42e38c8adf626e4348646892fd5aaee120b721ad19902cde9e923e3d733"
+bytes = 5980787
+retrieved_at = 2026-11-18
+published_at = 2023-05-29
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/boe/dias/2023/05/29/pdfs/BOE-A-2023-12416.pdf"
+review_status = "pending_review"
+
 [sources."aeat-dr-200-2023"]
 evidence_tier = "layout_authority"
 authority = "aeat"

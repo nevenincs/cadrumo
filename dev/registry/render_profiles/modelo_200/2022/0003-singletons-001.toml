@@ -246,7 +246,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 24. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 24. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox 'Si realiza actividades agrícolas y/o ganaderas marque', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -270,7 +270,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 27. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 27. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox 'Autoliquidación complementaria', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -318,7 +318,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 29. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00001] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 29. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00001] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00001 Entidad sin ánimo de lucro acogida régimen fiscal Título', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -342,7 +342,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 30. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00002] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 30. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00002] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00002 Entidad parcialmente exenta', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -366,7 +366,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 31. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00080] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 31. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00080] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00080 Uniones, federaciones y confederaciones de cooperativas', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -390,7 +390,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 32. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00003] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 32. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00003] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00003 Sociedad de inversión de capital variable o fondo de', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -414,7 +414,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 33. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00008] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 33. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00008] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00008 Sociedad de inversión de capital variable que no cumpla', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -438,7 +438,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 34. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00004] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 34. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00004] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00004 Sociedad de inversión inmobiliaria o fondo de inversión', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -462,7 +462,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 35. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00005] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 35. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00005] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00005 Comunidades titulares de montes vecinales en mano común', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -486,7 +486,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 36. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00011] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 36. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00011] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00011 Entidad de tenencia de valores extranjeros', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -510,7 +510,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 37. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00013] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 37. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00013] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00013 Agrupación de interés económico española', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -534,7 +534,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 38. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00014] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 38. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00014] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00014 Agrupación europea de interés económico', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -558,7 +558,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 39. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00017] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 39. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00017] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00017 Cooperativa protegida', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -582,7 +582,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 40. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00018] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 40. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00018] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00018 Cooperativa especialmente protegida', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -606,7 +606,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 41. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00019] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 41. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00019] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00019 Resto cooperativas', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -630,7 +630,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 42. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00021] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 42. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00021] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00021 Establecimiento permanente', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -654,7 +654,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 43. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00023] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 43. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00023] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00023 Gran empresa', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -678,7 +678,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 44. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00024] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 44. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00024] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00024 Entidad de crédito', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -702,7 +702,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 45. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00025] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 45. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00025] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00025 Entidad aseguradora', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -726,7 +726,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 46. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00031] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 46. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00031] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00031 Entidades de capital-riesgo', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -750,7 +750,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 47. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00032] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 47. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00032] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00032 Sociedad de desarrollo industrial regional', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -774,7 +774,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 48. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00036] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 48. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00036] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00036 Sociedad de garantía recíproca o de reafianzamiento', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -798,7 +798,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 49. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00048] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 49. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00048] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00048 Fondo de pensiones Real Decreto Legislativo 1/2002, de', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -822,7 +822,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 50. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00058] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 50. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00058] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00058 Mutua de seguros o Mutualidad de previsión social', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -846,7 +846,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 51. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00060] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 51. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00060] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00060 Fondos o activos de titulización', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -870,7 +870,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 52. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00066] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 52. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00066] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00066 Entidad patrimonial', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -894,7 +894,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 53. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00078] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 53. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00078] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00078 Diócesis, provincia religiosa o entidad eclesiástica que', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -918,7 +918,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 54. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00056] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 54. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00056] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00056 Entidad en régimen de atribución de rentas con tributación', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -942,7 +942,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 55. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00083] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 55. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00083] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00083 Empresa emergente', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -966,7 +966,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 56. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00006] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 56. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00006] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00006 Incentivos entidad de reducida dimensión', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -990,7 +990,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 80. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00016] in its description. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 80. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. DR200-2022 prints this field with box [00016] in its description. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox '00016 Opción art. 46.2 LIS', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -1014,7 +1014,7 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 106. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 106. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox 'INCN de al menos 20 millones de euros pero inferior a 60 millones de euros', so 1 writes a marked box and 0 an unmarked one."
 
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
@@ -1038,4 +1038,4 @@ authority_kind = "official_source"
 source_sheet = "DP200001"
 source_cell = "G104"
 expected_normalized_statement = "\"0\" o \"1\""
-justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 107. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. No anexo page of Orden HFP/523/2023 is cited: its anexo I is not in the corpus."
+justification = "Sibling-cell analogy, not own-cell text: the DR200-2022 design states no value in the own cells of field DP200001 row 107. Its sibling cell DP200001!G104, the SOCIMIS régimen fiscal de entrada-salida indicator of the same design, states \"0\" o \"1\" for a one-position Num indicator of the same field kind. BOE-A-2023-12416 (Orden HFP/523/2023) anexo I, PDF page 14, BOE Pág. 72933 prints this field as the checkbox 'INCN de al menos 60 millones de euros', so 1 writes a marked box and 0 an unmarked one."
