@@ -1,37 +1,4 @@
 [[revisions."2024".casillas]]
-id = "DP200001:00035"
-continuidad_id = "is-regimen-especial-fusiones-escisiones-aportaciones-activos-y-canjes-valores-cap-vii-tit-vii"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:91 (DP200001 field 61): Régimen especial fusiones, escisiones, aportaciones activos y canjes valores (Cap.VII, Tit. VII) [00035]. aeat-dr-200-2023 prints box [00035] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:88 (DP200001 field 58) as 'Aplicación rég.especial fusiones, escisiones, aportaciones activos y canjes valores (Cap.VII, Tit. VII) [00035]', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "00035"
-segmento = "DP200001"
-section = ["regimen_especial_fusiones_escisiones_aportaciones"]
-data_type = "decimal"
-semantic_role = "is_identificacion_regimen_flag"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "DP200001:00044"
-continuidad_id = "is-contribuyente-que-genera-deducciones-del-art-36-1-y-36-3-lis-con-financiacion-realizada-por-otros-contribuyentes"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:128 (DP200001 field 98): Contribuyente que genera deducciones del art. 36.1 y 36.3 LIS con financiación realizada por otros contribuyentes [00044]. aeat-dr-200-2023 prints box [00044] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:124 (DP200001 field 94) as 'Contribuyente que aplica deducciones del art. 36.1 y 36.3 LIS con financiación realizada por otros contribuyentes [00044]', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "00044"
-segmento = "DP200001"
-section = ["contribuyente_que_genera_deducciones_del_art_36_1"]
-data_type = "decimal"
-semantic_role = "is_identificacion_regimen_flag"
-legal_refs = ["ley-27-2014:art-36"]
-[[revisions."2024".casillas]]
-id = "DP200001:00059"
-continuidad_id = "is-opcion-art-39-2-lis"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:121 (DP200001 field 91): Opción art. 39.2 LIS [00059]. aeat-dr-200-2023 prints box [00059] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:118 (DP200001 field 88) as 'Opción art. 39.2 y 39.3 LIS [00059]', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "00059"
-segmento = "DP200001"
-section = ["opcion_art_39_2_lis"]
-data_type = "decimal"
-semantic_role = "is_identificacion_opcion_flag"
-legal_refs = ["ley-27-2014:art-39"]
-[[revisions."2024".casillas]]
 id = "DP200001:00090"
 segmento = "DP200001"
 continuidad_id = "is-opcion-art-39-3-lis"
@@ -665,15 +632,6 @@ section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana
 semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
-id = "01073"
-continuidad_id = "01073"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2939 (DP200018C field 132): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada .... aeat-dr-200-2023 prints box [01073] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2923 (DP200018C field 133) as 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada ...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01073"
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
-semantic_role = "is_deduccion_donativos_prioritarias"
-legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-[[revisions."2024".casillas]]
 id = "01184"
 continuidad_id = "is-correccion-libertad-amortizacion-vehiculos-saldo-inicial-neto"
 continuidad_origin = "new_on_form"
@@ -710,78 +668,6 @@ section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacio
 semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_final_cumplido_condiciones"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
-id = "01249"
-continuidad_id = "01249"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3239 (DP200020 field 15): Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - i) Límite a la deducción de gastos financieros netos (= 30%* [i1-i2-i3-.... aeat-dr-200-2023 prints box [01249] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3200 (DP200020 field 15) as 'Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - i) Límite a la deducción de gastos financieros netos (= 30%* [i1-i2-i3-...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01249"
-section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
-semantic_role = "is_gastos_financieros_limite_art16_calculo"
-legal_refs = ["ley-27-2014:art-16"]
-[[revisions."2024".casillas]]
-id = "01256"
-continuidad_id = "01256"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3248 (DP200020 field 24): Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - l1) Gastos financieros netos del período impositivo deducibles ([h=l1+l.... aeat-dr-200-2023 prints box [01256] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3207 (DP200020 field 22) as 'Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - k1) Gastos financieros netos del período impositivo deducibles (≤ [i+j]...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01256"
-section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
-semantic_role = "is_gastos_financieros_limite_art16_calculo"
-legal_refs = ["ley-27-2014:art-16"]
-[[revisions."2024".casillas]]
-id = "01257"
-continuidad_id = "01257"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3249 (DP200020 field 25): Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - l2) Gastos financieros netos del período impositivo no deducibles (=[h .... aeat-dr-200-2023 prints box [01257] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3208 (DP200020 field 23) as 'Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - k2) Gastos financieros netos del período impositivo no deducibles (=[h ...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01257"
-section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
-semantic_role = "is_gastos_financieros_limite_art16_calculo"
-legal_refs = ["ley-27-2014:art-16"]
-[[revisions."2024".casillas]]
-id = "01258"
-continuidad_id = "01258"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3250 (DP200020 field 26): Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - m) Gastos financieros pendientes de deducir en períodos impositivos ant.... aeat-dr-200-2023 prints box [01258] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3209 (DP200020 field 24) as 'Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - l) Gastos financieros pendientes de deducir en períodos impositivos ant...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01258"
-section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
-semantic_role = "is_gastos_financieros_limite_art16_calculo"
-legal_refs = ["ley-27-2014:art-16"]
-[[revisions."2024".casillas]]
-id = "01259"
-continuidad_id = "01259"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3251 (DP200020 field 27): Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - n) Gastos financieros pendientes de deducir de períodos impositivos ant.... aeat-dr-200-2023 prints box [01259] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3210 (DP200020 field 25) as 'Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - m) Gastos financieros pendientes de deducir de períodos impositivos ant...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01259"
-section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
-semantic_role = "is_gastos_financieros_limite_art16_calculo"
-legal_refs = ["ley-27-2014:art-16"]
-[[revisions."2024".casillas]]
-id = "01260"
-continuidad_id = "01260"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3252 (DP200020 field 28): Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - Total gastos financieros del período impositivo no deducibles (= [c2+l2.... aeat-dr-200-2023 prints box [01260] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3211 (DP200020 field 26) as 'Limitación deducibilidad gastos financieros - Límite art. 16.1 y 16.2 LIS - Total gastos financieros del período impositivo no deducibles (= [c2+k2...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01260"
-section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
-semantic_role = "is_gastos_financieros_limite_art16_calculo"
-legal_refs = ["ley-27-2014:art-16"]
-[[revisions."2024".casillas]]
-id = "01331"
-continuidad_id = "is-cooperativa-cuota-integra-previa"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1508 (DP200014 field 43): Liquidación III - Base imponible - Sólo sociedades cooperativas - Cuota íntegra previa después de la reserva de nivelación [01331]. aeat-dr-200-2023 prints box [01331] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1450 (DP200014 field 41) as 'Liquidación III - Base imponible - Sólo sociedades cooperativas - Cuota íntegra previa después de la reserva de nivelación - Disminuciones [01331]', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01331"
-section = ["liquidacion_iii", "base_imponible"]
-semantic_role = "is_cooperativa_cuota_integra_previa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
-[[revisions."2024".casillas]]
-id = "01510"
-continuidad_id = "is-cooperativa-reversion-deterioro"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1503 (DP200014 field 38): Liquidación III - Base imponible - Sólo sociedades cooperativas - Rentas correspondientes a la reversión de deterioros cooperativas (a nivel cuota).... aeat-dr-200-2023 prints box [01510] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1446 (DP200014 field 37) as 'Liquidación III - Base imponible - Sólo sociedades cooperativas - Rentas correspondientes a la reversión de deterioros cooperativas (a nivel cuota)...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01510"
-section = ["liquidacion_iii", "base_imponible"]
-semantic_role = "is_cooperativa_reversion_deterioro"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
 id = "01574"
 continuidad_id = "01574"
 continuidad_origin = "new_on_form"
@@ -800,66 +686,6 @@ section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana
 semantic_role = "is_correcciones_disminuciones"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
-id = "01576"
-continuidad_id = "01576"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1494 (DP200014 field 29): Liquidación III - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Parte de la base imponible que proceda de la realiz.... aeat-dr-200-2023 prints box [01576] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1437 (DP200014 field 28) as 'Liquidación III - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Parte de la base imponible que proceda de la realiz...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01576"
-section = ["liquidacion_iii", "base_imponible"]
-semantic_role = "is_base_imponible_zec_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01577"
-continuidad_id = "is-naviera-base-imponible-foral"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1495 (DP200014 field 30): Liquidación III - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Parte de la base imponible que proceda de la realiz.... aeat-dr-200-2023 prints box [01577] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1438 (DP200014 field 29) as 'Liquidación III - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Parte de la base imponible que proceda de la realiz...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01577"
-section = ["liquidacion_iii", "base_imponible"]
-semantic_role = "is_naviera_base_imponible_foral"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01578"
-continuidad_id = "01578"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1610 (DP200014B field 70): Liquidación IV - Rectificativa - Resultado a ingresar como consecuencia de la tramitación de autoliquidaciones anteriores o liquidaciones administr.... aeat-dr-200-2023 prints no field with this caption. Its box [01578] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1549 (DP200014B field 67): Liquidación IV - Líquido a ingresar o a devolver - Complementaria: Resultados a ingresar procedentes de autoliquidaci.... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01578"
-rotating_year_offset = 0
-section = ["liquidacion_iv", "rectificativa"]
-semantic_role = "is_liquidacion_iv_resultado_misc"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "DP200014B:01583"
-continuidad_id = "01583"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1611 (DP200014B field 71): Liquidación IV - Rectificativa - Resultado a ingresar como consecuencia de la tramitación de autoliquidaciones anteriores o liquidaciones administr.... aeat-dr-200-2023 prints no field with this caption. Its box [01583] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1550 (DP200014B field 68): Liquidación IV - Líquido a ingresar o a devolver - Complementaria: Resultados a ingresar procedentes de autoliquidaci...; 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4443 (DP200026 field 82): Tributación conjunta Estado y Adm.Forales - Complementaria: Resultados a ingresar autoliq. anteriores 2023 - Total [0.... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01583"
-segmento = "DP200014B"
-rotating_year_offset = 0
-section = ["liquidacion_iv", "rectificativa"]
-semantic_role = "is_liquidacion_iv_resultado_misc"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01584"
-continuidad_id = "is-liquidacion-iv-rectificacion-importe"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1612 (DP200014B field 72): Liquidación IV - Rectificativa - Devolución acordada por la Agencia Tributaria como consecuencia de la tramitación de autoliquidaciones anteriores .... aeat-dr-200-2023 prints no field with this caption. Its box [01584] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1552 (DP200014B field 69): Liquidación IV - Líquido a ingresar o a devolver - Complementaria: Devoluciones acordadas procedentes de autoliquidac.... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01584"
-rotating_year_offset = 0
-section = ["liquidacion_iv", "rectificativa"]
-semantic_role = "is_liquidacion_iv_rectificacion_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "DP200014B:01585"
-continuidad_id = "01585"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1613 (DP200014B field 73): Liquidación IV - Rectificativa - Devolución acordada por la Agencia Tributaria como consecuencia de la tramitación de autoliquidaciones anteriores .... aeat-dr-200-2023 prints no field with this caption. Its box [01585] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1554 (DP200014B field 70): Liquidación IV - Líquido a ingresar o a devolver - Complementaria: Devoluciones acordadas procedentes de autoliquidac...; 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4448 (DP200026 field 87): Tributación conjunta Estado y Adm.Forales - Complementaria: Devoluciones acordadas autoliq. anteriores 2023 - Total [.... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01585"
-segmento = "DP200014B"
-rotating_year_offset = 0
-section = ["liquidacion_iv", "rectificativa"]
-semantic_role = "is_liquidacion_iv_rectificacion_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
 id = "01602"
 continuidad_id = "is-correccion-deterioro-participaciones-dt16-all-temporaria-ejercicio-aumento"
 continuidad_origin = "new_on_form"
@@ -867,86 +693,6 @@ continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10
 number = "01602"
 section = ["ajustes_por_deterioro_de_valores_repr_de_partic_en", "aumento"]
 semantic_role = "is_correccion_deterioro_participaciones_dt16_all_temporaria_ejercicio_aumento"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01607"
-continuidad_id = "is-tributacion-conjunta-estado-forales-rectificacion-importe"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4506 (DP200026 field 78): Tributación conjunta Estado y Adm.Forales - Rectificativa: Resultado a ingresar como consecuencia de la tramitación de autoliquidaciones anteriores.... aeat-dr-200-2023 prints no field with this caption. Its box [01607] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4439 (DP200026 field 78): Tributación conjunta Estado y Adm.Forales - Complementaria: Resultados a ingresar autoliq. anteriores 2023 - Álava [0.... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01607"
-rotating_year_offset = 0
-section = ["tributacion_conjunta_estado_y_adm_forales", "rectificativa_resultado_a_ingresar_como_consecuenc"]
-semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01608"
-continuidad_id = "01608"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4507 (DP200026 field 79): Tributación conjunta Estado y Adm.Forales - Rectificativa: Resultado a ingresar como consecuencia de la tramitación de autoliquidaciones anteriores.... aeat-dr-200-2023 prints no field with this caption. Its box [01608] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4440 (DP200026 field 79): Tributación conjunta Estado y Adm.Forales - Complementaria: Resultados a ingresar autoliq. anteriores 2023 - Guipúzco.... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01608"
-rotating_year_offset = 0
-section = ["tributacion_conjunta_estado_y_adm_forales", "rectificativa_resultado_a_ingresar_como_consecuenc"]
-semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01609"
-continuidad_id = "01609"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4508 (DP200026 field 80): Tributación conjunta Estado y Adm.Forales - Rectificativa: Resultado a ingresar como consecuencia de la tramitación de autoliquidaciones anteriores.... aeat-dr-200-2023 prints no field with this caption. Its box [01609] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4441 (DP200026 field 80): Tributación conjunta Estado y Adm.Forales - Complementaria: Resultados a ingresar autoliq. anteriores 2023 - Vizcaya .... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01609"
-rotating_year_offset = 0
-section = ["tributacion_conjunta_estado_y_adm_forales", "rectificativa_resultado_a_ingresar_como_consecuenc"]
-semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01610"
-continuidad_id = "01610"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4509 (DP200026 field 81): Tributación conjunta Estado y Adm.Forales - Rectificativa: Resultado a ingresar como consecuencia de la tramitación de autoliquidaciones anteriores.... aeat-dr-200-2023 prints no field with this caption. Its box [01610] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4442 (DP200026 field 81): Tributación conjunta Estado y Adm.Forales - Complementaria: Resultados a ingresar autoliq. anteriores 2023 - Navarra .... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01610"
-rotating_year_offset = 0
-section = ["tributacion_conjunta_estado_y_adm_forales", "rectificativa_resultado_a_ingresar_como_consecuenc"]
-semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01611"
-continuidad_id = "01611"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4511 (DP200026 field 83): Tributación conjunta Estado y Adm.Forales - Rectificativa: Devolución acordada por la Agencia Tributaria como consecuencia de la tramitación de aut.... aeat-dr-200-2023 prints no field with this caption. Its box [01611] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4444 (DP200026 field 83): Tributación conjunta Estado y Adm.Forales - Complementaria: Devoluciones acordadas autoliq. anteriores 2023 - Álava [.... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01611"
-rotating_year_offset = 0
-section = ["tributacion_conjunta_estado_y_adm_forales", "rectificativa_devolucion_acordada_por_la_agencia_t"]
-semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01612"
-continuidad_id = "01612"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4512 (DP200026 field 84): Tributación conjunta Estado y Adm.Forales - Rectificativa: Devolución acordada por la Agencia Tributaria como consecuencia de la tramitación de aut.... aeat-dr-200-2023 prints no field with this caption. Its box [01612] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4445 (DP200026 field 84): Tributación conjunta Estado y Adm.Forales - Complementaria: Devoluciones acordadas autoliq. anteriores 2023 - Guipúzc.... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01612"
-rotating_year_offset = 0
-section = ["tributacion_conjunta_estado_y_adm_forales", "rectificativa_devolucion_acordada_por_la_agencia_t"]
-semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01613"
-continuidad_id = "01613"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4513 (DP200026 field 85): Tributación conjunta Estado y Adm.Forales - Rectificativa: Devolución acordada por la Agencia Tributaria como consecuencia de la tramitación de aut.... aeat-dr-200-2023 prints no field with this caption. Its box [01613] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4446 (DP200026 field 85): Tributación conjunta Estado y Adm.Forales - Complementaria: Devoluciones acordadas autoliq. anteriores 2023 - Vizcaya.... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01613"
-rotating_year_offset = 0
-section = ["tributacion_conjunta_estado_y_adm_forales", "rectificativa_devolucion_acordada_por_la_agencia_t"]
-semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01623"
-continuidad_id = "01623"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4514 (DP200026 field 86): Tributación conjunta Estado y Adm.Forales - Rectificativa: Devolución acordada por la Agencia Tributaria como consecuencia de la tramitación de aut.... aeat-dr-200-2023 prints no field with this caption. Its box [01623] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4447 (DP200026 field 86): Tributación conjunta Estado y Adm.Forales - Complementaria: Devoluciones acordadas autoliq. anteriores 2023 - Navarra.... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01623"
-rotating_year_offset = 0
-section = ["tributacion_conjunta_estado_y_adm_forales", "rectificativa_devolucion_acordada_por_la_agencia_t"]
-semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "01626"
@@ -977,118 +723,6 @@ number = "01628"
 rotating_year_offset = 0
 section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
 semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_final_no_cumplido_condiciones"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01650"
-continuidad_id = "01650"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4541 (DP200026 field 113): Tributación conjunta Estado y Adm.Forales - Rectificativa: Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS proced.... aeat-dr-200-2023 prints no field with this caption. Its box [01650] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4474 (DP200026 field 113): Tributación conjunta Estado y Adm.Forales - Complementaria: Resultado autoliq. incluido el 1º fraccionamiento procede.... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01650"
-rotating_year_offset = 0
-section = ["tributacion_conjunta_estado_y_adm_forales", "rectificativa_resultado_de_la_autoliquidacion_incl"]
-semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01651"
-continuidad_id = "01651"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4542 (DP200026 field 114): Tributación conjunta Estado y Adm.Forales - Rectificativa: Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS proced.... aeat-dr-200-2023 prints no field with this caption. Its box [01651] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4475 (DP200026 field 114): Tributación conjunta Estado y Adm.Forales - Complementaria: Resultado autoliq. incluido el 1º fraccionamiento procede.... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01651"
-rotating_year_offset = 0
-section = ["tributacion_conjunta_estado_y_adm_forales", "rectificativa_resultado_de_la_autoliquidacion_incl"]
-semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01652"
-continuidad_id = "01652"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4543 (DP200026 field 115): Tributación conjunta Estado y Adm.Forales - Rectificativa: Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS proced.... aeat-dr-200-2023 prints no field with this caption. Its box [01652] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4476 (DP200026 field 115): Tributación conjunta Estado y Adm.Forales - Complementaria: Resultado autoliq. incluido el 1º fraccionamiento procede.... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01652"
-rotating_year_offset = 0
-section = ["tributacion_conjunta_estado_y_adm_forales", "rectificativa_resultado_de_la_autoliquidacion_incl"]
-semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01653"
-continuidad_id = "01653"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4544 (DP200026 field 116): Tributación conjunta Estado y Adm.Forales - Rectificativa: Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS proced.... aeat-dr-200-2023 prints no field with this caption. Its box [01653] is a different field: 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4477 (DP200026 field 116): Tributación conjunta Estado y Adm.Forales - Complementaria: Resultado autoliq. incluido el 1º fraccionamiento procede.... The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01653"
-rotating_year_offset = 0
-section = ["tributacion_conjunta_estado_y_adm_forales", "rectificativa_resultado_de_la_autoliquidacion_incl"]
-semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01654"
-continuidad_id = "01654"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4546 (DP200026 field 118): Tributación conjunta Estado y Adm.Forales - Resultado incluido en el 1er fraccionamiento de art. 19.1 LIS - Araba/Álava [01654]. aeat-dr-200-2023 prints box [01654] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4479 (DP200026 field 118) as 'Tributación conjunta Estado y Adm.Forales - Complementaria: Liquido a ingresar incluido el 1º fraccionamiento - Álava [01654]', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01654"
-section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_incluido_en_el_1er_fraccionamiento_de_ar"]
-semantic_role = "is_tributacion_conjunta_resultado"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01655"
-continuidad_id = "01655"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4547 (DP200026 field 119): Tributación conjunta Estado y Adm.Forales - Resultado incluido en el 1er fraccionamiento de art. 19.1 LIS - Gipuzkoa [01655]. aeat-dr-200-2023 prints box [01655] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4480 (DP200026 field 119) as 'Tributación conjunta Estado y Adm.Forales - Complementaria: Liquido a ingresar incluido el 1º fraccionamiento - Guipúzcoa [01655]', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01655"
-section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_incluido_en_el_1er_fraccionamiento_de_ar"]
-semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01656"
-continuidad_id = "01656"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4548 (DP200026 field 120): Tributación conjunta Estado y Adm.Forales - Resultado incluido en el 1er fraccionamiento de art. 19.1 LIS - Bizkaia [01656]. aeat-dr-200-2023 prints box [01656] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4481 (DP200026 field 120) as 'Tributación conjunta Estado y Adm.Forales - Complementaria: Liquido a ingresar incluido el 1º fraccionamiento - Vizcaya [01656]', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01656"
-section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_incluido_en_el_1er_fraccionamiento_de_ar"]
-semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01657"
-continuidad_id = "01657"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4549 (DP200026 field 121): Tributación conjunta Estado y Adm.Forales - Resultado incluido en el 1er fraccionamiento de art. 19.1 LIS - Navarra [01657]. aeat-dr-200-2023 prints box [01657] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4482 (DP200026 field 121) as 'Tributación conjunta Estado y Adm.Forales - Complementaria: Liquido a ingresar incluido el 1º fraccionamiento - Navarra [01657]', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01657"
-section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_incluido_en_el_1er_fraccionamiento_de_ar"]
-semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01658"
-continuidad_id = "01658"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4561 (DP200026 field 133): Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (.... aeat-dr-200-2023 prints box [01658] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4494 (DP200026 field 133) as 'Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01658"
-section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
-semantic_role = "is_conversion_aid_conjunta_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01659"
-continuidad_id = "01659"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4562 (DP200026 field 134): Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (.... aeat-dr-200-2023 prints box [01659] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4495 (DP200026 field 134) as 'Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01659"
-section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
-semantic_role = "is_conversion_aid_conjunta_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01660"
-continuidad_id = "01660"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4563 (DP200026 field 135): Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (.... aeat-dr-200-2023 prints box [01660] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4496 (DP200026 field 135) as 'Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01660"
-section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
-semantic_role = "is_conversion_aid_conjunta_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "01661"
-continuidad_id = "01661"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4564 (DP200026 field 136): Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (.... aeat-dr-200-2023 prints box [01661] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4497 (DP200026 field 136) as 'Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "01661"
-section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
-semantic_role = "is_conversion_aid_conjunta_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = '01689'
@@ -1552,26 +1186,6 @@ section = ["deducciones_i_d_i_excluidas_de_limite", "2024_innovacion_tecnologica
 semantic_role = "is_deduccion_idi_excluida_limite_innovacion"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
-id = "DP200020B:02301"
-continuidad_id = "is-correccion-detalle-correcciones-resultado-permanente-disminucion"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3360 (DP200020B field 8): Detalle correcciones resultado pérdidas y ganancias - Correcciones al resultado de la cuenta de pérdidas y ganancias del ejercicio - Corrección per.... aeat-dr-200-2023 prints box [02301] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3314 (DP200020B field 8) as 'Detalle correcciones resultado pérdidas y ganancias - Correcciones al resultado de la cuenta de pérdidas y ganancias del ejercicio - Corrección per...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "02301"
-segmento = "DP200020B"
-section = ["detalle_correcciones_resultado_perdidas_y_ganancia", "correcciones_al_resultado_de_la_cuenta_de_perdidas"]
-semantic_role = "is_correccion_detalle_correcciones_resultado_permanente_disminucion"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "DP200020B:02302"
-continuidad_id = "02302"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3361 (DP200020B field 9): Detalle correcciones resultado pérdidas y ganancias - Correcciones al resultado de la cuenta de pérdidas y ganancias del ejercicio - Corrección per.... aeat-dr-200-2023 prints box [02302] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3315 (DP200020B field 9) as 'Detalle correcciones resultado pérdidas y ganancias - Correcciones al resultado de la cuenta de pérdidas y ganancias del ejercicio - Corrección per...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "02302"
-segmento = "DP200020B"
-section = ["detalle_correcciones_resultado_perdidas_y_ganancia", "correcciones_al_resultado_de_la_cuenta_de_perdidas"]
-semantic_role = "is_correccion_detalle_correcciones_resultado_permanente_disminucion"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
 id = "02362"
 continuidad_id = "02362"
 continuidad_origin = "new_on_form"
@@ -1787,134 +1401,6 @@ section = ["deducciones_por_producciones_cinematograficas_extr", "2024"]
 semantic_role = "is_deduccion_cinematografica_extranjera_pendiente_futuros"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
-id = "02487"
-continuidad_id = "02487"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1625 (DP200014B field 85): Liquidación IV - Opción de fraccionamiento en supuestos de cambios de residencia (art. 19.1 LIS) - Rectificativa - Resultado de la autoliquidación .... aeat-dr-200-2023 prints box [02487] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1566 (DP200014B field 81) as 'Liquidación IV - Opción de fraccionamiento en supuestos de cambios de residencia (art. 19.1 LIS) - Líquido a ingresar - Complementaria: Resultado d...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "02487"
-rotating_year_offset = 0
-section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
-semantic_role = "is_fraccionamiento_cambio_residencia_resultado"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "DP200014B:02488"
-continuidad_id = "02488"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1626 (DP200014B field 86): Liquidación IV - Opción de fraccionamiento en supuestos de cambios de residencia (art. 19.1 LIS) - Rectificativa - Resultado de la autoliquidación .... aeat-dr-200-2023 prints box [02488] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1568 (DP200014B field 82) as 'Liquidación IV - Opción de fraccionamiento en supuestos de cambios de residencia (art. 19.1 LIS) - Líquido a ingresar - Complementaria: Resultado d...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "02488"
-segmento = "DP200014B"
-rotating_year_offset = 0
-section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
-semantic_role = "is_fraccionamiento_cambio_residencia_resultado"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "DP200014B:02489"
-continuidad_id = "02489"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1627 (DP200014B field 87): Liquidación IV - Opción de fraccionamiento en supuestos de cambios de residencia (art. 19.1 LIS) - Resultado incluido el 1er fraccionamiento del ar.... aeat-dr-200-2023 prints box [02489] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1570 (DP200014B field 83) as 'Liquidación IV - Opción de fraccionamiento en supuestos de cambios de residencia (art. 19.1 LIS) - Líquido a ingresar - Líquido a ingresar incluido...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "02489"
-segmento = "DP200014B"
-section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
-semantic_role = "is_fraccionamiento_cambio_residencia_resultado"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "DP200015:02490"
-continuidad_id = "is-conversion-aid-rectificativa"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1663 (DP200015 field 19): Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Resultado de.... aeat-dr-200-2023 prints box [02490] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1600 (DP200015 field 19) as 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devol...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "02490"
-segmento = "DP200015"
-section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
-semantic_role = "is_conversion_aid_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "DP200015:02491"
-continuidad_id = "02491"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1664 (DP200015 field 20): Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Resultado de.... aeat-dr-200-2023 prints box [02491] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1601 (DP200015 field 20) as 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devol...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "02491"
-segmento = "DP200015"
-section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
-semantic_role = "is_conversion_aid_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "02492"
-continuidad_id = "02492"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1665 (DP200015 field 21): Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Resultado de.... aeat-dr-200-2023 prints box [02492] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1602 (DP200015 field 21) as 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devol...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "02492"
-section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
-semantic_role = "is_conversion_aid_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "DP200015:02493"
-continuidad_id = "02493"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1666 (DP200015 field 22): Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Resultado de.... aeat-dr-200-2023 prints box [02493] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1603 (DP200015 field 22) as 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devol...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "02493"
-segmento = "DP200015"
-section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
-semantic_role = "is_conversion_aid_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "DP200015:02494"
-continuidad_id = "02494"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1667 (DP200015 field 23): Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Resultado de.... aeat-dr-200-2023 prints box [02494] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1604 (DP200015 field 23) as 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devol...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "02494"
-segmento = "DP200015"
-section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
-semantic_role = "is_conversion_aid_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = '02694'
-continuidad_id = "priority-nonrecurrent-donation-2024-subperiod-generated"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2948 (DP200018C field 141): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada .... aeat-dr-200-2023 prints box [02694] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2932 (DP200018C field 142) as 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada ...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-# AEAT aeat-dr-200-2024 DP200018C : 141 | 2308 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2024(*) - Sin reiteración de donaciones a una misma entidad - Deducción pendiente/generada [02694]. aeat-dr-200-2025 DP200018C retira el subdetalle2024(*) y conserva la fila2024 de la misma clase, ya existente en2024, con sus identificadores00369/00395/00401,00405/00422/00423,00424/00430/00431 o00432/00439/00440. No nace una identidad agregada nueva: se retira el subdetalle de periodos2024(*) sin extinguir el credito ni inventar una fusion.
-number = '02694'
-semantic_role = 'is_deduccion_donativos_prioritarias'
-section = [
-    'deduccion_donativos_entidades_sin_fines_lucro',
-    'donaciones_para_actividades_prioritarias_de_mecena',
-]
-legal_refs = [
-    'ley-49-2002:art-20',
-    'ley-49-2002:art-22',
-]
-[[revisions."2024".casillas]]
-id = '02695'
-continuidad_id = "priority-nonrecurrent-donation-2024-subperiod-applied"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2949 (DP200018C field 142): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada .... aeat-dr-200-2023 prints box [02695] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2933 (DP200018C field 143) as 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada ...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-# AEAT aeat-dr-200-2024 DP200018C : 142 | 2325 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2024(*) - Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [02695]. aeat-dr-200-2025 DP200018C retira el subdetalle2024(*) y conserva la fila2024 de la misma clase, ya existente en2024, con sus identificadores00369/00395/00401,00405/00422/00423,00424/00430/00431 o00432/00439/00440. No nace una identidad agregada nueva: se retira el subdetalle de periodos2024(*) sin extinguir el credito ni inventar una fusion.
-number = '02695'
-semantic_role = 'is_deduccion_donativos_prioritarias'
-section = [
-    'deduccion_donativos_entidades_sin_fines_lucro',
-    'donaciones_para_actividades_prioritarias_de_mecena',
-]
-legal_refs = [
-    'ley-49-2002:art-20',
-    'ley-49-2002:art-22',
-]
-[[revisions."2024".casillas]]
-id = '02696'
-continuidad_id = "priority-nonrecurrent-donation-2024-subperiod-remaining"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2950 (DP200018C field 143): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada .... aeat-dr-200-2023 prints box [02696] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2934 (DP200018C field 144) as 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada ...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-# AEAT aeat-dr-200-2024 DP200018C : 143 | 2342 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2024(*) - Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [02696]. aeat-dr-200-2025 DP200018C retira el subdetalle2024(*) y conserva la fila2024 de la misma clase, ya existente en2024, con sus identificadores00369/00395/00401,00405/00422/00423,00424/00430/00431 o00432/00439/00440. No nace una identidad agregada nueva: se retira el subdetalle de periodos2024(*) sin extinguir el credito ni inventar una fusion.
-number = '02696'
-semantic_role = 'is_deduccion_donativos_prioritarias'
-section = [
-    'deduccion_donativos_entidades_sin_fines_lucro',
-    'donaciones_para_actividades_prioritarias_de_mecena',
-]
-legal_refs = [
-    'ley-49-2002:art-20',
-    'ley-49-2002:art-22',
-]
-[[revisions."2024".casillas]]
 id = "02766"
 continuidad_id = "02766"
 continuidad_origin = "new_on_form"
@@ -2024,44 +1510,6 @@ section = ["reg_especial_reserva_inversiones_canarias", "ric_2023"]
 semantic_role = "is_reserva_inversiones_canarias_importe"
 legal_refs = ["ley-19-1994:art-27"]
 [[revisions."2024".casillas]]
-id = "DP200014B:03242"
-continuidad_id = "03242"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1628 (DP200014B field 88): Liquidación IV - Opción de fraccionamiento en supuestos de cambios de residencia (art. 19.1 LIS) - Resultado incluido el 1er fraccionamiento del ar.... aeat-dr-200-2023 prints box [03242] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1571 (DP200014B field 84) as 'Liquidación IV - Opción de fraccionamiento en supuestos de cambios de residencia (art. 19.1 LIS) - Líquido a ingresar - Líquido a ingresar incluido...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "03242"
-segmento = "DP200014B"
-section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
-semantic_role = "is_liquidacion_iv_resultado_misc"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "03243"
-continuidad_id = "03243"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1656 (DP200015 field 12): Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Rectificativ.... aeat-dr-200-2023 prints box [03243] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1593 (DP200015 field 12) as 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devol...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "03243"
-section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
-semantic_role = "is_conversion_aid_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "03244"
-continuidad_id = "03244"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1657 (DP200015 field 13): Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Rectificativ.... aeat-dr-200-2023 prints box [03244] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1594 (DP200015 field 13) as 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devol...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "03244"
-section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
-semantic_role = "is_conversion_aid_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "DP200015:03245"
-continuidad_id = "03245"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1658 (DP200015 field 14): Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Rectificativ.... aeat-dr-200-2023 prints box [03245] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1595 (DP200015 field 14) as 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devol...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "03245"
-segmento = "DP200015"
-section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
-semantic_role = "is_conversion_aid_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
 id = '03312'
 continuidad_id = "ric-2024-current-advance-materialization"
 continuidad_origin = "new_on_form"
@@ -2085,44 +1533,6 @@ number = "03313"
 section = ["reg_especial_reserva_inversiones_canarias", "ric_2024"]
 semantic_role = "is_reserva_inversiones_canarias_importe"
 legal_refs = ["ley-19-1994:art-27"]
-[[revisions."2024".casillas]]
-id = "03317"
-continuidad_id = "03317"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1659 (DP200015 field 15): Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Resultado de.... aeat-dr-200-2023 prints box [03317] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1596 (DP200015 field 15) as 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devol...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "03317"
-section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
-semantic_role = "is_conversion_aid_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "DP200015:03318"
-continuidad_id = "03318"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1660 (DP200015 field 16): Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Resultado de.... aeat-dr-200-2023 prints box [03318] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1597 (DP200015 field 16) as 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devol...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "03318"
-segmento = "DP200015"
-section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
-semantic_role = "is_conversion_aid_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "DP200015:03319"
-continuidad_id = "03319"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1661 (DP200015 field 17): Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Resultado de.... aeat-dr-200-2023 prints box [03319] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1598 (DP200015 field 17) as 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devol...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "03319"
-segmento = "DP200015"
-section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
-semantic_role = "is_conversion_aid_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "03320"
-continuidad_id = "03320"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1662 (DP200015 field 18): Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Resultado de.... aeat-dr-200-2023 prints box [03320] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1599 (DP200015 field 18) as 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devol...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "03320"
-section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
-semantic_role = "is_conversion_aid_rectificativa"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "03354"
 continuidad_id = "03354"
@@ -2149,51 +1559,6 @@ continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10
 number = "03358"
 section = ["reg_cooperativas", "detalle_compensacion_cuotas_2024_aplicado_en_esta"]
 semantic_role = "is_cooperativa_compensacion_cuotas"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "1506"
-continuidad_id = "is-participaciones-directas-d-c-eliminacion-del-deterioro-contable-incluido-en-p-y-g-art-1"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:289 (DP200002 field 95): B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Total - Correcciones valorativas - c) Eliminación del deterioro .... aeat-dr-200-2023 prints box [1506] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:264 (DP200002 field 91) as 'B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Total - Correcciones valorativas - b) Eliminación del deterioro ...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "1506"
-section = ["participaciones_directas_declarante_totales", "totales"]
-semantic_role = "is_participaciones_directas_d_c_eliminacion_del_deterioro_contable_incluido_en_p_y_g_art_1"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "1809"
-continuidad_id = "is-participaciones-directas-d-d-eliminacion-del-deterioro-de-valores-repr-de-partic-en-el"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:290 (DP200002 field 96): B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Total - Correcciones valorativas - d) Eliminación del deterioro .... aeat-dr-200-2023 prints box [1809] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:265 (DP200002 field 92) as 'B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Total - Correcciones valorativas - c) Eliminación del deterioro ...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "1809"
-section = ["participaciones_directas_declarante_totales", "totales"]
-semantic_role = "is_participaciones_directas_d_d_eliminacion_del_deterioro_de_valores_repr_de_partic_en_el"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "1810"
-continuidad_id = "is-participaciones-directas-d-e-ajuste-por-la-disminucion-de-valor-originada-por-criterio"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:291 (DP200002 field 97): B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Total - Correcciones valorativas - e) Ajuste por la disminución .... aeat-dr-200-2023 prints box [1810] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:266 (DP200002 field 93) as 'B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Total - Correcciones valorativas - d) Ajuste por la disminución ...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "1810"
-section = ["participaciones_directas_declarante_totales", "totales"]
-semantic_role = "is_participaciones_directas_d_e_ajuste_por_la_disminucion_de_valor_originada_por_criterio"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "1507"
-continuidad_id = "is-participaciones-directas-d-f-efecto-correccion-valorativa-en-la-bi-del-ejercicio-a-b-c"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:292 (DP200002 field 98): B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Total - Correcciones valorativas - f) Efecto corrección valorati.... aeat-dr-200-2023 prints box [1507] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:267 (DP200002 field 94) as 'B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Total - Correcciones valorativas - e) Efecto corrección valorati...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "1507"
-section = ["participaciones_directas_declarante_totales", "totales"]
-semantic_role = "is_participaciones_directas_d_f_efecto_correccion_valorativa_en_la_bi_del_ejercicio_a_b_c"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-[[revisions."2024".casillas]]
-id = "1508"
-continuidad_id = "is-participaciones-directas-d-g-saldo-de-correcciones-fiscales-art-12-3-rdl-4-2004-pendien"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:293 (DP200002 field 99): B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Total - Correcciones valorativas - g) Saldo de correcciones fisc.... aeat-dr-200-2023 prints box [1508] on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:268 (DP200002 field 95) as 'B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Total - Correcciones valorativas - f) Saldo de correcciones fisc...', a reworded caption of the same field; the 2023 edition leaves the rewording unadjudicated and does not declare the row."
-number = "1508"
-section = ["participaciones_directas_declarante_totales", "totales"]
-semantic_role = "is_participaciones_directas_d_g_saldo_de_correcciones_fiscales_art_12_3_rdl_4_2004_pendien"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "DP200014:SAL_RESERVA_DOTACION"
@@ -3246,61 +2611,10 @@ number = "00024"
 section = ["reg_cooperativas", "detalle_compensacion_cuotas_2024_pendiente_aplicac"]
 semantic_role = "is_cooperativa_compensacion_cuotas"
 
-[[revisions."2024".casillas]]
-id = "DP200026:01583"
-segmento = "DP200026"
-continuidad_id = "dp200026-01583"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4510 (DP200026 field 82): Tributación conjunta Estado y Adm.Forales - Rectificativa: Resultado a ingresar como consecuencia de la tramitación de autoliquidaciones anteriores o liquidaciones administrativas correspondientes al periodo impositivo 2024 - Total [01583]. aeat-dr-200-2023 prints no box [01583] on DP200026 and no [01583] field with a matching caption. The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01583"
-section = ["tributacion_conjunta_estado_y_adm_forales", "rectificativa_resultado_a_ingresar_como_consecuenc"]
-semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
-rotating_year_offset = 0
 
-[[revisions."2024".casillas]]
-id = "DP200026:01585"
-segmento = "DP200026"
-continuidad_id = "dp200026-01585"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4515 (DP200026 field 87): Tributación conjunta Estado y Adm.Forales - Rectificativa: Devolución acordada por la Agencia Tributaria como consecuencia de la tramitación de autoliquidaciones anteriores o liquidaciones administrativas correspondientes al periodo impositivo 2024 - Total [01585]. aeat-dr-200-2023 prints no box [01585] on DP200026 and no [01585] field with a matching caption. The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "01585"
-section = ["tributacion_conjunta_estado_y_adm_forales", "rectificativa_devolucion_acordada_por_la_agencia_t"]
-semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
-rotating_year_offset = 0
 
-[[revisions."2024".casillas]]
-id = "DP200026:02488"
-segmento = "DP200026"
-continuidad_id = "is-tributacion-conjunta-estado-y-adm-forales-rectificativa-resultado-de-la-autoliquidacion-incluido-el-1e-total"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4545 (DP200026 field 117): Tributación conjunta Estado y Adm.Forales - Rectificativa: Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS procedente de una autoliquidación anterior o liquidación administrativa corresponiente al período impositivo 2024 - Total [02488]. aeat-dr-200-2023 prints no box [02488] on DP200026 and no [02488] field with a matching caption. The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "02488"
-section = ["tributacion_conjunta_estado_y_adm_forales", "rectificativa_resultado_de_la_autoliquidacion_incl"]
-semantic_role = "is_tributacion_conjunta_estado_y_adm_forales_rectificativa_resultado_de_la_autoliquidacion_incluido_el_1e_total"
-legal_refs = ["ley-27-2014:art-19"]
-rotating_year_offset = 0
 
-[[revisions."2024".casillas]]
-id = "DP200026:03242"
-segmento = "DP200026"
-continuidad_id = "is-tributacion-conjunta-estado-y-adm-forales-resultado-incluido-en-el-1er-fraccionamiento-de-art-19-1-lis-total"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4550 (DP200026 field 122): Tributación conjunta Estado y Adm.Forales - Resultado incluido en el 1er fraccionamiento de art. 19.1 LIS - Total [03242]. aeat-dr-200-2023 prints no box [03242] on DP200026 and no [03242] field with a matching caption. The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "03242"
-section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_incluido_en_el_1er_fraccionamiento_de_ar"]
-semantic_role = "is_tributacion_conjunta_estado_y_adm_forales_resultado_incluido_en_el_1er_fraccionamiento_de_art_19_1_lis_total"
-legal_refs = ["ley-27-2014:art-19"]
 
-[[revisions."2024".casillas]]
-id = "DP200026:03245"
-segmento = "DP200026"
-continuidad_id = "dp200026-03245"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2024 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:4565 (DP200026 field 137): Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa: Devolución - Total [03245]. aeat-dr-200-2023 prints no box [03245] on DP200026 and no [03245] field with a matching caption. The cell is new on the 2024 design; this does not claim the underlying concept is new in law."
-number = "03245"
-section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
-semantic_role = "is_conversion_aid_conjunta_importe"
-legal_refs = ["ley-27-2014:art-130"]
 
 [[revisions."2024".casillas]]
 id = "DP200026:00466"

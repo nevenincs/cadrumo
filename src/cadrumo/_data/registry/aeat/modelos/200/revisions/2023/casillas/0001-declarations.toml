@@ -6145,3 +6145,35 @@ number = "02806"
 section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
 semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_final_no_cumplido_condiciones"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# Donation generation boxes the 2023 record design prints for the current generation.
+
+[[revisions."2023".casillas]]
+id = "02694"
+continuidad_id = "priority-nonrecurrent-donation-2024-subperiod-generated"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2932 (DP200018C field 142): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023 Sin reiteración de donaciones a una misma entidad - Deducción pendiente/generada [02694]'. The same design prints 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Deducción pendiente/generada [01329]' on box [01329] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2926 (DP200018C field 136). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02694] on DP200018C; the cell is new on the 2023 design."
+number = "02694"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+[[revisions."2023".casillas]]
+id = "02695"
+continuidad_id = "priority-nonrecurrent-donation-2024-subperiod-applied"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2933 (DP200018C field 143): 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023 Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [02695]'. The same design prints 'Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01372]' on box [01372] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2927 (DP200018C field 137). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02695] on DP200018C; the cell is new on the 2023 design."
+number = "02695"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+[[revisions."2023".casillas]]
+id = "02696"
+continuidad_id = "priority-nonrecurrent-donation-2024-subperiod-remaining"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2934 (DP200018C field 144): 'Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023 Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [02696]'. The same design prints 'Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01373]' on box [01373] at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2928 (DP200018C field 138). Neither design prints a footnote defining the (*) mark, so the generation each caption names is read from the year it prints, an inference from the captions. aeat-dr-200-2022 prints no box [02696] on DP200018C; the cell is new on the 2023 design."
+number = "02696"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
