@@ -35,8 +35,12 @@ export const FIXTURE_STATUS: Record<OverviewPeriodState, ObligationStatus> = {
 
 /** What a fixture row sets beyond its Modelo, period and dates: any field of
  * the served row, and any of its filing evidence. */
-export type EntryChange = Partial<Omit<FilingCalendarServed["entries"][number], "filing_evidence">> & {
-  filing_evidence?: Partial<FilingCalendarServed["entries"][number]["filing_evidence"]>;
+export type EntryChange = Partial<
+  Omit<FilingCalendarServed["entries"][number], "filing_evidence">
+> & {
+  filing_evidence?: Partial<
+    FilingCalendarServed["entries"][number]["filing_evidence"]
+  >;
 };
 
 /** The fields the product decides from a calendar row rather than stores. */
@@ -426,7 +430,9 @@ export const NEVER_CAPTURED: NotificationsSummary = {
   unread: 0,
 };
 
-const without = (keep: (entry: FilingCalendarServed["entries"][number]) => boolean): FilingCalendarServed =>
+const without = (
+  keep: (entry: FilingCalendarServed["entries"][number]) => boolean,
+): FilingCalendarServed =>
   servedCalendar({
     ...FIXTURE_CALENDAR,
     entries: FIXTURE_CALENDAR.entries.filter(keep),

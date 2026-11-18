@@ -5,11 +5,11 @@
 // could not say whole is not drawn, and an element the list holds no name for
 // is counted, never named by its id.
 
-import type {
-  ActivityAssetFilingHandoffProjection,
-} from "../../../shell/ledgerActivityAssetReadContract";
+import type { ActivityAssetFilingHandoffProjection } from "../../../shell/ledgerActivityAssetReadContract";
 
-export type Handoff = NonNullable<ActivityAssetFilingHandoffProjection["filing_handoff"]>;
+export type Handoff = NonNullable<
+  ActivityAssetFilingHandoffProjection["filing_handoff"]
+>;
 
 /** What the handoff leaves out, in the order the backend states it: its
  * Modelo 100 intervals, then the Modelo 130 reasons. */

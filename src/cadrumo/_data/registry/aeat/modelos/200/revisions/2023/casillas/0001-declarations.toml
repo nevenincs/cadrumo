@@ -39,19 +39,6 @@
 # edition-specific.
 
 
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:63 DP200001 33|172|1|Num
-[[revisions."2023".casillas]]
-id = "DP200001:00013"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:63 (DP200001 field 33): Agrupación de interés económico española [00013]. aeat-dr-200-2022 prints box [00013] on the same sheet at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:62 (DP200001 field 32) as 'Agrupación de interés económico española o U.T.E. [00013]', a reworded caption of the same field; the 2022 edition leaves the rewording unadjudicated and does not declare the row."
-continuidad_id = "is-agrupacion-de-interes-economico-espanola"
-number = "00013"
-segmento = "DP200001"
-section = ["agrupacion_de_interes_economico_espanola"]
-data_type = "decimal"
-semantic_role = "is_identificacion_regimen_flag"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3806 DP200022 70|1101|17|N
 [[revisions."2023".casillas]]
 id = "00016"
@@ -73,19 +60,6 @@ number = "00067"
 semantic_role = "is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc"
 section = ["agrupacion_interes_economico_y_utes_datos_economicos", "6_deduc_evitar_doble_imposicion_base_de_la_deduc"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:116 DP200001 86|225|1|Num
-[[revisions."2023".casillas]]
-id = "DP200001:00083"
-segmento = "DP200001"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:116 (DP200001 field 86): Tipo gravamen reducido para empresa emergente [00083]. aeat-dr-200-2022 prints no field with this caption. Its box [00083] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:80 (DP200001 field 50): Empresa emergente [00083]; 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1517 (DP200014B field 41): Liquidación IV - Resultado de la autoliquidación - Abono deducciones I+D+i por insuficiencia de cuota - Estado [00083]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "is-tipo-gravamen-reducido-para-empresa-emergente"
-number = "00083"
-section = ["tipo_gravamen_reducido_para_empresa_emergente"]
-data_type = "decimal"
-semantic_role = "is_identificacion_regimen_flag"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:62 DP200001 32|171|1|Num
 [[revisions."2023".casillas]]
@@ -185,30 +159,6 @@ section = ["reserva_para_inversiones_en_illes_balears_da_70a_l", "aumento"]
 semantic_role = "is_reserva_inversiones_illes_balears_importe"
 legal_refs = ["ley-31-2022:da-70"]
 
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2006 DP200016 109|1637|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2087 (DP200016 field 112), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "00696"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2006 (DP200016 field 109): Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023(*) - Deducción pendiente/generada [00696]. aeat-dr-200-2022 prints no field with this caption. Its box [00696] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1973 (DP200016 field 107): Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2022 - Deducción pendiente/generada [00696]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "is-deduccion-reinversion-beneficios-dt24a7-periodo"
-number = "00696"
-section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2023"]
-semantic_role = "is_deduccion_reinversion_beneficios_dt24a7_periodo"
-legal_refs = ["ley-27-2014:dt-24"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2007 DP200016 110|1654|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2088 (DP200016 field 113), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "00697"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2007 (DP200016 field 110): Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023(*) - Aplicado en esta liquidación [00697]. aeat-dr-200-2022 prints no field with this caption. Its box [00697] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1974 (DP200016 field 108): Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2022 - Aplicado en esta liquidación [00697]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "00697"
-number = "00697"
-section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2023"]
-semantic_role = "is_deduccion_reinversion_beneficios_dt24a7_periodo"
-legal_refs = ["ley-27-2014:dt-24"]
-
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:5270 DP200026F 55|846|17|Num
 [[revisions."2023".casillas]]
 id = "DP200026F:00751"
@@ -220,18 +170,6 @@ segmento = "DP200026F"
 section = ["reserva_para_inversiones_en_illes_balears_da_70a_l", "disminucion"]
 semantic_role = "is_reserva_inversiones_illes_balears_importe"
 legal_refs = ["ley-31-2022:da-70"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2195 DP200016B 148|2427|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2285 (DP200016B field 154), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "00774"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2195 (DP200016B field 148): Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023(*) - Pendiente de aplicación en periodos futuros [00774]. aeat-dr-200-2022 prints no field with this caption. Its box [00774] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2153 (DP200016B field 142): Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2022 - Pendiente de aplicación en periodos futuros [00774]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "is-deduccion-inversion-canarias-importe"
-number = "00774"
-section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2023"]
-semantic_role = "is_deduccion_inversion_canarias_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1369 DP200013 71|1118|17|Num
 [[revisions."2023".casillas]]
@@ -408,28 +346,6 @@ section = ["regimen_especial_de_buques_y_empresas_navieras_en", "compensacion_de
 semantic_role = "is_naviera_base_imponible_negativa"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3997 DP200024 8|37|17|Num
-[[revisions."2023".casillas]]
-id = "01227"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3997 (DP200024 field 8): Agrup. interés económico y UTES - B) Datos económicos - 2.- Gastos financieros netos no deducidos por la entidad [01227]. aeat-dr-200-2022 prints box [01227] on the same sheet at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3833 (DP200024 field 8) as 'Agrup. interés económico y UTES - Modelo de información - Gastos financieros netos no deducidos por la entidad [01227]', a reworded caption of the same field; the 2022 edition leaves the rewording unadjudicated and does not declare the row."
-continuidad_id = "is-agrupacion-interes-econo-2-gastos-financieros-netos-no-deducidos-por-la-e"
-number = "01227"
-section = ["agrupacion_interes_economico_y_utes_datos_economicos", "2_gastos_financieros_netos_no_deducidos_por_la_e"]
-semantic_role = "is_agrupacion_interes_econo_2_gastos_financieros_netos_no_deducidos_por_la_e"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3998 DP200024 9|54|17|Num
-[[revisions."2023".casillas]]
-id = "01228"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3998 (DP200024 field 9): Agrup. interés económico y UTES - B) Datos económicos - 3.- Reserva capitaliz. no aplicada por la entidad [01228]. aeat-dr-200-2022 prints box [01228] on the same sheet at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3834 (DP200024 field 9) as 'Agrup. interés económico y UTES - Modelo de información - Reserva capitaliz. no aplicada por la entidad [01228]', a reworded caption of the same field; the 2022 edition leaves the rewording unadjudicated and does not declare the row."
-continuidad_id = "is-agrupacion-interes-econo-3-reserva-capitaliz-no-aplicada-por-la-entidad"
-number = "01228"
-section = ["agrupacion_interes_economico_y_utes_datos_economicos", "3_reserva_capitaliz_no_aplicada_por_la_entidad"]
-semantic_role = "is_agrupacion_interes_econo_3_reserva_capitaliz_no_aplicada_por_la_entidad"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2594 DP200018 171|2770|17|Num
 # aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2609 (DP200018 field 117), with the year it names read for its own ejercicio.
 [[revisions."2023".casillas]]
@@ -517,90 +433,6 @@ section = ["agrupacion_interes_economico_y_utes_participes", "datos_relativos_a_
 semantic_role = "is_agrupacion_interes_econo_datos_relativos_a_la_participacion_valoracion_de"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2684 DP200018B 75|1186|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2690 (DP200018B field 15), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01295"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2684 (DP200018B field 75): Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2023(*) - Deducción pendiente/generada [01295]. aeat-dr-200-2022 prints no field with this caption. Its box [01295] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2621 (DP200018B field 63): Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2022 - Deducción pendiente/generada [01295]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01295"
-number = "01295"
-section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2023"]
-semantic_role = "is_deduccion_autoridades_portuarias_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2685 DP200018B 76|1203|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2691 (DP200018B field 16), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01296"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2685 (DP200018B field 76): Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2023(*) - Aplicado en esta liquidación [01296]. aeat-dr-200-2022 prints no field with this caption. Its box [01296] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2622 (DP200018B field 64): Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2022 - Aplicado en esta liquidación [01296]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01296"
-number = "01296"
-section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2023"]
-semantic_role = "is_deduccion_autoridades_portuarias_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2686 DP200018B 77|1220|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2692 (DP200018B field 17), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01297"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2686 (DP200018B field 77): Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2023(*) - Pendiente de aplicación en períodos futuros.... aeat-dr-200-2022 prints no field with this caption. Its box [01297] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2623 (DP200018B field 65): Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2022 - Pendiente de aplicación en períodos futuros [0.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01297"
-number = "01297"
-section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2023"]
-semantic_role = "is_deduccion_autoridades_portuarias_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2769 DP200018B 160|2631|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2782 (DP200018B field 107), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01313"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2769 (DP200018B field 160): Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2023(*) - Deducción pendiente/generada [0.... aeat-dr-200-2022 prints no field with this caption. Its box [01313] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2699 (DP200018B field 141): Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2022 - Deducción pendiente/generada [0131.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01313"
-number = "01313"
-section = ["deducciones_por_producciones_cinematograficas_extr", "2023"]
-semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2770 DP200018B 161|2648|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2783 (DP200018B field 108), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01314"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2770 (DP200018B field 161): Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2023(*) - Aplicado en esta liquidación [0.... aeat-dr-200-2022 prints no field with this caption. Its box [01314] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2700 (DP200018B field 142): Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2022 - Aplicado en esta liquidación [0131.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01314"
-number = "01314"
-section = ["deducciones_por_producciones_cinematograficas_extr", "2023"]
-semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2771 DP200018B 162|2665|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2784 (DP200018B field 109), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01315"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2771 (DP200018B field 162): Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2023(*) - Importe abonado por insuficienc.... aeat-dr-200-2022 prints no field with this caption. Its box [01315] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2701 (DP200018B field 143): Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2022 - Importe abonado por insuficiencia .... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01315"
-number = "01315"
-section = ["deducciones_por_producciones_cinematograficas_extr", "2023"]
-semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2772 DP200018B 163|2682|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2785 (DP200018B field 110), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01316"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2772 (DP200018B field 163): Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2023(*) - Pendiente de aplicación en perí.... aeat-dr-200-2022 prints no field with this caption. Its box [01316] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2702 (DP200018B field 144): Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2022 - Pendiente de aplicación en período.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01316"
-number = "01316"
-section = ["deducciones_por_producciones_cinematograficas_extr", "2023"]
-semantic_role = "is_deduccion_cinematografica_extranjera_pendiente_futuros"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1820 DP200015B 89|1206|17|Num
 # aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1892 (DP200015B field 89), naming the same generation year; only the (*) marker differs.
 [[revisions."2023".casillas]]
@@ -612,78 +444,6 @@ number = "01318"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2023"]
 semantic_role = "is_deduccion_di_interna_dt231_detalle"
 legal_refs = ["ley-27-2014:dt-23"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2849 DP200018C 59|914|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2863 (DP200018C field 56), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01323"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2849 (DP200018C field 59): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) Sin reiteración de donaciones a una misma entidad- Deducción .... aeat-dr-200-2022 prints no field with this caption. Its box [01323] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2778 (DP200018C field 62): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2022 Sin reiteración de donaciones a una misma entidad- Deducción pen.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01323"
-number = "01323"
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
-semantic_role = "is_deduccion_donativos_general"
-legal_refs = ["ley-49-2002:art-20"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2850 DP200018C 60|931|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2864 (DP200018C field 57), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01324"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2850 (DP200018C field 60): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) Sin reiteración de donaciones a una misma entidad - Aplicado .... aeat-dr-200-2022 prints no field with this caption. Its box [01324] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2779 (DP200018C field 63): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2022 Sin reiteración de donaciones a una misma entidad - Aplicado en .... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01324"
-number = "01324"
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
-semantic_role = "is_deduccion_donativos_general"
-legal_refs = ["ley-49-2002:art-20"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2851 DP200018C 61|948|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2865 (DP200018C field 58), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01325"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2851 (DP200018C field 61): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) Sin reiteración de donaciones a una misma entidad - Pendiente.... aeat-dr-200-2022 prints no field with this caption. Its box [01325] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2780 (DP200018C field 64): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2022 Sin reiteración de donaciones a una misma entidad - Pendiente de.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01325"
-number = "01325"
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
-semantic_role = "is_deduccion_donativos_general"
-legal_refs = ["ley-49-2002:art-20"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2852 DP200018C 62|965|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2866 (DP200018C field 59), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01326"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2852 (DP200018C field 62): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) - Con reiteración de donaciones a una misma entidad- Deducció.... aeat-dr-200-2022 prints no field with this caption. Its box [01326] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2781 (DP200018C field 65): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2022 - Con reiteración de donaciones a una misma entidad- Deducción p.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01326"
-number = "01326"
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
-semantic_role = "is_deduccion_donativos_general"
-legal_refs = ["ley-49-2002:art-20"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2853 DP200018C 63|982|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2867 (DP200018C field 60), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01327"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2853 (DP200018C field 63): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) - Con reiteración de donaciones a una misma entidad - Aplicad.... aeat-dr-200-2022 prints no field with this caption. Its box [01327] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2782 (DP200018C field 66): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2022 - Con reiteración de donaciones a una misma entidad - Aplicado e.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01327"
-number = "01327"
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
-semantic_role = "is_deduccion_donativos_general"
-legal_refs = ["ley-49-2002:art-20"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2854 DP200018C 64|999|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2868 (DP200018C field 61), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01328"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2854 (DP200018C field 64): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2023(*) - Con reiteración de donaciones a una misma entidad - Pendien.... aeat-dr-200-2022 prints no field with this caption. Its box [01328] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2783 (DP200018C field 67): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2022 - Con reiteración de donaciones a una misma entidad - Pendiente .... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01328"
-number = "01328"
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
-semantic_role = "is_deduccion_donativos_general"
-legal_refs = ["ley-49-2002:art-20"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1821 DP200015B 90|1223|17|Num
 # aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:1893 (DP200015B field 90), naming the same generation year; only the (*) marker differs.
@@ -720,420 +480,6 @@ number = "01362"
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2023"]
 data_type = "decimal"
 semantic_role = "is_deduccion_di_internacional_tipo_gravamen_periodo_generacion"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2929 DP200018C 139|2274|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2945 (DP200018C field 138), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01374"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2929 (DP200018C field 139): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2.... aeat-dr-200-2022 prints no field with this caption. Its box [01374] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2855 (DP200018C field 139): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01374"
-number = "01374"
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
-semantic_role = "is_deduccion_donativos_prioritarias"
-legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2930 DP200018C 140|2291|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2946 (DP200018C field 139), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01375"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2930 (DP200018C field 140): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2.... aeat-dr-200-2022 prints no field with this caption. Its box [01375] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2856 (DP200018C field 140): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01375"
-number = "01375"
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
-semantic_role = "is_deduccion_donativos_prioritarias"
-legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2931 DP200018C 141|2308|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2947 (DP200018C field 140), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01376"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2931 (DP200018C field 141): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2.... aeat-dr-200-2022 prints no field with this caption. Its box [01376] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2857 (DP200018C field 141): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01376"
-number = "01376"
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
-semantic_role = "is_deduccion_donativos_prioritarias"
-legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3001 DP200019 38|557|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3022 (DP200019 field 38), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01377"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3001 (DP200019 field 38): Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023(*) - Base deducción [01377]. aeat-dr-200-2022 prints no field with this caption. Its box [01377] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2921 (DP200019 field 38): Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2022 - Base deducción [01377]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01377"
-number = "01377"
-section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"]
-semantic_role = "is_deduccion_reversion_medidas_periodo"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3002 DP200019 39|574|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3023 (DP200019 field 39), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01378"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3002 (DP200019 field 39): Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023(*) - Importe generado/pendiente principio periodo [01378]. aeat-dr-200-2022 prints no field with this caption. Its box [01378] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2922 (DP200019 field 39): Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2022 - Importe generado/pendiente principio periodo [01378]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01378"
-number = "01378"
-section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"]
-semantic_role = "is_deduccion_reversion_medidas_dt37_1_generado"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3003 DP200019 40|591|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3024 (DP200019 field 40), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01379"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3003 (DP200019 field 40): Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023(*) - Importe aplicado [01379]. aeat-dr-200-2022 prints no field with this caption. Its box [01379] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2923 (DP200019 field 40): Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2022 - Importe aplicado [01379]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01379"
-number = "01379"
-section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"]
-semantic_role = "is_deduccion_reversion_medidas_dt1_periodo"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3004 DP200019 41|608|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3025 (DP200019 field 41), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01380"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3004 (DP200019 field 41): Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023(*) - Importe pendiente [01380]. aeat-dr-200-2022 prints no field with this caption. Its box [01380] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2924 (DP200019 field 41): Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2022 - Importe pendiente [01380]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01380"
-number = "01380"
-section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"]
-semantic_role = "is_deduccion_reversion_medidas_dt1_pendiente"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3045 DP200019 82|1305|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3070 (DP200019 field 86), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01381"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3045 (DP200019 field 82): Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023(*) - Base deducción [01381]. aeat-dr-200-2022 prints no field with this caption. Its box [01381] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2961 (DP200019 field 78): Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2022 - Base deducción [01381]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01381"
-number = "01381"
-section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"]
-semantic_role = "is_deduccion_reversion_medidas_dt2_base"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3046 DP200019 83|1322|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3071 (DP200019 field 87), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01382"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3046 (DP200019 field 83): Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023(*) - Importe generado/pendiente principio periodo [01382]. aeat-dr-200-2022 prints no field with this caption. Its box [01382] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2962 (DP200019 field 79): Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2022 - Importe generado/pendiente principio periodo [01382]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01382"
-number = "01382"
-section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"]
-semantic_role = "is_deduccion_reversion_medidas_dt2_generado_pendiente_apertura"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3047 DP200019 84|1339|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3072 (DP200019 field 88), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01383"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3047 (DP200019 field 84): Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023(*) - Importe aplicado [01383]. aeat-dr-200-2022 prints no field with this caption. Its box [01383] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2963 (DP200019 field 80): Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2022 - Importe aplicado [01383]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "is-deduccion-reversion-medidas-dt2-periodo"
-number = "01383"
-section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"]
-semantic_role = "is_deduccion_reversion_medidas_dt2_periodo"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3048 DP200019 85|1356|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3073 (DP200019 field 89), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01384"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3048 (DP200019 field 85): Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023(*) - Importe pendiente [01384]. aeat-dr-200-2022 prints no field with this caption. Its box [01384] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2964 (DP200019 field 81): Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2022 - Importe pendiente [01384]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01384"
-number = "01384"
-section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"]
-semantic_role = "is_deduccion_reversion_medidas_dt2_pendiente"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3263 DP200020 78|1237|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3304 (DP200020 field 80), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01395"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3263 (DP200020 field 78): Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2023(*) - Aplicado en esta liquidación [0139.... aeat-dr-200-2022 prints no field with this caption. Its box [01395] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3172 (DP200020 field 76): Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2022(**) - Aplicado en esta liquidación [013.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01395"
-number = "01395"
-section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2023"]
-semantic_role = "is_gastos_financieros_pendiente_deducir"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3264 DP200020 79|1254|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3305 (DP200020 field 81), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01396"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3264 (DP200020 field 79): Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2023(*) - Pendiente aplicación en períodos f.... aeat-dr-200-2022 prints no field with this caption. Its box [01396] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3173 (DP200020 field 77): Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2022(**) - Pendiente aplicación en períodos .... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01396"
-number = "01396"
-section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2023"]
-semantic_role = "is_gastos_financieros_pendiente_deducir"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3265 DP200020 80|1271|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3306 (DP200020 field 82), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01397"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3265 (DP200020 field 80): Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2023(*) - Pendiente aplicación en períodos f.... aeat-dr-200-2022 prints no field with this caption. Its box [01397] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3174 (DP200020 field 78): Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2022(**) - Pendiente aplicación en períodos .... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01397"
-number = "01397"
-section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2023"]
-semantic_role = "is_gastos_financieros_pendiente_deducir"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3288 DP200020 103|1662|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3331 (DP200020 field 107), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01398"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3288 (DP200020 field 103): Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2023(*) - Pendiente aplicación a principio del período  [01398]. aeat-dr-200-2022 prints no field with this caption. Its box [01398] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3197 (DP200020 field 101): Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2022(**) - Pendiente aplicación a principio del período  [01398]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01398"
-number = "01398"
-section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2023"]
-semantic_role = "is_correccion_limite_beneficio_operativo_saldo_inicial"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3289 DP200020 104|1679|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3332 (DP200020 field 108), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01399"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3289 (DP200020 field 104): Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2023(*) - Aplicado en esta liquidación [01399]. aeat-dr-200-2022 prints no field with this caption. Its box [01399] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3198 (DP200020 field 102): Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2022(**) - Aplicado en esta liquidación [01399]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01399"
-number = "01399"
-section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2023"]
-semantic_role = "is_correccion_limite_beneficio_operativo_pendiente_adicion_aplicado"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3290 DP200020 105|1696|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3333 (DP200020 field 109), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01400"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3290 (DP200020 field 105): Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2023(*) - Pendiente aplicación períodos futuros [01400]. aeat-dr-200-2022 prints no field with this caption. Its box [01400] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3199 (DP200020 field 103): Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2022(**) - Pendiente aplicación períodos futuros [01400]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01400"
-number = "01400"
-section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2023"]
-semantic_role = "is_correccion_limite_beneficio_operativo_pendiente"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3329 DP200020B 23|302|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3372 (DP200020B field 20), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01401"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3329 (DP200020B field 23): Reserva Capitalización - 2023(*) - Derecho reducir B.I. generado periodo/pendiente aplicar inicio periodo [01401]. aeat-dr-200-2022 prints no field with this caption. Its box [01401] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3226 (DP200020B field 14): Reserva Capitalización - 2022 - Derecho reducir B.I. generado periodo/pendiente aplicar inicio periodo [01401]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01401"
-number = "01401"
-section = ["reserva_capitalizacion", "2023"]
-semantic_role = "is_reserva_capitalizacion_derecho_generado"
-legal_refs = ["ley-27-2014:art-25"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3330 DP200020B 24|319|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3373 (DP200020B field 21), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01402"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3330 (DP200020B field 24): Reserva Capitalización - 2023(*) - Reducción B.I. aplicada [01402]. aeat-dr-200-2022 prints no field with this caption. Its box [01402] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3227 (DP200020B field 15): Reserva Capitalización - 2022 - Reducción B.I. aplicada [01402]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01402"
-number = "01402"
-section = ["reserva_capitalizacion", "2023"]
-semantic_role = "is_reserva_capitalizacion_importe"
-legal_refs = ["ley-27-2014:art-25"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3331 DP200020B 25|336|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3374 (DP200020B field 22), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = '01403'
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3331 (DP200020B field 25): Reserva Capitalización - 2023(*) - Reducción B.I. pdte. De aplicar en períodos futuros [01403]. aeat-dr-200-2022 prints no field with this caption. Its box [01403] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3228 (DP200020B field 16): Reserva Capitalización - 2022 - Reducción B.I. pdte. De aplicar en períodos futuros [01403]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "capitalization-reserve-2023-remaining"
-# AEAT aeat-dr-200-2024 DP200020B : 22 | 285 | 17 | Num | Reserva Capitalización - 2023 - Reducción B.I. pdte. De aplicar en períodos futuros [01403]. Comparado con aeat-dr-200-2025: 2025DP200020B inicia derechos de reserva de capitalizacion en2023, con generado/aplicado pero sin saldo futuro2023. No se confunde con la propia reserva patrimonial ni con derechos2024.
-number = '01403'
-semantic_role = 'is_reserva_capitalizacion_pendiente_futuros'
-section = [
-    'reserva_capitalizacion',
-    '2023',
-]
-legal_refs = [
-    'ley-27-2014:art-25',
-]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3389 DP200020B 83|1322|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3431 (DP200020B field 79), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01410"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3389 (DP200020B field 83): Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023(*) - Importe reserva dotada [01410]. aeat-dr-200-2022 prints no field with this caption. Its box [01410] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3287 (DP200020B field 75): Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2022 - Importe reserva dotada [01410]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01410"
-number = "01410"
-section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
-semantic_role = "is_reserva_nivelacion_dotacion"
-legal_refs = ["ley-27-2014:art-105"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3390 DP200020B 84|1339|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3432 (DP200020B field 80), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01411"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3390 (DP200020B field 84): Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023(*) - Importe reserva pendiente dotación [01411]. aeat-dr-200-2022 prints no field with this caption. Its box [01411] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3288 (DP200020B field 76): Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2022 - Importe reserva pendiente dotación [01411]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01411"
-number = "01411"
-section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
-semantic_role = "is_reserva_nivelacion_dotacion_pendiente"
-legal_refs = ["ley-27-2014:art-105"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3391 DP200020B 85|1356|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3433 (DP200020B field 81), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01412"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3391 (DP200020B field 85): Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023(*) - Reserva dispuesta [01412]. aeat-dr-200-2022 prints no field with this caption. Its box [01412] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3289 (DP200020B field 77): Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2022 - Reserva dispuesta [01412]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01412"
-number = "01412"
-section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
-semantic_role = "is_reserva_nivelacion_dotacion_dispuesta"
-legal_refs = ["ley-27-2014:art-105"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3505 DP200020C 96|1543|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3551 (DP200020C field 96), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01414"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3505 (DP200020C field 96): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... aeat-dr-200-2022 prints no field with this caption. Its box [01414] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3399 (DP200020C field 96): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01414"
-number = "01414"
-section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
-semantic_role = "is_conversion_aid_art130_importe"
-legal_refs = ["ley-27-2014:art-130"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3506 DP200020C 97|1560|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3552 (DP200020C field 97), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01415"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3506 (DP200020C field 97): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... aeat-dr-200-2022 prints no field with this caption. Its box [01415] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3400 (DP200020C field 97): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01415"
-number = "01415"
-section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
-semantic_role = "is_conversion_aid_art130_importe"
-legal_refs = ["ley-27-2014:art-130"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3507 DP200020C 98|1577|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3553 (DP200020C field 98), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01416"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3507 (DP200020C field 98): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... aeat-dr-200-2022 prints no field with this caption. Its box [01416] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3401 (DP200020C field 98): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01416"
-number = "01416"
-section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
-semantic_role = "is_conversion_aid_art130_importe"
-legal_refs = ["ley-27-2014:art-130"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3508 DP200020C 99|1594|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3554 (DP200020C field 99), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01417"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3508 (DP200020C field 99): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... aeat-dr-200-2022 prints no field with this caption. Its box [01417] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3402 (DP200020C field 99): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01417"
-number = "01417"
-section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
-semantic_role = "is_conversion_aid_art130_importe"
-legal_refs = ["ley-27-2014:art-130"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3509 DP200020C 100|1611|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3555 (DP200020C field 100), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01418"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3509 (DP200020C field 100): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... aeat-dr-200-2022 prints no field with this caption. Its box [01418] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3403 (DP200020C field 100): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01418"
-number = "01418"
-section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
-semantic_role = "is_conversion_aid_art130_importe"
-legal_refs = ["ley-27-2014:art-130"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3511 DP200020C 102|1645|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3557 (DP200020C field 102), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01419"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3511 (DP200020C field 102): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... aeat-dr-200-2022 prints no field with this caption. Its box [01419] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3404 (DP200020C field 101): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01419"
-number = "01419"
-section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
-semantic_role = "is_conversion_aid_art130_importe"
-legal_refs = ["ley-27-2014:art-130"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3512 DP200020C 103|1662|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3558 (DP200020C field 103), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01420"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3512 (DP200020C field 103): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... aeat-dr-200-2022 prints no field with this caption. Its box [01420] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3405 (DP200020C field 102): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01420"
-number = "01420"
-section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
-semantic_role = "is_conversion_aid_art130_importe"
-legal_refs = ["ley-27-2014:art-130"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3513 DP200020C 104|1679|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3559 (DP200020C field 104), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01421"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3513 (DP200020C field 104): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... aeat-dr-200-2022 prints no field with this caption. Its box [01421] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3406 (DP200020C field 103): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01421"
-number = "01421"
-section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
-semantic_role = "is_conversion_aid_art130_importe"
-legal_refs = ["ley-27-2014:art-130"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3514 DP200020C 105|1696|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3560 (DP200020C field 105), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01422"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3514 (DP200020C field 105): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... aeat-dr-200-2022 prints no field with this caption. Its box [01422] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3407 (DP200020C field 104): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación -.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01422"
-number = "01422"
-section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
-semantic_role = "is_conversion_aid_art130_importe"
-legal_refs = ["ley-27-2014:art-130"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3545 DP200020C 136|2223|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3597 (DP200020C field 142), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01424"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3545 (DP200020C field 136): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023(*) - Exces.... aeat-dr-200-2022 prints no field with this caption. Its box [01424] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3433 (DP200020C field 130): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2022 - Exceso c.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01424"
-number = "01424"
-section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
-semantic_role = "is_conversion_aid_exceso_cuota_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3546 DP200020C 137|2240|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3598 (DP200020C field 143), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01425"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3546 (DP200020C field 137): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023(*) - Exces.... aeat-dr-200-2022 prints no field with this caption. Its box [01425] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3434 (DP200020C field 131): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2022 - Exceso c.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01425"
-number = "01425"
-section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
-semantic_role = "is_conversion_aid_exceso_cuota_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4262 DP200024B 174|1959|17|N
@@ -1224,24 +570,6 @@ section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados
 semantic_role = "is_agrupacion_interes_econo_importes_imputados_importe_bonificacion_generada"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3547 DP200020C 138|2257|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3599 (DP200020C field 144), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = '01469'
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3547 (DP200020C field 138): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023(*) - Exces.... aeat-dr-200-2022 prints no field with this caption. Its box [01469] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3435 (DP200020C field 132): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2022 - Exceso c.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "deferred-tax-excess-quota-2023-remaining"
-# AEAT aeat-dr-200-2024 DP200020C : 144 | 2359 | 17 | Num | Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023 - Exceso cuota líquida positiva pendiente aplicación periodos futuros [01469]. Comparado con aeat-dr-200-2025: 2025DP200020C inicia exceso de cuota positiva en2023 sin saldo futuro2023. El cuadro distinto de AID mantiene otras celdas2022; no se confunden el exceso de cuota y los activos.
-number = '01469'
-semantic_role = 'is_conversion_aid_exceso_cuota_importe'
-section = [
-    'conversion_activos_impuesto_diferido_credito_exigi',
-    'exceso_cuota_liquida_positiva',
-]
-legal_refs = [
-    'ley-27-2014:art-130',
-]
-
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1946 DP200016 49|627|17|Num
 # aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2024 (DP200016 field 49), naming the same generation year; only the (*) marker differs.
 [[revisions."2023".casillas]]
@@ -1252,42 +580,6 @@ continuidad_id = "01472"
 number = "01472"
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2023"]
 semantic_role = "is_deduccion_di_internacional_detalle"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3643 DP200020D 78|1237|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3699 (DP200020D field 78), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01479"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3643 (DP200020D field 78): Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2023(*) - Dotaciones pendientes integración a principio periodo - Que no han cu.... aeat-dr-200-2022 prints no field with this caption. Its box [01479] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3526 (DP200020D field 77): Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2022 - Dotaciones pendientes integración a principio periodo - Que no han cumpl.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01479"
-number = "01479"
-section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
-semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_inicial_no_cumplido_condiciones"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3646 DP200020D 81|1288|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3702 (DP200020D field 81), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01480"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3646 (DP200020D field 81): Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2023(*) - Dotaciones aplicadas conversión activos imp. diferido [01480]. aeat-dr-200-2022 prints no field with this caption. Its box [01480] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3527 (DP200020D field 78): Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2022 - Dotaciones aplicadas conversión activos imp. diferido [01480]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01480"
-number = "01480"
-section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
-semantic_role = "is_dotaciones_deterioro_creditos_aplicadas_conversion_aid"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3647 DP200020D 82|1305|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3703 (DP200020D field 82), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01500"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3647 (DP200020D field 82): Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2023(*) - Dotaciones pendientes integración periodos futuros - Que no han cumpl.... aeat-dr-200-2022 prints no field with this caption. Its box [01500] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3528 (DP200020D field 79): Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2022 - Dotaciones pendientes integración periodos futuros - Que no han cumplido.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01500"
-number = "01500"
-section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
-semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_final_no_cumplido_condiciones"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1947 DP200016 50|644|17|Num
@@ -1367,18 +659,6 @@ number = "01743"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_importe_de_la_deduccion_gener"]
 semantic_role = "is_agrupacion_interes_econo_importes_imputados_importe_de_la_deduccion_gener"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3388 DP200020B 82|1305|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3430 (DP200020B field 78), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01872"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3388 (DP200020B field 82): Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023(*) - Importe reserva a dotar [01872]. aeat-dr-200-2022 prints no field with this caption. Its box [01872] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3286 (DP200020B field 74): Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2022 - Importe reserva a dotar [01872]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01872"
-number = "01872"
-section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
-semantic_role = "is_reserva_nivelacion_dotacion"
-legal_refs = ["ley-27-2014:art-105"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2621 DP200018B 12|115|17|Num
 # aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2618 (DP200018 field 126), with the year it names read for its own ejercicio.
@@ -1529,18 +809,6 @@ continuidad_id = "is-agrupacion-interes-econo-importes-imputados-dividendos-y-pa
 number = "01912"
 section = ["agrupacion_interes_economico_y_utes_participes", "importes_imputados_dividendos_y_participaciones"]
 semantic_role = "is_agrupacion_interes_econo_importes_imputados_dividendos_y_participaciones"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2114 DP200016B 67|1050|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2201 (DP200016B field 70), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "01913"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2114 (DP200016B field 67): Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2023(*) - Aplicado en esta liquidación [01913]. aeat-dr-200-2022 prints no field with this caption. Its box [01913] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2075 (DP200016B field 64): Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2022 - Aplicado en esta liquidación [01913]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01913"
-number = "01913"
-section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
-semantic_role = "is_deduccion_inversion_canarias_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4280 DP200024B 192|2265|17|Num
@@ -1827,82 +1095,6 @@ continuidad_id = "02058"
 number = "02058"
 section = ["deducc_para_incentivar_determ_actividades", "2025_programa_deportivo_reto_de_rd"]
 semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2094 DP200016B 47|710|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2178 (DP200016B field 47), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "02077"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2094 (DP200016B field 47): Deducciones inversión Canarias - Activos fijos 2023(*) - Pendiente de aplicación en periodos futuros [02077]. aeat-dr-200-2022 prints no field with this caption. Its box [02077] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2058 (DP200016B field 47): Deducciones inversión Canarias - Activos fijos 2022 - Pendiente de aplicación en periodos futuros [02077]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "02077"
-number = "02077"
-section = ["deducciones_inversion_canarias", "activos_fijos_2023"]
-semantic_role = "is_deduccion_inversion_canarias_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2113 DP200016B 66|1033|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2200 (DP200016B field 69), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "02078"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2113 (DP200016B field 66): Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2023(*) - Deducción pendiente/generada [02078]. aeat-dr-200-2022 prints no field with this caption. Its box [02078] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2074 (DP200016B field 63): Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2022 - Deducción pendiente/generada [02078]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "02078"
-number = "02078"
-section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
-semantic_role = "is_deduccion_inversion_canarias_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2725 DP200018B 116|1883|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2734 (DP200018B field 59), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "DP200018B:02140"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2725 (DP200018B field 116): Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023(*) - Deducción pendiente/generada [02140]. aeat-dr-200-2022 prints no field with this caption. Its box [02140] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2659 (DP200018B field 101): Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2022 - Deducción pendiente/generada [02140]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "02140"
-number = "02140"
-segmento = "DP200018B"
-section = ["deducciones_por_producciones_cinematograficas_extr", "2023"]
-semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2726 DP200018B 117|1900|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2735 (DP200018B field 60), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "DP200018B:02141"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2726 (DP200018B field 117): Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023(*) - Aplicado en esta liquidación [02141]. aeat-dr-200-2022 prints no field with this caption. Its box [02141] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2660 (DP200018B field 102): Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2022 - Aplicado en esta liquidación [02141]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "02141"
-number = "02141"
-segmento = "DP200018B"
-section = ["deducciones_por_producciones_cinematograficas_extr", "2023"]
-semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2727 DP200018B 118|1917|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2736 (DP200018B field 61), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "DP200018B:02142"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2727 (DP200018B field 118): Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023(*) - Importe abonado por insuficiencia de cuota [02142]. aeat-dr-200-2022 prints no field with this caption. Its box [02142] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2661 (DP200018B field 103): Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2022 - Importe abonado por insuficiencia de cuota [02142]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "02142"
-number = "02142"
-segmento = "DP200018B"
-section = ["deducciones_por_producciones_cinematograficas_extr", "2023"]
-semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2728 DP200018B 119|1934|17|Num
-# aeat-dr-200-2024 prints the same field at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2737 (DP200018B field 62), naming the same generation year; only the (*) marker differs.
-[[revisions."2023".casillas]]
-id = "DP200018B:02143"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2728 (DP200018B field 119): Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2023(*) - Pendiente de aplicación en períodos futuros [02143]. aeat-dr-200-2022 prints no field with this caption. Its box [02143] is a different field, printed for another generation year: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2662 (DP200018B field 104): Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2022 - Pendiente de aplicación en períodos futuros [02143]. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "02143"
-number = "02143"
-segmento = "DP200018B"
-section = ["deducciones_por_producciones_cinematograficas_extr", "2023"]
-semantic_role = "is_deduccion_cinematografica_extranjera_pendiente_futuros"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2659 DP200018B 50|761|17|Num
@@ -2537,61 +1729,6 @@ section = ["agrupacion_interes_economico_y_utes_datos_economicos", "8_deduccione
 semantic_role = "is_agrupacion_interes_econo_base_de_la_deduccion"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1588 DP200015 7|30|17|Num
-[[revisions."2023".casillas]]
-id = "01020"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1588 (DP200015 field 7): Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Abono por conversión de acti.... aeat-dr-200-2022 prints no field with this caption. Its box [01020] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1554 (DP200014B field 70): Liquidación IV - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributari.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "is-conversion-aid-abono"
-number = "01020"
-section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "abono_por_conversion_de_activos_por_impuesto_difer"]
-semantic_role = "is_conversion_aid_abono"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1591 DP200015 10|81|17|Num
-[[revisions."2023".casillas]]
-id = "01021"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1591 (DP200015 field 10): Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Compensación por conversión .... aeat-dr-200-2022 prints no field with this caption. Its box [01021] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1557 (DP200014B field 73): Liquidación IV - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributari.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "is-conversion-aid-compensacion"
-number = "01021"
-section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "compensacion_por_conversion_de_activos_por_impuest"]
-semantic_role = "is_conversion_aid_compensacion"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2765 DP200018B 156|2563|17|Num
-[[revisions."2023".casillas]]
-id = "01309"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2765 (DP200018B field 156): Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2022) - Deducción pendiente/generada [.... aeat-dr-200-2022 prints box [01309] on the same sheet at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2695 (DP200018B field 137) as 'Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2022(*) - Deducción pendiente/generada...', a reworded caption of the same field; the 2022 edition leaves the rewording unadjudicated and does not declare the row."
-continuidad_id = "01309"
-number = "01309"
-section = ["deducciones_por_producciones_cinematograficas_extr", "2022"]
-semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1306 DP200013 8|47|17|Num
-[[revisions."2023".casillas]]
-id = "01764"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1306 (DP200013 field 8): Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participaciones en beneficios de entidades .... aeat-dr-200-2022 prints no field with this caption. Its box [01764] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1272 (DP200012 field 97): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participacione.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01764"
-number = "01764"
-section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
-semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1307 DP200013 9|64|17|Num
-[[revisions."2023".casillas]]
-id = "01765"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1307 (DP200013 field 9): Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participaciones en beneficios de entidades .... aeat-dr-200-2022 prints no field with this caption. Its box [01765] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1273 (DP200012 field 98): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participacione.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "01765"
-number = "01765"
-section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
-semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2348 DP200017 131|2138|17|Num
 [[revisions."2023".casillas]]
 id = "01848"
@@ -2769,61 +1906,6 @@ section = ["reg_especial_reserva_inversiones_canarias", "ric_2021"]
 semantic_role = "is_reserva_inversiones_canarias_importe"
 legal_refs = ["ley-19-1994:art-27"]
 
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1305 DP200013 7|30|17|Num
-[[revisions."2023".casillas]]
-id = "02181"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1305 (DP200013 field 7): Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participaciones en beneficios de entidades .... aeat-dr-200-2022 prints no field with this caption. Its box [02181] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1271 (DP200012 field 96): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participacione.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "02181"
-number = "02181"
-section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
-semantic_role = "is_liquidacion_ii_detalle_correcciones"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1308 DP200013 10|81|17|Num
-[[revisions."2023".casillas]]
-id = "02182"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1308 (DP200013 field 10): Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre la renta obtenida en la transmisión de valores entidades.... aeat-dr-200-2022 prints no field with this caption. Its box [02182] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1274 (DP200012 field 99): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre la renta obtenida en la tra.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "02182"
-number = "02182"
-section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
-semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1309 DP200013 11|98|17|Num
-[[revisions."2023".casillas]]
-id = "02183"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1309 (DP200013 field 11): Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre la renta obtenida en la transmisión de valores entidades.... aeat-dr-200-2022 prints no field with this caption. Its box [02183] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1275 (DP200012 field 100): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre la renta obtenida en la tra.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "02183"
-number = "02183"
-section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
-semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1310 DP200013 12|115|17|Num
-[[revisions."2023".casillas]]
-id = "02184"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1310 (DP200013 field 12): Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre la renta obtenida en la transmisión de valores entidades.... aeat-dr-200-2022 prints no field with this caption. Its box [02184] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1276 (DP200012 field 101): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre la renta obtenida en la tra.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "02184"
-number = "02184"
-section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
-semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1311 DP200013 13|132|17|Num
-[[revisions."2023".casillas]]
-id = "02185"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1311 (DP200013 field 13): Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre la renta obtenida en la transmisión de valores entidades.... aeat-dr-200-2022 prints no field with this caption. Its box [02185] is a different field: 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1277 (DP200012 field 102): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre la renta obtenida en la tra.... The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-continuidad_id = "02185"
-number = "02185"
-section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
-semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3769 DP200022 33|472|17|Num
 [[revisions."2023".casillas]]
 id = "02430"
@@ -2834,116 +1916,6 @@ number = "02430"
 section = ["reg_especial_reserva_inversiones_canarias", "ric_2022"]
 semantic_role = "is_reserva_inversiones_canarias_importe"
 legal_refs = ["ley-19-1994:art-27"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4645 DP200026B 122|1985|17|Num
-[[revisions."2023".casillas]]
-id = "02621"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4645 (DP200026B field 122): Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Aumento - Correcciones del ejercicio - Permanentes [02621]. aeat-dr-200-2022 prints box [02621] on the same sheet at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4293 (DP200026B field 120) as 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Aumento - Correcciones del ejercicio - Permanentes [02621]', a reworded caption of the same field; the 2022 edition leaves the rewording unadjudicated and does not declare the row."
-continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-permanente-aumento"
-number = "02621"
-section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "aumento"]
-semantic_role = "is_correccion_libertad_amortizacion_otros_art12_permanente_aumento"
-legal_refs = ["ley-27-2014:art-12"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4646 DP200026B 123|2002|17|Num
-[[revisions."2023".casillas]]
-id = "02622"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4646 (DP200026B field 123): Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen.... aeat-dr-200-2022 prints box [02622] on the same sheet at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4294 (DP200026B field 121) as 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercici...', a reworded caption of the same field; the 2022 edition leaves the rewording unadjudicated and does not declare the row."
-continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-temporaria-ejercicio-aumento"
-number = "02622"
-section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "aumento"]
-semantic_role = "is_correccion_libertad_amortizacion_otros_art12_temporaria_ejercicio_aumento"
-legal_refs = ["ley-27-2014:art-12"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4647 DP200026B 124|2019|17|Num
-[[revisions."2023".casillas]]
-id = "02623"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4647 (DP200026B field 124): Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen.... aeat-dr-200-2022 prints box [02623] on the same sheet at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4295 (DP200026B field 122) as 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios ...', a reworded caption of the same field; the 2022 edition leaves the rewording unadjudicated and does not declare the row."
-continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-temporaria-anteriores-aumento"
-number = "02623"
-section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "aumento"]
-semantic_role = "is_correccion_libertad_amortizacion_otros_art12_temporaria_anteriores_aumento"
-legal_refs = ["ley-27-2014:art-12"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4644 DP200026B 121|1968|17|Num
-[[revisions."2023".casillas]]
-id = "02624"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4644 (DP200026B field 121): Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Aumento - Saldo pendiente a principio de ejercicio [02624]. aeat-dr-200-2022 prints box [02624] on the same sheet at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4292 (DP200026B field 119) as 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Aumento - Saldo pendiente a principio de ejercicio [02624]', a reworded caption of the same field; the 2022 edition leaves the rewording unadjudicated and does not declare the row."
-continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-saldo-inicial"
-number = "02624"
-section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "aumento"]
-semantic_role = "is_correccion_libertad_amortizacion_otros_art12_saldo_inicial"
-legal_refs = ["ley-27-2014:art-12"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4648 DP200026B 125|2036|17|Num
-[[revisions."2023".casillas]]
-id = "02625"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4648 (DP200026B field 125): Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Aumento - Saldo pendiente a fin de ejercicio [02625]. aeat-dr-200-2022 prints box [02625] on the same sheet at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4296 (DP200026B field 123) as 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Aumento - Saldo pendiente a fin de ejercicio [02625]', a reworded caption of the same field; the 2022 edition leaves the rewording unadjudicated and does not declare the row."
-continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-saldo-final-neto"
-number = "02625"
-section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "aumento"]
-semantic_role = "is_correccion_libertad_amortizacion_otros_art12_saldo_final_neto"
-legal_refs = ["ley-27-2014:art-12"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4650 DP200026B 127|2070|17|Num
-[[revisions."2023".casillas]]
-id = "02626"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4650 (DP200026B field 127): Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Disminución - Correcciones del ejercicio - Permanentes [02626]. aeat-dr-200-2022 prints box [02626] on the same sheet at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4298 (DP200026B field 125) as 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Disminución - Correcciones del ejercicio - Permanentes [02626]', a reworded caption of the same field; the 2022 edition leaves the rewording unadjudicated and does not declare the row."
-continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-permanente-disminucion"
-number = "02626"
-section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "disminucion"]
-semantic_role = "is_correccion_libertad_amortizacion_otros_art12_permanente_disminucion"
-legal_refs = ["ley-27-2014:art-12"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4651 DP200026B 128|2087|17|Num
-[[revisions."2023".casillas]]
-id = "02627"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4651 (DP200026B field 128): Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Disminución - Correcciones del ejercicio - Temporarias (con or.... aeat-dr-200-2022 prints box [02627] on the same sheet at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4299 (DP200026B field 126) as 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejer...', a reworded caption of the same field; the 2022 edition leaves the rewording unadjudicated and does not declare the row."
-continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-temporaria-ejercicio-disminucion"
-number = "02627"
-section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "disminucion"]
-semantic_role = "is_correccion_libertad_amortizacion_otros_art12_temporaria_ejercicio_disminucion"
-legal_refs = ["ley-27-2014:art-12"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4652 DP200026B 129|2104|17|Num
-[[revisions."2023".casillas]]
-id = "02628"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4652 (DP200026B field 129): Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Disminución - Correcciones del ejercicio - Temporarias (con or.... aeat-dr-200-2022 prints box [02628] on the same sheet at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4300 (DP200026B field 127) as 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercic...', a reworded caption of the same field; the 2022 edition leaves the rewording unadjudicated and does not declare the row."
-continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-temporaria-anteriores-disminucion"
-number = "02628"
-section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "disminucion"]
-semantic_role = "is_correccion_libertad_amortizacion_otros_art12_temporaria_anteriores_disminucion"
-legal_refs = ["ley-27-2014:art-12"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4649 DP200026B 126|2053|17|Num
-[[revisions."2023".casillas]]
-id = "02629"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4649 (DP200026B field 126): Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Disminución - Saldo pendiente a principio de ejercicio [02629]. aeat-dr-200-2022 prints box [02629] on the same sheet at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4297 (DP200026B field 124) as 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Disminución - Saldo pendiente a principio de ejercicio [02629]', a reworded caption of the same field; the 2022 edition leaves the rewording unadjudicated and does not declare the row."
-continuidad_id = "02629"
-number = "02629"
-section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "disminucion"]
-semantic_role = "is_correccion_libertad_amortizacion_otros_art12_saldo_inicial"
-legal_refs = ["ley-27-2014:art-12"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4653 DP200026B 130|2121|17|Num
-[[revisions."2023".casillas]]
-id = "02630"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4653 (DP200026B field 130): Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Disminución - Saldo pendiente a fin de ejercicio [02630]. aeat-dr-200-2022 prints box [02630] on the same sheet at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4301 (DP200026B field 128) as 'Otros supuestos de libertad de amortización (art. 12.3 a) y d) LIS) - Disminución - Saldo pendiente a fin de ejercicio [02630]', a reworded caption of the same field; the 2022 edition leaves the rewording unadjudicated and does not declare the row."
-continuidad_id = "02630"
-number = "02630"
-section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "disminucion"]
-semantic_role = "is_correccion_libertad_amortizacion_otros_art12_saldo_final_neto"
-legal_refs = ["ley-27-2014:art-12"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3765 DP200022 29|404|17|Num
 [[revisions."2023".casillas]]
@@ -3867,84 +2839,6 @@ data_type = "money"
 semantic_role = "is_deduccion_125_aniversario_athletic_club_pendiente_futuro"
 legal_refs = ["ley-31-2022:da-64"]
 
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2861 DP200018C 71|1118|17|Num
-[[revisions."2023".casillas]]
-id = "DP200018C:01689"
-number = "01689"
-segmento = "DP200018C"
-continuidad_id = "is-deduccion-donativos-general-subtotal-2013-2014-pendiente-generada"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2861 (DP200018C field 71): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2013 y 2014 - Deducción pendiente/generada [01689]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general", "subtotal_donaciones_2013_y_2014"]
-data_type = "money"
-semantic_role = "is_deduccion_donativos_general_subtotal_2013_2014_pendiente_generada"
-legal_refs = ["ley-49-2002:art-20"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2862 DP200018C 72|1135|17|Num
-[[revisions."2023".casillas]]
-id = "DP200018C:01690"
-number = "01690"
-segmento = "DP200018C"
-continuidad_id = "is-deduccion-donativos-general-subtotal-2013-2014-aplicado-periodo"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2862 (DP200018C field 72): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2013 y 2014 - Aplicado en esta liquidación [01690]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general", "subtotal_donaciones_2013_y_2014"]
-data_type = "money"
-semantic_role = "is_deduccion_donativos_general_subtotal_2013_2014_aplicado_periodo"
-legal_refs = ["ley-49-2002:art-20"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2863 DP200018C 73|1152|17|Num
-[[revisions."2023".casillas]]
-id = "DP200018C:01691"
-number = "01691"
-segmento = "DP200018C"
-continuidad_id = "is-deduccion-donativos-general-subtotal-2013-2014-pendiente-futuro"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2863 (DP200018C field 73): Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2013 y 2014 - Pendiente de aplicación en periodos futuros [01691]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general", "subtotal_donaciones_2013_y_2014"]
-data_type = "money"
-semantic_role = "is_deduccion_donativos_general_subtotal_2013_2014_pendiente_futuro"
-legal_refs = ["ley-49-2002:art-20"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2938 DP200018C 148|2427|17|Num
-[[revisions."2023".casillas]]
-id = "DP200018C:01701"
-number = "01701"
-segmento = "DP200018C"
-continuidad_id = "is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-generada"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2938 (DP200018C field 148): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - Subtotal donaciones 2013 y 2014 - Deducción pendiente/generada [01701]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecenazgo_y_otras_con_derecho_a_deduccion_incrementada", "subtotal_donaciones_2013_y_2014"]
-data_type = "money"
-semantic_role = "is_deduccion_donativos_prioritarias_subtotal_2013_2014_pendiente_generada"
-legal_refs = ["ley-49-2002:art-20"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2939 DP200018C 149|2444|17|Num
-[[revisions."2023".casillas]]
-id = "DP200018C:01702"
-number = "01702"
-segmento = "DP200018C"
-continuidad_id = "is-deduccion-donativos-prioritarias-subtotal-2013-2014-aplicado-periodo"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2939 (DP200018C field 149): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - Subtotal donaciones 2013 y 2014 - Aplicado en esta liquidación [01702]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecenazgo_y_otras_con_derecho_a_deduccion_incrementada", "subtotal_donaciones_2013_y_2014"]
-data_type = "money"
-semantic_role = "is_deduccion_donativos_prioritarias_subtotal_2013_2014_aplicado_periodo"
-legal_refs = ["ley-49-2002:art-20"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2940 DP200018C 150|2461|17|Num
-[[revisions."2023".casillas]]
-id = "DP200018C:01703"
-number = "01703"
-segmento = "DP200018C"
-continuidad_id = "is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-futuro"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2940 (DP200018C field 150): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - Subtotal donaciones 2013 y 2014 - Pendiente de aplicación en periodos futuros [01703]. aeat-dr-200-2022 prints no field with this caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecenazgo_y_otras_con_derecho_a_deduccion_incrementada", "subtotal_donaciones_2013_y_2014"]
-data_type = "money"
-semantic_role = "is_deduccion_donativos_prioritarias_subtotal_2013_2014_pendiente_futuro"
-legal_refs = ["ley-49-2002:art-20"]
-
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3746 DP200022 10|81|17|Num
 [[revisions."2023".casillas]]
 id = "DP200022:01936"
@@ -4017,39 +2911,6 @@ number = "00077"
 section = ["amortizacion_acelerada_de_determinados_vehiculos_y", "aumento"]
 semantic_role = "is_correccion_amortizacion_acelerada_vehiculos_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2926 DP200018C field 136
-[[revisions."2023".casillas]]
-id = "01329"
-continuidad_id = "01329"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2926 (DP200018C field 136): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Deducción pendiente/generada [01329]. aeat-dr-200-2022 prints box [01329] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2852 for the 2022 donations, another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "01329"
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
-semantic_role = "is_deduccion_donativos_prioritarias"
-legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2927 DP200018C field 137
-[[revisions."2023".casillas]]
-id = "01372"
-continuidad_id = "01372"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2927 (DP200018C field 137): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01372]. aeat-dr-200-2022 prints box [01372] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2853 for the 2022 donations, another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "01372"
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
-semantic_role = "is_deduccion_donativos_prioritarias"
-legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2928 DP200018C field 138
-[[revisions."2023".casillas]]
-id = "01373"
-continuidad_id = "01373"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2928 (DP200018C field 138): Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2023(*) Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01373]. aeat-dr-200-2022 prints box [01373] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2854 for the 2022 donations, another cohort. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "01373"
-section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
-semantic_role = "is_deduccion_donativos_prioritarias"
-legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 
 # Modelo 200 ejercicio 2023 cohort boxes the 2023 record design prints and the 2023 edition did not
 # declare. Each is page-qualified because the 2024 design reuses its number for another field: the
@@ -4317,17 +3178,6 @@ continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07
 number = "00092"
 section = ["aplicacion_de_resultados", "aplicacion_a_dotaciones_voluntarias_fondo_de_educa"]
 semantic_role = "is_aplicacion_de_resultados_aplicacion_a_dotaciones_voluntarias_fondo_de_educacion_y_pro"
-
-[[revisions."2023".casillas]]
-id = "DP200021:00989"
-segmento = "DP200021"
-continuidad_id = "is-comunicacion-importe-neto-cifra-entidades-de-credito-aseguradora-importe-neto-de-la-cifra-de-negocios-ejercicio-y"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3708 (DP200021 field 40): Comunicación importe neto cifra negocios - Entidades de crédito, aseguradoras e instituciones de inversión colectiva - Importe neto de la cifra de negocios ejercicio 2023 [00989]. aeat-dr-200-2022 prints no box [00989] on DP200021 and no [00989] field with a matching caption. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "00989"
-section = ["comunicacion_importe_neto_cifra_negocios", "entidades_de_credito_aseguradoras_e_instituciones"]
-semantic_role = "is_comunicacion_importe_neto_cifra_entidades_de_credito_aseguradora_importe_neto_de_la_cifra_de_negocios_ejercicio_y"
-rotating_year_offset = 0
 
 [[revisions."2023".casillas]]
 id = "DP200022:00012"
@@ -4754,83 +3604,6 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 # Generation boxes the 2023 record design prints with the (*) current-ejercicio mark, which the
 # 2024 edition declared from its own design; declared here, where the generation is first printed.
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2115 DP200016B 68|1067|17|Num
-[[revisions."2023".casillas]]
-id = "DP200016B:00766"
-continuidad_id = "is-deducciones-inversion-canarias-activos-fijos-en-la-palma-la-gomera-y-el-pendiente-de-aplicacion-en-periodos-futuros-00766"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2115 (DP200016B field 68): Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2023(*) - Pendiente de aplicación en periodos futuros [00766]. aeat-dr-200-2024 prints the same generation on the same box at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2202 (DP200016B field 71) without the (*), which marks the generation of the ejercicio the 2023 return is filed for. aeat-dr-200-2022 prints box [00766] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2076 (DP200016B field 65) for the generation of its own ejercicio, a different field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "00766"
-segmento = "DP200016B"
-section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
-semantic_role = "is_deducciones_inversion_canarias_activos_fijos_en_la_palma_la_gomera_y_el_pendiente_de_aplicacion_en_periodos_futuros_00766"
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2172 DP200016B 125|2036|17|Num
-[[revisions."2023".casillas]]
-id = "DP200016B:00767"
-continuidad_id = "dp200016b-00767"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2172 (DP200016B field 125): Deducciones inversión Canarias - Inversiones Canarias 2023(*) - Deducción pendiente/generada [00767]. aeat-dr-200-2024 prints the same generation on the same box at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2259 (DP200016B field 128) without the (*), which marks the generation of the ejercicio the 2023 return is filed for. aeat-dr-200-2022 prints box [00767] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2133 (DP200016B field 122) for the generation of its own ejercicio, a different field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "00767"
-segmento = "DP200016B"
-section = ["deducciones_inversion_canarias", "inversiones_canarias_2023"]
-semantic_role = "is_deduccion_inversion_canarias_importe"
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2173 DP200016B 126|2053|17|Num
-[[revisions."2023".casillas]]
-id = "DP200016B:00768"
-continuidad_id = "dp200016b-00768"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2173 (DP200016B field 126): Deducciones inversión Canarias - Inversiones Canarias 2023(*) - Aplicado en esta liquidación [00768]. aeat-dr-200-2024 prints the same generation on the same box at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2260 (DP200016B field 129) without the (*), which marks the generation of the ejercicio the 2023 return is filed for. aeat-dr-200-2022 prints box [00768] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2134 (DP200016B field 123) for the generation of its own ejercicio, a different field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "00768"
-segmento = "DP200016B"
-section = ["deducciones_inversion_canarias", "inversiones_canarias_2023"]
-semantic_role = "is_deduccion_inversion_canarias_importe"
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2174 DP200016B 127|2070|17|Num
-[[revisions."2023".casillas]]
-id = "DP200016B:00769"
-continuidad_id = "is-deducciones-inversion-canarias-inversiones-canarias-y-pendiente-de-aplicacion-en-periodos-futuros-00769"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2174 (DP200016B field 127): Deducciones inversión Canarias - Inversiones Canarias 2023(*) - Pendiente de aplicación en periodos futuros [00769]. aeat-dr-200-2024 prints the same generation on the same box at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2261 (DP200016B field 130) without the (*), which marks the generation of the ejercicio the 2023 return is filed for. aeat-dr-200-2022 prints box [00769] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2135 (DP200016B field 124) for the generation of its own ejercicio, a different field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "00769"
-segmento = "DP200016B"
-section = ["deducciones_inversion_canarias", "inversiones_canarias_2023"]
-semantic_role = "is_deducciones_inversion_canarias_inversiones_canarias_y_pendiente_de_aplicacion_en_periodos_futuros_00769"
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2193 DP200016B 146|2393|17|Num
-[[revisions."2023".casillas]]
-id = "DP200016B:00770"
-continuidad_id = "dp200016b-00770"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2193 (DP200016B field 146): Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023(*) - Deducción pendiente/generada [00770]. aeat-dr-200-2024 prints the same generation on the same box at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2283 (DP200016B field 152) without the (*), which marks the generation of the ejercicio the 2023 return is filed for. aeat-dr-200-2022 prints box [00770] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2151 (DP200016B field 140) for the generation of its own ejercicio, a different field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "00770"
-segmento = "DP200016B"
-section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2023"]
-semantic_role = "is_deduccion_inversion_canarias_importe"
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2194 DP200016B 147|2410|17|Num
-[[revisions."2023".casillas]]
-id = "DP200016B:00771"
-continuidad_id = "dp200016b-00771"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2194 (DP200016B field 147): Deducciones inversión Canarias - Inversiones en La Palma, La Gomera y El Hierro 2023(*) - Aplicado en esta liquidación [00771]. aeat-dr-200-2024 prints the same generation on the same box at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:2284 (DP200016B field 153) without the (*), which marks the generation of the ejercicio the 2023 return is filed for. aeat-dr-200-2022 prints box [00771] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2152 (DP200016B field 141) for the generation of its own ejercicio, a different field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "00771"
-segmento = "DP200016B"
-section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2023"]
-semantic_role = "is_deduccion_inversion_canarias_islas_menores_aplicado"
-
-# 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3544 DP200020C 135|2206|17|Num
-[[revisions."2023".casillas]]
-id = "01423"
-continuidad_id = "01423"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:3544 (DP200020C field 135): Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023(*)- Exceso cuota líquida positiva pendiente a principio periodo [01423]. aeat-dr-200-2024 prints the same generation on the same box at 16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls.extracted.md:3596 (DP200020C field 141) without the (*), which marks the generation of the ejercicio the 2023 return is filed for. aeat-dr-200-2022 prints box [01423] at 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3432 (DP200020C field 129) for the generation of its own ejercicio, a different field. The cell is new on the 2023 design; this does not claim the underlying concept is new in law."
-number = "01423"
-section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
-semantic_role = "is_conversion_aid_exceso_cuota_importe"
-legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 
 # 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1819 DP200015B 88|1189|17|Num
 [[revisions."2023".casillas]]

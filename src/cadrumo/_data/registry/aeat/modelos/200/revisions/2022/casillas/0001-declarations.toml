@@ -36616,6 +36616,17 @@ segmento = "DP200021"
 section = ["comunicacion_importe_neto_cifra_negocios", "no_residentes_mas_de_un_establecimiento_permanente"]
 semantic_role = "is_comunicacion_importe_neto_cifra_negocios_no_residentes_mas_de_un_establecimiento_permanente_importe_n"
 
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3585 DP200021 40|333|17|N
+[[revisions."2022".casillas]]
+id = "DP200021:00989"
+segmento = "DP200021"
+continuidad_id = "is-comunicacion-importe-neto-cifra-entidades-de-credito-aseguradora-importe-neto-de-la-cifra-de-negocios-ejercicio-y"
+number = "00989"
+section = ["comunicacion_importe_neto_cifra_negocios", "entidades_de_credito_aseguradoras_e_instituciones"]
+semantic_role = "is_comunicacion_importe_neto_cifra_entidades_de_credito_aseguradora_importe_neto_de_la_cifra_de_negocios_ejercicio_y"
+rotating_year_offset = 0
+
+
 # 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3587 DP200021 42|354|17|Num
 [[revisions."2022".casillas]]
 id = "DP200021:00630"
@@ -47822,3 +47833,1084 @@ segmento = "DP200013"
 section = ["liquidacion_ii", "base_imponible"]
 semantic_role = "is_liquidacion_iii_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# Boxes the 2022 record design prints that the 2023 edition first declared: each is declared here at
+# the earliest edition that prints it, and the 2023 edition records a repurposing, a label change or
+# the sheet the 2023 design moves it to.
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1973 DP200016 107|1616|17|Num
+# aeat-dr-200-2023 prints box [00696] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "00696"
+continuidad_id = "is-deduccion-reinversion-beneficios-dt24a7-periodo"
+number = "00696"
+section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2022"]
+semantic_role = "is_deduccion_reinversion_beneficios_dt24a7_periodo"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1974 DP200016 108|1633|17|Num
+# aeat-dr-200-2023 prints box [00697] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "00697"
+continuidad_id = "00697"
+number = "00697"
+section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2022"]
+semantic_role = "is_deduccion_reinversion_beneficios_dt24a7_periodo"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2058 DP200016B 47|710|17|Num
+# aeat-dr-200-2023 prints box [02077] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "02077"
+continuidad_id = "02077"
+number = "02077"
+section = ["deducciones_inversion_canarias", "activos_fijos_2022"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2074 DP200016B 63|982|17|Num
+# aeat-dr-200-2023 prints box [02078] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "02078"
+continuidad_id = "02078"
+number = "02078"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2075 DP200016B 64|999|17|Num
+# aeat-dr-200-2023 prints box [01913] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01913"
+continuidad_id = "01913"
+number = "01913"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2076 DP200016B 65|1016|17|Num
+# aeat-dr-200-2023 prints box [00766] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200016B:00766"
+continuidad_id = "is-deducciones-inversion-canarias-activos-fijos-en-la-palma-la-gomera-y-el-pendiente-de-aplicacion-en-periodos-futuros-00766"
+number = "00766"
+segmento = "DP200016B"
+section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
+semantic_role = "is_deducciones_inversion_canarias_activos_fijos_en_la_palma_la_gomera_y_el_pendiente_de_aplicacion_en_periodos_futuros_00766"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2133 DP200016B 122|1985|17|Num
+# aeat-dr-200-2023 prints box [00767] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200016B:00767"
+continuidad_id = "dp200016b-00767"
+number = "00767"
+segmento = "DP200016B"
+section = ["deducciones_inversion_canarias", "inversiones_canarias_2022"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2134 DP200016B 123|2002|17|Num
+# aeat-dr-200-2023 prints box [00768] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200016B:00768"
+continuidad_id = "dp200016b-00768"
+number = "00768"
+segmento = "DP200016B"
+section = ["deducciones_inversion_canarias", "inversiones_canarias_2022"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2135 DP200016B 124|2019|17|Num
+# aeat-dr-200-2023 prints box [00769] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200016B:00769"
+continuidad_id = "is-deducciones-inversion-canarias-inversiones-canarias-y-pendiente-de-aplicacion-en-periodos-futuros-00769"
+number = "00769"
+segmento = "DP200016B"
+section = ["deducciones_inversion_canarias", "inversiones_canarias_2022"]
+semantic_role = "is_deducciones_inversion_canarias_inversiones_canarias_y_pendiente_de_aplicacion_en_periodos_futuros_00769"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2151 DP200016B 140|2291|17|Num
+# aeat-dr-200-2023 prints box [00770] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200016B:00770"
+continuidad_id = "dp200016b-00770"
+number = "00770"
+segmento = "DP200016B"
+section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2022"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2152 DP200016B 141|2308|17|Num
+# aeat-dr-200-2023 prints box [00771] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200016B:00771"
+continuidad_id = "dp200016b-00771"
+number = "00771"
+segmento = "DP200016B"
+section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2022"]
+semantic_role = "is_deduccion_inversion_canarias_islas_menores_aplicado"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2153 DP200016B 142|2325|17|Num
+# aeat-dr-200-2023 prints box [00774] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "00774"
+continuidad_id = "is-deduccion-inversion-canarias-importe"
+number = "00774"
+section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2022"]
+semantic_role = "is_deduccion_inversion_canarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2621 DP200018B 63|982|17|Num
+# aeat-dr-200-2023 prints box [01295] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01295"
+continuidad_id = "01295"
+number = "01295"
+section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2022"]
+semantic_role = "is_deduccion_autoridades_portuarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2622 DP200018B 64|999|17|Num
+# aeat-dr-200-2023 prints box [01296] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01296"
+continuidad_id = "01296"
+number = "01296"
+section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2022"]
+semantic_role = "is_deduccion_autoridades_portuarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2623 DP200018B 65|1016|17|Num
+# aeat-dr-200-2023 prints box [01297] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01297"
+continuidad_id = "01297"
+number = "01297"
+section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2022"]
+semantic_role = "is_deduccion_autoridades_portuarias_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2659 DP200018B 101|1628|17|Num
+# aeat-dr-200-2023 prints box [02140] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200018B:02140"
+continuidad_id = "02140"
+number = "02140"
+segmento = "DP200018B"
+section = ["deducciones_por_producciones_cinematograficas_extr", "2022"]
+semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2660 DP200018B 102|1645|17|Num
+# aeat-dr-200-2023 prints box [02141] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200018B:02141"
+continuidad_id = "02141"
+number = "02141"
+segmento = "DP200018B"
+section = ["deducciones_por_producciones_cinematograficas_extr", "2022"]
+semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2661 DP200018B 103|1662|17|Num
+# aeat-dr-200-2023 prints box [02142] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200018B:02142"
+continuidad_id = "02142"
+number = "02142"
+segmento = "DP200018B"
+section = ["deducciones_por_producciones_cinematograficas_extr", "2022"]
+semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2662 DP200018B 104|1679|17|Num
+# aeat-dr-200-2023 prints box [02143] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200018B:02143"
+continuidad_id = "02143"
+number = "02143"
+segmento = "DP200018B"
+section = ["deducciones_por_producciones_cinematograficas_extr", "2022"]
+semantic_role = "is_deduccion_cinematografica_extranjera_pendiente_futuros"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2699 DP200018B 141|2308|17|Num
+# aeat-dr-200-2023 prints box [01313] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01313"
+continuidad_id = "01313"
+number = "01313"
+section = ["deducciones_por_producciones_cinematograficas_extr", "2022"]
+semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2700 DP200018B 142|2325|17|Num
+# aeat-dr-200-2023 prints box [01314] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01314"
+continuidad_id = "01314"
+number = "01314"
+section = ["deducciones_por_producciones_cinematograficas_extr", "2022"]
+semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2701 DP200018B 143|2342|17|Num
+# aeat-dr-200-2023 prints box [01315] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01315"
+continuidad_id = "01315"
+number = "01315"
+section = ["deducciones_por_producciones_cinematograficas_extr", "2022"]
+semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2702 DP200018B 144|2359|17|Num
+# aeat-dr-200-2023 prints box [01316] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01316"
+continuidad_id = "01316"
+number = "01316"
+section = ["deducciones_por_producciones_cinematograficas_extr", "2022"]
+semantic_role = "is_deduccion_cinematografica_extranjera_pendiente_futuros"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2778 DP200018C 62|965|17|Num
+# aeat-dr-200-2023 prints box [01323] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01323"
+continuidad_id = "01323"
+number = "01323"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2779 DP200018C 63|982|17|Num
+# aeat-dr-200-2023 prints box [01324] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01324"
+continuidad_id = "01324"
+number = "01324"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2780 DP200018C 64|999|17|Num
+# aeat-dr-200-2023 prints box [01325] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01325"
+continuidad_id = "01325"
+number = "01325"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2781 DP200018C 65|1016|17|Num
+# aeat-dr-200-2023 prints box [01326] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01326"
+continuidad_id = "01326"
+number = "01326"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2782 DP200018C 66|1033|17|Num
+# aeat-dr-200-2023 prints box [01327] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01327"
+continuidad_id = "01327"
+number = "01327"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2783 DP200018C 67|1050|17|Num
+# aeat-dr-200-2023 prints box [01328] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01328"
+continuidad_id = "01328"
+number = "01328"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2852 DP200018C 136|2223|17|Num
+# aeat-dr-200-2023 prints box [01329] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01329"
+continuidad_id = "01329"
+number = "01329"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2853 DP200018C 137|2240|17|Num
+# aeat-dr-200-2023 prints box [01372] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01372"
+continuidad_id = "01372"
+number = "01372"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2854 DP200018C 138|2257|17|Num
+# aeat-dr-200-2023 prints box [01373] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01373"
+continuidad_id = "01373"
+number = "01373"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2855 DP200018C 139|2274|17|Num
+# aeat-dr-200-2023 prints box [01374] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01374"
+continuidad_id = "01374"
+number = "01374"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2856 DP200018C 140|2291|17|Num
+# aeat-dr-200-2023 prints box [01375] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01375"
+continuidad_id = "01375"
+number = "01375"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2857 DP200018C 141|2308|17|Num
+# aeat-dr-200-2023 prints box [01376] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01376"
+continuidad_id = "01376"
+number = "01376"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2921 DP200019 38|557|17|Num
+# aeat-dr-200-2023 prints box [01377] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01377"
+continuidad_id = "01377"
+number = "01377"
+section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2022"]
+semantic_role = "is_deduccion_reversion_medidas_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2922 DP200019 39|574|17|Num
+# aeat-dr-200-2023 prints box [01378] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01378"
+continuidad_id = "01378"
+number = "01378"
+section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2022"]
+semantic_role = "is_deduccion_reversion_medidas_dt37_1_generado"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2923 DP200019 40|591|17|Num
+# aeat-dr-200-2023 prints box [01379] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01379"
+continuidad_id = "01379"
+number = "01379"
+section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2022"]
+semantic_role = "is_deduccion_reversion_medidas_dt1_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2924 DP200019 41|608|17|Num
+# aeat-dr-200-2023 prints box [01380] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01380"
+continuidad_id = "01380"
+number = "01380"
+section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2022"]
+semantic_role = "is_deduccion_reversion_medidas_dt1_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2961 DP200019 78|1237|17|Num
+# aeat-dr-200-2023 prints box [01381] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01381"
+continuidad_id = "01381"
+number = "01381"
+section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2022"]
+semantic_role = "is_deduccion_reversion_medidas_dt2_base"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2962 DP200019 79|1254|17|Num
+# aeat-dr-200-2023 prints box [01382] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01382"
+continuidad_id = "01382"
+number = "01382"
+section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2022"]
+semantic_role = "is_deduccion_reversion_medidas_dt2_generado_pendiente_apertura"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2963 DP200019 80|1271|17|Num
+# aeat-dr-200-2023 prints box [01383] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01383"
+continuidad_id = "is-deduccion-reversion-medidas-dt2-periodo"
+number = "01383"
+section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2022"]
+semantic_role = "is_deduccion_reversion_medidas_dt2_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2964 DP200019 81|1288|17|Num
+# aeat-dr-200-2023 prints box [01384] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01384"
+continuidad_id = "01384"
+number = "01384"
+section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2022"]
+semantic_role = "is_deduccion_reversion_medidas_dt2_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3226 DP200020B 14|149|17|Num
+# aeat-dr-200-2023 prints box [01401] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01401"
+continuidad_id = "01401"
+number = "01401"
+section = ["reserva_capitalizacion", "2022"]
+semantic_role = "is_reserva_capitalizacion_derecho_generado"
+legal_refs = ["ley-27-2014:art-25"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3227 DP200020B 15|166|17|Num
+# aeat-dr-200-2023 prints box [01402] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01402"
+continuidad_id = "01402"
+number = "01402"
+section = ["reserva_capitalizacion", "2022"]
+semantic_role = "is_reserva_capitalizacion_importe"
+legal_refs = ["ley-27-2014:art-25"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3228 DP200020B 16|183|17|Num
+# aeat-dr-200-2023 prints box [01403] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01403"
+continuidad_id = "capitalization-reserve-2023-remaining"
+number = "01403"
+section = ["reserva_capitalizacion", "2022"]
+semantic_role = "is_reserva_capitalizacion_pendiente_futuros"
+legal_refs = ["ley-27-2014:art-25"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3286 DP200020B 74|1169|17|Num
+# aeat-dr-200-2023 prints box [01872] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01872"
+continuidad_id = "01872"
+number = "01872"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+semantic_role = "is_reserva_nivelacion_dotacion"
+legal_refs = ["ley-27-2014:art-105"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3287 DP200020B 75|1186|17|Num
+# aeat-dr-200-2023 prints box [01410] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01410"
+continuidad_id = "01410"
+number = "01410"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+semantic_role = "is_reserva_nivelacion_dotacion"
+legal_refs = ["ley-27-2014:art-105"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3288 DP200020B 76|1203|17|Num
+# aeat-dr-200-2023 prints box [01411] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01411"
+continuidad_id = "01411"
+number = "01411"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+semantic_role = "is_reserva_nivelacion_dotacion_pendiente"
+legal_refs = ["ley-27-2014:art-105"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3289 DP200020B 77|1220|17|Num
+# aeat-dr-200-2023 prints box [01412] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01412"
+continuidad_id = "01412"
+number = "01412"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+semantic_role = "is_reserva_nivelacion_dotacion_dispuesta"
+legal_refs = ["ley-27-2014:art-105"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3399 DP200020C 96|1543|17|Num
+# aeat-dr-200-2023 prints box [01414] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01414"
+continuidad_id = "01414"
+number = "01414"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3400 DP200020C 97|1560|17|Num
+# aeat-dr-200-2023 prints box [01415] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01415"
+continuidad_id = "01415"
+number = "01415"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3401 DP200020C 98|1577|17|Num
+# aeat-dr-200-2023 prints box [01416] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01416"
+continuidad_id = "01416"
+number = "01416"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3402 DP200020C 99|1594|17|Num
+# aeat-dr-200-2023 prints box [01417] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01417"
+continuidad_id = "01417"
+number = "01417"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3403 DP200020C 100|1611|17|Num
+# aeat-dr-200-2023 prints box [01418] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01418"
+continuidad_id = "01418"
+number = "01418"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3404 DP200020C 101|1628|17|Num
+# aeat-dr-200-2023 prints box [01419] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01419"
+continuidad_id = "01419"
+number = "01419"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3405 DP200020C 102|1645|17|Num
+# aeat-dr-200-2023 prints box [01420] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01420"
+continuidad_id = "01420"
+number = "01420"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3406 DP200020C 103|1662|17|Num
+# aeat-dr-200-2023 prints box [01421] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01421"
+continuidad_id = "01421"
+number = "01421"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3407 DP200020C 104|1679|17|Num
+# aeat-dr-200-2023 prints box [01422] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01422"
+continuidad_id = "01422"
+number = "01422"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
+semantic_role = "is_conversion_aid_art130_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3433 DP200020C 130|2121|17|Num
+# aeat-dr-200-2023 prints box [01424] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01424"
+continuidad_id = "01424"
+number = "01424"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
+semantic_role = "is_conversion_aid_exceso_cuota_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3434 DP200020C 131|2138|17|Num
+# aeat-dr-200-2023 prints box [01425] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01425"
+continuidad_id = "01425"
+number = "01425"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
+semantic_role = "is_conversion_aid_exceso_cuota_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3435 DP200020C 132|2155|17|Num
+# aeat-dr-200-2023 prints box [01469] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01469"
+continuidad_id = "deferred-tax-excess-quota-2023-remaining"
+number = "01469"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
+semantic_role = "is_conversion_aid_exceso_cuota_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3526 DP200020D 77|1220|17|Num
+# aeat-dr-200-2023 prints box [01479] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01479"
+continuidad_id = "01479"
+number = "01479"
+section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
+semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_inicial_no_cumplido_condiciones"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3527 DP200020D 78|1237|17|Num
+# aeat-dr-200-2023 prints box [01480] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01480"
+continuidad_id = "01480"
+number = "01480"
+section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
+semantic_role = "is_dotaciones_deterioro_creditos_aplicadas_conversion_aid"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3528 DP200020D 79|1254|17|Num
+# aeat-dr-200-2023 prints box [01500] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01500"
+continuidad_id = "01500"
+number = "01500"
+section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
+semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_final_no_cumplido_condiciones"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:62 DP200001 32|171|1|Num
+# aeat-dr-200-2023 prints box [00013] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200001:00013"
+continuidad_id = "is-agrupacion-de-interes-economico-espanola"
+number = "00013"
+segmento = "DP200001"
+section = ["agrupacion_de_interes_economico_espanola_o_u_t_e"]
+data_type = "decimal"
+semantic_role = "is_identificacion_regimen_flag"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:80 DP200001 50|189|1|Num
+# aeat-dr-200-2023 prints box [00083] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200001:00083"
+continuidad_id = "is-tipo-gravamen-reducido-para-empresa-emergente"
+number = "00083"
+segmento = "DP200001"
+section = ["empresa_emergente"]
+data_type = "decimal"
+semantic_role = "is_identificacion_regimen_flag"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2695 DP200018B 137|2240|17|Num
+# aeat-dr-200-2023 rewords the caption of box [01309]; the 2023 edition records the label change.
+[[revisions."2022".casillas]]
+id = "01309"
+continuidad_id = "01309"
+number = "01309"
+section = ["deducciones_por_producciones_cinematograficas_extr", "2022"]
+semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2784 DP200018C 68|1067|17|Num
+# aeat-dr-200-2023 prints box [01689] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200018C:01689"
+continuidad_id = "is-deduccion-donativos-general-subtotal-2013-2014-pendiente-generada"
+number = "01689"
+segmento = "DP200018C"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general", "subtotal_donaciones_2012_a_2014"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_general_subtotal_2013_2014_pendiente_generada"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2785 DP200018C 69|1084|17|Num
+# aeat-dr-200-2023 prints box [01690] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200018C:01690"
+continuidad_id = "is-deduccion-donativos-general-subtotal-2013-2014-aplicado-periodo"
+number = "01690"
+segmento = "DP200018C"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general", "subtotal_donaciones_2012_a_2014"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_general_subtotal_2013_2014_aplicado_periodo"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2786 DP200018C 70|1101|17|Num
+# aeat-dr-200-2023 prints box [01691] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200018C:01691"
+continuidad_id = "is-deduccion-donativos-general-subtotal-2013-2014-pendiente-futuro"
+number = "01691"
+segmento = "DP200018C"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general", "subtotal_donaciones_2012_a_2014"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_general_subtotal_2013_2014_pendiente_futuro"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2858 DP200018C 142|2325|17|Num
+# aeat-dr-200-2023 prints box [01701] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200018C:01701"
+continuidad_id = "is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-generada"
+number = "01701"
+segmento = "DP200018C"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecenazgo_y_otras_con_derecho_a_deduccion_incrementada", "subtotal_donaciones_2012_a_2014"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias_subtotal_2013_2014_pendiente_generada"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2859 DP200018C 143|2342|17|Num
+# aeat-dr-200-2023 prints box [01702] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200018C:01702"
+continuidad_id = "is-deduccion-donativos-prioritarias-subtotal-2013-2014-aplicado-periodo"
+number = "01702"
+segmento = "DP200018C"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecenazgo_y_otras_con_derecho_a_deduccion_incrementada", "subtotal_donaciones_2012_a_2014"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias_subtotal_2013_2014_aplicado_periodo"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2860 DP200018C 144|2359|17|Num
+# aeat-dr-200-2023 prints box [01703] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "DP200018C:01703"
+continuidad_id = "is-deduccion-donativos-prioritarias-subtotal-2013-2014-pendiente-futuro"
+number = "01703"
+segmento = "DP200018C"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecenazgo_y_otras_con_derecho_a_deduccion_incrementada", "subtotal_donaciones_2012_a_2014"]
+data_type = "money"
+semantic_role = "is_deduccion_donativos_prioritarias_subtotal_2013_2014_pendiente_futuro"
+legal_refs = ["ley-49-2002:art-20"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3172 DP200020 76|1203|17|Num
+# aeat-dr-200-2023 prints box [01395] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01395"
+continuidad_id = "01395"
+number = "01395"
+section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2022"]
+semantic_role = "is_gastos_financieros_pendiente_deducir"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3173 DP200020 77|1220|17|Num
+# aeat-dr-200-2023 prints box [01396] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01396"
+continuidad_id = "01396"
+number = "01396"
+section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2022"]
+semantic_role = "is_gastos_financieros_pendiente_deducir"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3174 DP200020 78|1237|17|Num
+# aeat-dr-200-2023 prints box [01397] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01397"
+continuidad_id = "01397"
+number = "01397"
+section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2022"]
+semantic_role = "is_gastos_financieros_pendiente_deducir"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3197 DP200020 101|1628|17|Num
+# aeat-dr-200-2023 prints box [01398] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01398"
+continuidad_id = "01398"
+number = "01398"
+section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2022"]
+semantic_role = "is_correccion_limite_beneficio_operativo_saldo_inicial"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3198 DP200020 102|1645|17|Num
+# aeat-dr-200-2023 prints box [01399] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01399"
+continuidad_id = "01399"
+number = "01399"
+section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2022"]
+semantic_role = "is_correccion_limite_beneficio_operativo_pendiente_adicion_aplicado"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3199 DP200020 103|1662|17|Num
+# aeat-dr-200-2023 prints box [01400] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01400"
+continuidad_id = "01400"
+number = "01400"
+section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2022"]
+semantic_role = "is_correccion_limite_beneficio_operativo_pendiente"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3432 DP200020C 129|2104|17|Num
+# aeat-dr-200-2023 prints box [01423] for another meaning; the 2023 edition repurposes the row.
+[[revisions."2022".casillas]]
+id = "01423"
+continuidad_id = "01423"
+number = "01423"
+section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
+semantic_role = "is_conversion_aid_exceso_cuota_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3833 DP200024 8|37|17|Num
+# aeat-dr-200-2023 rewords the caption of box [01227]; the 2023 edition records the label change.
+[[revisions."2022".casillas]]
+id = "01227"
+continuidad_id = "is-agrupacion-interes-econo-2-gastos-financieros-netos-no-deducidos-por-la-e"
+number = "01227"
+section = ["agrupacion_interes_economico_y_utes_datos_economicos", "2_gastos_financieros_netos_no_deducidos_por_la_e"]
+semantic_role = "is_agrupacion_interes_econo_2_gastos_financieros_netos_no_deducidos_por_la_e"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3834 DP200024 9|54|17|Num
+# aeat-dr-200-2023 rewords the caption of box [01228]; the 2023 edition records the label change.
+[[revisions."2022".casillas]]
+id = "01228"
+continuidad_id = "is-agrupacion-interes-econo-3-reserva-capitaliz-no-aplicada-por-la-entidad"
+number = "01228"
+section = ["agrupacion_interes_economico_y_utes_datos_economicos", "3_reserva_capitaliz_no_aplicada_por_la_entidad"]
+semantic_role = "is_agrupacion_interes_econo_3_reserva_capitaliz_no_aplicada_por_la_entidad"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4292 DP200026B 119|1934|17|Num
+# aeat-dr-200-2023 rewords the caption of box [02624]; the 2023 edition records the label change.
+[[revisions."2022".casillas]]
+id = "02624"
+continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-saldo-inicial"
+number = "02624"
+section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "aumento"]
+semantic_role = "is_correccion_libertad_amortizacion_otros_art12_saldo_inicial"
+legal_refs = ["ley-27-2014:art-12"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4293 DP200026B 120|1951|17|Num
+# aeat-dr-200-2023 rewords the caption of box [02621]; the 2023 edition records the label change.
+[[revisions."2022".casillas]]
+id = "02621"
+continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-permanente-aumento"
+number = "02621"
+section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "aumento"]
+semantic_role = "is_correccion_libertad_amortizacion_otros_art12_permanente_aumento"
+legal_refs = ["ley-27-2014:art-12"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4294 DP200026B 121|1968|17|Num
+# aeat-dr-200-2023 rewords the caption of box [02622]; the 2023 edition records the label change.
+[[revisions."2022".casillas]]
+id = "02622"
+continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-temporaria-ejercicio-aumento"
+number = "02622"
+section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "aumento"]
+semantic_role = "is_correccion_libertad_amortizacion_otros_art12_temporaria_ejercicio_aumento"
+legal_refs = ["ley-27-2014:art-12"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4295 DP200026B 122|1985|17|Num
+# aeat-dr-200-2023 rewords the caption of box [02623]; the 2023 edition records the label change.
+[[revisions."2022".casillas]]
+id = "02623"
+continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-temporaria-anteriores-aumento"
+number = "02623"
+section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "aumento"]
+semantic_role = "is_correccion_libertad_amortizacion_otros_art12_temporaria_anteriores_aumento"
+legal_refs = ["ley-27-2014:art-12"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4296 DP200026B 123|2002|17|Num
+# aeat-dr-200-2023 rewords the caption of box [02625]; the 2023 edition records the label change.
+[[revisions."2022".casillas]]
+id = "02625"
+continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-saldo-final-neto"
+number = "02625"
+section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "aumento"]
+semantic_role = "is_correccion_libertad_amortizacion_otros_art12_saldo_final_neto"
+legal_refs = ["ley-27-2014:art-12"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4297 DP200026B 124|2019|17|Num
+# aeat-dr-200-2023 rewords the caption of box [02629]; the 2023 edition records the label change.
+[[revisions."2022".casillas]]
+id = "02629"
+continuidad_id = "02629"
+number = "02629"
+section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "disminucion"]
+semantic_role = "is_correccion_libertad_amortizacion_otros_art12_saldo_inicial"
+legal_refs = ["ley-27-2014:art-12"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4298 DP200026B 125|2036|17|Num
+# aeat-dr-200-2023 rewords the caption of box [02626]; the 2023 edition records the label change.
+[[revisions."2022".casillas]]
+id = "02626"
+continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-permanente-disminucion"
+number = "02626"
+section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "disminucion"]
+semantic_role = "is_correccion_libertad_amortizacion_otros_art12_permanente_disminucion"
+legal_refs = ["ley-27-2014:art-12"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4299 DP200026B 126|2053|17|Num
+# aeat-dr-200-2023 rewords the caption of box [02627]; the 2023 edition records the label change.
+[[revisions."2022".casillas]]
+id = "02627"
+continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-temporaria-ejercicio-disminucion"
+number = "02627"
+section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "disminucion"]
+semantic_role = "is_correccion_libertad_amortizacion_otros_art12_temporaria_ejercicio_disminucion"
+legal_refs = ["ley-27-2014:art-12"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4300 DP200026B 127|2070|17|Num
+# aeat-dr-200-2023 rewords the caption of box [02628]; the 2023 edition records the label change.
+[[revisions."2022".casillas]]
+id = "02628"
+continuidad_id = "is-correccion-libertad-amortizacion-otros-art12-temporaria-anteriores-disminucion"
+number = "02628"
+section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "disminucion"]
+semantic_role = "is_correccion_libertad_amortizacion_otros_art12_temporaria_anteriores_disminucion"
+legal_refs = ["ley-27-2014:art-12"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4301 DP200026B 128|2087|17|Num
+# aeat-dr-200-2023 rewords the caption of box [02630]; the 2023 edition records the label change.
+[[revisions."2022".casillas]]
+id = "02630"
+continuidad_id = "02630"
+number = "02630"
+section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "disminucion"]
+semantic_role = "is_correccion_libertad_amortizacion_otros_art12_saldo_final_neto"
+legal_refs = ["ley-27-2014:art-12"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1271 DP200012 96|1543|17|Num
+# aeat-dr-200-2023 prints the same field one record later, on DP200013 at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1305.
+[[revisions."2022".casillas]]
+id = "02181"
+continuidad_id = "02181"
+number = "02181"
+section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+semantic_role = "is_liquidacion_ii_detalle_correcciones"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1272 DP200012 97|1560|17|Num
+# aeat-dr-200-2023 prints the same field one record later, on DP200013 at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1306.
+[[revisions."2022".casillas]]
+id = "01764"
+continuidad_id = "01764"
+number = "01764"
+section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1273 DP200012 98|1577|17|Num
+# aeat-dr-200-2023 prints the same field one record later, on DP200013 at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1307.
+[[revisions."2022".casillas]]
+id = "01765"
+continuidad_id = "01765"
+number = "01765"
+section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1274 DP200012 99|1594|17|Num
+# aeat-dr-200-2023 prints the same field one record later, on DP200013 at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1308.
+[[revisions."2022".casillas]]
+id = "02182"
+continuidad_id = "02182"
+number = "02182"
+section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1275 DP200012 100|1611|17|Num
+# aeat-dr-200-2023 prints the same field one record later, on DP200013 at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1309.
+[[revisions."2022".casillas]]
+id = "02183"
+continuidad_id = "02183"
+number = "02183"
+section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1276 DP200012 101|1628|17|Num
+# aeat-dr-200-2023 prints the same field one record later, on DP200013 at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1310.
+[[revisions."2022".casillas]]
+id = "02184"
+continuidad_id = "02184"
+number = "02184"
+section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1277 DP200012 102|1645|17|Num
+# aeat-dr-200-2023 prints the same field one record later, on DP200013 at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1311.
+[[revisions."2022".casillas]]
+id = "02185"
+continuidad_id = "02185"
+number = "02185"
+section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+semantic_role = "is_correcciones_disminuciones_liquidacion_detalle"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1554 DP200014B 70|1101|17|Num
+# aeat-dr-200-2023 prints the same field one record later, on DP200015 at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1588.
+[[revisions."2022".casillas]]
+id = "01020"
+continuidad_id = "is-conversion-aid-abono"
+number = "01020"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "abono_por_conversion_de_activos_por_impuesto_difer"]
+semantic_role = "is_conversion_aid_abono"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1557 DP200014B 73|1152|17|Num
+# aeat-dr-200-2023 prints the same field one record later, on DP200015 at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1591.
+[[revisions."2022".casillas]]
+id = "01021"
+continuidad_id = "is-conversion-aid-compensacion"
+number = "01021"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "compensacion_por_conversion_de_activos_por_impuest"]
+semantic_role = "is_conversion_aid_compensacion"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# Boxes the 2022 record design prints that the 2023 design does not and a later design prints for
+# another field: the 2023 edition removes each row and retires its lineage.
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2182 DP200017 10|81|17|Num
+# aeat-dr-200-2023 prints box [00468] only on DP200010, DP200033, DP200042, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+# aeat-dr-200-2024 prints box [00468] again for another field, DP200017:00468, a new lineage.
+[[revisions."2022".casillas]]
+id = "DP200017:00468"
+continuidad_id = "is-m200-dp200017-00468"
+number = "00468"
+segmento = "DP200017"
+section = ["deducc_para_incentivar_determ_actividades", "2005_suma_deducciones"]
+semantic_role = "is_deduccion_cap_iv_tit_vi_suma_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2384 DP200018 21|220|17|Num
+# aeat-dr-200-2023 prints box [01907] only on DP200018B, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+# aeat-dr-200-2024 prints box [01907] again for another field, 01907, a new lineage.
+[[revisions."2022".casillas]]
+id = "DP200018:01907"
+continuidad_id = "is-m200-dp200018-01907"
+number = "01907"
+segmento = "DP200018"
+section = ["deducc_para_incentivar_determ_actividades", "2022_ano_santo_jacobeo_2021_j21"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2385 DP200018 22|237|17|Num
+# aeat-dr-200-2023 prints box [01908] only on DP200018B, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+# aeat-dr-200-2024 prints box [01908] again for another field, 01908, a new lineage.
+[[revisions."2022".casillas]]
+id = "DP200018:01908"
+continuidad_id = "is-m200-dp200018-01908"
+number = "01908"
+segmento = "DP200018"
+section = ["deducc_para_incentivar_determ_actividades", "2022_ano_santo_jacobeo_2021_j21"]
+semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
