@@ -271,15 +271,6 @@ class TransactionKindCatalogue:
             )
         return matches[0]
 
-    def kinds_for_oss_regime(self, oss_regime: str) -> frozenset[TransactionKind]:
-        """Return registry kinds routed through one OSS regime token."""
-        matches = frozenset(definition.token for definition in self.definitions if definition.oss_regime == oss_regime)
-        if not matches:
-            raise IvaValidationError(
-                f"OSS regime {oss_regime!r} must map to at least one transaction kind",
-            )
-        return matches
-
 
 def required_classification_entry(entries: Mapping[str, str], key: str) -> str:
     value = entries.get(key)

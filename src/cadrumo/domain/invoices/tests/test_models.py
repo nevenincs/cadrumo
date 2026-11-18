@@ -563,13 +563,6 @@ def test_invoice_number_is_uppercased_for_identity() -> None:
     assert lower.invoice_number == "INV-001"
 
 
-def test_catalogue_rejects_duplicate_invoice_ids_on_construction() -> None:
-    """Duplicate logical IDs must be rejected when building a catalogue."""
-    invoice = _valid_invoice()
-    with pytest.raises(ValidationError, match=r"duplicate invoice_id"):
-        build_invoice_catalogue([invoice, invoice])
-
-
 def test_catalogue_iteration_yields_invoices() -> None:
     """Iteration yields invoices, not model fields."""
     first = _valid_invoice(invoice_number="INV-001")

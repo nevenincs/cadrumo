@@ -29,8 +29,6 @@ from ....application.modelo.incn_periodo_anterior import (
     IncnPeriodoAnterior,
     IncnPeriodoAnteriorGap,
     IncnPeriodoAnteriorOrigin,
-    IncnPeriodoAnteriorStores,
-    resolve_incn_periodo_anterior,
 )
 from ....application.modelo.preconditions import ATTEST_PRIOR_VALUE_ACTION_ID
 from ....application.modelo.work_form_service import modelo_form_snapshot
@@ -40,6 +38,7 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.values import UserProfileFact
 from ...adapter_composition import profile_adapter_composition
 from ..modelo_operator_work_storage import SeededOperatorWork, seeded_operator_work
+from .incn_reader_support import read_seeded_incn
 from .observation_seeding_support import save_preceding_m200_turnover
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -94,21 +93,6 @@ def _work(tmp_path: Path, year: int) -> Generator[SeededOperatorWork]:
         yield work
 
 
-def _read(
-    work: SeededOperatorWork,
-    *,
-    activity_start: datetime | None = None,
-    twelve_month_statement: Decimal | None = None,
-) -> IncnPeriodoAnterior:
-    return resolve_incn_periodo_anterior(
-        work.work_unit.bucket_id,
-        work.work_unit.filing_year,
-        stores=IncnPeriodoAnteriorStores.from_calculation_ports(work.ports),
-        activity_start_date=None if activity_start is None else activity_start.date(),
-        twelve_month_statement=twelve_month_statement,
-    )
-
-
 def _hold_preceding_return(year: int) -> None:
     save_preceding_m200_turnover(
         CalculationObservationRepository(),
@@ -130,7 +114,7 @@ def test_some_supported_year_reads_the_preceding_turnover() -> None:
 @pytest.mark.parametrize("year", _READING_YEARS)
 def test_nothing_held_and_nothing_stated_stays_unresolved_with_the_statement_door(tmp_path: Path, year: int) -> None:
     with _work(tmp_path, year) as work:
-        result = _read(work)
+        result = read_seeded_incn(work)
 
     _assert_preceding_return(result, year)
     assert result.origin is IncnPeriodoAnteriorOrigin.UNRESOLVED
@@ -144,7 +128,7 @@ def test_nothing_held_and_nothing_stated_stays_unresolved_with_the_statement_doo
 def test_the_held_preceding_return_supplies_the_figure(tmp_path: Path, year: int) -> None:
     with _work(tmp_path, year) as work:
         _hold_preceding_return(year)
-        result = _read(work)
+        result = read_seeded_incn(work)
 
     _assert_preceding_return(result, year)
     assert result.origin is IncnPeriodoAnteriorOrigin.HELD_RETURN
@@ -169,7 +153,7 @@ def test_the_filers_statement_supplies_the_figure_when_no_return_is_held(tmp_pat
         )
         applied = work.apply(binding=statements)
         assert applied.refusal is None, applied.refusal
-        result = _read(work)
+        result = read_seeded_incn(work)
 
     _assert_preceding_return(result, year)
     assert result.origin is IncnPeriodoAnteriorOrigin.OPERATOR_STATEMENT
@@ -181,7 +165,7 @@ def test_the_filers_statement_supplies_the_figure_when_no_return_is_held(tmp_pat
 def test_a_preceding_period_before_the_activity_is_not_zero(tmp_path: Path, year: int) -> None:
     start = Period.from_year_and_code(year, _PERIOD).start_date
     with _work(tmp_path, year) as work:
-        result = _read(work, activity_start=datetime(start.year, start.month, start.day, tzinfo=UTC))
+        result = read_seeded_incn(work, activity_start=datetime(start.year, start.month, start.day, tzinfo=UTC))
 
     assert result.origin is IncnPeriodoAnteriorOrigin.UNRESOLVED
     assert result.value is None
@@ -192,7 +176,7 @@ def test_a_preceding_period_before_the_activity_is_not_zero(tmp_path: Path, year
 @pytest.mark.parametrize("year", _OTHER_YEARS)
 def test_an_edition_that_reads_no_preceding_turnover_says_so(tmp_path: Path, year: int) -> None:
     with _work(tmp_path, year) as work:
-        result = _read(work)
+        result = read_seeded_incn(work)
 
     assert result.origin is IncnPeriodoAnteriorOrigin.UNRESOLVED
     assert result.gap is IncnPeriodoAnteriorGap.NOT_READ_BY_EDITION
@@ -205,7 +189,7 @@ def test_a_twelve_month_preceding_periodo_takes_the_stated_twelve_month_turnover
     tmp_path: Path, year: int
 ) -> None:
     with _work(tmp_path, year) as work:
-        result = _read(work, twelve_month_statement=Decimal(_STATED))
+        result = read_seeded_incn(work, twelve_month_statement=Decimal(_STATED))
 
     _assert_preceding_return(result, year)
     assert result.origin is IncnPeriodoAnteriorOrigin.TWELVE_MONTH_STATEMENT
@@ -219,7 +203,7 @@ def test_a_held_return_agreeing_with_the_stated_twelve_month_turnover_supplies_t
 ) -> None:
     with _work(tmp_path, year) as work:
         _hold_preceding_return(year)
-        result = _read(work, twelve_month_statement=_HELD)
+        result = read_seeded_incn(work, twelve_month_statement=_HELD)
 
     assert result.origin is IncnPeriodoAnteriorOrigin.HELD_RETURN
     assert result.value == _HELD
@@ -231,7 +215,7 @@ def test_a_held_return_and_a_different_stated_twelve_month_turnover_leave_the_fi
 ) -> None:
     with _work(tmp_path, year) as work:
         _hold_preceding_return(year)
-        result = _read(work, twelve_month_statement=Decimal(_STATED))
+        result = read_seeded_incn(work, twelve_month_statement=Decimal(_STATED))
 
     _assert_preceding_return(result, year)
     assert result.origin is IncnPeriodoAnteriorOrigin.UNRESOLVED
@@ -248,7 +232,7 @@ def test_a_preceding_period_before_the_activity_stays_unresolved_whatever_twelve
 ) -> None:
     start = Period.from_year_and_code(year, _PERIOD).start_date
     with _work(tmp_path, year) as work:
-        result = _read(
+        result = read_seeded_incn(
             work,
             activity_start=datetime(start.year, start.month, start.day, tzinfo=UTC),
             twelve_month_statement=Decimal(_STATED),
