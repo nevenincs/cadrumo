@@ -13,14 +13,13 @@ import {
 import { formatCount } from "../shared/numbers";
 import { effortWords } from "./agentCatalog";
 import { sentFiles } from "./agentDocuments";
-import type { Effort, ProviderTransport } from "./agentCatalogContract";
+import type { ThreadStatus } from "./agentGatewayContract";
 import type {
-  ProviderCondition,
-  ThreadStatus,
-  ToolCallStatus,
-  ToolKind,
-} from "./agentGatewayContract";
-import type { AgentApproval, AgentQuestionnaire } from "./agentSession";
+  AgentRanWith,
+  AgentReplyRecord,
+  AgentSnapshot,
+  AgentTurnRecord,
+} from "./agentSnapshotContract";
 import { conditionWords, toolKindWords } from "./agentWords";
 import { listed } from "./compose";
 import { logRef } from "./providerSignInWords";
@@ -38,39 +37,6 @@ import type { Translate } from "./strings";
 // What the agent does not serve is not here: no title but the first run's, no
 // message id that tells two identical messages apart, no place for a tool call
 // among a reply's text.
-
-/** A tool call as the agent reports it: its `tool_call_id`, its `title` (the
- * tool's name), its `kind` and its `status`. The stream carries nothing of
- * its input or result; the history may say more in `details`. */
-export type AgentToolCall = {
-  id: string;
-  title: string;
-  tool_kind: ToolKind;
-  status: ToolCallStatus;
-  /** What the history says of the call, as the agent worded it and the
-   * host cut it: its input, its result and the places it touched. Absent
-   * while the call is only streamed. */
-  details?: string[];
-};
-
-/** What a reply ran with, as the agent froze it when the run started: the
- * provider and the way into it, the model and the effort it applied. The
- * display names are the agent's own and are absent where it served none. */
-export type AgentRanWith = {
-  provider: string;
-  transport: ProviderTransport;
-  provider_display_name?: string | null;
-  model: string;
-  model_display_name?: string | null;
-  effort?: Effort | null;
-};
-
-/** The tokens a run's provider reported, as the agent counts them. The agent
- * serves no cost, and none is made up. */
-export type AgentUsage = {
-  input_tokens: number;
-  output_tokens: number;
-};
 
 /** One conversation: a chain of runs, composed by the host. */
 export type AgentConversationRecord = {
@@ -119,31 +85,9 @@ export type AgentDocumentsQuery = {
   q?: string;
 };
 
-/** A stored document a message names, as the history echoes it. */
-export type AgentDocumentReference = {
-  name: string;
-  sha256: string | null;
-  media_type: string | null;
-};
-
-/** The record of a reply (a run) itself. */
-export type AgentReplyRecord = {
-  kind: "reply";
-  /** The run's id: the reply's handle. */
-  id: string;
-  status: ThreadStatus;
-  /** For a failed run, why its provider failed. */
-  provider_condition?: ProviderCondition | null;
-  /** For a failed run, the agent's one line about it. */
-  failure_reason?: string | null;
-  /** Messages queued behind the run's current turn. */
-  queued_messages?: number;
-  selection?: AgentRanWith | null;
-  usage?: AgentUsage | null;
-};
-
 /**
- * What history lists of a conversation, oldest first, in the order the host
+ * What the column lists of a conversation: the history's records, oldest
+ * first, in the order the host
  * composes it from its runs. Each record names the reply (run) it comes from,
  * and a reply's records are listed together: the person's messages, then its
  * tool calls, then the agent's messages, and last the reply's own record.
@@ -155,49 +99,25 @@ export type AgentReplyRecord = {
  * A reply in progress has no agent message here: the agent records a message
  * when its turn ends, and the text so far comes from the stream. A reply that
  * failed before it wrote has no message either, and its reply record says
- * why. The host invents neither.
+ * why. The host invents neither. The column lists the thoughts the stream
+ * gave beside them.
  */
-export type AgentTurnRecord =
-  | {
-      kind: "person";
-      /** cadrumo-agent's `message_id`, a hash of role and content where it
-       * has none. Two identical messages can share one: only their order
-       * tells them apart. */
-      id: string;
-      reply_id: string;
-      text: string;
-      /** When it was sent, as an ISO instant; null where the agent has no
-       * time for it. */
-      sent_at: string | null;
-      /** The stored documents the message named, in the order it named
-       * them; absent where none. */
-      attachments?: AgentDocumentReference[];
-      /** The skills the message loaded, by name; absent or empty where
-       * none. */
-      skills?: string[];
-    }
-  | {
-      kind: "agent";
-      /** cadrumo-agent's `message_id`: the id the stream's text names. */
-      id: string;
-      reply_id: string;
-      text: string;
-    }
-  | ({ kind: "tool"; reply_id: string } & AgentToolCall)
-  /** What the agent thought on the way, by the stream's `message_id`. The
-   * history lists none: only the stream has it, and the column keeps it
-   * beside what it reads for as long as it watches. */
-  | { kind: "thought"; id: string; reply_id: string; text: string }
-  | AgentReplyRecord;
+export type AgentColumnRecord = AgentTurnRecord | AgentThoughtRecord;
+
+/** What the agent thought on the way, by the stream's `message_id`. The
+ * history lists none: only the stream has it, and the column keeps it beside
+ * what it reads for as long as it watches. The window's own record, never
+ * the host's. */
+export type AgentThoughtRecord = {
+  kind: "thought";
+  id: string;
+  reply_id: string;
+  text: string;
+};
 
 /** The reply a record belongs to. */
-export const replyIdOf = (record: AgentTurnRecord): string =>
+export const replyIdOf = (record: AgentColumnRecord): string =>
   record.kind === "reply" ? record.id : record.reply_id;
-
-export type AgentSnapshot = {
-  history: AgentTurnRecord[];
-  pending: { questionnaires: AgentQuestionnaire[]; approvals: AgentApproval[] };
-};
 
 /** The agent views a host offers. Each read is refused while nobody is
  * signed in, as the profile's own views are. */
@@ -351,8 +271,9 @@ export function useCachedRead<T>(
   };
 }
 
-/** Whether a run is still going: neither settled nor past help. */
-export const isLiveStatus = (status: ThreadStatus): boolean =>
+/** Whether a run is still going: neither settled nor past help. A run whose
+ * status the host could not read is not taken for one still going. */
+export const isLiveStatus = (status: ThreadStatus | null): boolean =>
   status === "submitted" ||
   status === "running" ||
   status === "input_required" ||
@@ -362,7 +283,9 @@ export const isLiveStatus = (status: ThreadStatus): boolean =>
  * repair or is being reconciled is neither being written nor finished: the
  * column says so beside the conversation, and the transcript draws no
  * indicator for it. */
-function replyState(status: ThreadStatus): AgentReplyState {
+function replyState(status: ThreadStatus | null): AgentReplyState {
+  // A run whose status the host could not read draws no indicator.
+  if (status === null) return "complete";
   switch (status) {
     case "submitted":
     case "running":
@@ -410,14 +333,14 @@ type TranscriptProjectionCache = {
   locale?: string;
   t?: Translate;
   day?: number;
-  entries: Map<AgentTurnRecord, TranscriptProjectionEntry>;
+  entries: Map<AgentColumnRecord, TranscriptProjectionEntry>;
 };
 
 /** Retains unchanged rows only for this transcript's latest projection. */
 export function createTranscriptProjection() {
   const cache: TranscriptProjectionCache = { entries: new Map() };
   return (
-    records: readonly AgentTurnRecord[],
+    records: readonly AgentColumnRecord[],
     locale: string,
     t: Translate,
     now = new Date(),
@@ -433,7 +356,7 @@ export function createTranscriptProjection() {
  * reply's record alone makes.
  */
 export function transcriptItems(
-  records: readonly AgentTurnRecord[],
+  records: readonly AgentColumnRecord[],
   locale: string,
   t: Translate,
   now: Date = new Date(),
@@ -481,7 +404,7 @@ export function transcriptItems(
     cache?.locale === locale && cache.t === t && cache.day === dayStart(now)
       ? cache.entries
       : undefined;
-  const entries = new Map<AgentTurnRecord, TranscriptProjectionEntry>();
+  const entries = new Map<AgentColumnRecord, TranscriptProjectionEntry>();
   records.forEach((record, index) => {
     if (
       record.kind === "thought" ||
@@ -491,7 +414,7 @@ export function transcriptItems(
     const id =
       record.kind === "reply"
         ? unique(`reply:${record.id}`)
-        : unique(`${record.kind}:${record.reply_id}:${record.id}`);
+        : unique(`${record.kind}:${record.reply_id}:${record.id ?? ""}`);
     const reply =
       record.kind === "agent" ? replies.get(record.reply_id) : undefined;
     const last =
@@ -524,24 +447,29 @@ export function transcriptItems(
           kind: "person",
           id,
           text: record.text,
-          ...(record.attachments?.length
+          ...(record.attachments.length
             ? { files: sentFiles(record.attachments) }
             : {}),
-          ...(record.skills?.length ? { skills: record.skills } : {}),
+          ...(record.skills.length ? { skills: record.skills } : {}),
           ...(sentAtLabel ? { sentAtLabel } : {}),
         };
         break;
       }
-      case "tool":
+      case "tool": {
+        // A call the agent named no title for is named by its kind.
+        const kind = record.tool_kind
+          ? toolKindWords(t, record.tool_kind)
+          : undefined;
         item = {
           kind: "tool",
           id,
-          label: record.title,
+          label: record.title ?? kind ?? "",
           state: record.status,
-          detail: toolKindWords(t, record.tool_kind),
-          ...(record.details?.length ? { internals: record.details } : {}),
+          ...(record.title !== null && kind ? { detail: kind } : {}),
+          ...(record.details.length ? { internals: record.details } : {}),
         };
         break;
+      }
       case "agent":
         item = {
           kind: "agent",
@@ -691,7 +619,7 @@ export function useConversationGroups(
 /** What the newest reply of a conversation that says so ran with; undefined
  * where none says. */
 export function newestRanWith(
-  records: readonly AgentTurnRecord[],
+  records: readonly AgentColumnRecord[],
 ): AgentRanWith | undefined {
   for (let index = records.length - 1; index >= 0; index -= 1) {
     const record = records[index];
@@ -704,7 +632,7 @@ export function newestRanWith(
  * the newest of them ran with, and the tokens all of them used. Each is null
  * where no reply served it. */
 export function replyFacts(
-  records: readonly AgentTurnRecord[],
+  records: readonly AgentColumnRecord[],
   locale: string,
   t: Translate,
 ): { ranWith: string | null; usage: string | null } {
@@ -718,13 +646,23 @@ export function replyFacts(
         [
           selection.provider_display_name || selection.provider,
           selection.model_display_name || selection.model,
-          ...(selection.effort ? [effortWords(t, selection.effort)] : []),
-        ],
+          selection.effort ? effortWords(t, selection.effort) : null,
+        ].filter((part): part is string => Boolean(part)),
         "plain",
       )
     : null;
+  // A reply counts only where its provider reported both of its counts.
   const counted = replies.flatMap((reply) =>
-    reply.usage ? [reply.usage] : [],
+    reply.usage &&
+    reply.usage.input_tokens !== null &&
+    reply.usage.output_tokens !== null
+      ? [
+          {
+            input_tokens: reply.usage.input_tokens,
+            output_tokens: reply.usage.output_tokens,
+          },
+        ]
+      : [],
   );
   return {
     ranWith: ranWith

@@ -7,19 +7,18 @@ import {
   questionnaireFaults,
   type AnswerFault,
 } from "../shell/agentClarification";
-import { offeredOptions } from "../shell/agentPermission";
 import type {
   AgentApproval,
   AgentApprovalOption,
+  AgentQuestion,
   AgentQuestionnaire,
-} from "../shell/agentSession";
-import type { ClarificationQuestion } from "../shell/agentGatewayContract";
+} from "../shell/agentSnapshotContract";
 
 // The questions, as cadrumo-agent serves them: every field present, a text
 // question's options null. A reply that asks is given these unless its
 // message asks for the most the agent can: four questions of four options,
 // a prompt and an option at the longest they can be.
-export const QUESTIONS: ClarificationQuestion[] = [
+export const QUESTIONS: AgentQuestion[] = [
   {
     id: "q-trimestre",
     prompt: "¿Qué trimestre preparo?",
@@ -41,7 +40,7 @@ export const QUESTIONS: ClarificationQuestion[] = [
 export const exactly = (words: string, length: number) =>
   `${words.repeat(Math.ceil(length / words.length)).slice(0, length - 1)}.`;
 
-export const MOST_QUESTIONS: ClarificationQuestion[] = [
+export const MOST_QUESTIONS: AgentQuestion[] = [
   {
     id: "q-trimestre",
     prompt: exactly(
@@ -82,8 +81,7 @@ export const MOST_QUESTIONS: ClarificationQuestion[] = [
 
 // The options of a permission request, in the order the agent lists them,
 // each under its own name. The agent offers only options that answer the call
-// alone: one it would remember is withheld unless nothing else is offered.
-// Their order on the card is decided by kind.
+// or the session alone. Their order on the card is decided by kind.
 export const TOOL_OPTIONS: AgentApprovalOption[] = [
   { option_id: "allow-once", name: "Allow this read", kind: "allow_once" },
   { option_id: "reject-once", name: "Skip this read", kind: "reject_once" },
@@ -122,25 +120,12 @@ export const PERMISSION_TARGETS: Record<
   },
 };
 
-export const REVIEW_OPTIONS: AgentApprovalOption[] = [
-  { option_id: "allow-once", name: "Registrar la factura", kind: "allow_once" },
-  { option_id: "reject-once", name: "No registrar", kind: "reject_once" },
-];
-
-// Options the agent gives no name: absent, null, empty or only spaces.
+// Options the agent gives no name: null, empty or only spaces.
 export const UNNAMED_OPTIONS: AgentApprovalOption[] = [
   { option_id: "a", name: "", kind: "allow_once" },
-  { option_id: "b", kind: "reject_once" },
+  { option_id: "b", name: null, kind: "reject_once" },
   { option_id: "c", name: null, kind: "allow_once" },
   { option_id: "d", name: "   ", kind: "reject_once" },
-];
-
-// A request that offers nothing but options the agent would remember, which it
-// then keeps: narrowing it to nothing would refuse a question a person can
-// answer. Unnamed, so the card words them by their kind.
-export const REMEMBERED_OPTIONS: AgentApprovalOption[] = [
-  { option_id: "always-allow", kind: "allow_always" },
-  { option_id: "always-reject", kind: "reject_always" },
 ];
 
 // The most a request can hold: sixteen options, alternating kinds, the first
@@ -181,8 +166,6 @@ function approvalFaults(approval: AgentApproval): string[] {
     notes.push("a request offers one to sixteen options");
   if (new Set(options.map((option) => option.option_id)).size < options.length)
     notes.push("option ids repeat");
-  if (offeredOptions(options).length < options.length)
-    notes.push("an option it would remember is offered beside others");
   for (const option of options) {
     if (
       option.option_id === "" ||
