@@ -168,7 +168,7 @@ def conforms_to_fixed_rate(base: Decimal, amount: Decimal, rate: Decimal) -> boo
 
     The statutory withholding is a single ``base * rate`` product rounded once
     to cents (money-2), so the largest honest gap between the operator's amount
-    and the recomputed expectation is half a cent. Bounding at :data:`CENT`
+    and the recomputed expectation is half a cent. Bounding at ``CENT``
     accepts that gap while still catching a genuinely divergent rate.
     """
     expected = base * rate

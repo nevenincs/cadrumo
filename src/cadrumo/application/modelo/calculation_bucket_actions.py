@@ -597,7 +597,7 @@ def _bucket_aggregation_channels(
         detail_rows=all_detail_rows,
     )
     detail_row_binding_values = detail_row_binding_values_for_calculation(
-        work_unit=preparation.work_unit,
+        resolver_rows=source_resolution.detail_rows,
         revision=preparation.snapshot.revision,
         detail_rows=detail_rows,
     )

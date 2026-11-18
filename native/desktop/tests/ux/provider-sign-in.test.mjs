@@ -1064,6 +1064,10 @@ for (const provider of PROVIDERS) {
         case: "success",
         ask: `complete the ${provider} sign-in in the browser the window opened, within ${Math.round(PERSON_MS / 1000)} s`,
       });
+      // The dialog closes when the attempt settles, before the window has read
+      // the lane again, so a closed dialog keeps the wait going until the lane
+      // reads ready; the status it last read is kept for a lane that never does.
+      let afterClose = null;
       const outcome = await waitFor(
         async () => {
           const now = await exec(pageDialog);
@@ -1072,10 +1076,12 @@ for (const provider of PROVIDERS) {
           if (now.open) return null;
           const group = await readGroup(provider);
           const lane = group.lanes?.find((item) => item.id === found.lane.id);
-          return lane?.status === "ready" ? { ok: true, lane } : { ok: null };
+          afterClose = lane?.status ?? "absent";
+          return lane?.status === "ready" ? { ok: true, lane } : null;
         },
         { timeout: PERSON_MS, what: "the person's sign-in", soft: true },
       );
+      line.lane_status_after_close = afterClose;
       line.durations_ms.to_outcome = Date.now() - began;
       if (!outcome || outcome.ok !== true) {
         // Which step the attempt stood at when the person's time ran out, in
@@ -1101,8 +1107,8 @@ for (const provider of PROVIDERS) {
         assert.fail(
           outcome?.ok === false
             ? "the sign-in failed"
-            : outcome?.ok === null
-              ? "the dialog closed but the lane does not read as ready"
+            : afterClose !== null
+              ? `the dialog closed but the lane does not read as ready (last read ${afterClose})`
               : "no outcome before the person's time ran out",
         );
       }

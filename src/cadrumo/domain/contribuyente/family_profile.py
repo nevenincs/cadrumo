@@ -466,8 +466,11 @@ class RentaFamilyProfile(BaseModel):
         only limb one would pass any test that checks the deceased's own amount.
 
         The two limbs read ``death_date`` through different predicates and the
-        difference is deliberate: :meth:`~DescendantInfo.died_in_period` for the
-        cuantía, :meth:`~DescendantInfo.died_before_devengo` for the ordering.
+        difference is deliberate:
+        :meth:`~cadrumo.domain.contribuyente.descendant_record.DescendantRecordBase.died_in_period`
+        for the cuantía,
+        :meth:`~cadrumo.domain.contribuyente.descendant_record.DescendantRecordBase.died_before_devengo`
+        for the ordering.
         See the ``death_date`` field documentation for why they are not one
         condition.
 

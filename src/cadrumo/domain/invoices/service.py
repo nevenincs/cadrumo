@@ -43,7 +43,7 @@ from .models import Invoice
 _LOGGER = get_logger(__name__)
 #: Default closeness for proposing an invoice-to-transaction link.
 #:
-#: DELIBERATELY NOT :data:`~core.money.rounding.CENT`, despite carrying the same value.
+#: DELIBERATELY NOT ``CENT``, despite carrying the same value.
 #: CENT bounds rounding noise: it answers "could these two figures be the same
 #: number, differently rounded". This answers something else -- "are these two
 #: figures close enough that a human should be offered the link" -- which is a

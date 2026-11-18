@@ -594,7 +594,7 @@
         "1T",
         "--no-joint-return-elected",
         "--casilla",
-        "44=150.00"
+        "77=150.00"
       ],
       "captures": [],
       "envelope": {
@@ -614,22 +614,6 @@
               "source_kind": "ledger_iva_aggregation"
             },
             "message": "Some invoices have no date for when the operation took place, so their issue date chose the period.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "box": "44",
-              "casilla_id": "44",
-              "detail": "casilla '44': the caller value replaced a different value from backend",
-              "level": "blocks",
-              "reason": "precedence_tier_divergence",
-              "remedy": "Correct the source in error so both state the same value, or remove the higher tier's value, then calculate again.",
-              "resolver_id": "calculate_caller_relations_and_boxes",
-              "source_kind": "operator_input"
-            },
-            "message": "Two sources hold different values for a figure that reaches box 44, and Cadrumo used the one that takes precedence.",
             "severity": "warning"
           },
           {
@@ -694,7 +678,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "9a08bcc2c5d24d29e55bf0ce85e4ebe713a524b3ae7952e018ba00589a1285f9",
+          "calculation_revision_id": "568a3ed6dd8dafd82caff648e0b7012b659b425f33de22444bff5c552c9f3400",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -767,8 +751,8 @@
             "41": "0.00",
             "42": "0",
             "43": "0.00",
-            "44": "150.00",
-            "45": "255.00",
+            "44": "0.00",
+            "45": "105.00",
             "47": "0",
             "48": "0",
             "49": "0",
@@ -785,16 +769,16 @@
             "60": "0",
             "62": "0",
             "63": "0",
-            "64": "-45.00",
+            "64": "105.00",
             "65": "100",
-            "66": "-45.00",
+            "66": "105.00",
             "68": "0",
             "70": "0",
-            "71": "-45.00",
+            "71": "255.00",
             "74": "0",
             "75": "0",
             "76": "0",
-            "77": "0",
+            "77": "150.00",
             "79": "0",
             "80": "0",
             "81": "0",
@@ -829,11 +813,11 @@
             "iva.autorepercutido.intracomunitaria.devengado": "0",
             "iva.autorepercutido.intracomunitaria.devengado.base": "0",
             "iva.compensacion-aplicada-periodo": "0.00",
-            "iva.compensacion-disponible-fin-periodo": "45.00",
-            "iva.compensacion-generada-periodo": "45.00",
+            "iva.compensacion-disponible-fin-periodo": "0.00",
+            "iva.compensacion-generada-periodo": "0.00",
             "iva.compensacion-pendiente-periodos-anteriores": "0",
             "iva.compensacion-pendiente-periodos-posteriores": "0.00",
-            "iva.cuota-deducible-total": "255.00",
+            "iva.cuota-deducible-total": "105.00",
             "iva.cuota-devengada-total": "210.00",
             "iva.cuota-devengada.general": "210.00",
             "iva.cuota-devengada.reducido": "0.00",
@@ -856,8 +840,8 @@
             "iva.repercutido.super-reducido": "0",
             "iva.repercutido.super-reducido.base": "0",
             "iva.repercutido.super-reducido.transitorio": "0",
-            "iva.resultado": "-45.00",
-            "iva.resultado-regimen-general": "-45.00",
+            "iva.resultado": "255.00",
+            "iva.resultado-regimen-general": "105.00",
             "iva.soportado.importaciones": "0",
             "iva.soportado.interiores": "105.00",
             "iva.soportado.interiores.base": "500.00",
@@ -890,7 +874,7 @@
             "38": "0",
             "39": "0",
             "43": "0",
-            "44": "150",
+            "44": "0",
             "59": "0",
             "60": "0",
             "62": "0",
@@ -898,6 +882,7 @@
             "65": "100",
             "74": "0",
             "75": "0",
+            "77": "150",
             "decl.ejercicio": "2026",
             "decl.periodo": "1T",
             "iva.autorepercutido.interior.deducible": "0",
@@ -1004,8 +989,8 @@
             {"absent_by_design":false,"casilla_id":"41","formula_id":"modelo-303-iva-rectificacion-deducciones-cuota","legal_refs":["ley-37-1992:art-80","ley-37-1992:art-99","ley-37-1992:art-92","ley-37-1992:art-94","ley-37-1992:art-95","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["iva.rectificacion-deducciones.interiores","iva.rectificacion-deducciones.importaciones","iva.rectificacion-deducciones.inversion-sujeto-pasivo"],"operand_refs":["iva.rectificacion-deducciones.interiores","iva.rectificacion-deducciones.importaciones","iva.rectificacion-deducciones.inversion-sujeto-pasivo"],"operand_values":["0","0","0"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"42","formula_id":null,"legal_refs":["ley-37-1992:art-92","ley-37-1992:art-94","ley-37-1992:art-95","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"43","formula_id":null,"legal_refs":["ley-37-1992:art-107","ley-37-1992:art-108","ley-37-1992:art-109","ley-37-1992:art-110","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0.00"},
-            {"absent_by_design":false,"casilla_id":"44","formula_id":null,"legal_refs":["ley-37-1992:art-104","ley-37-1992:art-105","ley-37-1992:art-92","ley-37-1992:art-94","ley-37-1992:art-95","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"150.00"},
-            {"absent_by_design":false,"casilla_id":"45","formula_id":"modelo-303-dr303-45-projection","legal_refs":["ley-37-1992:art-92","ley-37-1992:art-94","ley-37-1992:art-95","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"value","operand_casilla_refs":["iva.cuota-deducible-total"],"operand_refs":["iva.cuota-deducible-total"],"operand_values":["255.00"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"255.00"},
+            {"absent_by_design":false,"casilla_id":"44","formula_id":null,"legal_refs":["ley-37-1992:art-104","ley-37-1992:art-105","ley-37-1992:art-92","ley-37-1992:art-94","ley-37-1992:art-95","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0.00"},
+            {"absent_by_design":false,"casilla_id":"45","formula_id":"modelo-303-dr303-45-projection","legal_refs":["ley-37-1992:art-92","ley-37-1992:art-94","ley-37-1992:art-95","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"value","operand_casilla_refs":["iva.cuota-deducible-total"],"operand_refs":["iva.cuota-deducible-total"],"operand_values":["105.00"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"105.00"},
             {"absent_by_design":false,"casilla_id":"47","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"48","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"49","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
@@ -1022,16 +1007,16 @@
             {"absent_by_design":false,"casilla_id":"60","formula_id":null,"legal_refs":["ley-37-1992:art-21","ley-37-1992:art-22","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"62","formula_id":null,"legal_refs":["ley-37-1992:art-75","ley-37-1992:art-163-decies","ley-37-1992:art-163-undecies","ley-37-1992:art-163-duodecies","ley-37-1992:art-163-terdecies","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"63","formula_id":null,"legal_refs":["ley-37-1992:art-75","ley-37-1992:art-163-decies","ley-37-1992:art-163-undecies","ley-37-1992:art-163-duodecies","ley-37-1992:art-163-terdecies","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"64","formula_id":"modelo-303-iva-suma-resultados","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-92","ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71"],"op":"add","operand_casilla_refs":["iva.resultado-regimen-general","58","76"],"operand_refs":["iva.resultado-regimen-general","58","76"],"operand_values":["-45.00","0","0"],"source_refs":["aeat-dr-303-2024-early","boe-modelo-303-2008-form","aeat-modelo-303-procedure"],"value":"-45.00"},
+            {"absent_by_design":false,"casilla_id":"64","formula_id":"modelo-303-iva-suma-resultados","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-92","ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71"],"op":"add","operand_casilla_refs":["iva.resultado-regimen-general","58","76"],"operand_refs":["iva.resultado-regimen-general","58","76"],"operand_values":["105.00","0","0"],"source_refs":["aeat-dr-303-2024-early","boe-modelo-303-2008-form","aeat-modelo-303-procedure"],"value":"105.00"},
             {"absent_by_design":false,"casilla_id":"65","formula_id":null,"legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"100"},
-            {"absent_by_design":false,"casilla_id":"66","formula_id":"modelo-303-iva-atribuible-estado","legal_refs":["rd-1624-1992:art-71"],"op":"divide","operand_casilla_refs":["64","65"],"operand_refs":["64","65"],"operand_values":["-45.00","100"],"source_refs":["aeat-dr-303-2024-early","boe-modelo-303-2008-form","aeat-modelo-303-procedure"],"value":"-45.00"},
+            {"absent_by_design":false,"casilla_id":"66","formula_id":"modelo-303-iva-atribuible-estado","legal_refs":["rd-1624-1992:art-71"],"op":"divide","operand_casilla_refs":["64","65"],"operand_refs":["64","65"],"operand_values":["105.00","100"],"source_refs":["aeat-dr-303-2024-early","boe-modelo-303-2008-form","aeat-modelo-303-procedure"],"value":"105.00"},
             {"absent_by_design":false,"casilla_id":"68","formula_id":null,"legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"70","formula_id":null,"legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"71","formula_id":"modelo-303-iva-resultado-final","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","rd-1624-1992:art-29","rd-1624-1992:art-30"],"op":"subtract","operand_casilla_refs":["iva.resultado","70","109","112"],"operand_refs":["iva.resultado","70","109","112"],"operand_values":["-45.00","0","0","0"],"source_refs":["aeat-dr-303-2026","boe-modelo-303-2008-form","aeat-modelo-303-procedure"],"value":"-45.00"},
+            {"absent_by_design":false,"casilla_id":"71","formula_id":"modelo-303-iva-resultado-final","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","rd-1624-1992:art-29","rd-1624-1992:art-30"],"op":"subtract","operand_casilla_refs":["iva.resultado","70","109","112"],"operand_refs":["iva.resultado","70","109","112"],"operand_values":["255.00","0","0","0"],"source_refs":["aeat-dr-303-2026","boe-modelo-303-2008-form","aeat-modelo-303-procedure"],"value":"255.00"},
             {"absent_by_design":false,"casilla_id":"74","formula_id":null,"legal_refs":["ley-37-1992:art-163-decies","ley-37-1992:art-163-undecies","ley-37-1992:art-163-duodecies","ley-37-1992:art-163-terdecies","ley-37-1992:art-163-quinquiesdecies","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"75","formula_id":null,"legal_refs":["ley-37-1992:art-163-decies","ley-37-1992:art-163-undecies","ley-37-1992:art-163-duodecies","ley-37-1992:art-163-terdecies","ley-37-1992:art-163-quinquiesdecies","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"76","formula_id":null,"legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"77","formula_id":null,"legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"77","formula_id":null,"legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"150.00"},
             {"absent_by_design":false,"casilla_id":"79","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"80","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"81","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
@@ -1066,12 +1051,12 @@
             {"absent_by_design":false,"casilla_id":"iva.autorepercutido.intracomunitaria.deducible","formula_id":null,"legal_refs":["ley-37-1992:art-13","ley-37-1992:art-15","ley-37-1992:art-69","ley-37-1992:art-70","ley-37-1992:art-84","ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.autorepercutido.intracomunitaria.devengado","formula_id":null,"legal_refs":["ley-37-1992:art-13","ley-37-1992:art-15","ley-37-1992:art-69","ley-37-1992:art-70","ley-37-1992:art-84","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.autorepercutido.intracomunitaria.devengado.base","formula_id":null,"legal_refs":["ley-37-1992:art-13","ley-37-1992:art-15","ley-37-1992:art-69","ley-37-1992:art-70","ley-37-1992:art-84","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"iva.compensacion-aplicada-periodo","formula_id":"modelo-303-compensacion-aplicada-periodo","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","rd-1624-1992:art-29","rd-1624-1992:art-30","orden-eha-3786-2008:art-1"],"op":"min","operand_casilla_refs":["iva.compensacion-pendiente-periodos-anteriores","iva.resultado-regimen-general"],"operand_refs":["iva.compensacion-pendiente-periodos-anteriores","iva.resultado-regimen-general"],"operand_values":["0","-45.00"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"0.00"},
-            {"absent_by_design":false,"casilla_id":"iva.compensacion-disponible-fin-periodo","formula_id":"modelo-303-compensacion-disponible-fin-periodo","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","rd-1624-1992:art-29","rd-1624-1992:art-30","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["iva.compensacion-pendiente-periodos-posteriores","iva.compensacion-generada-periodo"],"operand_refs":["iva.compensacion-pendiente-periodos-posteriores","iva.compensacion-generada-periodo"],"operand_values":["0.00","45.00"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"45.00"},
-            {"absent_by_design":false,"casilla_id":"iva.compensacion-generada-periodo","formula_id":"modelo-303-compensacion-generada-periodo","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","rd-1624-1992:art-29","rd-1624-1992:art-30","orden-eha-3786-2008:art-1"],"op":"max","operand_casilla_refs":["iva.resultado"],"operand_refs":["iva.resultado"],"operand_values":["-45.00"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"45.00"},
+            {"absent_by_design":false,"casilla_id":"iva.compensacion-aplicada-periodo","formula_id":"modelo-303-compensacion-aplicada-periodo","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","rd-1624-1992:art-29","rd-1624-1992:art-30","orden-eha-3786-2008:art-1"],"op":"min","operand_casilla_refs":["iva.compensacion-pendiente-periodos-anteriores","iva.resultado-regimen-general"],"operand_refs":["iva.compensacion-pendiente-periodos-anteriores","iva.resultado-regimen-general"],"operand_values":["0","105.00"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"0.00"},
+            {"absent_by_design":false,"casilla_id":"iva.compensacion-disponible-fin-periodo","formula_id":"modelo-303-compensacion-disponible-fin-periodo","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","rd-1624-1992:art-29","rd-1624-1992:art-30","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["iva.compensacion-pendiente-periodos-posteriores","iva.compensacion-generada-periodo"],"operand_refs":["iva.compensacion-pendiente-periodos-posteriores","iva.compensacion-generada-periodo"],"operand_values":["0.00","0.00"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"0.00"},
+            {"absent_by_design":false,"casilla_id":"iva.compensacion-generada-periodo","formula_id":"modelo-303-compensacion-generada-periodo","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","rd-1624-1992:art-29","rd-1624-1992:art-30","orden-eha-3786-2008:art-1"],"op":"max","operand_casilla_refs":["iva.resultado"],"operand_refs":["iva.resultado"],"operand_values":["255.00"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"iva.compensacion-pendiente-periodos-anteriores","formula_id":null,"legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","rd-1624-1992:art-29","rd-1624-1992:art-30","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.compensacion-pendiente-periodos-posteriores","formula_id":"modelo-303-compensacion-pendiente-periodos-posteriores","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","rd-1624-1992:art-29","rd-1624-1992:art-30","orden-eha-3786-2008:art-1"],"op":"subtract","operand_casilla_refs":["iva.compensacion-pendiente-periodos-anteriores","iva.compensacion-aplicada-periodo"],"operand_refs":["iva.compensacion-pendiente-periodos-anteriores","iva.compensacion-aplicada-periodo"],"operand_values":["0","0.00"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"0.00"},
-            {"absent_by_design":false,"casilla_id":"iva.cuota-deducible-total","formula_id":"modelo-303-iva-cuota-deducible-total","legal_refs":["ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["29","31","33","35","37","39","41","42","43","44"],"operand_refs":["29","31","33","35","37","39","41","42","43","44"],"operand_values":["105.00","0.00","0.00","0","0.00","0","0.00","0","0.00","150.00"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"255.00"},
+            {"absent_by_design":false,"casilla_id":"iva.cuota-deducible-total","formula_id":"modelo-303-iva-cuota-deducible-total","legal_refs":["ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"add","operand_casilla_refs":["29","31","33","35","37","39","41","42","43","44"],"operand_refs":["29","31","33","35","37","39","41","42","43","44"],"operand_values":["105.00","0.00","0.00","0","0.00","0","0.00","0","0.00","0.00"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"105.00"},
             {
               "absent_by_design": false,
               "casilla_id": "iva.cuota-devengada-total",
@@ -1164,8 +1149,8 @@
             {"absent_by_design":false,"casilla_id":"iva.repercutido.super-reducido","formula_id":null,"legal_refs":["ley-37-1992:art-88","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.repercutido.super-reducido.base","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.repercutido.super-reducido.transitorio","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"iva.resultado","formula_id":"modelo-303-iva-resultado","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","rd-1624-1992:art-29","rd-1624-1992:art-30"],"op":"subtract","operand_casilla_refs":["66","77","68","108","iva.compensacion-aplicada-periodo"],"operand_refs":["66","77","68","108","iva.compensacion-aplicada-periodo"],"operand_values":["-45.00","0","0","0","0.00"],"source_refs":["aeat-dr-303-2024-late","boe-modelo-303-2008-form","aeat-modelo-303-procedure"],"value":"-45.00"},
-            {"absent_by_design":false,"casilla_id":"iva.resultado-regimen-general","formula_id":"modelo-303-iva-resultado-regimen-general","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"subtract","operand_casilla_refs":["iva.cuota-devengada-total","iva.cuota-deducible-total"],"operand_refs":["iva.cuota-devengada-total","iva.cuota-deducible-total"],"operand_values":["210.00","255.00"],"source_refs":["aeat-dr-303-2024-early","boe-modelo-303-2008-form","aeat-modelo-303-procedure"],"value":"-45.00"},
+            {"absent_by_design":false,"casilla_id":"iva.resultado","formula_id":"modelo-303-iva-resultado","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","rd-1624-1992:art-29","rd-1624-1992:art-30"],"op":"subtract","operand_casilla_refs":["66","77","68","108","iva.compensacion-aplicada-periodo"],"operand_refs":["66","77","68","108","iva.compensacion-aplicada-periodo"],"operand_values":["105.00","150.00","0","0","0.00"],"source_refs":["aeat-dr-303-2024-late","boe-modelo-303-2008-form","aeat-modelo-303-procedure"],"value":"255.00"},
+            {"absent_by_design":false,"casilla_id":"iva.resultado-regimen-general","formula_id":"modelo-303-iva-resultado-regimen-general","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"subtract","operand_casilla_refs":["iva.cuota-devengada-total","iva.cuota-deducible-total"],"operand_refs":["iva.cuota-devengada-total","iva.cuota-deducible-total"],"operand_values":["210.00","105.00"],"source_refs":["aeat-dr-303-2024-early","boe-modelo-303-2008-form","aeat-modelo-303-procedure"],"value":"105.00"},
             {"absent_by_design":false,"casilla_id":"iva.soportado.importaciones","formula_id":null,"legal_refs":["ley-37-1992:art-17","ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.soportado.interiores","formula_id":null,"legal_refs":["ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"105.00"},
             {"absent_by_design":false,"casilla_id":"iva.soportado.interiores.base","formula_id":null,"legal_refs":["ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"500.00"},
@@ -1191,25 +1176,25 @@
               "casilla_id": "iva.cuota-deducible-total",
               "label": "Total deductible VAT amount",
               "role": "key_figure",
-              "value": "255.00"
+              "value": "105.00"
             },
             {
               "casilla_id": "iva.resultado-regimen-general",
               "label": "General regime result",
               "role": "key_figure",
-              "value": "-45.00"
+              "value": "105.00"
             },
             {
               "casilla_id": "64",
               "label": "Result. Sum of results",
               "role": "key_figure",
-              "value": "-45.00"
+              "value": "105.00"
             },
             {
               "casilla_id": "66",
               "label": "Result. Attributable to the State Administration",
               "role": "key_figure",
-              "value": "-45.00"
+              "value": "105.00"
             },
             {
               "casilla_id": "iva.compensacion-aplicada-periodo",
@@ -1227,25 +1212,25 @@
               "casilla_id": "iva.resultado",
               "label": "Self-assessment result",
               "role": "key_figure",
-              "value": "-45.00"
+              "value": "255.00"
             },
             {
               "casilla_id": "71",
               "label": "Result of the settlement",
               "role": "key_figure",
-              "value": "-45.00"
+              "value": "255.00"
             },
             {
               "casilla_id": "iva.compensacion-generada-periodo",
               "label": "Offset balance generated in this period",
               "role": "key_figure",
-              "value": "45.00"
+              "value": "0.00"
             },
             {
               "casilla_id": "iva.compensacion-disponible-fin-periodo",
               "label": "Offset balance available for later periods",
               "role": "key_figure",
-              "value": "45.00"
+              "value": "0.00"
             },
             {
               "casilla_id": "27",
@@ -1257,11 +1242,11 @@
               "casilla_id": "45",
               "label": "Total deductible amount",
               "role": "key_figure",
-              "value": "255.00"
+              "value": "105.00"
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 9a08bcc2c5d24d29e55bf0ce85e4ebe713a524b3ae7952e018ba00589a1285f9 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 568a3ed6dd8dafd82caff648e0b7012b659b425f33de22444bff5c552c9f3400 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
