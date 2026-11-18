@@ -1078,6 +1078,20 @@ for (const provider of PROVIDERS) {
       );
       line.durations_ms.to_outcome = Date.now() - began;
       if (!outcome || outcome.ok !== true) {
+        // Which step the attempt stood at when the person's time ran out, in
+        // the window's own words (never a URL or a code): a dialog still
+        // starting never offered the browser; one past it waited on a person.
+        if (!outcome) {
+          const last = await exec(pageDialog);
+          line.dialog_at_timeout = last.open
+            ? {
+                title: last.title,
+                statuses: last.statuses,
+                buttons: last.buttons.map((button) => button.text),
+                attempt: last.attemptId ? "answered" : "not-answered",
+              }
+            : "closed";
+        }
         if (outcome?.now) {
           const judged = judgeFailure(outcome.now);
           line.cause = judged.causes.join(",") || null;
