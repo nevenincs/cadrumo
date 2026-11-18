@@ -273,6 +273,15 @@ def load_for_build(root: Path) -> ApplicationEnvironment:
     return bind_build_provisioning(load(root), root)
 
 
+def load_unprovisioned(root: Path) -> ApplicationEnvironment:
+    """Read the declaration for a contract no package embeds: no package-fixed value is bound.
+
+    Host unit tests and lints compile against this contract, so they build where no
+    publisher provisioning exists; their launch profiles set no package-fixed name.
+    """
+    return replace(load(root), package_fixed=())
+
+
 def bind_build_provisioning(declaration: ApplicationEnvironment, root: Path) -> ApplicationEnvironment:
     """Resolve declared fixed inputs through their canonical build owners."""
     from ..google_oauth import GOOGLE_OAUTH_ENV, build_client_json

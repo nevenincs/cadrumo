@@ -374,9 +374,15 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
   set(host_driver_action "${action}")
   set(host_dependencies desktop-frontend-build ${desktop_user_docs})
   set(host_fixture_check)
+  set(host_contract "${CADRUMO_NATIVE_CONTRACT}")
+  set(host_contracts ${desktop_host_contracts})
   if(action STREQUAL "unit-test" OR action STREQUAL "unit-clippy")
     # build.rs embeds the navigation projection, so even backend-only runs generate it.
     set(host_dependencies desktop-frontend-install desktop-frontend-navigation)
+    # Backend-only runs launch no package, so they compile the contract no package embeds and
+    # build without publisher provisioning; the live-package actions keep the package contract.
+    set(host_contract "${CADRUMO_UNPROVISIONED_CONTRACT_DIR}/contract.json")
+    set(host_contracts native_contract_unprovisioned)
     if(action STREQUAL "unit-test")
       set(host_driver_action test-unit)
     else()
@@ -415,7 +421,7 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
     ${desktop_identity_only}
     COMMAND "${CMAKE_COMMAND}" -E env --unset=CARGO_BUILD_TARGET
       ${desktop_environment} "${desktop_configuration}" ${desktop_node_path_arguments} ${desktop_rust_environment}
-      "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
+      "CADRUMO_NATIVE_CONTRACT=${host_contract}"
       "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
       "CADRUMO_PACKAGE_USER_DOCS=${desktop_test_user_docs}"
       "CADRUMO_PROVIDER_STATUS_CONTRACT_FIXTURE=${CADRUMO_PATH_DESKTOP_TESTING}/provider-status-contract.json"
@@ -425,7 +431,7 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
       "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${host_driver_action}
     DEPENDS ${host_dependencies}
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-  add_dependencies(desktop-host-${action} ${desktop_host_contracts})
+  add_dependencies(desktop-host-${action} ${host_contracts})
 endforeach()
 # The backend-only lint needs the frontend packages but not a frontend build or staged
 # documentation. CTest drives the existing target, so its identity, fixture and environment

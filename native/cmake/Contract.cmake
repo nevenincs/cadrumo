@@ -91,6 +91,77 @@ add_custom_target(native_contract
     "${CONTRACT_DIR}/contract_vectors.rs" "${CONTRACT_DIR}/operational-settings.ts"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${contract_comment}" VERBATIM)
 add_dependencies(native_contract native_manager_strings)
+# The contract no package embeds: the same projection with no package-fixed value bound, so the
+# desktop host's unit tests and lints build where no publisher provisioning exists. Its directory
+# also holds the outputs that carry no build identity, which the host's build scripts read beside
+# the contract, so those targets need neither the package contract nor the interpreter metadata.
+set(CADRUMO_UNPROVISIONED_CONTRACT_DIR "${CONTRACT_DIR}/unprovisioned" CACHE INTERNAL
+  "Generated native contract without package provisioning, for the host unit and lint actions")
+set(unprovisioned_contract_outputs "${CADRUMO_UNPROVISIONED_CONTRACT_DIR}/contract.rs"
+  "${CADRUMO_UNPROVISIONED_CONTRACT_DIR}/contract.h" "${CADRUMO_UNPROVISIONED_CONTRACT_DIR}/contract.json"
+  "${CADRUMO_UNPROVISIONED_CONTRACT_DIR}/contract_vectors.rs"
+  "${CADRUMO_UNPROVISIONED_CONTRACT_DIR}/operational-settings.ts")
+set(unstamped_metadata_outputs "${CADRUMO_UNPROVISIONED_CONTRACT_DIR}/build_layout.h")
+if(CADRUMO_TARGET MATCHES "^windows-")
+  foreach(image IN ITEMS process desktop)
+    foreach(build_kind IN ITEMS release development)
+      list(APPEND unstamped_metadata_outputs "${CADRUMO_UNPROVISIONED_CONTRACT_DIR}/${image}-${build_kind}.manifest")
+    endforeach()
+  endforeach()
+endif()
+cadrumo_cached_command(unstamped_metadata_command native_unstamped_metadata SHARED DISCOVER
+  INPUTS ${platform_contract_inputs} "${CADRUMO_SOURCE_ROOT}/native/package-layout.json"
+    "${CADRUMO_SOURCE_ROOT}/native/interpreter/windows/host.manifest"
+    "${CADRUMO_SOURCE_ROOT}/native/desktop/src-tauri/windows/desktop.manifest"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/metadata.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/identity.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/layout.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/stable_output.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/platforms/windows.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/platforms/linux.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/platforms/macos.py"
+    "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/product_identity.py"
+    "${CADRUMO_SOURCE_ROOT}/pyproject.toml" "${CADRUMO_SOURCE_ROOT}/uv.lock" "${CADRUMO_DEV_PYTHON}"
+    "${CADRUMO_BUILD_HELPER}"
+  OUTPUTS ${unstamped_metadata_outputs})
+cadrumo_build_step(unstamped_metadata_comment native_unstamped_metadata GROUP contract
+  SUMMARY "generate the layout header and manifests the unprovisioned contract's hosts compile beside it"
+  OUTPUTS ${unstamped_metadata_outputs})
+add_custom_target(native_unstamped_metadata
+  COMMAND ${unstamped_metadata_command} ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B
+    -m dev.packaging.native.metadata "${CADRUMO_UNPROVISIONED_CONTRACT_DIR}" --unstamped
+    --channel "${CADRUMO_CHANNEL}" --target "${CADRUMO_TARGET}"
+  BYPRODUCTS ${unstamped_metadata_outputs}
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${unstamped_metadata_comment}" VERBATIM)
+cadrumo_cached_command(unprovisioned_contract_command native_contract_unprovisioned SHARED DISCOVER
+  INPUTS ${contract_inputs} "${CONTRACT_DIR}/manager-chrome.json"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/generate.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/stable_output.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/storage_vectors.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/transport_contract.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/operational_settings.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/identity.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/runtime_exit_reasons.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/runtime_wheelhouse_contract.py"
+    "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/external_constants.py"
+    "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/connection_transport.py"
+    "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/product_identity.py"
+    "${CADRUMO_SOURCE_ROOT}/src/cadrumo_client/contracts/contracts.py"
+    "${CONTRACT_DIR}/identity.json" "${CADRUMO_SOURCE_ROOT}/pyproject.toml"
+    "${CADRUMO_SOURCE_ROOT}/uv.lock" "${CADRUMO_DEV_PYTHON}"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/release-python-version" "${CADRUMO_SOURCE_ROOT}/.python-version"
+    "${CADRUMO_BUILD_HELPER}"
+  OUTPUTS ${unprovisioned_contract_outputs})
+cadrumo_build_step(unprovisioned_contract_comment native_contract_unprovisioned GROUP contract
+  SUMMARY "generate the unprovisioned native contract the desktop host's unit tests and lints compile"
+  OUTPUTS "${CADRUMO_UNPROVISIONED_CONTRACT_DIR}/contract.json" "${CADRUMO_UNPROVISIONED_CONTRACT_DIR}/contract.rs")
+add_custom_target(native_contract_unprovisioned
+  COMMAND ${unprovisioned_contract_command} ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B
+    -m dev.packaging.native.generate "${CADRUMO_UNPROVISIONED_CONTRACT_DIR}" --unprovisioned
+    --channel "${CADRUMO_ID_CHANNEL}" --target "${CADRUMO_TARGET}" --manager-strings "${CONTRACT_DIR}/manager-chrome.json"
+  BYPRODUCTS ${unprovisioned_contract_outputs}
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${unprovisioned_contract_comment}" VERBATIM)
+add_dependencies(native_contract_unprovisioned native_manager_strings native_unstamped_metadata)
 # Each native component resolves its own build identity just before it compiles
 # (dev/packaging/native/build_stamp.py): a content fingerprint of its inputs keys the
 # identity, so an unchanged component keeps its number and its generated identity file,
