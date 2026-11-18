@@ -72,18 +72,11 @@ from ...core.modelo_export_artefact import ModeloExportArtefact
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.export_parse import parse_export_payload
 from ...domain.calculations.registry.schema_form_layouts import FormContextFieldBlock
-from ...tests.personas import YearEnvelope, read_persona
-from .persona_materialisation import (
-    PERSONA_ACTOR,
-    PersonaMaterialisationError,
-    PersonaWorld,
-    ReplayScope,
-    attest_before_first_calculation,
-    materialised_persona,
-    run_operation,
-    settle_operation,
-    year_envelope,
-)
+from ...tests.persona_types import YearEnvelope
+from ...tests.personas import read_persona
+from .persona_materialisation import materialised_persona
+from .persona_operations import attest_before_first_calculation, run_operation, settle_operation
+from .persona_world import PERSONA_ACTOR, PersonaMaterialisationError, PersonaWorld, ReplayScope, year_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

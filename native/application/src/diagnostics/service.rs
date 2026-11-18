@@ -157,6 +157,32 @@ pub enum FeatureRefusal {
     Refused,
 }
 
+/// Where following an operation ended.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SettleEnd {
+    /// The operation reached its terminal state and its outcome was read.
+    Settled,
+    /// The operation waits on the person, at a review.
+    Person,
+    /// Observing it, or reading its outcome, failed.
+    Failed,
+    /// No outcome was observed within the window's bound.
+    Unobserved,
+}
+
+/// What woke the last observe of a followed operation.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SettleWake {
+    /// None: the first observe, right after submitting or answering.
+    First,
+    /// The runtime's change cue, or a cue stream that fell behind.
+    Cue,
+    /// The recheck bound, which ran out with no cue.
+    Recheck,
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(
     tag = "event",
@@ -216,6 +242,19 @@ pub enum ServiceFact {
     SetupAdmissionRead {
         read: AdmissionRead,
         outcome: AdmissionReadOutcome,
+        elapsed_ms: u64,
+    },
+    /// How following one operation the window submitted or answered went: where it
+    /// ended, what woke the observe that ended it, how many observes it took and how
+    /// many of their waits a change cue ended, their time, the time to read its
+    /// outcome (a settled operation's result document), and the whole wait.
+    OperationSettle {
+        end: SettleEnd,
+        wake: SettleWake,
+        observes: u32,
+        cues: u32,
+        observe_ms: u64,
+        outcome_ms: u64,
         elapsed_ms: u64,
     },
     /// The window presented its stored sign-in to hold a person session.

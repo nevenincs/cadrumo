@@ -26,15 +26,12 @@ from pathlib import Path
 from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-from cadrumo.entrypoints.tests.persona_materialisation import (
-    PERSONA_ACTOR,
-    MaterialisedPersona,
-    PersonaMaterialisationError,
-    filing_key,
-    materialised_persona,
-)
+from cadrumo.entrypoints.tests.persona_history_replay import filing_key
+from cadrumo.entrypoints.tests.persona_materialisation import materialised_persona
+from cadrumo.entrypoints.tests.persona_world import PERSONA_ACTOR, MaterialisedPersona, PersonaMaterialisationError
 from cadrumo.tests.env_scope import scoped_env_var
-from cadrumo.tests.personas import PersonaCatalogueError, persona_ids, read_persona
+from cadrumo.tests.persona_types import PersonaCatalogueError
+from cadrumo.tests.personas import persona_ids, read_persona
 from dev.desktop_persona_world import refuse_storage_root
 from dev.exit_codes import FAILED, OK
 from dev.paths import STORAGE_ROOT_ENV

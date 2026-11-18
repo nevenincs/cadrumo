@@ -12,6 +12,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
@@ -55,7 +56,10 @@ _BucketEventIds = Annotated[tuple[BucketEventId, ...], Field(max_length=_MAX_BUC
 
 
 class LedgerAllocateRequest(BaseModel):
-    """Private exact-profile request; ``transaction_id`` may be a CLI prefix."""
+    """Private exact-profile request; ``transaction_id`` may be a CLI prefix.
+
+    ``output_language`` is the language the result's transaction link fields are named in.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -66,6 +70,7 @@ class LedgerAllocateRequest(BaseModel):
     usage_ratio_id: Annotated[str, Field(max_length=LEDGER_ALLOCATE_RATIO_ID_MAX)] | None = None
     prorrata_reference: ProrrataReferenceText | None = None
     actor: Annotated[str, Field(min_length=1, max_length=64)] | None = None
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     @field_validator("business_pct")
     @classmethod
@@ -181,7 +186,7 @@ class LedgerAllocateExecutor:
             async with context.cancellation.irreversible_section():
                 await context.events.effect(OperationEffect.UNKNOWN)
                 result = await asyncio.to_thread(allocate)
-                projection = operation_result(payload.profile_id, result)
+                projection = operation_result(payload.profile_id, result, language=payload.output_language)
                 await context.events.effect(
                     OperationEffect.UPDATED if result.bucket_event_ids else OperationEffect.NONE
                 )
@@ -207,7 +212,9 @@ def build_ledger_allocate_definition(
     )
 
 
-def operation_result(profile_id: UUID, result: ManualLedgerTransactionResult) -> LedgerAllocateOperationResult:
+def operation_result(
+    profile_id: UUID, result: ManualLedgerTransactionResult, *, language: OutputLanguage
+) -> LedgerAllocateOperationResult:
     """Validate the exact profile and preserve only the canonical result payload."""
     canonical: LedgerTransactionResultPayload = ledger_transaction_result_payload(result)
     if (
@@ -218,7 +225,7 @@ def operation_result(profile_id: UUID, result: ManualLedgerTransactionResult) ->
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return LedgerAllocateOperationResult(
         profile_id=profile_id,
-        transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
+        transaction=LedgerTransactionProjection.from_payload(canonical.transaction, language=language),
         review_status=canonical.review_status,
         bucket_event_ids=result.bucket_event_ids,
     )

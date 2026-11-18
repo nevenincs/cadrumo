@@ -297,7 +297,7 @@ async def test_post_write_failure_retains_updated_effect(
         port.operands.failure = failure
     else:
 
-        def project(*_args: object) -> BaseModel:
+        def project(*_args: object, **_kwargs: object) -> BaseModel:
             raise failure
 
         monkeypatch.setattr(subject, "classification_result_from_action", project)

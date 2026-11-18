@@ -20,7 +20,7 @@ from cadrumo.application.modelo.workbench_operations import (
 )
 from cadrumo.entrypoints.cli.command_operation_table import COMMAND_OPERATION_ROWS
 from cadrumo.entrypoints.cli.tests.cli_runner import cadrumo_click_command
-from cadrumo.entrypoints.tests.persona_materialisation import PERSONA_PROFILE_CREDENTIAL
+from cadrumo.entrypoints.tests.persona_world import PERSONA_PROFILE_CREDENTIAL
 
 from ..cli_column.doors import (
     DOORS,

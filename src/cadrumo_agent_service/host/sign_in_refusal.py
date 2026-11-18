@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import logging
+import time
 from collections.abc import Sequence
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from cadrumo.core.logging import get_logger
 
-from ..providers.application.contracts import ProviderSettingsRefusalCode, ServiceCause, ServiceRefusalCode
+from ..providers.application.contracts import HelperCause, ProviderSettingsRefusalCode, ServiceCause, ServiceRefusalCode
 
 if TYPE_CHECKING:
     from .auth_attempt import AuthAttempt
@@ -52,6 +54,37 @@ def refuse(
     return {**served, "cause": cause, "log_ref": log_ref}
 
 
+Settlement = tuple[str, str | None, HelperCause | ServiceCause | None]
+"""An attempt's outcome event, its reason and its cause."""
+
+WITHDRAWN: Settlement = ("cancelled", "profile_required", "profile_signed_out")
+"""An attempt whose profile authority ended under it: said as such, never as the person's own cancellation."""
+
+CANCELLED: Settlement = ("cancelled", None, None)
+"""The person's own cancellation, which needs no reason."""
+
+DISCONNECTED: Settlement = ("cancelled", "host_disconnected", "host_disconnected")
+"""An attempt whose window stopped observing it."""
+
+
+_ACTIVE_EVENTS = frozenset({"starting", "started", "browser_action", "authorization_code_required"})
+
+
+@dataclass
+class SignInProgress:
+    """The last step a live attempt stood at and when, so an unfinished attempt says whether it offered the browser."""
+
+    began: float = field(default_factory=time.monotonic)
+    reached: str = "starting"
+    reached_at: float | None = None
+
+    def note(self, event: object) -> None:
+        """Record a newly reached live step; terminal events and repeats leave it as it was."""
+        if isinstance(event, str) and event in _ACTIVE_EVENTS and event != self.reached:
+            self.reached = event
+            self.reached_at = time.monotonic()
+
+
 def log_settlement(
     logger: logging.Logger,
     lane: str,
@@ -65,12 +98,18 @@ def log_settlement(
     stderr_bytes: int,
     errors: Sequence[str],
     log_ref: str,
+    progress: SignInProgress,
 ) -> None:
-    """One line per settled attempt on the attempt's own logger, at warning when it failed; no helper output."""
+    """One line per settled attempt on the attempt's own logger, at warning when it failed; no helper output.
+
+    ``progress`` gives the last step the attempt stood at before it settled, the seconds from its start to
+    that step and its whole life, so an attempt that ended unfinished says whether it ever offered the browser.
+    """
     logger.log(
         logging.WARNING if outcome == "failed" else logging.INFO,
         "provider sign-in settled provider=%s event=%s reason=%s cause=%s status_cause=%s "
-        "cleanup_confirmed=%s helper_exit_status=%s helper_stderr_bytes=%d errors=%s log_ref=%s",
+        "cleanup_confirmed=%s helper_exit_status=%s helper_stderr_bytes=%d errors=%s "
+        "reached=%s reached_after_s=%.1f lasted_s=%.1f log_ref=%s",
         lane,
         outcome,
         reason or "none",
@@ -80,6 +119,9 @@ def log_settlement(
         "none" if exit_status is None else exit_status,
         stderr_bytes,
         ",".join(errors) or "none",
+        progress.reached,
+        (progress.reached_at or progress.began) - progress.began,
+        time.monotonic() - progress.began,
         log_ref,
     )
 

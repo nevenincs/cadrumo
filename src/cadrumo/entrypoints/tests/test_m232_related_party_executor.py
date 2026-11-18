@@ -231,60 +231,83 @@ def _refusal(run: _Run) -> tuple[str, str]:
     return result.refusal.reason, outcome.refusal_code
 
 
+def _assert_empty_year_decides_nothing(empty: Modelo232YearProjection) -> None:
+    # An empty year lists as empty: success, no change, and the records decide nothing yet.
+    assert (empty.operations, empty.none_statements, empty.turnover_statements) == ((), (), ())
+    assert empty.verdict is not None
+    assert empty.verdict.basis is Modelo232Basis.NOTHING_STATED
+    assert empty.verdict.obligation is Modelo232Obligation.UNDECIDED
+
+
+def _assert_operation_stated(run: _Run) -> Modelo232RelatedPartyExecutionResult:
+    outcome, stated, effects = run
+    assert not isinstance(outcome, OperationRefusalEvidence)
+    assert effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
+    assert stated.outcome == "success"
+    assert stated.operation is not None
+    assert stated.operation.state is Modelo232StatementState.ACTIVE
+    assert stated.operation.counterparty_name == _NAME
+    assert _TAX_ID not in stated.model_dump_json()
+    return stated
+
+
+def _assert_listed_with_owed_verdict(
+    listed: Modelo232YearProjection,
+    empty: Modelo232YearProjection,
+    stated: Modelo232RelatedPartyExecutionResult,
+) -> None:
+    assert stated.operation is not None
+    (row,) = listed.operations
+    assert row.operation_id == stated.operation.operation_id
+    assert row.revision_id == stated.operation.revision_id
+    assert row.amount_eur.decimal == "312345.67"
+    assert listed.guard_revision_id != empty.guard_revision_id
+    # The amount with one related party passes the registry's art. 2.1.a threshold.
+    verdict = listed.verdict
+    assert verdict is not None
+    assert verdict.basis is Modelo232Basis.OPERATIONS_STATED
+    assert verdict.obligation is Modelo232Obligation.OWED
+    assert verdict.obligation_label == tr("aggregation.modelo_232_related_party.obligation.owed")
+    grounds = {ground.ground: ground for ground in verdict.grounds}
+    assert grounds[Modelo232Ground.SAME_RELATED_PARTY].state.value == "met"
+    assert _TAX_ID not in listed.model_dump_json()
+
+
+def _assert_withdrawal_lifecycle(operation: PinnedAuthorityOperation, operation_id: str, revision_id: str) -> None:
+    stale = _withdraw_operation(operation, operation_id, _STALE)
+    assert _refusal(stale) == ("stale_revision", M232_RELATED_PARTY_REVISION_REFUSAL_CODE)
+
+    _, withdrawn, _ = _withdraw_operation(operation, operation_id, revision_id)
+    assert withdrawn.operation is not None
+    assert withdrawn.operation.state is Modelo232StatementState.WITHDRAWN
+    assert withdrawn.operation.revision_id != revision_id
+
+    again = _withdraw_operation(operation, operation_id, withdrawn.operation.revision_id)
+    assert _refusal(again) == ("not_stated", M232_RELATED_PARTY_REFUSAL_CODE)
+
+    # The withdrawn operation stays listed, and with nothing in force the records decide nothing.
+    after = _list(operation)
+    (kept,) = after.operations
+    assert kept.state is Modelo232StatementState.WITHDRAWN
+    assert after.verdict is not None
+    assert after.verdict.basis is Modelo232Basis.NOTHING_STATED
+    assert _list(operation, _EJERCICIO - 1).operations == ()
+
+
 def test_an_operation_is_stated_listed_with_its_verdict_and_withdrawn(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE):
-        # An empty year lists as empty: success, no change, and the records decide nothing yet.
         empty = _list(operation)
-        assert (empty.operations, empty.none_statements, empty.turnover_statements) == ((), (), ())
-        assert empty.verdict is not None
-        assert empty.verdict.basis is Modelo232Basis.NOTHING_STATED
-        assert empty.verdict.obligation is Modelo232Obligation.UNDECIDED
+        _assert_empty_year_decides_nothing(empty)
 
-        outcome, stated, effects = _state_operation(operation, guard=empty.guard_revision_id)
-        assert not isinstance(outcome, OperationRefusalEvidence)
-        assert effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
-        assert stated.outcome == "success"
+        stated = _assert_operation_stated(_state_operation(operation, guard=empty.guard_revision_id))
         assert stated.operation is not None
-        assert stated.operation.state is Modelo232StatementState.ACTIVE
-        assert stated.operation.counterparty_name == _NAME
-        assert _TAX_ID not in stated.model_dump_json()
 
         listed = _list(operation)
+        _assert_listed_with_owed_verdict(listed, empty, stated)
         (row,) = listed.operations
-        assert row.operation_id == stated.operation.operation_id
-        assert row.revision_id == stated.operation.revision_id
-        assert row.amount_eur.decimal == "312345.67"
-        assert listed.guard_revision_id != empty.guard_revision_id
-        # The amount with one related party passes the registry's art. 2.1.a threshold.
-        verdict = listed.verdict
-        assert verdict is not None
-        assert verdict.basis is Modelo232Basis.OPERATIONS_STATED
-        assert verdict.obligation is Modelo232Obligation.OWED
-        assert verdict.obligation_label == tr("aggregation.modelo_232_related_party.obligation.owed")
-        grounds = {ground.ground: ground for ground in verdict.grounds}
-        assert grounds[Modelo232Ground.SAME_RELATED_PARTY].state.value == "met"
-        assert _TAX_ID not in listed.model_dump_json()
-
-        stale = _withdraw_operation(operation, row.operation_id, _STALE)
-        assert _refusal(stale) == ("stale_revision", M232_RELATED_PARTY_REVISION_REFUSAL_CODE)
-
-        _, withdrawn, _ = _withdraw_operation(operation, row.operation_id, row.revision_id)
-        assert withdrawn.operation is not None
-        assert withdrawn.operation.state is Modelo232StatementState.WITHDRAWN
-        assert withdrawn.operation.revision_id != row.revision_id
-
-        again = _withdraw_operation(operation, row.operation_id, withdrawn.operation.revision_id)
-        assert _refusal(again) == ("not_stated", M232_RELATED_PARTY_REFUSAL_CODE)
-
-        # The withdrawn operation stays listed, and with nothing in force the records decide nothing.
-        after = _list(operation)
-        (kept,) = after.operations
-        assert kept.state is Modelo232StatementState.WITHDRAWN
-        assert after.verdict is not None
-        assert after.verdict.basis is Modelo232Basis.NOTHING_STATED
-        assert _list(operation, _EJERCICIO - 1).operations == ()
+        _assert_withdrawal_lifecycle(operation, row.operation_id, row.revision_id)
 
 
 def test_a_write_against_a_moved_guard_is_refused(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:

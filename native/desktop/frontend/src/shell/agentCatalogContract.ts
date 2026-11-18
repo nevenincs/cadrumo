@@ -520,7 +520,7 @@ export type ServedCatalogModel = {
  * The catalog the agent declares before it runs, as the service relays it.
  */
 export type ServedDeclaredCatalogDocument = {
-  schema_version?: 6;
+  schema_version?: 7;
   providers: ServedDeclaredLane[];
   icon_attribution: DeclaredIconAttribution;
 };
@@ -536,6 +536,7 @@ export type ServedDeclaredLane = {
   display_name: string;
   description: string;
   auth_kind: AuthKind;
+  logout?: boolean;
   default_base_url: string | null;
   agent_credential_id: string | null;
   reads_off_host: boolean;

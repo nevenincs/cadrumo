@@ -3,6 +3,7 @@
 //! settles, the result read, and the closed failure codes the window maps to
 //! its own words. No operation's meaning lives here.
 use crate::agent::person::{HeldPerson, PersonEvent};
+use cadrumo_application::diagnostics::service::SettleWake;
 use cadrumo_application::error::application::ApplicationError;
 use cadrumo_application::runtime_client::framing::MAXIMUM_SECRET_BYTES;
 use serde::Serialize;
@@ -302,16 +303,60 @@ pub(crate) async fn follow(
     relayed: &Relayed<'_>,
     stop: impl Fn(&Value) -> bool,
 ) -> Result<Value> {
+    follow_traced(events, relayed, stop, &mut FollowTrace::default()).await
+}
+
+/// What following an operation saw so far: its observes, their time, how many
+/// of the waits between them a cue ended, and what woke the last one. Kept by
+/// the caller, so a follow cut off by its bound still tells how far it got.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct FollowTrace {
+    pub(crate) observes: u32,
+    pub(crate) cues: u32,
+    pub(crate) observe: Duration,
+    pub(crate) wake: SettleWake,
+}
+impl Default for FollowTrace {
+    fn default() -> Self {
+        Self {
+            observes: 0,
+            cues: 0,
+            observe: Duration::ZERO,
+            wake: SettleWake::First,
+        }
+    }
+}
+
+/// [`follow`], noting in `trace` what each observe took and what woke it.
+pub(crate) async fn follow_traced(
+    events: &mut tokio::sync::broadcast::Receiver<PersonEvent>,
+    relayed: &Relayed<'_>,
+    stop: impl Fn(&Value) -> bool,
+    trace: &mut FollowTrace,
+) -> Result<Value> {
     let mut recheck = FOLLOW_RECHECK_FIRST;
     loop {
-        let projection = observe(relayed).await?;
+        let started = std::time::Instant::now();
+        let projection = observe(relayed).await;
+        trace.observes = trace.observes.saturating_add(1);
+        trace.observe += started.elapsed();
+        let projection = projection?;
         if projection["lifecycle"] == "terminal" || stop(&projection) {
             return Ok(projection);
         }
         // The runtime's cue is how a settlement is normally learned; looking
         // again after a bound keeps a late or lost cue from holding a settled
         // answer back until some unrelated change wakes this wait.
-        recheck = next_recheck(recheck, next_cue(events, recheck).await?);
+        let cued = next_cue(events, recheck).await?;
+        if cued {
+            trace.cues = trace.cues.saturating_add(1);
+        }
+        trace.wake = if cued {
+            SettleWake::Cue
+        } else {
+            SettleWake::Recheck
+        };
+        recheck = next_recheck(recheck, cued);
     }
 }
 

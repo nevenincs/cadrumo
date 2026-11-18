@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.errors.hierarchy import CadrumoError
+from ...core.external_constants import OutputLanguage
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.models import Transaction
@@ -60,6 +61,8 @@ def project_lifecycle_mutation_from_action(
     operation_id: LedgerLifecycleOperationId,
     result: ManualLedgerTransactionResult,
     replaced: Transaction | None,
+    *,
+    language: OutputLanguage,
 ) -> LedgerLifecycleMutationProjection:
     """Project the canonical action result after checking profile and row identity.
 
@@ -80,7 +83,7 @@ def project_lifecycle_mutation_from_action(
     return LedgerLifecycleMutationProjection(
         profile_id=profile_id,
         operation_id=operation_id,
-        transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
+        transaction=LedgerTransactionProjection.from_payload(canonical.transaction, language=language),
         review_status=canonical.review_status,
         bucket_event_ids=result.bucket_event_ids,
         replaced=LedgerLifecycleReplacedStateProjection(

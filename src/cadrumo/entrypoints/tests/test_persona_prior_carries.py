@@ -30,18 +30,11 @@ from ...application.modelo.work_create_operation import (
 from ...application.operations.public_period import PublicPeriod
 from ...application.operations.public_scalar import restore_scalar
 from ...core.absence_attestation_family import PRIOR_CARRY_FAMILIES, AbsenceAttestationFamily
-from ...tests.personas import GENERAL_BASES_CARRY_FAMILY, PRIOR_CARRY_BOXES, Persona, PriorCarries, YearToken
-from .persona_materialisation import (
-    PERSONA_ACTOR,
-    MaterialisedPersona,
-    PersonaMaterialisationError,
-    PersonaWorld,
-    ReplayScope,
-    materialised_persona,
-    run_operation,
-    settle_operation,
-)
+from ...tests.persona_types import GENERAL_BASES_CARRY_FAMILY, PRIOR_CARRY_BOXES, Persona, PriorCarries, YearToken
+from .persona_materialisation import materialised_persona
+from .persona_operations import run_operation, settle_operation
 from .persona_prior_carries import attest_prior_carries, statement_families
+from .persona_world import PERSONA_ACTOR, MaterialisedPersona, PersonaMaterialisationError, PersonaWorld, ReplayScope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

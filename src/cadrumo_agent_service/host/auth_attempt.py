@@ -21,15 +21,12 @@ from cadrumo_client.transport.windows_process import WindowsProcessScope, unretu
 from ..providers.application.contracts import HelperCause, ServiceCause
 from .auth_protocol import TERMINAL_EVENTS, AuthEvent, AuthProtocol, append_auth_code, read_event_lines, snapshot
 from .credential_frame import wipe
-from .sign_in_refusal import log_settlement, new_log_ref
+from .sign_in_refusal import CANCELLED, DISCONNECTED, WITHDRAWN, Settlement, SignInProgress, log_settlement, new_log_ref
 
 _LOGGER = get_logger(__name__)
 
 EXCHANGE_SECONDS = 305
 """The bound on one helper exchange: a little past the helper's own 300 second login timeout."""
-
-_Settlement = tuple[str, str | None, HelperCause | ServiceCause | None]
-"""An outcome event, its reason and its cause."""
 
 
 class HelperStreamError(ValueError):
@@ -88,12 +85,14 @@ class AuthAttempt:
         self._confirm = confirm
         self._lock = Lock()
         self._cancel = Event()
+        self._withdrawn = False
         self._done = Event()
         self._clean = False
         self._scope: WindowsProcessScope | None = None
         self._input: BinaryIO | None = None
         self._readers: list[Thread] = []
         self._observed = time.monotonic()
+        self._progress = SignInProgress()
         self._deadline: float | None = None
         self._snapshot = snapshot(self.id, lane, "starting")
         self._thread = Thread(target=self._run, name="provider-sign-in", daemon=True)
@@ -111,9 +110,8 @@ class AuthAttempt:
 
     def observe(self) -> dict[str, JsonValue]:
         """A live dialog renews only its helper watchdog, never person authority."""
-        if not self._valid():
-            self.cancel()
-            return snapshot(self.id, self._lane, "cancelled")
+        if self._lost():
+            return self._served(WITHDRAWN)
         with self._lock:
             self._observed = time.monotonic()
             return dict(self._snapshot)
@@ -124,6 +122,30 @@ class AuthAttempt:
             self._cancel.set()
             self._snapshot.pop("url", None)
             self._snapshot.pop("user_code", None)
+
+    def _lost(self) -> bool:
+        """Whether the profile authority the attempt was started under has ended; if so it is cancelled as such."""
+        if self._valid():
+            return False
+        self._withdrawn = True
+        self.cancel()
+        return True
+
+    def _cancelled(self) -> Settlement:
+        """The cancellation as it happened: lost authority names itself; the person's own has no reason."""
+        return WITHDRAWN if self._withdrawn else CANCELLED
+
+    def _served(self, settlement: Settlement, status_cause: str | None = None) -> dict[str, JsonValue]:
+        """The served outcome; a failure or a cancellation with a reason carries the log reference."""
+        outcome, reason, cause = settlement
+        log_ref = self.log_ref if outcome == "failed" or reason is not None else None
+        return snapshot(
+            self.id, self._lane, outcome, reason=reason, cause=cause, status_cause=status_cause, log_ref=log_ref
+        )
+
+    def _held(self) -> bool:
+        """Whether neither a cancellation nor lost authority has ended the attempt; lost authority is noted."""
+        return not self._cancel.is_set() and not self._lost()
 
     def submit_code(self, code: bytearray) -> dict[str, JsonValue]:
         """Submit once to this live attempt, never retaining or returning the code."""
@@ -204,6 +226,7 @@ class AuthAttempt:
                 value.pop("url", None)
                 value.pop("user_code", None)
             self._snapshot = value
+            self._progress.note(value.get("event"))
 
     def _discard(self, stream: BinaryIO) -> None:
         """Drain the helper's error output unread: it may hold secrets, so only its size is kept."""
@@ -224,7 +247,7 @@ class AuthAttempt:
                 return None
             raise
 
-    def _exchange(self, input_stream: BinaryIO, queue: Queue[bytes | None]) -> _Settlement:
+    def _exchange(self, input_stream: BinaryIO, queue: Queue[bytes | None]) -> Settlement:
         deadline = time.monotonic() + EXCHANGE_SECONDS
         with self._lock:
             self._deadline = deadline
@@ -257,7 +280,7 @@ class AuthAttempt:
         except ValueError:
             raise HelperStreamError("helper_ended_without_result" if raw is None else "helper_output_invalid") from None
 
-    def _answer_event(self, input_stream: BinaryIO, event: AuthEvent) -> _Settlement | None:
+    def _answer_event(self, input_stream: BinaryIO, event: AuthEvent) -> Settlement | None:
         """Act on one event; a settlement ends the exchange."""
         if event.event == "ready":
             input_stream.write(b'{"version":1,"action":"start"}\n')
@@ -266,23 +289,22 @@ class AuthAttempt:
         if event.event in TERMINAL_EVENTS:
             return event.event, event.reason, event.cause
         if not self._publish_action(event):
-            return "cancelled", None, None
+            return self._cancelled()
         return None
 
     def _recheck_scope(self, now: float, checked: float) -> float:
         if now >= checked:
-            if not self._valid():
-                self.cancel()
+            self._lost()
             return now + 1
         return checked
 
-    def _cancel_exchange(self, input_stream: BinaryIO) -> _Settlement:
+    def _cancel_exchange(self, input_stream: BinaryIO) -> Settlement:
         with self._lock, contextlib.suppress(OSError, ValueError):
             input_stream.write(b'{"version":1,"action":"cancel"}\n')
             input_stream.flush()
         if self._cancel.is_set():
-            return "cancelled", None, None
-        return "cancelled", "host_disconnected", "host_disconnected"
+            return self._cancelled()
+        return DISCONNECTED
 
     def _read_event(self, raw: bytes | None) -> AuthEvent:
         with self._lock:
@@ -310,8 +332,7 @@ class AuthAttempt:
             if url is not None:
                 value["url"] = url
         # Never disclose a stale profile action, including a queued one.
-        if not self._valid():
-            self.cancel()
+        if self._lost():
             return False
         self._publish(value)
         return True
@@ -346,18 +367,18 @@ class AuthAttempt:
         finally:
             self._finish_run(process, input_stream, outcome, reason, cause)
 
-    def _refused_before_launch(self) -> _Settlement | None:
+    def _refused_before_launch(self) -> Settlement | None:
         """Run the preparation unless authority is gone; a settlement means the helper must not start."""
-        if not self._valid() or self._cancel.is_set():
-            return "cancelled", None, None
+        if not self._held():
+            return self._cancelled()
         if self._prepare is not None:
             try:
                 self._prepare()
             except BaseException as error:
                 self._note("prepare", error)
                 return "failed", "cleanup_failed", "agent_stop_failed"
-            if not self._valid() or self._cancel.is_set():
-                return "cancelled", None, None
+            if not self._held():
+                return self._cancelled()
         return None
 
     def _open_scope(self) -> WindowsProcessScope:
@@ -384,8 +405,8 @@ class AuthAttempt:
         self,
         process: WindowsOwnedProcess | None,
         input_stream: BinaryIO | None,
-        settlement: _Settlement,
-    ) -> _Settlement:
+        settlement: Settlement,
+    ) -> Settlement:
         try:
             if input_stream is not None:
                 with self._lock:
@@ -418,8 +439,8 @@ class AuthAttempt:
         self,
         process: WindowsOwnedProcess | None,
         input_stream: BinaryIO | None,
-        settlement: _Settlement,
-    ) -> _Settlement:
+        settlement: Settlement,
+    ) -> Settlement:
         """Retire the helper's pipes, job and readers; unconfirmed cleanup replaces the settlement."""
         try:
             try:
@@ -434,19 +455,17 @@ class AuthAttempt:
             return "failed", "cleanup_failed", "cleanup_unconfirmed"
         return settlement
 
-    def _confirmed_settlement(self, settlement: _Settlement) -> tuple[_Settlement, str | None]:
+    def _confirmed_settlement(self, settlement: Settlement) -> tuple[Settlement, str | None]:
         """Serve a success only while authority holds and the provider confirms it, with the status cause."""
         if settlement[0] != "succeeded":
             return settlement, None
-        if self._cancel.is_set() or not self._valid():
-            return ("cancelled", None, None), None
-        if self._confirm is None:
-            return settlement, None
+        if not self._held():
+            return self._cancelled(), None
         signed_in, status_cause = self._confirmed()
         if not signed_in:
             return ("failed", "provider_error", "status_not_confirmed"), status_cause
-        if self._cancel.is_set() or not self._valid():
-            return ("cancelled", None, None), status_cause
+        if not self._held():
+            return self._cancelled(), status_cause
         return settlement, status_cause
 
     def _finish_run(
@@ -473,18 +492,9 @@ class AuthAttempt:
                 stderr_bytes=self._stderr_bytes,
                 errors=self._errors,
                 log_ref=self.log_ref,
+                progress=self._progress,
             )
-            self._publish(
-                snapshot(
-                    self.id,
-                    self._lane,
-                    outcome,
-                    reason=reason,
-                    cause=cause,
-                    status_cause=status_cause,
-                    log_ref=self.log_ref if outcome == "failed" else None,
-                )
-            )
+            self._publish(self._served((outcome, reason, cause), status_cause))
         except BaseException as error:
             # Nothing may leave the attempt live: a person must always be able to start again.
             _LOGGER.warning(

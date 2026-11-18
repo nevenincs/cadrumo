@@ -17,10 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.tests.personas import (
-    Persona,
-    YearEnvelope,
-)
+from cadrumo.tests.persona_types import Persona, YearEnvelope
 from dev.acceptance.installed_cli import InstalledCli, InstalledCliError, typed_refusal
 
 from . import commands

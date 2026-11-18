@@ -167,12 +167,14 @@ def _bundled_m200_editions() -> dict[str, tuple[dict[str, str], frozenset[tuple[
     editions: dict[str, tuple[dict[str, str], frozenset[tuple[str, str]]]] = {}
     for revision in authority.modelo("200").revisions.values():
         source_ref = record_design_source(revision.source_refs, sources)
+        epoch = sources[source_ref].record_design_epoch
+        assert epoch is not None, f"edition {revision.id} names a record design without an epoch"
         design = load_record_design_intermediate(
             bundled_path(),
             sources,
             source_ref=source_ref,
             filing_year=revision.valid_from.year,
-            design_epoch=sources[source_ref].record_design_epoch,
+            design_epoch=epoch,
         )
         printed = frozenset(
             (field.record_identity.upper(), number)

@@ -1,4 +1,5 @@
 import { Channel } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import type { DesktopSetup } from "../ipc/componentSetup";
 import type { LogBatch, ShellToken, WindowPresentation } from "../ipc/contract";
 import type { ManagerSignal, SignInSignal } from "../ipc/account";
@@ -476,6 +477,7 @@ function tauriProviderSettings(
   return {
     status: (plan) =>
       command<ProviderSettingsAnswer>("provider_settings_status", {}, plan),
+    observeConsoleLogin: (changed) => listen("provider-login-changed", changed),
     async set({ provider, revision, secret, base_url }) {
       if (!token) return unavailable();
       // An empty address is the catalogue's default; absent keeps the stored one.

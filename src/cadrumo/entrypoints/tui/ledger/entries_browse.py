@@ -26,7 +26,8 @@ from ....application.ledger.merge_operation import LedgerMergeRequest
 from ....application.ledger.remove_operation import LedgerRemoveRequest
 from ....application.ledger.transaction_projection import LedgerTransactionReviewProjection
 from ....core.errors.hierarchy import CadrumoError
-from ....core.i18n.render import tr
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
 from ..account import AccountSessionExpiredError
 from ..components.dialogs import ConfirmScreen
 from ..components.language import repaint_tables
@@ -90,7 +91,9 @@ class LedgerEntriesBrowseScreen(LedgerWorkspaceScreen):
         super().__init__(controller, id="ledger-entries-browse-screen")
         self.doors = doors
         initial = state or LedgerBrowseStateV1()
-        self.request = initial.request or LedgerListRequest(profile_id=doors.profile_id, limit=BROWSE_PAGE_SIZE)
+        self.request = initial.request or LedgerListRequest(
+            profile_id=doors.profile_id, limit=BROWSE_PAGE_SIZE, output_language=OutputLanguage(output_language())
+        )
         if self.request.profile_id != doors.profile_id or self.request.limit != BROWSE_PAGE_SIZE:
             raise ValueError("Browse entries reads one bounded page for its own profile")
         self.page: LedgerListProjection | None = None
@@ -380,6 +383,7 @@ class LedgerEntriesBrowseScreen(LedgerWorkspaceScreen):
             profile_id=self.doors.profile_id,
             transaction_id=row.transaction.transaction_id,
             reason=self._reason(),
+            output_language=OutputLanguage(output_language()),
         )
         operation = door.operation_id
         self._confirm(

@@ -23,12 +23,13 @@ from cadrumo_client.contracts.installation_requests import (
     StorageInventoryReply,
 )
 
+from ....application.modelo.value_presentation import format_casilla_value
 from ....application.operator_output.connection_remedies import connection_unavailable_remedy
-from ....core.i18n.render import tr
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
 from ..components.status import StatusTone
 from ..refusal.served import ServedRefusalV1, served_refusal
 from .door import ActCompleted, ActFailed, ActOutcome, ActRefused, ActSecretDeclined, ActUnreachable
-from .texts import yes_no
 
 #: Reply members that correlate the exchange and say nothing about the act.
 _COORDINATES = frozenset({"request_id", "runtime_boot_id", "connection_id", "kind"})
@@ -60,7 +61,7 @@ def _scalar_text(value: object) -> str:
     if value is None:
         return "-"
     if isinstance(value, bool):
-        return yes_no(value)
+        return format_casilla_value(value, data_type="boolean", language=OutputLanguage(output_language()))
     return str(value)
 
 
@@ -110,6 +111,7 @@ def _verdict(reply: InstallationCompleted) -> bool | None:
 
 
 def _table(reply: InstallationCompleted) -> ResultTable | None:
+    language = OutputLanguage(output_language())
     if isinstance(reply, StorageInventoryReply):
         return ResultTable(
             columns=(
@@ -127,7 +129,7 @@ def _table(reply: InstallationCompleted) -> ResultTable | None:
                     row.occupancy.value,
                     str(row.entry_count),
                     f"{row.footprint_bytes} B",
-                    yes_no(row.reclaimable),
+                    format_casilla_value(row.reclaimable, data_type="boolean", language=language),
                 )
                 for row in ([reply.area] if reply.area is not None else reply.areas or [])
             ),
@@ -139,7 +141,14 @@ def _table(reply: InstallationCompleted) -> ResultTable | None:
                 tr("tui.installation.profiles.column.id"),
                 tr("tui.installation.profiles.column.active"),
             ),
-            rows=tuple((profile.name, profile.bucket_id, yes_no(profile.active)) for profile in reply.profiles),
+            rows=tuple(
+                (
+                    profile.name,
+                    profile.bucket_id,
+                    format_casilla_value(profile.active, data_type="boolean", language=language),
+                )
+                for profile in reply.profiles
+            ),
         )
     return None
 

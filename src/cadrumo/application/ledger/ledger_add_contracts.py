@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal.grammar import CENT_FRACTION_DIGITS, DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.dates import require_iso8601_date
 from ...domain.iva.prorrata import ProrrataReferenceText
@@ -69,7 +70,10 @@ _CLASSIFICATION_CHOICE_LOCALE_KEYS: Final[dict[str, str]] = {
 
 
 class LedgerAddRequest(BaseModel):
-    """Bounded private CLI input; taxpayer-derived values are resolved in the worker."""
+    """Bounded private CLI input; taxpayer-derived values are resolved in the worker.
+
+    ``output_language`` is the language the result's transaction link fields are named in.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -240,6 +244,7 @@ class LedgerAddRequest(BaseModel):
         OwnAccountId | None,
         Field(json_schema_extra=form_field_schema(label_key="application.ledger.add.field.own_account_id")),
     ] = None
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     @field_validator("booked_date", "value_date", "operation_date", "accrual_date")
     @classmethod

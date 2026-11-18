@@ -189,9 +189,11 @@ errors:
     row: fila
     schema_version: versión del esquema
     section: sección
+    source: origen
     state: estado
     status: estado
     tax_year: ejercicio
+    terminal_condition: resultado
     value: valor
     year: año
   error:

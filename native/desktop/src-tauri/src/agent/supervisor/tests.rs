@@ -341,18 +341,15 @@ async fn repeated_start_failures_exhaust_retries_and_profile_change_resets_them(
             .any(|fact| matches!(fact, ServiceFact::AgentRetryExhausted { attempts: 4 }))
     );
     // Neither a failed read nor an unavailable runtime creates a new
-    // authorization epoch or replenishes an exhausted attempt budget.
+    // authorization epoch or replenishes an exhausted attempt budget. Within
+    // its readiness bound the runtime is waited for, as Stopped.
     for unavailable in [
         Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)),
         observed(true, false, Some("A")),
     ] {
         *lock(&source) = unavailable;
         tokio::time::timeout(Duration::from_secs(5), async {
-            while supervisor.status().state
-                != (State::Refused {
-                    code: Refusal::RuntimeUnavailable,
-                })
-            {
+            while supervisor.status().state != State::Stopped {
                 tokio::time::sleep(Duration::from_millis(2)).await;
             }
         })
@@ -719,19 +716,17 @@ async fn provider_settings_status_before_the_first_observation_answers_busy_neve
 
 #[test]
 fn provider_settings_status_without_a_starting_service_is_refused_at_once() {
-    for state in [State::Refused {
-        code: Refusal::SignedOut,
-    }] {
-        let supervisor = starting_supervisor(Duration::from_secs(60));
-        super::publish(&supervisor.shared, state.clone());
-        let asked = std::time::Instant::now();
-        assert_eq!(supervisor.await_admin(), super::AdminWait::NotStarting);
-        assert!(
-            admin_unavailable(provider_settings_status(&supervisor)),
-            "{state:?}"
-        );
-        assert!(asked.elapsed() < Duration::from_secs(10), "{state:?}");
-    }
+    let supervisor = starting_supervisor(Duration::from_secs(60));
+    super::publish(
+        &supervisor.shared,
+        State::Refused {
+            code: Refusal::SignedOut,
+        },
+    );
+    let asked = std::time::Instant::now();
+    assert_eq!(supervisor.await_admin(), super::AdminWait::NotStarting);
+    assert!(admin_unavailable(provider_settings_status(&supervisor)));
+    assert!(asked.elapsed() < Duration::from_secs(10));
 }
 
 #[test]
@@ -793,3 +788,126 @@ fn provider_settings_status_past_the_start_bound_answers_busy() {
 
 #[cfg(windows)]
 mod live;
+
+/// A supervisor whose launcher counts its starts, observing `source` every
+/// millisecond, with `bound` for the runtime's readiness.
+fn awaiting(
+    source: &Arc<Mutex<Result<Observation>>>,
+    bound: Duration,
+) -> (Supervisor, Arc<AtomicU64>, Arc<Diagnostics>) {
+    let current = source.clone();
+    let observe: Observe = Arc::new(move || {
+        let result = lock(&current).clone();
+        Box::pin(async move { result })
+    });
+    let attempts = Arc::new(AtomicU64::new(0));
+    let count = attempts.clone();
+    let launch: Launch = Arc::new(move |_, _| {
+        count.fetch_add(1, Ordering::SeqCst);
+        Err(ApplicationError::new(
+            ErrorCode::SpawnFailed,
+            Operation::Cli,
+        ))
+    });
+    let diagnostics = Arc::new(Diagnostics::default());
+    let supervisor = Supervisor::with_timing(
+        observe,
+        every(Duration::from_millis(1)),
+        Some(launch),
+        diagnostics.clone(),
+        Duration::from_millis(1),
+        Duration::from_secs(60),
+    )
+    .timeout_within(bound);
+    (supervisor, attempts, diagnostics)
+}
+
+fn refusals(diagnostics: &Diagnostics) -> Vec<Refusal> {
+    diagnostics
+        .snapshot(u64::MAX)
+        .events
+        .into_iter()
+        .filter_map(|event| match event.service {
+            Some(ServiceFact::AgentRefused { reason }) => Some(reason),
+            _ => None,
+        })
+        .collect()
+}
+
+#[tokio::test]
+async fn a_runtime_not_ready_yet_is_waited_for_and_the_agent_starts_once_it_is() {
+    let source = Arc::new(Mutex::new(observed(true, false, Some("A"))));
+    let (supervisor, attempts, diagnostics) = awaiting(&source, Duration::from_secs(60));
+    supervisor.status();
+    tokio::time::sleep(Duration::from_millis(50)).await;
+    // Waiting: nothing refused, nothing started, and a read made now is told
+    // the service is still starting.
+    assert_eq!(supervisor.status().state, State::Stopped);
+    assert_eq!(attempts.load(Ordering::SeqCst), 0);
+    assert!(refusals(&diagnostics).is_empty());
+    assert!(matches!(
+        supervisor.admin_now(),
+        super::AdminWait::StillStarting
+    ));
+    *lock(&source) = observed(true, true, Some("A"));
+    tokio::time::timeout(Duration::from_secs(5), async {
+        while attempts.load(Ordering::SeqCst) == 0 {
+            tokio::time::sleep(Duration::from_millis(2)).await;
+        }
+    })
+    .await
+    .unwrap();
+    assert!(
+        !refusals(&diagnostics).contains(&Refusal::RuntimeUnavailable),
+        "a runtime that became ready in time is never refused"
+    );
+    supervisor.close().await.unwrap();
+}
+
+#[tokio::test]
+async fn a_runtime_unavailable_past_its_readiness_bound_is_refused() {
+    let source = Arc::new(Mutex::new(observed(true, false, Some("A"))));
+    let (supervisor, attempts, diagnostics) = awaiting(&source, Duration::from_millis(80));
+    supervisor.status();
+    tokio::time::timeout(Duration::from_secs(5), async {
+        while supervisor.status().state
+            != (State::Refused {
+                code: Refusal::RuntimeUnavailable,
+            })
+        {
+            tokio::time::sleep(Duration::from_millis(2)).await;
+        }
+    })
+    .await
+    .unwrap();
+    assert_eq!(refusals(&diagnostics), [Refusal::RuntimeUnavailable]);
+    assert_eq!(attempts.load(Ordering::SeqCst), 0);
+    supervisor.close().await.unwrap();
+}
+
+#[tokio::test]
+async fn a_sign_in_after_a_sign_out_is_not_answered_as_signed_out_meanwhile() {
+    let source = Arc::new(Mutex::new(observed(false, true, Some("A"))));
+    let (supervisor, _, _) = awaiting(&source, Duration::from_secs(60));
+    supervisor.status();
+    tokio::time::timeout(Duration::from_secs(5), async {
+        while supervisor.status().state
+            != (State::Refused {
+                code: Refusal::SignedOut,
+            })
+        {
+            tokio::time::sleep(Duration::from_millis(2)).await;
+        }
+    })
+    .await
+    .unwrap();
+    // The next sign-in observation is awaited as Stopped, before it is read.
+    tokio::time::timeout(Duration::from_secs(5), async {
+        while supervisor.status().state != State::Stopped {
+            tokio::time::sleep(Duration::from_millis(1)).await;
+        }
+    })
+    .await
+    .unwrap();
+    supervisor.close().await.unwrap();
+}

@@ -8,7 +8,7 @@ import pytest
 
 from cadrumo.application.operations import supervisor_execution
 
-from .persona_materialisation import _failure_frames
+from .persona_operations import _failure_frames
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

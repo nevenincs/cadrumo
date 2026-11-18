@@ -20,7 +20,7 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from ...host.launch_environment import AUTH_BROWSER_EXECUTABLE_VARIABLE, HOSTED_ROOT_VARIABLE
 from .. import provider_login
-from ..agent_programs import PACKAGE_AGENT_VARIABLE, AgentProgramRefusalError, profile_agent_root
+from ..agent_programs import PACKAGE_AGENT_VARIABLE, AgentProgramRefusalError, profile_agent_root, provider_login_notice
 from ..provider_login import ProviderLoginRefusalError, main, prepare_provider_login, selected_profile_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -203,6 +203,7 @@ def test_the_console_door_inherits_the_terminal_and_records_the_hosted_root_and_
     assert f"{HOSTED_ROOT_VARIABLE}={root}" in names
     assert "AUTH_BROWSER_EXECUTABLE" not in names
     assert not (root / "leaked.txt").exists()
+    assert provider_login_notice(root).read_bytes() == b""
 
 
 @pytest.mark.parametrize("status", [1, 3])
@@ -210,10 +211,11 @@ def test_the_agents_exit_status_is_the_commands_exit_status(
     outside_git: Path, monkeypatch: pytest.MonkeyPatch, status: int
 ) -> None:
     storage = outside_git / "storage"
-    _agent_root(storage)
+    root = _agent_root(storage)
     shim = _shim(outside_git / "package", status=status)
     done = _door(monkeypatch, storage, shim, "--profile", str(_PROFILE), "--provider", "claude")
     assert done == status
+    assert not provider_login_notice(root).exists()
 
 
 def test_a_refusal_ends_the_door_with_its_reason_on_standard_error_and_status_two(

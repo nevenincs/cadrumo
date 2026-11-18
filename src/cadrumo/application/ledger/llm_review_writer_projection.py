@@ -117,7 +117,9 @@ def project_ledger_llm_writer_result(
         classification = LedgerClassifyOperationResult(
             outcome="classified",
             profile_id=operand.request.profile_id,
-            transaction=LedgerTransactionProjection.from_payload(payload.transaction),
+            transaction=LedgerTransactionProjection.from_payload(
+                payload.transaction, language=operand.request.output_language
+            ),
             deduction_fact_kind=result.transaction.deduction_fact_kind.value
             if (result.transaction.deduction_fact_kind is not None and result.transaction.deduction_fact_kind)
             else None,
