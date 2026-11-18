@@ -245,29 +245,21 @@ def classify_m200_target_identities(
                     description=field.normalized_description,
                 )
             )
-        unnumbered = (
-            None
-            if diagnostic is None or mismatch is not None
-            else unnumbered_design_row_disposition(
-                field,
-                diagnostic,
-                declared_ids=declared_ids,
-                unnumbered_on_form_ids=unnumbered_on_form_ids,
-            )
-        )
-        if diagnostic is not None and unnumbered is not None:
-            unnumbered_rows.append(
-                M200UnnumberedDesignRow(
-                    export_field_id=diagnostic.export_field_id,
-                    anchor=diagnostic.anchor,
-                    declared_map_owner=diagnostic.declared_map_owner,
-                    disposition=unnumbered,
-                    source_ref=diagnostic.source_ref,
-                    source_sha256=diagnostic.source_sha256,
+        if diagnostic is not None:
+            unnumbered = (
+                None
+                if mismatch is not None
+                else _unnumbered_design_row(
+                    field,
+                    diagnostic,
+                    declared_ids=declared_ids,
+                    unnumbered_on_form_ids=unnumbered_on_form_ids,
                 )
             )
-        elif diagnostic is not None:
-            diagnostics.append(diagnostic)
+            if unnumbered is None:
+                diagnostics.append(diagnostic)
+            else:
+                unnumbered_rows.append(unnumbered)
         if mismatch is not None:
             mismatches.append(mismatch)
 
@@ -292,6 +284,29 @@ def classify_m200_target_identities(
         printed_identity_diagnostics=tuple(sorted(diagnostics, key=lambda item: item.export_field_id)),
         unnumbered_design_rows=tuple(sorted(unnumbered_rows, key=lambda item: item.export_field_id)),
         shared_owners=_shared_owners(cells_by_owner),
+    )
+
+
+def _unnumbered_design_row(
+    field: RecordDesignIntermediateField,
+    diagnostic: M200PrintedIdentityDiagnostic,
+    *,
+    declared_ids: frozenset[CasillaId],
+    unnumbered_on_form_ids: frozenset[CasillaId],
+) -> M200UnnumberedDesignRow | None:
+    """Return the admitted unnumbered row for ``diagnostic``, or None when it stays a diagnostic."""
+    disposition = unnumbered_design_row_disposition(
+        field, diagnostic, declared_ids=declared_ids, unnumbered_on_form_ids=unnumbered_on_form_ids
+    )
+    if disposition is None:
+        return None
+    return M200UnnumberedDesignRow(
+        export_field_id=diagnostic.export_field_id,
+        anchor=diagnostic.anchor,
+        declared_map_owner=diagnostic.declared_map_owner,
+        disposition=disposition,
+        source_ref=diagnostic.source_ref,
+        source_sha256=diagnostic.source_sha256,
     )
 
 
@@ -320,15 +335,23 @@ def unnumbered_design_row_disposition(
     owner = diagnostic.declared_map_owner
     if owner not in declared_ids or owner not in unnumbered_on_form_ids:
         return None
-    segment, separator, tail = owner.partition(":")
-    if not separator or segment != field.record_identity or classify_casilla_id(owner) != "page_qualified":
-        return None
-    if classify_casilla_id(tail) == "numeric":
+    tail = _own_segment_tail(owner, field.record_identity)
+    if tail is None:
         return None
     labels = _BRACKETED_LABEL.findall(field.normalized_description)
     if labels and labels != [tail]:
         return None
     return M200UnnumberedDesignRowDisposition.SEGMENT_IDENTITY_OF_UNNUMBERED_ROW
+
+
+def _own_segment_tail(owner: CasillaId, record_identity: str) -> str | None:
+    """Return the non-numeric tail of ``owner`` when it is qualified by ``record_identity``, else None."""
+    segment, separator, tail = owner.partition(":")
+    if not separator or segment != record_identity or classify_casilla_id(owner) != "page_qualified":
+        return None
+    if classify_casilla_id(tail) == "numeric":
+        return None
+    return tail
 
 
 def _shared_owners(cells_by_owner: Mapping[CasillaId, list[M200SharedOwnerCell]]) -> tuple[M200SharedOwner, ...]:
