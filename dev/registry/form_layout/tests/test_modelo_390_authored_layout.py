@@ -6,10 +6,15 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.form_context import resolve_form_context_field
 from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
 from cadrumo.domain.calculations.registry.formula_runtime_ops import UnresolvedFormulaDependencyError
+from cadrumo.domain.calculations.registry.prorrata_register_activity_bindings import (
+    ProrrataActivityField,
+    ProrrataRegisterActivityProvider,
+)
 from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures
@@ -198,20 +203,32 @@ def test_prorrata_preserves_five_separate_activity_blocks_and_all_thirty_binding
     page = next(p for p in revision.form_layouts[0].pages if p.id == "pag-7")
     section = next(s for s in page.sections if s.id == "12-prorratas")
     assert len(section.blocks) == 10
-    suffixes = (
-        "codigo-cnae",
-        "importe-de-operaciones",
-        "importe-de-operaciones-con-derecho-a-deduccion",
-        "tipo-de-prorrata",
-        "porcentaje-de-prorrata",
+    # Boxes 114-118 of each activity row are the register row's facts, in printed order; the
+    # grid shows each box's casilla, and no operator input channel duplicates the register.
+    facts = (
+        ("codigo-cnae", ProrrataActivityField.CNAE),
+        ("importe-operaciones", ProrrataActivityField.OPERACIONES_TOTAL),
+        ("importe-con-derecho", ProrrataActivityField.OPERACIONES_CON_DERECHO),
+        ("tipo", ProrrataActivityField.TIPO),
+        ("porcentaje", ProrrataActivityField.PORCENTAJE),
     )
+    casillas = {str(casilla.id): casilla for casilla in revision.casillas}
+    bindings = {str(binding.id): binding for binding in revision.bindings}
     for n in range(1, 6):
         description, grid = section.blocks[2 * (n - 1) : 2 * n]
         assert description.binding_id == f"modelo-390.page_7.prorratas-{n}-actividad-desarrollada"
         assert len(grid.columns) == 5 and len(grid.rows) == 1
-        assert [c.binding_id for c in grid.rows[0].cells] == [
-            f"modelo-390.page_7.prorratas-{n}-{suffix}" for suffix in suffixes
+        cells = grid.rows[0].cells
+        assert [c.kind for c in cells] == ["casilla"] * len(facts)
+        assert [c.binding_id for c in cells] == [None] * len(facts)
+        assert [str(c.casilla_id) for c in cells] == [
+            f"iva.anual.prorrata.actividad-{n}.{suffix}" for suffix, _field in facts
         ]
+        for cell, (_suffix, field) in zip(cells, facts, strict=True):
+            provider = bindings[str(casillas[str(cell.casilla_id)].binding)].provider
+            assert isinstance(provider, ProrrataRegisterActivityProvider)
+            assert provider.kind is BindingSourceKind.PRORRATA_REGISTER_ACTIVITY
+            assert (provider.row, provider.field) == (str(n), field)
 
 
 @pytest.mark.parametrize("year", _CALCULATED)
