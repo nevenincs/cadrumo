@@ -21,12 +21,16 @@ import {
   conversationGroups,
   replyFacts,
   transcriptItems,
+  type AgentColumnRecord,
   type AgentConversationRecord,
-  type AgentTurnRecord,
 } from "../src/shell/agentViews";
 import { conditionWords, toolKindWords } from "../src/shell/agentWords";
 import type { Translate } from "../src/shell/strings";
 import { label } from "./support/strings";
+import type {
+  AgentReplyRecord,
+  AgentTurnRecord,
+} from "../src/shell/agentSnapshotContract";
 
 // What the column does with a conversation as cadrumo-agent serves it: the
 // stream's text applied by sequence, a lost stream recovered, what the person
@@ -62,7 +66,7 @@ const agentTexts = (live: LiveTurns) =>
     record.kind === "agent" ? [record.text] : [],
   );
 
-const kinds = (turns: readonly AgentTurnRecord[]) =>
+const kinds = (turns: readonly AgentColumnRecord[]) =>
   turns.map((record) => record.kind);
 
 const person = (
@@ -75,12 +79,24 @@ const person = (
   reply_id,
   text: words,
   sent_at: null,
+  attachments: [],
+  skills: [],
 });
 const reply = (
   id: string,
-  status: Extract<AgentTurnRecord, { kind: "reply" }>["status"],
-  more: Partial<Extract<AgentTurnRecord, { kind: "reply" }>> = {},
-): AgentTurnRecord => ({ kind: "reply", id, status, ...more });
+  status: AgentReplyRecord["status"],
+  more: Partial<AgentReplyRecord> = {},
+): AgentTurnRecord => ({
+  kind: "reply",
+  id,
+  status,
+  provider_condition: null,
+  failure_reason: null,
+  queued_messages: 0,
+  selection: null,
+  usage: null,
+  ...more,
+});
 
 const nothingPending = { questionnaires: [], approvals: [] };
 
@@ -146,10 +162,16 @@ test.describe("the text of a reply, as the stream sends it", () => {
 
   test("of a reply the history does not know starts a reply that is running", () => {
     const live = play([text("r9", "m1", 1, "Hola")]);
+    // Every key of the host's record, none of them served yet.
     expect(live.turns.at(-1)).toEqual({
       kind: "reply",
       id: "r9",
       status: "running",
+      provider_condition: null,
+      failure_reason: null,
+      queued_messages: 0,
+      selection: null,
+      usage: null,
     });
   });
 });
@@ -390,7 +412,8 @@ test.describe("what the person sent, shown until the history has it", () => {
     );
   const local = (live: LiveTurns) =>
     live.turns.filter(
-      (record) => record.kind === "person" && record.id.startsWith("local:"),
+      (record) =>
+        record.kind === "person" && record.id?.startsWith("local:") === true,
     );
 
   test("is replaced by the history's record of it", () => {
@@ -597,7 +620,7 @@ test.describe("a conversation composed from its runs", () => {
 
 test.describe("what a conversation's replies served about themselves", () => {
   const ran = {
-    provider: "alpha",
+    provider: "kimi",
     transport: "api",
     provider_display_name: "Example Alpha",
     model: "m",
@@ -642,16 +665,19 @@ test.describe("what a conversation's replies served about themselves", () => {
       [
         reply("r1", "completed", {
           selection: {
-            provider: "gateway",
+            provider: "ollama",
             transport: "cli",
+            provider_display_name: null,
             model: "gateway-x",
+            model_display_name: null,
+            effort: null,
           },
         }),
       ],
       "en",
       t,
     );
-    expect(facts.ranWith).toBe("Ran with: gateway, gateway-x");
+    expect(facts.ranWith).toBe("Ran with: ollama, gateway-x");
   });
 });
 
