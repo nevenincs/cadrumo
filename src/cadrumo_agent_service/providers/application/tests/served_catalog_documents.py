@@ -137,7 +137,7 @@ def declared_catalog() -> dict[str, JsonValue]:
     }
     attribution = dict.fromkeys(("title", "url", "pin", "licence", "notice", "trademarks"), "Synthetic attribution")
     return _DOCUMENT.validate_python(
-        {"kind": "declared", "catalog": {"schema_version": 6, "providers": [lane], "icon_attribution": attribution}}
+        {"kind": "declared", "catalog": {"schema_version": 7, "providers": [lane], "icon_attribution": attribution}}
     )
 
 

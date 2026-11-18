@@ -629,7 +629,7 @@ const declaredModel = (entry: ServedCatalogModel): DeclaredModel => ({
 export const FIXTURE_DECLARED_CATALOG: ServedDeclaredProviderCatalog = {
   kind: "declared",
   catalog: {
-    schema_version: 6,
+    schema_version: 7,
     providers: (FIXTURE_CATALOG.providers ?? []).map((served) => {
       const id = `${served.provider_id}_${served.transport}`;
       const models = (served.catalog.models ?? []).map(declaredModel);

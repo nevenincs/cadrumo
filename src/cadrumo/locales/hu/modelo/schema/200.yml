@@ -2095,10 +2095,6 @@ modelo:
             label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
               és 16.2. cikke szerinti korlát - h) Az adóidőszak nettó pénzügyi ráfordításai
               (= [f-g]) [01248]
-          01249:
-            label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
-              és 16.2. cikke szerinti korlát - i) Nettó pénzügyi ráfordítások levonásának
-              korlátja (= 30%* [i1-i2-i3-i4+i5-i6]) [01249]
           '01250':
             label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
               és 16.2. cikke szerinti korlát - i1) Üzemi eredmény (az eredménykimutatással
@@ -2123,18 +2119,6 @@ modelo:
             label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
               és 16.2. cikke szerinti korlát - j) Az előző öt évben nem alkalmazott
               üzemi eredménykorlát miatti hozzáadás [01255]
-          '01256':
-            label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
-              és 16.2. cikke szerinti korlát - l1) Az adóidőszak levonható nettó pénzügyi
-              ráfordításai ([h=l1+l2], ≥ 0) [01256]
-          '01257':
-            label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
-              és 16.2. cikke szerinti korlát - l2) Az adóidőszak nem levonható nettó
-              pénzügyi ráfordításai (=[h - l1], ≥ 0) [01257]
-          '01260':
-            label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
-              és 16.2. cikke szerinti korlát - Az adóidőszak nem levonható pénzügyi
-              ráfordításai összesen (= [c2+l2]) [01260]
           '01275':
             label: Elszámolás II - Az eredménykimutatás eredményét érintő korrekciók
               részletezése - Az átruházott szervezet által az adócsoporton belül keletkezett
@@ -2915,21 +2899,6 @@ modelo:
           '01606':
             label: Kiegyenlítési tartalék - Adóalap-csökkentés - Összesen - Követelmények
               megsértése miatt a bevallásba beépített összeg [01606]
-          01608:
-            label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
-              a {year}. adómegállapítási időszakra vonatkozó korábbi önadózások vagy
-              hatósági megállapítások feldolgozása nyomán fizetendő összeg - Gipuzkoa
-              [01608]'
-          01609:
-            label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
-              a {year}. adómegállapítási időszakra vonatkozó korábbi önadózások vagy
-              hatósági megállapítások feldolgozása nyomán fizetendő összeg - Bizkaia
-              [01609]'
-          '01610':
-            label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
-              a {year}. adómegállapítási időszakra vonatkozó korábbi önadózások vagy
-              hatósági megállapítások feldolgozása nyomán fizetendő összeg - Navarra
-              [01610]'
           '01614':
             label: Kanári-szigeteki beruházási levonások - Tárgyi eszközök 2023 -
               Függőben lévő/keletkezett levonás [01614]
@@ -2999,18 +2968,6 @@ modelo:
           01649:
             label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
               eredménye az első részlettel együtt - Navarra [01649]
-          '01654':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - A LIS 19.1
-              cikk szerinti első részletben szereplő eredmény - Araba/Alava [01654]
-          '01655':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - A LIS 19.1
-              cikk szerinti első részletben szereplő eredmény - Gipuzkoa [01655]
-          '01656':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - A LIS 19.1
-              cikk szerinti első részletben szereplő eredmény - Bizkaia [01656]
-          '01657':
-            label: Állami és tartományi adóhatóságok együttes adóztatása - A LIS 19.1
-              cikk szerinti első részletben szereplő eredmény - Navarra [01657]
           01681:
             label: A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba
               történő székhelyáthelyezéstől eltérő ügyletek - Csökkenés - Év elején
@@ -5100,21 +5057,6 @@ modelo:
             label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
               (LIS 19.1 cikk) - 1. részletfizetés - Tartományi adóhatóságok/Navarra
               (Összesen) [02484]
-          02487:
-            label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
-              (LIS 19.1 cikk) - Helyesbítő bevallás - Az önadózás eredménye a LIS
-              19.1 cikke szerinti első részlettel együtt, korábbi önadózás vagy hatósági
-              megállapítás alapján, a {year}. adómegállapítási időszakra - Állam [02487]
-          02488:
-            label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
-              (LIS 19.1 cikk) - Helyesbítő bevallás - Az önadózás eredménye a LIS
-              19.1 cikke szerinti első részlettel együtt, korábbi önadózás vagy hatósági
-              megállapítás alapján, a {year}. adómegállapítási időszakra - Tartományi
-              adóhatóságok/Navarra (Összesen) [02488]
-          02489:
-            label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
-              (LIS 19.1 cikk) - Eredmény a LIS 19.1. cikke szerinti 1. részletfizetéssel
-              együtt - Állam [02489]
           02495:
             label: 'Kiegészítő információk a levonási korlátok számításához - {year}:
               producer: az adómegállapítási időszakban keletkezett Kanári-szigeteki
@@ -6224,18 +6166,6 @@ modelo:
             label: A kikötői hatóságok által végrehajtott beruházások utáni levonás
               tárgyát képező kiadások (LIS 15. cikk n) pont) - Növekedés - Évi korrekciók
               - Végleges [03241]
-          '03242':
-            label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
-              (LIS 19.1 cikk) - Eredmény a LIS 19.1. cikke szerinti 1. részletfizetéssel
-              együtt - Tartományi adóhatóságok/Navarra (Összesen) [03242]
-          '03243':
-            label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
-              érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás - Helyesbítő:
-              Elrendelt/kompenzált visszatérítés - Összesen [03243]'
-          '03244':
-            label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
-              érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás - Helyesbítő:
-              Elrendelt/kompenzált visszatérítés - Állam [03244]'
           '03247':
             help: A levonás alapja - B) gazdasági adatok
             label: B) gazdasági adatok. A levonás alapja
@@ -8202,16 +8132,6 @@ modelo:
           dp200026-01332:
             label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i levonások
               jóváírása elégtelen adókötelezettség miatt - Összesen [01332]
-          dp200026-01583:
-            label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
-              a {year}. adómegállapítási időszakra vonatkozó korábbi önadózások vagy
-              hatósági megállapítások feldolgozása nyomán fizetendő összeg - Összesen
-              [01583]'
-          dp200026-01585:
-            label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
-              bevallás: Az Adóhatóság által a {year}. adóidőszakra vonatkozó korábbi
-              önadózások vagy hatósági megállapítások feldolgozása nyomán megítélt
-              visszatérítés - Összesen [01585]'
           dp200026-01587:
             label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
               eredménye - Összesen [01587]
@@ -8229,10 +8149,6 @@ modelo:
             label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
               adókövetelések átalakítása az adóhatósággal szemben érvényesíthető követeléssé
               (LIS 130. cikk) - Az átalakítás eredménye: Fizetendő - Összesen [02494]'
-          dp200026-03245:
-            label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-              adókövetelések átalakítása az adóhatósággal szemben érvényesíthető követeléssé
-              (LIS 130. cikk) - Helyesbítő bevallás: Visszatérítés - Összesen [03245]'
           dp200026-03319:
             label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
               adókövetelések átalakítása az adóhatósággal szemben érvényesíthető követeléssé
@@ -13194,8 +13110,6 @@ modelo:
             help: Jelölő olyan adózó esetén, aki a társasági adóról szóló törvény
               36.1 és 36.3 cikke szerinti kedvezményeket más adózók finanszírozásával
               hozza létre [00044].
-            label: A LIS 36.1 és 36.3 cikke szerinti kedvezményeket más adózók finanszírozásával
-              létrehozó adózó [00044]
           is-conversion-activos-impuesto-diferido-cre-conversion-activos-impuesto-diferido-cre-abono:
             label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
               érvényesíthető követeléssé - Halasztott adókövetelések átalakítása az
@@ -13227,9 +13141,6 @@ modelo:
           is-cooperativa-compensacion-cuotas-2011-pendiente-inicio:
             label: Szövetkezeti rendszer - Adókötelezettségek kompenzációjának részletezése.
               2011 Az időszak elején alkalmazásra vár [00017]
-          is-cooperativa-cuota-integra-previa:
-            label: Elszámolás III - adóalap - Csak szövetkezetek - Kiegyenlítési tartalék
-              utáni előzetes teljes adókötelezettség [01331]
           is-cooperativa-especialmente-protegida:
             help: Jelölő különösen védett szövetkezet esetén [00018].
             label: Különösen védett szövetkezet [00018]
@@ -13240,10 +13151,6 @@ modelo:
             label: Elszámolás III - adóalap - Csak szövetkezetek - Adókötelezettséggé
               alakított kiegyenlítési tartalék (csak LIS 101. cikk szerinti szervezetek)
               - Csökkentések [01286]
-          is-cooperativa-reversion-deterioro:
-            label: Elszámolás III - adóalap - Csak szövetkezetek - Szövetkezeti értékvesztések
-              visszafordításához kapcsolódó jövedelmek (adókötelezettségi szinten)
-              (LIS 16.8 átmeneti rendelkezés) - Csökkenések [01510]
           is-correccion-adquisicion-participaciones-no-residentes-dt14-permanente-aumento:
             label: Nem belföldi illetőségű jogalanyokban való részesedés szerzése
               (LIS DT 14. cikk) - Növekedés - Évi korrekciók - Végleges [03331]
@@ -16582,6 +16489,10 @@ modelo:
           is-m200-dp200016-00032:
             label: LIS 24.7. átmeneti rendelkezés szerinti levonások - RDLeg. 4/2004
               42. cikk szerinti levonás 2008 - Ebben az elszámolásban alkalmazva [00032]
+          is-m200-dp200016-00033:
+            label: LIS 24.7. átmeneti rendelkezés szerinti levonások - RDLeg. 4/2004
+              42. cikk szerinti levonás 2008 - Jövőbeli időszakokban alkalmazandó
+              [00033]
           is-m200-dp200016b-00866:
             label: Kanári-szigeteki beruházási levonások - Kanári-szigeteki beruházások
               2005 - Függőben lévő/keletkezett levonás [00866]
@@ -16591,6 +16502,12 @@ modelo:
           is-m200-dp200016b-00941:
             label: Kanári-szigeteki beruházási levonások - Kanári-szigeteki beruházások
               2006 - Jövőbeli időszakokban alkalmazandó [00941]
+          is-m200-dp200017-00288:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2004 Levonások
+              összege - Függőben lévő/keletkezett levonás [00288]
+          is-m200-dp200017-00289:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2004 Levonások
+              összege - Ebben az elszámolásban alkalmazva [00289]
           is-m200-dp200017-00466:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2005 Levonások
               összege - Függőben lévő/keletkezett levonás [00466]
@@ -16600,6 +16517,10 @@ modelo:
           is-m200-dp200017-00586:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2006 Levonások
               összege - Jövőbeli időszakokban alkalmazandó [00586]
+          is-m200-dp200018-00258:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 A szabadság
+              ideje. A comunerók felkelésének 500. évfordulója (CVC). - Jövőbeli időszakokban
+              alkalmazandó [00258]
           is-m200-dp200018-00259:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Az
               iberoamerikai köztársaságok függetlenségének bicentenáriuma (BIR). -
@@ -16648,6 +16569,15 @@ modelo:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Az
               Escuela Superior de Música Reina Sofía 30. évfordulója (RS) - Jövőbeli
               időszakokban alkalmazandó [00274]
+          is-m200-dp200018-00291:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 Guadalupei
+              szentév 2021 (G21) - Függőben lévő/keletkezett levonás [00291]
+          is-m200-dp200018-00292:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 Guadalupei
+              szentév 2021 (G21) - Ebben az elszámolásban alkalmazva [00292]
+          is-m200-dp200018-00293:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 Guadalupei
+              szentév 2021 (G21) - Jövőbeli időszakokban alkalmazandó [00293]
           is-m200-dp200018-00294:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Davis-kupa
               madridi torna (DCM) - Függőben lévő/keletkezett levonás [00294]
@@ -16700,6 +16630,18 @@ modelo:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Valencia,
               a design világfővárosa 2022/Valencia World Design Capital 2022 (VD22)
               - Jövőbeli időszakokban alkalmazandó [00405]
+          is-m200-dp200018-00406:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 Az Országos
+              Távoktatási Egyetem ötvenedik évfordulója (UNED) - Függőben lévő/keletkezett
+              levonás [00406]
+          is-m200-dp200018-00407:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 Az Országos
+              Távoktatási Egyetem ötvenedik évfordulója (UNED) - Ebben az elszámolásban
+              alkalmazva [00407]
+          is-m200-dp200018-00419:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 Az Országos
+              Távoktatási Egyetem ötvenedik évfordulója (UNED) - Jövőbeli időszakokban
+              alkalmazandó [00419]
           is-m200-dp200018-00422:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
               Revista de Occidente centenáriuma (RO) - Függőben lévő/keletkezett levonás
@@ -16805,6 +16747,22 @@ modelo:
             label: 'Egyes tevékenységek ösztönzésére szolgáló levonások - {year} Különleges
               FITUR: a turizmus helyreállítása (FE) - Jövőbeli időszakokban alkalmazandó
               [00513]'
+          is-m200-dp200018-00540:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 Valencia
+              2020-2021, jubileumi év. A Szent Kehely útja (VAJ) - Függőben lévő/keletkezett
+              levonás [00540]
+          is-m200-dp200018-00542:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 Valencia
+              2020-2021, jubileumi év. A Szent Kehely útja (VAJ) - Ebben az elszámolásban
+              alkalmazva [00542]
+          is-m200-dp200018-00595:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 Valencia
+              2020-2021, jubileumi év. A Szent Kehely útja (VAJ) - Jövőbeli időszakokban
+              alkalmazandó [00595]
+          is-m200-dp200018-00596:
+            label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 Neurodegeneratív
+              betegségek. A kutatás és innováció nemzetközi éve. 2021-2022 közötti
+              időszak (EN21) - Függőben lévő/keletkezett levonás [00596]
           is-m200-dp200018-00812:
             label: Egyes tevékenységek ösztönzésére szolgáló levonások - {year} A
               Hospital Sant Joan de Déu 50. évfordulója (HSJD) - Függőben lévő/keletkezett
@@ -16990,6 +16948,10 @@ modelo:
               érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
               - Keletkezés éve - 2021 - A 2016-tól kezdődő adómegállapítási időszakokban
               felhasznált pozitív nettó adótöbblet [02429]
+          is-m200-dp200022-00130:
+            label: Kanári-szigeteki beruházási tartalék különös rendszere - Előzetes
+              beruházások 2022 - 19/1994. törvény 27.4 cikk B bis, C és D pont szerinti
+              beruházások [00130]
           is-m200-dp200022-00524:
             label: Kanári-szigeteki beruházási tartalék különös rendszere - RIC 2018
               - Időszak elején materializálásra váró RIC [00524]
@@ -17116,7 +17078,6 @@ modelo:
           is-opcion-art-39-2-lis:
             help: Jelölő a társasági adóról szóló törvény 39.2 cikke szerinti opcióhoz
               [00059].
-            label: Opció a LIS 39.2 cikke szerint [00059]
           is-opcion-art-39-3-lis:
             label: Választási lehetőség a LIS 39.3. cikke alapján [00090]
           is-opcion-art-46-2-lis-dp200001-00016:
@@ -17142,31 +17103,18 @@ modelo:
               a) Az év eredménykimutatásában szereplő értékkorrekció
           is-participaciones-directas-d-c-eliminacion-del-deterioro-contable-incluido-en-p-y-g-art-1:
             help: A Modelo 200 nyomtatvány éves társasági adóbevallásának 1506. rovata.
-            label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
-              c) Az eredménykimutatásban szereplő számviteli értékvesztés kiszűrése
-              (LIS 13.2.b cikk)
           is-participaciones-directas-d-d-eliminacion-del-deterioro-de-valores-repr-de-partic-en-el:
             help: A Modelo 200 nyomtatvány éves társasági adóbevallásának 1809. rovata.
-            label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
-              d) A tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
-              értékvesztésének kiszűrése (LIS 15.k cikk)
           is-participaciones-directas-d-datos-de-la-declarante-ingresos-por-dividendos-recibidos-en:
             help: A Modelo 200 nyomtatvány éves társasági adóbevallásának 1503. rovata.
             label: Közvetlen részesedések más szervezetekben. Értékhelyesbítések.
               A bevallott évben kapott osztalékból származó bevétel
           is-participaciones-directas-d-e-ajuste-por-la-disminucion-de-valor-originada-por-criterio:
             help: A Modelo 200 nyomtatvány éves társasági adóbevallásának 1810. rovata.
-            label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
-              e) A valós értéken alapuló értékcsökkenés miatti kiigazítás (LIS 15.l
-              cikk)
           is-participaciones-directas-d-f-efecto-correccion-valorativa-en-la-bi-del-ejercicio-a-b-c:
             help: A Modelo 200 nyomtatvány éves társasági adóbevallásának 1507. rovata.
-            label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
-              f) Az értékelési korrekció hatása az év adóalapjára
           is-participaciones-directas-d-g-saldo-de-correcciones-fiscales-art-12-3-rdl-4-2004-pendien:
             help: A Modelo 200 nyomtatvány éves társasági adóbevallásának 1508. rovata.
-            label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
-              g) Az év végén fennálló adókorrekciók egyenlege (12.3 RDL 4/2004)
           is-participaciones-directas-d-valor-en-libros-en-el-activo-de-la-declarante-de-la-particip:
             help: A Modelo 200 nyomtatvány 1502. rovata.
             label: A részesedés könyv szerinti értéke (a bevalló eszközei között)
@@ -17545,8 +17493,6 @@ modelo:
           is-regimen-especial-fusiones-escisiones-aportaciones-activos-y-canjes-valores-cap-vii-tit-vii:
             help: Jelölő az egyesülések, szétválások, eszköz-hozzájárulások és értékpapírcserék
               VII. fejezet, VII. cím szerinti különleges rendszere esetén [00035].
-            label: Egyesülések, szétválások, eszköz-hozzájárulások és értékpapírcserék
-              különleges rendszere (VII. fejezet, VII. cím) [00035]
           is-regimen-especial-hidrocarburos:
             help: Jelölő a szénhidrogének különleges rendszere esetén [00034].
             label: Szénhidrogének különleges rendszere [00034]
@@ -17995,11 +17941,6 @@ modelo:
               közös adózás esetén [00028].
             label: 'Közös adózás: állam / tartományi tanácsok / forális közösségek
               [00028]'
-          is-tributacion-conjunta-estado-forales-rectificacion-importe:
-            label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
-              a {year}. adómegállapítási időszakra vonatkozó korábbi önadózások vagy
-              hatósági megállapítások feldolgozása nyomán fizetendő összeg - Araba/Alava
-              [01607]'
           is-tributacion-conjunta-estado-y-adm-forales-abono-deducciones-producciones-extranjeras-en-canarias-total:
             label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
               külföldi produkciók levonásainak jóváírása - Összesen [01881]
@@ -18109,11 +18050,6 @@ modelo:
           is-tributacion-conjunta-estado-y-adm-forales-pagos-fraccionados-3-total:
             label: Állami és tartományi adóhatóságok együttes adóztatása - Adóelőleg-részletek
               3 - Összesen [00606]
-          is-tributacion-conjunta-estado-y-adm-forales-rectificativa-resultado-de-la-autoliquidacion-incluido-el-1e-total:
-            label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
-              bevallás: az önadózás eredménye, beleértve a LIS 19.1. cikke szerinti
-              első részletet, a {year}. adóidőszakra vonatkozó korábbi önadózásból
-              vagy hatósági megállapításból származóan - Összesen [02488]'
           is-tributacion-conjunta-estado-y-adm-forales-resultado-araba-alava:
             label: Állami és tartományi adóhatóságok együttes adóztatása - Eredmény
               - Araba/Alava [00494]
@@ -18126,9 +18062,6 @@ modelo:
           is-tributacion-conjunta-estado-y-adm-forales-resultado-gipuzkoa:
             label: Állami és tartományi adóhatóságok együttes adóztatása - Eredmény
               - Gipuzkoa [00495]
-          is-tributacion-conjunta-estado-y-adm-forales-resultado-incluido-en-el-1er-fraccionamiento-de-art-19-1-lis-total:
-            label: Állami és tartományi adóhatóságok együttes adóztatása - A LIS 19.1
-              cikk szerinti első részletben szereplő eredmény - Összesen [03242]
           is-tributacion-conjunta-estado-y-adm-forales-resultado-navarra:
             label: Állami és tartományi adóhatóságok együttes adóztatása - Eredmény
               - Navarra [00497]
@@ -18296,21 +18229,6 @@ modelo:
               és más, növelt levonásra jogosító célokra adott adományok - 2015 ugyanazon
               szervezetnek ismételten nem nyújtott adományok - Jövőbeli időszakokban
               alkalmazandó [00942]
-          priority-nonrecurrent-donation-2024-subperiod-applied:
-            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
-              és más, növelt levonásra jogosító célokra adott adományok - 2024(*)
-              - Ugyanazon szervezetnek ismételten nem nyújtott adományok - Ebben az
-              elszámolásban alkalmazva [02695]
-          priority-nonrecurrent-donation-2024-subperiod-generated:
-            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
-              és más, növelt levonásra jogosító célokra adott adományok - 2024(*)
-              - Ugyanazon szervezetnek ismételten nem nyújtott adományok - Függőben
-              lévő/keletkezett levonás [02694]
-          priority-nonrecurrent-donation-2024-subperiod-remaining:
-            label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
-              és más, növelt levonásra jogosító célokra adott adományok - 2024(*)
-              - Ugyanazon szervezetnek ismételten nem nyújtott adományok - Jövőbeli
-              időszakokban alkalmazandó [02696]
           priority-recurrent-donation-2015-remaining:
             label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
               és más, növelt levonásra jogosító célokra adott adományok - 2015 - Ugyanazon
@@ -18625,6 +18543,24 @@ modelo:
       revision:
         '2022':
           casilla:
+            '00052':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
+                megállapodás - Álava ügyleteinek volumene [00052]
+            '00053':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
+                megállapodás - Guipúzcoa ügyleteinek volumene [00053]
+            '00054':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
+                megállapodás - Vizcaya ügyleteinek volumene [00054]
+            00913:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
+                a SOCIMI követelmények nem teljesítése miatt - Álava [00913]
+            00914:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
+                a SOCIMI követelmények nem teljesítése miatt - Guipúzcoa [00914]
+            00915:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
+                a SOCIMI követelmények nem teljesítése miatt - Vizcaya [00915]
             00933:
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2015 ugyanazon
@@ -18844,6 +18780,11 @@ modelo:
                 és más, növelt levonásra jogosító célokra adott adományok - 2022(*)
                 Ugyanazon szervezetnek ismételt adományozás nélkül - Jövőbeli időszakokban
                 alkalmazandó [01072]
+            '01073':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2022(*)
+                - Ugyanazon szervezetnek ismételt adományozással - Függőben lévő/keletkezett
+                levonás [01073]
             '01074':
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2022(*)
@@ -18919,16 +18860,94 @@ modelo:
                 és/vagy 83. cikke szerinti korlát - d) Korábbi időszakokból levonásra
                 váró pénzügyi ráfordítások, a LIS 16.5 és/vagy 83. cikke által érintve,
                 e korlát után levonhatók ([b≥c1+d], ≥ 0) [01244]
+            01249:
+              label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
+                és 16.2. cikke szerinti korlát - i) Nettó pénzügyi ráfordítások levonásának
+                korlátja (= 30%* [i1-i2-i3-i4+i5], legalább 1 millió euró, ha a nettó
+                pénzügyi ráfordítás ≥ 1 millió) [01249]
+            '01256':
+              label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
+                és 16.2. cikke szerinti korlát - k1) Az adóidőszak levonható nettó
+                pénzügyi ráfordításai (≤ [i+j], [h=k1+k2], ≥ 0) [01256]
+            '01257':
+              label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
+                és 16.2. cikke szerinti korlát - k2) Az adóidőszak nem levonható nettó
+                pénzügyi ráfordításai (=[h - k1], ≤ [h - i], ≥ 0) [01257]
+            01258:
+              label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
+                és 16.2. cikke szerinti korlát - l) Korábbi adómegállapítási időszakokból
+                a LIS 16.5 és/vagy 83. cikke alapján levonásra váró pénzügyi ráfordítások,
+                mindkét korlát alkalmazása után levonhatók (≤ [d], ≥ 0) [01258]
+            01259:
+              label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
+                és 16.2. cikke szerinti korlát - m) Korábbi adómegállapítási időszakokból
+                levonásra váró pénzügyi ráfordítások, a LIS 16.5 és/vagy 83. cikke
+                által nem érintve, felhasználva [01259]
+            '01260':
+              label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
+                és 16.2. cikke szerinti korlát - Az adóidőszak nem levonható pénzügyi
+                ráfordításai összesen (= [c2+k2]) [01260]
+            '01300':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti jóváírás - Álava
+                [01300]
+            '01301':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti jóváírás - Guipúzcoa
+                [01301]
+            '01302':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti jóváírás - Vizcaya
+                [01302]
             '01303':
               label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
                 követeléssé (LIS 130. cikk) - Eszközátalakítás miatti jóváírás - Navarra
                 [01303]
+            '01305':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
+                Álava [01305]
+            '01306':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
+                Guipúzcoa [01306]
+            '01307':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
+                Vizcaya [01307]
             01308:
               label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
                 követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
                 Navarra [01308]
+            '01331':
+              label: Elszámolás III - adóalap - Csak szövetkezetek - Kiegyenlítési
+                tartalék utáni előzetes teljes adókötelezettség - Csökkentések [01331]
+            '01334':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
+                levonások jóváírása elégtelen adókötelezettség miatt - Álava [01334]
+            '01335':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
+                levonások jóváírása elégtelen adókötelezettség miatt - Guipúzcoa [01335]
+            '01336':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
+                levonások jóváírása elégtelen adókötelezettség miatt - Vizcaya [01336]
+            01338:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
+                produkciók levonásainak kifizetése - Álava [01338]
+            01339:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
+                produkciók levonásainak kifizetése - Guipúzcoa [01339]
+            '01340':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
+                produkciók levonásainak kifizetése - Vizcaya [01340]
             01408:
               label: Követelések vagy egyéb eszközök értékvesztési ráfordításai -
                 Keletkezés éve - 2007 és korábbi - Időszak elején beépítésre váró
@@ -18949,6 +18968,10 @@ modelo:
                 Keletkezés éve - 2007 és korábbi - Jövőbeli időszakokban beépítésre
                 váró ráfordítások - Amelyek nem teljesítették az adóügyi levonhatósági
                 feltételeket [01476]
+            '01510':
+              label: Elszámolás III - adóalap - Csak szövetkezetek - Szövetkezeti
+                értékvesztések visszafordításához kapcsolódó jövedelmek (adókötelezettségi
+                szinten) (LIS 16.8 átmeneti rendelkezés) [01510]
             '01524':
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
@@ -19166,6 +19189,19 @@ modelo:
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
                 130. cikk - Keletkezés éve - Összesen - Jövőbeli időszakokban alkalmazásra
                 váró AID - Érvényesíthető követeléssé alakítás joga nélkül [01570]
+            '01576':
+              label: Elszámolás III - adóalap - A Kanári-szigeteki hajók és hajózási
+                társaságok különleges rendszere - Az adóalapnak a különleges rendszer
+                alá tartozó tevékenységekből származó része, a kiegyenlítő tartalék
+                után [01576]
+            '01577':
+              label: Elszámolás III - adóalap - A Kanári-szigeteki hajók és hajózási
+                társaságok különleges rendszere - Az adóalapnak az egyéb tevékenységekből
+                származó része, a kiegyenlítő tartalék után [01577]
+            01578:
+              label: 'Elszámolás IV - Fizetendő vagy visszajáró nettó összeg - Kiegészítő:
+                a {year}. adóidőszakra vonatkozó korábbi önadózásokból eredő fizetendő
+                összegek - Állam [01578]'
             01579:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
@@ -19186,6 +19222,10 @@ modelo:
                 érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
                 - Keletkezés éve - Összesen - Jövőbeli időszakokban felhasználandó
                 pozitív nettó adótöbblet [01582]
+            01584:
+              label: 'Elszámolás IV - Fizetendő vagy visszajáró nettó összeg - Kiegészítő:
+                a {year}. adóidőszakra vonatkozó korábbi önadózásokból eredő megítélt
+                visszatérítések - Állam [01584]'
             01589:
               label: Elszámolás II - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - Az adózó által viselt külföldi adó, amely nem levonható,
@@ -19201,16 +19241,181 @@ modelo:
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
                 33. átmeneti rendelkezés és 13. kiegészítő rendelkezés - Keletkezés
                 éve - Összesen 2008-2015 - Követeléssé alakított DTA [01591]
+            '01607':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                korábbi {year}. évi önadózásokból fizetendő összegek - Álava [01607]'
+            01608:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                korábbi {year}. évi önadózásokból fizetendő összegek - Guipúzcoa [01608]'
+            01609:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                korábbi {year}. évi önadózásokból fizetendő összegek - Vizcaya [01609]'
+            '01610':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                korábbi {year}. évi önadózásokból fizetendő összegek - Navarra [01610]'
+            '01611':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                korábbi {year}. évi önadózásokból megítélt visszatérítések - Álava
+                [01611]'
+            '01612':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                korábbi {year}. évi önadózásokból megítélt visszatérítések - Guipúzcoa
+                [01612]'
+            '01613':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                korábbi {year}. évi önadózásokból megítélt visszatérítések - Vizcaya
+                [01613]'
+            '01623':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                korábbi {year}. évi önadózásokból megítélt visszatérítések - Navarra
+                [01623]'
+            '01624':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
+                eredménye - Álava [01624]
+            '01625':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
+                eredménye - Guipúzcoa [01625]
+            01629:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
+                eredménye - Vizcaya [01629]
+            '01631':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Beépített összeg - Álava [01631]
+            '01632':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Beépített összeg - Guipúzcoa [01632]
+            '01633':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Beépített összeg - Vizcaya [01633]
+            '01635':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Adótartozás - Álava [01635]
+            '01636':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Adótartozás - Guipúzcoa [01636]
+            '01637':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Adótartozás - Vizcaya [01637]
+            '01642':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Első részlet - Álava [01642]
+            '01643':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Első részlet - Guipúzcoa [01643]
+            '01644':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
+                lehetőség LIS 19.1 cikk - Első részlet - Vizcaya [01644]
+            '01646':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
+                eredménye az első részlettel együtt - Álava [01646]
+            '01647':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
+                eredménye az első részlettel együtt - Guipúzcoa [01647]
+            01648:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
+                eredménye az első részlettel együtt - Vizcaya [01648]
+            '01650':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                az önadózás eredménye az első részlettel együtt, a {year}. adóidőszakra
+                vonatkozó korábbi önadózásokból - Álava [01650]'
+            '01651':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                az önadózás eredménye az első részlettel együtt, a {year}. adóidőszakra
+                vonatkozó korábbi önadózásokból - Guipúzcoa [01651]'
+            '01652':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                az önadózás eredménye az első részlettel együtt, a {year}. adóidőszakra
+                vonatkozó korábbi önadózásokból - Vizcaya [01652]'
+            '01653':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                az önadózás eredménye az első részlettel együtt, a {year}. adóidőszakra
+                vonatkozó korábbi önadózásokból - Navarra [01653]'
+            '01654':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                fizetendő összeg az első részlettel együtt - Álava [01654]'
+            '01655':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                fizetendő összeg az első részlettel együtt - Guipúzcoa [01655]'
+            '01656':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                fizetendő összeg az első részlettel együtt - Vizcaya [01656]'
+            '01657':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                fizetendő összeg az első részlettel együtt - Navarra [01657]'
+            01658:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Kiegészítő: Visszatérítés - Álava [01658]'
+            01659:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Kiegészítő: Visszatérítés - Guipúzcoa
+                [01659]'
+            '01660':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Kiegészítő: Visszatérítés - Vizcaya
+                [01660]'
+            '01661':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Kiegészítő: Visszatérítés - Navarra
+                [01661]'
+            '01662':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Jóváírás -
+                Álava [01662]'
+            '01663':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Jóváírás -
+                Guipúzcoa [01663]'
+            '01664':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Jóváírás -
+                Vizcaya [01664]'
             '01665':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
                 követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Jóváírás -
                 Navarra [01665]'
+            '01666':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Beszámítás
+                - Álava [01666]'
+            '01667':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Beszámítás
+                - Guipúzcoa [01667]'
+            01668:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Beszámítás
+                - Vizcaya [01668]'
             01669:
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
                 követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Beszámítás
                 - Navarra [01669]'
+            '01670':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Fizetendő -
+                Álava [01670]'
+            '01671':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Fizetendő -
+                Guipúzcoa [01671]'
+            '01672':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Fizetendő -
+                Vizcaya [01672]'
             '01673':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
@@ -19284,6 +19489,15 @@ modelo:
                 részletezése - A kikötői hatóságok által a tárgyi eszközök átruházásából
                 szerzett jövedelmek (6/2018. sz. törvény 68. kiegészítő rendelkezése)
                 - Csökkentések [01824]
+            01877:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
+                külföldi produkciók levonásainak jóváírása - Álava [01877]
+            01878:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
+                külföldi produkciók levonásainak jóváírása - Guipúzcoa [01878]
+            01879:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
+                külföldi produkciók levonásainak jóváírása - Vizcaya [01879]
             01886:
               label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
                 a negatív adóalapok beszámításának részletezése - A különleges adóalap
@@ -19503,6 +19717,16 @@ modelo:
                 és más, növelt levonásra jogosító célokra adott adományok - 2017 Ugyanazon
                 szervezetnek adott ismételt adományok nélkül - Jövőbeli időszakokban
                 alkalmazandó [02474]
+            02487:
+              label: 'Elszámolás IV - Részletfizetési lehetőség lakóhely-változás
+                esetén (LIS 19.1 cikk) - Fizetendő összeg - Kiegészítő: az önadózás
+                eredménye a LIS 19.1 cikke szerinti első részlettel együtt, korábbi
+                önadózások alapján, a {year}. adómegállapítási időszakra - Állam [02487]'
+            02492:
+              label: 'Elszámolás IV - Halasztott adókövetelések átalakítása az adóhatósággal
+                szemben érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy
+                visszajáró nettó összeg - Az AID átalakításának eredménye a rendezés
+                után: Fizetendő - Összesen [02492]'
             02578:
               label: A számviteli értékcsökkenési ráfordítás 30%-ának levonása (kisvállalkozások
                 kivételével) (7. cikk, 16/2012. törvény) - Csökkenés - Évi korrekciók
@@ -19817,6 +20041,26 @@ modelo:
               label: Javak és jogok értékelése. Átszervezési műveletek különleges
                 szabályozása (LIS VII. cím VII. fejezet) - Csökkenés - Évi korrekciók
                 - Átmeneti (korábbi időszakokból eredő) [03148]
+            '03243':
+              label: 'Elszámolás IV - Halasztott adókövetelések átalakítása az adóhatósággal
+                szemben érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy
+                visszajáró nettó összeg - Kiegészítő: megítélt vagy beszámított visszatérítés
+                - Összesen [03243]'
+            '03244':
+              label: 'Elszámolás IV - Halasztott adókövetelések átalakítása az adóhatósággal
+                szemben érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy
+                visszajáró nettó összeg - Kiegészítő: megítélt vagy beszámított visszatérítés
+                - Állam [03244]'
+            '03317':
+              label: 'Elszámolás IV - Halasztott adókövetelések átalakítása az adóhatósággal
+                szemben érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy
+                visszajáró nettó összeg - Az AID átalakításának eredménye a rendezés
+                után: Jóváírás - Összesen [03317]'
+            '03320':
+              label: 'Elszámolás IV - Halasztott adókövetelések átalakítása az adóhatósággal
+                szemben érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy
+                visszajáró nettó összeg - Az AID átalakításának eredménye a rendezés
+                után: Beszámítás - Összesen [03320]'
             '03362':
               label: Külföldön alapított, jövedelem-tulajdonítási rendszerben működő,
                 spanyol területen jelen lévő jogalanyok (TRLIRNR 38. cikk) - Növekedés
@@ -19833,6 +20077,32 @@ modelo:
               label: Külföldön alapított, jövedelem-tulajdonítási rendszerben működő,
                 spanyol területen jelen lévő jogalanyok (TRLIRNR 38. cikk) - Csökkenés
                 - Évi korrekciók - Átmeneti (korábbi időszakokból eredő) [03368]
+            '1506':
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                b) Az eredménykimutatásban szereplő számviteli értékvesztés kiszűrése
+                (LIS 13.2.b cikk)
+            '1507':
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                e) Az értékelési korrekció hatása az év adóalapjára
+            '1508':
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                f) Az év végén fennálló adókorrekciók egyenlege (12.3 RDL 4/2004)
+            '1809':
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                c) A tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
+                értékvesztésének kiszűrése (LIS 15.k cikk)
+            '1810':
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                d) A valós értéken alapuló értékcsökkenés miatti kiigazítás (LIS 15.l
+                cikk)
+            x-8h834c1g60o32ehg60o36d8:
+              label: Az egyesülések, szétválások, eszköz-hozzájárulások és értékpapírcserék
+                különleges rendszerének alkalmazása (VII. fejezet, VII. cím) [00035]
+            x-8h834c1g60o32ehg60o38d0:
+              label: A LIS 36.1 és 36.3 cikke szerinti kedvezményeket más adózók finanszírozásával
+                alkalmazó adózó [00044]
+            x-8h834c1g60o32ehg60o3ae8:
+              label: Opció a LIS 39.2 és 39.3 cikke szerint [00059]
             x-8h834c1g60o32ehg60o3gc8:
               label: Multinacionális csoport leányvállalata [00081]
             x-8h834c1g60o32ehg60o3gcg:
@@ -19841,9 +20111,22 @@ modelo:
               label: Saját tőke változásainak kimutatása (II) - Saját tőkében elszámolt
                 bevételek és ráfordítások - Saját tőkében elszámolt egyéb bevételek
                 és ráfordítások - Saját részvények és üzletrészek [00496]
+            x-8h834c1g60oj4ehg60pjec0:
+              label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
+                részletezése - Belföldi illetőségű jogalanyok osztalékaira vagy nyereségrészesedéseire
+                vonatkozó mentesség (LIS 21.1., 21.10. cikk és 40. átmeneti rendelkezés)
+                - Csökkentések [00370]
             x-8h834c1g60oj4ehg60qj0c8:
               label: Elszámolás I - Eredménykimutatás eredménye - Az eredménykimutatás
                 eredménye a társasági adó előtt [00501]
+            x-8h834c1g60oj6ehg64s3gdo:
+              label: Elszámolás II - adóalap - A Kanári-szigeteki hajók és hajózási
+                társaságok különleges rendszere - Korábbi időszakok negatív adóalapjainak
+                beszámítása az adóalap különleges rendszerre eső részén [01887]
+            x-8h834c1g60oj6ehg64s3ic0:
+              label: Elszámolás II - adóalap - A Kanári-szigeteki hajók és hajózási
+                társaságok különleges rendszere - Korábbi időszakok negatív adóalapjainak
+                beszámítása az adóalap egyéb tevékenységekre eső részén [01890]
             x-8h834c1g60oj8ehg64pj6c0:
               label: Elszámolás III - Adóalap - Kis méretű vállalkozások - Adóalap
                 a kiegyenlítési tartalék után - Csökkentések [01330]
@@ -19859,11 +20142,77 @@ modelo:
                 adóhatósággal szemben érvényesíthető követeléssé alakításából eredő
                 beszámítás (LIS 130. cikk) - Tartományi adóhatóságok/Navarra (Összesen)
                 [01044]
+            x-8h834c1g60oj8ghq60ojae1j:
+              label: 'Elszámolás IV - Fizetendő vagy visszajáró nettó összeg - Kiegészítő:
+                a {year}. adóidőszakra vonatkozó korábbi önadózásokból eredő fizetendő
+                összegek - Tartományi adóhatóságok/Navarra (Összesen) [01583]'
+            x-8h834c1g60oj8ghq60ojae1l:
+              label: 'Elszámolás IV - Fizetendő vagy visszajáró nettó összeg - Kiegészítő:
+                a {year}. adóidőszakra vonatkozó korábbi önadózásokból eredő megítélt
+                visszatérítések - Tartományi adóhatóságok/Navarra (Összesen) [01585]'
             x-8h834c1g60oj8ghq60p38e1m:
               label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
                 (LIS 19.1 cikk) - Az önadózás eredménye a LIS 19.1. cikke szerinti
                 1. részletfizetéssel együtt - Tartományi adóhatóságok/Navarra (Összesen)
                 [02486]
+            x-8h834c1g60oj8ghq60p38e1o:
+              label: 'Elszámolás IV - Részletfizetési lehetőség lakóhely-változás
+                esetén (LIS 19.1 cikk) - Fizetendő összeg - Kiegészítő: az önadózás
+                eredménye a LIS 19.1 cikke szerinti első részlettel együtt, korábbi
+                önadózások alapján, a {year}. adómegállapítási időszakra - Tartományi
+                adóhatóságok/Navarra (Összesen) [02488]'
+            x-8h834c1g60oj8ghq60p38e1p:
+              label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
+                (LIS 19.1 cikk) - Fizetendő összeg - Fizetendő összeg a LIS 19.1.
+                cikke szerinti 1. részletfizetéssel együtt - Állam [02489]
+            x-8h834c1g60oj8ghq60p38e9g:
+              label: 'Elszámolás IV - Halasztott adókövetelések átalakítása az adóhatósággal
+                szemben érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy
+                visszajáró nettó összeg - Az AID átalakításának eredménye a rendezés
+                után: Beszámítás - Állam [02490]'
+            x-8h834c1g60oj8ghq60p38e9h:
+              label: 'Elszámolás IV - Halasztott adókövetelések átalakítása az adóhatósággal
+                szemben érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy
+                visszajáró nettó összeg - Az AID átalakításának eredménye a rendezés
+                után: Beszámítás - Tartományi adóhatóságok/Navarra (Összesen) [02491]'
+            x-8h834c1g60oj8ghq60p38e9j:
+              label: 'Elszámolás IV - Halasztott adókövetelések átalakítása az adóhatósággal
+                szemben érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy
+                visszajáró nettó összeg - Az AID átalakításának eredménye a rendezés
+                után: Fizetendő - Állam [02493]'
+            x-8h834c1g60oj8ghq60p38e9k:
+              label: 'Elszámolás IV - Halasztott adókövetelések átalakítása az adóhatósággal
+                szemben érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy
+                visszajáró nettó összeg - Az AID átalakításának eredménye a rendezés
+                után: Fizetendő - Tartományi adóhatóságok/Navarra (Összesen) [02494]'
+            x-8h834c1g60oj8ghq60pj4d1i:
+              label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
+                (LIS 19.1 cikk) - Fizetendő összeg - Fizetendő összeg a LIS 19.1.
+                cikke szerinti 1. részletfizetéssel együtt - Tartományi adóhatóságok/Navarra
+                (Összesen) [03242]
+            x-8h834c1g60oj8ghq60pj4d1l:
+              label: 'Elszámolás IV - Halasztott adókövetelések átalakítása az adóhatósággal
+                szemben érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy
+                visszajáró nettó összeg - Kiegészítő: megítélt vagy beszámított visszatérítés
+                - Tartományi adóhatóságok/Navarra (Összesen) [03245]'
+            x-8h834c1g60oj8ghq60pj6c9o:
+              label: 'Elszámolás IV - Halasztott adókövetelések átalakítása az adóhatósággal
+                szemben érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy
+                visszajáró nettó összeg - Az AID átalakításának eredménye a rendezés
+                után: Jóváírás - Állam [03318]'
+            x-8h834c1g60oj8ghq60pj6c9p:
+              label: 'Elszámolás IV - Halasztott adókövetelések átalakítása az adóhatósággal
+                szemben érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy
+                visszajáró nettó összeg - Az AID átalakításának eredménye a rendezés
+                után: Jóváírás - Tartományi adóhatóságok/Navarra (Összesen) [03319]'
+            x-8h834c1g60ojiehg68pj0c8:
+              label: Az eredmény korrekcióinak részletezése - Az adóévi eredménykimutatás
+                eredményének korrekciói - Állandó jellegű korrekció (a társasági adó
+                szerinti korrekció kivételével) - Növelések [02301]
+            x-8h834c1g60ojiehg68pj0cg:
+              label: Az eredmény korrekcióinak részletezése - Az adóévi eredménykimutatás
+                eredményének korrekciói - Állandó jellegű korrekció (a társasági adó
+                szerinti korrekció kivételével) - Csökkentések [02302]
             x-8h834c1g60ojiehg68pj0d0:
               label: Az eredmény korrekcióinak részletezése - Az adóévi eredménykimutatás
                 eredményének korrekciói - Az adóévben keletkezett ideiglenes korrekció
@@ -19876,19 +20225,41 @@ modelo:
               label: Az eredmény korrekcióinak részletezése - Az adóévi eredménykimutatás
                 eredményének korrekciói - Korábbi évekből eredő átmeneti korrekció
                 - Csökkentések [02308]
+            x-8h834c1g60p3cehg60q38do:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - 2. részletfizetések
+                - Vizcaya [00447]
+            x-8h834c1g60p3cehg60q3ed0:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Különbözeti
+                adó - Álava [00474]
+            x-8h834c1g60p3cehg60q3gdo:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Késedelmi
+                kamatok - Guipúzcoa [00487]
+            x-8h834c1g60p3cehg60q3ge0:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - Késedelmi
+                kamatok - Vizcaya [00488]
+            x-8h834c1g60p3cehg64qjgco:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                korábbi {year}. évi önadózásokból fizetendő összegek - Összesen [01583]'
+            x-8h834c1g60p3cehg64qjgd8:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                korábbi {year}. évi önadózásokból megítélt visszatérítések - Összesen
+                [01585]'
+            x-8h834c1g60p3cehg68q3ge0:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                az önadózás eredménye az első részlettel együtt, a {year}. adóidőszakra
+                vonatkozó korábbi önadózásokból - Összesen [02488]'
+            x-8h834c1g60p3cehg6cp38cg:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Kiegészítő:
+                fizetendő összeg az első részlettel együtt - Összesen [03242]'
+            x-8h834c1g60p3cehg6cp38d8:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Kiegészítő: Visszatérítés - Összesen
+                [03245]'
           field:
             label: 200-es modelo, 2022. adóév
         '2023':
           casilla:
-            '00052':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
-                megállapodás - Álava ügyleteinek volumene [00052]
-            '00053':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
-                megállapodás - Guipúzcoa ügyleteinek volumene [00053]
-            '00054':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - gazdasági
-                megállapodás - Vizcaya ügyleteinek volumene [00054]
             '00077':
               label: Egyes járművek és új töltőinfrastruktúrák gyorsított értékcsökkenése
                 (LIS 18. kiegészítő rendelkezés) - Növekedés - Évi korrekciók - Időleges
@@ -19901,15 +20272,6 @@ modelo:
               label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - Egyes járművek és új töltőinfrastruktúrák gyorsított
                 értékcsökkenése (LIS 18. kiegészítő rendelkezés) - Csökkentések [00776]
-            00913:
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
-                a SOCIMI követelmények nem teljesítése miatt - Álava [00913]
-            00914:
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
-                a SOCIMI követelmények nem teljesítése miatt - Guipúzcoa [00914]
-            00915:
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Növekmény
-                a SOCIMI követelmények nem teljesítése miatt - Vizcaya [00915]
             '01020':
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé (LIS 130. cikk) - Halasztott adókövetelések
@@ -19935,6 +20297,11 @@ modelo:
                 és más, növelt levonásra jogosító célokra adott adományok - 2022 Ugyanazon
                 szervezetnek ismételt adományozás nélkül - Jövőbeli időszakokban alkalmazandó
                 [01072]
+            '01073':
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 20222
+                - Ugyanazon szervezetnek ismételt adományozással - Függőben lévő/keletkezett
+                levonás [01073]
             '01074':
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2022 -
@@ -19989,59 +20356,11 @@ modelo:
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
                 130. cikk - Keletkezés éve - 2022 - Jövőbeli időszakokban alkalmazásra
                 váró AID - Érvényesíthető követeléssé alakítás joga nélkül [01133]
-            '01300':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti jóváírás - Álava
-                [01300]
-            '01301':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti jóváírás - Guipúzcoa
-                [01301]
-            '01302':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti jóváírás - Vizcaya
-                [01302]
-            '01305':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
-                Álava [01305]
-            '01306':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
-                Guipúzcoa [01306]
-            '01307':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
-                Vizcaya [01307]
             01329:
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2023(*)
                 Ugyanazon szervezetnek ismételten nem nyújtott adományok - Függőben
                 lévő/keletkezett levonás [01329]
-            '01334':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
-                levonások jóváírása elégtelen adókötelezettség miatt - Álava [01334]
-            '01335':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
-                levonások jóváírása elégtelen adókötelezettség miatt - Guipúzcoa [01335]
-            '01336':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
-                levonások jóváírása elégtelen adókötelezettség miatt - Vizcaya [01336]
-            01338:
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
-                produkciók levonásainak kifizetése - Álava [01338]
-            01339:
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
-                produkciók levonásainak kifizetése - Guipúzcoa [01339]
-            '01340':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
-                produkciók levonásainak kifizetése - Vizcaya [01340]
             '01372':
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2023(*)
@@ -20052,105 +20371,6 @@ modelo:
                 és más, növelt levonásra jogosító célokra adott adományok - 2023(*)
                 Ugyanazon szervezetnek ismételten nem nyújtott adományok - Jövőbeli
                 időszakokban alkalmazandó [01373]
-            '01624':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
-                eredménye - Álava [01624]
-            '01625':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
-                eredménye - Guipúzcoa [01625]
-            01629:
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Az önadózás
-                eredménye - Vizcaya [01629]
-            '01631':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-                lehetőség LIS 19.1 cikk - Beépített összeg - Álava [01631]
-            '01632':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-                lehetőség LIS 19.1 cikk - Beépített összeg - Guipúzcoa [01632]
-            '01633':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-                lehetőség LIS 19.1 cikk - Beépített összeg - Vizcaya [01633]
-            '01635':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-                lehetőség LIS 19.1 cikk - Adótartozás - Álava [01635]
-            '01636':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-                lehetőség LIS 19.1 cikk - Adótartozás - Guipúzcoa [01636]
-            '01637':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-                lehetőség LIS 19.1 cikk - Adótartozás - Vizcaya [01637]
-            '01642':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-                lehetőség LIS 19.1 cikk - Első részlet - Álava [01642]
-            '01643':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-                lehetőség LIS 19.1 cikk - Első részlet - Guipúzcoa [01643]
-            '01644':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
-                lehetőség LIS 19.1 cikk - Első részlet - Vizcaya [01644]
-            '01646':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
-                eredménye az első részlettel együtt - Álava [01646]
-            '01647':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
-                eredménye az első részlettel együtt - Guipúzcoa [01647]
-            01648:
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Önbevallás
-                eredménye az első részlettel együtt - Vizcaya [01648]
-            '01662':
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Jóváírás -
-                Álava [01662]'
-            '01663':
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Jóváírás -
-                Guipúzcoa [01663]'
-            '01664':
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Jóváírás -
-                Vizcaya [01664]'
-            '01666':
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Beszámítás
-                - Álava [01666]'
-            '01667':
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Beszámítás
-                - Guipúzcoa [01667]'
-            01668:
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Beszámítás
-                - Vizcaya [01668]'
-            '01670':
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Fizetendő -
-                Álava [01670]'
-            '01671':
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Fizetendő -
-                Guipúzcoa [01671]'
-            '01672':
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Az átalakítás eredménye: Fizetendő -
-                Vizcaya [01672]'
-            01877:
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
-                külföldi produkciók levonásainak jóváírása - Álava [01877]
-            01878:
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
-                külföldi produkciók levonásainak jóváírása - Guipúzcoa [01878]
-            01879:
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Kanári-szigeteki
-                külföldi produkciók levonásainak jóváírása - Vizcaya [01879]
             01899:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 Nyugat-afrikai
                 területi beruházások és reklám- és propagandaköltségek (19/1994. törvény
@@ -20186,6 +20406,26 @@ modelo:
                 részletezése - Nem belföldi illetőségű jogalanyok értékpapír-átruházásából
                 származó jövedelem mentessége (LIS 21.3., 21.10. cikk és 40. átmeneti
                 rendelkezés) - Csökkentések [02185]
+            02492:
+              label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy visszajáró
+                nettó összeg - Az AID átalakításának eredménye a rendezés után: Fizetendő
+                - Összesen [02492]'
+            02694:
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2023 ugyanazon
+                szervezetnek ismételten nem nyújtott adományok - Függőben lévő/keletkezett
+                levonás [02694]
+            02695:
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2023 ugyanazon
+                szervezetnek ismételten nem nyújtott adományok - Ebben az elszámolásban
+                alkalmazva [02695]
+            02696:
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2023 ugyanazon
+                szervezetnek ismételten nem nyújtott adományok - Jövőbeli időszakokban
+                alkalmazandó [02696]
             02786:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
@@ -20250,6 +20490,26 @@ modelo:
                 érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
                 - Keletkezés éve - 2023 - Jövőbeli időszakokban felhasználandó pozitív
                 nettó adótöbblet [02799]
+            '03243':
+              label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy visszajáró
+                nettó összeg - Kiegészítő: megítélt vagy beszámított visszatérítés
+                - Összesen [03243]'
+            '03244':
+              label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy visszajáró
+                nettó összeg - Kiegészítő: megítélt vagy beszámított visszatérítés
+                - Állam [03244]'
+            '03317':
+              label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy visszajáró
+                nettó összeg - Az AID átalakításának eredménye a rendezés után: Jóváírás
+                - Összesen [03317]'
+            '03320':
+              label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy visszajáró
+                nettó összeg - Az AID átalakításának eredménye a rendezés után: Beszámítás
+                - Összesen [03320]'
             x-8h834c1g60oj4ehg60pj0e8:
               label: Elszámolás I - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - A szabad értékcsökkenés egyéb esetei (LIS 12.3. a)
@@ -20271,6 +20531,41 @@ modelo:
               label: Elszámolás III - adóalap - A Kanári-szigeteki hajók és hajózási
                 társaságok különleges rendszere - Korábbi időszakok negatív adóalapjainak
                 beszámítása az adóalap egyéb tevékenységekre eső részén [01890]
+            x-8h834c1g60ojaehg68q3ic0:
+              label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy visszajáró
+                nettó összeg - Az AID átalakításának eredménye a rendezés után: Beszámítás
+                - Állam [02490]'
+            x-8h834c1g60ojaehg68q3ic8:
+              label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy visszajáró
+                nettó összeg - Az AID átalakításának eredménye a rendezés után: Beszámítás
+                - Tartományi adóhatóságok/Navarra (Összesen) [02491]'
+            x-8h834c1g60ojaehg68q3ico:
+              label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy visszajáró
+                nettó összeg - Az AID átalakításának eredménye a rendezés után: Fizetendő
+                - Állam [02493]'
+            x-8h834c1g60ojaehg68q3id0:
+              label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy visszajáró
+                nettó összeg - Az AID átalakításának eredménye a rendezés után: Fizetendő
+                - Tartományi adóhatóságok/Navarra (Összesen) [02494]'
+            x-8h834c1g60ojaehg6cp38d8:
+              label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy visszajáró
+                nettó összeg - Kiegészítő: megítélt vagy beszámított visszatérítés
+                - Tartományi adóhatóságok/Navarra (Összesen) [03245]'
+            x-8h834c1g60ojaehg6cpj2e0:
+              label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy visszajáró
+                nettó összeg - Az AID átalakításának eredménye a rendezés után: Jóváírás
+                - Állam [03318]'
+            x-8h834c1g60ojaehg6cpj2e8:
+              label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé (LIS 130. cikk) - Fizetendő vagy visszajáró
+                nettó összeg - Az AID átalakításának eredménye a rendezés után: Jóváírás
+                - Tartományi adóhatóságok/Navarra (Összesen) [03319]'
             x-8h834c1g60ojgehg60pj2d8:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2023 A
                 spanyol rögbi és az Unió Esportiva Santboiana centenáriuma (CRE) -
@@ -20279,6 +20574,14 @@ modelo:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2023 A
                 spanyol rögbi és az Unió Esportiva Santboiana centenáriuma (CRE) -
                 Ebben az elszámolásban alkalmazva [00316]
+            x-8h834c1g60p30ghq60p36c1h:
+              label: Az eredmény korrekcióinak részletezése - Az adóévi eredménykimutatás
+                eredményének korrekciói - Állandó jellegű korrekció (a társasági adó
+                szerinti korrekció kivételével) - Növelések [02301]
+            x-8h834c1g60p30ghq60p36c1i:
+              label: Az eredmény korrekcióinak részletezése - Az adóévi eredménykimutatás
+                eredményének korrekciói - Állandó jellegű korrekció (a társasági adó
+                szerinti korrekció kivételével) - Csökkentések [02302]
             x-8h834c1g60p30ghq60p36c1k:
               label: Az eredmény korrekcióinak részletezése - Az adóévi eredménykimutatás
                 eredményének korrekciói - Az adóévben keletkezett ideiglenes korrekció
@@ -20291,18 +20594,6 @@ modelo:
               label: Az eredmény korrekcióinak részletezése - Az adóévi eredménykimutatás
                 eredményének korrekciói - Korábbi évekből eredő átmeneti korrekció
                 - Csökkentések [02308]
-            x-8h834c1g60p3cehg60q38do:
-              label: Állami és tartományi adóhatóságok együttes adóztatása - 2. részletfizetések
-                - Vizcaya [00447]
-            x-8h834c1g60p3cehg60q3ed0:
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Különbözeti
-                adó - Álava [00474]
-            x-8h834c1g60p3cehg60q3gdo:
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Késedelmi
-                kamatok - Guipúzcoa [00487]
-            x-8h834c1g60p3cehg60q3ge0:
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Késedelmi
-                kamatok - Vizcaya [00488]
           field:
             label: 200-es modelo, 2023. adóév
         '2024':
@@ -20470,6 +20761,18 @@ modelo:
                 130. cikk - Keletkezés éve - 2022 - Jövőbeli időszakokban felhasználásra
                 váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
                 joga nélkül [01133]
+            01249:
+              label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
+                és 16.2. cikke szerinti korlát - i) Nettó pénzügyi ráfordítások levonásának
+                korlátja (= 30%* [i1-i2-i3-i4+i5-i6]) [01249]
+            '01256':
+              label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
+                és 16.2. cikke szerinti korlát - l1) Az adóidőszak levonható nettó
+                pénzügyi ráfordításai ([h=l1+l2], ≥ 0) [01256]
+            '01257':
+              label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
+                és 16.2. cikke szerinti korlát - l2) Az adóidőszak nem levonható nettó
+                pénzügyi ráfordításai (=[h - l1], ≥ 0) [01257]
             01258:
               label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
                 és 16.2. cikke szerinti korlát - m) Korábbi adómegállapítási időszakokból
@@ -20481,6 +20784,10 @@ modelo:
                 és 16.2. cikke szerinti korlát - n) Korábbi adómegállapítási időszakokból
                 levonásra váró pénzügyi ráfordítások, a LIS 16.5 és/vagy 83. cikke
                 által nem érintve, felhasználva [01259]
+            '01260':
+              label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
+                és 16.2. cikke szerinti korlát - Az adóidőszak nem levonható pénzügyi
+                ráfordításai összesen (= [c2+l2]) [01260]
             '01300':
               label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
@@ -20516,6 +20823,9 @@ modelo:
                 és más, növelt levonásra jogosító célokra adott adományok - 2023 -
                 Ugyanazon szervezetnek ismételten nem nyújtott adományok - Függőben
                 lévő/keletkezett levonás [01329]
+            '01331':
+              label: Elszámolás III - adóalap - Csak szövetkezetek - Kiegyenlítési
+                tartalék utáni előzetes teljes adókötelezettség [01331]
             '01334':
               label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
                 levonások jóváírása elégtelen adókötelezettség miatt - Araba/Alava
@@ -20545,6 +20855,10 @@ modelo:
                 és más, növelt levonásra jogosító célokra adott adományok - 2023 -
                 Ugyanazon szervezetnek ismételten nem nyújtott adományok - Jövőbeli
                 időszakokban alkalmazandó [01373]
+            '01510':
+              label: Elszámolás III - adóalap - Csak szövetkezetek - Szövetkezeti
+                értékvesztések visszafordításához kapcsolódó jövedelmek (adókötelezettségi
+                szinten) (LIS 16.8 átmeneti rendelkezés) - Csökkenések [01510]
             '01515':
               label: LIS 24.7. átmeneti rendelkezés szerinti levonások - LIS 24.7
                 átmeneti rendelkezés 2024. évi levonásai - Függőben lévő/keletkezett
@@ -20575,6 +20889,26 @@ modelo:
               label: Elszámolás IV - Helyesbítő bevallás - Az Adóhatóság által a {year}.
                 adóidőszakra vonatkozó korábbi önadózások vagy hatósági megállapítások
                 feldolgozása nyomán megítélt visszatérítés - Állam [01584]
+            '01607':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
+                a {year}. adómegállapítási időszakra vonatkozó korábbi önadózások
+                vagy hatósági megállapítások feldolgozása nyomán fizetendő összeg
+                - Araba/Alava [01607]'
+            01608:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
+                a {year}. adómegállapítási időszakra vonatkozó korábbi önadózások
+                vagy hatósági megállapítások feldolgozása nyomán fizetendő összeg
+                - Gipuzkoa [01608]'
+            01609:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
+                a {year}. adómegállapítási időszakra vonatkozó korábbi önadózások
+                vagy hatósági megállapítások feldolgozása nyomán fizetendő összeg
+                - Bizkaia [01609]'
+            '01610':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
+                a {year}. adómegállapítási időszakra vonatkozó korábbi önadózások
+                vagy hatósági megállapítások feldolgozása nyomán fizetendő összeg
+                - Navarra [01610]'
             '01611':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
                 bevallás: Az Adóhatóság által a {year}. adóidőszakra vonatkozó korábbi
@@ -20669,6 +21003,19 @@ modelo:
                 bevallás: az önadózás eredménye, beleértve a LIS 19.1. cikke szerinti
                 első részletet, a {year}. adóidőszakra vonatkozó korábbi önadózásból
                 vagy hatósági megállapításból származóan - Navarra [01653]'
+            '01654':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - A LIS
+                19.1 cikk szerinti első részletben szereplő eredmény - Araba/Alava
+                [01654]
+            '01655':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - A LIS
+                19.1 cikk szerinti első részletben szereplő eredmény - Gipuzkoa [01655]
+            '01656':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - A LIS
+                19.1 cikk szerinti első részletben szereplő eredmény - Bizkaia [01656]
+            '01657':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - A LIS
+                19.1 cikk szerinti első részletben szereplő eredmény - Navarra [01657]
             01658:
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
@@ -20840,6 +21187,12 @@ modelo:
               label: Nonprofit szervezeteknek adott adományok levonása - Általános
                 adományok - 2024(*) ugyanazon szervezetnek ismételten nem nyújtott
                 adományok- függőben lévő/keletkezett levonás [02471]
+            02487:
+              label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
+                (LIS 19.1 cikk) - Helyesbítő bevallás - Az önadózás eredménye a LIS
+                19.1 cikke szerinti első részlettel együtt, korábbi önadózás vagy
+                hatósági megállapítás alapján, a {year}. adómegállapítási időszakra
+                - Állam [02487]
             02492:
               label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
@@ -20865,6 +21218,21 @@ modelo:
               label: Nonprofit szervezeteknek adott adományok levonása - Általános
                 adományok - 2024(*) - Ugyanazon szervezetnek ismételt adományozással
                 - Jövőbeli időszakokban alkalmazandó [02693]
+            02694:
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2024(*)
+                - Ugyanazon szervezetnek ismételten nem nyújtott adományok - Függőben
+                lévő/keletkezett levonás [02694]
+            02695:
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2024(*)
+                - Ugyanazon szervezetnek ismételten nem nyújtott adományok - Ebben
+                az elszámolásban alkalmazva [02695]
+            02696:
+              label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
+                és más, növelt levonásra jogosító célokra adott adományok - 2024(*)
+                - Ugyanazon szervezetnek ismételten nem nyújtott adományok - Jövőbeli
+                időszakokban alkalmazandó [02696]
             02697:
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2024(*)
@@ -21010,6 +21378,14 @@ modelo:
                 Keletkezés éve - 2024 - Jövőbeli időszakokban beépítésre váró ráfordítások
                 - Amelyek nem teljesítették az adóügyi levonhatósági feltételeket
                 [02806]
+            '03243':
+              label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
+                Helyesbítő: Elrendelt/kompenzált visszatérítés - Összesen [03243]'
+            '03244':
+              label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
+                Helyesbítő: Elrendelt/kompenzált visszatérítés - Állam [03244]'
             '03317':
               label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
@@ -21020,6 +21396,32 @@ modelo:
                 érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
                 Az AID átalakításának eredménye a rendezés után: Beszámítás - Összesen
                 [03320]'
+            '1506':
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                c) Az eredménykimutatásban szereplő számviteli értékvesztés kiszűrése
+                (LIS 13.2.b cikk)
+            '1507':
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                f) Az értékelési korrekció hatása az év adóalapjára
+            '1508':
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                g) Az év végén fennálló adókorrekciók egyenlege (12.3 RDL 4/2004)
+            '1809':
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                d) A tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
+                értékvesztésének kiszűrése (LIS 15.k cikk)
+            '1810':
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                e) A valós értéken alapuló értékcsökkenés miatti kiigazítás (LIS 15.l
+                cikk)
+            x-8h834c1g60o32ehg60o36d8:
+              label: Egyesülések, szétválások, eszköz-hozzájárulások és értékpapírcserék
+                különleges rendszere (VII. fejezet, VII. cím) [00035]
+            x-8h834c1g60o32ehg60o38d0:
+              label: A LIS 36.1 és 36.3 cikke szerinti kedvezményeket más adózók finanszírozásával
+                létrehozó adózó [00044]
+            x-8h834c1g60o32ehg60o3ae8:
+              label: Opció a LIS 39.2 cikke szerint [00059]
             x-8h834c1g60o3gehg60rjidg:
               label: Eredménykimutatás (II) - Folytatódó tevékenységek - A jegyzett
                 tőkéhez és egyéb, kötelezettség jellegűnek minősített alapokhoz nyújtott
@@ -21048,6 +21450,20 @@ modelo:
                 adóidőszakra vonatkozó korábbi önadózások vagy hatósági megállapítások
                 feldolgozása nyomán megítélt visszatérítés - Tartományi adóhatóságok/Navarra
                 (Összesen) [01585]
+            x-8h834c1g60oj8ghq60p38e1o:
+              label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
+                (LIS 19.1 cikk) - Helyesbítő bevallás - Az önadózás eredménye a LIS
+                19.1 cikke szerinti első részlettel együtt, korábbi önadózás vagy
+                hatósági megállapítás alapján, a {year}. adómegállapítási időszakra
+                - Tartományi adóhatóságok/Navarra (Összesen) [02488]
+            x-8h834c1g60oj8ghq60p38e1p:
+              label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
+                (LIS 19.1 cikk) - Eredmény a LIS 19.1. cikke szerinti 1. részletfizetéssel
+                együtt - Állam [02489]
+            x-8h834c1g60oj8ghq60pj4d1i:
+              label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
+                (LIS 19.1 cikk) - Eredmény a LIS 19.1. cikke szerinti 1. részletfizetéssel
+                együtt - Tartományi adóhatóságok/Navarra (Összesen) [03242]
             x-8h834c1g60ojaehg60o3ic8:
               label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
                 a negatív adóalapok beszámításának részletezése - A 2024. évi különleges
@@ -21116,6 +21532,29 @@ modelo:
             x-8h834c1g60p3cehg60q3ge0:
               label: Állami és tartományi adóhatóságok együttes adóztatása - Késedelmi
                 kamatok - Bizkaia [00488]
+            x-8h834c1g60p3cehg64qjgco:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
+                a {year}. adómegállapítási időszakra vonatkozó korábbi önadózások
+                vagy hatósági megállapítások feldolgozása nyomán fizetendő összeg
+                - Összesen [01583]'
+            x-8h834c1g60p3cehg64qjgd8:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
+                bevallás: Az Adóhatóság által a {year}. adóidőszakra vonatkozó korábbi
+                önadózások vagy hatósági megállapítások feldolgozása nyomán megítélt
+                visszatérítés - Összesen [01585]'
+            x-8h834c1g60p3cehg68q3ge0:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
+                bevallás: az önadózás eredménye, beleértve a LIS 19.1. cikke szerinti
+                első részletet, a {year}. adóidőszakra vonatkozó korábbi önadózásból
+                vagy hatósági megállapításból származóan - Összesen [02488]'
+            x-8h834c1g60p3cehg6cp38cg:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - A LIS
+                19.1 cikk szerinti első részletben szereplő eredmény - Összesen [03242]
+            x-8h834c1g60p3cehg6cp38d8:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Helyesbítő bevallás: Visszatérítés -
+                Összesen [03245]'
           field:
             label: 200-es modelo, 2024. adóév
         2025-y-siguientes:
@@ -21520,6 +21959,18 @@ modelo:
                 és/vagy 83. cikke szerinti korlát - d) Korábbi időszakokból levonásra
                 váró, a 16.5. és/vagy 83. cikk által érintett pénzügyi ráfordítások,
                 e korlát alkalmazása utáni levonható összeg ([b≥c1+d], ≥ 0]
+            01249:
+              label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
+                és 16.2. cikke szerinti korlát - i) Nettó pénzügyi ráfordítások levonásának
+                korlátja (= 30%* [i1-i2-i3-i4+i5-i6]) [01249]
+            '01256':
+              label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
+                és 16.2. cikke szerinti korlát - l1) Az adóidőszak levonható nettó
+                pénzügyi ráfordításai ([h=l1+l2], ≥ 0) [01256]
+            '01257':
+              label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
+                és 16.2. cikke szerinti korlát - l2) Az adóidőszak nem levonható nettó
+                pénzügyi ráfordításai (=[h - l1], ≥ 0) [01257]
             01258:
               label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
                 és 16.2. cikke szerinti korlát - m) Korábbi adóidőszakokból levonásra
@@ -21530,6 +21981,10 @@ modelo:
                 és 16.2. cikke szerinti korlát - n) Korábbi adóidőszakokból levonásra
                 váró, a 16.5. és/vagy 83. cikk által nem érintett, alkalmazott pénzügyi
                 ráfordítások
+            '01260':
+              label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1.
+                és 16.2. cikke szerinti korlát - Az adóidőszak nem levonható pénzügyi
+                ráfordításai összesen (= [c2+l2]) [01260]
             '01300':
               label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
@@ -21571,6 +22026,9 @@ modelo:
                 és más, növelt levonásra jogosító célokra adott adományok - 2023 -
                 Ugyanazon szervezetnek ismételt adományozás nélkül - Függőben lévő/keletkezett
                 levonás
+            '01331':
+              label: Elszámolás III - adóalap - Csak szövetkezetek - Kiegyenlítési
+                tartalék utáni előzetes teljes adókötelezettség [01331]
             '01334':
               label: Állami és tartományi adóhatóságok együttes adóztatása - K+F+i
                 levonások jóváírása elégtelen adókötelezettség miatt - Araba/Alava
@@ -21689,6 +22147,10 @@ modelo:
                 Keletkezés éve - 2007 és korábbi - Jövőbeli időszakokban beépítésre
                 váró ráfordítások - Amelyek nem teljesítették az adójogi levonhatóság
                 feltételeit
+            '01510':
+              label: Elszámolás III - adóalap - Csak szövetkezetek - Szövetkezeti
+                értékvesztések visszafordításához kapcsolódó jövedelmek (adókötelezettségi
+                szinten) (LIS 16.8 átmeneti rendelkezés) - Csökkenések [01510]
             '01515':
               label: LIS 24.7. átmeneti rendelkezés szerinti levonások - LIS 24.7
                 átmeneti rendelkezés 2024. évi levonásai - Függőben lévő/keletkezett
@@ -21966,6 +22428,26 @@ modelo:
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
                 33. átmeneti rendelkezés és 13. kiegészítő rendelkezés - Keletkezés
                 éve - Összesen 2008-2015 - DTA átalakítva követeléssé
+            '01607':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
+                a {year}. adómegállapítási időszakra vonatkozó korábbi önadózások
+                vagy hatósági megállapítások feldolgozása nyomán fizetendő összeg
+                - Araba/Alava [01607]'
+            01608:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
+                a {year}. adómegállapítási időszakra vonatkozó korábbi önadózások
+                vagy hatósági megállapítások feldolgozása nyomán fizetendő összeg
+                - Gipuzkoa [01608]'
+            01609:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
+                a {year}. adómegállapítási időszakra vonatkozó korábbi önadózások
+                vagy hatósági megállapítások feldolgozása nyomán fizetendő összeg
+                - Bizkaia [01609]'
+            '01610':
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
+                a {year}. adómegállapítási időszakra vonatkozó korábbi önadózások
+                vagy hatósági megállapítások feldolgozása nyomán fizetendő összeg
+                - Navarra [01610]'
             '01611':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
                 bevallás: Az Adóhatóság által a 2025. adóidőszakra vonatkozó korábbi
@@ -22060,6 +22542,19 @@ modelo:
                 bevallás: az önadózás eredménye, beleértve a LIS 19.1. cikke szerinti
                 első részletet, a 2025. adóidőszakra vonatkozó korábbi önadózásból
                 vagy hatósági megállapításból származóan - Navarra'
+            '01654':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - A LIS
+                19.1 cikk szerinti első részletben szereplő eredmény - Araba/Alava
+                [01654]
+            '01655':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - A LIS
+                19.1 cikk szerinti első részletben szereplő eredmény - Gipuzkoa [01655]
+            '01656':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - A LIS
+                19.1 cikk szerinti első részletben szereplő eredmény - Bizkaia [01656]
+            '01657':
+              label: Állami és tartományi adóhatóságok együttes adóztatása - A LIS
+                19.1 cikk szerinti első részletben szereplő eredmény - Navarra [01657]
             01658:
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
@@ -22624,6 +23119,12 @@ modelo:
                 és más, növelt levonásra jogosító célokra adott adományok - Adományok
                 részösszege 2015-2025, ugyanazon szervezetnek ismételten nyújtott
                 adományokkal - Jövőbeli időszakokban alkalmazandó
+            02487:
+              label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
+                (LIS 19.1 cikk) - Helyesbítő bevallás - Az önadózás eredménye a LIS
+                19.1 cikke szerinti első részlettel együtt, korábbi önadózás vagy
+                hatósági megállapítás alapján, a {year}. adómegállapítási időszakra
+                - Állam [02487]
             02492:
               label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
@@ -23070,6 +23571,14 @@ modelo:
               label: Javak és jogok értékelése. Átszervezési műveletek különleges
                 szabályozása (LIS VII. cím VII. fejezet) - Csökkenés - Évi korrekciók
                 - Átmeneti (korábbi időszakokból eredő)
+            '03243':
+              label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
+                Helyesbítő: Elrendelt/kompenzált visszatérítés - Összesen [03243]'
+            '03244':
+              label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
+                érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
+                Helyesbítő: Elrendelt/kompenzált visszatérítés - Állam [03244]'
             '03317':
               label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
@@ -24090,6 +24599,32 @@ modelo:
                 beruházások 2023
               label: Előzetes beruházások 2023. A RIC-hez az időszak végén még hozzárendelendő
                 összeg
+            '1506':
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                c) Az eredménykimutatásban szereplő számviteli értékvesztés kiszűrése
+                (LIS 13.2.b cikk)
+            '1507':
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                f) Az értékelési korrekció hatása az év adóalapjára
+            '1508':
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                g) Az év végén fennálló adókorrekciók egyenlege (12.3 RDL 4/2004)
+            '1809':
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                d) A tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
+                értékvesztésének kiszűrése (LIS 15.k cikk)
+            '1810':
+              label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
+                e) A valós értéken alapuló értékcsökkenés miatti kiigazítás (LIS 15.l
+                cikk)
+            x-8h834c1g60o32ehg60o36d8:
+              label: Egyesülések, szétválások, eszköz-hozzájárulások és értékpapírcserék
+                különleges rendszere (VII. fejezet, VII. cím) [00035]
+            x-8h834c1g60o32ehg60o38d0:
+              label: A LIS 36.1 és 36.3 cikke szerinti kedvezményeket más adózók finanszírozásával
+                létrehozó adózó [00044]
+            x-8h834c1g60o32ehg60o3ae8:
+              label: Opció a LIS 39.2 cikke szerint [00059]
             x-8h834c1g60o32ehg60o3gc8:
               label: Multinacionális csoport vagy nagy méretű belföldi csoport leányvállalata
                 [00081]
@@ -24144,6 +24679,20 @@ modelo:
               label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
                 (LIS 19.1 cikk) - Az önadózás eredménye a LIS 19.1. cikke szerinti
                 1. részletfizetéssel együtt - Tartományi adóhatóságok/Navarra (összesen)
+            x-8h834c1g60oj8ghq60p38e1o:
+              label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
+                (LIS 19.1 cikk) - Helyesbítő bevallás - Az önadózás eredménye a LIS
+                19.1 cikke szerinti első részlettel együtt, korábbi önadózás vagy
+                hatósági megállapítás alapján, a {year}. adómegállapítási időszakra
+                - Tartományi adóhatóságok/Navarra (Összesen) [02488]
+            x-8h834c1g60oj8ghq60p38e1p:
+              label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
+                (LIS 19.1 cikk) - Eredmény a LIS 19.1. cikke szerinti 1. részletfizetéssel
+                együtt - Állam [02489]
+            x-8h834c1g60oj8ghq60pj4d1i:
+              label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
+                (LIS 19.1 cikk) - Eredmény a LIS 19.1. cikke szerinti 1. részletfizetéssel
+                együtt - Tartományi adóhatóságok/Navarra (Összesen) [03242]
             x-8h834c1g60ojaehg60o3ic8:
               label: 'A Kanári-szigeteki hajók és hajózási társaságok különleges rendszere:
                 a negatív adóalapok beszámításának részletezése - A 2024. évi különleges
@@ -24250,5 +24799,28 @@ modelo:
             x-8h834c1g60p3cehg60q3ge0:
               label: Állami és tartományi adóhatóságok együttes adóztatása - Késedelmi
                 kamatok - Bizkaia [00488]
+            x-8h834c1g60p3cehg64qjgco:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
+                a {year}. adómegállapítási időszakra vonatkozó korábbi önadózások
+                vagy hatósági megállapítások feldolgozása nyomán fizetendő összeg
+                - Összesen [01583]'
+            x-8h834c1g60p3cehg64qjgd8:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
+                bevallás: Az Adóhatóság által a {year}. adóidőszakra vonatkozó korábbi
+                önadózások vagy hatósági megállapítások feldolgozása nyomán megítélt
+                visszatérítés - Összesen [01585]'
+            x-8h834c1g60p3cehg68q3ge0:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
+                bevallás: az önadózás eredménye, beleértve a LIS 19.1. cikke szerinti
+                első részletet, a {year}. adóidőszakra vonatkozó korábbi önadózásból
+                vagy hatósági megállapításból származóan - Összesen [02488]'
+            x-8h834c1g60p3cehg6cp38cg:
+              label: Állami és tartományi adóhatóságok együttes adóztatása - A LIS
+                19.1 cikk szerinti első részletben szereplő eredmény - Összesen [03242]
+            x-8h834c1g60p3cehg6cp38d8:
+              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
+                követeléssé (LIS 130. cikk) - Helyesbítő bevallás: Visszatérítés -
+                Összesen [03245]'
           field:
             label: 200-es modelo, 2025. adóévtől

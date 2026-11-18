@@ -293,8 +293,12 @@ class Modelo200ProfileFacts(BaseModel):
     codigo_cnae_2025_actividad_principal: str | None = None
     como_consecuencia_de_la_presentacion_de_la_a: str | None = None
     cuenta_corriente_tributaria: str | None = None
+    cuota_cero: str | None = None
+    datos_de_la_sociedad_matriz_ultima_codigo_pais: str | None = None
     datos_de_la_sociedad_matriz_ultima_nif: str | None = None
+    datos_de_la_sociedad_matriz_ultima_nif_o_equivalente: str | None = None
     datos_de_la_sociedad_matriz_ultima_nombre_de: str | None = None
+    datos_de_la_sociedad_matriz_ultima_pais_o_jurisdiccion: str | None = None
     datos_de_la_sociedad_matriz_ultima_razon_soc: str | None = None
     deduccion_resto_del_grupo: str | None = None
     deduccion_resto_del_grupo_10: str | None = None
@@ -333,6 +337,7 @@ class Modelo200ProfileFacts(BaseModel):
     identificacion_tipo_de_ejercicio: str | None = None
     importe_a_devolver: str | None = None
     importe_a_ingresar: str | None = None
+    importe_neto_de_la_cifra_de_negocios_de_al_menos_20_millones: str | None = None
     importe_neto_de_la_cifra_de_negocios_de_los: str | None = None
     importe_neto_de_la_cifra_de_negocios_de_los_2: str | None = None
     importe_neto_de_la_cifra_de_negocios_de_los_3: str | None = None
@@ -387,6 +392,8 @@ class Modelo200ProfileFacts(BaseModel):
     presentacion_de_documentacion_previa_en_la_s_7: str | None = None
     presentacion_de_documentacion_previa_en_la_s_8: str | None = None
     realiza_actividades_agricolas_y_o_ganaderas: str | None = None
+    regimen_de_cooperativas_incn_de_al_menos_20_millones_pero_inferior_a_60: str | None = None
+    regimen_de_cooperativas_incn_de_al_menos_60_millones: str | None = None
     reg_entidades_navieras_en_funcion_del_tonela: str | None = None
     renuncia_o_por_transferencia: str | None = None
     resultado_a_ingresar_correspondiente_a_la_an: str | None = None

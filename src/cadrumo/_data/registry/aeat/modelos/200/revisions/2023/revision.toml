@@ -2936,3 +2936,126 @@ fields = { id = "DP200015:001043", segmento = "DP200015" }
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "DP200014B:001044" }
 fields = { id = "DP200015:001044", segmento = "DP200015" }
+
+# Relocations and own-period caption changes of boxes first printed in 2022.
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "03243" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1559 (DP200014B field 75): 'Liquidación IV - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devolver - Complementaria: Devolución acordada/compensada - Total [03243]'; aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1593 (DP200015 field 12): 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devolver - Complementaria: Devolución acordada/compensada - Total [03243]'. The 2022 design prints the field on the Liquidación IV sheet, so its caption opens with that sheet's title; the 2023 design prints the same field on its own sheet without it. Each design prints the number once, and the amount the box holds is unchanged." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "03244" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1560 (DP200014B field 76): 'Liquidación IV - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devolver - Complementaria: Devolución acordada/compensada - Estado [03244]'; aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1594 (DP200015 field 13): 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devolver - Complementaria: Devolución acordada/compensada - Estado [03244]'. The 2022 design prints the field on the Liquidación IV sheet, so its caption opens with that sheet's title; the 2023 design prints the same field on its own sheet without it. Each design prints the number once, and the amount the box holds is unchanged." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200014B:03245" }
+fields = { id = "DP200015:03245", segmento = "DP200015" }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "03317" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1562 (DP200014B field 78): 'Liquidación IV - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devolver - Resultado de conversión de AID tras regularización: Abono - Total [03317]'; aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1596 (DP200015 field 15): 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devolver - Resultado de conversión de AID tras regularización: Abono - Total [03317]'. The 2022 design prints the field on the Liquidación IV sheet, so its caption opens with that sheet's title; the 2023 design prints the same field on its own sheet without it. Each design prints the number once, and the amount the box holds is unchanged." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200014B:03318" }
+fields = { id = "DP200015:03318", segmento = "DP200015" }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200014B:03319" }
+fields = { id = "DP200015:03319", segmento = "DP200015" }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "03320" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1565 (DP200014B field 81): 'Liquidación IV - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devolver - Resultado de conversión de AID tras regularización: Compensación - Total [03320]'; aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1599 (DP200015 field 18): 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devolver - Resultado de conversión de AID tras regularización: Compensación - Total [03320]'. The 2022 design prints the field on the Liquidación IV sheet, so its caption opens with that sheet's title; the 2023 design prints the same field on its own sheet without it. Each design prints the number once, and the amount the box holds is unchanged." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200014B:02490" }
+fields = { id = "DP200015:02490", segmento = "DP200015" }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200014B:02491" }
+fields = { id = "DP200015:02491", segmento = "DP200015" }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "02492" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1568 (DP200014B field 84): 'Liquidación IV - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devolver - Resultado de conversión de AID tras regularización: A ingresar - Total [02492]'; aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1602 (DP200015 field 21): 'Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Líquido a ingresar o a devolver - Resultado de conversión de AID tras regularización: A ingresar - Total [02492]'. The 2022 design prints the field on the Liquidación IV sheet, so its caption opens with that sheet's title; the 2023 design prints the same field on its own sheet without it. Each design prints the number once, and the amount the box holds is unchanged." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200014B:02493" }
+fields = { id = "DP200015:02493", segmento = "DP200015" }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200014B:02494" }
+fields = { id = "DP200015:02494", segmento = "DP200015" }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "01073" }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2849 (DP200018C field 133): 'Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2022(*) - Con reiteración de donaciones a una misma entidad - Deducción pendiente/generada [01073]'; aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:2923 (DP200018C field 133): 'Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 20222 - Con reiteración de donaciones a una misma entidad - Deducción pendiente/generada [01073]'. The 2023 caption prints the generation as '20222' where its neighbouring 2023 rows [01074] and [01078] of the same generation print '2022', and aeat-dr-200-2024 prints '2022' on the same box, so the box keeps the 2022 donation generation; the reading of '20222' as '2022' is an analogy from those sibling cells." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200019:02301" }
+fields = { id = "DP200020B:02301", segmento = "DP200020B" }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200019:02302" }
+fields = { id = "DP200020B:02302", segmento = "DP200020B" }
+
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200016:00033" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200017:00288" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200017:00289" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:00258" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:00291" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:00292" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:00293" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:00406" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:00407" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:00419" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:00540" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:00542" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:00595" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200018:00596" }
+[[revisions."2023".casilla_removals]]
+selector = { revision = "2022", id = "DP200022:00130" }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200012:00370" }
+fields = { id = "DP200013:00370", segmento = "DP200013", section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1270 (DP200012 field 95): Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participaciones en beneficios de entidades residentes (art. 21.1, 21.10 y DT 40ª LIS) - Disminuciones [00370]. aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1304 (DP200013 field 6): Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participaciones en beneficios de entidades residentes (art. 21.1, 21.10 y DT 40ª LIS) - Disminuciones [00370]. Both designs print box [00370] with the same concept, width and type; the 2023 design moves the cell from DP200012 to DP200013, so the 2022 member continues with its 2023 sheet and section." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200013:01887" }
+fields = { id = "DP200014:01887", segmento = "DP200014", section = ["liquidacion_iii", "base_imponible"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1386 (DP200013 field 99): Liquidación II - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Compensación de bases imponibles negativas períodos anteriores de la parte de base imponible régimen especial [01887]. aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1422 (DP200014 field 13): Liquidación III - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Compensación de bases imponibles negativas períodos anteriores de la parte de base imponible régimen especial [01887]. Both designs print box [01887] with the same concept, width and type; the 2023 design moves the cell from DP200013 to DP200014, so the 2022 member continues with its 2023 sheet and section." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2022", id = "DP200013:01890" }
+fields = { id = "DP200014:01890", segmento = "DP200014", section = ["liquidacion_iii", "base_imponible"], continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-200-2022 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1387 (DP200013 field 100): Liquidación II - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Compensación de bases imponibles negativas períodos anteriores de la parte de base imponible resto de actividades [01890]. aeat-dr-200-2023 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1423 (DP200014 field 14): Liquidación III - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Compensación de bases imponibles negativas períodos anteriores de la parte de base imponible resto de actividades [01890]. Both designs print box [01890] with the same concept, width and type; the 2023 design moves the cell from DP200013 to DP200014, so the 2022 member continues with its 2023 sheet and section." }
+removed_fields = []
+restate_provenance = true

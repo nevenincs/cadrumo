@@ -46465,3 +46465,1360 @@ segmento = "DP200018B"
 section = ["deducciones_incentivos", "total_aplicado"]
 semantic_role = "is_liquidacion_iv_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+
+# Boxes the 2022 record design already prints that a later edition first declared; each is declared
+# here, at the earliest design that prints it, and later wording is an evolution.
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:88 DP200001 field 58
+[[revisions."2022".casillas]]
+id = "DP200001:00035"
+continuidad_id = "is-regimen-especial-fusiones-escisiones-aportaciones-activos-y-canjes-valores-cap-vii-tit-vii"
+number = "00035"
+segmento = "DP200001"
+section = ["regimen_especial_fusiones_escisiones_aportaciones"]
+data_type = "decimal"
+semantic_role = "is_identificacion_regimen_flag"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:115 DP200001 field 85
+[[revisions."2022".casillas]]
+id = "DP200001:00059"
+continuidad_id = "is-opcion-art-39-2-lis"
+number = "00059"
+segmento = "DP200001"
+section = ["opcion_art_39_2_lis"]
+data_type = "decimal"
+semantic_role = "is_identificacion_opcion_flag"
+legal_refs = ["ley-27-2014:art-39"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:121 DP200001 field 91
+[[revisions."2022".casillas]]
+id = "DP200001:00044"
+continuidad_id = "is-contribuyente-que-genera-deducciones-del-art-36-1-y-36-3-lis-con-financiacion-realizada-por-otros-contribuyentes"
+number = "00044"
+segmento = "DP200001"
+section = ["contribuyente_que_genera_deducciones_del_art_36_1"]
+data_type = "decimal"
+semantic_role = "is_identificacion_regimen_flag"
+legal_refs = ["ley-27-2014:art-36"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:261 DP200002 field 91
+[[revisions."2022".casillas]]
+id = "1506"
+continuidad_id = "is-participaciones-directas-d-c-eliminacion-del-deterioro-contable-incluido-en-p-y-g-art-1"
+number = "1506"
+section = ["participaciones_directas_declarante_totales", "totales"]
+semantic_role = "is_participaciones_directas_d_c_eliminacion_del_deterioro_contable_incluido_en_p_y_g_art_1"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:262 DP200002 field 92
+[[revisions."2022".casillas]]
+id = "1809"
+continuidad_id = "is-participaciones-directas-d-d-eliminacion-del-deterioro-de-valores-repr-de-partic-en-el"
+number = "1809"
+section = ["participaciones_directas_declarante_totales", "totales"]
+semantic_role = "is_participaciones_directas_d_d_eliminacion_del_deterioro_de_valores_repr_de_partic_en_el"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:263 DP200002 field 93
+[[revisions."2022".casillas]]
+id = "1810"
+continuidad_id = "is-participaciones-directas-d-e-ajuste-por-la-disminucion-de-valor-originada-por-criterio"
+number = "1810"
+section = ["participaciones_directas_declarante_totales", "totales"]
+semantic_role = "is_participaciones_directas_d_e_ajuste_por_la_disminucion_de_valor_originada_por_criterio"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:264 DP200002 field 94
+[[revisions."2022".casillas]]
+id = "1507"
+continuidad_id = "is-participaciones-directas-d-f-efecto-correccion-valorativa-en-la-bi-del-ejercicio-a-b-c"
+number = "1507"
+section = ["participaciones_directas_declarante_totales", "totales"]
+semantic_role = "is_participaciones_directas_d_f_efecto_correccion_valorativa_en_la_bi_del_ejercicio_a_b_c"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:265 DP200002 field 95
+[[revisions."2022".casillas]]
+id = "1508"
+continuidad_id = "is-participaciones-directas-d-g-saldo-de-correcciones-fiscales-art-12-3-rdl-4-2004-pendien"
+number = "1508"
+section = ["participaciones_directas_declarante_totales", "totales"]
+semantic_role = "is_participaciones_directas_d_g_saldo_de_correcciones_fiscales_art_12_3_rdl_4_2004_pendien"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1417 DP200014 field 16
+[[revisions."2022".casillas]]
+id = "01576"
+continuidad_id = "01576"
+number = "01576"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_base_imponible_zec_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1418 DP200014 field 17
+[[revisions."2022".casillas]]
+id = "01577"
+continuidad_id = "is-naviera-base-imponible-foral"
+number = "01577"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_naviera_base_imponible_foral"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1426 DP200014 field 25
+[[revisions."2022".casillas]]
+id = "01510"
+continuidad_id = "is-cooperativa-reversion-deterioro"
+number = "01510"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_cooperativa_reversion_deterioro"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1430 DP200014 field 29
+[[revisions."2022".casillas]]
+id = "01331"
+continuidad_id = "is-cooperativa-cuota-integra-previa"
+number = "01331"
+section = ["liquidacion_iii", "base_imponible"]
+semantic_role = "is_cooperativa_cuota_integra_previa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1530 DP200014B field 51
+[[revisions."2022".casillas]]
+id = "01578"
+continuidad_id = "01578"
+number = "01578"
+section = ["liquidacion_iv", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_liquidacion_iv_resultado_misc"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1531 DP200014B field 52
+[[revisions."2022".casillas]]
+id = "DP200014B:01583"
+continuidad_id = "01583"
+number = "01583"
+segmento = "DP200014B"
+section = ["liquidacion_iv", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_liquidacion_iv_resultado_misc"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1533 DP200014B field 53
+[[revisions."2022".casillas]]
+id = "01584"
+continuidad_id = "is-liquidacion-iv-rectificacion-importe"
+number = "01584"
+section = ["liquidacion_iv", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_liquidacion_iv_rectificacion_importe"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1535 DP200014B field 54
+[[revisions."2022".casillas]]
+id = "DP200014B:01585"
+continuidad_id = "01585"
+number = "01585"
+segmento = "DP200014B"
+section = ["liquidacion_iv", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_liquidacion_iv_rectificacion_importe"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1547 DP200014B field 65
+[[revisions."2022".casillas]]
+id = "02487"
+continuidad_id = "02487"
+number = "02487"
+section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
+semantic_role = "is_fraccionamiento_cambio_residencia_resultado"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1549 DP200014B field 66
+[[revisions."2022".casillas]]
+id = "DP200014B:02488"
+continuidad_id = "02488"
+number = "02488"
+segmento = "DP200014B"
+section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
+semantic_role = "is_fraccionamiento_cambio_residencia_resultado"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1551 DP200014B field 67
+[[revisions."2022".casillas]]
+id = "DP200014B:02489"
+continuidad_id = "02489"
+number = "02489"
+segmento = "DP200014B"
+section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
+semantic_role = "is_fraccionamiento_cambio_residencia_resultado"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1552 DP200014B field 68
+[[revisions."2022".casillas]]
+id = "DP200014B:03242"
+continuidad_id = "03242"
+number = "03242"
+segmento = "DP200014B"
+section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
+semantic_role = "is_liquidacion_iv_resultado_misc"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1559 DP200014B field 75
+[[revisions."2022".casillas]]
+id = "03243"
+continuidad_id = "03243"
+number = "03243"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_conversion_aid_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1560 DP200014B field 76
+[[revisions."2022".casillas]]
+id = "03244"
+continuidad_id = "03244"
+number = "03244"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_conversion_aid_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1561 DP200014B field 77
+[[revisions."2022".casillas]]
+id = "DP200014B:03245"
+continuidad_id = "03245"
+number = "03245"
+segmento = "DP200014B"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_conversion_aid_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1562 DP200014B field 78
+[[revisions."2022".casillas]]
+id = "03317"
+continuidad_id = "03317"
+number = "03317"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
+semantic_role = "is_conversion_aid_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1563 DP200014B field 79
+[[revisions."2022".casillas]]
+id = "DP200014B:03318"
+continuidad_id = "03318"
+number = "03318"
+segmento = "DP200014B"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
+semantic_role = "is_conversion_aid_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1564 DP200014B field 80
+[[revisions."2022".casillas]]
+id = "DP200014B:03319"
+continuidad_id = "03319"
+number = "03319"
+segmento = "DP200014B"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
+semantic_role = "is_conversion_aid_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1565 DP200014B field 81
+[[revisions."2022".casillas]]
+id = "03320"
+continuidad_id = "03320"
+number = "03320"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
+semantic_role = "is_conversion_aid_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1566 DP200014B field 82
+[[revisions."2022".casillas]]
+id = "DP200014B:02490"
+continuidad_id = "is-conversion-aid-rectificativa"
+number = "02490"
+segmento = "DP200014B"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
+semantic_role = "is_conversion_aid_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1567 DP200014B field 83
+[[revisions."2022".casillas]]
+id = "DP200014B:02491"
+continuidad_id = "02491"
+number = "02491"
+segmento = "DP200014B"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
+semantic_role = "is_conversion_aid_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1568 DP200014B field 84
+[[revisions."2022".casillas]]
+id = "02492"
+continuidad_id = "02492"
+number = "02492"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
+semantic_role = "is_conversion_aid_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1569 DP200014B field 85
+[[revisions."2022".casillas]]
+id = "DP200014B:02493"
+continuidad_id = "02493"
+number = "02493"
+segmento = "DP200014B"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
+semantic_role = "is_conversion_aid_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1570 DP200014B field 86
+[[revisions."2022".casillas]]
+id = "DP200014B:02494"
+continuidad_id = "02494"
+number = "02494"
+segmento = "DP200014B"
+section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
+semantic_role = "is_conversion_aid_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2849 DP200018C field 133
+[[revisions."2022".casillas]]
+id = "01073"
+continuidad_id = "01073"
+number = "01073"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
+semantic_role = "is_deduccion_donativos_prioritarias"
+legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3111 DP200020 field 15
+[[revisions."2022".casillas]]
+id = "01249"
+continuidad_id = "01249"
+number = "01249"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+legal_refs = ["ley-27-2014:art-16"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3118 DP200020 field 22
+[[revisions."2022".casillas]]
+id = "01256"
+continuidad_id = "01256"
+number = "01256"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+legal_refs = ["ley-27-2014:art-16"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3119 DP200020 field 23
+[[revisions."2022".casillas]]
+id = "01257"
+continuidad_id = "01257"
+number = "01257"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+legal_refs = ["ley-27-2014:art-16"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3120 DP200020 field 24
+[[revisions."2022".casillas]]
+id = "01258"
+continuidad_id = "01258"
+number = "01258"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+legal_refs = ["ley-27-2014:art-16"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3121 DP200020 field 25
+[[revisions."2022".casillas]]
+id = "01259"
+continuidad_id = "01259"
+number = "01259"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+legal_refs = ["ley-27-2014:art-16"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3122 DP200020 field 26
+[[revisions."2022".casillas]]
+id = "01260"
+continuidad_id = "01260"
+number = "01260"
+section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
+semantic_role = "is_gastos_financieros_limite_art16_calculo"
+legal_refs = ["ley-27-2014:art-16"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3075 DP200019 field 192
+[[revisions."2022".casillas]]
+id = "DP200019:02301"
+continuidad_id = "is-correccion-detalle-correcciones-resultado-permanente-disminucion"
+number = "02301"
+segmento = "DP200019"
+section = ["detalle_correcciones_resultado_perdidas_y_ganancia", "correcciones_al_resultado_de_la_cuenta_de_perdidas"]
+semantic_role = "is_correccion_detalle_correcciones_resultado_permanente_disminucion"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3076 DP200019 field 193
+[[revisions."2022".casillas]]
+id = "DP200019:02302"
+continuidad_id = "02302"
+number = "02302"
+segmento = "DP200019"
+section = ["detalle_correcciones_resultado_perdidas_y_ganancia", "correcciones_al_resultado_de_la_cuenta_de_perdidas"]
+semantic_role = "is_correccion_detalle_correcciones_resultado_permanente_disminucion"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4089 DP200026 field 78
+[[revisions."2022".casillas]]
+id = "01607"
+continuidad_id = "is-tributacion-conjunta-estado-forales-rectificacion-importe"
+number = "01607"
+section = ["tributacion_conjunta_estado_y_adm_forales", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4090 DP200026 field 79
+[[revisions."2022".casillas]]
+id = "01608"
+continuidad_id = "01608"
+number = "01608"
+section = ["tributacion_conjunta_estado_y_adm_forales", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4091 DP200026 field 80
+[[revisions."2022".casillas]]
+id = "01609"
+continuidad_id = "01609"
+number = "01609"
+section = ["tributacion_conjunta_estado_y_adm_forales", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4092 DP200026 field 81
+[[revisions."2022".casillas]]
+id = "01610"
+continuidad_id = "01610"
+number = "01610"
+section = ["tributacion_conjunta_estado_y_adm_forales", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4093 DP200026 field 82
+[[revisions."2022".casillas]]
+id = "DP200026:01583"
+continuidad_id = "dp200026-01583"
+number = "01583"
+segmento = "DP200026"
+section = ["tributacion_conjunta_estado_y_adm_forales", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
+rotating_year_offset = 0
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4094 DP200026 field 83
+[[revisions."2022".casillas]]
+id = "01611"
+continuidad_id = "01611"
+number = "01611"
+section = ["tributacion_conjunta_estado_y_adm_forales", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4095 DP200026 field 84
+[[revisions."2022".casillas]]
+id = "01612"
+continuidad_id = "01612"
+number = "01612"
+section = ["tributacion_conjunta_estado_y_adm_forales", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4096 DP200026 field 85
+[[revisions."2022".casillas]]
+id = "01613"
+continuidad_id = "01613"
+number = "01613"
+section = ["tributacion_conjunta_estado_y_adm_forales", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4097 DP200026 field 86
+[[revisions."2022".casillas]]
+id = "01623"
+continuidad_id = "01623"
+number = "01623"
+section = ["tributacion_conjunta_estado_y_adm_forales", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4098 DP200026 field 87
+[[revisions."2022".casillas]]
+id = "DP200026:01585"
+continuidad_id = "dp200026-01585"
+number = "01585"
+segmento = "DP200026"
+section = ["tributacion_conjunta_estado_y_adm_forales", "liquido_a_ingresar_o_a_devolver"]
+semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
+rotating_year_offset = 0
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4124 DP200026 field 113
+[[revisions."2022".casillas]]
+id = "01650"
+continuidad_id = "01650"
+number = "01650"
+section = ["tributacion_conjunta_estado_y_adm_forales", "opcion_de_fraccionamiento_art_19_1_lis"]
+semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4125 DP200026 field 114
+[[revisions."2022".casillas]]
+id = "01651"
+continuidad_id = "01651"
+number = "01651"
+section = ["tributacion_conjunta_estado_y_adm_forales", "opcion_de_fraccionamiento_art_19_1_lis"]
+semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4126 DP200026 field 115
+[[revisions."2022".casillas]]
+id = "01652"
+continuidad_id = "01652"
+number = "01652"
+section = ["tributacion_conjunta_estado_y_adm_forales", "opcion_de_fraccionamiento_art_19_1_lis"]
+semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4127 DP200026 field 116
+[[revisions."2022".casillas]]
+id = "01653"
+continuidad_id = "01653"
+number = "01653"
+section = ["tributacion_conjunta_estado_y_adm_forales", "opcion_de_fraccionamiento_art_19_1_lis"]
+semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4128 DP200026 field 117
+[[revisions."2022".casillas]]
+id = "DP200026:02488"
+continuidad_id = "is-tributacion-conjunta-estado-y-adm-forales-rectificativa-resultado-de-la-autoliquidacion-incluido-el-1e-total"
+number = "02488"
+segmento = "DP200026"
+section = ["tributacion_conjunta_estado_y_adm_forales", "opcion_de_fraccionamiento_art_19_1_lis"]
+semantic_role = "is_tributacion_conjunta_estado_y_adm_forales_rectificativa_resultado_de_la_autoliquidacion_incluido_el_1e_total"
+rotating_year_offset = 0
+legal_refs = ["ley-27-2014:art-19"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4129 DP200026 field 118
+[[revisions."2022".casillas]]
+id = "01654"
+continuidad_id = "01654"
+number = "01654"
+section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_incluido_en_el_1er_fraccionamiento_de_ar"]
+semantic_role = "is_tributacion_conjunta_resultado"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4130 DP200026 field 119
+[[revisions."2022".casillas]]
+id = "01655"
+continuidad_id = "01655"
+number = "01655"
+section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_incluido_en_el_1er_fraccionamiento_de_ar"]
+semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4131 DP200026 field 120
+[[revisions."2022".casillas]]
+id = "01656"
+continuidad_id = "01656"
+number = "01656"
+section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_incluido_en_el_1er_fraccionamiento_de_ar"]
+semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4132 DP200026 field 121
+[[revisions."2022".casillas]]
+id = "01657"
+continuidad_id = "01657"
+number = "01657"
+section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_incluido_en_el_1er_fraccionamiento_de_ar"]
+semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4133 DP200026 field 122
+[[revisions."2022".casillas]]
+id = "DP200026:03242"
+continuidad_id = "is-tributacion-conjunta-estado-y-adm-forales-resultado-incluido-en-el-1er-fraccionamiento-de-art-19-1-lis-total"
+number = "03242"
+segmento = "DP200026"
+section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_incluido_en_el_1er_fraccionamiento_de_ar"]
+semantic_role = "is_tributacion_conjunta_estado_y_adm_forales_resultado_incluido_en_el_1er_fraccionamiento_de_art_19_1_lis_total"
+legal_refs = ["ley-27-2014:art-19"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4144 DP200026 field 133
+[[revisions."2022".casillas]]
+id = "01658"
+continuidad_id = "01658"
+number = "01658"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4145 DP200026 field 134
+[[revisions."2022".casillas]]
+id = "01659"
+continuidad_id = "01659"
+number = "01659"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4146 DP200026 field 135
+[[revisions."2022".casillas]]
+id = "01660"
+continuidad_id = "01660"
+number = "01660"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4147 DP200026 field 136
+[[revisions."2022".casillas]]
+id = "01661"
+continuidad_id = "01661"
+number = "01661"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4148 DP200026 field 137
+[[revisions."2022".casillas]]
+id = "DP200026:03245"
+continuidad_id = "dp200026-03245"
+number = "03245"
+segmento = "DP200026"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-130"]
+
+# Boxes the 2022 record design prints with the same caption, type and length as the 2023 design,
+# which the 2023 edition declared; declared here at the earliest edition that prints them, and
+# inherited by the 2023 edition. The Tributacion conjunta rows of DP200026 among them print Alava,
+# Guipuzcoa or Vizcaya in both designs; the 2024 design names the territory Araba/Alava, Gipuzkoa or
+# Bizkaia on the same box of the same record, and the 2024 edition labels the renamed territory itself.
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:86 DP200001 56|195|1|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:86 (DP200001 field 56).
+[[revisions."2022".casillas]]
+id = "DP200001:00047"
+continuidad_id = "is-entidades-sometidas-a-normativa-foral"
+number = "00047"
+segmento = "DP200001"
+section = ["entidades_sometidas_a_normativa_foral"]
+data_type = "decimal"
+semantic_role = "is_identificacion_regimen_flag"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1093 DP200011 67|1050|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1108 (DP200011 field 67).
+[[revisions."2022".casillas]]
+id = "DP200011:00527"
+continuidad_id = "00527"
+number = "00527"
+segmento = "DP200011"
+section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
+semantic_role = "is_ecpn_operaciones_socios_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4019 DP200026 8|47|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4369 (DP200026 field 8).
+[[revisions."2022".casillas]]
+id = "00052"
+continuidad_id = "00052"
+number = "00052"
+section = ["tributacion_conjunta_estado_y_adm_forales", "concierto_economico"]
+semantic_role = "is_tributacion_conjunta_proporcion"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4020 DP200026 9|64|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4370 (DP200026 field 9).
+[[revisions."2022".casillas]]
+id = "00053"
+continuidad_id = "00053"
+number = "00053"
+section = ["tributacion_conjunta_estado_y_adm_forales", "concierto_economico"]
+semantic_role = "is_tributacion_conjunta_proporcion"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4021 DP200026 10|81|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4371 (DP200026 field 10).
+[[revisions."2022".casillas]]
+id = "00054"
+continuidad_id = "00054"
+number = "00054"
+section = ["tributacion_conjunta_estado_y_adm_forales", "concierto_economico"]
+semantic_role = "is_tributacion_conjunta_proporcion"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4041 DP200026 30|361|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4391 (DP200026 field 30).
+[[revisions."2022".casillas]]
+id = "DP200026:00447"
+continuidad_id = "is-pagos-fraccionados"
+number = "00447"
+segmento = "DP200026"
+section = ["tributacion_conjunta_estado_y_adm_forales", "pagos_fraccionados_2"]
+semantic_role = "is_pagos_fraccionados"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4049 DP200026 38|497|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4399 (DP200026 field 38).
+[[revisions."2022".casillas]]
+id = "DP200026:00474"
+continuidad_id = "is-tributacion-conjunta-cuota-diferencial"
+number = "00474"
+segmento = "DP200026"
+section = ["tributacion_conjunta_estado_y_adm_forales", "cuota_diferencial"]
+semantic_role = "is_tributacion_conjunta_cuota_diferencial"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4059 DP200026 48|667|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4409 (DP200026 field 48).
+[[revisions."2022".casillas]]
+id = "00913"
+continuidad_id = "is-tributacion-conjunta-incremento"
+number = "00913"
+section = ["tributacion_conjunta_estado_y_adm_forales", "incremento_por_incumplimiento_requisitos_socimi"]
+semantic_role = "is_tributacion_conjunta_incremento"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4060 DP200026 49|684|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4410 (DP200026 field 49).
+[[revisions."2022".casillas]]
+id = "00914"
+continuidad_id = "00914"
+number = "00914"
+section = ["tributacion_conjunta_estado_y_adm_forales", "incremento_por_incumplimiento_requisitos_socimi"]
+semantic_role = "is_tributacion_conjunta_incremento"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4061 DP200026 50|701|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4411 (DP200026 field 50).
+[[revisions."2022".casillas]]
+id = "00915"
+continuidad_id = "00915"
+number = "00915"
+section = ["tributacion_conjunta_estado_y_adm_forales", "incremento_por_incumplimiento_requisitos_socimi"]
+semantic_role = "is_tributacion_conjunta_incremento"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4065 DP200026 54|769|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4415 (DP200026 field 54).
+[[revisions."2022".casillas]]
+id = "DP200026:00487"
+continuidad_id = "is-tributacion-conjunta-intereses"
+number = "00487"
+segmento = "DP200026"
+section = ["tributacion_conjunta_estado_y_adm_forales", "intereses_demora"]
+semantic_role = "is_tributacion_conjunta_intereses"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4066 DP200026 55|786|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4416 (DP200026 field 55).
+[[revisions."2022".casillas]]
+id = "DP200026:00488"
+continuidad_id = "00488"
+number = "00488"
+segmento = "DP200026"
+section = ["tributacion_conjunta_estado_y_adm_forales", "intereses_demora"]
+semantic_role = "is_tributacion_conjunta_intereses"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4069 DP200026 58|837|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4419 (DP200026 field 58).
+[[revisions."2022".casillas]]
+id = "01334"
+continuidad_id = "is-tributacion-conjunta-abono-idi"
+number = "01334"
+section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_i_d_i_insuf_cuota"]
+semantic_role = "is_tributacion_conjunta_abono_idi"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4070 DP200026 59|854|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4420 (DP200026 field 59).
+[[revisions."2022".casillas]]
+id = "01335"
+continuidad_id = "01335"
+number = "01335"
+section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_i_d_i_insuf_cuota"]
+semantic_role = "is_tributacion_conjunta_abono_idi"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4071 DP200026 60|871|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4421 (DP200026 field 60).
+[[revisions."2022".casillas]]
+id = "01336"
+continuidad_id = "01336"
+number = "01336"
+section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_i_d_i_insuf_cuota"]
+semantic_role = "is_tributacion_conjunta_abono_idi"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4074 DP200026 63|922|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4424 (DP200026 field 63).
+[[revisions."2022".casillas]]
+id = "01338"
+continuidad_id = "is-tributacion-conjunta-abono-deducciones-cinematograficas"
+number = "01338"
+section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_producciones_extranjeras"]
+semantic_role = "is_tributacion_conjunta_abono_deducciones_cinematograficas"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4075 DP200026 64|939|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4425 (DP200026 field 64).
+[[revisions."2022".casillas]]
+id = "01339"
+continuidad_id = "is-tributacion-conjunta-abono-cinematografica"
+number = "01339"
+section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_producciones_extranjeras"]
+semantic_role = "is_tributacion_conjunta_abono_cinematografica"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4076 DP200026 65|956|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4426 (DP200026 field 65).
+[[revisions."2022".casillas]]
+id = "01340"
+continuidad_id = "01340"
+number = "01340"
+section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_producciones_extranjeras"]
+semantic_role = "is_tributacion_conjunta_abono_cinematografica"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4079 DP200026 68|1007|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4429 (DP200026 field 68).
+[[revisions."2022".casillas]]
+id = "01877"
+continuidad_id = "01877"
+number = "01877"
+section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_producciones_extranjeras_en_cana"]
+semantic_role = "is_tributacion_conjunta_abono_deducciones_cinematograficas"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4080 DP200026 69|1024|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4430 (DP200026 field 69).
+[[revisions."2022".casillas]]
+id = "01878"
+continuidad_id = "01878"
+number = "01878"
+section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_producciones_extranjeras_en_cana"]
+semantic_role = "is_tributacion_conjunta_abono_cinematografica"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4081 DP200026 70|1041|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4431 (DP200026 field 70).
+[[revisions."2022".casillas]]
+id = "01879"
+continuidad_id = "01879"
+number = "01879"
+section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_producciones_extranjeras_en_cana"]
+semantic_role = "is_tributacion_conjunta_abono_cinematografica"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4084 DP200026 73|1092|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4434 (DP200026 field 73).
+[[revisions."2022".casillas]]
+id = "01624"
+continuidad_id = "is-tributacion-conjunta-resultado"
+number = "01624"
+section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_de_la_autoliquidacion"]
+semantic_role = "is_tributacion_conjunta_resultado"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4085 DP200026 74|1109|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4435 (DP200026 field 74).
+[[revisions."2022".casillas]]
+id = "01625"
+continuidad_id = "01625"
+number = "01625"
+section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_de_la_autoliquidacion"]
+semantic_role = "is_tributacion_conjunta_resultado"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4086 DP200026 75|1126|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4436 (DP200026 field 75).
+[[revisions."2022".casillas]]
+id = "01629"
+continuidad_id = "01629"
+number = "01629"
+section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_de_la_autoliquidacion"]
+semantic_role = "is_tributacion_conjunta_resultado"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4104 DP200026 93|1432|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4454 (DP200026 field 93).
+[[revisions."2022".casillas]]
+id = "01631"
+continuidad_id = "is-tributacion-conjunta-opcion-0-7"
+number = "01631"
+section = ["tributacion_conjunta_estado_y_adm_forales", "opcion_de_fraccionamiento_art_19_1_lis"]
+semantic_role = "is_tributacion_conjunta_opcion_0_7"
+legal_refs = ["ley-27-2014:art-19"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4105 DP200026 94|1449|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4455 (DP200026 field 94).
+[[revisions."2022".casillas]]
+id = "01632"
+continuidad_id = "is-tributacion-conjunta-fraccionamiento-importe"
+number = "01632"
+section = ["tributacion_conjunta_estado_y_adm_forales", "opcion_de_fraccionamiento_art_19_1_lis"]
+semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
+legal_refs = ["ley-27-2014:art-19"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4106 DP200026 95|1466|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4456 (DP200026 field 95).
+[[revisions."2022".casillas]]
+id = "01633"
+continuidad_id = "01633"
+number = "01633"
+section = ["tributacion_conjunta_estado_y_adm_forales", "opcion_de_fraccionamiento_art_19_1_lis"]
+semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
+legal_refs = ["ley-27-2014:art-19"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4109 DP200026 98|1517|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4459 (DP200026 field 98).
+[[revisions."2022".casillas]]
+id = "01635"
+continuidad_id = "01635"
+number = "01635"
+section = ["tributacion_conjunta_estado_y_adm_forales", "opcion_de_fraccionamiento_art_19_1_lis"]
+semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
+legal_refs = ["ley-27-2014:art-19"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4110 DP200026 99|1534|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4460 (DP200026 field 99).
+[[revisions."2022".casillas]]
+id = "01636"
+continuidad_id = "01636"
+number = "01636"
+section = ["tributacion_conjunta_estado_y_adm_forales", "opcion_de_fraccionamiento_art_19_1_lis"]
+semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
+legal_refs = ["ley-27-2014:art-19"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4111 DP200026 100|1551|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4461 (DP200026 field 100).
+[[revisions."2022".casillas]]
+id = "01637"
+continuidad_id = "01637"
+number = "01637"
+section = ["tributacion_conjunta_estado_y_adm_forales", "opcion_de_fraccionamiento_art_19_1_lis"]
+semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
+legal_refs = ["ley-27-2014:art-19"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4114 DP200026 103|1602|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4464 (DP200026 field 103).
+[[revisions."2022".casillas]]
+id = "01642"
+continuidad_id = "01642"
+number = "01642"
+section = ["tributacion_conjunta_estado_y_adm_forales", "opcion_de_fraccionamiento_art_19_1_lis"]
+semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
+legal_refs = ["ley-27-2014:art-19"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4115 DP200026 104|1619|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4465 (DP200026 field 104).
+[[revisions."2022".casillas]]
+id = "01643"
+continuidad_id = "01643"
+number = "01643"
+section = ["tributacion_conjunta_estado_y_adm_forales", "opcion_de_fraccionamiento_art_19_1_lis"]
+semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
+legal_refs = ["ley-27-2014:art-19"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4116 DP200026 105|1636|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4466 (DP200026 field 105).
+[[revisions."2022".casillas]]
+id = "01644"
+continuidad_id = "01644"
+number = "01644"
+section = ["tributacion_conjunta_estado_y_adm_forales", "opcion_de_fraccionamiento_art_19_1_lis"]
+semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
+legal_refs = ["ley-27-2014:art-19"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4119 DP200026 108|1687|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4469 (DP200026 field 108).
+[[revisions."2022".casillas]]
+id = "01646"
+continuidad_id = "01646"
+number = "01646"
+section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_de_la_autoliquidacion_incluido_el_1o_fra"]
+semantic_role = "is_tributacion_conjunta_resultado"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4120 DP200026 109|1704|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4470 (DP200026 field 109).
+[[revisions."2022".casillas]]
+id = "01647"
+continuidad_id = "is-tributacion-conjunta-fraccionamiento-y-rectificativa"
+number = "01647"
+section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_de_la_autoliquidacion_incluido_el_1o_fra"]
+semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4121 DP200026 110|1721|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4471 (DP200026 field 110).
+[[revisions."2022".casillas]]
+id = "01648"
+continuidad_id = "01648"
+number = "01648"
+section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_de_la_autoliquidacion_incluido_el_1o_fra"]
+semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4134 DP200026 123|1942|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4484 (DP200026 field 123).
+[[revisions."2022".casillas]]
+id = "01300"
+continuidad_id = "is-conversion-aid-conjunta-importe"
+number = "01300"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4135 DP200026 124|1959|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4485 (DP200026 field 124).
+[[revisions."2022".casillas]]
+id = "01301"
+continuidad_id = "01301"
+number = "01301"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4136 DP200026 125|1976|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4486 (DP200026 field 125).
+[[revisions."2022".casillas]]
+id = "01302"
+continuidad_id = "01302"
+number = "01302"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4139 DP200026 128|2027|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4489 (DP200026 field 128).
+[[revisions."2022".casillas]]
+id = "01305"
+continuidad_id = "01305"
+number = "01305"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4140 DP200026 129|2044|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4490 (DP200026 field 129).
+[[revisions."2022".casillas]]
+id = "01306"
+continuidad_id = "01306"
+number = "01306"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4141 DP200026 130|2061|17|Num
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4491 (DP200026 field 130).
+[[revisions."2022".casillas]]
+id = "01307"
+continuidad_id = "01307"
+number = "01307"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4149 DP200026 138|2197|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4499 (DP200026 field 138).
+[[revisions."2022".casillas]]
+id = "01662"
+continuidad_id = "01662"
+number = "01662"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4150 DP200026 139|2214|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4500 (DP200026 field 139).
+[[revisions."2022".casillas]]
+id = "01663"
+continuidad_id = "01663"
+number = "01663"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4151 DP200026 140|2231|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4501 (DP200026 field 140).
+[[revisions."2022".casillas]]
+id = "01664"
+continuidad_id = "01664"
+number = "01664"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4154 DP200026 143|2282|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4504 (DP200026 field 143).
+[[revisions."2022".casillas]]
+id = "01666"
+continuidad_id = "01666"
+number = "01666"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4155 DP200026 144|2299|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4505 (DP200026 field 144).
+[[revisions."2022".casillas]]
+id = "01667"
+continuidad_id = "01667"
+number = "01667"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4156 DP200026 145|2316|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4506 (DP200026 field 145).
+[[revisions."2022".casillas]]
+id = "01668"
+continuidad_id = "01668"
+number = "01668"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4159 DP200026 148|2367|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4509 (DP200026 field 148).
+[[revisions."2022".casillas]]
+id = "01670"
+continuidad_id = "01670"
+number = "01670"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4160 DP200026 149|2384|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4510 (DP200026 field 149).
+[[revisions."2022".casillas]]
+id = "01671"
+continuidad_id = "01671"
+number = "01671"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:4161 DP200026 150|2401|17|N
+# aeat-dr-200-2023 prints the identical field on the same sheet at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:4511 (DP200026 field 150).
+[[revisions."2022".casillas]]
+id = "01672"
+continuidad_id = "01672"
+number = "01672"
+section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
+semantic_role = "is_conversion_aid_conjunta_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# Boxes only the 2022 record design prints: no edition declared them, and the 2023 design does not
+# print them, so the 2023 edition removes each row and retires its lineage.
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1930 DP200016 64|885|17|Num
+# aeat-dr-200-2023 prints box [00033] only on DP200001, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+[[revisions."2022".casillas]]
+id = "DP200016:00033"
+continuidad_id = "is-m200-dp200016-00033"
+number = "00033"
+segmento = "DP200016"
+section = ["deducc_disposic_transit_24a_7_lis", "deducc_art_42_rdleg_4_2004_2008"]
+semantic_role = "is_deduccion_dt24a7_pendiente"
+legal_refs = ["ley-27-2014:dt-24"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2178 DP200017 6|13|17|Num
+# aeat-dr-200-2023 prints box [00288] only on DP200007, DP200031, DP200038, DP200047, DP200054, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+[[revisions."2022".casillas]]
+id = "DP200017:00288"
+continuidad_id = "is-m200-dp200017-00288"
+number = "00288"
+segmento = "DP200017"
+section = ["deducc_para_incentivar_determ_actividades", "2004_suma_deducciones"]
+semantic_role = "is_deduccion_cap_iv_tit_vi_suma_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2179 DP200017 7|30|17|Num
+# aeat-dr-200-2023 prints box [00289] only on DP200007, DP200031, DP200039, DP200047, DP200053, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+[[revisions."2022".casillas]]
+id = "DP200017:00289"
+continuidad_id = "is-m200-dp200017-00289"
+number = "00289"
+segmento = "DP200017"
+section = ["deducc_para_incentivar_determ_actividades", "2004_suma_deducciones"]
+semantic_role = "is_deduccion_cap_iv_tit_vi_suma_periodo"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2413 DP200018 50|713|17|Num
+# aeat-dr-200-2023 prints box [00258] only on DP200007, DP200030, DP200038, DP200047, DP200054, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+[[revisions."2022".casillas]]
+id = "DP200018:00258"
+continuidad_id = "is-m200-dp200018-00258"
+number = "00258"
+segmento = "DP200018"
+section = ["deducc_para_incentivar_determ_actividades", "2022_el_tiempo_de_la_libertad_comuneros_v_centenario_cvc"]
+semantic_role = "is_deduccion_eventos_especiales_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2426 DP200018 63|934|17|Num
+# aeat-dr-200-2023 prints box [00291] only on DP200007, DP200031, DP200039, DP200047, DP200053, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+[[revisions."2022".casillas]]
+id = "DP200018:00291"
+continuidad_id = "is-m200-dp200018-00291"
+number = "00291"
+segmento = "DP200018"
+section = ["deducc_para_incentivar_determ_actividades", "2022_ano_santo_guadalupense_2021_g21"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2427 DP200018 64|951|17|Num
+# aeat-dr-200-2023 prints box [00292] only on DP200007, DP200031, DP200039, DP200047, DP200053, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+[[revisions."2022".casillas]]
+id = "DP200018:00292"
+continuidad_id = "is-m200-dp200018-00292"
+number = "00292"
+segmento = "DP200018"
+section = ["deducc_para_incentivar_determ_actividades", "2022_ano_santo_guadalupense_2021_g21"]
+semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2428 DP200018 65|968|17|Num
+# aeat-dr-200-2023 prints box [00293] only on DP200007, DP200032, DP200039, DP200047, DP200053, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+[[revisions."2022".casillas]]
+id = "DP200018:00293"
+continuidad_id = "is-m200-dp200018-00293"
+number = "00293"
+segmento = "DP200018"
+section = ["deducc_para_incentivar_determ_actividades", "2022_ano_santo_guadalupense_2021_g21"]
+semantic_role = "is_deduccion_eventos_especiales_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2453 DP200018 87|1342|17|Num
+# aeat-dr-200-2023 prints box [00406] only on DP200011, DP200032, DP200041, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+[[revisions."2022".casillas]]
+id = "DP200018:00406"
+continuidad_id = "is-m200-dp200018-00406"
+number = "00406"
+segmento = "DP200018"
+section = ["deducc_para_incentivar_determ_actividades", "2022_cincuenta_aniversario_de_la_universidad_nacional_de_educacion_a_distancia_uned"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2455 DP200018 88|1359|17|Num
+# aeat-dr-200-2023 prints box [00407] only on DP200011, DP200033, DP200041, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+[[revisions."2022".casillas]]
+id = "DP200018:00407"
+continuidad_id = "is-m200-dp200018-00407"
+number = "00407"
+segmento = "DP200018"
+section = ["deducc_para_incentivar_determ_actividades", "2022_cincuenta_aniversario_de_la_universidad_nacional_de_educacion_a_distancia_uned"]
+semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2457 DP200018 89|1376|17|Num
+# aeat-dr-200-2023 prints box [00419] only on DP200011, DP200033, DP200042, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+[[revisions."2022".casillas]]
+id = "DP200018:00419"
+continuidad_id = "is-m200-dp200018-00419"
+number = "00419"
+segmento = "DP200018"
+section = ["deducc_para_incentivar_determ_actividades", "2022_cincuenta_aniversario_de_la_universidad_nacional_de_educacion_a_distancia_uned"]
+semantic_role = "is_deduccion_eventos_especiales_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2501 DP200018 126|2005|17|Num
+# aeat-dr-200-2023 prints box [00540] only on DP200010, DP200033, DP200043, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+[[revisions."2022".casillas]]
+id = "DP200018:00540"
+continuidad_id = "is-m200-dp200018-00540"
+number = "00540"
+segmento = "DP200018"
+section = ["deducc_para_incentivar_determ_actividades", "2022_valencia_2020_2021_ano_jubilar_camino_del_santo_caliz_vaj"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2502 DP200018 127|2022|17|Num
+# aeat-dr-200-2023 prints box [00542] only on DP200011, DP200033, DP200043, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+[[revisions."2022".casillas]]
+id = "DP200018:00542"
+continuidad_id = "is-m200-dp200018-00542"
+number = "00542"
+segmento = "DP200018"
+section = ["deducc_para_incentivar_determ_actividades", "2022_valencia_2020_2021_ano_jubilar_camino_del_santo_caliz_vaj"]
+semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2503 DP200018 128|2039|17|Num
+# aeat-dr-200-2023 prints box [00595] only on DP200010, DP200042, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+[[revisions."2022".casillas]]
+id = "DP200018:00595"
+continuidad_id = "is-m200-dp200018-00595"
+number = "00595"
+segmento = "DP200018"
+section = ["deducc_para_incentivar_determ_actividades", "2022_valencia_2020_2021_ano_jubilar_camino_del_santo_caliz_vaj"]
+semantic_role = "is_deduccion_eventos_especiales_pendiente"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:2504 DP200018 129|2056|17|Num
+# aeat-dr-200-2023 prints box [00596] only on DP200010, DP200026F, DP200042, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+[[revisions."2022".casillas]]
+id = "DP200018:00596"
+continuidad_id = "is-m200-dp200018-00596"
+number = "00596"
+segmento = "DP200018"
+section = ["deducc_para_incentivar_determ_actividades", "2022_enfermedades_neurodegenerativas_ano_internacional_de_la_investigacion_e_innovacion_periodo_2021_2022_en21"]
+semantic_role = "is_deduccion_idi_evento_especial"
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:3650 DP200022 44|659|17|Num
+# aeat-dr-200-2023 prints box [00130] only on DP200003, DP200019, DP200027, DP200034, DP200044, DP200049, for other fields; it does not print this field, so the 2023 edition removes and retires the row.
+[[revisions."2022".casillas]]
+id = "DP200022:00130"
+continuidad_id = "is-m200-dp200022-00130"
+number = "00130"
+segmento = "DP200022"
+section = ["reg_especial_reserva_inversiones_canarias", "inversiones_anticipadas_2022"]
+semantic_role = "is_reserva_inversiones_canarias_importe"
+legal_refs = ["ley-19-1994:art-27"]
+
+# Boxes the 2022 record design prints one record earlier than the 2023 design, which the 2023
+# edition declared on its own sheet; declared here on the 2022 sheet, the 2023 sheet an override.
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1270 DP200012 95|1526|17|Num
+# aeat-dr-200-2023 prints the same field one record later, on DP200013 at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1304 (DP200013 field 6); only the sheet title the caption repeats differs (Liquidación I against Liquidación II).
+[[revisions."2022".casillas]]
+id = "DP200012:00370"
+continuidad_id = "is-liquidacion-ii-detalle-correcciones"
+number = "00370"
+segmento = "DP200012"
+section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
+semantic_role = "is_liquidacion_ii_detalle_correcciones"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1386 DP200013 99|1594|17|N
+# aeat-dr-200-2023 prints the same field one record later, on DP200014 at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1422 (DP200014 field 13); only the sheet title the caption repeats differs (Liquidación II against Liquidación III).
+[[revisions."2022".casillas]]
+id = "DP200013:01887"
+continuidad_id = "01887"
+number = "01887"
+segmento = "DP200013"
+section = ["liquidacion_ii", "base_imponible"]
+semantic_role = "is_liquidacion_iii_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+
+# 14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls.extracted.md:1387 DP200013 100|1611|17|N
+# aeat-dr-200-2023 prints the same field one record later, on DP200014 at 15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls.extracted.md:1423 (DP200014 field 14); only the sheet title the caption repeats differs (Liquidación II against Liquidación III).
+[[revisions."2022".casillas]]
+id = "DP200013:01890"
+continuidad_id = "01890"
+number = "01890"
+segmento = "DP200013"
+section = ["liquidacion_ii", "base_imponible"]
+semantic_role = "is_liquidacion_iii_importe"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
