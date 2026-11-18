@@ -38,7 +38,8 @@ def suppressed_pre_activity_evidence(
     observation to load and nothing to stamp; the
     binding value resolves to a provenance-marked ``Decimal`` zero through the
     existing absent-by-design path, recorded here as an explicit, auditable
-    no-prior-obligation outcome with NO blockers (the row is :attr:`clean`).
+    no-prior-obligation outcome with NO blockers (the row is
+    :attr:`~cadrumo.application.calculations.cross_period_models.CrossPeriodDependencyEvidence.clean`).
     """
     return CrossPeriodDependencyEvidence(
         requirement=requirement,

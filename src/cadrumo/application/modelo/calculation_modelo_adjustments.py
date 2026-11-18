@@ -757,13 +757,27 @@ def _detail_summary_values(
     return result
 
 
+def _rows_beyond_resolver(
+    detail_rows: tuple[ModeloDetailRow, ...],
+    resolver_rows: tuple[ModeloDetailRow, ...],
+) -> tuple[ModeloDetailRow, ...]:
+    """Return the caller rows the resolver does not itself supply.
+
+    The resolver's binding values already count its own rows, and a recalculation
+    replays the current revision's rows (resolver rows included) as caller rows, so
+    only the rows the identity union adds may be summed on top of that count.
+    """
+    return tuple(row for row in detail_rows if row not in resolver_rows)
+
+
 def _detail_row_binding_values_for_calculation(
     *,
-    work_unit: WorkUnit,
+    resolver_rows: tuple[ModeloDetailRow, ...],
     revision: ModeloRevision,
     detail_rows: tuple[ModeloDetailRow, ...],
 ) -> dict[BindingId, Decimal]:
-    del work_unit
+    """Project the M349 summary of the caller rows the resolver does not itself supply."""
+    detail_rows = _rows_beyond_resolver(detail_rows, resolver_rows)
     summary_bindings = _detail_summary_bindings(revision)
 
     operador_rows = tuple(row for row in detail_rows if isinstance(row, Modelo349OperadorRow))
