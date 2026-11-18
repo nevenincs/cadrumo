@@ -172,6 +172,13 @@ TRANSLATION_SPANISH_AUTHORITY_RE: Final[re.Pattern[str]] = re.compile(
 TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
     r"(?:(?<![\w'’-])|(?<!\wl')(?<=l'))['‘’]?(?:bien(?:es)? de inversión|"
     r"recargo de equivalencia|grupo de entidades de IVA|"
+    # The Modelo 200 checkbox is quoted using its exact printed label.
+    r"Extinción de entidad|"
+    # Keep the retained AEAT and legislation phrases whole. Their function
+    # words are checked in Spanish only within the legal expression.
+    r"labores del tabaco|Ley del IVA|razón social|pleno dominio|"
+    r"ganancias y pérdidas patrimoniales|período impositivo|tipo de gravamen|"
+    r"[Cc]ifra de negocios|domiciliación previa|"
     # Full official tax names retained in the bilingual lifecycle guides.
     # https://sede.agenciatributaria.gob.es/Sede/iva/novedades-iva/novedades-normativa-2025/orden-hac-1425-2025-9-diciembre.html
     r"Impuesto sobre la Renta de las Personas Físicas|Impuesto sobre el Valor Añadido|"
