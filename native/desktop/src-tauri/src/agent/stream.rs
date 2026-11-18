@@ -103,9 +103,11 @@ pub struct ToolCall {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(test, derive(schemars::JsonSchema), schemars(rename = "AgentQuestion"))]
 pub struct Question {
     pub id: String,
     pub prompt: String,
+    #[cfg_attr(test, schemars(extend("enum" = ["choice", "text"])))]
     pub kind: String,
     /// A choice's options; null for a text question.
     pub options: Option<Vec<String>>,
@@ -113,6 +115,11 @@ pub struct Question {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(
+    test,
+    derive(schemars::JsonSchema),
+    schemars(rename = "AgentQuestionnaire")
+)]
 pub struct Questionnaire {
     pub request_id: String,
     pub reply_id: String,
@@ -120,18 +127,29 @@ pub struct Questionnaire {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(
+    test,
+    derive(schemars::JsonSchema),
+    schemars(rename = "AgentApprovalOption")
+)]
 pub struct ApprovalOption {
     pub option_id: String,
     /// The option's own name, which may be absent: the card words an option
     /// by its kind.
     pub name: Option<String>,
+    #[cfg_attr(
+        test,
+        schemars(extend("enum" = ["allow_once", "allow_session", "reject_once"]))
+    )]
     pub kind: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(test, derive(schemars::JsonSchema), schemars(rename = "AgentApproval"))]
 pub struct Approval {
     pub request_id: String,
     pub reply_id: String,
+    #[cfg_attr(test, schemars(extend("enum" = ["agent_tool"])))]
     pub source: &'static str,
     /// The tool the agent wants to call, as the agent names it.
     pub tool_call: Option<String>,
@@ -140,6 +158,7 @@ pub struct Approval {
     pub tool_server: Option<String>,
     pub description: Option<String>,
     /// One of the agent's ten tool kinds.
+    #[cfg_attr(test, schemars(schema_with = "super::records::relayed::tool_kind"))]
     pub tool_kind: Option<String>,
     pub options: Vec<ApprovalOption>,
 }
