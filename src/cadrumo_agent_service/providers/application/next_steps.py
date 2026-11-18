@@ -20,6 +20,7 @@ _STEPS: Final[dict[str, NextStep]] = {
     "cli_exited_early": NextStep.CONSOLE_SIGN_IN,
     "cli_reported_error": NextStep.CONSOLE_SIGN_IN,
     "login_not_completed": NextStep.CONSOLE_SIGN_IN,
+    "browser_not_offered": NextStep.CONSOLE_SIGN_IN,
     "internal_error": NextStep.CONSOLE_SIGN_IN,
     "helper_start_failed": NextStep.CONSOLE_SIGN_IN,
     "helper_ended_without_result": NextStep.CONSOLE_SIGN_IN,
