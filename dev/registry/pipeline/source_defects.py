@@ -613,6 +613,27 @@ def _m490_territorio_comun(source_ref: str) -> NoteGovernedAmountDeclaration:
 
 
 _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ...]] = {
+    "aeat-dr-200-2023": (
+        NoteGovernedAmountDeclaration(
+            source_ref="aeat-dr-200-2023",
+            source_sha256="07ab6b44ac6b46317d965ef59680aeb0a3380f197f55f94af824383d228190b6",
+            sheet="DP200019",
+            published_content="Nota 1",
+            note_cell="A221",
+            note_statement=(
+                "A cumplimentar exclusivamente por entidades que pertenezcan a grupos mercantiles (carácter 00039)"
+            ),
+            integer_digits=15,
+            decimal_digits=2,
+            sign_policy=_UNSIGNED_SIGN_POLICY,
+            mandated_values=None,
+            evidence=(
+                "DP200019 G103-G208 (22 'Deducción resto del grupo' slots, Num, length 17) hold only 'Nota 1'; "
+                "A220/A221 limit them to grupo mercantil entities, no scale. DP200001!A131 gives '15 enteros (o "
+                "N + 14) y 2 decimales', as the reviewed 2023 width-17 profile cites; unscaled they emit euros."
+            ),
+        ),
+    ),
     "aeat-dr-200-2024": (
         NoteGovernedAmountDeclaration(
             source_ref="aeat-dr-200-2024",
