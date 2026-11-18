@@ -145,6 +145,70 @@ def test_resolved_rates_are_memoized_per_currency_and_date() -> None:
     assert len(calls) == 1, "a repeated (currency, date) lookup must not re-query the ECB"
 
 
+def _counting(quotes: dict[str, dict[date, Decimal]], calls: list[str]) -> ecb_provider.RateFetch:
+    inner = ecb_csv_fetch(quotes)
+
+    def counting_fetch(url: str) -> str | None:
+        calls.append(url)
+        return inner(url)
+
+    return counting_fetch
+
+
+def test_a_year_of_row_dates_costs_one_request_per_currency() -> None:
+    # A statement's foreign rows fall on many dates; one request per row date
+    # outran the import's settlement wait over the network.
+    days = [_MONTH_START + timedelta(days=offset) for offset in range(0, 280, 7)]
+    quotes = {"USD": {day: Decimal("1.08") + Decimal(index) / 1000 for index, day in enumerate(days)}}
+    calls: list[str] = []
+    provider = EcbReferenceRateProvider(fetch=_counting(quotes, calls))
+
+    lookups = [provider.lookup_eur_rate("USD", day + timedelta(days=2)) for day in days[:-1]]
+
+    assert len(calls) == 1
+    assert [lookup.observation_date for lookup in lookups] == days[:-1]
+    assert [lookup.rate for lookup in lookups] == [Decimal("1") / quotes["USD"][day] for day in days[:-1]]
+
+
+def test_an_early_january_date_reaches_the_last_december_publication() -> None:
+    december = date(_YEAR - 1, 12, 30)
+    january = date(_YEAR, 1, 2)
+    quotes = {"USD": {december: Decimal("1.0400"), january: Decimal("1.0500")}}
+    provider = EcbReferenceRateProvider(fetch=_counting(quotes, []))
+
+    new_year = provider.lookup_eur_rate("USD", date(_YEAR, 1, 1))
+
+    assert new_year.observation_date == december
+    assert new_year.rate == Decimal("1") / Decimal("1.0400")
+
+
+def test_a_date_after_the_years_latest_publication_asks_for_its_own_window() -> None:
+    # The year was read before Friday's publication existed; Friday must get
+    # its own rate, never Thursday's carried forward from the earlier read.
+    quotes = {"USD": {_THURSDAY: Decimal("1.0830")}}
+    calls: list[str] = []
+    provider = EcbReferenceRateProvider(fetch=_counting(quotes, calls))
+    assert provider.lookup_eur_rate("USD", _THURSDAY).observation_date == _THURSDAY
+
+    quotes["USD"][_FRIDAY] = Decimal("1.0889")
+    on_friday = provider.lookup_eur_rate("USD", _FRIDAY)
+
+    assert on_friday.observation_date == _FRIDAY
+    assert on_friday.rate == Decimal("1") / Decimal("1.0889")
+    assert calls[-1] == observation_url("USD", _FRIDAY - timedelta(days=ecb_provider.LOOKBACK_DAYS), _FRIDAY)
+    assert len(calls) == 2
+
+
+def test_an_unpublished_series_is_asked_once_per_year() -> None:
+    calls: list[str] = []
+    provider = EcbReferenceRateProvider(fetch=_counting({}, calls))
+
+    lookups = [provider.lookup_eur_rate("XYZ", _FRIDAY - timedelta(days=offset)) for offset in range(3)]
+
+    assert {lookup.status for lookup in lookups} == {EurRateLookupStatus.UNSUPPORTED_CURRENCY}
+    assert len(calls) == 1
+
+
 def test_transport_failure_raises_rather_than_reporting_a_missing_rate() -> None:
     # A network fault must be distinguishable from "the ECB publishes no such
     # rate": collapsing the two would silently book the row at zero EUR.

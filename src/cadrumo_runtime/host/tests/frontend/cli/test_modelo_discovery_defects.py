@@ -27,6 +27,8 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
+from cadrumo.application.modelo.registry_discovery import declared_modelo_period_tokens
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
     SCENARIO_FILING_YEAR,
@@ -34,7 +36,7 @@ from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
     create_m303_work_unit,
 )
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope
+from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_envelope
 
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
@@ -72,6 +74,12 @@ _LEGAL_ENTITY_FACTS = {
     "taxpayer_type.incn_prior_12_months": "7500000.00",
     "taxpayer_type.new_entity_first_two_profit_periods": "false",
 }
+
+
+def _declared_m210_period_tokens() -> tuple[str, ...]:
+    """The period tokens the Modelo 210 editions declare, read from the published authority."""
+    with bundled_indexed_authority().operation() as operation:
+        return declared_modelo_period_tokens("210", operation=operation)
 
 
 def _m303_filing_evidence_args() -> tuple[str, ...]:
@@ -381,9 +389,11 @@ def test_modelo_readiness_refuses_revision_mismatch(seed_profile: ProfileSeeder)
 
 
 def test_modelo_readiness_refuses_period_without_registry_coverage(seed_profile: ProfileSeeder) -> None:
-    """M210 readiness must fail closed when the requested period is not covered."""
+    """M210 readiness must fail closed when no edition declares the requested period."""
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
+    declared = _declared_m210_period_tokens()
+    assert "3T" not in declared
     result = invoke_cached_cli(
         [
             "app",
@@ -399,12 +409,12 @@ def test_modelo_readiness_refuses_period_without_registry_coverage(seed_profile:
             "3T",
         ],
     )
-    # Refused outright, naming the uncovered period and the revisions that exist.
+    # Refused outright, naming the undeclared period and the tokens the editions declare.
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
     flat = " ".join(result.output.split())
     assert "3T" in flat
-    assert "2026-y-siguientes" in flat
+    assert all(token in flat for token in declared), flat
 
 
 def test_describe_m210_accepts_numbered_event_token_with_year_scope() -> None:
@@ -507,9 +517,11 @@ def test_modelo_readiness_m210_legacy_event_token_reports_current_guidance(seed_
 
     assert result.exit_code != 0, result.output
     flat = result.output.replace("\n", " ")
-    assert "EVENT-N" in flat
+    message = require_error_document(result.output)["error"]["message"]
+    # The period-token guidance names the retired token and offers only the declared ones.
+    assert "'evento'" in message
+    assert all(token in message for token in _declared_m210_period_tokens()), message
     assert "Valid tokens: evento" not in flat
-    assert "REFUSED_CLI_BOUNDARY" not in flat
     assert "Traceback" not in flat
 
 

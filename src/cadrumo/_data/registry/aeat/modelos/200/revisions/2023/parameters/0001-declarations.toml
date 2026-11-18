@@ -14,7 +14,7 @@ legal_refs = ["ley-27-2014:art-29"]
 
 [[revisions."2023".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2023"
-required_text = ["tipo de gravamen"]
+required_text = ["tributan al tipo de gravamen reducido del 23 por ciento", "Entidades INCN < 1 millón de euros en el período impositivo inmediato anterior (no siendo aplicable a aquellas entidades que tengan la consideración de entidad patrimonial) 23 por 100"]
 
 # Periods initiated in 2023 and 2024: 23 % flat rate (LIS Art. 29.1 as
 # amended by Ley 31/2022 Art. 39 for INCN < 1M, in force for ejercicios
@@ -36,7 +36,7 @@ legal_refs = ["ley-27-2014:art-29", "ley-31-2022:art-39"]
 
 [[revisions."2023".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2023"
-required_text = ["tipo de gravamen"]
+required_text = ["tributan al tipo de gravamen reducido del 23 por ciento", "Entidades INCN < 1 millón de euros en el período impositivo inmediato anterior (no siendo aplicable a aquellas entidades que tengan la consideración de entidad patrimonial) 23 por 100"]
 
 # Scalar echo for casilla 00558 when the cuota path uses the micro-empresa
 # bracket. It reports the first-tranche rate for the filing period; casilla
@@ -66,7 +66,7 @@ legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-101"]
 
 [[revisions."2023".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2023"
-required_text = ["tipo de gravamen"]
+required_text = ["sea inferior a 1 millón de euros", "tributan al tipo de gravamen reducido del 23 por ciento"]
 
 # In force from the first period the 23 % lane applies, periods initiated on or
 # after 1 January 2023 (Ley 31/2022 art. 39); Ley 7/2024 keeps the same 1 millón

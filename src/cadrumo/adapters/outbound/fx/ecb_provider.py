@@ -10,11 +10,19 @@ The ECB publishes EUR-base quotes (``1 EUR = rate CCY``). The
 rate (so ``eur = amount * rate``), so this provider answers with ``1 / ecb_rate``.
 
 The ECB publishes only on TARGET working days and the Data Portal answers a
-non-publication date with an empty result set, so a lookup widens its query
-window backwards by :data:`LOOKBACK_DAYS` and takes the most recent published
-observation on or before the requested date, recording that observation's own
-date. A currency the ECB publishes no series for answers HTTP 404, which the
-transport reports as ``None`` and the provider as an unsupported currency.
+non-publication date with an empty result set, so a lookup reaches back by
+:data:`LOOKBACK_DAYS` and takes the most recent published observation on or
+before the requested date, recording that observation's own date. A currency
+the ECB publishes no series for answers HTTP 404, which the transport reports as
+``None`` and the provider as an unsupported currency.
+
+A lookup reads the currency's whole calendar year in one request (from
+:data:`LOOKBACK_DAYS` before 1 January, so an early-January date still reaches
+the last December publication) and answers every later date of that year up to
+the year's latest observation from it. A statement of a year's foreign rows then
+costs one request per currency rather than one per row date, which a ledger
+import's settlement wait cannot afford over the network. A date after that
+latest observation may postdate the read, so it asks for its own window.
 
 A transport or protocol failure raises
 :exc:`domain.currency.errors.ExchangeRateProviderError` rather than answering:
@@ -89,9 +97,11 @@ class EcbReferenceRateProvider:
         """
         self._fetch = fetch or https_fetch
         self._lookback = timedelta(days=lookback_days)
-        # Resolved results are memoized per (currency, date) so a ledger import
-        # spanning many rows on few distinct dates issues few requests.
+        # Resolved results are memoized per (currency, date), and each
+        # currency's published year per (currency, year), None for a series
+        # the ECB does not publish.
         self._resolved: dict[tuple[str, date], EurRateLookup] = {}
+        self._years: dict[tuple[str, int], tuple[tuple[date, Decimal], ...] | None] = {}
 
     @property
     def rate_source_id(self) -> str:
@@ -124,15 +134,35 @@ class EcbReferenceRateProvider:
         return self._resolved[key]
 
     def _resolve(self, code: str, rate_date: date) -> EurRateLookup:
-        url = observation_url(code, rate_date - self._lookback, rate_date)
-        payload = self._fetch(url)
+        published = self._published_year(code, rate_date.year)
+        if published is None:
+            return EurRateLookup(
+                status=EurRateLookupStatus.UNSUPPORTED_CURRENCY,
+                rate_date=rate_date,
+                source=ECB_RATE_SOURCE_ID,
+            )
+        if published and rate_date <= published[-1][0]:
+            window_start = rate_date - self._lookback
+            return self._latest_in_window([row for row in published if window_start <= row[0] <= rate_date], rate_date)
+        payload = self._fetch(observation_url(code, rate_date - self._lookback, rate_date))
         if payload is None:
             return EurRateLookup(
                 status=EurRateLookupStatus.UNSUPPORTED_CURRENCY,
                 rate_date=rate_date,
                 source=ECB_RATE_SOURCE_ID,
             )
-        observations = parse_observations(payload)
+        return self._latest_in_window(parse_observations(payload), rate_date)
+
+    def _published_year(self, code: str, year: int) -> tuple[tuple[date, Decimal], ...] | None:
+        """Return the year's observations in date order, read once, or ``None`` for an unpublished series."""
+        key = (code, year)
+        if key not in self._years:
+            payload = self._fetch(observation_url(code, date(year, 1, 1) - self._lookback, date(year, 12, 31)))
+            self._years[key] = None if payload is None else tuple(sorted(parse_observations(payload)))
+        return self._years[key]
+
+    @staticmethod
+    def _latest_in_window(observations: list[tuple[date, Decimal]], rate_date: date) -> EurRateLookup:
         if not observations:
             return EurRateLookup(
                 status=EurRateLookupStatus.MISSING_RATE,
@@ -142,12 +172,7 @@ class EcbReferenceRateProvider:
         # The window ends at rate_date, so the latest observation in it is the
         # operation-date rate or the most recent prior publication. Every
         # observation the parser yields is finite and strictly positive, so
-        # the inversion below cannot divide by zero or by a non-finite value
-        # and no second usability test is needed here. The check that used to
-        # live at this line was the weaker of the two: it ran only on the
-        # LATEST observation, so a single unusable quote at the end of the
-        # window discarded the valid earlier ones behind it and reported no
-        # rate at all.
+        # the inversion below cannot divide by zero or by a non-finite value.
         observed_on, ecb_rate = max(observations, key=lambda row: row[0])
         # ECB quotes EUR-base (1 EUR = ecb_rate CCY); CCY->EUR is the inverse.
         return EurRateLookup(

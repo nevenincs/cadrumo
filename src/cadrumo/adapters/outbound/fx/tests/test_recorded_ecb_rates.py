@@ -33,9 +33,21 @@ def test_a_recorded_window_converts_through_the_real_provider() -> None:
     assert rate > 0
 
 
+def _latest_recorded_observation(currency: str) -> date:
+    """Return the last publication the recording holds for ``currency``."""
+    return max(
+        day
+        for url, body in recorded_ecb_answers().items()
+        if f"/EXR/D.{currency}." in url
+        for day, _ in parse_observations(body)
+    )
+
+
 def test_an_unrecorded_date_refuses_instead_of_borrowing_a_neighbour() -> None:
-    currency, rate_date = _recorded_pair()
-    unrecorded = rate_date + timedelta(days=1)
+    # A date after the last recorded publication may postdate the capture, so
+    # the provider asks for its own window, which the recording does not hold.
+    currency, _ = _recorded_pair()
+    unrecorded = _latest_recorded_observation(currency) + timedelta(days=1)
     assert observation_url(currency, unrecorded - timedelta(days=LOOKBACK_DAYS), unrecorded) not in (
         recorded_ecb_answers()
     ), "the probe date must fall outside the recording for this refusal to mean anything"

@@ -9,8 +9,6 @@ import {
 import { failureCode } from "../errors";
 import { questionnaireFaults } from "./agentClarification";
 import type {
-  AgentApproval,
-  AgentQuestionnaire,
   AgentServiceStatus,
   AgentSession,
   AgentStreamEvent,
@@ -19,13 +17,20 @@ import type {
 import {
   isLiveStatus,
   replyIdOf,
-  type AgentDocumentReference,
+  type AgentColumnRecord,
   type AgentRead,
-  type AgentReplyRecord,
-  type AgentTurnRecord,
   type AgentViews,
 } from "./agentViews";
 import type { ToolCallStatus } from "./agentGatewayContract";
+import type {
+  AgentApproval,
+  AgentDocumentReference,
+  AgentPersonRecord,
+  AgentQuestionnaire,
+  AgentReplyRecord,
+  AgentToolRecord,
+  AgentTurnRecord,
+} from "./agentSnapshotContract";
 
 // A conversation as it is being written: its history, read from the host,
 // with the host's stream applied on top. The stream is watched before the
@@ -52,24 +57,23 @@ import type { ToolCallStatus } from "./agentGatewayContract";
  * began it, `end` for one that continued it. */
 const LOCAL = "local:";
 
-type Person = Extract<AgentTurnRecord, { kind: "person" }>;
-type Tool = Extract<AgentTurnRecord, { kind: "tool" }>;
+/** A message sent here: it always has the id the column gave it. */
+type Sent = AgentPersonRecord & { id: string };
 
-const isLocal = (record: AgentTurnRecord): boolean =>
-  record.kind === "person" && record.id.startsWith(LOCAL);
+const isSent = (record: AgentColumnRecord): record is Sent =>
+  record.kind === "person" && record.id !== null && record.id.startsWith(LOCAL);
+
+const isLocal = (record: AgentColumnRecord): boolean => isSent(record);
 
 /** The messages sent here that `turns` holds, in the order they were sent. */
-const localMessages = (turns: readonly AgentTurnRecord[]): Person[] =>
-  turns.filter(
-    (record): record is Person =>
-      record.kind === "person" && record.id.startsWith(LOCAL),
-  );
+const localMessages = (turns: readonly AgentColumnRecord[]): Sent[] =>
+  turns.filter(isSent);
 
 /** A conversation's records so far, and what its reply waits on. */
 export type LiveTurns = {
   /** The history's records with the stream's applied, in the order a
    * conversation lists them. */
-  turns: AgentTurnRecord[];
+  turns: AgentColumnRecord[];
   /** The messages the history holds, by reply and id: their text is whole,
    * and the stream's text for them is not added to it. */
   recorded: readonly string[];
@@ -135,7 +139,7 @@ export function withoutRequest(live: LiveTurns, requestId: string): LiveTurns {
 
 /** The record of reply `id`, if the records have it. */
 export const replyRecord = (
-  turns: readonly AgentTurnRecord[],
+  turns: readonly AgentColumnRecord[],
   id: string,
 ): AgentReplyRecord | undefined =>
   turns.find(
@@ -145,7 +149,7 @@ export const replyRecord = (
 
 /** The newest reply of a conversation. */
 export const newestReply = (
-  turns: readonly AgentTurnRecord[],
+  turns: readonly AgentColumnRecord[],
 ): AgentReplyRecord | undefined =>
   [...turns]
     .reverse()
@@ -153,7 +157,7 @@ export const newestReply = (
 
 /** The reply still going, if there is one. */
 export const liveReply = (
-  turns: readonly AgentTurnRecord[],
+  turns: readonly AgentColumnRecord[],
 ): AgentReplyRecord | undefined =>
   [...turns]
     .reverse()
@@ -164,21 +168,36 @@ export const liveReply = (
 
 /** `turns` with a record for reply `id`, which the stream names before any
  * history does. A reply is running until something says otherwise. */
-function withReply(turns: AgentTurnRecord[], id: string): AgentTurnRecord[] {
+function withReply(
+  turns: AgentColumnRecord[],
+  id: string,
+): AgentColumnRecord[] {
   return replyRecord(turns, id)
     ? turns
-    : [...turns, { kind: "reply", id, status: "running" }];
+    : [
+        ...turns,
+        {
+          kind: "reply",
+          id,
+          status: "running",
+          provider_condition: null,
+          failure_reason: null,
+          queued_messages: 0,
+          selection: null,
+          usage: null,
+        },
+      ];
 }
 
 /** `turns` with `record` inserted at `at`. */
 const inserted = (
-  turns: AgentTurnRecord[],
+  turns: AgentColumnRecord[],
   at: number,
-  record: AgentTurnRecord,
+  record: AgentColumnRecord,
 ) => [...turns.slice(0, at), record, ...turns.slice(at)];
 
 /** Where a reply's records begin, its tool calls begin, and its record is. */
-function placesOf(turns: readonly AgentTurnRecord[], id: string) {
+function placesOf(turns: readonly AgentColumnRecord[], id: string) {
   const own = turns
     .map((record, index) => ({ record, index }))
     .filter(({ record }) => replyIdOf(record) === id);
@@ -340,7 +359,15 @@ export function applyStreamEvent(
     case "tool": {
       const reply = event.reply_id;
       const turns = withReply(live.turns, reply);
-      const call: Tool = { kind: "tool", reply_id: reply, ...event.tool };
+      const call: AgentToolRecord = {
+        kind: "tool",
+        reply_id: reply,
+        id: event.tool.id,
+        title: event.tool.title,
+        tool_kind: event.tool.tool_kind,
+        status: event.tool.status,
+        details: [],
+      };
       const at = turns.findIndex(
         (record) =>
           record.kind === "tool" &&
@@ -349,15 +376,20 @@ export function applyStreamEvent(
       );
       if (at >= 0) {
         const held = turns[at];
-        // A call does not go back to an earlier state.
-        if (held?.kind === "tool" && RANK[call.status] < RANK[held.status])
+        // A call does not go back to an earlier state. One whose state the
+        // host could not read takes the stream's.
+        if (
+          held?.kind === "tool" &&
+          held.status !== null &&
+          RANK[event.tool.status] < RANK[held.status]
+        )
           return quiet(live);
         // What the history said of the call stays: the stream says none.
-        const details = held?.kind === "tool" ? held.details : undefined;
+        const details = held?.kind === "tool" ? held.details : [];
         return quiet({
           ...live,
           turns: turns.map((record, index) =>
-            index === at ? (details ? { ...call, details } : call) : record,
+            index === at ? { ...call, details } : record,
           ),
         });
       }
@@ -472,14 +504,14 @@ export function withSent(
   const sentBefore = turns.filter(
     (record) => isLocal(record) && replyIdOf(record) === sent.reply_id,
   ).length;
-  const message: Person = {
+  const message: Sent = {
     kind: "person",
     id: `${LOCAL}${sent.at}:${sent.reply_id}:${sentBefore}`,
     reply_id: sent.reply_id,
     text: sent.text,
     sent_at: now.toISOString(),
-    ...(sent.attachments?.length ? { attachments: sent.attachments } : {}),
-    ...(sent.skills?.length ? { skills: sent.skills } : {}),
+    attachments: sent.attachments ?? [],
+    skills: sent.skills ?? [],
   };
   const places = placesOf(turns, sent.reply_id);
   return {
@@ -500,7 +532,7 @@ export function withHistory(
   records: AgentTurnRecord[],
   pending: LivePending,
 ): LiveTurns {
-  let turns = [...records];
+  let turns: AgentColumnRecord[] = [...records];
   let taken = new Set<number>();
   for (const sent of localMessages(live.turns)) {
     const at = turns.findIndex(
@@ -543,7 +575,7 @@ export function withHistory(
 
 export type LiveConversation = {
   /** The records, read and streamed. */
-  read: AgentRead<AgentTurnRecord[]>;
+  read: AgentRead<AgentColumnRecord[]>;
   /** The reply still being written that can be stopped, by its handle. */
   open: string | null;
   /** A reply is still going: being written, waiting for the person,
@@ -849,7 +881,7 @@ export function useLiveConversation({
   const mine = key !== null && state.for === key;
   const live = mine ? state.live : null;
   const read = useMemo(
-    (): AgentRead<AgentTurnRecord[]> =>
+    (): AgentRead<AgentColumnRecord[]> =>
       key === null
         ? { kind: "unavailable" }
         : mine && state.failed !== null
