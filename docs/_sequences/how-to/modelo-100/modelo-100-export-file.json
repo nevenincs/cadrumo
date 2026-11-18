@@ -161,7 +161,13 @@
         "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd",
         "--yes"
       ],
-      "captures": [],
+      "captures": [
+        {
+          "json_path": "result.calculation_revision_id",
+          "name": "stated_revision_id",
+          "value": "e4207cd9c90f570e4dbb81472a3c097ff6eb736cf657b1ca4dce69dddb7002e5"
+        }
+      ],
       "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
@@ -178,12 +184,7 @@
         "modelo",
         "work",
         "verify",
-        "--modelo",
-        "100",
-        "--year",
-        "2025",
-        "--period",
-        "0A"
+        "e4207cd9c90f570e4dbb81472a3c097ff6eb736cf657b1ca4dce69dddb7002e5"
       ],
       "captures": [],
       "envelope": null,
@@ -201,12 +202,9 @@
         "app",
         "modelo",
         "export",
-        "--modelo",
-        "100",
-        "--year",
-        "2025",
-        "--period",
-        "0A",
+        "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd",
+        "--revision",
+        "e4207cd9c90f570e4dbb81472a3c097ff6eb736cf657b1ca4dce69dddb7002e5",
         "--output",
         "./modelo-100.boe"
       ],
