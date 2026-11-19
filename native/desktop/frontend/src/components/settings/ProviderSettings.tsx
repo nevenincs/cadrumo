@@ -315,6 +315,14 @@ function WayRow({
   const keyless = provider.authKind === "none";
   const hasKey = provider.mode === "key" || provider.mode === "oauth_token";
   const off = provider.mode === "disabled";
+  // A key lane with nothing saved cannot run, so it does not read as on. The
+  // stored enablement stays the host's: adding a key restores it.
+  const keyMissing =
+    !signInOnly &&
+    !keyless &&
+    !hasKey &&
+    !provider.credentialSaved &&
+    provider.source === "none";
   // Where a sign-in-only lane's sign-in stands: offered, still being read, or
   // unavailable by a complete answer.
   const signInState = !signInOnly
@@ -379,8 +387,8 @@ function WayRow({
             </Button>
           )}
           <Switch
-            checked={!off}
-            disabled={busy}
+            checked={!off && !keyMissing}
+            disabled={busy || (keyMissing && !off)}
             aria-label={t("desktop.providers.use_in_agent", {
               provider: provider.name,
               connection,
@@ -453,7 +461,7 @@ function WayRow({
       {!off && !keyless && (
         <div className="grid gap-2 pt-1">
           {signInOnly ? (
-            signInState === "offered" ? (
+            provider.signOutAvailable ? null : signInState === "offered" ? (
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={onSignIn}>
                   {t("desktop.providers.sign_in_action")}
