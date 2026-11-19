@@ -64,6 +64,7 @@ export function MainPane({
   ledgerOn,
   browserOn,
   browserMounted,
+  browserReader,
   profileOn,
   aeatSyncOn,
   calendarOn,
@@ -144,6 +145,9 @@ export function MainPane({
   ledgerOn: boolean;
   browserOn: boolean;
   browserMounted: boolean;
+  /** Whose browser page stands: the reader's, or the one kept through a
+   * transient account phase; null where it is withheld. */
+  browserReader: string | null;
   profileOn: boolean;
   aeatSyncOn: boolean;
   calendarOn: boolean;
@@ -389,10 +393,10 @@ export function MainPane({
       {browserMounted && host.sedeView && (
         // A view the runtime refuses for a missing component offers its setup.
         <BrowserPage
-          key={reader ?? ""}
+          key={browserReader ?? ""}
           port={host.sedeView}
           withheld={
-            reader === null ? (
+            browserReader === null ? (
               <SignedOut
                 account={account}
                 lead={t("desktop.browser.failure.not_signed_in")}

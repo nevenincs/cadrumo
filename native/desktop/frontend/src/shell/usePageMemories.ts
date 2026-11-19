@@ -3,27 +3,51 @@ import type { CalendarMemory } from "../components/FilingCalendar";
 import type { LedgerMemory } from "../components/ledger/LedgerPage";
 import type { DeclarationsMemory } from "../components/modelo/declarations/DeclarationsPage";
 import type { WorkspaceView } from "../components/modelo/workspace/Workspace";
+import type { AccountPhase } from "./signIn";
+
+/** The phases that come and go while the same profile stays signed in: a
+ * status read that was refused or failed, a manager restarting. */
+const TRANSIENT: ReadonlySet<AccountPhase> = new Set([
+  "checking",
+  "unknown",
+  "starting",
+  "services-down",
+]);
 
 /** What the pages keep of themselves while they are put away, for one
  * profile and one sign-in, in memory only. */
 export function usePageMemories({
   reader,
+  phase,
+  activeProfile,
   browserOn,
   wantsDeclarations,
 }: {
   reader: string | null;
+  phase: AccountPhase;
+  /** The profile the account's status names, null while it names none. */
+  activeProfile: string | null;
   browserOn: boolean;
   wantsDeclarations: RefObject<boolean>;
 }) {
   // The browser's view goes on while its page is put aside: the page stays
   // mounted, hidden, for the profile that opened it, until the person closes
-  // it or that profile is no longer the one signed in.
+  // it or that profile is no longer the one signed in. A transient account
+  // phase that does not name another profile is not that: the host ends a
+  // view whose person session is lost, and the page says so.
   const [browserKeptFor, setBrowserKeptFor] = useState<string | null>(null);
-  const browserReader = browserOn
-    ? reader
-    : reader === browserKeptFor
-      ? browserKeptFor
-      : null;
+  const survivesBlip =
+    reader === null &&
+    browserKeptFor !== null &&
+    TRANSIENT.has(phase) &&
+    (activeProfile === null || activeProfile === browserKeptFor);
+  const browserReader = survivesBlip
+    ? browserKeptFor
+    : browserOn
+      ? reader
+      : reader === browserKeptFor
+        ? browserKeptFor
+        : null;
   if (browserReader !== browserKeptFor) setBrowserKeptFor(browserReader);
   const browserMounted = browserOn || browserReader !== null;
   // Raised to send an open view to its home page, the Sede.
@@ -100,6 +124,7 @@ export function usePageMemories({
     showDeclarationList,
     setBrowserKeptFor,
     browserMounted,
+    browserReader,
     browserHome,
     setBrowserHome,
     calendarMemory,
