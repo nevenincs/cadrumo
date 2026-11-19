@@ -14,6 +14,7 @@ import {
   save,
   aeatEditor,
   goToSection,
+  profileAction,
 } from "../support/userProfilePage";
 import { fixtureYear } from "../../src/dev/fixtureDates";
 
@@ -493,4 +494,22 @@ test("a date left unfinished stays in its field, is refused, and never clears th
   await expect(dialog).toHaveCount(0);
   await expect(birth).toContainText("1985");
   expect(await writes()).toBe(saved);
+});
+
+test("a field editor and the AEAT access dialog each offer Cancel once", async ({
+  page,
+}) => {
+  const profile = await open(page);
+  const cancel = page.getByRole("dialog").getByRole("button", {
+    name: label("desktop.profile.cancel"),
+    exact: true,
+  });
+  await row(profile, "contact.fiscal_address").dblclick();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(cancel).toHaveCount(1);
+  await cancel.click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await profileAction(page, "desktop.profile.action.aeat_access");
+  await expect(aeatEditor(page)).toBeVisible();
+  await expect(cancel).toHaveCount(1);
 });
