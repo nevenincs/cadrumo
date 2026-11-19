@@ -54,12 +54,14 @@ pub struct Refused {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub log_ref: Option<String>,
     /// The lane a conversation is fixed to, where the agent's refusal states it.
+    /// Boxed, as the next field is, so every refusal stays small where it is
+    /// returned as an error.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub lane: Option<LaneFact>,
+    pub lane: Option<Box<LaneFact>>,
     /// The model change a send must acknowledge, where the agent's refusal
     /// states it.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub selection_change: Option<SelectionChange>,
+    pub selection_change: Option<Box<SelectionChange>>,
 }
 
 /// The provider and transport a conversation stays on.
