@@ -13,7 +13,7 @@ parts:
   executes (directive options merged with the private contract), the private
   contract's bytes and the committed golden's bytes;
 - the product it reached: every checkout file and directory listing its
-  processes were observed to read (:mod:`dev.docs.sequences.dependency_observation`),
+  processes were observed to read (:mod:`dev.dependency_observation.observation`),
   each with the digest it had when it was read. When that observation is
   unavailable, incomplete (product source read from outside the checkout
   makes it so) or missing the product package itself, the whole product source (the CLI, its runtime, its client
@@ -52,13 +52,19 @@ from typing import Final, Protocol
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from dev.cache_root import dev_cache_dir
+from dev.dependency_observation.observation import (
+    Observation,
+    file_digest,
+    listing_digest,
+    static_import_closure,
+    unobserved,
+)
 from dev.first_party_source import PRODUCT_SOURCE_ROOTS
 from dev.locales.write_guard import LOCK_FILENAME
 from dev.paths import REPO_ROOT
 
 from .authority_currency import require_current_authority
 from .contracts import sequence_contract_path
-from .dependency_observation import Observation, file_digest, listing_digest, static_import_closure, unobserved
 from .errors import SequenceEngineError
 from .golden_store import golden_path
 from .schema import ParsedSequence
@@ -71,7 +77,13 @@ _OBSERVED: Final[str] = "observed"
 _CLOSURE: Final[str] = "closure"
 _PRUNED: Final[tuple[str, ...]] = ("__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache")
 #: The engine's entry points; every ``dev`` module they import, transitively, is a verdict input.
-ENGINE_ROOTS: Final[tuple[str, ...]] = ("dev/docs/sequences", "dev/docs/sequence_build_gate.py", "dev/docs/build.py")
+#: The observer package is a root because its bootstrap script is copied, never imported.
+ENGINE_ROOTS: Final[tuple[str, ...]] = (
+    "dev/docs/sequences",
+    "dev/dependency_observation",
+    "dev/docs/sequence_build_gate.py",
+    "dev/docs/build.py",
+)
 #: Registry tooling reaches the verdict only through the published authority it
 #: compiles. The key carries the authority's logical generation and hashes this
 #: whole tree beside it, so the engine's import walk need not follow it.

@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field, StringConstraints, ValidationError
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.tests.golden_comparison import canonicalise
+from dev.dependency_observation.observation import active_observation, unobserved
 from dev.packaging.command_execution import CommandResult, run_command
 from dev.paths import AUTHORITY_ROOT_ENV, REPO_ROOT, UTF_8
 from dev.product_environment import ambient_product_settings_removed
@@ -32,7 +33,6 @@ from dev.product_environment import ambient_product_settings_removed
 from .authority_currency import require_current_authority
 from .compare import check_transcript, evaluate_expectations, validate_live_export_evidence
 from .contracts import read_sequence_contract
-from .dependency_observation import active_observation, unobserved
 from .errors import SequenceEngineError, SequenceParseError
 from .golden_store import (
     GoldenFrame,
