@@ -5,17 +5,19 @@ transcript with its committed golden. Its verdict is a pure function of three
 parts:
 
 - the corpus inputs every sequence shares: the interpreter and platform, the
-  published registry authority, the gate engine and every ``dev`` module it
-  imports, the locked dependencies, and the shared seeds and fixtures under
-  ``docs/_sequences``;
+  environment variables that configure the product, the published registry
+  authority with the tooling and product modules that compile it, the gate
+  engine and every ``dev`` module it imports, the locked dependencies, and the
+  shared seeds and fixtures under ``docs/_sequences``;
 - the sequence's own inputs: its page and id, the parsed sequence the runner
   executes (directive options merged with the private contract), the private
   contract's bytes and the committed golden's bytes;
 - the product it reached: every checkout file and directory listing its
   processes were observed to read (:mod:`dev.docs.sequences.dependency_observation`),
   each with the digest it had when it was read. When that observation is
-  unavailable or incomplete, the whole product source (the CLI, its runtime,
-  its client and its registry data) stands in for it.
+  unavailable, incomplete, rooted outside the checkout or missing the product
+  package itself, the whole product source (the CLI, its runtime, its client
+  and its registry data) stands in for it.
 
 The first two parts form the record's key, enumerated from the filesystem and
 from the engine's static import graph, so any change to a shared input
@@ -36,7 +38,6 @@ every reuse reports which recorded verdict stood in for execution.
 
 from __future__ import annotations
 
-import ast
 import hashlib
 import json
 import os
@@ -57,7 +58,7 @@ from dev.paths import REPO_ROOT
 
 from .authority_currency import require_current_authority
 from .contracts import sequence_contract_path
-from .dependency_observation import Observation, file_digest, listing_digest, unobserved
+from .dependency_observation import Observation, file_digest, listing_digest, static_import_closure, unobserved
 from .errors import SequenceEngineError
 from .golden_store import golden_path
 from .schema import ParsedSequence
@@ -65,7 +66,7 @@ from .schema import ParsedSequence
 #: Set to bypass reuse and always execute every sequence; passing sequences are still recorded.
 FORCE_ENV: Final[str] = "CADRUMO_DOCS_FORCE_SEQUENCE_CHECK"
 _CACHE_NAME: Final[str] = "docs-sequence-verdicts"
-_RECORD_FORMAT: Final[str] = "cli-sequence-verdict/3"
+_RECORD_FORMAT: Final[str] = "cli-sequence-verdict/4"
 _OBSERVED: Final[str] = "observed"
 _CLOSURE: Final[str] = "closure"
 _PRUNED: Final[tuple[str, ...]] = ("__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache")
@@ -75,6 +76,20 @@ ENGINE_ROOTS: Final[tuple[str, ...]] = ("dev/docs/sequences", "dev/docs/sequence
 #: compiles. The key carries the authority's logical generation and hashes this
 #: whole tree beside it, so the engine's import walk need not follow it.
 _AUTHORITY_TOOLING: Final[str] = "dev/registry/"
+#: The publication entry point; the product modules it imports shape the compiled
+#: authority bytes without changing its logical generation, so they are corpus inputs.
+_AUTHORITY_COMPILER: Final[str] = "dev/registry/pipeline/authority_publication.py"
+#: Every sequence imports this, so an observation without it never saw the product.
+OBSERVATION_SENTINEL: Final[str] = "src/cadrumo/__init__.py"
+#: Environment variables that configure the product or its rendering enter every key.
+#: Those that only steer this tooling or its test runner do not.
+_ENVIRONMENT_PREFIX: Final[str] = "CADRUMO_"
+_ENVIRONMENT_NAMES: Final[frozenset[str]] = frozenset(
+    {"LANG", "LANGUAGE", "LC_ALL", "LC_MESSAGES", "TZ", "PYTHONHASHSEED", "PYTHONUTF8", "PYTHONIOENCODING"}
+)
+_TOOLING_ENVIRONMENT: Final[frozenset[str]] = frozenset(
+    {"CADRUMO_DEV_CACHE_ROOT", "CADRUMO_DOCS_FORCE_SEQUENCE_CHECK", "CADRUMO_PYTEST_WORKERS"}
+)
 #: Under ``docs/_sequences`` these subtrees hold per-sequence inputs, keyed
 #: sequence by sequence; everything else there (seeds, fixtures) is shared.
 _CONTRACTS_DIRECTORY: Final[str] = "contracts"
@@ -166,47 +181,6 @@ def _stat(path: Path) -> tuple[int, int] | None:
     return (status.st_size, status.st_mtime_ns)
 
 
-def _is_type_checking_guard(node: ast.If) -> bool:
-    test = node.test
-    return (isinstance(test, ast.Name) and test.id == "TYPE_CHECKING") or (
-        isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
-    )
-
-
-def _imported_modules(tree: ast.Module, package: str) -> Iterator[str]:
-    """Yield every dotted name a module may import at runtime, including lazy imports.
-
-    Relative imports resolve against ``package``. ``from a import b`` yields both
-    ``a`` and ``a.b`` because ``b`` may be a submodule; a name that is not a module
-    simply resolves to no file.
-    """
-    pending: list[ast.AST] = list(tree.body)
-    while pending:
-        node = pending.pop()
-        if isinstance(node, ast.If) and _is_type_checking_guard(node):
-            pending.extend(node.orelse)
-            continue
-        if isinstance(node, ast.Import):
-            yield from (alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom):
-            module = _resolved_import_module(node, package)
-            yield module
-            yield from (f"{module}.{alias.name}" for alias in node.names)
-        pending.extend(ast.iter_child_nodes(node))
-
-
-def _dev_module_files(repo_root: Path, module: str) -> Iterator[Path]:
-    """Yield the files importing ``module`` executes: each package ``__init__`` and the module itself."""
-    parts = module.split(".")
-    if parts[0] != "dev":
-        return
-    for end in range(1, len(parts) + 1):
-        base = repo_root.joinpath(*parts[:end])
-        for candidate in (base / "__init__.py", base.with_suffix(".py")):
-            if candidate.is_file():
-                yield candidate
-
-
 def engine_import_closure(repo_root: Path = REPO_ROOT) -> tuple[str, ...]:
     """Return the engine's files and every ``dev`` module they import, transitively.
 
@@ -232,19 +206,46 @@ def engine_import_closure(repo_root: Path = REPO_ROOT) -> tuple[str, ...]:
                     prune_directories=("tests", *_PRUNED),
                 )
             )
-    seen: set[Path] = set()
-    while pending:
-        path = pending.pop()
-        if path in seen:
-            continue
-        seen.add(path)
-        package = ".".join(path.relative_to(repo_root).parent.parts)
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for module in _imported_modules(tree, package):
-            for imported in _dev_module_files(repo_root, module):
-                if not imported.relative_to(repo_root).as_posix().startswith(_AUTHORITY_TOOLING):
-                    pending.append(imported)
-    return tuple(sorted(path.relative_to(repo_root).as_posix() for path in seen))
+    development = repo_root / "dev"
+    tooling = repo_root / _AUTHORITY_TOOLING
+
+    def admit(path: Path) -> bool:
+        return path.is_relative_to(development) and not path.is_relative_to(tooling)
+
+    closure = static_import_closure(pending, (repo_root,), admit=admit)
+    return tuple(sorted(path.relative_to(repo_root).as_posix() for path in closure))
+
+
+def authority_compiler_closure(repo_root: Path = REPO_ROOT) -> tuple[str, ...]:
+    """Return the product and ``dev`` modules outside the registry tooling that the authority compiler imports.
+
+    The logical generation names the registry source, not the code that compiles
+    it, so these files enter every key beside the generation and the tooling tree.
+
+    Returns:
+        Repository-relative POSIX paths, sorted.
+    """
+    tooling = repo_root / _AUTHORITY_TOOLING
+    source = repo_root / "src"
+    development = repo_root / "dev"
+
+    def admit(path: Path) -> bool:
+        return path.is_relative_to(source) or path.is_relative_to(development)
+
+    closure = static_import_closure([repo_root / _AUTHORITY_COMPILER], (repo_root, source), admit=admit)
+    # The walk passes through the tooling, which is hashed whole beside this closure.
+    return tuple(sorted(path.relative_to(repo_root).as_posix() for path in closure if not path.is_relative_to(tooling)))
+
+
+def configuring_environment() -> tuple[tuple[str, str], ...]:
+    """Return the environment variables that can change what a sequence prints, sorted."""
+    return tuple(
+        sorted(
+            (name, value)
+            for name, value in os.environ.items()
+            if (name.startswith(_ENVIRONMENT_PREFIX) or name in _ENVIRONMENT_NAMES) and name not in _TOOLING_ENVIRONMENT
+        )
+    )
 
 
 def _record_path(key: str) -> Path:
@@ -305,8 +306,12 @@ class SequenceVerdicts:
             f"{_RECORD_FORMAT}\npython:{sys.version}\nplatform:{platform.system()}\n"
             f"authority:{authority_identity}\n".encode()
         )
+        for name, value in configuring_environment():
+            digest.update(f"environment:{name}={value}\n".encode())
         for relative in engine_import_closure(repo_root):
             self._trace.hash_tree(digest, repo_root / relative, label=f"engine-import/{relative}")
+        for relative in authority_compiler_closure(repo_root):
+            self._trace.hash_tree(digest, repo_root / relative, label=f"authority-compiler/{relative}")
         self._trace.hash_tree(digest, repo_root / "dev" / "docs" / "sequences", label="engine")
         self._trace.hash_tree(digest, repo_root / _AUTHORITY_TOOLING, label="authority-tooling")
         self._trace.hash_tree(digest, repo_root / "uv.lock", label="lock")
@@ -409,6 +414,16 @@ class SequenceVerdicts:
                 return None
         return f"{len(files)} observed product files unchanged"
 
+    def _observed_inputs(self, item: KeyedSequence) -> Iterator[Path]:
+        """Yield the product inputs ``item``'s current record was observed to read, for the depfile."""
+        with unobserved():
+            try:
+                document = json.loads(_record_path(self.key(item)).read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                return
+            if isinstance(document, dict):
+                yield from _observed_paths(self._repo_root, document.get("product"))
+
     def _current_file(self, path: Path) -> str:
         if path not in self._current:
             self._current[path] = file_digest(path)
@@ -469,9 +484,13 @@ class SequenceVerdicts:
     def _recorded_product(self, observation: Observation | None, changed: list[Path]) -> dict[str, object] | None:
         """Return the product part to record, appending to ``changed`` any product file that moved."""
         if observation is not None and not observation.incomplete:
-            files = self._recordable(observation.files)
-            listings = self._recordable(observation.listings)
-            return {"mode": _OBSERVED, "files": files, "listings": listings}
+            files, outside = self._recordable(observation.files)
+            listings, outside_listings = self._recordable(observation.listings)
+            # An observation rooted elsewhere (another worktree, an unresolved
+            # alias) or one that never saw the product package keys on less than
+            # the sequence read; the whole product source stands in instead.
+            if not outside and not outside_listings and OBSERVATION_SENTINEL in files:
+                return {"mode": _OBSERVED, "files": files, "listings": listings}
         digest, trace, snapshot, hashed_ns = self._product_closure()
         changed.extend(path for path, before in snapshot.items() if _stat(path) != before)
         changed.extend(trace.current_files() ^ trace.files)
@@ -482,17 +501,24 @@ class SequenceVerdicts:
             changed.extend(path for path, status in snapshot.items() if status is None or status[1] >= started_ns)
         return None if changed else {"mode": _CLOSURE, "digest": digest}
 
-    def _recordable(self, observed: dict[Path, str]) -> dict[str, str]:
-        """Keep the observed checkout entries a later run can re-read, keyed repository-relative."""
+    def _recordable(self, observed: dict[Path, str]) -> tuple[dict[str, str], list[Path]]:
+        """Key the observed checkout entries repository-relative, and list any outside the repository.
+
+        Entries under the development cache or the published authority are
+        dropped: the key already carries them. An entry outside the repository
+        is returned so the caller refuses to record an observed product part.
+        """
         kept: dict[str, str] = {}
+        outside: list[Path] = []
         for path, digest in observed.items():
             resolved = path.resolve()
-            if not resolved.is_relative_to(self._repo_root) or any(
-                resolved.is_relative_to(excluded) for excluded in self._unrecorded
-            ):
+            if any(resolved.is_relative_to(excluded) for excluded in self._unrecorded):
+                continue
+            if not resolved.is_relative_to(self._repo_root):
+                outside.append(path)
                 continue
             kept[resolved.relative_to(self._repo_root).as_posix()] = digest
-        return dict(sorted(kept.items()))
+        return dict(sorted(kept.items())), outside
 
     def dependency_paths(self, items: Iterable[KeyedSequence]) -> tuple[Path, ...]:
         """Return every file and directory the keys of ``items`` read, for a build-system depfile.
@@ -507,9 +533,24 @@ class SequenceVerdicts:
         for item in items:
             for path in self._own_inputs(item):
                 paths.add(path if path.exists() else path.parent)
+            paths.update(self._observed_inputs(item))
         paths.add(Path(sys.executable))
         paths.update(self._authority_files)
         return tuple(sorted(paths))
+
+
+def _observed_paths(repo_root: Path, product: object) -> Iterator[Path]:
+    """Yield the files and listed directories an observed product part names, or an absent file's directory."""
+    if not isinstance(product, dict) or product.get("mode") != _OBSERVED:
+        return
+    for part in ("files", "listings"):
+        entries = product.get(part)
+        if not isinstance(entries, dict):
+            continue
+        for relative in entries:
+            if isinstance(relative, str):
+                path = repo_root / relative
+                yield path if path.exists() else path.parent
 
 
 def _page_inputs(docs_root: Path) -> Iterator[Path]:
@@ -574,13 +615,3 @@ def write_depfile(depfile: Path, *, target: Path, dependencies: Iterable[Path]) 
     lines.append("")
     depfile.parent.mkdir(parents=True, exist_ok=True)
     depfile.write_text("\n".join(lines), encoding="utf-8", newline="\n")
-
-
-def _resolved_import_module(node: ast.ImportFrom, package: str) -> str:
-    if node.level:
-        parts = package.split(".")
-        base = ".".join(parts[: len(parts) - node.level + 1])
-        module = f"{base}.{node.module}" if (node.module is not None and node.module) else base
-    else:
-        module = node.module or ""
-    return module

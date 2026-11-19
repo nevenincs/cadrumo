@@ -53,7 +53,7 @@ _SPY_CHILD = (
     "from pathlib import Path\n"
     "sys.path.insert(0, sys.argv[1])\n"
     "from dev.docs.sequences import dependency_observation as observation_module\n"
-    "observation_module.observe_process(Path(sys.argv[1]))\n"
+    "observation_module.observe_check(Path(sys.argv[1]))\n"
     "folded = []\n"
     "original = observation_module.Observation.merge_journal\n"
     "def spy(self, journal):\n"
@@ -130,8 +130,18 @@ def test_the_first_run_records_the_observed_product_and_the_second_reuses_every_
         assert isinstance(files, dict) and isinstance(listings, dict)
         assert any(name.startswith("src/cadrumo/") for name in files), "the CLI's own source must be observed"
         assert any(name.startswith("src/cadrumo_runtime/") for name in files), "the runtime's source must be observed"
-        assert all((REPO_ROOT / name).is_file() for name in files)
-        assert all((REPO_ROOT / name).is_dir() for name in listings)
+        # A probed path is recorded as its digest, ``directory`` or ``absent``.
+        assert all(
+            (REPO_ROOT / name).is_dir()
+            if digest == "directory"
+            else not (REPO_ROOT / name).exists()
+            if digest == "absent"
+            else (REPO_ROOT / name).is_file()
+            for name, digest in files.items()
+        )
+        assert any(digest not in {"directory", "absent"} for digest in files.values())
+        # A listing of a directory that did not exist when read is recorded as ``absent``.
+        assert all((REPO_ROOT / name).is_dir() for name, digest in listings.items() if digest != "absent")
         assert not any(name.split("/", 1)[0] in {".venv", ".tmp", "build", ".git", ".cache"} for name in files)
 
     code, out, err = _check(docs, goldens, cache)

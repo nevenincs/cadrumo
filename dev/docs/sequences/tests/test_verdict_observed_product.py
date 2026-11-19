@@ -23,7 +23,7 @@ from dev.cache_root import DEV_CACHE_ROOT_ENV, dev_cache_dir
 
 from ..dependency_observation import Observation
 from ..errors import SequenceEngineError
-from ..verdict_cache import _CACHE_NAME, FORCE_ENV, SequenceVerdicts
+from ..verdict_cache import _CACHE_NAME, FORCE_ENV, OBSERVATION_SENTINEL, SequenceVerdicts
 from .verdict_tree_support import SyntheticTree, build_tree, write
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -88,9 +88,13 @@ def test_a_complete_observation_records_observed_mode_with_first_seen_digests_an
 ) -> None:
     product = _record(tree, tree.observe(_CLI, _CLIENT))
     assert product["mode"] == "observed"
-    assert product["files"] == {_CLI: _on_disk(tree, _CLI), _CLIENT: _on_disk(tree, _CLIENT)}
+    assert product["files"] == {
+        OBSERVATION_SENTINEL: _on_disk(tree, OBSERVATION_SENTINEL),
+        _CLI: _on_disk(tree, _CLI),
+        _CLIENT: _on_disk(tree, _CLIENT),
+    }
     assert product["listings"] == {
-        "src/cadrumo": hashlib.sha256(b"cli.py").hexdigest(),
+        "src/cadrumo": hashlib.sha256(b"__init__.py\ncli.py").hexdigest(),
         "src/cadrumo_client": hashlib.sha256(b"transport.py").hexdigest(),
     }
 
@@ -120,7 +124,7 @@ def test_an_observed_record_is_reused_and_says_how_many_files_still_match(tree: 
     _record(tree, tree.observe(_CLI, _CLIENT))
     description = tree.verdicts().reused(tree.discovered()[_ONE])
     assert description is not None
-    assert "2 observed product files unchanged" in description
+    assert "3 observed product files unchanged" in description
 
 
 @pytest.mark.parametrize("unrelated", [_RUNTIME, "src/cadrumo_runtime/new_leaf.py"])
@@ -195,7 +199,10 @@ def test_an_observed_file_edited_after_it_was_first_seen_records_a_verdict_the_e
     _append(tree, _CLI)
     assert _on_disk(tree, _CLI) != first_seen
     product = _record(tree, observation)
-    assert product["files"] == {_CLI: first_seen}, "the digest read, not the digest on disk now"
+    assert product["files"] == {
+        OBSERVATION_SENTINEL: _on_disk(tree, OBSERVATION_SENTINEL),
+        _CLI: first_seen,
+    }, "the digest read, not the digest on disk now"
     assert not _reusable(tree)
 
 
@@ -282,21 +289,15 @@ def test_a_record_whose_product_part_is_missing_malformed_or_foreign_is_not_reus
     assert not _reusable(tree)
 
 
-def test_an_observed_set_with_no_files_is_reusable_until_a_listing_it_holds_changes(
-    tree: SyntheticTree, cache: Path
-) -> None:
-    observation = Observation(tree.repo, started_ns=time.time_ns())
-    observation.note_listing(str(tree.repo / "src" / "cadrumo"))
-    product = _record(tree, observation)
-    assert product["files"] == {}
+def test_an_observed_set_is_reusable_until_a_listing_it_holds_changes(tree: SyntheticTree, cache: Path) -> None:
+    product = _record(tree, tree.observe())
+    assert product["files"] == {OBSERVATION_SENTINEL: _on_disk(tree, OBSERVATION_SENTINEL)}
     assert _reusable(tree)
     write(tree.repo / "src/cadrumo/appeared.py", "")
     assert not _reusable(tree)
 
 
-def test_recording_drops_paths_outside_the_repository_the_cache_and_the_authority_directory(
-    tmp_path: Path,
-) -> None:
+def test_recording_drops_paths_under_the_cache_and_the_authority_directory(tmp_path: Path) -> None:
     tree = build_tree(tmp_path / "repo")
     cache_root = tree.repo / "var" / "devcache"
     authority = tree.repo / "var" / "authority" / "descriptor.json"
@@ -314,14 +315,16 @@ def test_recording_drops_paths_outside_the_repository_the_cache_and_the_authorit
         )
         item = tree.discovered()[_ONE]
         observation = tree.observe(_CLI, "var/devcache/something.bin", "var/authority/descriptor.json")
-        # An imported-module journal can name any path; the cache must not keep one a later run cannot re-read.
-        observation.files[outside] = _sha("outside")
-        observation.listings[tmp_path] = _sha("listing")
+        assert outside.is_file()
 
         verdicts.record_clean(item, key=verdicts.key(item), observation=observation)
 
-        (record,) = cache_root.rglob("*.json")
-        product = json.loads(record.read_text(encoding="utf-8"))["product"]
+        records = list(cache_root.rglob("*.json"))
+        assert len(records) == 1
+        product = json.loads(records[0].read_text(encoding="utf-8"))["product"]
     assert product["mode"] == "observed"
-    assert list(product["files"]) == [_CLI]
-    assert list(product["listings"]) == ["src/cadrumo"]
+    assert product["files"] == {
+        OBSERVATION_SENTINEL: _on_disk(tree, OBSERVATION_SENTINEL),
+        _CLI: _on_disk(tree, _CLI),
+    }
+    assert product["listings"] == {"src/cadrumo": _sha("__init__.py\ncli.py")}

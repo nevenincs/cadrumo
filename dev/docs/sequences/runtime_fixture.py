@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
+import time
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
@@ -247,6 +248,7 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
     pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="docs-runtime")
     owner.executor = pool
     primary: BaseException | None = None
+    settled_ns: int | None = None
     journals = prepare_worker_journals(root)
     try:
         profiles = RuntimeProfileConnections(
@@ -284,6 +286,7 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
         if signed_in_profile is not None:
             _establish_synthetic_sign_in(signed_in_profile)
         yield server
+        settled_ns = time.time_ns()
     except BaseException as error:
         primary = error
         raise
@@ -291,7 +294,7 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
         owner.close_from_sync(task_name="docs-runtime-close", primary_error=primary)
         observation = active_observation()
         if observation is not None and journals is not None:
-            observation.harvest(journals)
+            observation.harvest(journals, settled_ns=settled_ns)
 
 
 def _worker_script(journals: Path | None) -> Path:

@@ -14,7 +14,7 @@ from pathlib import Path
 
 from ..checks import DiscoveredSequence, discover_sequences
 from ..dependency_observation import Observation
-from ..verdict_cache import SequenceVerdicts
+from ..verdict_cache import OBSERVATION_SENTINEL, SequenceVerdicts
 
 PROFILE_PREREQUISITE = "Create a profile first with `aeat config profile create`.\n"
 CONTRACT_BODY = "@result aeat --format json config profile list\n@expect exit_code == 0\n"
@@ -30,6 +30,7 @@ PAGE_TWO = f"# Beta\n\nProse. {PROFILE_PREREQUISITE}\n```{{cli-sequence}} b-one\
 
 #: Every shared input of the synthetic tree, by repository-relative path.
 SHARED_FILES: dict[str, str] = {
+    "src/cadrumo/__init__.py": "# product package\n",
     "src/cadrumo/cli.py": "print('cli')\n",
     "src/cadrumo_client/transport.py": "# client\n",
     "src/cadrumo_runtime/host.py": "# runtime\n",
@@ -42,6 +43,8 @@ SHARED_FILES: dict[str, str] = {
     "dev/helper.py": "def assist() -> None: ...\n",
     "dev/registry/__init__.py": "",
     "dev/registry/compiler.py": "# authority tooling\n",
+    "dev/registry/pipeline/__init__.py": "",
+    "dev/registry/pipeline/authority_publication.py": "from __future__ import annotations\n",
     "uv.lock": "lock\n",
     "docs/_sequences/seeds/shared.json": '{"seed": 1}\n',
     "docs/_sequences/fixtures/shared.txt": "fixture\n",
@@ -81,10 +84,14 @@ class SyntheticTree:
         assert problems == (), problems
         return {(item.page, item.sequence_id): item for item in found}
 
-    def observe(self, *relatives: str) -> Observation:
-        """Return a complete observation that read ``relatives`` (and so their directories), as a process would."""
+    def observe(self, *relatives: str, sentinel: bool = True) -> Observation:
+        """Return a complete observation that read ``relatives`` (and so their directories), as a process would.
+
+        Every sequence imports the product package, so the observation also read
+        :data:`OBSERVATION_SENTINEL` unless ``sentinel`` is false.
+        """
         observation = Observation(self.repo, started_ns=time.time_ns())
-        for relative in relatives:
+        for relative in (*((OBSERVATION_SENTINEL,) if sentinel else ()), *relatives):
             observation.note_file(str(self.repo / relative))
         return observation
 

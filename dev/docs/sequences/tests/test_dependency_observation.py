@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import importlib
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -21,11 +22,12 @@ import pytest
 from dev.packaging.command_execution import run_command
 
 from ..dependency_observation import (
+    CHECKOUT_ROOT_FILE,
     JOURNAL_DIRECTORY_NAME,
     WORKER_SCRIPT_NAME,
     Observation,
+    file_digest,
 )
-from ..observed_worker import CHECKOUT_ROOT_FILE
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -69,20 +71,52 @@ def test_a_read_open_records_the_files_content_digest(root: Path, observation: O
     assert observation.incomplete == []
 
 
-def test_an_open_with_no_mode_string_is_judged_by_its_flags(root: Path, observation: Observation) -> None:
-    readable = _write(root / "read.txt", b"r")
-    written = _write(root / "write.txt", b"w")
-    observation.audit("open", (str(readable), None, 0))
-    observation.audit("open", (str(written), None, 0o1))  # O_WRONLY
-    assert set(observation.files) == {readable}
+@pytest.mark.parametrize("mode", ["r", "rb", "rt", "r+", "rb+", "a+", "ab+"])
+def test_an_open_that_can_consume_the_existing_bytes_is_recorded(
+    root: Path, observation: Observation, mode: str
+) -> None:
+    target = _write(root / "readable.txt", b"existing")
+    _opened(observation, target, mode)
+    assert observation.files == {target: _sha(b"existing")}
 
 
-@pytest.mark.parametrize("mode", ["w", "wb", "a", "x", "r+", "w+"])
-def test_a_write_mode_open_is_ignored(root: Path, observation: Observation, mode: str) -> None:
+@pytest.mark.parametrize("mode", ["w", "wb", "x", "xb", "a", "ab", "w+", "wb+", "x+"])
+def test_an_open_that_never_reads_the_existing_bytes_is_ignored(
+    root: Path, observation: Observation, mode: str
+) -> None:
     target = _write(root / "out.txt", b"existing")
     _opened(observation, target, mode)
     assert observation.files == {}
     assert observation.listings == {}
+
+
+@pytest.mark.parametrize("flags", [os.O_RDONLY, os.O_RDWR, os.O_RDWR | os.O_APPEND])
+def test_an_open_by_flags_that_can_read_is_recorded(root: Path, observation: Observation, flags: int) -> None:
+    target = _write(root / "flagged.txt", b"flag bytes")
+    observation.audit("open", (str(target), None, flags))
+    assert observation.files == {target: _sha(b"flag bytes")}
+
+
+@pytest.mark.parametrize(
+    "flags",
+    [os.O_WRONLY, os.O_WRONLY | os.O_TRUNC, os.O_RDWR | os.O_TRUNC, os.O_RDWR | os.O_CREAT | os.O_EXCL],
+    ids=["wronly", "wronly-trunc", "rdwr-trunc", "rdwr-excl"],
+)
+def test_an_open_by_flags_that_write_only_truncate_or_exclusively_create_is_ignored(
+    root: Path, observation: Observation, flags: int
+) -> None:
+    target = _write(root / "flagged.txt", b"flag bytes")
+    observation.audit("open", (str(target), None, flags))
+    assert observation.files == {}
+    assert observation.listings == {}
+
+
+def test_file_digest_names_a_directory_a_file_and_an_absent_path(root: Path) -> None:
+    (root / "folder").mkdir()
+    target = _write(root / "file.bin", b"\x00digest me")
+    assert file_digest(root / "folder") == "directory"
+    assert file_digest(target) == _sha(b"\x00digest me")
+    assert file_digest(root / "nothing-here") == "absent"
 
 
 def test_a_bytecode_read_is_recorded_as_its_source(root: Path, observation: Observation) -> None:

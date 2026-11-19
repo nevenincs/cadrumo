@@ -59,6 +59,12 @@ A per-sequence key re-executes only what diverged, and observed dependencies sto
 - A registry tooling edit re-runs every sequence even when the compiled content is unchanged. This is an accepted cost.
 - Edits to modules that every sequence loads (configuration, CLI root, authority reader) still re-run the corpus.
 - Records accumulate in the development cache, one file per verdict of a few hundred kilobytes (the observed file and listing digests), and are removed with that cache.
-- Observation records file opens, SQLite connections, directory listings, every imported module, and the parent listing of each observed file. A bare existence probe raises no audit event, so it is covered only when its directory is also read or listed. The worker script is copied beside its journals, and a worker that cannot journal refuses to run rather than run unobserved.
+- Observation records the following, each at its first-seen digest:
+  - file opens (including `r+` and `a+`), SQLite connections, directory listings, and every imported module;
+  - existence and metadata probes, through wrapped `os.stat` and `os.path` predicates;
+  - the parent listing of each observed file.
+- Docs workers and Python `-m` checkout children run through journaling bootstraps, and the parent expects each journal. A worker that cannot journal refuses to run rather than run unobserved.
+- Any other child process, a missing journal, conflicting digests between processes, an entry outside the repository, or an observation lacking the product package makes the record fall back to the whole product source.
+- The corpus key also carries the configuring environment and the product modules that the authority compiler imports.
 - The authority currency check's re-read of the registry sources is not observed. It only refuses a stale generation, and the generation keys every record.
 - If the authority compiler stops being deterministic for a given source and toolchain, this ruling must be reconsidered.
