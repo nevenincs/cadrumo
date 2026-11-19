@@ -51,6 +51,55 @@ export type ClarificationQuestion = {
 };
 
 /**
+ * What a new conversation took from an earlier one, and what it left behind.
+ *
+ * A carry takes whole turns, newest first, within a budget of estimated tokens
+ * and a count of turns. `carried_turns` and `carried_tokens` are what entered
+ * the new conversation's prompt; `omitted_turns` and `omitted_tokens` are the
+ * older turns that did not, which the new conversation cannot read. `limit` is
+ * set only when the newest turn alone was larger than the budget: `receipts`
+ * says its tool evidence was reduced to receipts, `cut` that its text was cut
+ * at the budget as well. `source_lane` is the provider and transport, as
+ * `provider/transport`, that the earlier conversation's newest run used, when
+ * it recorded one.
+ */
+export type ConversationCarry = {
+  source_run_id: string;
+  source_lane?: string | null;
+  carried_turns: number;
+  omitted_turns: number;
+  carried_tokens: number;
+  omitted_tokens: number;
+  limit?: "receipts" | "cut" | null;
+};
+
+/**
+ * Why a continuing run was refused for naming another provider or transport.
+ *
+ * A conversation stays on the provider and transport of its newest run.
+ * `provider` and `transport` name that lane, so a host can correct its picker;
+ * another lane is reached only by starting a new conversation with
+ * `carries_from_run_id`. Nothing was started and no other lane was
+ * substituted.
+ */
+export type ConversationLaneFixedRefusalDetail = {
+  code?: "conversation_lane_fixed";
+  message: string;
+  provider: Provider;
+  transport: ProviderTransport;
+};
+
+/**
+ * How much reasoning a run asks its model for, lowest first.
+ *
+ * The ordered union of the values the provider lanes offer. Every lane spells
+ * the values it supports with these same strings, so a member's value is also
+ * the provider-native value; what differs per lane is which members it accepts
+ * and how the value reaches the provider.
+ */
+export type Effort = "low" | "medium" | "high" | "xhigh" | "max" | "ultra";
+
+/**
  * One model's licence, as its lane's catalog states it, with the text.
  *
  * `spdx`, `name` and `digest` are the catalog entry's `licence`; `digest` is
@@ -99,6 +148,7 @@ export type ProviderCondition =
   | "credits_exhausted"
   | "budget_exhausted"
   | "invalid_request"
+  | "model_unavailable"
   | "model_does_not_fit"
   | "no_answer"
   | "unknown";
@@ -107,6 +157,45 @@ export type ProviderCondition =
  * How a run reaches a named provider product.
  */
 export type ProviderTransport = "api" | "cli";
+
+/**
+ * The history a continuing run reads uncached, as the service estimates it.
+ *
+ * `retained_messages` enter the run's prompt and `estimated_tokens` is their
+ * size by the same estimator the context budget uses, not a provider
+ * tokenizer. `omitted_messages` older ones stay reachable only through the
+ * conversation history tool.
+ */
+export type SeededHistory = {
+  retained_messages: number;
+  estimated_tokens: number;
+  omitted_messages: number;
+};
+
+/**
+ * One model and effort, as a run was frozen with them or asked for them.
+ */
+export type SelectedModel = {
+  model: string;
+  effort?: Effort | null;
+};
+
+/**
+ * Why a continuing run that changes model or effort was refused.
+ *
+ * Any change of model or effort makes the next request read the whole retained
+ * history uncached. `previous` is what the run being continued used,
+ * `requested` what this start asked for, and `history` the size of the history
+ * the new model would read. Sending the same start with
+ * `acknowledge_selection_change: true` accepts the change for that one run.
+ */
+export type SelectionChangeUnacknowledgedRefusalDetail = {
+  code?: "selection_change_unacknowledged";
+  message: string;
+  previous: SelectedModel;
+  requested: SelectedModel;
+  history: SeededHistory;
+};
 
 /**
  * One skill with the whole text of its `SKILL.md`.

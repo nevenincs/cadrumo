@@ -87,6 +87,12 @@ import {
   TOOL_REFUSALS,
   UNEXPECTED_PROVIDER_CONDITION,
 } from "./agentFixtureTriggers";
+import {
+  MODEL_UNAVAILABLE,
+  MODEL_UNAVAILABLE_WHY,
+  admitted,
+  withStaleReads,
+} from "./fixtures/agentLanes";
 import { pieces } from "./fixtures/textPieces";
 import type {
   AgentApproval,
@@ -575,6 +581,13 @@ export function fixtureAgent({
    * stop for what this run asks of the person. */
   const play = (held: Reply, text: string) => {
     const goOn = (steps: (() => void)[]) => schedule(held, steps);
+    if (MODEL_UNAVAILABLE.test(text)) {
+      schedule(held, [
+        started(held),
+        () => settle(held.run.id, "failed", MODEL_UNAVAILABLE_WHY),
+      ]);
+      return;
+    }
     if (
       FAILS_FIRST.test(text) ||
       AUTHENTICATION_REQUIRED.test(text) ||
@@ -1000,7 +1013,7 @@ export function fixtureAgent({
       const stated = engineHealth
         ? withEngineHealth(served, engineHealth)
         : served;
-      return models ? models.report(stated) : stated;
+      return withStaleReads(models ? models.report(stated) : stated);
     },
     async localModels() {
       say("agentLocalModels");
@@ -1253,6 +1266,7 @@ export function fixtureAgent({
       // A reply still going takes no second message, and none is queued.
       if ((last && isLiveStatus(last.status)) || BUSY_ELSEWHERE.test(text))
         throw coded("agent_reply_in_progress");
+      const carried = admitted(say, runsOf, request);
       // A model this computer does not hold is refused before a run starts.
       if (notHeld(request)) throw coded("agent_gateway_model_not_installed");
       // A model this computer cannot run is refused the same way.
@@ -1279,7 +1293,7 @@ export function fixtureAgent({
         // The first run of a conversation has the conversation's id.
         id: last ? id("r") : conversationId,
         status: "running",
-        messages: seeded(last?.messages ?? [], [
+        messages: seeded(last?.messages ?? carried?.seeded ?? [], [
           {
             role: "user",
             text,
@@ -1302,7 +1316,10 @@ export function fixtureAgent({
           archived: false,
         });
       play(reply(fresh, conversationId), text);
-      return { reply_id: fresh.id };
+      return {
+        reply_id: fresh.id,
+        ...(carried ? { carry: carried.carry } : {}),
+      };
     },
     async cancel(replyId) {
       say(`agentCancel ${replyId}`);

@@ -5,7 +5,9 @@
 //! are read as JSON; a refusal leaves as a typed code, never as the gateway's
 //! prose.
 
-use super::{Refused, supervisor::protocol::Gateway};
+use super::{
+    HistoryLoss, LaneFact, ModelChoice, Refused, SelectionChange, supervisor::protocol::Gateway,
+};
 use serde_json::Value;
 use std::{io::Read, time::Duration};
 
@@ -68,10 +70,73 @@ pub fn refusal(status: u16, body: &[u8]) -> Refused {
         (Some(code), Some(detail)) => Refused {
             needed_tokens: tokens(detail, "needed_tokens"),
             context_tokens: tokens(detail, "context_tokens"),
+            lane: (code == "conversation_lane_fixed")
+                .then(|| lane_fact(detail))
+                .flatten(),
+            selection_change: (code == "selection_change_unacknowledged")
+                .then(|| selection_change(detail))
+                .flatten(),
             ..Refused::new(format!("agent_gateway_{code}"))
         },
         _ => Refused::new(format!("agent_gateway_{status}")),
     }
+}
+
+/// `effort` as a run start takes it.
+pub fn effort(value: &str) -> bool {
+    matches!(value, "low" | "medium" | "high" | "xhigh" | "max" | "ultra")
+}
+
+/// A provider or transport identity: a short lowercase slug.
+fn slug(value: Option<&Value>) -> Option<String> {
+    let text = value?.as_str()?;
+    (!text.is_empty()
+        && text.len() <= 64
+        && text
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || matches!(b, b'_' | b'-')))
+    .then(|| text.to_owned())
+}
+
+fn lane_fact(detail: &Value) -> Option<LaneFact> {
+    Some(LaneFact {
+        provider: slug(detail.get("provider"))?,
+        transport: slug(detail.get("transport"))?,
+    })
+}
+
+fn model_choice(value: &Value) -> Option<ModelChoice> {
+    let model = value.get("model")?.as_str()?;
+    let count = model.chars().count();
+    if !(1..=1024).contains(&count) || model.chars().any(char::is_control) {
+        return None;
+    }
+    let effort = match value.get("effort") {
+        None | Some(Value::Null) => None,
+        Some(Value::String(effort)) if self::effort(effort) => Some(effort.clone()),
+        Some(_) => return None,
+    };
+    Some(ModelChoice {
+        model: model.to_owned(),
+        effort,
+    })
+}
+
+fn count(history: &Value, name: &str) -> Option<u32> {
+    u32::try_from(history.get(name)?.as_u64()?).ok()
+}
+
+fn selection_change(detail: &Value) -> Option<SelectionChange> {
+    let history = detail.get("history")?;
+    Some(SelectionChange {
+        previous: model_choice(detail.get("previous")?)?,
+        requested: model_choice(detail.get("requested")?)?,
+        history: HistoryLoss {
+            retained_messages: count(history, "retained_messages")?,
+            estimated_tokens: count(history, "estimated_tokens")?,
+            omitted_messages: count(history, "omitted_messages")?,
+        },
+    })
 }
 
 /// A positive whole number of tokens the refusal states under `name`.
@@ -551,6 +616,126 @@ mod tests {
         // An uncoded refusal carries nothing of its body.
         let uncoded = br#"{"detail": {"code": "Not A Code", "needed_tokens": 5}}"#;
         assert_eq!(refusal(422, uncoded).needed_tokens, None);
+    }
+
+    #[test]
+    fn a_fixed_lane_refusal_carries_its_lane_and_never_its_prose() {
+        let fixed = br#"{"detail": {"code": "conversation_lane_fixed", "message": "private prose",
+            "provider": "claude", "transport": "api"}}"#;
+        let refused = refusal(409, fixed);
+        assert_eq!(refused.code, "agent_gateway_conversation_lane_fixed");
+        assert_eq!(
+            serde_json::to_value(&refused).unwrap(),
+            serde_json::json!({
+                "code": "agent_gateway_conversation_lane_fixed",
+                "lane": {"provider": "claude", "transport": "api"}
+            })
+        );
+        let unusable: [&[u8]; 5] = [
+            br#"{"detail": {"code": "conversation_lane_fixed", "provider": "claude"}}"#,
+            br#"{"detail": {"code": "conversation_lane_fixed", "provider": "Claude", "transport": "api"}}"#,
+            br#"{"detail": {"code": "conversation_lane_fixed", "provider": "claude", "transport": ""}}"#,
+            br#"{"detail": {"code": "conversation_lane_fixed", "provider": 3, "transport": "api"}}"#,
+            br#"{"detail": {"code": "conversation_lane_fixed", "provider": "a b", "transport": "api"}}"#,
+        ];
+        for unusable in unusable {
+            let refused = refusal(409, unusable);
+            assert_eq!(refused.code, "agent_gateway_conversation_lane_fixed");
+            assert_eq!(refused.lane, None);
+        }
+        // Another code never lifts a lane.
+        let other =
+            br#"{"detail": {"code": "run_busy", "provider": "claude", "transport": "api"}}"#;
+        assert_eq!(refusal(409, other).lane, None);
+    }
+
+    fn unacknowledged(previous: &str, requested: &str, history: &str) -> Vec<u8> {
+        format!(
+            r#"{{"detail": {{"code": "selection_change_unacknowledged", "message": "private prose",
+            "previous": {previous}, "requested": {requested}, "history": {history}}}}}"#
+        )
+        .into_bytes()
+    }
+
+    #[test]
+    fn an_unacknowledged_selection_change_carries_its_facts_and_never_its_prose() {
+        let body = unacknowledged(
+            r#"{"model": "m1", "effort": "high"}"#,
+            r#"{"model": "m2", "effort": null}"#,
+            r#"{"retained_messages": 6, "estimated_tokens": 4100, "omitted_messages": 2}"#,
+        );
+        let refused = refusal(409, &body);
+        assert_eq!(
+            refused.code,
+            "agent_gateway_selection_change_unacknowledged"
+        );
+        assert_eq!(
+            serde_json::to_value(&refused).unwrap(),
+            serde_json::json!({
+                "code": "agent_gateway_selection_change_unacknowledged",
+                "selection_change": {
+                    "previous": {"model": "m1", "effort": "high"},
+                    "requested": {"model": "m2", "effort": null},
+                    "history": {"retained_messages": 6, "estimated_tokens": 4100, "omitted_messages": 2}
+                }
+            })
+        );
+        // An absent effort reads as none.
+        let absent = unacknowledged(
+            r#"{"model": "m1"}"#,
+            r#"{"model": "m2"}"#,
+            r#"{"retained_messages": 0, "estimated_tokens": 0, "omitted_messages": 0}"#,
+        );
+        let change = refusal(409, &absent).selection_change.unwrap();
+        assert_eq!(change.previous.effort, None);
+    }
+
+    #[test]
+    fn a_malformed_selection_change_keeps_only_the_code() {
+        let good_model = r#"{"model": "m1", "effort": "low"}"#;
+        let good_history =
+            r#"{"retained_messages": 1, "estimated_tokens": 2, "omitted_messages": 3}"#;
+        let long = format!(r#"{{"model": "{}"}}"#, "x".repeat(1025));
+        let bad_models = [
+            r#"{"model": "", "effort": null}"#,
+            r#"{"model": "a\nb", "effort": null}"#,
+            r#"{"model": "m", "effort": "extreme"}"#,
+            r#"{"model": "m", "effort": 3}"#,
+            r#"{"model": 4}"#,
+            r#"{}"#,
+            "null",
+            long.as_str(),
+        ];
+        for bad in bad_models {
+            for body in [
+                unacknowledged(bad, good_model, good_history),
+                unacknowledged(good_model, bad, good_history),
+            ] {
+                let refused = refusal(409, &body);
+                assert_eq!(
+                    serde_json::to_value(&refused).unwrap(),
+                    serde_json::json!({"code": "agent_gateway_selection_change_unacknowledged"}),
+                    "{bad}"
+                );
+            }
+        }
+        let bad_histories = [
+            r#"{"retained_messages": -1, "estimated_tokens": 2, "omitted_messages": 3}"#,
+            r#"{"retained_messages": 1.5, "estimated_tokens": 2, "omitted_messages": 3}"#,
+            r#"{"retained_messages": 1, "estimated_tokens": 99999999999, "omitted_messages": 3}"#,
+            r#"{"retained_messages": 1, "estimated_tokens": "2", "omitted_messages": 3}"#,
+            r#"{"retained_messages": 1, "estimated_tokens": 2}"#,
+            "[]",
+        ];
+        for bad in bad_histories {
+            let body = unacknowledged(good_model, good_model, bad);
+            assert_eq!(refusal(409, &body).selection_change, None, "{bad}");
+        }
+        // Another code never lifts a change.
+        let other = String::from_utf8(unacknowledged(good_model, good_model, good_history))
+            .unwrap()
+            .replace("selection_change_unacknowledged", "run_busy");
+        assert_eq!(refusal(409, other.as_bytes()).selection_change, None);
     }
 
     #[test]

@@ -104,6 +104,7 @@ export function Composer({
   onStop,
   onAddFiles,
   onSelectionChange,
+  fixedWayId,
   pickerRequests,
   onPickerClosed,
   onDownloadModels,
@@ -128,6 +129,9 @@ export function Composer({
   onStop?: () => void;
   onAddFiles?: () => void;
   onSelectionChange?: (selection: AgentSelection) => void;
+  /** The lane the conversation is fixed to, by way id: every other lane is
+   * offered as a new conversation. */
+  fixedWayId?: string;
   /** Counts the asks from elsewhere to open the model picker. */
   pickerRequests?: number;
   /** Called when the person closes the model picker. */
@@ -309,6 +313,7 @@ export function Composer({
               models={models}
               selection={selection}
               onChange={onSelectionChange}
+              fixedWayId={fixedWayId}
               openRequests={pickerRequests}
               onClosed={onPickerClosed}
               onDownloadModels={onDownloadModels}

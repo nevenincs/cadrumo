@@ -44,7 +44,19 @@ desktop:
     can_write: fájlokat írni
     cancel: Mégse
     capabilities: 'Képes: {list}'
+    carried_turns: Ez a beszélgetés az előző {carried} körével indult; {omitted} régebbi
+      kör kimaradt.
+    carry_back: Vissza abba a beszélgetésbe
+    carry_pending: A következő üzeneted új beszélgetést indít, amely átveszi a(z)
+      „{title}” legutóbbi köreit.
+    carry_pending_untitled: A következő üzeneted új beszélgetést indít, amely átveszi
+      az előző legutóbbi köreit.
+    carry_source_not_settled: Az előző beszélgetés válasza még nem fejeződött be.
+      Várd meg, majd küldd el újra.
+    carry_source_unavailable: Az előző beszélgetés nem vihető át. Küldd el újra, hogy
+      nélküle induljon az új beszélgetés.
     catalog_unavailable: Nem sikerült beolvasni az ügynök szolgáltatólistáját.
+    choose_another_model: Válassz másik modellt
     choose_model: Válassz modellt
     choose_provider: Válassz szolgáltatót
     close_documents: Dokumentumok bezárása
@@ -53,6 +65,10 @@ desktop:
     condition_invalid_request: A szolgáltató elutasította a kérést
     condition_model_does_not_fit: A modell nem fér el abban, amit ez a számítógép
       biztosítani tud neki. Válassz kisebb modellt vagy másik szolgáltatót.
+    condition_model_unavailable: Ez a modell nem érhető el ennél a szolgáltatónál.
+      Válassz másik modellt a listából.
+    condition_model_unavailable_named: 'A(z) {model} nem érhető el itt: {provider}
+      ({connection}). Válassz másik modellt a listából.'
     condition_network_unreachable: A szolgáltató nem érhető el
     condition_no_answer: A modell nem adott használható választ ehhez a dokumentumhoz.
       Próbálj ki másik (instruct) modellt, vagy próbáld újra.
@@ -78,6 +94,7 @@ desktop:
       olvasott bármely dokumentumra érvényes.
     consent_recall: Amit már elküldtél, azt nem lehet visszahívni.
     consent_title: 'Elküldöd ezt ide: {provider}?'
+    continue_in_new_conversation: Új beszélgetésben folytatódik
     conversation_deleting: Ez a beszélgetés törlés alatt áll, ezért nem fogad fájlokat.
     conversation_id_taken: Ez a beszélgetés nem tárolhat fájlokat. Kezdj új beszélgetést
       a csatolásukhoz.
@@ -119,6 +136,8 @@ desktop:
     history: Előzmények
     history_empty: Még nincs beszélgetés
     history_no_match: 'Egy beszélgetés sem felel meg ennek: „{query}”.'
+    lane_fixed_refused: Ez a beszélgetés azzal a szolgáltatóval folytatódik, amellyel
+      indult. Ha másikat használnál, válaszd ki, és folytasd új beszélgetésben.
     lane_no_catalog: Nem sikerült betölteni a modelleket. Próbáld újra.
     lane_no_installed_model: Még nincs letöltött modell. Tölts le egyet a beállításokban.
     lane_not_admitted: Ezen a gépen nem érhető el. Válassz másikat.
@@ -128,6 +147,8 @@ desktop:
     lane_notice: Ebben a verzióban a beszélgetések nincsenek titkosítva.
     lane_signed_out: Jelentkezz be ehhez a szolgáltatóhoz a beállításokban.
     lane_unreachable: Nem lehet kapcsolódni. Ellenőrizd ezt a szolgáltatót a beállításokban.
+    lane_unreadable_refused: Nem olvasható, melyik szolgáltatóval futott ez a beszélgetés.
+      Küldd el újra az üzeneted, hogy egy új, ezt átvevő beszélgetésben folytasd.
     members_multiple: '{count} fájl'
     members_single: 1 fájl
     mention_empty: Nincs egyező tárolt dokumentum
@@ -150,6 +171,9 @@ desktop:
     model_not_installed: '{name} (nincs letöltve)'
     model_not_installed_refused: A választott modell nincs ezen a gépen. Töltsd le,
       vagy válassz másik modellt.
+    model_not_offered_refused: A fiókod nem kínálja ezt a modellt. Válassz másikat
+      a listából.
+    model_with_effort: '{model} ({effort})'
     model_written: Ez a szolgáltató nem sorolja fel a modelljeit. Írd be a modell
       nevét pontosan úgy, ahogy a szolgáltató írja.
     models_to_download: Néhány modell még nincs ezen a gépen. Töltsd le őket a helyi
@@ -208,6 +232,14 @@ desktop:
     row_documents: 'Dokumentumok: {count}'
     search_history: Keresés a beszélgetésekben
     search_placeholder: Keresés
+    selection_change_asked: 'Ez az üzenet a modellt erről: {previous} erre váltja:
+      {requested}.'
+    selection_change_confirm: Váltás és küldés
+    selection_change_history: Az új modell {retained} üzenetet kap ebből a beszélgetésből
+      (kb. {tokens} token); {omitted} korábbi üzenet kimarad.
+    selection_change_keep: Maradjon a modell
+    selection_change_refused: A modell váltásához a megerősítésed kell. Küldd el újra
+      az üzenetet.
     send: Küldés
     send_nothing: Előbb írj üzenetet, vagy adj hozzá fájlt
     send_too_long: Ez az üzenet {count} karakter hosszú; legfeljebb {max} lehet

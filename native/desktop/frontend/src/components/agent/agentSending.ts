@@ -1,8 +1,13 @@
 import type { Dispatch, RefObject, SetStateAction } from "react";
-import { failureCode, failureFit, type ContextFit } from "../../errors";
+import {
+  failureCode,
+  failureFit,
+  failureSelectionChange,
+  type ContextFit,
+} from "../../errors";
 import { selectionRecord } from "../../shell/agentCatalog";
 import { documentRefs } from "../../shell/agentDocuments";
-import { sendRefusalStep } from "../../shell/agentSendRefusals";
+import { sendRefusalStaleCatalog } from "../../shell/agentSendRefusals";
 import type { newestReply, useLiveConversation } from "../../shell/agentLive";
 import type {
   AgentQuestionnaireAnswer,
@@ -34,6 +39,8 @@ export function agentSending({
   session,
   reader,
   conversationId,
+  carryFrom,
+  changeAsk,
   catalog,
   selection,
   newest,
@@ -52,6 +59,10 @@ export function agentSending({
   session: AgentSession | undefined;
   reader: string | null;
   conversationId: string | null;
+  /** While no conversation is open, the one a first message carries from. */
+  carryFrom: string | null;
+  /** A message held back until the person confirms its change of model. */
+  changeAsk: AgentColumnView["changeAsk"];
   catalog: ReturnType<typeof useAgentCatalog>["catalog"];
   /** What the next message runs with. */
   selection: AgentSelection | null;
@@ -97,7 +108,7 @@ export function agentSending({
     const current = () =>
       currentReader.current === reader && currentSend.current === submission.id;
     try {
-      const { reply_id } = await session.send(request);
+      const { reply_id, carry } = await session.send(request);
       if (!current()) return;
       // The agent returns no id for the message, so it is shown as sent until
       // the history has it.
@@ -119,15 +130,77 @@ export function agentSending({
             ? { ...held.pending, replyId: reply_id }
             : held.pending,
         revision: held.revision + 1,
+        // The source is carried once, by this first message.
+        ...(request.carries_from ? { carryFrom: null } : {}),
+        ...(carry
+          ? { carried: { conversationId: request.conversation_id, carry } }
+          : {}),
       }));
     } catch (error) {
       const code = failureCode(error);
-      // A choice refused as one this computer cannot run came from a
-      // catalog older than the agent's answer: what is offered is read again.
-      if (sendRefusalStep(code) !== null) refreshCatalog();
-      if (current()) giveBack(request.text, code, failureFit(error));
+      // A choice refused as one the catalog should not have offered came
+      // from a catalog older than the agent's answer: it is read again.
+      if (sendRefusalStaleCatalog(code)) refreshCatalog();
+      if (!current()) return;
+      // A change of model is the person's to confirm: the agent said what
+      // the new model is given, and the message waits on their answer.
+      const facts =
+        code === "agent_gateway_selection_change_unacknowledged"
+          ? failureSelectionChange(error)
+          : null;
+      if (facts) {
+        giveBack(request.text, null);
+        change({ changeAsk: { request, submission, facts } });
+        return;
+      }
+      // The conversation runs on another lane than the one sent: the
+      // picker follows the conversation's own lane again.
+      if (code === "agent_gateway_conversation_lane_fixed")
+        change({ chosen: null });
+      // The agent cannot read which lane the conversation runs on: the way
+      // on is a new conversation that carries this one, which the message
+      // given back starts when it is sent again.
+      if (
+        code === "agent_gateway_conversation_lane_unreadable" &&
+        request.carries_from === undefined
+      )
+        change({
+          conversationId: null,
+          carryFrom: request.conversation_id,
+          pending: null,
+        });
+      // A source the agent cannot carry is not offered again: the message
+      // sent again starts the new conversation without it.
+      if (
+        code.startsWith("agent_gateway_carry_source_") &&
+        code !== "agent_gateway_carry_source_not_settled"
+      )
+        change({ carryFrom: null });
+      giveBack(request.text, code, failureFit(error));
     }
   };
+  // The person confirmed the change of model: the same message goes again,
+  // acknowledged for this one run only.
+  const confirmChange = () => {
+    const ask = changeAsk;
+    if (!ask || !session) return;
+    currentSend.current = ask.submission.id;
+    setView((view) => ({
+      ...view,
+      changeAsk: null,
+      sending: true,
+      sendFailure: null,
+      pending: ask.submission,
+      draft: { key: view.draft.key + 1, text: "" },
+    }));
+    void deliver(
+      { ...ask.request, acknowledge_selection_change: true },
+      ask.submission,
+    );
+  };
+  // The person kept the conversation's model: the message stays in the
+  // composer, unsent.
+  const withdrawChange = () => change({ changeAsk: null });
   // Pressing Send is the person's decision: the message goes, and nothing
   // asks them again.
   const submit = async (
@@ -137,6 +210,7 @@ export function agentSending({
   ) => {
     if (!session || catalog.kind !== "ready") return;
     pendingPrompt.current = null;
+    change({ changeAsk: null });
     const runs = selectionRecord(catalog.value, chosen);
     if (!runs) {
       giveBack(text, "agent_selection_unavailable");
@@ -182,6 +256,9 @@ export function agentSending({
       await live.watch(id);
       if (!current()) return;
       request = { conversation_id: id, text, selection: runs };
+      // The carry goes with the new conversation's first message, also when
+      // that message is sent again after a refusal.
+      if (carryFrom !== null) request.carries_from = carryFrom;
       if (references.skills.length > 0) request.skills = references.skills;
       const named = namedFor(id);
       if (named.length > 0) request.attachments = documentRefs(named);
@@ -293,5 +370,14 @@ export function agentSending({
             );
         }
       : undefined;
-  return { questionnaire, answering, answer, decide, send, stop };
+  return {
+    questionnaire,
+    answering,
+    answer,
+    decide,
+    send,
+    stop,
+    confirmChange,
+    withdrawChange,
+  };
 }

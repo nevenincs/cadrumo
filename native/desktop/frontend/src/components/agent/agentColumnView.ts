@@ -1,5 +1,6 @@
-import type { ContextFit } from "../../errors";
-import type { AgentSession } from "../../shell/agentSession";
+import type { ContextFit, SelectionChangeFacts } from "../../errors";
+import type { ConversationCarry } from "../../shell/agentGatewayContract";
+import type { AgentSendRequest, AgentSession } from "../../shell/agentSession";
 import type { AgentSelection } from "./types";
 import type { AgentDocumentReference } from "../../shell/agentSnapshotContract";
 
@@ -25,6 +26,19 @@ export type AgentColumnView = {
   archived: boolean;
   conversationId: string | null;
   chosen: AgentSelection | null;
+  // While no conversation is open: the conversation the next first message
+  // continues from on another lane, its newest turns carried into the new one.
+  carryFrom: string | null;
+  // What the last carried message took over, for the conversation it began.
+  carried: { conversationId: string; carry: ConversationCarry } | null;
+  // A message the agent held back because it changes the conversation's
+  // model, with what the change gives the new model, until the person
+  // confirms or withdraws it.
+  changeAsk: {
+    request: AgentSendRequest;
+    submission: PendingSend;
+    facts: SelectionChangeFacts;
+  } | null;
   sending: boolean;
   interactionId: string | null;
   pending: PendingSend | null;

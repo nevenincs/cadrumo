@@ -46,7 +46,19 @@ desktop:
     can_write: escribir archivos
     cancel: Cancelar
     capabilities: 'Puede: {list}'
+    carried_turns: Esta conversación empezó con {carried} turnos de la anterior; se
+      omitieron {omitted} turnos más antiguos.
+    carry_back: Vuelve a esa conversación
+    carry_pending: Tu próximo mensaje empieza una conversación nueva que lleva los
+      turnos más recientes de «{title}».
+    carry_pending_untitled: Tu próximo mensaje empieza una conversación nueva que
+      lleva los turnos más recientes de la anterior.
+    carry_source_not_settled: La respuesta de la conversación anterior aún no ha terminado.
+      Espera a que termine y vuelve a enviar.
+    carry_source_unavailable: No se puede llevar la conversación anterior. Vuelve
+      a enviar para empezar la nueva conversación sin ella.
     catalog_unavailable: No se ha podido leer la lista de proveedores del agente.
+    choose_another_model: Elige otro modelo
     choose_model: Elige un modelo
     choose_provider: Elige un proveedor
     close_documents: Cerrar los documentos
@@ -55,6 +67,10 @@ desktop:
     condition_invalid_request: El proveedor rechazó la petición
     condition_model_does_not_fit: El modelo no cabe en lo que este ordenador puede
       darle. Elige un modelo más pequeño u otro proveedor.
+    condition_model_unavailable: Este modelo no está disponible en este proveedor.
+      Elige otro modelo de la lista.
+    condition_model_unavailable_named: '{model} no está disponible en {provider} ({connection}).
+      Elige otro modelo de la lista.'
     condition_network_unreachable: No se puede contactar con el proveedor
     condition_no_answer: El modelo no dio una respuesta utilizable para este documento.
       Prueba con otro modelo (instruct) o inténtalo de nuevo.
@@ -80,6 +96,7 @@ desktop:
       documento que lea este modelo.
     consent_recall: Lo que ya se ha enviado no se puede recuperar.
     consent_title: ¿Enviar esto a {provider}?
+    continue_in_new_conversation: Continúa en una conversación nueva
     conversation_deleting: Esta conversación se está eliminando, así que no admite
       archivos.
     conversation_id_taken: Esta conversación no puede guardar archivos. Empieza una
@@ -121,6 +138,8 @@ desktop:
     history: Historial
     history_empty: Todavía no hay conversaciones
     history_no_match: Ninguna conversación coincide con «{query}».
+    lane_fixed_refused: Esta conversación sigue con el proveedor con el que empezó.
+      Para usar otro, elígelo y continúa en una conversación nueva.
     lane_no_catalog: No se han podido cargar los modelos. Vuelve a intentarlo.
     lane_no_installed_model: Todavía no hay ningún modelo descargado. Descarga uno
       en los ajustes.
@@ -130,6 +149,9 @@ desktop:
     lane_notice: Las conversaciones de esta versión no están cifradas.
     lane_signed_out: Inicia sesión en este proveedor desde los ajustes.
     lane_unreachable: No se puede conectar. Revisa este proveedor en los ajustes.
+    lane_unreadable_refused: No se puede leer el proveedor con el que funcionó esta
+      conversación. Vuelve a enviar tu mensaje para continuar en una conversación
+      nueva que lleve esta.
     members_multiple: '{count} archivos'
     members_single: 1 archivo
     mention_empty: Ningún documento guardado coincide
@@ -152,6 +174,8 @@ desktop:
     model_not_installed: '{name} (sin descargar)'
     model_not_installed_refused: El modelo elegido no está en este equipo. Descárgalo
       o elige otro modelo.
+    model_not_offered_refused: Tu cuenta no ofrece este modelo. Elige otro de la lista.
+    model_with_effort: '{model} ({effort})'
     model_written: Este proveedor no lista sus modelos. Escribe el nombre del modelo
       tal como lo escribe el proveedor.
     models_to_download: Algunos modelos aún no están en este equipo. Descárgalos en
@@ -212,6 +236,13 @@ desktop:
     row_documents: 'Documentos: {count}'
     search_history: Buscar conversaciones
     search_placeholder: Buscar
+    selection_change_asked: Este mensaje cambia el modelo de {previous} a {requested}.
+    selection_change_confirm: Cambia y envía
+    selection_change_history: El modelo nuevo recibe {retained} mensajes de esta conversación
+      (unos {tokens} tokens); se omiten {omitted} mensajes anteriores.
+    selection_change_keep: Mantén el modelo
+    selection_change_refused: Cambiar el modelo necesita tu confirmación. Vuelve a
+      enviar el mensaje.
     send: Enviar
     send_nothing: Escribe un mensaje o añade un archivo primero
     send_too_long: Este mensaje tiene {count} caracteres; el máximo es {max}

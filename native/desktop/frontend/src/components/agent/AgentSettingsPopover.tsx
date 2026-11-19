@@ -30,6 +30,7 @@ export function AgentSettingsPopover({
   models,
   selection,
   onChange,
+  fixedWayId,
   children,
   openRequests = 0,
   onClosed,
@@ -40,6 +41,9 @@ export function AgentSettingsPopover({
   models: Readonly<Record<string, readonly ModelOption[]>>;
   selection: AgentSelection;
   onChange: (selection: AgentSelection) => void;
+  /** The lane the conversation is fixed to, by way id: every other lane is
+   * offered as a new conversation. */
+  fixedWayId?: string;
   /** The one element that opens the popover. */
   children: ReactElement;
   /** Counts the asks from elsewhere to open the popover that no close has
@@ -135,6 +139,7 @@ export function AgentSettingsPopover({
             id={providerId}
             providers={providers}
             value={selection.wayId}
+            fixedWayId={fixedWayId}
             onChange={chooseEntry}
           />
           {/* What the lane has been proven to do on this computer. */}

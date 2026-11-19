@@ -214,11 +214,13 @@ const AgentTurn = memo(function AgentTurn({
   message,
   onRetry,
   onOpenProviderSettings,
+  onChooseModel,
   onOpenLink,
 }: {
   message: Extract<TranscriptMessage, { kind: "agent" }>;
   onRetry?: (id: string) => void;
   onOpenProviderSettings?: () => void;
+  onChooseModel?: () => void;
   onOpenLink?: OpenLink;
 }) {
   const t = useStrings();
@@ -289,6 +291,16 @@ const AgentTurn = memo(function AgentTurn({
                   onAction={onOpenProviderSettings}
                 >
                   {t("desktop.agent.settings")}
+                </AgentTextAction>
+              )
+            ) : message.failureAction === "choose_model" ? (
+              onChooseModel && (
+                <AgentTextAction
+                  variant="outline"
+                  size="xs"
+                  onAction={onChooseModel}
+                >
+                  {t("desktop.agent.choose_another_model")}
                 </AgentTextAction>
               )
             ) : (
@@ -378,6 +390,7 @@ export function Transcript({
   emptyHint,
   onRetry,
   onOpenProviderSettings,
+  onChooseModel,
   onOpenLink,
   followNewest = true,
 }: {
@@ -389,6 +402,8 @@ export function Transcript({
   onRetry?: (id: string) => void;
   /** Open the provider settings for a reply that needs sign-in. */
   onOpenProviderSettings?: () => void;
+  /** Open the model picker for a reply whose model the lane cannot run. */
+  onChooseModel?: () => void;
   /** Open an address a reply links to, outside the window. */
   onOpenLink?: OpenLink;
   /** Keep the newest turn in view as the conversation grows. */
@@ -397,13 +412,24 @@ export function Transcript({
   const t = useStrings();
   // Event handlers always use the current caller without invalidating every
   // completed row when the parent publishes another text chunk.
-  const actions = useRef({ onRetry, onOpenProviderSettings, onOpenLink });
-  actions.current = { onRetry, onOpenProviderSettings, onOpenLink };
+  const actions = useRef({
+    onRetry,
+    onOpenProviderSettings,
+    onChooseModel,
+    onOpenLink,
+  });
+  actions.current = {
+    onRetry,
+    onOpenProviderSettings,
+    onChooseModel,
+    onOpenLink,
+  };
   const retry = useCallback((id: string) => actions.current.onRetry?.(id), []);
   const settings = useCallback(
     () => actions.current.onOpenProviderSettings?.(),
     [],
   );
+  const chooseModel = useCallback(() => actions.current.onChooseModel?.(), []);
   const openLink = useCallback(
     (url: string) => actions.current.onOpenLink?.(url),
     [],
@@ -474,6 +500,7 @@ export function Transcript({
                   onOpenProviderSettings={
                     onOpenProviderSettings ? settings : undefined
                   }
+                  onChooseModel={onChooseModel ? chooseModel : undefined}
                   onOpenLink={onOpenLink ? openLink : undefined}
                 />
               ) : (

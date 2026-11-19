@@ -64,6 +64,21 @@ export function refusalWords(
       return t("desktop.agent.model_not_installed_refused");
     case "agent_gateway_model_does_not_fit":
       return fitWords(t, fit);
+    case "agent_gateway_model_not_offered":
+      return t("desktop.agent.model_not_offered_refused");
+    case "agent_gateway_conversation_lane_fixed":
+      return t("desktop.agent.lane_fixed_refused");
+    case "agent_gateway_conversation_lane_unreadable":
+      return t("desktop.agent.lane_unreadable_refused");
+    case "agent_gateway_selection_change_unacknowledged":
+      return t("desktop.agent.selection_change_refused");
+    case "agent_gateway_carry_source_not_settled":
+      return t("desktop.agent.carry_source_not_settled");
+    case "agent_gateway_carry_source_deleting":
+    case "agent_gateway_carry_source_not_found":
+    case "agent_gateway_carry_source_other_workspace":
+    case "agent_gateway_carry_source_unreadable":
+      return t("desktop.agent.carry_source_unavailable");
     default:
       return t("desktop.agent.request_failed");
   }

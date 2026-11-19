@@ -52,6 +52,7 @@ export function ProviderSelect({
   id,
   providers,
   value,
+  fixedWayId,
   onChange,
 }: {
   /** Ties the control to its label. */
@@ -59,6 +60,9 @@ export function ProviderSelect({
   providers: readonly ProviderOption[];
   /** The lane chosen, by `ProviderWay.id`. */
   value: string;
+  /** The lane the conversation is fixed to, by `ProviderWay.id`: each other
+   * lane says that choosing it continues in a new conversation. */
+  fixedWayId?: string;
   onChange: (wayId: string) => void;
 }) {
   const t = useStrings();
@@ -142,10 +146,12 @@ export function ProviderSelect({
                 <CommandGroup>
                   {group.map(({ provider, way }) => {
                     const connection = connectionWords(t, way);
-                    const reason = way.selectable
-                      ? null
-                      : (way.unavailableReason ??
-                        t("desktop.agent.unavailable"));
+                    const reason = !way.selectable
+                      ? (way.unavailableReason ??
+                        t("desktop.agent.unavailable"))
+                      : fixedWayId !== undefined && way.id !== fixedWayId
+                        ? t("desktop.agent.continue_in_new_conversation")
+                        : null;
                     return (
                       <CommandItem
                         key={way.id}

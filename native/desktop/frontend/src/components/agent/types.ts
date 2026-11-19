@@ -175,8 +175,9 @@ export type TranscriptMessage =
       state: AgentReplyState;
       /** Why the reply failed, when `state` is `failed`. */
       failureReason?: string;
-      /** An action the host can offer for this failure. */
-      failureAction?: "provider_settings";
+      /** An action the host can offer for this failure: the provider
+       * settings, or the model picker for a model the lane cannot run. */
+      failureAction?: "provider_settings" | "choose_model";
       /** While `state` is `working`: the reply is held until the person
        * answers questions or decides an approval, so it says it is waiting
        * for them rather than working. */

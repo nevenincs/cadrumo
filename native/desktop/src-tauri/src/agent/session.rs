@@ -107,6 +107,14 @@ pub struct SendRequest {
     /// answers.
     #[serde(default)]
     pub skills: Vec<String>,
+    /// Accepts the model change the agent refused to make unasked, for this
+    /// one run of a continued conversation.
+    #[serde(default)]
+    pub acknowledge_selection_change: bool,
+    /// The conversation, by its first run's id, a new conversation starts from
+    /// the history of.
+    #[serde(default)]
+    pub carries_from: Option<String>,
 }
 
 /// The most skills one message may load.
@@ -362,12 +370,18 @@ pub fn admit_send(request: &SendRequest) -> Result<(), Refused> {
             return Err(invalid());
         }
     }
-    if selection.effort.as_deref().is_some_and(|effort| {
-        !matches!(
-            effort,
-            "low" | "medium" | "high" | "xhigh" | "max" | "ultra"
-        )
-    }) {
+    if selection
+        .effort
+        .as_deref()
+        .is_some_and(|effort| !gateway::effort(effort))
+    {
+        return Err(invalid());
+    }
+    if let Some(source) = &request.carries_from
+        && (!gateway::run_id(source)
+            || *source == request.conversation_id
+            || request.acknowledge_selection_change)
+    {
         return Err(invalid());
     }
     let mut named = HashSet::new();
@@ -395,13 +409,16 @@ pub fn admit_send(request: &SendRequest) -> Result<(), Refused> {
 /// The run start a send makes: its run, its message, its agent in the
 /// profile's workspace, the predecessor it continues, and for a
 /// conversation's first run the title the person gave it, else one from the
-/// message's first line.
+/// message's first line. A continued run carries the person's acknowledgement
+/// of a model change; a first run may carry the settled run whose history it
+/// starts from.
 pub fn start_body(
     run_id: &str,
     request: &SendRequest,
     workspace_root: &str,
     continues: Option<&str>,
     named: Option<&str>,
+    carries_from_run_id: Option<&str>,
 ) -> Value {
     let selection = &request.selection;
     let mut agent = json!({
@@ -425,8 +442,16 @@ pub fn start_body(
         body["skills"] = json!(request.skills);
     }
     match continues {
-        Some(predecessor) => body["continues_run_id"] = json!(predecessor),
+        Some(predecessor) => {
+            body["continues_run_id"] = json!(predecessor);
+            if request.acknowledge_selection_change {
+                body["acknowledge_selection_change"] = json!(true);
+            }
+        }
         None => {
+            if let Some(source) = carries_from_run_id {
+                body["carries_from_run_id"] = json!(source);
+            }
             let title: String = named
                 .or_else(|| {
                     request
@@ -445,6 +470,48 @@ pub fn start_body(
         }
     }
     body
+}
+
+/// What the agent says of the history a new conversation carried over, as the
+/// column reads it, or `None` where it states none or states it malformed.
+pub fn carry_facts(started: &Value) -> Option<Value> {
+    let carry = started.get("carry")?.as_object()?;
+    let source = carry.get("source_run_id")?.as_str()?;
+    let lane = match carry.get("source_lane")? {
+        Value::Null => Value::Null,
+        Value::String(lane)
+            if (1..=64).contains(&lane.chars().count()) && !lane.chars().any(char::is_control) =>
+        {
+            json!(lane)
+        }
+        _ => return None,
+    };
+    let limit = match carry.get("limit")? {
+        Value::Null => Value::Null,
+        Value::String(limit) if matches!(limit.as_str(), "receipts" | "cut") => json!(limit),
+        _ => return None,
+    };
+    let count = |name: &str| carry.get(name)?.as_u64();
+    gateway::run_id(source).then_some(())?;
+    Some(json!({
+        "source_run_id": source,
+        "source_lane": lane,
+        "carried_turns": count("carried_turns")?,
+        "omitted_turns": count("omitted_turns")?,
+        "carried_tokens": count("carried_tokens")?,
+        "omitted_tokens": count("omitted_tokens")?,
+        "limit": limit,
+    }))
+}
+
+/// The answer to a send: the reply it started, and the carry where the agent
+/// states a well-formed one.
+pub fn send_answer(run_id: &str, started: &Value) -> Value {
+    let mut answer = json!({ "reply_id": run_id });
+    if let Some(carry) = carry_facts(started) {
+        answer["carry"] = carry;
+    }
+    answer
 }
 
 /// A title the person gave a conversation: one line of 1 to `TITLE_LIMIT`
@@ -1200,14 +1267,38 @@ impl Session {
         }
         let client = Client::new(&gateway);
         let chain = self.chain(&client, &request.conversation_id)?;
+        let settled = |run: &Run| -> Result<(), Refused> {
+            let status = client.run_status(&run.id)?;
+            let current = text(&status, "status").unwrap_or(&run.status);
+            if SETTLED.contains(&current) {
+                Ok(())
+            } else {
+                Err(refused("agent_reply_in_progress"))
+            }
+        };
+        let mut carry_source = None;
         let (run_id, continues) = match chain.last() {
-            None => (request.conversation_id.clone(), None),
-            Some(last) => {
-                let status = client.run_status(&last.id)?;
-                let current = text(&status, "status").unwrap_or(&last.status);
-                if !SETTLED.contains(&current) {
-                    return Err(refused("agent_reply_in_progress"));
+            None => {
+                if request.acknowledge_selection_change {
+                    return Err(refused("agent_invalid_request"));
                 }
+                if let Some(source) = &request.carries_from {
+                    let last = match self.chain(&client, source) {
+                        Ok(source_chain) => source_chain.into_iter().next_back(),
+                        Err(error) if error.code == "agent_conversation_unknown" => None,
+                        Err(error) => return Err(error),
+                    }
+                    .ok_or_else(|| refused("agent_gateway_carry_source_not_found"))?;
+                    settled(&last)?;
+                    carry_source = Some(last.id);
+                }
+                (request.conversation_id.clone(), None)
+            }
+            Some(last) => {
+                if request.carries_from.is_some() {
+                    return Err(refused("agent_invalid_request"));
+                }
+                settled(last)?;
                 (mint_run_id()?, Some(last.id.clone()))
             }
         };
@@ -1221,6 +1312,7 @@ impl Session {
             &gateway.workspace_root,
             continues.as_deref(),
             named.as_deref(),
+            carry_source.as_deref(),
         ))?;
         if text(&started, "run_id") != Some(run_id.as_str()) {
             return Err(refused("agent_gateway_unreadable"));
@@ -1238,7 +1330,7 @@ impl Session {
                 .pumps
                 .push(pump_run(&gateway, &run_id, watch.channel.clone()));
         }
-        Ok(json!({ "reply_id": run_id }))
+        Ok(send_answer(&run_id, &started))
     }
 
     pub fn pending(&self, supervisor: &Supervisor, conversation: &str) -> Result<Value, Refused> {
@@ -1552,7 +1644,14 @@ mod tests {
 
     #[test]
     fn a_send_starts_its_run_as_the_gateway_takes_one() {
-        let first = start_body("r00ff", &send(request()), r"C:\agent\ws\main", None, None);
+        let first = start_body(
+            "r00ff",
+            &send(request()),
+            r"C:\agent\ws\main",
+            None,
+            None,
+            None,
+        );
         assert_eq!(
             first,
             json!({
@@ -1571,6 +1670,7 @@ mod tests {
             r"C:\ws",
             Some("r00ff"),
             Some("Renta"),
+            None,
         );
         assert_eq!(next["continues_run_id"], "r00ff");
         assert!(next.get("title").is_none());
@@ -1585,8 +1685,142 @@ mod tests {
             r"C:\ws",
             None,
             Some("Renta 2025"),
+            None,
         );
         assert_eq!(first["title"], "Renta 2025");
+    }
+
+    #[test]
+    fn an_acknowledgement_rides_only_a_continued_run_and_a_carry_only_a_first_one() {
+        let mut acknowledged = request();
+        acknowledged["acknowledge_selection_change"] = json!(true);
+        assert!(admit_send(&send(acknowledged.clone())).is_ok());
+        let continued = start_body(
+            "r0100",
+            &send(acknowledged.clone()),
+            r"C:\ws",
+            Some("r00ff"),
+            None,
+            None,
+        );
+        assert_eq!(continued["acknowledge_selection_change"], true);
+        assert!(continued.get("carries_from_run_id").is_none());
+        // Never sent unasked, and never on a first run.
+        let unasked = start_body(
+            "r0100",
+            &send(request()),
+            r"C:\ws",
+            Some("r00ff"),
+            None,
+            None,
+        );
+        assert!(unasked.get("acknowledge_selection_change").is_none());
+        let first = start_body("r00ff", &send(acknowledged), r"C:\ws", None, None, None);
+        assert!(first.get("acknowledge_selection_change").is_none());
+
+        let mut carrying = request();
+        carrying["carries_from"] = json!("r0abc");
+        assert!(admit_send(&send(carrying.clone())).is_ok());
+        let carried = start_body(
+            "r00ff",
+            &send(carrying.clone()),
+            r"C:\ws",
+            None,
+            None,
+            Some("r0abd"),
+        );
+        assert_eq!(carried["carries_from_run_id"], "r0abd");
+        assert_eq!(carried["title"], "¿Cuánto IVA declaré?");
+        assert!(carried.get("continues_run_id").is_none());
+        let continuing = start_body(
+            "r0100",
+            &send(carrying),
+            r"C:\ws",
+            Some("r00ff"),
+            None,
+            Some("r0abd"),
+        );
+        assert!(continuing.get("carries_from_run_id").is_none());
+        assert!(
+            start_body("r00ff", &send(request()), r"C:\ws", None, None, None)
+                .get("carries_from_run_id")
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn a_carry_source_must_be_another_conversation_and_exclude_an_acknowledgement() {
+        for source in [json!("../x"), json!(""), json!("r00ff"), json!("a b")] {
+            let mut bad = request();
+            bad["carries_from"] = source.clone();
+            assert_eq!(
+                admit_send(&send(bad)).unwrap_err().code,
+                "agent_invalid_request",
+                "{source}"
+            );
+        }
+        let mut both = request();
+        both["carries_from"] = json!("r0abc");
+        both["acknowledge_selection_change"] = json!(true);
+        assert_eq!(
+            admit_send(&send(both)).unwrap_err().code,
+            "agent_invalid_request"
+        );
+    }
+
+    #[test]
+    fn a_send_answer_carries_the_agents_carry_only_when_well_typed() {
+        let carry = json!({
+            "source_run_id": "r0abc", "source_lane": "claude", "carried_turns": 4,
+            "omitted_turns": 1, "carried_tokens": 9000, "omitted_tokens": 1200, "limit": "cut"
+        });
+        let started = json!({"run_id": "r00ff", "carry": carry});
+        assert_eq!(
+            send_answer("r00ff", &started),
+            json!({"reply_id": "r00ff", "carry": carry})
+        );
+        let mut open = carry.clone();
+        open["source_lane"] = Value::Null;
+        open["limit"] = Value::Null;
+        assert_eq!(send_answer("r00ff", &json!({"carry": open}))["carry"], open);
+        // Facts the agent did not state are not made up from its extra fields.
+        let mut extra = carry.clone();
+        extra["prose"] = json!("private words");
+        assert_eq!(
+            send_answer("r00ff", &json!({"carry": extra}))["carry"],
+            carry
+        );
+        let mut malformed = vec![json!(null), json!("carry"), json!({})];
+        for (field, value) in [
+            ("source_run_id", json!("../x")),
+            ("source_run_id", json!(7)),
+            ("source_lane", json!("")),
+            ("source_lane", json!("x".repeat(65))),
+            ("source_lane", json!(3)),
+            ("carried_turns", json!(-1)),
+            ("omitted_turns", json!(1.5)),
+            ("carried_tokens", json!("9000")),
+            ("omitted_tokens", Value::Null),
+            ("limit", json!("everything")),
+        ] {
+            let mut bad = carry.clone();
+            bad[field] = value;
+            malformed.push(bad);
+        }
+        let mut missing = carry.clone();
+        missing.as_object_mut().unwrap().remove("limit");
+        malformed.push(missing);
+        for bad in malformed {
+            assert_eq!(
+                send_answer("r00ff", &json!({"carry": bad})),
+                json!({"reply_id": "r00ff"}),
+                "{bad}"
+            );
+        }
+        assert_eq!(
+            send_answer("r00ff", &json!({"run_id": "r00ff"})),
+            json!({"reply_id": "r00ff"})
+        );
     }
 
     const SHA: &str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
@@ -1596,14 +1830,14 @@ mod tests {
         let mut named = request();
         named["attachments"] = json!([{"name": "factura.pdf", "sha256": SHA}]);
         assert!(admit_send(&send(named.clone())).is_ok());
-        let body = start_body("r00ff", &send(named), r"C:\ws", None, None);
+        let body = start_body("r00ff", &send(named), r"C:\ws", None, None, None);
         assert_eq!(
             body["attachments"],
             json!([{"name": "factura.pdf", "sha256": SHA}])
         );
         // A message naming none sends no field at all.
         assert!(
-            start_body("r00ff", &send(request()), r"C:\ws", None, None)
+            start_body("r00ff", &send(request()), r"C:\ws", None, None, None)
                 .get("attachments")
                 .is_none()
         );
@@ -1638,10 +1872,10 @@ mod tests {
         let mut named = request();
         named["skills"] = json!(["cadrumo-iva-303", "cadrumo-0"]);
         assert!(admit_send(&send(named.clone())).is_ok());
-        let body = start_body("r00ff", &send(named), r"C:\ws", Some("r0"), None);
+        let body = start_body("r00ff", &send(named), r"C:\ws", Some("r0"), None, None);
         assert_eq!(body["skills"], json!(["cadrumo-iva-303", "cadrumo-0"]));
         assert!(
-            start_body("r00ff", &send(request()), r"C:\ws", None, None)
+            start_body("r00ff", &send(request()), r"C:\ws", None, None, None)
                 .get("skills")
                 .is_none()
         );
