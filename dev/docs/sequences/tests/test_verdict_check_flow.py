@@ -148,6 +148,24 @@ def test_a_second_run_reuses_every_sequence_and_executes_none(case: _Case) -> No
     assert all("reused clean verdict" in line for line in second_report)
 
 
+def test_an_unobserved_run_re_executes_every_sequence_after_a_product_edit_between_runs(case: _Case) -> None:
+    """Without an installed observer each record holds the whole product source, so any product edit ends reuse."""
+    case.run([])
+    write(case.repo / "src/cadrumo_client/transport.py", "# edited between the runs\n")
+
+    report: list[str] = []
+    with _counting_executions() as calls:
+        assert case.run(report)[0] == ()
+    assert len(calls) == 2
+    assert report == []
+
+    again: list[str] = []
+    with _counting_executions() as calls:
+        assert case.run(again)[0] == ()
+    assert calls == [], "the records written for the edited product are served"
+    assert all("whole product source unchanged" in line for line in again)
+
+
 def test_execute_all_runs_every_sequence_and_still_records(case: _Case) -> None:
     case.run([])
     report: list[str] = []

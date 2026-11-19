@@ -47,9 +47,6 @@ def _changed(before: dict[tuple[str, str], str], after: dict[tuple[str, str], st
 @pytest.mark.parametrize(
     "relative",
     [
-        "src/cadrumo/cli.py",
-        "src/cadrumo_client/transport.py",
-        "src/cadrumo_runtime/host.py",
         "dev/docs/sequences/runner.py",
         "dev/docs/build.py",
         "dev/helper.py",
@@ -65,6 +62,27 @@ def test_a_shared_input_changes_the_key_of_every_sequence(tree: SyntheticTree, r
     path = tree.repo / relative
     write(path, path.read_text(encoding="utf-8") + "# edited\n")
     assert _unchanged(before, tree.keys()) == []
+
+
+@pytest.mark.parametrize(
+    "relative", ["src/cadrumo/cli.py", "src/cadrumo_client/transport.py", "src/cadrumo_runtime/host.py"]
+)
+def test_a_product_source_edit_leaves_every_key_unchanged_but_ends_whole_closure_reuse(
+    tree: SyntheticTree, cache: Path, relative: str
+) -> None:
+    """Product source is no part of a key; an unobserved record is reusable only while all of it is unchanged."""
+    verdicts = tree.verdicts()
+    item = tree.discovered()[_ONE]
+    key = verdicts.key(item)
+    verdicts.record_clean(item, key=key)
+    assert tree.verdicts().reused(item) is not None
+    before = tree.keys()
+
+    path = tree.repo / relative
+    write(path, path.read_text(encoding="utf-8") + "# edited\n")
+
+    assert tree.keys() == before
+    assert tree.verdicts().reused(item) is None
 
 
 def test_a_new_shared_file_changes_every_key(tree: SyntheticTree) -> None:

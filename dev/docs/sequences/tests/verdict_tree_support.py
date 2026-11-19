@@ -8,10 +8,12 @@ sequences with their private contracts and committed goldens.
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
 from ..checks import DiscoveredSequence, discover_sequences
+from ..dependency_observation import Observation
 from ..verdict_cache import SequenceVerdicts
 
 PROFILE_PREREQUISITE = "Create a profile first with `aeat config profile create`.\n"
@@ -78,6 +80,13 @@ class SyntheticTree:
         found, problems = discover_sequences(docs_root=self.docs)
         assert problems == (), problems
         return {(item.page, item.sequence_id): item for item in found}
+
+    def observe(self, *relatives: str) -> Observation:
+        """Return a complete observation that read ``relatives`` (and so their directories), as a process would."""
+        observation = Observation(self.repo, started_ns=time.time_ns())
+        for relative in relatives:
+            observation.note_file(str(self.repo / relative))
+        return observation
 
     def keys(self, identity: str = "generation-1") -> dict[tuple[str, str], str]:
         """Key every sequence from a freshly constructed authority, as a new process would."""

@@ -32,6 +32,7 @@ from dev.product_environment import ambient_product_settings_removed
 from .authority_currency import require_current_authority
 from .compare import check_transcript, evaluate_expectations, validate_live_export_evidence
 from .contracts import read_sequence_contract
+from .dependency_observation import active_observation, unobserved
 from .errors import SequenceEngineError, SequenceParseError
 from .golden_store import (
     GoldenFrame,
@@ -661,7 +662,10 @@ def check_sequences(
         SequenceEngineError: When a sequence would execute and the registry
             authority the runner reads is not current.
     """
-    discovered, problems = discover_sequences(docs_root=docs_root, page=page, sequence_id=sequence_id)
+    with unobserved():
+        # Discovery reads pages and contracts, which key each sequence on their own;
+        # only what executing a sequence reads belongs to its observed product inputs.
+        discovered, problems = discover_sequences(docs_root=docs_root, page=page, sequence_id=sequence_id)
     if any(item.sequence.executed_frames for item in discovered):
         require_current_authority()
     all_problems = list(problems)
@@ -670,7 +674,10 @@ def check_sequences(
         # fault; a scoped run leaves it to the unscoped gate.
         all_problems.extend(check_seeds())
     advisories: list[str] = []
+    observation = active_observation()
     keyed = None if verdicts is None else verdicts.open(docs_root=docs_root, goldens_root=goldens_root)
+    if keyed is not None and observation is None:
+        keyed.prepare_unobserved_run()
     for item in discovered:
         advisories.extend(unused_capture_advisories(item))
         if not item.sequence.executed_frames:
@@ -695,8 +702,10 @@ def check_sequences(
             continue
         all_problems.extend(sequence_problems)
         if keyed is not None and key is not None and not sequence_problems:
+            if observation is not None:
+                observation.note_imported_modules()
             try:
-                keyed.record_clean(item, key=key)
+                keyed.record_clean(item, key=key, observation=observation)
             except SequenceEngineError as exc:
                 all_problems.append(str(exc))
     return tuple(all_problems), tuple(advisories)

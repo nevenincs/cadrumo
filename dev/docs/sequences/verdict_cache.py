@@ -1,21 +1,28 @@
 """Reuse a clean cli-sequence verdict, sequence by sequence, when nothing it depends on changed.
 
 Each documented sequence executes against the real CLI and compares its
-transcript with its committed golden. Its verdict is a pure function of two
-parts, hashed into one content key per sequence:
+transcript with its committed golden. Its verdict is a pure function of three
+parts:
 
 - the corpus inputs every sequence shares: the interpreter and platform, the
-  published registry authority, the product source (the CLI, its runtime, its
-  client and its registry data), the gate engine and every ``dev`` module it
+  published registry authority, the gate engine and every ``dev`` module it
   imports, the locked dependencies, and the shared seeds and fixtures under
   ``docs/_sequences``;
 - the sequence's own inputs: its page and id, the parsed sequence the runner
   executes (directive options merged with the private contract), the private
-  contract's bytes and the committed golden's bytes.
+  contract's bytes and the committed golden's bytes;
+- the product it reached: every checkout file and directory listing its
+  processes were observed to read (:mod:`dev.docs.sequences.dependency_observation`),
+  each with the digest it had when it was read. When that observation is
+  unavailable or incomplete, the whole product source (the CLI, its runtime,
+  its client and its registry data) stands in for it.
 
-The corpus inputs are enumerated from the filesystem and from the engine's
-static import graph, so any change to a shared input re-executes every
-sequence, and a change to one sequence's own inputs re-executes only it. The
+The first two parts form the record's key, enumerated from the filesystem and
+from the engine's static import graph, so any change to a shared input
+re-executes every sequence and a change to one sequence's own inputs
+re-executes only it. The record holds the third part, and a recorded verdict
+is reused only while every file and listing in it still has its recorded
+digest, so a product edit re-executes exactly the sequences that read it. The
 published authority enters as its logical generation together with the
 registry tooling that compiles it, because two publications of one source
 differ in database bytes.
@@ -35,6 +42,7 @@ import json
 import os
 import platform
 import sys
+import time
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -49,6 +57,7 @@ from dev.paths import REPO_ROOT
 
 from .authority_currency import require_current_authority
 from .contracts import sequence_contract_path
+from .dependency_observation import Observation, file_digest, listing_digest, unobserved
 from .errors import SequenceEngineError
 from .golden_store import golden_path
 from .schema import ParsedSequence
@@ -56,7 +65,9 @@ from .schema import ParsedSequence
 #: Set to bypass reuse and always execute every sequence; passing sequences are still recorded.
 FORCE_ENV: Final[str] = "CADRUMO_DOCS_FORCE_SEQUENCE_CHECK"
 _CACHE_NAME: Final[str] = "docs-sequence-verdicts"
-_RECORD_FORMAT: Final[str] = "cli-sequence-verdict/2"
+_RECORD_FORMAT: Final[str] = "cli-sequence-verdict/3"
+_OBSERVED: Final[str] = "observed"
+_CLOSURE: Final[str] = "closure"
 _PRUNED: Final[tuple[str, ...]] = ("__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache")
 #: The engine's entry points; every ``dev`` module they import, transitively, is a verdict input.
 ENGINE_ROOTS: Final[tuple[str, ...]] = ("dev/docs/sequences", "dev/docs/sequence_build_gate.py", "dev/docs/build.py")
@@ -274,14 +285,26 @@ class SequenceVerdicts:
         self._docs_root = docs_root
         self._goldens_root = goldens_root
         self._contracts_root = contracts_root
+        self._repo_root = repo_root.resolve()
+        self._opened_ns = time.time_ns()
         self._trace = _InputTrace()
+        self._closure: tuple[str, _InputTrace, dict[Path, tuple[int, int] | None], int] | None = None
+        self._current: dict[Path, str] = {}
+        self._current_listings: dict[Path, str] = {}
+        self._unrecorded = tuple(
+            path.resolve() for path in (dev_cache_dir(_CACHE_NAME).parent, *(file.parent for file in authority_files))
+        )
+        with unobserved():
+            self._corpus_key, self._snapshot = self._hash_corpus(authority_identity)
+
+    def _hash_corpus(self, authority_identity: str) -> tuple[str, dict[Path, tuple[int, int] | None]]:
+        repo_root = self._repo_root
+        docs_root = self._docs_root
         digest = hashlib.sha256()
         digest.update(
             f"{_RECORD_FORMAT}\npython:{sys.version}\nplatform:{platform.system()}\n"
             f"authority:{authority_identity}\n".encode()
         )
-        for source_root in PRODUCT_SOURCE_ROOTS:
-            self._trace.hash_tree(digest, repo_root / source_root, label=source_root)
         for relative in engine_import_closure(repo_root):
             self._trace.hash_tree(digest, repo_root / relative, label=f"engine-import/{relative}")
         self._trace.hash_tree(digest, repo_root / "dev" / "docs" / "sequences", label="engine")
@@ -290,8 +313,23 @@ class SequenceVerdicts:
         sequences_root = docs_root / "_sequences"
         shared_skip = (_CONTRACTS_DIRECTORY, *self._golden_page_roots(sequences_root))
         self._trace.hash_tree(digest, sequences_root, label="sequences", skip=shared_skip)
-        self._corpus_key = digest.hexdigest()
-        self._snapshot = self._trace.snapshot()
+        return digest.hexdigest(), self._trace.snapshot()
+
+    def _product_closure(self) -> tuple[str, _InputTrace, dict[Path, tuple[int, int] | None], int]:
+        """Hash the whole product source once, when an unobserved record or reuse first needs it."""
+        if self._closure is None:
+            trace = _InputTrace()
+            digest = hashlib.sha256()
+            hashed_ns = time.time_ns()
+            with unobserved():
+                for source_root in PRODUCT_SOURCE_ROOTS:
+                    trace.hash_tree(digest, self._repo_root / source_root, label=source_root)
+            self._closure = (digest.hexdigest(), trace, trace.snapshot(), hashed_ns)
+        return self._closure
+
+    def prepare_unobserved_run(self) -> None:
+        """Hash the product closure now, before any sequence executes without observation."""
+        self._product_closure()
 
     def _golden_page_roots(self, sequences_root: Path) -> tuple[str, ...]:
         """Name the top-level ``_sequences`` directories that hold committed goldens.
@@ -340,14 +378,46 @@ class SequenceVerdicts:
         """Describe the recorded clean verdict standing in for ``item``, or ``None`` to execute it."""
         if reuse_forced_off():
             return None
-        key = self.key(item)
-        try:
-            document = json.loads(_record_path(key).read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
+        with unobserved():
+            key = self.key(item)
+            try:
+                document = json.loads(_record_path(key).read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                return None
+            if not isinstance(document, dict) or document.get("verdict") != "clean" or document.get("key") != key:
+                return None
+            product = self._product_still_matches(document.get("product"))
+        if product is None:
             return None
-        if not isinstance(document, dict) or document.get("verdict") != "clean" or document.get("key") != key:
+        return f"reused clean verdict {key[:12]} recorded {document.get('recorded_at')} ({product})"
+
+    def _product_still_matches(self, product: object) -> str | None:
+        """Return how the recorded product part still holds, or ``None`` when any of it moved."""
+        if not isinstance(product, dict):
             return None
-        return f"reused clean verdict {key[:12]} recorded {document.get('recorded_at')}"
+        mode = product.get("mode")
+        if mode == _CLOSURE:
+            return "whole product source unchanged" if product.get("digest") == self._product_closure()[0] else None
+        files, listings = product.get("files"), product.get("listings")
+        if mode != _OBSERVED or not isinstance(files, dict) or not isinstance(listings, dict):
+            return None
+        for relative, recorded in files.items():
+            if not isinstance(relative, str) or self._current_file(self._repo_root / relative) != recorded:
+                return None
+        for relative, recorded in listings.items():
+            if not isinstance(relative, str) or self._current_listing(self._repo_root / relative) != recorded:
+                return None
+        return f"{len(files)} observed product files unchanged"
+
+    def _current_file(self, path: Path) -> str:
+        if path not in self._current:
+            self._current[path] = file_digest(path)
+        return self._current[path]
+
+    def _current_listing(self, path: Path) -> str:
+        if path not in self._current_listings:
+            self._current_listings[path] = listing_digest(path)
+        return self._current_listings[path]
 
     def changed_inputs(self) -> tuple[Path, ...]:
         """Return the shared inputs added, removed, or whose size or modification time moved since construction."""
@@ -355,22 +425,29 @@ class SequenceVerdicts:
         moved.update(self._trace.current_files() ^ self._trace.files)
         return tuple(sorted(moved))
 
-    def record_clean(self, item: KeyedSequence, *, key: str) -> None:
+    def record_clean(self, item: KeyedSequence, *, key: str, observation: Observation | None = None) -> None:
         """Record that ``item`` passed under ``key``, the key taken before it executed.
 
-        A failure to write costs only a future re-run.
+        With a complete ``observation`` the record holds every checkout file and
+        listing the sequence's processes read, at the digest they had when read.
+        Otherwise it holds the whole product source's digest. A failure to write
+        costs only a future re-run.
 
         Raises:
             SequenceEngineError: When any input changed while the sequence ran;
                 nothing is recorded.
         """
-        changed = self.changed_inputs()
-        if changed or self.key(item) != key:
-            detail = ", ".join(str(path) for path in changed[:5]) or "the sequence's own contract or golden"
-            raise SequenceEngineError(
-                f"cli-sequence inputs changed during execution ({detail}); "
-                f"no verdict was recorded for {item.page}/{item.sequence_id}"
-            )
+        with unobserved():
+            changed = list(self.changed_inputs())
+            if self.key(item) != key:
+                changed.append(Path(f"{item.page}/{item.sequence_id}"))
+            product = None if changed else self._recorded_product(observation, changed)
+            if changed or product is None:
+                detail = ", ".join(str(path) for path in changed[:5])
+                raise SequenceEngineError(
+                    f"cli-sequence inputs changed during execution ({detail}); "
+                    f"no verdict was recorded for {item.page}/{item.sequence_id}"
+                )
         record = _record_path(key)
         document = {
             "format": _RECORD_FORMAT,
@@ -379,6 +456,7 @@ class SequenceVerdicts:
             "page": item.page,
             "sequence_id": item.sequence_id,
             "recorded_at": datetime.now(UTC).isoformat(),
+            "product": product,
         }
         staged = record.with_name(f"{record.name}.{os.getpid()}.tmp")
         try:
@@ -388,13 +466,42 @@ class SequenceVerdicts:
         except OSError:
             staged.unlink(missing_ok=True)
 
+    def _recorded_product(self, observation: Observation | None, changed: list[Path]) -> dict[str, object] | None:
+        """Return the product part to record, appending to ``changed`` any product file that moved."""
+        if observation is not None and not observation.incomplete:
+            files = self._recordable(observation.files)
+            listings = self._recordable(observation.listings)
+            return {"mode": _OBSERVED, "files": files, "listings": listings}
+        digest, trace, snapshot, hashed_ns = self._product_closure()
+        changed.extend(path for path, before in snapshot.items() if _stat(path) != before)
+        changed.extend(trace.current_files() ^ trace.files)
+        started_ns = self._opened_ns if observation is None else observation.started_ns
+        if hashed_ns > started_ns:
+            # Hashed after sequences began executing: a file edited in between
+            # would carry its new digest for a run that read the old bytes.
+            changed.extend(path for path, status in snapshot.items() if status is None or status[1] >= started_ns)
+        return None if changed else {"mode": _CLOSURE, "digest": digest}
+
+    def _recordable(self, observed: dict[Path, str]) -> dict[str, str]:
+        """Keep the observed checkout entries a later run can re-read, keyed repository-relative."""
+        kept: dict[str, str] = {}
+        for path, digest in observed.items():
+            resolved = path.resolve()
+            if not resolved.is_relative_to(self._repo_root) or any(
+                resolved.is_relative_to(excluded) for excluded in self._unrecorded
+            ):
+                continue
+            kept[resolved.relative_to(self._repo_root).as_posix()] = digest
+        return dict(sorted(kept.items()))
+
     def dependency_paths(self, items: Iterable[KeyedSequence]) -> tuple[Path, ...]:
         """Return every file and directory the keys of ``items`` read, for a build-system depfile.
 
         Directories are listed so that a file added to or removed from a hashed
         tree, or a new page, re-runs the check.
         """
-        paths: set[Path] = {*self._trace.files, *self._trace.directories}
+        closure = self._product_closure()[1]
+        paths: set[Path] = {*self._trace.files, *self._trace.directories, *closure.files, *closure.directories}
         paths.update(path for path in self._trace.absent if path.parent.exists())
         paths.update(_page_inputs(self._docs_root))
         for item in items:
