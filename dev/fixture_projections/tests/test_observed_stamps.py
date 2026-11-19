@@ -41,6 +41,11 @@ if "--child-script" in options:
     subprocess.run([sys.executable, "tools/child_script.py"], check=True)
 if "--child-module-without-site" in options:
     subprocess.run([sys.executable, "-S", "-m", "pkg.child"], check=True)
+if "--scratch-child" in options:
+    import tempfile
+
+    with tempfile.TemporaryDirectory(dir="var/tmp") as scratch:
+        subprocess.run([sys.executable, "-S", "-m", "pkg.child"], cwd=scratch, check=True)
 if "--isolated-child" in options:
     subprocess.run([sys.executable, "-I", "-c", "pass"], check=True)
 if "--native-child" in options:
@@ -82,6 +87,7 @@ def _checkout(root: Path) -> Path:
         (root / "src" / "pkg" / f"{name}.py").write_text(text, encoding="utf-8")
     (root / ".gitignore").write_text("__pycache__/\n", encoding="utf-8")
     (root / "out").mkdir()
+    (root / "var" / "tmp").mkdir(parents=True)
     (root / "authority.json").write_text("{}", encoding="utf-8")
     return root
 
@@ -280,3 +286,17 @@ def test_a_file_added_beside_an_imported_module_makes_the_family_stale(tmp_path:
     assert "observed: listing of src/pkg changed" in result.reasons
     assert seed([], force=False, workspace=workspace) == 0
     assert _writes(root) == ["", ""]
+
+
+def test_run_scratch_made_under_the_checkout_and_read_by_a_child_is_not_an_input(tmp_path: Path) -> None:
+    root, workspace = _seeded(tmp_path, "--scratch-child")
+
+    observation = _stamp(workspace)["observation"]
+    assert observation["mode"] == OBSERVED_MODE, observation
+    assert "src/pkg/child.py" in observation["files"]
+    members = [*observation["files"], *observation["listings"]]
+    assert not [member for member in members if member.startswith("var/tmp/")], members
+    assert list((root / "var" / "tmp").iterdir()) == []
+    assert _status(workspace).state is FixtureState.FRESH
+    assert seed([], force=False, workspace=workspace) == 0
+    assert _writes(root) == ["--scratch-child"]

@@ -288,3 +288,99 @@ def test_a_child_that_keeps_the_inherited_environment_leaves_the_harvest_complet
 
     assert observation.incomplete == []
     assert len(list(journals.directory.glob("*.journal"))) >= 2
+
+
+# Directories the run created -------------------------------------------------------------
+
+
+def _journal(directory: Path, name: str, *lines: str) -> None:
+    (directory / f"{name}.journal").write_text("".join(f"{line}\n" for line in ("B\t-\t1", *lines)), encoding="utf-8")
+
+
+@pytest.mark.unit
+def test_reads_under_a_created_directory_are_dropped_and_their_conflicts_are_no_conflict(
+    tmp_path: Path, root: Path
+) -> None:
+    directory = tmp_path / "journals"
+    directory.mkdir()
+    holder = root / "var"
+    holder.mkdir()
+    scratch = holder / "scratch"
+    _journal(
+        directory,
+        "a",
+        f"D\t{'1' * 64}\t{holder}",
+        f"C\t-\t{scratch}",
+        f"F\t{'2' * 64}\t{scratch / 'x.txt'}",
+        f"D\t{'3' * 64}\t{scratch}",
+    )
+    # The reading process's journal sorts before the creating one's, and its digests differ.
+    _journal(
+        directory, "0", f"F\t{'4' * 64}\t{scratch / 'x.txt'}", f"D\t{'5' * 64}\t{scratch}", f"D\t{'6' * 64}\t{holder}"
+    )
+
+    observation = harvest_inherited(InheritedJournals(directory), root)
+
+    assert observation.incomplete == []
+    assert observation.files == {}
+    assert observation.listings == {holder: hashlib.sha256(b"").hexdigest()}
+
+
+@pytest.mark.unit
+def test_a_conflict_outside_a_created_directory_still_makes_the_harvest_incomplete(tmp_path: Path, root: Path) -> None:
+    directory = tmp_path / "journals"
+    directory.mkdir()
+    _journal(directory, "a", f"C\t-\t{root / 'scratch'}", f"F\t{'1' * 64}\t{root / 'data.txt'}")
+    _journal(directory, "b", f"F\t{'2' * 64}\t{root / 'data.txt'}")
+
+    observation = harvest_inherited(InheritedJournals(directory), root)
+
+    assert any("changed between the processes that read it" in reason for reason in observation.incomplete)
+
+
+_SCRATCH_PARENT = """import os, subprocess, sys, tempfile
+from pathlib import Path
+
+holder = Path(sys.argv[1])
+os.listdir(holder)
+child = "import os, sys; from pathlib import Path; os.listdir(sys.argv[1]); Path(sys.argv[1], 'a.txt').read_text()"
+with tempfile.TemporaryDirectory(dir=holder) as scratch:
+    Path(scratch, "a.txt").write_text("first")
+    subprocess.run([sys.executable, "-c", child, scratch], check=True)
+    Path(scratch, "a.txt").write_text("second")
+    Path(scratch, "a.txt").read_text()
+"""
+
+
+@pytest.mark.integration
+def test_scratch_two_processes_read_under_the_checkout_is_no_input_and_leaves_the_harvest_complete(
+    root: Path, journals: InheritedJournals
+) -> None:
+    holder = root / "var" / "storage" / "tmp"
+    holder.mkdir(parents=True)
+
+    _run([sys.executable, "-c", _SCRATCH_PARENT, str(holder)], root, journals.environment(os.environ))
+
+    observation = harvest_inherited(journals, root)
+    assert observation.incomplete == []
+    assert list(holder.iterdir()) == []
+    assert not [
+        path for path in (*observation.files, *observation.listings) if path.is_relative_to(holder) and path != holder
+    ]
+    assert observation.listings[holder] == hashlib.sha256(b"").hexdigest()
+
+
+@pytest.mark.integration
+def test_a_directory_made_with_exist_ok_that_was_already_there_is_not_created(
+    root: Path, journals: InheritedJournals
+) -> None:
+    (root / "pre").mkdir()
+    (root / "pre" / "data.txt").write_bytes(b"already here")
+    program = "from pathlib import Path; Path('pre').mkdir(exist_ok=True); Path('pre/data.txt').read_bytes()"
+
+    _run([sys.executable, "-c", program], root, journals.environment(os.environ))
+
+    observation = harvest_inherited(journals, root)
+    assert observation.incomplete == []
+    assert observation.created == set()
+    assert observation.files[root / "pre" / "data.txt"] == hashlib.sha256(b"already here").hexdigest()

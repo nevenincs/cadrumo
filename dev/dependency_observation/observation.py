@@ -41,6 +41,11 @@ What the hook cannot see is reported, never guessed:
   the same file;
 - a worker journal that never began, or that says it is incomplete.
 
+A directory the run itself creates (``os.mkdir``, so ``tempfile`` scratch as
+well) is not an input: reads under it are dropped, and the listing of the
+directory that holds it is taken again once the run is done, when the scratch
+is normally gone.
+
 Each makes the observation incomplete, and the consumer then keys on the whole
 product source instead.
 """
@@ -58,7 +63,7 @@ import tempfile
 import threading
 import time
 import uuid
-from collections.abc import Callable, Generator, Iterable, Iterator, Mapping
+from collections.abc import Callable, Generator, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -75,6 +80,7 @@ _BEGIN: Final[str] = "B"
 _FILE: Final[str] = "F"
 _LISTING: Final[str] = "D"
 _INCOMPLETE: Final[str] = "X"
+_CREATED: Final[str] = "C"
 _CONSTRUCTOR: Final[str] = "__init__"
 _BYTECODE_DIRECTORY: Final[str] = "__pycache__"
 _ABSENT: Final[str] = "absent"
@@ -230,6 +236,8 @@ class Observation:
         self.files: dict[Path, str] = {}
         self.listings: dict[Path, str] = {}
         self.incomplete: list[str] = []
+        #: Directories the run created; nothing under them was an input.
+        self.created: set[Path] = set()
         #: Script copies whose processes journal themselves; a launch running one is covered.
         self.worker_scripts: set[str] = set()
         #: Where this process's instrumented children journal, while it has such a directory.
@@ -312,6 +320,8 @@ class Observation:
                 self._write(_FILE, digest, path)
             for directory, digest in self.listings.items():
                 self._write(_LISTING, digest, directory)
+            for directory in self.created:
+                self._write(_CREATED, "-", directory)
             for reason in self.incomplete:
                 self._write(_INCOMPLETE, "-", reason)
             journal.flush()
@@ -329,6 +339,8 @@ class Observation:
                 self._write(_FILE, digest, path)
             for directory, digest in self.listings.items():
                 self._write(_LISTING, digest, directory)
+            for directory in self.created:
+                self._write(_CREATED, "-", directory)
             for reason in self.incomplete:
                 self._write(_INCOMPLETE, "-", reason)
 
@@ -563,12 +575,51 @@ class Observation:
                 self.note_listing(os.getcwd())
             elif isinstance(path, (str, bytes, os.PathLike)):
                 self.note_listing(os.fsdecode(path))
+        elif event == "os.mkdir":
+            path = arguments[0]
+            if isinstance(path, (str, bytes, os.PathLike)):
+                self.note_created(os.fsdecode(path))
         elif event == _POPEN_EVENT or event in _NATIVE_LAUNCH_EVENTS or event in _OTHER_SPAWN_EVENTS:
             self._launch(event, arguments)
         elif event == "ctypes.dlsym" and len(arguments) > 1 and isinstance(arguments[1], str):
             self._native_lookup(arguments[1])
         elif event == "ctypes.create_unicode_buffer":
             self._native_command(arguments[0])
+
+    def note_created(self, raw: str) -> None:
+        """Record a directory this run is about to create; what is under it was written by the run, never read.
+
+        The hook runs before the creation, so a path that already exists is not recorded.
+        """
+        canonical = self._canonical(raw)
+        if canonical is None or not self._admitted(canonical) or os.path.lexists(canonical):
+            return
+        with self._lock:
+            if canonical in self.created:
+                return
+            self.created.add(canonical)
+            self._write(_CREATED, "-", canonical)
+
+    def _within_created(self, path: Path) -> bool:
+        return any(path.is_relative_to(directory) for directory in self.created)
+
+    def settle_created(self) -> None:
+        """Drop reads under directories the run created, and key their parents' listings on their state now.
+
+        A run's own scratch is not an input. The directory that holds it lists that scratch only while the run
+        lasts, so its listing is read again once the run's processes are done.
+        """
+        with self._lock, self.suspended():
+            if not self.created:
+                return
+            for path in [path for path in self.files if self._within_created(path)]:
+                del self.files[path]
+            for path in [path for path in self.listings if self._within_created(path)]:
+                del self.listings[path]
+            for directory in self.created:
+                parent = directory.parent
+                if parent in self.listings and not self._within_created(parent):
+                    self.listings[parent] = listing_digest(parent)
 
     def note_imported_modules(self) -> None:
         """Record every imported module's source; one changed since the process started is unobservable."""
@@ -624,16 +675,37 @@ class Observation:
                 self._merge_entry(self.files, Path(location), digest)
             elif kind == _LISTING:
                 self._merge_entry(self.listings, Path(location), digest)
+            elif kind == _CREATED:
+                self.created.add(Path(location))
             elif kind == _INCOMPLETE:
                 self.incomplete.append(f"worker: {location}")
             else:
                 self.incomplete.append(f"worker journal {journal.name} has an unreadable line")
 
     def _merge_entry(self, entries: dict[Path, str], path: Path, digest: str) -> None:
-        """Keep the first digest; two processes that read different bytes make the run unobservable."""
+        """Keep the first digest; two processes that read different bytes make the run unobservable.
+
+        Entries under a directory the run created, and the listing of the directory holding one, are settled by
+        :meth:`settle_created` instead.
+        """
         recorded = entries.setdefault(path, digest)
-        if recorded != digest:
+        if recorded != digest and not self._within_created(path) and not self._holds_created(path):
             self.note_incomplete(f"{path} changed between the processes that read it")
+
+    def _holds_created(self, path: Path) -> bool:
+        return any(directory.parent == path for directory in self.created)
+
+    def _collect_created(self, journals: Sequence[Path]) -> None:
+        """Learn every directory any process of the run created before any journal's reads are merged."""
+        for journal in journals:
+            try:
+                lines = journal.read_text(encoding="utf-8", errors="surrogateescape").splitlines()
+            except OSError:
+                continue  # merge_journal reports it
+            for line in lines[1:]:
+                kind, _, rest = line.partition("\t")
+                if kind == _CREATED:
+                    self.created.add(Path(rest.partition("\t")[2]))
 
     def harvest(self, directory: Path) -> None:
         """Fold every worker journal written under ``directory``.
@@ -647,8 +719,10 @@ class Observation:
             except OSError as error:
                 self.note_incomplete(f"unreadable worker journal directory: {type(error).__name__}")
                 return
+            self._collect_created(journals)
             for journal in journals:
                 self.merge_journal(journal)
+            self.settle_created()
             if self.journal_directory == directory and directory != self.own_journals:
                 self.journal_directory = self.own_journals
 
