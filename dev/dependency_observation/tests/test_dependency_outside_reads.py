@@ -26,18 +26,12 @@ import pytest
 
 from dev.packaging.command_execution import run_command
 
-from ..dependency_observation import (
-    CHILD_SCRIPT_NAME,
-    WORKER_SCRIPT_NAME,
-    Observation,
-    _is_foreign_source,
-    _uri_path,
-)
+from ..observation import CHILD_SCRIPT_NAME, Observation, _is_foreign_source, _uri_path
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_WORKTREE = Path(__file__).resolve().parents[4]
-_SEQUENCES = "dev/docs/sequences"
+_WORKTREE = Path(__file__).resolve().parents[3]
+_PACKAGE = "dev/dependency_observation"
 _SCRATCH = _WORKTREE / ".tmp" / "2026-11-19-docsverify" / "tests-scratch"
 _FOREIGN = "source read outside the checkout"
 #: A drive-rooted directory no real file lives in, outside every allowlisted tree.
@@ -273,7 +267,7 @@ from pathlib import Path
 
 root, outside = Path(sys.argv[1]), Path(sys.argv[2])
 sys.path.insert(0, str(root))
-from dev.docs.sequences import dependency_observation as observing
+from dev.dependency_observation import observation as observing
 
 observation = observing.observe_process(root)
 sys.path.insert(0, str(outside))
@@ -291,10 +285,10 @@ print(json.dumps({"before": before, "incomplete": observation.incomplete}))
 def checkout(tmp_path: Path) -> Path:
     """A synthetic checkout holding its own copy of the stdlib-only observer."""
     directory = tmp_path / "real-checkout"
-    for package in ("dev", "dev/docs", _SEQUENCES):
+    for package in ("dev", _PACKAGE):
         _write(directory / package / "__init__.py")
-    for name in ("dependency_observation.py", CHILD_SCRIPT_NAME, WORKER_SCRIPT_NAME):
-        shutil.copyfile(_WORKTREE / _SEQUENCES / name, directory / _SEQUENCES / name)
+    for name in ("observation.py", CHILD_SCRIPT_NAME):
+        shutil.copyfile(_WORKTREE / _PACKAGE / name, directory / _PACKAGE / name)
     return directory.resolve()
 
 
