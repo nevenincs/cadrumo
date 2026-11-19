@@ -117,7 +117,19 @@ export function userProfileFixture(
     data.sections
       .flatMap((section) => section.fields)
       .find((entry) => entry.path === path);
+  // The name the profile was created under, which heads it while it states
+  // no taxpayer name.
+  let created = "";
+  // What the product heads the profile with after a change, as its overview
+  // names it: given name and surnames, else legal name, else `created`.
+  const served = () =>
+    [fieldOf("identity.name")?.value, fieldOf("identity.surnames")?.value]
+      .filter(Boolean)
+      .join(" ") ||
+    fieldOf("identity.legal_name")?.value ||
+    created;
   const changed = () => {
+    data.name = served();
     data.record_revision++;
     data.content_digest = String(data.record_revision).padStart(64, "0");
     data.missing_required = data.sections
@@ -138,7 +150,7 @@ export function userProfileFixture(
         "identity.legal_name",
       ])
         fieldOf(path)!.value = null;
-      data.name = name;
+      created = name;
       changed();
     },
     completeWithMissing() {
