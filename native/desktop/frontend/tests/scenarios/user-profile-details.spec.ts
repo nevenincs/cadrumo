@@ -513,3 +513,24 @@ test("a field editor and the AEAT access dialog each offer Cancel once", async (
   await expect(aeatEditor(page)).toBeVisible();
   await expect(cancel).toHaveCount(1);
 });
+
+test("a section heading names the section and holds no control or count of its own", async ({
+  page,
+}) => {
+  const profile = await open(page, "user-profile", "es");
+  // A repeatable section with no entry: its heading used to take in the
+  // "add" control and the count beside the title as well.
+  const section = profile
+    .locator("[data-section]", {
+      hasText: label("desktop.profile.entries_none", {}, "es"),
+    })
+    .first();
+  const heading = section.getByRole("heading");
+  const title = (await heading.getByRole("button").innerText()).trim();
+  await expect(heading).toHaveAccessibleName(title);
+  await expect(
+    section.getByRole("button", {
+      name: label("desktop.profile.add", {}, "es"),
+    }),
+  ).toHaveCount(1);
+});

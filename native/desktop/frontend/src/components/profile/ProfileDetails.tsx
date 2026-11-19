@@ -225,29 +225,33 @@ export function ProfileDetails({
         aria-labelledby={`profile-title-${key}`}
         className="group/section scroll-mt-14 overflow-hidden rounded-lg border bg-card"
       >
-        <h3 className="flex min-h-control-md items-center gap-2 border-b bg-chrome pr-2 pl-1">
-          <button
-            type="button"
-            {...navProps(`head:${key}`, "head")}
-            id={`profile-title-${key}`}
-            aria-expanded={open}
-            aria-controls={`profile-body-${key}`}
-            onClick={() => onToggle(key)}
-            className="flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-sm px-1.5 py-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Icon name={open ? "chevronDown" : "forward"} />
-            <span className="truncate font-semibold text-foreground">
-              {title}
-            </span>
-            {required && <RequiredMark />}
-          </button>
+        {/* The heading is the title alone: the add control and the count
+            beside it are not part of the section's name. */}
+        <div className="flex min-h-control-md items-center gap-2 border-b bg-chrome pr-2 pl-1">
+          <h3 className="flex min-w-0 flex-1">
+            <button
+              type="button"
+              {...navProps(`head:${key}`, "head")}
+              id={`profile-title-${key}`}
+              aria-expanded={open}
+              aria-controls={`profile-body-${key}`}
+              onClick={() => onToggle(key)}
+              className="flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-sm px-1.5 py-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Icon name={open ? "chevronDown" : "forward"} />
+              <span className="truncate font-semibold text-foreground">
+                {title}
+              </span>
+              {required && <RequiredMark />}
+            </button>
+          </h3>
           {extra}
           {meta && (
             <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
               {meta}
             </span>
           )}
-        </h3>
+        </div>
         <div id={`profile-body-${key}`} hidden={!open}>
           {children}
         </div>
