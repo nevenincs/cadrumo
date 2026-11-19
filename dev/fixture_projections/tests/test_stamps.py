@@ -7,8 +7,18 @@ from pathlib import Path
 
 import pytest
 
+from dev.dependency_observation.observation import file_digest, listing_digest
+
 from ..registry import Command, FixtureFamily, InputGroup
-from ..stamps import FixtureState, InputDigests, family_inputs, family_status, stamp_path, write_stamp
+from ..stamps import (
+    FixtureState,
+    InputDigests,
+    ObservedReads,
+    family_inputs,
+    family_status,
+    stamp_path,
+    write_stamp,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -162,3 +172,54 @@ def test_a_generated_family_keeps_its_stamp_beside_its_outputs(tmp_path: Path) -
     assert path == stamp_path(_family(committed=False), root) == root / "out" / ".sample.fixture-stamp.json"
     assert _status(root, tmp_path / "cache", committed=False).state is FixtureState.FRESH
     assert _stamp(root, tmp_path / "cache").parent == tmp_path / "cache"
+
+
+def _observed_family() -> FixtureFamily:
+    return FixtureFamily(
+        name="sample",
+        summary="A sample projection.",
+        inputs=(InputGroup("producer", ("tools/produce.py",)), InputGroup("product", ("src",), observed=True)),
+        check=(Command(("{python}", "tools/produce.py", "--check")),),
+        producer=Command(("{python}", "tools/produce.py")),
+        output_root="out",
+        outputs=("*.json",),
+        committed=False,
+    )
+
+
+def _observed_tree(root: Path) -> ObservedReads:
+    _tree(root)
+    (root / "src" / "pkg").mkdir(parents=True)
+    (root / "src" / "pkg" / "used.py").write_text("VALUE = 1\n", encoding="utf-8")
+    (root / "src" / "pkg" / "unused.py").write_text("OTHER = 1\n", encoding="utf-8")
+    return ObservedReads(
+        files={"src/pkg/used.py": file_digest(root / "src" / "pkg" / "used.py")},
+        listings={"src/pkg": listing_digest(root / "src" / "pkg")},
+    )
+
+
+def _observed_status(root: Path, cache: Path):
+    family = _observed_family()
+    inputs = family_inputs(family, InputDigests(root), _AUTHORITY)
+    return family_status(family, root, inputs, cache_directory=cache)
+
+
+def test_an_observed_stamp_whose_recorded_file_was_deleted_is_stale(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    root.mkdir()
+    reads = _observed_tree(root)
+    family = _observed_family()
+    write_stamp(
+        family, root, family_inputs(family, InputDigests(root), _AUTHORITY), reads=reads, cache_directory=tmp_path
+    )
+    assert _observed_status(root, tmp_path).state is FixtureState.FRESH
+
+    (root / "src" / "pkg" / "unused.py").write_text("OTHER = 2\n", encoding="utf-8")
+    assert _observed_status(root, tmp_path).state is FixtureState.FRESH
+
+    (root / "src" / "pkg" / "used.py").unlink()
+
+    result = _observed_status(root, tmp_path)
+    assert result.state is FixtureState.STALE
+    assert "observed: src/pkg/used.py changed" in result.reasons
+    assert "observed: listing of src/pkg changed" in result.reasons

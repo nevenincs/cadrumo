@@ -21,7 +21,7 @@ const band = (page: Page) =>
 
 const review = (page: Page) =>
   band(page).getByRole("button", {
-    name: label("desktop.profile.censo.review_count", { count: 3 }),
+    name: label("desktop.profile.censo.review_count", { count: 10 }),
   });
 
 test("the Modelo page's census entry starts the one Censo flow on the profile page", async ({

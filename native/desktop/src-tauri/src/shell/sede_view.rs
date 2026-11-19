@@ -102,6 +102,12 @@ const ATTACH_RETRY: Duration = Duration::from_millis(250);
 /// Asks to attach this many times between looks at whether the operation still runs.
 const ATTACH_TRIES_PER_LOOK: u32 = 8;
 
+/// How long a view may wait for its browser to open before it is cancelled.
+/// The worker's acquisition probes the stored session with a browser launch
+/// and navigation timeouts of its own, so this is longer than those together;
+/// a worker that never opens the view stream no longer holds the place for good.
+const ATTACH_LIMIT: Duration = Duration::from_secs(180);
+
 /// The images a view may send before the window credits any.
 const START_CREDIT: u8 = 2;
 
@@ -248,12 +254,21 @@ struct View {
     clipboard_wait: Mutex<Option<(u32, mpsc::SyncSender<Option<String>>)>>,
     clipboard_issued: AtomicU32,
     diagnostics: Arc<Diagnostics>,
+    /// How long the browser may take to open before the view is cancelled.
+    attach_limit: Duration,
 }
 
 impl View {
-    fn new(id: u32, started: Started, sink: Sink, diagnostics: Arc<Diagnostics>) -> Self {
+    fn new(
+        id: u32,
+        started: Started,
+        sink: Sink,
+        diagnostics: Arc<Diagnostics>,
+        attach_limit: Duration,
+    ) -> Self {
         Self {
             id,
+            attach_limit,
             operation: started.operation,
             runtime: started.runtime,
             sink,
@@ -452,6 +467,7 @@ impl View {
     /// is cancelled.
     fn attach(&self) -> std::result::Result<Arc<dyn Lane>, End> {
         let mut tries = 0u32;
+        let started = Instant::now();
         loop {
             let stop = lock(&self.control).stop;
             if stop.is_some() || !self.runtime.held() {
@@ -469,6 +485,10 @@ impl View {
                         && self.runtime.running(&self.operation) == Some(false)
                     {
                         return Err(End::of(Reason::OperationEnded, true));
+                    }
+                    if started.elapsed() >= self.attach_limit {
+                        self.runtime.cancel(&self.operation);
+                        return Err(End::of(Reason::Unavailable, true));
                     }
                     thread::sleep(ATTACH_RETRY);
                 }
@@ -913,6 +933,7 @@ pub struct SedeViewHost {
     behind: Mutex<Behind>,
     opener: Box<dyn Opener>,
     diagnostics: Arc<Diagnostics>,
+    attach_limit: Duration,
 }
 
 /// A window close that waits for the view off the window's thread.
@@ -941,7 +962,16 @@ impl SedeViewHost {
     }
 
     fn with_opener(opener: Box<dyn Opener>, diagnostics: Arc<Diagnostics>) -> Self {
+        Self::with_attach_limit(opener, diagnostics, ATTACH_LIMIT)
+    }
+
+    fn with_attach_limit(
+        opener: Box<dyn Opener>,
+        diagnostics: Arc<Diagnostics>,
+        attach_limit: Duration,
+    ) -> Self {
         Self {
+            attach_limit,
             current: Mutex::new(None),
             issued: AtomicU32::new(0),
             closed: AtomicBool::new(false),
@@ -1057,6 +1087,20 @@ impl SedeViewHost {
         }
     }
 
+    /// The window has one browser panel, so a new open supersedes the view it
+    /// holds: that view is asked to close as the person closing it would, and
+    /// the open is refused `conflict` until it ends. Asking again while it
+    /// closes changes nothing. A closed host is left to refuse `unavailable`.
+    fn supersede_current(&self) {
+        if self.closed.load(Ordering::Acquire) {
+            return;
+        }
+        let view = lock(&self.current).clone();
+        if let Some(view) = view {
+            view.request_close(true);
+        }
+    }
+
     /// Whether another view may start.
     fn admit_open(&self) -> Result<()> {
         self.admits(lock(&self.current).as_ref())
@@ -1104,7 +1148,13 @@ impl SedeViewHost {
     /// that cannot take it is cancelled.
     fn open_with(self: &Arc<Self>, started: Started, sink: Sink) -> Result<u32> {
         let id = self.issued.fetch_add(1, Ordering::AcqRel) + 1;
-        let view = Arc::new(View::new(id, started, sink, self.diagnostics.clone()));
+        let view = Arc::new(View::new(
+            id,
+            started,
+            sink,
+            self.diagnostics.clone(),
+            self.attach_limit,
+        ));
         let admitted = {
             let mut current = lock(&self.current);
             let refused = self.admits(current.as_ref());

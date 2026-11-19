@@ -82,7 +82,6 @@ def _seed_profile(bucket_id: str = _BUCKET_ID, *, label: str = _PROFILE_LABEL) -
             display_name=label,
             overrides={
                 "identity.tax_id": _TAX_ID,
-                "auth.dni_nie": _TAX_ID,
                 "auth.numero_soporte": _SOPORTE,
                 "auth.clave_movil_route": ClaveMovilRoute.QR.value,
             },
@@ -105,7 +104,6 @@ def test_the_same_record_reads_under_its_session_and_stays_sealed_without_one() 
         sealed = _read_active_profile_auth_facts()
 
     assert unlocked.tax_id == _TAX_ID
-    assert unlocked.dni_nie == _TAX_ID
     assert unlocked.numero_soporte == _SOPORTE
     assert unlocked.clave_movil_route is ClaveMovilRoute.QR
 

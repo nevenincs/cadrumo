@@ -144,6 +144,12 @@ async def _view_context(
         await browser.close()
 
 
+def _stored_state() -> object:
+    persisted = session_store.load(session_path())
+    assert persisted is not None
+    return persisted.storage_state
+
+
 def _cookie_names(storage_state: Mapping[str, object] | None) -> set[str]:
     assert storage_state is not None
     cookies = storage_state.get("cookies")
@@ -318,6 +324,36 @@ async def test_a_clave_movil_profile_without_its_contraste_publishes_a_manual_vi
 
 
 @pytest.mark.asyncio
+async def test_a_stored_session_the_probe_refuses_opens_signed_out_and_deletes_nothing(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    with certificate_profile(tmp_path, operation):
+        async with opened_http_boundary() as boundary:
+            factory = real_browser_factory(boundary=boundary, profile_name="sede-view-resume-refused")
+            await _sync(factory, OperationHost(), operation)
+            stored_bytes = _stored_state()
+            stored_before = stored_digest()
+            assert stored_before is not None
+
+            boundary.configure("failure")
+            host = OperationHost()
+            seed = await _open(factory, host, operation)
+
+            assert not seed.signed_in
+            assert seed.baseline.storage_state_sha256 == stored_before
+            assert host.effects == []
+            assert stored_digest() == stored_before
+            assert _stored_state() == stored_bytes
+            assert lock_state() is AuthAcquisitionLockState.ABSENT
+
+            # The refusal was the provider's alone: once AEAT answers again, the same session resumes.
+            boundary.configure("success")
+            resumed = await _open(factory, OperationHost(), operation)
+            assert resumed.signed_in
+
+
+@pytest.mark.asyncio
 async def test_a_refused_provider_probe_publishes_and_deletes_nothing(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
@@ -326,6 +362,7 @@ async def test_a_refused_provider_probe_publishes_and_deletes_nothing(
         async with opened_http_boundary() as boundary:
             factory = real_browser_factory(boundary=boundary, profile_name="sede-view-refused")
             await _sync(factory, OperationHost(), operation)
+            stored_bytes = _stored_state()
             seed = await _open(factory, OperationHost(), operation)
             host = OperationHost()
             async with _view_context(boundary, seed.storage_state, browse_to_session_cookie=True) as context:
@@ -333,8 +370,10 @@ async def test_a_refused_provider_probe_publishes_and_deletes_nothing(
                 publication = await _close(factory, host, operation, baseline=seed.baseline, view_context=context)
 
             assert publication.outcome is ViewSessionPublicationOutcome.VERIFICATION_FAILED
+            assert publication.baseline == seed.baseline
             assert host.effects == []
             assert stored_digest() == seed.baseline.storage_state_sha256
+            assert _stored_state() == stored_bytes
 
 
 @pytest.mark.asyncio
@@ -378,10 +417,14 @@ async def test_a_live_acquisition_holding_the_lock_keeps_its_session(
                     load_settings(), AuthProviderKind.CERTIFICATE, ttl_seconds=60, operation="sync-acquiring"
                 ):
                     publication = await _close(factory, host, operation, baseline=seed.baseline, view_context=context)
+                    # The close deferred to the acquisition without touching its lock.
+                    assert lock_state() is AuthAcquisitionLockState.HELD
 
             assert publication.outcome is ViewSessionPublicationOutcome.KEPT_NEWER
+            assert publication.baseline == seed.baseline
             assert host.effects == []
             assert stored_digest() == seed.baseline.storage_state_sha256
+            assert lock_state() is AuthAcquisitionLockState.ABSENT
 
 
 @pytest.mark.asyncio

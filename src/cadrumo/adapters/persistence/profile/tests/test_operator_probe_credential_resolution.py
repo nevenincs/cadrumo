@@ -64,7 +64,7 @@ def test_probe_reports_a_profile_borne_credential_as_configured() -> None:
     already recorded.
     """
 
-    _register_profile(**{"auth.dni_nie": _TAX_ID})
+    _register_profile()
     with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
         credentials = probe_clave_credentials(
             AuthProviderKind.CLAVE_MOVIL,
@@ -85,7 +85,6 @@ def test_backend_readiness_describes_the_profile_bound_clave_provider() -> None:
     """
     _register_profile(
         **{
-            "auth.dni_nie": _TAX_ID,
             "auth.clave_movil_route": "qr",
         },
     )
@@ -119,7 +118,7 @@ def test_alignment_reports_a_match_for_a_profile_borne_credential() -> None:
     credential that is already correct.
     """
 
-    _register_profile(**{"auth.dni_nie": _TAX_ID})
+    _register_profile()
     with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
         profile_present, provider_present, alignment = live_auth_identity_state(
             AuthProviderKind.CLAVE_MOVIL,
@@ -130,25 +129,6 @@ def test_alignment_reports_a_match_for_a_profile_borne_credential() -> None:
     assert profile_present is True
     assert provider_present is True
     assert alignment == "matches"
-
-
-def test_alignment_still_reports_a_mismatch_it_should_catch() -> None:
-    """Resolving from the profile must not blunt the mismatch signal.
-
-    A Cl@ve credential that disagrees with the profile's tax identity is
-    the case the fail-closed guard exists for, so the probe has to keep
-    naming it even when the credential came from the profile.
-    """
-
-    _register_profile(**{"auth.dni_nie": _OTHER_TAX_ID})
-    with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
-        _profile_present, _provider_present, alignment = live_auth_identity_state(
-            AuthProviderKind.CLAVE_MOVIL,
-            settings=settings,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        )
-
-    assert alignment == "mismatch"
 
 
 def test_alignment_still_reports_an_absent_credential() -> None:
@@ -177,7 +157,7 @@ def test_identity_kind_classifies_a_profile_borne_credential() -> None:
     perfectly well-formed DNI the profile carries.
     """
 
-    _register_profile(**{"auth.dni_nie": _TAX_ID})
+    _register_profile()
     with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
         kind = live_auth_identity_kind(
             AuthProviderKind.CLAVE_MOVIL,
@@ -217,7 +197,7 @@ def test_preflight_reports_a_profile_borne_soporte_as_configured() -> None:
     while live authentication resolved it fine.
     """
 
-    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.numero_soporte": "E12345678"})
+    _register_profile(**{"auth.numero_soporte": "E12345678"})
     with override_settings(
         cadrumo_clave_movil_dni_nie=None,
         cadrumo_clave_movil_nie_soporte=None,
@@ -236,7 +216,7 @@ def test_preflight_reports_a_profile_borne_soporte_as_configured() -> None:
 def test_preflight_reports_a_profile_borne_validity_date_as_configured() -> None:
     """The DNI holder's mirror of the same report field."""
 
-    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.fecha_validez": "2030-01-01"})
+    _register_profile(**{"auth.fecha_validez": "2030-01-01"})
     with override_settings(
         cadrumo_clave_movil_dni_nie=None,
         cadrumo_clave_movil_nie_soporte=None,
@@ -259,7 +239,7 @@ def test_preflight_still_reports_an_absent_contraste() -> None:
     manufacture a contraste the operator never recorded.
     """
 
-    _register_profile(**{"auth.dni_nie": _TAX_ID})
+    _register_profile()
     with override_settings(
         cadrumo_clave_movil_dni_nie=None,
         cadrumo_clave_movil_nie_soporte=None,
@@ -284,7 +264,7 @@ def test_preflight_report_carries_no_identity_material() -> None:
     """
 
     soporte = "E12345678"
-    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.numero_soporte": soporte})
+    _register_profile(**{"auth.numero_soporte": soporte})
     with override_settings(
         cadrumo_clave_movil_dni_nie=None,
         cadrumo_clave_movil_nie_soporte=None,
@@ -304,7 +284,7 @@ def test_preflight_report_carries_no_identity_material() -> None:
 def test_certificate_provider_is_not_probed_for_clave_credentials() -> None:
     """A certificate profile has no Cl@ve credential to resolve."""
 
-    _register_profile(**{"auth.dni_nie": _TAX_ID})
+    _register_profile()
     assert (
         probe_clave_credentials(
             AuthProviderKind.CERTIFICATE,

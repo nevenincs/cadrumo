@@ -22,11 +22,11 @@ import pytest
 
 from dev.packaging.command_execution import run_command
 
-from ..dependency_observation import Observation
+from ..observation import Observation
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_WORKTREE = Path(__file__).resolve().parents[4]
+_WORKTREE = Path(__file__).resolve().parents[3]
 
 
 def _sha(data: bytes) -> str:
@@ -127,7 +127,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, sys.argv[1])
-from dev.docs.sequences.dependency_observation import observe_process
+from dev.dependency_observation.observation import observe_process
 
 root = Path(sys.argv[2])
 observation = observe_process(root)

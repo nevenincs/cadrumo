@@ -4864,12 +4864,11 @@ desktop:
         és nézd meg, mi hiányzik még.
       document_hint: Alkalmazáskéréshez add meg a DNI érvényességi dátumát vagy a
         NIE támogatási számát az okmányod szerint.
-      done: Kész
       failed: 'Nem sikerült menteni: {item}. Ellenőrizd, és próbáld újra.'
       passphrase: Tanúsítvány jelszava
       password: '{method} jelszó'
       readiness: Feltételek
-      saved: Mentve. Az alábbi feltételek a tárolt állapotot tükrözik.
+      saved_notice: AEAT-hozzáférés mentve.
       saved_value: Van mentett érték, de nem jelenítjük meg. Írj be újat a cseréhez,
         vagy hagyd üresen, ha meg akarod tartani.
       secret_help: A profilodtól külön tároljuk, és többé nem jelenítjük meg. Hagyd
@@ -4889,7 +4888,6 @@ desktop:
       done: A szinkronizálás befejeződött. Ellenőrizd a profil még hiányzó adatait.
       failed: A szinkronizálás sikertelen volt, a profilod nem változott. Ellenőrizd
         az AEAT-hozzáférést, és próbáld újra.
-      identity: Adóazonosító megadása
       incoming: AEAT
       preserve: A mentett válasz megőrzése.
       profile_mismatch: Ezek a Censo-adatok nem egyeznek a bejelentkezett profillal.
@@ -4902,10 +4900,18 @@ desktop:
         és az AEAT-hozzáférés beállításait, majd próbáld újra.
       reject: Módosítások elvetése
       review_count: 'Ellenőrzendő AEAT-értékek: {count}'
+      review_current: A profilod
+      review_description: Amit az AEAT Censo nyilvántart rólad, a profilodban tárolt
+        adatok mellett. Semmit sem mentünk, amíg meg nem erősíted.
+      review_field: Adat
       review_hint: A változások lent, a helyükön látszanak. Semmi sem mentődik, amíg
         meg nem erősíted.
-      scope: Adócím, irányítószám és kataszteri azonosító átvétele az adózói nyilvántartásból.
-        A profil többi adatát neked kell megadnod.
+      review_outcome: Mentéskor
+      review_title: AEAT-adatok áttekintése
+      scope: Importáld a Censo nyilvántartásából az adóügyi lakcímedet az irányítószámmal,
+        a kataszteri hivatkozással, a tartomány- és településkóddal, az AEAT-irodádat,
+        valamint a tevékenységed kezdő és záró dátumát. A neved, az e-mail-címed és
+        a profil többi adata a te válaszaidat igényli.
       session: A munkameneted véget ért. A folytatáshoz jelentkezz be újra.
       setup: AEAT-bejelentkezés beállítása
       source: Az AEAT adózói nyilvántartásából mentve

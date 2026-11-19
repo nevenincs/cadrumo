@@ -16,7 +16,7 @@ export type ProfileEntryKind =
  * custody, never in browser form history. */
 export function profileInput(field: ProfileField) {
   const kind: ProfileEntryKind =
-    field.path === "auth.dni_nie" || field.path === "identity.tax_id"
+    field.path === "identity.tax_id"
       ? "tax_id"
       : field.field_type === "date" ||
           field.field_type === "integer" ||

@@ -37,10 +37,16 @@ class InputGroup:
     """A named set of repository files or directories, given relative to the repository root.
 
     Every named path must exist: a mistyped path is refused, never digested as empty.
+
+    An ``observed`` group is too wide to key a family on as a whole: the product
+    source holds far more than any one producer reads. A run whose processes were
+    all observed keys the family on the files and listings they read instead, and
+    only an incomplete observation keys it on the whole group.
     """
 
     label: str
     paths: tuple[str, ...]
+    observed: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -90,7 +96,7 @@ PERSONA_ROOT: Final[str] = "dev/fixtures/personas"
 
 _SCRIPTS: Final[str] = f"{FRONTEND}/scripts"
 _PERSONAS: Final = InputGroup("personas", (PERSONA_ROOT,))
-_PRODUCT: Final = InputGroup("product-source", PRODUCT_SOURCE_ROOTS)
+_PRODUCT: Final = InputGroup("product-source", PRODUCT_SOURCE_ROOTS, observed=True)
 _LOCK: Final = InputGroup("lockfile", ("uv.lock",))
 _FRONTEND_LOCK: Final = InputGroup("frontend-lockfile", (f"{FRONTEND}/package-lock.json",))
 _FRONTEND_PACKAGES: Final = Prerequisite(f"{FRONTEND}/node_modules", "just setup-desktop-frontend")
@@ -171,12 +177,14 @@ def _script(
 
 _MODELO_PRODUCER: Final = f"{_SCRIPTS}/modelo_fixtures.py"
 _MODELO_DRIVER: Final = f"{_SCRIPTS}/modelo-fixtures.mjs"
+#: The driver's environment for the Python it starts; the driver itself is not observed, so it is declared.
+_MODELO_DRIVER_ENVIRONMENT: Final = f"{_SCRIPTS}/producer-environment.mjs"
 #: The module bound's one definition, which the producer sizes its modules within and reports, and the driver's
 #: refusal of a generated module past it.
 _MODULE_BOUND: Final = ("dev/quality/typescript_module_size.py", f"{_SCRIPTS}/generated-module-bound.mjs")
 #: The Modelo wire types and the envelopes read the same application, host sources and personas.
 _MODELO_INPUTS: Final = (
-    *_common(_MODELO_PRODUCER, _MODELO_DRIVER, *_MODULE_BOUND),
+    *_common(_MODELO_PRODUCER, _MODELO_DRIVER, _MODELO_DRIVER_ENVIRONMENT, *_MODULE_BOUND),
     InputGroup(
         "host-source",
         (

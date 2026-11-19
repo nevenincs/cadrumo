@@ -528,7 +528,7 @@ def mask_profile_field(*, path: str, label: str, sensitivity: SensitivityClass |
     overridden by wording.
 
     Args:
-        path: Dotted schema path of the field, e.g. ``auth.dni_nie``.
+        path: Dotted schema path of the field, e.g. ``auth.numero_soporte``.
         label: Operator-facing description, or the path when none exists.
             Read only when ``sensitivity`` is ``None``.
         sensitivity: Declared :class:`SensitivityClass`, or ``None`` for a

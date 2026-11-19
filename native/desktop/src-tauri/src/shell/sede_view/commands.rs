@@ -29,8 +29,9 @@ pub(super) fn channel_sink<R: tauri::Runtime>(
 /// relays it on `messages` until it ends. The answer comes before the browser
 /// is open; `opened` follows on the channel.
 ///
-/// Refuses `conflict` while the previous view has not ended, which includes the
-/// time it takes to publish its session.
+/// The window has one panel, so the previous view is asked to close first, and
+/// the open refuses `conflict` while it has not ended, which includes the time
+/// it takes to publish its session. The caller retries.
 #[tauri::command]
 pub(super) async fn sede_view_open<R: tauri::Runtime>(
     host: State<'_, Arc<SedeViewHost>>,
@@ -42,6 +43,12 @@ pub(super) async fn sede_view_open<R: tauri::Runtime>(
     messages: Channel<InvokeResponseBody>,
 ) -> Result<Opened> {
     let size = Size::admit(css_width, css_height, scale)?;
+    let superseded = host.inner().clone();
+    blocking(move || {
+        superseded.supersede_current();
+        Ok(())
+    })
+    .await?;
     host.admit_open()?;
     let setup = webview
         .try_state::<Arc<super::super::setup::SetupHost>>()

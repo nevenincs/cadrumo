@@ -782,9 +782,6 @@ def resolve_clave_credentials(
     # The person signing in is always the taxpayer the profile describes:
     # representation is refused and the identity guard refuses any divergence.
     # So the profile's tax identifier IS the Cl@ve identity, its single source.
-    # A value an earlier flow stored under ``auth.dni_nie`` is not read: kept as
-    # an input it could only ever agree with the tax identifier or block every
-    # session after the tax identifier was corrected.
     profile_dni_nie = facts.tax_id
     return ClaveCredentials(
         provider_kind=provider_kind,

@@ -28,6 +28,8 @@ declare global {
       release(): void;
       holdReadiness(): void;
       releaseReadiness(): void;
+      /** Every requirements check from now on fails with this code. */
+      failReadiness(code: string): void;
       holdStatus(): void;
       releaseStatus(): void;
       /** The pull begins at the host without this window asking, as the AEAT
@@ -77,6 +79,7 @@ export function censoFixture(
   let held: Promise<void> | null = null;
   let release = () => {};
   let readinessHeld: Promise<void> | null = null;
+  let readinessFailure: string | null = null;
   let releaseReadiness = () => {};
   const controls = {
     fail() {
@@ -99,6 +102,9 @@ export function censoFixture(
       });
     },
     release: () => release(),
+    failReadiness(code: string) {
+      readinessFailure = code;
+    },
     holdReadiness() {
       readinessHeld ??= new Promise<void>((resolve) => {
         releaseReadiness = () => {
@@ -157,6 +163,24 @@ export function censoFixture(
         incoming: "1234567UF7613S0001AB",
         preserve: false,
       },
+      ...(
+        [
+          ["contact.fiscal_address_province_code", "29"],
+          ["contact.fiscal_address_municipality_code", "29067"],
+          ["contact.fiscal_address_municipality_name", "MÁLAGA"],
+          ["censo.aeat_delegacion_code", "29"],
+          ["censo.aeat_administracion_code", "601"],
+          ["censo.aeat_administracion_name", "OFICINA EJEMPLO"],
+          ["censo.activity_start_date", "2024-01-01"],
+          // No activity has ceased, so the read states no end date.
+          ["censo.activity_end_date", null],
+        ] as const
+      ).map(([path, incoming]) => ({
+        path,
+        current: profileStated(path),
+        incoming,
+        preserve: false,
+      })),
     ],
   });
   window.__scenarioCenso = controls;
@@ -170,6 +194,7 @@ export function censoFixture(
     async readiness(id) {
       await readinessHeld;
       readinessChecks++;
+      if (readinessFailure) throw { code: readinessFailure };
       // What the profile saved satisfies: the setup the scenario seeded, and
       // whatever the person has entered since.
       return profile.readiness(id);
@@ -228,19 +253,19 @@ export function censoFixture(
         (decision !== "cancel" && snapshot.review_digest !== digest)
       )
         throw { code: "conflict" };
-      if (decision === "apply") {
-        const current = await profile.read("en");
-        await profile.change({
-          profile_id: current.profile_id,
-          expected_revision: current.record_revision,
-          expected_content_digest: current.content_digest,
-          edit: {
-            kind: "field",
-            path: "contact.fiscal_address_cadastral_reference",
-            value: "1234567UF7613S0001AB",
-          },
-        });
-      }
+      if (decision === "apply")
+        // The host commits the reviewed values at once; one field edit each
+        // is how this fixture's profile takes them.
+        for (const field of snapshot.fields) {
+          if (field.preserve || field.incoming === null) continue;
+          const current = await profile.read("en");
+          await profile.change({
+            profile_id: current.profile_id,
+            expected_revision: current.record_revision,
+            expected_content_digest: current.content_digest,
+            edit: { kind: "field", path: field.path, value: field.incoming },
+          });
+        }
       snapshot = {
         ...snapshot,
         state: decision === "apply" ? "done" : "stopped",

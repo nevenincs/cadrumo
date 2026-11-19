@@ -4892,12 +4892,11 @@ desktop:
       description: Elige cómo accede este perfil a la AEAT y mira qué falta todavía.
       document_hint: Para solicitar el acceso en la aplicación, introduce la fecha
         de validez del DNI o el número de soporte del NIE, según tu documento.
-      done: Hecho
       failed: 'No se pudo guardar: {item}. Revisa el valor y vuelve a intentarlo.'
       passphrase: Contraseña del certificado
       password: Contraseña de {method}
       readiness: Requisitos
-      saved: Guardado. Los requisitos de abajo reflejan lo almacenado.
+      saved_notice: Acceso a la AEAT guardado.
       saved_value: Hay un valor guardado que no se muestra. Escribe uno nuevo para
         sustituirlo o déjalo en blanco para conservarlo.
       secret_help: Se guarda aparte de tu perfil y no vuelve a mostrarse. Déjala en
@@ -4916,7 +4915,6 @@ desktop:
       done: Sincronización completada. Revisa los datos que aún faltan en tu perfil.
       failed: La sincronización ha fallado sin cambiar tu perfil. Comprueba el acceso
         a la AEAT e inténtalo de nuevo.
-      identity: Añadir NIF o NIE
       incoming: AEAT
       preserve: Conservar tu respuesta guardada.
       profile_mismatch: Estos datos del Censo no coinciden con el perfil con el que
@@ -4929,10 +4927,18 @@ desktop:
         de acceso a la AEAT y vuelve a intentarlo.
       reject: Descartar cambios
       review_count: 'Valores de la AEAT por revisar: {count}'
+      review_current: Tu perfil
+      review_description: Lo que el Censo de la AEAT tiene de ti, junto a lo que guarda
+        tu perfil. No se guarda nada hasta que confirmes.
+      review_field: Dato
       review_hint: Los cambios se muestran abajo, en su sitio. No se guarda nada hasta
         que confirmes.
-      scope: Importa tu domicilio fiscal, código postal y referencia catastral del
-        Censo. Los demás datos del perfil requieren tus respuestas.
+      review_outcome: Al guardar
+      review_title: Revisar los datos de la AEAT
+      scope: Importa del Censo tu domicilio fiscal con su código postal, referencia
+        catastral y códigos de provincia y municipio, tu Administración de la AEAT
+        y las fechas de alta y baja de tu actividad. Tu nombre, tu correo y los demás
+        datos del perfil requieren tus respuestas.
       session: Tu sesión ha terminado. Inicia sesión de nuevo para continuar.
       setup: Configurar acceso a la AEAT
       source: Guardado desde el censo de la AEAT

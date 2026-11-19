@@ -18,8 +18,10 @@ import runpy
 import sys
 from pathlib import Path
 
-#: Named in ``dependency_observation``, which is unimportable before the path is set.
+#: Named in ``observation``, which is unimportable before the path is set.
 _CHECKOUT_ROOT_FILE = "checkout-root.txt"
+#: Present in an inherited run's journals: the observer's checkout, then the observed one.
+_INHERITED_ROOTS_FILE = "observer-roots.txt"
 
 
 def _main() -> None:
@@ -28,11 +30,16 @@ def _main() -> None:
     # A missing pointer is a fault, never an unobserved child: the parent
     # records this child's reads from its journal alone.
     root = Path((journals / _CHECKOUT_ROOT_FILE).read_text(encoding="utf-8").strip())
-    sys.path.insert(0, str(root))
-    from dev.docs.sequences.dependency_observation import observe_child
+    roots = journals / _INHERITED_ROOTS_FILE
+    tooling = roots.read_text(encoding="utf-8").splitlines()[0] if roots.is_file() else str(root)
+    sys.path.insert(0, tooling)
+    from dev.dependency_observation.observation import active_observation, allow_observer_outside, observe_child
 
     observe_child(root, journals, token)
-    sys.path.remove(str(root))
+    observation = active_observation()
+    if observation is not None:
+        allow_observer_outside(observation, journals)
+    sys.path.remove(tooling)
     # ``-m`` puts the working directory first on the path, where a script puts its own directory.
     sys.path[0] = os.getcwd()
     sys.argv = [sys.argv[0], *arguments]

@@ -594,7 +594,7 @@ test("the census review takes over the pull that is going on and starts no secon
   await target.evaluate(() => window.__scenarioCenso!.reachReview());
   await expect(
     band.getByRole("button", {
-      name: label("desktop.profile.censo.review_count", { count: 3 }),
+      name: label("desktop.profile.censo.review_count", { count: 10 }),
     }),
   ).toBeVisible();
   expect(await target.evaluate(() => window.__scenarioCenso!.pulls())).toBe(1);

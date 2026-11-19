@@ -13,18 +13,19 @@ import { useStrings } from "../../shell/strings";
 /**
  * Censo synchronization as a band of the profile page: what it still needs,
  * the pull in progress, and its review, whose values are shown on the
- * details they would change. The review is answered as a whole.
+ * details they would change and listed together in the review dialog. The
+ * review is answered as a whole.
  */
 export function ProfileSync({
   sync,
   compact,
-  onTaxId,
   onSetup,
   onReview,
 }: {
   sync: ReturnType<typeof useCensoSync>;
   compact: boolean;
-  onTaxId(): void;
+  /** Opens the one AEAT access configurator, which asks for everything the
+   * requirements say is missing, the NIF/NIE included. */
   onSetup(): void;
   onReview(): void;
 }) {
@@ -122,20 +123,10 @@ export function ProfileSync({
           ))}
         </span>
       );
-      const needsTaxId = missing.some(
-        (item) => item.field === "identity.tax_id",
-      );
       actions = (
-        <>
-          {needsTaxId && (
-            <Button size="xs" variant="outline" onClick={onTaxId}>
-              {t("desktop.profile.censo.identity")}
-            </Button>
-          )}
-          <Button size="xs" variant="outline" onClick={onSetup}>
-            {t("desktop.profile.censo.setup")}
-          </Button>
-        </>
+        <Button size="xs" variant="outline" onClick={onSetup}>
+          {t("desktop.profile.censo.setup")}
+        </Button>
       );
     } else {
       status = (
@@ -176,7 +167,9 @@ export function ProfileSync({
               onClick={onReview}
             >
               {t("desktop.profile.censo.review_count", {
-                count: snapshot.fields.length,
+                count: snapshot.fields.filter(
+                  (field) => field.incoming !== null,
+                ).length,
               })}
             </button>
             {!compact && (

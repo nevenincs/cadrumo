@@ -61,7 +61,6 @@ from cadrumo.application.user_profile.censal_operation import (
     CensalOperationRequest,
     CensalOperationResult,
     CensalProfileBaseline,
-    CensalReviewedFieldIntent,
     CensalReviewedOperand,
     CensalReviewProjectionV1,
     build_censal_operation_definition,
@@ -78,6 +77,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import governed_fa
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
+from .....application.user_profile.tests.censal_intent_support import censal_field_intents
 from .....application.user_profile.tests.record_session_scope import bound_profile_record_session
 from .supervision_support import run_to_settlement
 
@@ -160,14 +160,7 @@ def censal_request_payload(profile_id: str) -> CensalOperationRequest:
     ).load(profile_id)
     return CensalOperationRequest(
         baseline=CensalProfileBaseline.from_record(record),
-        field_intents=tuple(
-            CensalReviewedFieldIntent(path=path, intent=CensalFieldIntent.ADOPT)
-            for path in (
-                "contact.fiscal_address",
-                "contact.postcode",
-                "contact.fiscal_address_cadastral_reference",
-            )
-        ),
+        field_intents=censal_field_intents(default=CensalFieldIntent.ADOPT),
     )
 
 

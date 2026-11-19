@@ -1,8 +1,9 @@
-"""Encrypted profile persistence proof for auth-identity divergence.
+"""Encrypted profile persistence proof that the profile holds one Cl@ve identity.
 
-The application auth tests own the identity comparison policy. This one test
-owns the separate persistence fact: the validated profile edit door accepts a
-divergent DNI/NIE and the two identifiers are genuinely persisted.
+The application auth tests own the identity comparison policy. This test owns
+the separate persistence fact: the identity Cl@ve signs in with is the stored
+``identity.tax_id``, and the validated edit door refuses a second copy apart
+from it, so no divergent identity can be persisted.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from cadrumo.application.user_profile.projections import record_to_path_values
+from cadrumo.domain.user_profile.errors import UserProfileValidationError
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -50,7 +52,7 @@ def _register_with_tax_id() -> None:
 
 
 def _write_dni_nie(value: str) -> None:
-    """Set ``auth.dni_nie`` through the validated edit door."""
+    """Try to set the retired ``auth.dni_nie`` through the validated edit door."""
     with bound_test_profile_record(_BUCKET_ID) as repository:
         record = repository.load(_BUCKET_ID)
     replace_test_profile_record(
@@ -71,12 +73,10 @@ def _stored() -> dict[str, str | None]:
     return {path: values.get(path) for path in (_TAX_ID_PATH, _DNI_NIE_PATH)}
 
 
-def test_the_validated_edit_door_accepts_a_dni_that_diverges_from_the_tax_id() -> None:
-    """No write-time validator refuses the divergence; both values persist."""
+def test_the_validated_edit_door_refuses_a_second_clave_identity() -> None:
+    """A copy of the identity apart from the tax identifier is not a profile fact."""
     _register_with_tax_id()
-    _write_dni_nie(_OTHER_TAX_ID)
+    with pytest.raises(UserProfileValidationError, match=r"auth.dni_nie"):
+        _write_dni_nie(_OTHER_TAX_ID)
 
-    stored = _stored()
-    assert stored[_TAX_ID_PATH] == _TAX_ID
-    assert stored[_DNI_NIE_PATH] == _OTHER_TAX_ID
-    assert stored[_TAX_ID_PATH] != stored[_DNI_NIE_PATH]
+    assert _stored() == {_TAX_ID_PATH: _TAX_ID, _DNI_NIE_PATH: None}
