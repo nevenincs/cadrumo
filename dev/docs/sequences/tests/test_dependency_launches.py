@@ -510,3 +510,50 @@ def test_the_real_popen_wrapper_ends_the_judged_launch_when_the_constructor_retu
     lines = result.stdout.strip().splitlines()
     assert lines[-2] == "after popen []"
     assert lines[-1] == "after spawn ['unjudged child process (os.posix_spawn)']"
+
+
+_REAL_LAUNCH = """import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+sys.path.insert(0, str(root))
+from dev.docs.sequences import dependency_observation as observing
+
+observation = observing.observe_process(root)
+journals = root / "journals"
+journals.mkdir()
+observation.adopt_journal_directory(journals)
+script = journals / observing.WORKER_SCRIPT_NAME
+script.write_text("pass\\n", encoding="utf-8")
+# The real Popen constructor, wrapped by the observer: on POSIX it forks and
+# execs without a native audit event, on Windows it raises _winapi.CreateProcess.
+process = subprocess.Popen([sys.executable, "-I", "-S", str(script)])
+process.wait()
+after_popen = list(observation.incomplete)
+if hasattr(os, "posix_spawn"):
+    child = os.posix_spawn(sys.executable, [sys.executable, "-I", "-S", "-c", "pass"], dict(os.environ))
+    os.waitpid(child, 0)
+else:
+    # No posix_spawn here: raise the event a real call raises, through the installed hook.
+    sys.audit("os.posix_spawn", sys.executable, [sys.executable], {})
+print(json.dumps({"returncode": process.returncode, "after_popen": after_popen, "after_spawn": observation.incomplete}))
+"""
+
+
+def test_a_real_popen_that_returned_leaves_a_later_posix_spawn_unobserved(checkout: Path) -> None:
+    """The observer's real Popen wrapper ends its judged launch, so an unrelated spawn after it is not covered.
+
+    POSIX runs a real ``os.posix_spawn``. A platform without one raises the
+    same audit event through the real hook, after a real covered Popen.
+    """
+    result = run_command(
+        [sys.executable, "-I", "-B", "-c", _REAL_LAUNCH, str(checkout)], cwd=checkout, environment=None
+    )
+    assert result.returncode == 0, result.stderr
+    summary = json.loads(result.stdout.strip().splitlines()[-1])
+    assert summary["returncode"] == 0
+    assert summary["after_popen"] == []
+    assert summary["after_spawn"] == ["unjudged child process (os.posix_spawn)"]

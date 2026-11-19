@@ -598,7 +598,7 @@ class Observation:
 #: Product package names; one of these outside the checkout is always another checkout's code.
 _PRODUCT_PACKAGE_PREFIX: Final[str] = "cadrumo"
 _SITE_PACKAGES: Final[str] = "site-packages"
-_SOURCE_SUFFIXES: Final[frozenset[str]] = frozenset({".py", ".pyc", ".pyd", ".pth"})
+_SOURCE_SUFFIXES: Final[frozenset[str]] = frozenset({".py", ".pyc", ".pyd", ".so", ".pth"})
 
 
 def _uri_path(uri: str) -> str:

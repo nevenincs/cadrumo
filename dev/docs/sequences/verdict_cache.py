@@ -306,8 +306,18 @@ class SequenceVerdicts:
         self._closure: tuple[str, _InputTrace, dict[Path, tuple[int, int] | None], int] | None = None
         self._current: dict[Path, str] = {}
         self._current_listings: dict[Path, str] = {}
+        # The sequence tree is keyed already: its shared seeds and fixtures by the
+        # corpus, each contract and golden by its own sequence. Recording it as an
+        # observed read would tie every sequence to the goldens of all the
+        # sequences that ran before it in the same process.
+        sequence_inputs = (docs_root / "_sequences", *(root for root in (goldens_root, contracts_root) if root))
         self._unrecorded = tuple(
-            path.resolve() for path in (dev_cache_dir(_CACHE_NAME).parent, *(file.parent for file in authority_files))
+            path.resolve()
+            for path in (
+                dev_cache_dir(_CACHE_NAME).parent,
+                *(file.parent for file in authority_files),
+                *sequence_inputs,
+            )
         )
         with unobserved():
             self._corpus_key, self._snapshot = self._hash_corpus(authority_identity)

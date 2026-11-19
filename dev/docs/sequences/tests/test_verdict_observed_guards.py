@@ -449,3 +449,42 @@ def test_editing_a_product_module_the_compiler_never_reaches_changes_no_key(tree
     before = tree.keys()
     _edit(tree, _CLI)
     assert tree.keys() == before
+
+
+# The sequence tree ----------------------------------------------------------------
+
+
+def test_another_sequences_golden_and_contract_read_in_the_same_process_are_not_recorded(
+    tree: SyntheticTree, cache: Path
+) -> None:
+    """Sequences share one process, so the observer sees every earlier sequence's golden and contract.
+
+    Those files are keyed by their own sequence, so editing them must leave
+    this record reusable; its own golden and the shared seeds still end reuse
+    through the key.
+    """
+    other_golden = tree.golden(*_TWO).relative_to(tree.repo).as_posix()
+    other_contract = tree.contract(*_TWO).relative_to(tree.repo).as_posix()
+    observation = tree.observe(_CLI, other_golden, other_contract, "docs/_sequences/seeds/shared.json")
+
+    product = _product(_record(tree, observation))
+    assert product["mode"] == "observed"
+    files = product["files"]
+    assert isinstance(files, dict)
+    assert not [name for name in files if name.startswith("docs/_sequences/")], files
+    assert files[_CLI] == _sha((tree.repo / _CLI).read_bytes())
+
+    for relative in (other_golden, other_contract):
+        path = tree.repo / relative
+        write(path, path.read_text(encoding="utf-8") + "\n")
+    assert _reusable(tree), "another sequence's inputs do not shape this one"
+    _edit(tree, "docs/_sequences/seeds/shared.json")
+    assert not _reusable(tree), "a shared seed is a corpus input"
+
+
+def test_a_sequences_own_golden_still_ends_reuse_when_it_is_not_recorded(tree: SyntheticTree, cache: Path) -> None:
+    own_golden = tree.golden(*_ONE).relative_to(tree.repo).as_posix()
+    _record(tree, tree.observe(_CLI, own_golden))
+    assert _reusable(tree)
+    _edit(tree, own_golden)
+    assert not _reusable(tree)
