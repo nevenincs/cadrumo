@@ -64,12 +64,20 @@ add_custom_target(user_docs_build
   BYPRODUCTS "${CADRUMO_PATH_USER_DOCS_BUILD}/ready"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${docs_comment}" USES_TERMINAL VERBATIM)
 add_dependencies(user_docs_build registry_authority)
+# A clean check writes the stamp and a depfile naming every input its per-sequence
+# verdict keys read, so an unchanged corpus is skipped here; when an input moved, the
+# check re-executes only the sequences whose recorded verdicts no longer match.
+set(user_docs_verify_stamp "${CADRUMO_PATH_USER_DOCS_WORK}/sequences-verified.stamp")
 cadrumo_build_step(docs_comment user_docs_verify GROUP verification
-  SUMMARY "check every documented CLI sequence against the selected authority")
-add_custom_target(user_docs_verify
-  COMMAND ${docs_helper} dev.docs.sequences check
+  SUMMARY "check every documented CLI sequence against the selected authority"
+  OUTPUTS "${user_docs_verify_stamp}")
+add_custom_command(OUTPUT "${user_docs_verify_stamp}"
+  COMMAND ${docs_helper} dev.docs.sequences check --stamp "${user_docs_verify_stamp}"
+  DEPFILE "${user_docs_verify_stamp}.d"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${docs_comment}" USES_TERMINAL VERBATIM)
+add_custom_target(user_docs_verify DEPENDS "${user_docs_verify_stamp}")
 add_dependencies(user_docs_verify registry_authority)
+cadrumo_register_clean(TARGET user_docs_verify PATHS "${user_docs_verify_stamp}" "${user_docs_verify_stamp}.d")
 cadrumo_build_step(docs_comment user_docs_driver_test GROUP verification
   SUMMARY "test the documentation build driver")
 add_custom_target(user_docs_driver_test

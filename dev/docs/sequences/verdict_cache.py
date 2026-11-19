@@ -1,20 +1,30 @@
-"""Reuse a clean cli-sequence gate verdict when nothing it depends on has changed.
+"""Reuse a clean cli-sequence verdict, sequence by sequence, when nothing it depends on changed.
 
-The gate executes every documented CLI sequence against the real CLI and
-compares the transcripts with their committed goldens. Its verdict is a pure
-function of the product source (the CLI, its registry data and the golden mask
-set), the gate engine and every ``dev`` module it imports, the sequence
-contracts, goldens, seeds and fixtures, the directives the pages enroll, the
-published registry authority, the locked dependencies and the interpreter. The
-key hashes all of them, enumerated from the filesystem and from the engine's
-static import graph, so any change to any input is a cache miss and a re-run.
-The registry tooling is the one deliberate omission: it reaches the verdict
-only through the published authority, whose exact database bytes the key
-carries.
+Each documented sequence executes against the real CLI and compares its
+transcript with its committed golden. Its verdict is a pure function of two
+parts, hashed into one content key per sequence:
 
-Only a clean verdict is stored. A divergence is never cached, so a cache can
-cost a re-run but can never turn a failing gate green; a hit always says which
-recorded verdict it reused.
+- the corpus inputs every sequence shares: the interpreter and platform, the
+  published registry authority, the product source (the CLI, its runtime, its
+  client and its registry data), the gate engine and every ``dev`` module it
+  imports, the locked dependencies, and the shared seeds and fixtures under
+  ``docs/_sequences``;
+- the sequence's own inputs: its page and id, the parsed sequence the runner
+  executes (directive options merged with the private contract), the private
+  contract's bytes and the committed golden's bytes.
+
+The corpus inputs are enumerated from the filesystem and from the engine's
+static import graph, so any change to a shared input re-executes every
+sequence, and a change to one sequence's own inputs re-executes only it. The
+published authority enters as its logical generation together with the
+registry tooling that compiles it, because two publications of one source
+differ in database bytes.
+
+Only a clean sequence is recorded, immediately after it passes, so an
+interrupted run keeps the verdicts it completed. A divergence is never
+recorded, so a record can cost a re-run but can never turn a failing sequence
+green. A record is refused when any input changed while the sequence ran, and
+every reuse reports which recorded verdict stood in for execution.
 """
 
 from __future__ import annotations
@@ -24,9 +34,9 @@ import hashlib
 import json
 import os
 import platform
-import re
 import sys
-from collections.abc import Callable, Iterator
+from collections.abc import Iterable, Iterator
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final, Protocol
@@ -38,59 +48,111 @@ from dev.locales.write_guard import LOCK_FILENAME
 from dev.paths import REPO_ROOT
 
 from .authority_currency import require_current_authority
+from .contracts import sequence_contract_path
 from .errors import SequenceEngineError
+from .golden_store import golden_path
+from .schema import ParsedSequence
 
-#: Set to bypass the cache and always execute the gate.
+#: Set to bypass reuse and always execute every sequence; passing sequences are still recorded.
 FORCE_ENV: Final[str] = "CADRUMO_DOCS_FORCE_SEQUENCE_CHECK"
 _CACHE_NAME: Final[str] = "docs-sequence-verdicts"
-_DIRECTIVE_RE: Final[re.Pattern[str]] = re.compile(r"^```\{cli-sequence\}.*?^```", re.MULTILINE | re.DOTALL)
+_RECORD_FORMAT: Final[str] = "cli-sequence-verdict/2"
 _PRUNED: Final[tuple[str, ...]] = ("__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache")
 #: The engine's entry points; every ``dev`` module they import, transitively, is a verdict input.
 ENGINE_ROOTS: Final[tuple[str, ...]] = ("dev/docs/sequences", "dev/docs/sequence_build_gate.py", "dev/docs/build.py")
-#: Registry tooling reaches the verdict only through the published authority,
-#: whose database digest the key already carries. Following its imports would
-#: re-run the gate for every registry-tool edit without adding an input.
+#: Registry tooling reaches the verdict only through the published authority it
+#: compiles. The key carries the authority's logical generation and hashes this
+#: whole tree beside it, so the engine's import walk need not follow it.
 _AUTHORITY_TOOLING: Final[str] = "dev/registry/"
+#: Under ``docs/_sequences`` these subtrees hold per-sequence inputs, keyed
+#: sequence by sequence; everything else there (seeds, fixtures) is shared.
+_CONTRACTS_DIRECTORY: Final[str] = "contracts"
+_GOLDEN_SUFFIX: Final[str] = ".json"
 
 
 class _Digest(Protocol):
     def update(self, data: bytes, /) -> None: ...
 
 
-def _hash_tree(digest: _Digest, root: Path, *, label: str) -> None:
-    if not root.exists():
-        digest.update(f"absent:{label}\n".encode())
-        return
-    files = (
-        [root]
-        if root.is_file()
-        else scan_directory(root, recursive=True, select=DirectoryEntryKind.FILES, prune_directories=_PRUNED)
-    )
-    for path in files:
-        # The catalogue writers' lock exists only while one of them runs, so it
-        # carries no verdict input and may vanish between the scan and the read.
-        if path.name == LOCK_FILENAME:
-            continue
-        relative = path.relative_to(root).as_posix() if path != root else path.name
-        digest.update(f"{label}/{relative}\n".encode())
+class KeyedSequence(Protocol):
+    """The discovered-sequence shape a verdict is keyed on."""
+
+    @property
+    def page(self) -> str: ...
+
+    @property
+    def sequence_id(self) -> str: ...
+
+    @property
+    def sequence(self) -> ParsedSequence: ...
+
+
+@dataclass
+class _InputTrace:
+    """Every file and tree one key read, so a later change can be detected and declared."""
+
+    files: set[Path] = field(default_factory=set)
+    directories: set[Path] = field(default_factory=set)
+    absent: set[Path] = field(default_factory=set)
+    trees: list[tuple[Path, tuple[str, ...]]] = field(default_factory=list)
+
+    def hash_file(self, digest: _Digest, path: Path, *, label: str) -> None:
+        self.files.add(path)
+        digest.update(f"{label}\n".encode())
         with path.open("rb") as handle:
             digest.update(hashlib.file_digest(handle, "sha256").digest())
 
+    def hash_tree(
+        self,
+        digest: _Digest,
+        root: Path,
+        *,
+        label: str,
+        skip: tuple[str, ...] = (),
+    ) -> None:
+        """Hash every file under ``root`` (or ``root`` itself), skipping the top-level ``skip`` names."""
+        if not root.exists():
+            self.absent.add(root)
+            digest.update(f"absent:{label}\n".encode())
+            return
+        if root.is_file():
+            self.hash_file(digest, root, label=f"{label}/{root.name}")
+            return
+        self.trees.append((root, skip))
+        self.directories.add(root)
+        for path in _tree_files(root, skip):
+            relative = path.relative_to(root)
+            self.directories.update(path.parents[: len(relative.parts) - 1])
+            self.hash_file(digest, path, label=f"{label}/{relative.as_posix()}")
 
-def _hash_directives(digest: _Digest, docs_root: Path) -> None:
-    """Hash only the directives each page enrolls; page prose does not change a verdict."""
-    pages = scan_directory(
-        docs_root,
-        pattern="*.md",
-        recursive=True,
-        select=DirectoryEntryKind.FILES,
-        prune_directories=("_build", "locales", *_PRUNED),
-    )
-    for page in pages:
-        directives = _DIRECTIVE_RE.findall(page.read_text(encoding="utf-8"))
-        if directives:
-            digest.update(f"page/{page.relative_to(docs_root).as_posix()}\n".encode())
-            digest.update("\n".join(directives).encode())
+    def snapshot(self) -> dict[Path, tuple[int, int] | None]:
+        """Return each traced file's size and modification time; ``None`` for an absent path."""
+        return {path: _stat(path) for path in (*self.files, *self.absent)}
+
+    def current_files(self) -> set[Path]:
+        """Re-enumerate the traced trees, so an added or removed file is seen as a change."""
+        files = {path for path in self.files if not any(path.is_relative_to(root) for root, _ in self.trees)}
+        for root, skip in self.trees:
+            if root.is_dir():
+                files.update(_tree_files(root, skip))
+        return files
+
+
+def _tree_files(root: Path, skip: tuple[str, ...]) -> Iterator[Path]:
+    for path in scan_directory(root, recursive=True, select=DirectoryEntryKind.FILES, prune_directories=_PRUNED):
+        # The catalogue writers' lock exists only while one of them runs, so it
+        # carries no verdict input and may vanish between the scan and the read.
+        if path.relative_to(root).parts[0] in skip or path.name == LOCK_FILENAME:
+            continue
+        yield path
+
+
+def _stat(path: Path) -> tuple[int, int] | None:
+    try:
+        status = path.stat()
+    except OSError:
+        return None
+    return (status.st_size, status.st_mtime_ns)
 
 
 def _is_type_checking_guard(node: ast.If) -> bool:
@@ -174,72 +236,196 @@ def engine_import_closure(repo_root: Path = REPO_ROOT) -> tuple[str, ...]:
     return tuple(sorted(path.relative_to(repo_root).as_posix() for path in seen))
 
 
-def verdict_key(
-    *,
-    docs_root: Path,
-    goldens_root: Path | None,
-    authority_database_sha256: str,
-    repo_root: Path = REPO_ROOT,
-) -> str:
-    """Return the content key of everything the gate's verdict depends on."""
-    digest = hashlib.sha256()
-    digest.update(
-        f"python:{sys.version}\nplatform:{platform.system()}\nauthority:{authority_database_sha256}\n".encode()
-    )
-    for source_root in PRODUCT_SOURCE_ROOTS:
-        _hash_tree(digest, repo_root / source_root, label=source_root)
-    _hash_tree(digest, repo_root / "dev" / "docs" / "sequences", label="engine")
-    for relative in engine_import_closure(repo_root):
-        _hash_tree(digest, repo_root / relative, label=f"engine-import/{relative}")
-    _hash_tree(digest, repo_root / "uv.lock", label="lock")
-    _hash_tree(digest, docs_root / "_sequences", label="sequences")
-    if goldens_root is not None:
-        _hash_tree(digest, goldens_root, label="goldens")
-    _hash_directives(digest, docs_root)
-    return digest.hexdigest()
-
-
 def _record_path(key: str) -> Path:
     return dev_cache_dir(_CACHE_NAME) / f"{key}.json"
 
 
-def reused_verdict(key: str) -> str | None:
-    """Return a description of the recorded clean verdict for ``key``, or ``None`` to run the gate."""
-    if bool(os.environ.get(FORCE_ENV)):
-        return None
-    record = _record_path(key)
-    try:
-        document = json.loads(record.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-    if document.get("verdict") != "clean" or document.get("key") != key:
-        return None
-    return f"reused clean verdict {key[:12]} recorded {document.get('recorded_at')}"
+def reuse_forced_off() -> bool:
+    """Return whether :data:`FORCE_ENV` asks every sequence to execute."""
+    return bool(os.environ.get(FORCE_ENV))
 
 
-def record_clean_verdict(key: str) -> None:
-    """Record that the gate passed for ``key``; a failure to record costs only a future re-run."""
-    record = _record_path(key)
-    try:
-        record.parent.mkdir(parents=True, exist_ok=True)
-        record.write_text(
-            json.dumps({"key": key, "verdict": "clean", "recorded_at": datetime.now(UTC).isoformat()}),
-            encoding="utf-8",
+class SequenceVerdicts:
+    """The per-sequence verdict authority for one docs tree under one published authority.
+
+    Construct it once per process, before any sequence executes: the corpus
+    inputs are hashed once and their sizes and modification times captured, so
+    recording a pass can confirm cheaply that nothing changed underneath it.
+    """
+
+    def __init__(
+        self,
+        *,
+        docs_root: Path,
+        goldens_root: Path | None,
+        authority_identity: str,
+        repo_root: Path = REPO_ROOT,
+        contracts_root: Path | None = None,
+        authority_files: tuple[Path, ...] = (),
+    ) -> None:
+        """Hash the corpus inputs once.
+
+        Args:
+            authority_files: The published authority's files; they enter the
+                depfile so a republication re-runs the check, while the key
+                carries only ``authority_identity``.
+        """
+        self._authority_files = authority_files
+        self._docs_root = docs_root
+        self._goldens_root = goldens_root
+        self._contracts_root = contracts_root
+        self._trace = _InputTrace()
+        digest = hashlib.sha256()
+        digest.update(
+            f"{_RECORD_FORMAT}\npython:{sys.version}\nplatform:{platform.system()}\n"
+            f"authority:{authority_identity}\n".encode()
         )
-    except OSError:
-        return
+        for source_root in PRODUCT_SOURCE_ROOTS:
+            self._trace.hash_tree(digest, repo_root / source_root, label=source_root)
+        for relative in engine_import_closure(repo_root):
+            self._trace.hash_tree(digest, repo_root / relative, label=f"engine-import/{relative}")
+        self._trace.hash_tree(digest, repo_root / "dev" / "docs" / "sequences", label="engine")
+        self._trace.hash_tree(digest, repo_root / _AUTHORITY_TOOLING, label="authority-tooling")
+        self._trace.hash_tree(digest, repo_root / "uv.lock", label="lock")
+        sequences_root = docs_root / "_sequences"
+        shared_skip = (_CONTRACTS_DIRECTORY, *self._golden_page_roots(sequences_root))
+        self._trace.hash_tree(digest, sequences_root, label="sequences", skip=shared_skip)
+        self._corpus_key = digest.hexdigest()
+        self._snapshot = self._trace.snapshot()
+
+    def _golden_page_roots(self, sequences_root: Path) -> tuple[str, ...]:
+        """Name the top-level ``_sequences`` directories that hold committed goldens.
+
+        Goldens live at ``<goldens root>/<page>/<sequence-id>.json``; a page's
+        first docname segment is a docs section directory (``how-to``,
+        ``explanation``), never ``seeds`` or ``fixtures``. When the goldens are
+        redirected elsewhere, every committed ``_sequences`` subtree is shared.
+        """
+        if self._goldens_root is not None and self._goldens_root.resolve() != sequences_root.resolve():
+            return ()
+        sections = {
+            path.relative_to(self._docs_root).parts[0]
+            for path in scan_directory(self._docs_root, pattern="*.md", recursive=True, prune_directories=_PRUNED)
+            if len(path.relative_to(self._docs_root).parts) > 1
+        }
+        return tuple(sorted(name for name in sections if not name.startswith("_")))
+
+    @property
+    def corpus_key(self) -> str:
+        """The digest of every input the sequences share."""
+        return self._corpus_key
+
+    def _own_inputs(self, item: KeyedSequence) -> tuple[Path, Path]:
+        contract = sequence_contract_path(
+            item.page, item.sequence_id, docs_root=self._docs_root, contracts_root=self._contracts_root
+        )
+        return contract, golden_path(item.page, item.sequence_id, goldens_root=self._goldens_root)
+
+    def key(self, item: KeyedSequence) -> str:
+        """Return the content key of everything ``item``'s verdict depends on."""
+        digest = hashlib.sha256()
+        digest.update(f"corpus:{self._corpus_key}\npage:{item.page}\nsequence:{item.sequence_id}\n".encode())
+        digest.update(item.sequence.model_dump_json().encode())
+        for label, path in zip(("contract", "golden"), self._own_inputs(item), strict=True):
+            try:
+                content = path.read_bytes()
+            except FileNotFoundError:
+                digest.update(f"\nabsent:{label}\n".encode())
+                continue
+            digest.update(f"\n{label}:".encode())
+            digest.update(hashlib.sha256(content).digest())
+        return digest.hexdigest()
+
+    def reused(self, item: KeyedSequence) -> str | None:
+        """Describe the recorded clean verdict standing in for ``item``, or ``None`` to execute it."""
+        if reuse_forced_off():
+            return None
+        key = self.key(item)
+        try:
+            document = json.loads(_record_path(key).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        if not isinstance(document, dict) or document.get("verdict") != "clean" or document.get("key") != key:
+            return None
+        return f"reused clean verdict {key[:12]} recorded {document.get('recorded_at')}"
+
+    def changed_inputs(self) -> tuple[Path, ...]:
+        """Return the shared inputs added, removed, or whose size or modification time moved since construction."""
+        moved = {path for path, before in self._snapshot.items() if _stat(path) != before}
+        moved.update(self._trace.current_files() ^ self._trace.files)
+        return tuple(sorted(moved))
+
+    def record_clean(self, item: KeyedSequence, *, key: str) -> None:
+        """Record that ``item`` passed under ``key``, the key taken before it executed.
+
+        A failure to write costs only a future re-run.
+
+        Raises:
+            SequenceEngineError: When any input changed while the sequence ran;
+                nothing is recorded.
+        """
+        changed = self.changed_inputs()
+        if changed or self.key(item) != key:
+            detail = ", ".join(str(path) for path in changed[:5]) or "the sequence's own contract or golden"
+            raise SequenceEngineError(
+                f"cli-sequence inputs changed during execution ({detail}); "
+                f"no verdict was recorded for {item.page}/{item.sequence_id}"
+            )
+        record = _record_path(key)
+        document = {
+            "format": _RECORD_FORMAT,
+            "key": key,
+            "verdict": "clean",
+            "page": item.page,
+            "sequence_id": item.sequence_id,
+            "recorded_at": datetime.now(UTC).isoformat(),
+        }
+        staged = record.with_name(f"{record.name}.{os.getpid()}.tmp")
+        try:
+            record.parent.mkdir(parents=True, exist_ok=True)
+            staged.write_text(json.dumps(document), encoding="utf-8")
+            staged.replace(record)
+        except OSError:
+            staged.unlink(missing_ok=True)
+
+    def dependency_paths(self, items: Iterable[KeyedSequence]) -> tuple[Path, ...]:
+        """Return every file and directory the keys of ``items`` read, for a build-system depfile.
+
+        Directories are listed so that a file added to or removed from a hashed
+        tree, or a new page, re-runs the check.
+        """
+        paths: set[Path] = {*self._trace.files, *self._trace.directories}
+        paths.update(path for path in self._trace.absent if path.parent.exists())
+        paths.update(_page_inputs(self._docs_root))
+        for item in items:
+            for path in self._own_inputs(item):
+                paths.add(path if path.exists() else path.parent)
+        paths.add(Path(sys.executable))
+        paths.update(self._authority_files)
+        return tuple(sorted(paths))
 
 
-def published_verdict_key(*, docs_root: Path, goldens_root: Path | None) -> str:
-    """Return the verdict key under the published authority the runner will read.
+def _page_inputs(docs_root: Path) -> Iterator[Path]:
+    """Yield every page and docs directory discovery reads directives from."""
+    yield docs_root
+    for page in scan_directory(docs_root, pattern="*.md", recursive=True, prune_directories=("_build", *_PRUNED)):
+        yield page
+        yield page.parent
 
-    The authority enters as the physical digest its descriptor names: the exact
-    bytes every sequence child reads, and the same in every process that reads
-    them. A reader's generation pin is not usable here, because it carries an
-    incarnation drawn fresh for each reader, which would make every process's
-    key unique and no recorded verdict reusable. A stale authority is refused
-    before it can key anything, so a clean verdict recorded under it can never
-    be reused.
+
+def published_authority_identity() -> str:
+    """Return the identity under which the published authority enters every verdict key.
+
+    The authority enters as the logical generation its descriptor names: the
+    identity of the registry source it was compiled from. Two publications of
+    one source tree differ in database bytes, so the physical digest would make
+    every fresh publication (each native build publishes its own) re-execute the
+    whole corpus. The compiler that maps the generation to those bytes is a
+    shared verdict input in its own right (``_AUTHORITY_TOOLING``), so the pair
+    determines what every sequence reads. A reader's generation pin is not
+    usable here, because it carries an incarnation drawn fresh for each reader.
+    A stale authority is refused before it can key anything, so a clean verdict
+    recorded under it can never be reused.
 
     Raises:
         SequenceEngineError: When the published authority is not current.
@@ -248,36 +434,39 @@ def published_verdict_key(*, docs_root: Path, goldens_root: Path | None) -> str:
     from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
 
     require_current_authority()
-    descriptor = AuthorityDescriptor.read(bundled_authority_descriptor_path())
-    return verdict_key(
+    return AuthorityDescriptor.read(bundled_authority_descriptor_path()).logical_generation
+
+
+def published_sequence_verdicts(
+    *, docs_root: Path, goldens_root: Path | None, contracts_root: Path | None = None
+) -> SequenceVerdicts:
+    """Return the verdict authority for ``docs_root`` under the published authority the runner reads.
+
+    Raises:
+        SequenceEngineError: When the published authority is not current.
+    """
+    from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
+
+    return SequenceVerdicts(
         docs_root=docs_root,
         goldens_root=goldens_root,
-        authority_database_sha256=descriptor.database_sha256,
+        contracts_root=contracts_root,
+        authority_identity=published_authority_identity(),
+        authority_files=(bundled_authority_descriptor_path(),),
     )
 
 
-def check_reusing_verdict(
-    input_key: Callable[[], str], check: Callable[[], tuple[str, ...]]
-) -> tuple[tuple[str, ...], str | None]:
-    """Check the current inputs, reusing or recording only a clean verdict for them.
+def write_depfile(depfile: Path, *, target: Path, dependencies: Iterable[Path]) -> None:
+    """Write a Makefile-syntax depfile naming ``target``'s ``dependencies``."""
 
-    The docs build and the merge gate both go through this one flow, so neither
-    can reuse or record a verdict on terms the other would not.
+    def escaped(path: Path) -> str:
+        return path.resolve().as_posix().replace("$", "$$").replace("#", "\\#").replace(" ", "\\ ")
 
-    Returns:
-        The problems ``check`` reported, and the description of the recorded
-        verdict when one stood in for execution (``None`` when ``check`` ran).
-    """
-    key = input_key()
-    reused = reused_verdict(key)
-    if reused is not None:
-        return (), reused
-    problems = check()
-    if input_key() != key:
-        raise SequenceEngineError("cli-sequence inputs changed during execution; no verdict was recorded")
-    if not problems:
-        record_clean_verdict(key)
-    return problems, None
+    lines = [f"{escaped(target)}: \\"]
+    lines.extend(f"  {escaped(path)} \\" for path in dependencies)
+    lines.append("")
+    depfile.parent.mkdir(parents=True, exist_ok=True)
+    depfile.write_text("\n".join(lines), encoding="utf-8", newline="\n")
 
 
 def _resolved_import_module(node: ast.ImportFrom, package: str) -> str:

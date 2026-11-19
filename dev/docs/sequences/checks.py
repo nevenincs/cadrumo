@@ -51,15 +51,18 @@ from .runner import (
 from .sandbox import owned_scratch_directory
 from .schema import FrameKind, ParsedSequence, SequenceId
 from .seed_generator import check_seeds
+from .verdict_cache import SequenceVerdicts, published_sequence_verdicts, reuse_forced_off
 
 __all__ = [
     "ADVISORY_PREFIX",
     "DEFAULT_REFRESH_JOBS",
+    "EXECUTE_ALL_OPTION",
     "PROBLEM_PREFIX",
     "READER_FRAME_OUTPUT_ADVISORY_BYTES",
     "REFRESHED_PREFIX",
     "DiscoveredSequence",
     "RefreshUnit",
+    "VerdictPolicy",
     "check_page_coherence",
     "check_page_coherence_in_subprocess",
     "check_sequences",
@@ -112,6 +115,8 @@ DEFAULT_REFRESH_JOBS: Final[int] = 8
 REFRESHED_PREFIX: Final[str] = "refreshed: "
 ADVISORY_PREFIX: Final[str] = "advisory: "
 PROBLEM_PREFIX: Final[str] = "problem: "
+#: The ``check`` option that executes every addressed sequence instead of reusing recorded verdicts.
+EXECUTE_ALL_OPTION: Final[str] = "--execute-all"
 
 #: A sequence pays for its own runtime and profile worker before its first frame,
 #: roughly what three frames cost. The shard schedule weighs a sequence by its
@@ -631,12 +636,18 @@ def check_sequences(
     goldens_root: Path | None = None,
     page: str | None = None,
     sequence_id: str | None = None,
+    verdicts: VerdictPolicy | None = None,
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
     """Execute the addressed sequences and compare against committed goldens.
 
     This is THE engine check function: the ``check`` CLI mode, the Sphinx
     ``builder-inited`` hook, and the pytest gate all call it, so a divergence
     reds every surface through one execution path.
+
+    With ``verdicts``, each sequence whose content key has a recorded clean
+    verdict is reported as reused instead of executed (unless the policy only
+    records), and each sequence that passes is recorded as soon as it does, so
+    an interrupted run keeps the verdicts it completed.
 
     Returns:
         ``(problems, advisories)``. Empty ``problems`` is a clean pass; each
@@ -659,6 +670,7 @@ def check_sequences(
         # fault; a scoped run leaves it to the unscoped gate.
         all_problems.extend(check_seeds())
     advisories: list[str] = []
+    keyed = None if verdicts is None else verdicts.open(docs_root=docs_root, goldens_root=goldens_root)
     for item in discovered:
         advisories.extend(unused_capture_advisories(item))
         if not item.sequence.executed_frames:
@@ -669,13 +681,45 @@ def check_sequences(
             all_problems.append(str(exc))
             continue
         advisories.extend(oversized_frame_advisories(item.page, golden))
+        key = None if keyed is None else keyed.key(item)
+        if keyed is not None and verdicts is not None and verdicts.reuse:
+            reused = keyed.reused(item)
+            if reused is not None:
+                verdicts.report(f"{item.page}/{item.sequence_id}: {reused}")
+                continue
         try:
             with sequence_progress_scope(item.page), execute_in_fresh_sandbox(item.sequence) as transcript:
-                all_problems.extend(check_transcript(item.sequence, transcript, golden, page=item.page))
+                sequence_problems = check_transcript(item.sequence, transcript, golden, page=item.page)
         except SequenceEngineError as exc:
             all_problems.append(f"page {item.page!r}: {with_notes(exc)}")
             continue
+        all_problems.extend(sequence_problems)
+        if keyed is not None and key is not None and not sequence_problems:
+            try:
+                keyed.record_clean(item, key=key)
+            except SequenceEngineError as exc:
+                all_problems.append(str(exc))
     return tuple(all_problems), tuple(advisories)
+
+
+@dataclass(frozen=True)
+class VerdictPolicy:
+    """How a check consults the per-sequence verdict cache.
+
+    ``reuse`` lets a recorded clean verdict stand in for execution; without it
+    every addressed sequence executes and each pass is still recorded.
+    ``report`` receives one line naming every recorded verdict reused.
+    """
+
+    reuse: bool = True
+    report: Callable[[str], None] = print
+
+    def open(self, *, docs_root: Path | None, goldens_root: Path | None) -> SequenceVerdicts:
+        """Key the corpus under the published authority; refuses a stale authority."""
+        return published_sequence_verdicts(
+            docs_root=docs_root if docs_root is not None else default_docs_root(),
+            goldens_root=goldens_root,
+        )
 
 
 def english_pinned_environment() -> dict[str, str]:
@@ -782,11 +826,14 @@ def _scoped_check_command(
     docs_root: Path | None,
     goldens_root: Path | None,
     coherence: bool,
+    reuse_verdicts: bool = True,
 ) -> list[str]:
     """Build one page-scoped ``check`` child command line."""
     command = [sys.executable, "-m", "dev.docs.sequences", "check", "--page", page]
     if coherence:
         command.append("--coherence")
+    elif not reuse_verdicts:
+        command.append(EXECUTE_ALL_OPTION)
     if docs_root is not None:
         command.extend(("--docs-root", str(docs_root)))
     if goldens_root is not None and not coherence:
@@ -801,6 +848,7 @@ def _check_pages_in_subprocesses(
     jobs: int,
     timeout: float | None,
     coherence: bool = False,
+    reuse_verdicts: bool = True,
 ) -> tuple[str, ...]:
     """Shard the unscoped check across page-scoped children, ``jobs`` at a time.
 
@@ -811,6 +859,12 @@ def _check_pages_in_subprocesses(
     (parse-only, no execution) and prepended to the merged report. A page-local
     discovery fault is reported by both the parent and its page's child; on an
     already-red gate the repetition is cosmetic.
+
+    In the golden tier with ``reuse_verdicts``, a page whose every executed
+    sequence has a recorded clean verdict starts no child at all; the parent
+    reports each verdict it reused. A page with any unrecorded sequence starts
+    its child, which reuses and records sequence by sequence through the same
+    cache.
 
     Returns:
         The merged report tuple: the parent discovery problems (if any)
@@ -824,19 +878,54 @@ def _check_pages_in_subprocesses(
     # Longest page first: with bounded workers, scheduling the heaviest pages
     # early keeps the tail short (the largest page bounds the ideal wall).
     pages = sorted(counts, key=lambda page: counts[page], reverse=True)
+    if not coherence and reuse_verdicts and not discovery_problems:
+        pages = _pages_needing_execution(discovered, pages, docs_root=docs_root, goldens_root=goldens_root)
 
     reports: list[str] = []
     if discovery_problems:
         reports.append("\n".join(f"FAIL: {problem}" for problem in discovery_problems))
     if pages:
         commands = [
-            _scoped_check_command(page=page, docs_root=docs_root, goldens_root=goldens_root, coherence=coherence)
+            _scoped_check_command(
+                page=page,
+                docs_root=docs_root,
+                goldens_root=goldens_root,
+                coherence=coherence,
+                reuse_verdicts=reuse_verdicts,
+            )
             for page in pages
         ]
         with ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
             for child_report in pool.map(lambda command: _run_check_child(command, timeout=timeout), commands):
                 reports.extend(child_report)
     return tuple(reports)
+
+
+def _pages_needing_execution(
+    discovered: Sequence[DiscoveredSequence],
+    pages: list[str],
+    *,
+    docs_root: Path | None,
+    goldens_root: Path | None,
+) -> list[str]:
+    """Drop the pages whose every executed sequence has a recorded clean verdict, reporting each reuse."""
+    policy = VerdictPolicy()
+    verdicts = policy.open(docs_root=docs_root, goldens_root=goldens_root)
+    reused: dict[str, list[str]] = {}
+    pending: set[str] = set()
+    for item in discovered:
+        if not item.sequence.executed_frames:
+            continue
+        description = verdicts.reused(item)
+        if description is None:
+            pending.add(item.page)
+        else:
+            reused.setdefault(item.page, []).append(f"{item.page}/{item.sequence_id}: {description}")
+    for page in pages:
+        if page not in pending:
+            for line in reused.get(page, ()):
+                policy.report(line)
+    return [page for page in pages if page in pending]
 
 
 def check_sequences_in_subprocess(
@@ -847,6 +936,7 @@ def check_sequences_in_subprocess(
     sequence_id: str | None = None,
     timeout: float | None = None,
     jobs: int = 1,
+    reuse_verdicts: bool = True,
 ) -> tuple[str, ...]:
     """Run the golden check in fresh English-pinned interpreter(s).
 
@@ -865,6 +955,12 @@ def check_sequences_in_subprocess(
     Children run to completion unless the caller explicitly supplies an
     elapsed-time deadline; correctness does not depend on host speed.
 
+    Every child consults the per-sequence verdict cache
+    (:mod:`dev.docs.sequences.verdict_cache`): a sequence with a recorded clean
+    verdict for its exact inputs is reused, and each sequence that passes is
+    recorded. ``reuse_verdicts=False``, or :data:`~dev.docs.sequences.verdict_cache.FORCE_ENV`
+    set in this process, executes every sequence and still records passes.
+
     Returns:
         An empty tuple on success, or the complete child diagnostic report(s)
         on a golden divergence.
@@ -876,14 +972,20 @@ def check_sequences_in_subprocess(
     # Refused here, once, so a stale authority is not reported by every child
     # as a golden divergence.
     require_current_authority()
+    # The children's environment drops every ``CADRUMO_*`` setting, so the
+    # force switch reaches them as an explicit option instead.
+    reuse_verdicts = reuse_verdicts and not reuse_forced_off()
     if jobs > 1 and page is None and sequence_id is None:
         return _check_pages_in_subprocesses(
             docs_root=docs_root,
             goldens_root=goldens_root,
             jobs=jobs,
             timeout=timeout,
+            reuse_verdicts=reuse_verdicts,
         )
     command = [sys.executable, "-m", "dev.docs.sequences", "check"]
+    if not reuse_verdicts:
+        command.append(EXECUTE_ALL_OPTION)
     if docs_root is not None:
         command.extend(("--docs-root", str(docs_root)))
     if goldens_root is not None:
@@ -1038,6 +1140,23 @@ def build_argument_parser() -> argparse.ArgumentParser:
                     "enrolled page's sequences execute cumulatively in ONE sandbox, "
                     "in page order, and every @expect must hold against the live "
                     "cumulative output"
+                ),
+            )
+            sub.add_argument(
+                EXECUTE_ALL_OPTION,
+                action="store_true",
+                help=(
+                    "execute every addressed sequence instead of reusing a recorded clean "
+                    "verdict for identical inputs; passing sequences are still recorded"
+                ),
+            )
+            sub.add_argument(
+                "--stamp",
+                type=Path,
+                default=None,
+                help=(
+                    "on a clean unscoped run, write this stamp and a Makefile-syntax "
+                    "depfile beside it (STAMP.d) naming every input the verdicts read"
                 ),
             )
             sub.add_argument(

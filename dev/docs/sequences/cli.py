@@ -10,11 +10,15 @@ Three modes over one engine:
   every page that executes that command. The author reviews the git diff — which IS the behaviour-change
   review — and commits the goldens with the CLI change that legitimately
   moved them. This is the ONLY sanctioned way a golden changes.
-- ``check [--page PAGE | --sequence ID]`` re-executes the addressed sequences
-  and compares against the committed goldens, failing (exit 1) with every
+- ``check [--page PAGE | --sequence ID] [--execute-all] [--stamp STAMP]``
+  re-executes the addressed sequences whose inputs have no recorded clean
+  verdict (:mod:`dev.docs.sequences.verdict_cache`; ``--execute-all`` runs
+  them all) and compares against the committed goldens, failing (exit 1) with every
   divergence: the page, the sequence id, the frame index and argv, the
   post-mask differing paths or unified text diff, and the exact ``refresh``
-  invocation that updates the golden.
+  invocation that updates the golden. ``--stamp`` lets a build system skip
+  an unchanged corpus: a clean unscoped run writes the stamp and a depfile
+  naming every input the verdicts read.
 - ``seeds [--check]`` renders the generated frames of each persona-derived
   seed recipe, and the sandbox persona's statement fixture, from the catalogue
   personas they declare; ``--check`` fails on drift without writing
@@ -48,19 +52,23 @@ reported the same way, by both modes.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
+import time
 from pathlib import Path
 
 from .checks import (
     ADVISORY_PREFIX,
     PROBLEM_PREFIX,
     REFRESHED_PREFIX,
+    VerdictPolicy,
     build_argument_parser,
     check_page_coherence,
     check_page_coherence_in_subprocess,
     check_sequences,
     check_sequences_in_subprocess,
     checks_owning_page,
+    default_docs_root,
     discover_sequences,
     pages_running_command,
     refresh_pages,
@@ -71,6 +79,7 @@ from .golden_store import (
     refresh_invocation,
 )
 from .seed_generator import check_seeds, write_seeds
+from .verdict_cache import published_sequence_verdicts, write_depfile
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -85,8 +94,18 @@ def main(argv: list[str] | None = None) -> int:
         return _seeds_mode(args)
 
     if args.coherence:
+        if args.stamp is not None or args.execute_all:
+            print("--coherence executes every page; it takes neither --stamp nor --execute-all", file=sys.stderr)
+            return 2
         return _coherence_mode(args)
+    if args.stamp is not None and (args.page is not None or args.sequence is not None or args.timeout is not None):
+        print("--stamp records the unscoped in-process check; drop --page, --sequence and --timeout", file=sys.stderr)
+        return 2
 
+    started = time.time_ns()
+    if args.stamp is not None:
+        # A failing or interrupted run must leave no stamp a build could take for a pass.
+        args.stamp.unlink(missing_ok=True)
     try:
         if args.timeout is None:
             problems, advisories = check_sequences(
@@ -94,6 +113,7 @@ def main(argv: list[str] | None = None) -> int:
                 goldens_root=args.goldens_root,
                 page=args.page,
                 sequence_id=args.sequence,
+                verdicts=VerdictPolicy(reuse=not args.execute_all),
             )
         else:
             problems = check_sequences_in_subprocess(
@@ -102,8 +122,11 @@ def main(argv: list[str] | None = None) -> int:
                 page=args.page,
                 sequence_id=args.sequence,
                 timeout=args.timeout,
+                reuse_verdicts=not args.execute_all,
             )
             advisories = ()
+        if not problems and args.stamp is not None:
+            _write_stamp(args, started_ns=started)
     except SequenceEngineError as exc:
         print(f"FAIL: {exc}", file=sys.stderr)
         return 1
@@ -122,6 +145,26 @@ def main(argv: list[str] | None = None) -> int:
     if args.sequence is not None:
         _single_sequence_advisory(args)
     return 0
+
+
+def _write_stamp(args: argparse.Namespace, *, started_ns: int) -> None:
+    """Write the clean-run stamp and its depfile from the inputs the verdict keys read.
+
+    The stamp is dated to the start of the run, so an input edited while the
+    run executed is newer than the stamp and the next build checks again.
+    """
+    stamp = Path(args.stamp)
+    docs_root = args.docs_root if args.docs_root is not None else default_docs_root()
+    discovered, _problems = discover_sequences(docs_root=docs_root)
+    verdicts = published_sequence_verdicts(docs_root=docs_root, goldens_root=args.goldens_root)
+    write_depfile(
+        stamp.with_name(f"{stamp.name}.d"),
+        target=stamp,
+        dependencies=verdicts.dependency_paths(discovered),
+    )
+    stamp.parent.mkdir(parents=True, exist_ok=True)
+    stamp.write_text(f"{verdicts.corpus_key}\n", encoding="utf-8")
+    os.utime(stamp, ns=(started_ns, started_ns))
 
 
 def _refresh_mode(args: argparse.Namespace) -> int:
