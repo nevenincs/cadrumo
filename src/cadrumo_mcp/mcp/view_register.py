@@ -5,7 +5,8 @@ module answers three questions about it and nothing else: which views match a
 text, what one view id names, and whether one ``cadrumo://view`` link is valid.
 Every row names the view's id, parent, surfaces, link parameters with their
 value grammar, label key, and the keywords and label in the profile's language,
-plus the link that opens it. Retired ids are never answered as views.
+plus the link that opens it. Retired ids and elements no surface implements are
+never answered as views.
 
 A view link only shows, selects or focuses; it grants nothing and carries no
 profile. The answers here are orientation, not authority.
@@ -138,7 +139,7 @@ def view_register_query(args: dict[str, Any], language: str) -> dict[str, Any]:
     register = load_navigation_register()
     if (view_id := args.get("id")) is not None:
         element = register.element(view_id)
-        if element is None:
+        if element is None or not element.surfaces:
             return {"outcome": "not_found", "id": view_id, "language": language}
         return {"outcome": "found", "language": language, "views": [_row(register, element, language)]}
     if (text := args.get("link")) is not None:
@@ -151,6 +152,9 @@ def _view_link_query(register: NavigationRegister, text: str, language: str) -> 
     parsed = parse_view_link(text, register=register)
     if isinstance(parsed, ViewLinkRefused):
         return {"outcome": "invalid", "reason": parsed.reason.value}
+    opens = _opens(register, parsed)
+    if opens is None:
+        return {"outcome": "invalid", "reason": "not_implemented"}
     # The parser admits only a registered element, so its lineage starts with it.
     element = register.lineage(parsed.view_id)[0]
     return {
@@ -160,7 +164,7 @@ def _view_link_query(register: NavigationRegister, text: str, language: str) -> 
         "view": _row(register, element, language),
         "params": dict(parsed.params),
         PREFER_KEY: None if parsed.prefer is None else parsed.prefer.value,
-        "opens": _opens(register, parsed),
+        "opens": opens,
     }
 
 
@@ -168,13 +172,14 @@ def _search_views(register: NavigationRegister, args: dict[str, Any], language: 
     """Page the complete view register or its stable lexical relevance ranking."""
     limit = args.get("limit", VIEW_PAGE_DEFAULT)
     query = _words(args.get("query") or "")
+    advertised = tuple(element for element in register.elements if element.surfaces)
     if not query:
-        rows = [_row(register, element, language) for element in register.elements]
+        rows = [_row(register, element, language) for element in advertised]
         return {"outcome": "found", "language": language, "views": rows[:limit], "total": len(rows)}
     ranked = sorted(
         (
             (score, index, element)
-            for index, element in enumerate(register.elements)
+            for index, element in enumerate(advertised)
             if (score := _score(element, language, query))
         ),
         key=lambda match: (-match[0], match[1]),

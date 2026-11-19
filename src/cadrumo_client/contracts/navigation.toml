@@ -7,9 +7,9 @@
 # `keywords` is the locale key of its extra search words, translated like the
 # label so a palette searches in the person's language, and `surfaces` lists
 # which interfaces implement the element. How a surface implements an element is that surface's
-# own table, never this file. An element the window has not built yet is still
-# declared with `gui`; resolving it against the window's table, which does not
-# list it, refuses it as `not_implemented`.
+# own table, never this file. An element the window has not built yet is declared with no surface
+# (`surfaces = []`): a link to it is refused `not_implemented` everywhere and
+# never advertised. `surfaces` lists only what implements the element now.
 #
 # An element may declare link parameters in `params`, a map from parameter
 # name to value kind, such as `params = { select = "invoice" }` for a link
@@ -40,7 +40,7 @@ length = 64
 id = "home"
 label = "navigation.view.home.label"
 keywords = "navigation.view.home.keywords"
-surfaces = ["gui"]
+surfaces = []
 
 [[element]]
 id = "ledger"
@@ -97,7 +97,7 @@ surfaces = ["gui"]
 id = "withholding"
 label = "navigation.view.withholding.label"
 keywords = "navigation.view.withholding.keywords"
-surfaces = ["gui"]
+surfaces = []
 
 [[element]]
 id = "declarations"
@@ -115,19 +115,19 @@ surfaces = ["gui"]
 id = "operations"
 label = "navigation.view.operations.label"
 keywords = "navigation.view.operations.keywords"
-surfaces = ["gui"]
+surfaces = []
 
 [[element]]
 id = "installation"
 label = "navigation.view.installation.label"
 keywords = "navigation.view.installation.keywords"
-surfaces = ["gui"]
+surfaces = []
 
 [[element]]
 id = "reference"
 label = "navigation.view.reference.label"
 keywords = "navigation.view.reference.keywords"
-surfaces = ["gui"]
+surfaces = []
 
 [[element]]
 id = "profile"
