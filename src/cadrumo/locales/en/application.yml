@@ -4845,6 +4845,8 @@ application:
     notices:
       censo_divergences_open: '{count} profile or certificate field(s) still diverge
         from the Certificado de Situación Censal and remain unresolved: {axes}.'
+      entity_type_unstated: Fill in “{field}” to see the sections that concern you.
+        Until then, sections that concern only one type of taxpayer are not shown.
       kdf_at_fallback: This profile's password has the minimum protection, because
         this computer could not confirm a stronger setting in time when the profile
         was created. Change the password to strengthen it; you can enter the same

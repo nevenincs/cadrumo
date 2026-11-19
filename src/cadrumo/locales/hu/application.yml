@@ -5021,6 +5021,9 @@ application:
     notices:
       censo_divergences_open: '{count} profil- vagy tanúsítványadat továbbra is eltér
         a Certificado de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
+      entity_type_unstated: 'Add meg ezt az adatot: {field}, hogy lásd a rád vonatkozó
+        részeket. Addig nem jelennek meg azok a részek, amelyek csak egyféle adózóra
+        vonatkoznak.'
       kdf_at_fallback: A profil jelszava a legkisebb védelmet kapta, mert a számítógép
         a profil létrehozásakor nem tudott időben erősebb beállítást megerősíteni.
         Változtasd meg a jelszót a megerősítéséhez; ugyanazt a jelszót is megadhatod

@@ -85,6 +85,7 @@ def test_the_overview_offers_each_list_and_keeps_a_stored_code_outside_it() -> N
         )
         overview = build_profile_overview(record, schema=authority.profile_schema(), code_lists=lists)
         unlisted = build_profile_overview(record, schema=authority.profile_schema())
+        schema = authority.profile_schema()
     fields = {field.path: field for section in overview.sections for field in section.fields}
     plain = {field.path: field for section in unlisted.sections for field in section.fields}
 
@@ -95,4 +96,7 @@ def test_the_overview_offers_each_list_and_keeps_a_stored_code_outside_it() -> N
     assert fields["renta_spouse.eu_eea_country"].choices == ()
     assert fields["renta_spouse.eu_eea_country"].field_type.value == "string"
     assert plain["taxpayer_type.country_of_fiscal_residence"].country_options == ()
-    assert {path for path, field in fields.items() if field.country_options} == set(_EXPECTED)
+    # The record states no taxpayer entity type, so a field that concerns only one type is not offered.
+    offered = {path for path in _EXPECTED if not schema.entity_types_of(*path.split("."))}
+    assert offered < set(_EXPECTED)
+    assert {path for path, field in fields.items() if field.country_options} == offered

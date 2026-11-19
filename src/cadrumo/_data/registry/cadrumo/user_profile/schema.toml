@@ -541,6 +541,7 @@ legal_refs = ["ley-35-2006:art-8", "ley-27-2014:art-7", "ley-35-2006:art-86", "l
 
 [[sections.fields]]
 key = "legal_entity_form"
+entity_types = ["legal_entity"]
 type = "enum"
 required = false
 sensitivity = "identity"
@@ -552,6 +553,7 @@ legal_refs = ["ley-27-2014:art-29", "ley-44-2015:art-1"]
 
 [[sections.fields]]
 key = "incn_prior_12_months"
+entity_types = ["legal_entity"]
 type = "decimal"
 required = false
 sensitivity = "financial"
@@ -562,6 +564,7 @@ legal_refs = ["ley-27-2014:art-40-3"]
 
 [[sections.fields]]
 key = "new_entity_first_two_profit_periods"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -572,6 +575,7 @@ legal_refs = ["ley-27-2014:art-29"]
 
 [[sections.fields]]
 key = "pago_fraccionado_art_40_3_elected"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -582,6 +586,7 @@ legal_refs = ["ley-27-2014:art-40-3"]
 
 [[sections.fields]]
 key = "fecha_constitucion"
+entity_types = ["legal_entity"]
 type = "date"
 required = false
 sensitivity = "identity"
@@ -593,6 +598,7 @@ source_refs = ["aeat-dr-036-2025", "aeat-modelo-202-instructions"]
 
 [[sections.fields]]
 key = "cierre_ejercicio_dia"
+entity_types = ["legal_entity"]
 type = "integer"
 required = false
 sensitivity = "identity"
@@ -606,6 +612,7 @@ source_refs = ["aeat-dr-036-2025", "aeat-modelo-202-instructions"]
 
 [[sections.fields]]
 key = "cierre_ejercicio_mes"
+entity_types = ["legal_entity"]
 type = "integer"
 required = false
 sensitivity = "identity"
@@ -619,6 +626,7 @@ source_refs = ["aeat-dr-036-2025", "aeat-modelo-202-instructions"]
 
 [[sections.fields]]
 key = "principal_cnae"
+entity_types = ["legal_entity"]
 type = "string"
 required = false
 sensitivity = "identity"
@@ -630,6 +638,7 @@ source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "principal_cnae_classification"
+entity_types = ["legal_entity"]
 type = "string"
 required = false
 sensitivity = "identity"
@@ -641,6 +650,7 @@ source_refs = ["aeat-dr-202-2025"]
 
 [[sections.fields]]
 key = "regimen_ley_49_2002"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -652,6 +662,7 @@ source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "regimen_socimi"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -663,6 +674,7 @@ source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "regimen_entidad_capital_riesgo"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -674,6 +686,7 @@ source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "regimen_entidades_navieras_tonelaje"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -685,6 +698,7 @@ source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "erd_tipo_gravamen_especifico"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -696,6 +710,7 @@ source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "cooperativa_fiscalmente_protegida"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -707,6 +722,7 @@ source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "marca_instrumental"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -718,6 +734,7 @@ source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "tributacion_estado_porcentaje"
+entity_types = ["legal_entity"]
 type = "decimal"
 required = false
 sensitivity = "financial"
@@ -796,6 +813,7 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-10"]
 
 [[sections]]
 key = "attribution_entity_socios"
+entity_types = ["attribution_entity"]
 title = "Attribution entity socios"
 sensitivity = "identity"
 effective_dated = true
@@ -1135,6 +1153,7 @@ legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-89"]
 # stored fact rules out, is the registry's rule (fact m200-page-002-profile-rules).
 [[sections]]
 key = "m200_administrador"
+entity_types = ["legal_entity"]
 title = "Modelo 200 administradores"
 sensitivity = "identity"
 effective_dated = true
@@ -1203,6 +1222,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[sections]]
 key = "m200_participacion_socio"
+entity_types = ["legal_entity"]
 title = "Modelo 200 participaciones en la declarante"
 sensitivity = "identity"
 effective_dated = true
@@ -1284,6 +1304,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[sections]]
 key = "m200_representante_legal"
+entity_types = ["legal_entity"]
 title = "Modelo 200 representantes legales"
 sensitivity = "identity"
 effective_dated = true
@@ -1331,6 +1352,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[sections]]
 key = "m200_secretario_consejo"
+entity_types = ["legal_entity"]
 title = "Modelo 200 secretario del consejo"
 sensitivity = "identity"
 effective_dated = true
@@ -1358,6 +1380,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[sections]]
 key = "m200_participacion_directa"
+entity_types = ["legal_entity"]
 title = "Modelo 200 participaciones de la declarante"
 sensitivity = "identity"
 effective_dated = true
@@ -1551,6 +1574,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[sections]]
 key = "m200_entidad_menor_dependiente"
+entity_types = ["legal_entity"]
 title = "Modelo 200 entidades menores dependientes"
 sensitivity = "identity"
 effective_dated = true
@@ -1578,6 +1602,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[sections]]
 key = "m200_establecimiento_permanente"
+entity_types = ["legal_entity"]
 title = "Modelo 200 establecimientos permanentes en el extranjero"
 sensitivity = "identity"
 effective_dated = true
@@ -1647,6 +1672,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[sections]]
 key = "m200_socio_sicav_disolucion"
+entity_types = ["legal_entity"]
 title = "Modelo 200 socio de SICAV en disolución"
 sensitivity = "identity"
 effective_dated = true
@@ -1677,6 +1703,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 # refused. A stated no is the entity's answer that it has none; a stated yes needs rows.
 [[sections]]
 key = "m200_relaciones"
+entity_types = ["legal_entity"]
 title = "Modelo 200 relaciones declaradas"
 sensitivity = "identity"
 effective_dated = true
