@@ -4856,6 +4856,7 @@
         "dev.corpus.sync_aeat_record_design_corpus",
         "dev.corpus.text",
         "dev.dependency_observation",
+        "dev.dependency_observation.census_admission",
         "dev.dependency_observation.inherited_bootstrap",
         "dev.dependency_observation.observation",
         "dev.dependency_observation.observed_child",
