@@ -135,14 +135,6 @@ def test_a_file_under_an_excluded_tree_is_ignored(root: Path, observation: Obser
     assert observation.listings == {}
 
 
-def test_a_file_outside_the_root_is_ignored(tmp_path: Path, root: Path, observation: Observation) -> None:
-    outside = _write(tmp_path / "elsewhere" / "file.txt", b"outside")
-    _opened(observation, outside)
-    observation.audit("os.listdir", (str(outside.parent),))
-    assert observation.files == {}
-    assert observation.listings == {}
-
-
 def test_a_listing_records_the_sorted_entry_names_and_ignores_bytecode_caches(
     root: Path, observation: Observation
 ) -> None:
@@ -301,12 +293,11 @@ def test_merging_keeps_the_first_digest_the_parent_already_saw(root: Path, tmp_p
 @pytest.mark.parametrize(
     ("text", "fragment"),
     [
-        ("", "never began"),
         ("F\tabc\t/somewhere\n", "never began"),
         ("B\t-\t1\nZ\tabc\t/somewhere\n", "unreadable line"),
         ("B\t-\t1\nX\t-\tsqlite fault\n", "worker: sqlite fault"),
     ],
-    ids=["empty", "no-begin", "unreadable-line", "worker-reported-incomplete"],
+    ids=["no-begin", "unreadable-line", "worker-reported-incomplete"],
 )
 def test_a_damaged_or_incomplete_worker_journal_makes_the_observation_incomplete(
     root: Path, tmp_path: Path, text: str, fragment: str
@@ -314,6 +305,13 @@ def test_a_damaged_or_incomplete_worker_journal_makes_the_observation_incomplete
     parent = Observation(root, started_ns=0)
     parent.merge_journal(_write(tmp_path / "4.journal", text))
     assert any(fragment in reason for reason in parent.incomplete), parent.incomplete
+
+
+def test_an_empty_worker_journal_adds_nothing(root: Path, tmp_path: Path) -> None:
+    parent = Observation(root, started_ns=0)
+    parent.merge_journal(_write(tmp_path / "5.journal", ""))
+    assert parent.incomplete == []
+    assert parent.files == {} and parent.listings == {}
 
 
 def test_a_missing_journal_file_makes_the_observation_incomplete(root: Path, tmp_path: Path) -> None:
@@ -362,7 +360,8 @@ def test_a_module_older_than_the_process_start_is_recorded_with_its_digest(
         observation = Observation(root, started_ns=module.stat().st_mtime_ns + 5_000_000_000)
         observation.note_imported_modules()
         assert observation.files[module] == _sha(b"VALUE = 1\n")
-        assert observation.incomplete == []
+        # The test process's own imports lie outside this root and are judged as such.
+        assert not any("changed after the process started" in reason for reason in observation.incomplete)
     finally:
         sys.modules.pop(name, None)
 

@@ -4,7 +4,7 @@ An observed process starts ``python [options] -m <module> [arguments]`` children
 of checkout modules as ``python [options] <this copy> <token> <module>
 [arguments]``. The copy sits beside the journals, with a file naming the
 checkout. It installs the dependency observer before the module is imported,
-journals as ``<token>.journal`` (which the parent expects), and runs the
+journals as ``<token>.journal``, and runs the
 module as ``__main__`` with the arguments and the module search path that
 ``-m`` would have given it.
 

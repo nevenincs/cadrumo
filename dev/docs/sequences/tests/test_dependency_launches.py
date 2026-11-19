@@ -229,11 +229,8 @@ def test_a_python_dash_m_checkout_module_child_is_routed_through_the_bootstrap(
 ) -> None:
     journal = tmp_path / "parent.journal"
     adopting.attach_journal_path(journal)
-    before = time.time_ns()
-
     rewritten = adopting.instrument_child([sys.executable, "-S", "-m", checkout_module, "arg-one", "--flag"])
 
-    after = time.time_ns()
     assert isinstance(rewritten, list)
     token = rewritten[3]
     assert rewritten == [
@@ -246,12 +243,8 @@ def test_a_python_dash_m_checkout_module_child_is_routed_through_the_bootstrap(
         "--flag",
     ]
     assert len(token) == 32 and set(token) <= set("0123456789abcdef")
-    directory, launched_ns = adopting.expected_children[token]
-    assert directory == journals
-    assert before <= launched_ns <= after
-    lines = [line.split("\t") for line in journal.read_text(encoding="utf-8").splitlines()]
-    assert lines[0][0] == "B"
-    assert ["E", str(launched_ns), token] in lines
+    lines = [line.split("	") for line in journal.read_text(encoding="utf-8").splitlines()]
+    assert [line[0] for line in lines] == ["B"]
     # The rewritten command is itself a registered script launch, so its Popen is covered.
     _popen(adopting, rewritten)
     assert adopting.incomplete == []
@@ -262,7 +255,6 @@ def test_each_instrumented_child_gets_its_own_token(adopting: Observation, check
     first, second = adopting.instrument_child(command), adopting.instrument_child(command)
     assert isinstance(first, list) and isinstance(second, list)
     assert first[2] != second[2]
-    assert len(adopting.expected_children) == 2
 
 
 def test_a_tuple_command_is_rewritten_to_a_list(adopting: Observation, journals: Path, checkout_module: str) -> None:
@@ -276,7 +268,6 @@ def test_a_child_command_is_left_alone_when_the_process_has_no_journal_directory
 ) -> None:
     command = [sys.executable, "-m", checkout_module]
     assert observation.instrument_child(command) is command
-    assert observation.expected_children == {}
     # Left alone, the launch is judged unobserved.
     _popen(observation, command)
     assert "unobserved child process" in _reasons(observation)
@@ -295,89 +286,49 @@ def test_a_child_command_is_left_alone_when_the_process_has_no_journal_directory
     ],
     ids=["stdlib-module", "dash-c", "not-python", "script-first", "unresolved-module", "string", "non-text-word"],
 )
-def test_any_other_command_is_left_unrewritten_and_expects_no_journal(
+def test_any_other_command_is_left_unrewritten(
     adopting: Observation, checkout_module: str, build: Callable[[str], object]
 ) -> None:
     command = build(checkout_module)
     assert adopting.instrument_child(command) is command
-    assert adopting.expected_children == {}
 
 
-# Expecting the child's journal ---------------------------------------------------
+# Reading the child's journal -----------------------------------------------------
 
 
-def test_harvest_marks_an_expected_child_that_never_began_incomplete(observation: Observation, journals: Path) -> None:
-    observation.expected_children["deadbeef"] = (journals, 100)
-    observation.harvest(journals)
-    assert "instrumented child deadbeef left no journal" in _reasons(observation)
-
-
-def test_harvest_accepts_an_expected_child_whose_journal_began(observation: Observation, journals: Path) -> None:
-    _write(journals / "deadbeef.journal", "B\t-\t1\n")
-    observation.expected_children["deadbeef"] = (journals, 100)
+def test_a_missing_child_journal_adds_nothing(observation: Observation, journals: Path) -> None:
     observation.harvest(journals)
     assert observation.incomplete == []
 
 
-def test_a_journal_with_content_but_no_begin_line_does_not_satisfy_an_expected_child(
-    observation: Observation, journals: Path
-) -> None:
+def test_an_empty_child_journal_adds_nothing(observation: Observation, journals: Path) -> None:
+    _write(journals / "deadbeef.journal", b"")
+    observation.harvest(journals)
+    assert observation.incomplete == []
+    assert observation.files == {} and observation.listings == {}
+
+
+def test_a_journal_that_began_is_folded_in(observation: Observation, journals: Path, root: Path) -> None:
+    data = root / "data.bin"
+    _write(data, b"x")
+    digest = _sha(b"x")
+    _write(journals / "deadbeef.journal", f"B\t-\t1\nF\t{digest}\t{data}\n")
+    observation.harvest(journals)
+    assert observation.incomplete == []
+    assert observation.files == {data: digest}
+
+
+def test_a_non_empty_journal_that_does_not_begin_is_incomplete(observation: Observation, journals: Path) -> None:
     _write(journals / "deadbeef.journal", "F\tabc\t/somewhere\n")
-    observation.expected_children["deadbeef"] = (journals, 100)
     observation.harvest(journals)
     assert "deadbeef.journal never began" in _reasons(observation)
-    assert "instrumented child deadbeef left no journal" in _reasons(observation)
+    assert observation.files == {}
 
 
-def test_a_child_launched_at_or_after_the_settled_moment_is_not_expected_to_journal(
-    observation: Observation, journals: Path
-) -> None:
-    observation.expected_children["before"] = (journals, 199)
-    observation.expected_children["at"] = (journals, 200)
-    observation.expected_children["after"] = (journals, 201)
-    observation.harvest(journals, settled_ns=200)
-    reasons = _reasons(observation)
-    assert "instrumented child before left no journal" in reasons
-    assert "child at " not in reasons
-    assert "child after " not in reasons
-
-
-def test_a_missing_settled_moment_expects_every_child_to_journal(observation: Observation, journals: Path) -> None:
-    observation.expected_children["late"] = (journals, 2**62)
-    observation.harvest(journals, settled_ns=None)
-    assert "instrumented child late left no journal" in _reasons(observation)
-
-
-def test_only_children_expected_in_the_harvested_directory_are_checked(
-    observation: Observation, journals: Path, tmp_path: Path
-) -> None:
-    elsewhere = tmp_path / "elsewhere"
-    elsewhere.mkdir()
-    observation.expected_children["foreign"] = (elsewhere, 100)
-    observation.harvest(journals)
-    assert observation.incomplete == []
-
-
-def test_a_grandchild_named_in_a_journal_is_expected_to_journal_in_that_directory(
-    observation: Observation, journals: Path
-) -> None:
+def test_a_journal_line_naming_an_expected_child_is_now_unreadable(observation: Observation, journals: Path) -> None:
     _write(journals / "child.journal", "B\t-\t1\nE\t150\tgrandchild\n")
     observation.harvest(journals)
-    assert observation.expected_children == {"grandchild": (journals, 150)}
-    assert "instrumented child grandchild left no journal" in _reasons(observation)
-    _write(journals / "grandchild.journal", "B\t-\t2\n")
-    again = Observation(observation.root, started_ns=0)
-    again.harvest(journals)
-    assert again.incomplete == []
-
-
-def test_a_journal_expected_line_with_a_non_numeric_launch_time_is_unreadable(
-    observation: Observation, journals: Path
-) -> None:
-    _write(journals / "child.journal", "B\t-\t1\nE\tlater\tgrandchild\n")
-    observation.harvest(journals)
     assert "has an unreadable line" in _reasons(observation)
-    assert observation.expected_children == {}
 
 
 def test_harvest_returns_the_journal_directory_to_the_checks_own(
@@ -493,12 +444,10 @@ def test_a_real_python_dash_m_child_runs_through_the_bootstrap_and_its_reads_rea
     assert summary["incomplete"] == []
 
 
-def test_a_real_child_that_cannot_start_its_journal_makes_the_observation_incomplete(checkout: Path) -> None:
+def test_a_real_child_that_dies_before_its_bootstrap_journals_adds_nothing(checkout: Path) -> None:
     summary = _observed_parent(checkout, "pointer-missing", CHECKOUT_ROOT_FILE)
     assert summary["returncode"] != 0
-    incomplete = summary["incomplete"]
-    assert isinstance(incomplete, list)
-    assert any("left no journal" in str(reason) for reason in incomplete), incomplete
+    assert summary["incomplete"] == []
 
 
 @pytest.mark.parametrize("scenario", ["dash-c", "foreign-module"])
@@ -507,3 +456,57 @@ def test_a_real_child_that_cannot_journal_makes_the_observation_incomplete(check
     incomplete = summary["incomplete"]
     assert isinstance(incomplete, list)
     assert any("unobserved child process" in str(reason) for reason in incomplete), incomplete
+
+
+# Ending a judged launch ----------------------------------------------------------
+
+
+def test_a_popen_that_returned_does_not_cover_a_later_native_launch(adopting: Observation, journals: Path) -> None:
+    _popen(adopting, [sys.executable, str(journals / WORKER_SCRIPT_NAME)])
+    adopting.end_launch()
+    adopting.audit("os.posix_spawn", ("python", ["python"], {}))
+    assert adopting.incomplete == ["unjudged child process (os.posix_spawn)"]
+
+
+def test_a_native_launch_inside_the_judged_popen_is_still_covered_before_it_ends(
+    adopting: Observation, journals: Path
+) -> None:
+    _popen(adopting, [sys.executable, str(journals / WORKER_SCRIPT_NAME)])
+    adopting.audit("_winapi.CreateProcess", ("x",))
+    adopting.end_launch()
+    assert adopting.incomplete == []
+
+
+_WRAPPED = """import subprocess
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+sys.path.insert(0, str(root))
+from dev.docs.sequences import dependency_observation as observing
+
+
+def posix_like_constructor(self, args, *arguments, **keywords):
+    # A POSIX Popen raises its audit event and no native one afterwards.
+    sys.audit("subprocess.Popen", None, args, None, None)
+
+
+subprocess.Popen.__init__ = posix_like_constructor
+observation = observing.observe_process(root)
+journals = root / "journals"
+journals.mkdir()
+observation.adopt_journal_directory(journals)
+script = journals / observing.WORKER_SCRIPT_NAME
+subprocess.Popen([sys.executable, str(script)])
+print("after popen", observation.incomplete)
+sys.audit("os.posix_spawn", "python", ["python"], {})
+print("after spawn", observation.incomplete)
+"""
+
+
+def test_the_real_popen_wrapper_ends_the_judged_launch_when_the_constructor_returns(checkout: Path) -> None:
+    result = run_command([sys.executable, "-I", "-B", "-c", _WRAPPED, str(checkout)], cwd=checkout, environment=None)
+    assert result.returncode == 0, result.stderr
+    lines = result.stdout.strip().splitlines()
+    assert lines[-2] == "after popen []"
+    assert lines[-1] == "after spawn ['unjudged child process (os.posix_spawn)']"

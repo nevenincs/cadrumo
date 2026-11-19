@@ -15,8 +15,8 @@ parts:
 - the product it reached: every checkout file and directory listing its
   processes were observed to read (:mod:`dev.docs.sequences.dependency_observation`),
   each with the digest it had when it was read. When that observation is
-  unavailable, incomplete, rooted outside the checkout or missing the product
-  package itself, the whole product source (the CLI, its runtime, its client
+  unavailable, incomplete (product source read from outside the checkout
+  makes it so) or missing the product package itself, the whole product source (the CLI, its runtime, its client
   and its registry data) stands in for it.
 
 The first two parts form the record's key, enumerated from the filesystem and
@@ -66,7 +66,7 @@ from .schema import ParsedSequence
 #: Set to bypass reuse and always execute every sequence; passing sequences are still recorded.
 FORCE_ENV: Final[str] = "CADRUMO_DOCS_FORCE_SEQUENCE_CHECK"
 _CACHE_NAME: Final[str] = "docs-sequence-verdicts"
-_RECORD_FORMAT: Final[str] = "cli-sequence-verdict/4"
+_RECORD_FORMAT: Final[str] = "cli-sequence-verdict/5"
 _OBSERVED: Final[str] = "observed"
 _CLOSURE: Final[str] = "closure"
 _PRUNED: Final[tuple[str, ...]] = ("__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache")
@@ -85,7 +85,21 @@ OBSERVATION_SENTINEL: Final[str] = "src/cadrumo/__init__.py"
 #: Those that only steer this tooling or its test runner do not.
 _ENVIRONMENT_PREFIX: Final[str] = "CADRUMO_"
 _ENVIRONMENT_NAMES: Final[frozenset[str]] = frozenset(
-    {"LANG", "LANGUAGE", "LC_ALL", "LC_MESSAGES", "TZ", "PYTHONHASHSEED", "PYTHONUTF8", "PYTHONIOENCODING"}
+    {
+        "LANG",
+        "LANGUAGE",
+        "LC_ALL",
+        "LC_MESSAGES",
+        "TZ",
+        "PYTHONHASHSEED",
+        "PYTHONUTF8",
+        "PYTHONIOENCODING",
+        "PYTHONPATH",
+        "COLUMNS",
+        "NO_COLOR",
+        "FORCE_COLOR",
+        "TERM",
+    }
 )
 _TOOLING_ENVIRONMENT: Final[frozenset[str]] = frozenset(
     {"CADRUMO_DEV_CACHE_ROOT", "CADRUMO_DOCS_FORCE_SEQUENCE_CHECK", "CADRUMO_PYTEST_WORKERS"}
@@ -484,12 +498,12 @@ class SequenceVerdicts:
     def _recorded_product(self, observation: Observation | None, changed: list[Path]) -> dict[str, object] | None:
         """Return the product part to record, appending to ``changed`` any product file that moved."""
         if observation is not None and not observation.incomplete:
-            files, outside = self._recordable(observation.files)
-            listings, outside_listings = self._recordable(observation.listings)
-            # An observation rooted elsewhere (another worktree, an unresolved
-            # alias) or one that never saw the product package keys on less than
-            # the sequence read; the whole product source stands in instead.
-            if not outside and not outside_listings and OBSERVATION_SENTINEL in files:
+            files = self._recordable(observation.files)
+            listings = self._recordable(observation.listings)
+            # An observation that never saw the product package (rooted at
+            # another checkout, or empty) keys on less than the sequence read;
+            # the whole product source stands in instead.
+            if OBSERVATION_SENTINEL in files:
                 return {"mode": _OBSERVED, "files": files, "listings": listings}
         digest, trace, snapshot, hashed_ns = self._product_closure()
         changed.extend(path for path, before in snapshot.items() if _stat(path) != before)
@@ -501,24 +515,25 @@ class SequenceVerdicts:
             changed.extend(path for path, status in snapshot.items() if status is None or status[1] >= started_ns)
         return None if changed else {"mode": _CLOSURE, "digest": digest}
 
-    def _recordable(self, observed: dict[Path, str]) -> tuple[dict[str, str], list[Path]]:
-        """Key the observed checkout entries repository-relative, and list any outside the repository.
+    def _recordable(self, observed: dict[Path, str]) -> dict[str, str]:
+        """Key the observed entries: checkout entries repository-relative, any other by its absolute path.
 
+        The observer records a read outside the checkout only when it is not
+        product source and not on its explicit allowlist, so such an entry is
+        an input in its own right and is re-checked on reuse like any other.
         Entries under the development cache or the published authority are
-        dropped: the key already carries them. An entry outside the repository
-        is returned so the caller refuses to record an observed product part.
+        dropped: the key already carries them.
         """
         kept: dict[str, str] = {}
-        outside: list[Path] = []
         for path, digest in observed.items():
             resolved = path.resolve()
             if any(resolved.is_relative_to(excluded) for excluded in self._unrecorded):
                 continue
-            if not resolved.is_relative_to(self._repo_root):
-                outside.append(path)
-                continue
-            kept[resolved.relative_to(self._repo_root).as_posix()] = digest
-        return dict(sorted(kept.items())), outside
+            if resolved.is_relative_to(self._repo_root):
+                kept[resolved.relative_to(self._repo_root).as_posix()] = digest
+            else:
+                kept[resolved.as_posix()] = digest
+        return dict(sorted(kept.items()))
 
     def dependency_paths(self, items: Iterable[KeyedSequence]) -> tuple[Path, ...]:
         """Return every file and directory the keys of ``items`` read, for a build-system depfile.

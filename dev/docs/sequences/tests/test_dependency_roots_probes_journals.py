@@ -11,8 +11,11 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import sys
 import time
+import uuid
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -45,6 +48,17 @@ def root(tmp_path: Path) -> Path:
     directory = tmp_path / "checkout"
     directory.mkdir()
     return directory.resolve()
+
+
+@pytest.fixture
+def outside() -> Iterator[Path]:
+    """A real directory outside the temporary directory, so off the observer's allowlist."""
+    directory = _WORKTREE / ".tmp" / "2026-11-19-docsverify" / "tests-scratch" / f"outside-{uuid.uuid4().hex}"
+    directory.mkdir(parents=True)
+    try:
+        yield directory.resolve()
+    finally:
+        shutil.rmtree(directory, ignore_errors=True)
 
 
 @pytest.fixture
@@ -97,12 +111,8 @@ def test_probing_something_that_is_not_a_path_records_nothing(observation: Obser
     assert observation.incomplete == []
 
 
-def test_probing_outside_the_root_or_while_suspended_records_nothing(
-    root: Path, tmp_path: Path, observation: Observation
-) -> None:
-    outside = _write(tmp_path / "elsewhere.txt", b"outside")
+def test_probing_while_suspended_records_nothing(root: Path, observation: Observation) -> None:
     inside = _write(root / "inside.txt", b"inside")
-    observation.probe(outside)
     with observation.suspended():
         observation.probe(inside)
     assert observation.files == {}
@@ -216,16 +226,16 @@ def test_a_root_given_as_an_alias_resolves_and_records_reads_by_either_spelling(
     assert observation.files == {first: _sha(b"1"), second: _sha(b"2")}
 
 
-def test_a_path_reached_through_a_link_to_a_directory_outside_the_root_is_ignored(
-    root: Path, tmp_path: Path, observation: Observation
+def test_a_path_reached_through_a_link_to_a_directory_outside_the_root_is_recorded_with_its_digest(
+    root: Path, outside: Path, observation: Observation
 ) -> None:
-    outside = tmp_path / "outside"
-    _write(outside / "file.txt", b"outside")
-    alias = tmp_path / "alias-to-outside"
-    _link(outside, alias)
+    _write(outside / "target" / "file.txt", b"outside")
+    alias = outside / "alias-to-target"
+    _link(outside / "target", alias)
     observation.audit("open", (str(alias / "file.txt"), "rb", 0))
-    assert observation.files == {}
+    assert observation.files == {alias / "file.txt": _sha(b"outside")}
     assert observation.listings == {}
+    assert observation.incomplete == []
 
 
 # Disagreeing journals ------------------------------------------------------------

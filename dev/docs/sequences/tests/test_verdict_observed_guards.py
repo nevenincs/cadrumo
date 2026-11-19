@@ -15,7 +15,7 @@ import json
 import os
 import sys
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -41,7 +41,21 @@ _ONE = (ALPHA, "a-one")
 _TWO = (ALPHA, "a-two")
 _CLI = "src/cadrumo/cli.py"
 _RUNTIME = "src/cadrumo_runtime/host.py"
-_CONFIGURING = ("LANG", "LANGUAGE", "LC_ALL", "LC_MESSAGES", "TZ", "PYTHONHASHSEED", "PYTHONUTF8", "PYTHONIOENCODING")
+_CONFIGURING = (
+    "LANG",
+    "LANGUAGE",
+    "LC_ALL",
+    "LC_MESSAGES",
+    "TZ",
+    "PYTHONHASHSEED",
+    "PYTHONUTF8",
+    "PYTHONIOENCODING",
+    "PYTHONPATH",
+    "COLUMNS",
+    "NO_COLOR",
+    "FORCE_COLOR",
+    "TERM",
+)
 
 
 @pytest.fixture
@@ -98,20 +112,6 @@ def test_an_unjudged_child_process_records_the_whole_product_so_any_product_edit
     assert not _reusable(tree), "a product file the unjudged child may have read changed"
 
 
-def test_an_expected_child_that_left_no_journal_records_the_whole_product(
-    tree: SyntheticTree, cache: Path, tmp_path: Path
-) -> None:
-    journals = tmp_path / "journals"
-    journals.mkdir()
-    observation = tree.observe(_CLI)
-    observation.expected_children["deadbeef"] = (journals, 100)
-    observation.harvest(journals)
-
-    assert _product(_record(tree, observation))["mode"] == "closure"
-    _edit(tree, _RUNTIME)
-    assert not _reusable(tree)
-
-
 def test_a_covered_child_launch_leaves_the_record_observed_and_an_unread_edit_harmless(
     tree: SyntheticTree, cache: Path, tmp_path: Path
 ) -> None:
@@ -129,32 +129,72 @@ def test_a_covered_child_launch_leaves_the_record_observed_and_an_unread_edit_ha
     assert not _reusable(tree)
 
 
-# Mis-rooted observations ---------------------------------------------------------
+# Entries outside the repository ---------------------------------------------------
 
 
-def _outside_file(observation: Observation, tree: SyntheticTree) -> None:
+def test_an_outside_file_is_recorded_by_absolute_path_and_editing_it_ends_reuse(
+    tree: SyntheticTree, cache: Path
+) -> None:
     outside = tree.repo.parent / "outside.txt"
     write(outside, "outside")
-    observation.files[outside] = _sha(outside.read_bytes())
-
-
-def _outside_listing(observation: Observation, tree: SyntheticTree) -> None:
-    observation.listings[tree.repo.parent] = _sha(b"listing")
-
-
-@pytest.mark.parametrize("add", [_outside_file, _outside_listing], ids=["file", "listing"])
-def test_an_observation_naming_an_entry_outside_the_repository_records_the_whole_product(
-    tree: SyntheticTree, cache: Path, add: Callable[[Observation, SyntheticTree], None]
-) -> None:
     observation = tree.observe(_CLI)
-    add(observation, tree)
+    observation.files[outside] = _sha(b"outside")
+
+    product = _product(_record(tree, observation))
+    assert product["mode"] == "observed"
+    files = product["files"]
+    assert isinstance(files, dict)
+    assert files[outside.resolve().as_posix()] == _sha(b"outside")
+    assert _reusable(tree)
+    _edit(tree, _RUNTIME)
+    assert _reusable(tree), "a repository file the sequence never read is no input"
+
+    write(outside, "outside, edited")
+    assert not _reusable(tree), "the outside file was read, so its edit is the stale-PASS case"
+
+
+def test_an_outside_file_that_is_deleted_ends_reuse(tree: SyntheticTree, cache: Path) -> None:
+    outside = tree.repo.parent / "outside.txt"
+    write(outside, "outside")
+    observation = tree.observe(_CLI)
+    observation.files[outside] = _sha(b"outside")
+    _record(tree, observation)
+    assert _reusable(tree)
+    outside.unlink()
+    assert not _reusable(tree)
+
+
+def test_an_outside_listing_is_recorded_by_absolute_path_and_a_new_entry_ends_reuse(
+    tree: SyntheticTree, cache: Path
+) -> None:
+    directory = tree.repo.parent / "outside-listed"
+    write(directory / "a.txt", "a")
+    observation = tree.observe(_CLI)
+    observation.listings[directory] = _sha(b"a.txt")
+
+    product = _product(_record(tree, observation))
+    assert product["mode"] == "observed"
+    listings = product["listings"]
+    assert isinstance(listings, dict)
+    assert listings[directory.resolve().as_posix()] == _sha(b"a.txt")
+    assert _reusable(tree)
+
+    write(directory / "b.txt", "b")
+    assert not _reusable(tree)
+
+
+def test_an_outside_entry_does_not_hide_a_missing_sentinel(tree: SyntheticTree, cache: Path) -> None:
+    outside = tree.repo.parent / "outside.txt"
+    write(outside, "outside")
+    observation = tree.observe(_CLI, sentinel=False)
+    observation.files[outside] = _sha(b"outside")
 
     assert _product(_record(tree, observation))["mode"] == "closure"
     _edit(tree, _RUNTIME)
-    assert not _reusable(tree), "an observation rooted elsewhere said nothing about this checkout"
+    assert not _reusable(tree)
 
 
-def test_an_entry_reached_through_a_link_inside_the_repository_to_a_directory_outside_it_is_refused(
+def test_an_entry_reached_through_a_link_inside_the_repository_to_a_directory_outside_it_is_keyed_outside(
     tree: SyntheticTree, cache: Path
 ) -> None:
     outside = tree.repo.parent / "linked-outside"
@@ -171,8 +211,14 @@ def test_an_entry_reached_through_a_link_inside_the_repository_to_a_directory_ou
     assert observation.incomplete == []
     assert link / "data.txt" in observation.files
 
-    assert _product(_record(tree, observation))["mode"] == "closure"
-    _edit(tree, _RUNTIME)
+    product = _product(_record(tree, observation))
+    assert product["mode"] == "observed"
+    files = product["files"]
+    assert isinstance(files, dict)
+    assert files[(outside / "data.txt").resolve().as_posix()] == _sha(b"outside bytes")
+    assert "jump/data.txt" not in files
+    assert _reusable(tree)
+    write(outside / "data.txt", "changed through the link")
     assert not _reusable(tree)
 
 

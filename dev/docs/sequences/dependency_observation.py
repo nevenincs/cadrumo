@@ -18,8 +18,8 @@ wraps those functions when it is installed: a probed path is recorded as its
 digest, ``directory`` or ``absent``. A child process is covered only when it
 journals itself: an observed docs worker, or a Python ``-m`` child of a checkout
 module, which an observed process starts through a bootstrap
-(``observed_child.py``) that installs this observer first. The parent expects
-one journal per such child and treats a missing one as unobservable.
+(``observed_child.py``) that installs this observer first. A child killed
+before that leaves an empty journal or none, having run no product code.
 
 What the hook cannot see is reported, never guessed:
 
@@ -54,6 +54,7 @@ from collections.abc import Callable, Generator, Iterable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Final, TextIO, cast
+from urllib.parse import unquote, urlsplit
 
 #: The directory, beside a sandbox's profile storage root, that collects worker journals.
 JOURNAL_DIRECTORY_NAME: Final[str] = "docs-dependency-observations"
@@ -68,7 +69,6 @@ _BEGIN: Final[str] = "B"
 _FILE: Final[str] = "F"
 _LISTING: Final[str] = "D"
 _INCOMPLETE: Final[str] = "X"
-_EXPECTED: Final[str] = "E"
 _CONSTRUCTOR: Final[str] = "__init__"
 _BYTECODE_DIRECTORY: Final[str] = "__pycache__"
 _ABSENT: Final[str] = "absent"
@@ -217,10 +217,6 @@ class Observation:
         self.journal_directory: Path | None = None
         #: The check process's own journal directory, for children it starts outside a sandbox.
         self.own_journals: Path | None = None
-        #: Children started through the bootstrap: journal name to the directory it must
-        #: begin in and the time it was launched.
-        self.expected_children: dict[str, tuple[Path, int]] = {}
-        self._begun: set[Path] = set()
         self._journal: TextIO | None = None
         self._journal_path: Path | None = None
         self._lock = threading.RLock()
@@ -230,6 +226,40 @@ class Observation:
         given = Path(os.path.abspath(root))
         self._aliases = tuple(dict.fromkeys((self.root, given)))
         self._real_parents: dict[str, Path] = {}
+        self._outside_seen: set[Path] = set()
+        self._outside_allowed: list[Path] = [
+            Path(os.path.realpath(location))
+            for location in {sys.prefix, sys.base_prefix, sys.exec_prefix, sys.base_exec_prefix, tempfile.gettempdir()}
+            if location
+        ]
+
+    def allow_outside(self, directory: Path) -> None:
+        """Admit reads under ``directory``, outside the checkout, as inputs the verdict key already carries."""
+        with self._lock:
+            self._outside_allowed.append(Path(os.path.realpath(directory)))
+
+    def _external(self, raw: str) -> Path | None:
+        """Judge a read outside the checkout: return it to record, or ``None`` to skip it.
+
+        Product source there (a ``cadrumo`` package, or Python source outside
+        the interpreter's own trees) means another checkout's code ran, so the
+        observation becomes incomplete. The explicit allowlist (the
+        interpreter's prefixes, any ``site-packages``, the temporary directory,
+        the null device and :meth:`allow_outside` directories) holds what the
+        key already carries or what cannot shape a verdict, and is skipped.
+        Anything else is recorded by its absolute path, like a checkout read.
+        """
+        path = Path(os.path.abspath(raw))
+        if _is_foreign_source(path, self._outside_allowed):
+            with self._lock:
+                seen = path in self._outside_seen
+                self._outside_seen.add(path)
+            if not seen:
+                self.note_incomplete(f"source read outside the checkout: {path}")
+            return None
+        if _allowed_outside(path, self._outside_allowed):
+            return None
+        return path
 
     def _canonical(self, raw: str) -> Path | None:
         """Return ``raw`` rebased onto the resolved checkout root, or ``None`` when it lies outside it.
@@ -293,9 +323,21 @@ class Observation:
     def note_file(self, raw: str) -> None:
         canonical = self._canonical(raw)
         if canonical is None:
+            external = self._external(raw)
+            if external is not None:
+                self._record_file(external)
             return
         path = _source_of(canonical)
         if path in self.files or not self._admitted(path):
+            return
+        self._record_file(path)
+        if path != self.root:
+            # The listing that would reveal a new sibling; the checkout's own
+            # parent is not an input (a new worktree beside it changes nothing).
+            self.note_listing(str(path.parent))
+
+    def _record_file(self, path: Path) -> None:
+        if path in self.files:
             return
         digest = file_digest(path)
         with self._lock:
@@ -303,11 +345,18 @@ class Observation:
                 return
             self.files[path] = digest
             self._write(_FILE, digest, path)
-        self.note_listing(str(path.parent))
 
     def note_listing(self, raw: str) -> None:
-        directory = self._canonical(raw)
-        if directory is None or directory in self.listings or not self._admitted(directory):
+        canonical = self._canonical(raw)
+        if canonical is None:
+            directory = self._external(raw)
+            if directory is None:
+                return
+        elif not self._admitted(canonical):
+            return
+        else:
+            directory = canonical
+        if directory in self.listings:
             return
         digest = listing_digest(directory)
         with self._lock:
@@ -365,6 +414,10 @@ class Observation:
         else:
             self.note_incomplete(f"unobserved child process ({event})")
 
+    def end_launch(self) -> None:
+        """Forget a judged Popen once it returns; a POSIX Popen raises no native event to consume it."""
+        self._launches.covered = False
+
     def _judge_launch(self, words: list[str]) -> None:
         """Cover a launch whose process journals itself; any other child makes the observation incomplete."""
         line = " ".join(words)
@@ -390,10 +443,6 @@ class Observation:
             token = uuid.uuid4().hex
             index = words.index("-m")
             script = str(self.journal_directory / CHILD_SCRIPT_NAME)
-            launched_ns = time.time_ns()
-            with self._lock:
-                self.expected_children[token] = (self.journal_directory, launched_ns)
-                self._write(_EXPECTED, str(launched_ns), token)
             return [*words[:index], script, token, module, *words[index + 2 :]]
 
     def adopt_journal_directory(self, directory: Path) -> None:
@@ -445,7 +494,7 @@ class Observation:
             if isinstance(path, (str, bytes, os.PathLike)):
                 text = os.fsdecode(path)
                 if text.startswith("file:"):
-                    text = text.removeprefix("file:").partition("?")[0]
+                    text = _uri_path(text)
                 if text and text != ":memory:":
                     self.note_file(text)
         elif event in {"os.listdir", "os.scandir"}:
@@ -478,6 +527,7 @@ class Observation:
                 continue
             canonical = self._canonical(location)
             if canonical is None:
+                self._external(location)
                 continue
             path = _source_of(canonical)
             if path in self.files or not self._admitted(path):
@@ -491,16 +541,24 @@ class Observation:
             self.note_file(str(path))
 
     def merge_journal(self, journal: Path) -> None:
-        """Fold one worker's journal into this observation."""
+        """Fold one worker's journal into this observation.
+
+        An empty journal belongs to a process killed before its observer
+        started; it had imported no product module and read nothing that could
+        shape the verdict (the observer writes its first line before the
+        observed program runs), so it adds nothing. A non-empty journal that
+        does not begin with that line is unreadable, and so incomplete.
+        """
         try:
             lines = journal.read_text(encoding="utf-8", errors="surrogateescape").splitlines()
         except OSError as error:
             self.note_incomplete(f"unreadable worker journal {journal.name}: {type(error).__name__}")
             return
-        if not lines or lines[0].split("\t", 1)[0] != _BEGIN:
+        if not lines:
+            return
+        if lines[0].split("\t", 1)[0] != _BEGIN:
             self.note_incomplete(f"worker journal {journal.name} never began")
             return
-        self._begun.add(journal)
         for line in lines[1:]:
             kind, _, rest = line.partition("\t")
             digest, _, location = rest.partition("\t")
@@ -510,8 +568,6 @@ class Observation:
                 self._merge_entry(self.listings, Path(location), digest)
             elif kind == _INCOMPLETE:
                 self.incomplete.append(f"worker: {location}")
-            elif kind == _EXPECTED and digest.isdecimal():
-                self.expected_children.setdefault(location, (journal.parent, int(digest)))
             else:
                 self.incomplete.append(f"worker journal {journal.name} has an unreadable line")
 
@@ -521,13 +577,11 @@ class Observation:
         if recorded != digest:
             self.note_incomplete(f"{path} changed between the processes that read it")
 
-    def harvest(self, directory: Path, *, settled_ns: int | None = None) -> None:
+    def harvest(self, directory: Path) -> None:
         """Fold every worker journal written under ``directory``.
 
-        A child that left no journal makes the observation incomplete, unless it
-        was launched at or after ``settled_ns``: the moment the sequence's output
-        was complete, after which a child (a shutdown wrap the runtime kills with
-        its worker) cannot have shaped what the check compares.
+        A child that left no journal was killed before its bootstrap installed
+        the observer, so it ran no product code (see :meth:`merge_journal`).
         """
         with self.suspended():
             try:
@@ -537,13 +591,55 @@ class Observation:
                 return
             for journal in journals:
                 self.merge_journal(journal)
-            for token, (expected, launched_ns) in sorted(self.expected_children.items()):
-                if expected != directory or directory / f"{token}{_JOURNAL_SUFFIX}" in self._begun:
-                    continue
-                if settled_ns is None or launched_ns < settled_ns:
-                    self.note_incomplete(f"instrumented child {token} left no journal")
             if self.journal_directory == directory and directory != self.own_journals:
                 self.journal_directory = self.own_journals
+
+
+#: Product package names; one of these outside the checkout is always another checkout's code.
+_PRODUCT_PACKAGE_PREFIX: Final[str] = "cadrumo"
+_SITE_PACKAGES: Final[str] = "site-packages"
+_SOURCE_SUFFIXES: Final[frozenset[str]] = frozenset({".py", ".pyc", ".pyd", ".pth"})
+
+
+def _uri_path(uri: str) -> str:
+    """Return the filesystem path a SQLite ``file:`` URI names."""
+    location = unquote(urlsplit(uri).path)
+    if os.name == "nt" and location[:1] == "/" and location[2:3] == ":":
+        location = location[1:]
+    return location
+
+
+def _is_foreign_source(path: Path, allowed: Iterable[Path]) -> bool:
+    """Whether ``path`` is Python source of another checkout: product code, or source outside the allowed trees."""
+    if path.suffix.casefold() not in _SOURCE_SUFFIXES:
+        return False
+    parts = [part.casefold() for part in path.parts]
+    if _SITE_PACKAGES in parts:
+        # An installed product (a wheel, or an editable finder or ``.pth`` naming
+        # another checkout) is foreign; the directories above an environment are not.
+        installed = parts[parts.index(_SITE_PACKAGES) + 1 :]
+        return any(_PRODUCT_PACKAGE_PREFIX in part for part in installed)
+    if not _allowed_outside(path, allowed):
+        return True
+    # Below the allowlisted directory that holds it, a product package is still another checkout's code.
+    real = Path(os.path.realpath(path))
+    for directory in allowed:
+        for candidate in (path, real):
+            if candidate.is_relative_to(directory):
+                inner = candidate.relative_to(directory).parts
+                if any(part.casefold().startswith(_PRODUCT_PACKAGE_PREFIX) for part in inner):
+                    return True
+    return False
+
+
+def _allowed_outside(path: Path, allowed: Iterable[Path]) -> bool:
+    """Whether ``path``, outside the checkout, is on the explicit allowlist of reads that cannot change a verdict."""
+    if os.path.normcase(str(path)) == os.path.normcase(os.path.abspath(os.devnull)):
+        return True
+    if _SITE_PACKAGES in (part.casefold() for part in path.parts):
+        return True
+    real = Path(os.path.realpath(path))
+    return any(real.is_relative_to(directory) or path.is_relative_to(directory) for directory in allowed)
 
 
 def _python_module(words: list[str]) -> str | None:
@@ -592,7 +688,10 @@ def _wrap_child_launches(observation: Observation) -> None:
     original: Callable[..., None] = getattr(subprocess.Popen, _CONSTRUCTOR)
 
     def launch(self: object, args: object, *arguments: object, **keywords: object) -> None:
-        original(self, observation.instrument_child(args), *arguments, **keywords)
+        try:
+            original(self, observation.instrument_child(args), *arguments, **keywords)
+        finally:
+            observation.end_launch()
 
     setattr(subprocess.Popen, _CONSTRUCTOR, launch)
 
@@ -675,7 +774,7 @@ def observe_worker(root: Path, journals: Path) -> None:
 
 
 def observe_child(root: Path, journals: Path, token: str) -> None:
-    """Observe an instrumented child, journalling under ``journals`` by the name its parent expects."""
+    """Observe an instrumented child, journalling under ``journals`` by the token its parent gave it."""
     observation = observe_process(root)
     observation.adopt_journal_directory(journals)
     observation.attach_journal_path(journals / f"{token}{_JOURNAL_SUFFIX}")
