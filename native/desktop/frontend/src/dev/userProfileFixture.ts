@@ -29,6 +29,9 @@ declare global {
        * declared complete: what the completion action waits for. */
       readyToComplete(): void;
       changeIdentity(): void;
+      /** The profile states no taxpayer name, and the product heads it with
+       * `name`, the name it was created under. */
+      servedName(name: string): void;
       /** The providers whose passphrase or password was saved. */
       credentials(): string[];
       /** How many times a credential save was sent, whatever came of it. */
@@ -127,6 +130,16 @@ export function userProfileFixture(
     changeIdentity() {
       data.profile_id = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
       listeners.forEach((listener) => listener());
+    },
+    servedName(name: string) {
+      for (const path of [
+        "identity.name",
+        "identity.surnames",
+        "identity.legal_name",
+      ])
+        fieldOf(path)!.value = null;
+      data.name = name;
+      changed();
     },
     completeWithMissing() {
       data.setup_state = "complete";

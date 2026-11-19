@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from cadrumo.application.user_profile.overview import ProfileFieldView, ProfileOverview, ProfileSectionView
 from cadrumo.application.user_profile.view_operation import (
     ProfileViewFieldItem,
+    ProfileViewHeadingItem,
     ProfileViewItem,
     ProfileViewMissingItem,
     ProfileViewNoticeItem,
@@ -70,9 +71,12 @@ class _OverviewAccumulator:
     missing: list[str] = field(default_factory=list)
     notices: list[Notice] = field(default_factory=list)
     phase: str = "sections"
+    headed: bool = False
 
     def consume(self, item: ProfileViewItem) -> None:
-        if isinstance(item, ProfileViewSectionItem):
+        if isinstance(item, ProfileViewHeadingItem):
+            self._heading()
+        elif isinstance(item, ProfileViewSectionItem):
             self._section(item)
         elif isinstance(item, ProfileViewFieldItem):
             self._field(item)
@@ -101,6 +105,12 @@ class _OverviewAccumulator:
                 fields=tuple(self.fields),
             )
         )
+
+    def _heading(self) -> None:
+        # The overview this rebuilds names itself from its own rows and label.
+        if self.headed or self.current is not None:
+            raise ValueError("overview heading is repeated or follows a section")
+        self.headed = True
 
     def _section(self, item: ProfileViewSectionItem) -> None:
         if self.phase != "sections" or item.key in self.section_keys:

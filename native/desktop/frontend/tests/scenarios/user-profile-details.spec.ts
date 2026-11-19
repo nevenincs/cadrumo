@@ -58,6 +58,17 @@ for (const language of ["en", "es", "ca", "hu"]) {
   });
 }
 
+test("the summary is headed with the name the product serves, never as unnamed while the profile has one", async ({
+  page,
+}) => {
+  const profile = await open(page);
+  const heading = profile.locator("header").getByRole("heading", { level: 3 });
+  await expect(heading).toHaveText(PROFILE_NAME);
+  await page.evaluate(() => window.__scenarioProfile!.servedName("Casa"));
+  await expect(heading).toHaveText("Casa");
+  await expect(heading).not.toHaveText(label("desktop.profile.unnamed"));
+});
+
 test("the summary names the taxpayer and filters to what is required and missing", async ({
   page,
 }) => {

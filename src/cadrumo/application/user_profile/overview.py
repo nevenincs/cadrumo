@@ -439,6 +439,10 @@ class ProfileSectionView(BaseModel):
         return len(self.fields)
 
 
+_PERSON_NAME_PATHS: Final = ("identity.name", "identity.surnames")
+_LEGAL_NAME_PATH: Final = "identity.legal_name"
+
+
 class ProfileOverview(BaseModel):
     """Everything the manager's landing page renders for one profile."""
 
@@ -453,6 +457,20 @@ class ProfileOverview(BaseModel):
     missing_required: tuple[str, ...] = Field(default=())
     notices: tuple[Notice, ...] = Field(default=())
     """Typed envelope advisories that apply to this profile projection."""
+
+    @property
+    def heading_name(self) -> str:
+        """The name the profile is headed with: the taxpayer's, else the profile's own.
+
+        A person is named by given name and surnames, an entity by its legal
+        name; a profile that states neither is headed with the name it was
+        created under, and only one with no name at all is left unnamed.
+        """
+        values = {
+            field.path: field.value for section in self.sections for field in section.fields if not field.masked
+        }
+        person = " ".join(value for path in _PERSON_NAME_PATHS if (value := (values.get(path) or "").strip()))
+        return person or (values.get(_LEGAL_NAME_PATH) or "").strip() or self.label.strip()
 
     @property
     def present_count(self) -> int:

@@ -18,6 +18,8 @@ PERSONA_ID = "asalariada-familia"
 """The catalogue persona whose profile the demo shows."""
 PROFILE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 """The profile id the browser fixtures name, in place of the id a registration mints afresh."""
+PROFILE_LABEL = "Casa"
+"""The name the demo profile was created under, which heads it only while it states no taxpayer name."""
 LANGUAGES = ("en", "es", "ca", "hu")
 UNANSWERED = ("identity.tax_id", "tax_residence.jurisdiction_scope")
 """The required answers the demo's setup has not reached yet."""
@@ -56,9 +58,12 @@ def render_fixture(root: Path) -> str:
         flow = build_setup_flow(operation)
         for language in LANGUAGES:
             with override_settings(cadrumo_output_language=language):
-                data = build_profile_overview(record, schema=schema, flow=flow).model_dump(mode="json")
+                overview = build_profile_overview(record, schema=schema, flow=flow, label=PROFILE_LABEL)
+            data = overview.model_dump(mode="json")
             data.pop("label")
-            data.update(profile_id=PROFILE_ID, valid=True, pages=1, content_digest="a" * 64)
+            data.update(
+                profile_id=PROFILE_ID, name=overview.heading_name, valid=True, pages=1, content_digest="a" * 64
+            )
             fixtures[language] = data
     return dump_json(fixtures)
 

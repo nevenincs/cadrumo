@@ -31,7 +31,6 @@ import {
   fieldAt,
   marked,
   matches,
-  nameOf,
   rowsOf,
   sorted,
   type Row,
@@ -814,7 +813,7 @@ export const UserProfilePage = memo(function UserProfilePage({
   const total = data ? counts(data) : null;
   const header = data && total && (
     <ProfileSummaryHeader
-      name={nameOf(data)}
+      name={data.name}
       full={maximized}
       facts={[
         ["idCard", fieldAt(data, "identity.tax_id")],
