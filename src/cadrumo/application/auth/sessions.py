@@ -185,7 +185,8 @@ class ClaveCredentials(BaseModel):
     profile itself held, because the provider adapters read their
     credentials from :class:`Settings` - a profile-borne value only
     reaches AEAT once it has been bound onto the settings the provider
-    will read.
+    will read. The profile's Cl@ve identity, ``profile_dni_nie``, is its
+    ``identity.tax_id``.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -780,9 +781,11 @@ def resolve_clave_credentials(
         settings_fecha_validez = _normalise_credential(settings.cadrumo_clave_movil_dni_fecha)
     # The person signing in is always the taxpayer the profile describes:
     # representation is refused and the identity guard refuses any divergence.
-    # So the profile's tax identifier IS the Cl@ve identity, and a profile that
-    # recorded it is never asked for it a second time.
-    profile_dni_nie = facts.dni_nie or facts.tax_id
+    # So the profile's tax identifier IS the Cl@ve identity, its single source.
+    # A value an earlier flow stored under ``auth.dni_nie`` is not read: kept as
+    # an input it could only ever agree with the tax identifier or block every
+    # session after the tax identifier was corrected.
+    profile_dni_nie = facts.tax_id
     return ClaveCredentials(
         provider_kind=provider_kind,
         dni_nie=profile_dni_nie or settings_dni_nie,
@@ -1052,7 +1055,6 @@ class ClaveAuthFacts(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     tax_id: str = ""
-    dni_nie: str = ""
     numero_soporte: str = ""
     fecha_validez: str = ""
     clave_movil_route: ClaveMovilRoute | None = None
@@ -1079,7 +1081,6 @@ def clave_auth_facts_from_profile_values(
     """
     return ClaveAuthFacts(
         tax_id=_normalise_tax_identity(values.get(PROFILE_TAX_ID_PATH)),
-        dni_nie=_normalise_tax_identity(values.get("auth.dni_nie")),
         numero_soporte=_normalise_credential(values.get("auth.numero_soporte")),
         fecha_validez=_normalise_credential(values.get("auth.fecha_validez")),
         clave_movil_route=(

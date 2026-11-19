@@ -33,7 +33,6 @@ from ....core.config import Settings, override_settings
 from ...user_profile.preflight import build_profile_preflight_requirement
 from .. import sessions
 from ..sessions import (
-    AuthProfileIdentityMismatchError,
     ClaveAuthFacts,
     ClaveCredentialsIncompleteError,
     clave_auth_facts_from_profile_values,
@@ -86,28 +85,6 @@ def _bind_profile_facts(
     )
     with validating_governed_facts(_profile_fact_operation):
         yield
-
-
-def test_profile_dni_nie_wins_over_settings_and_reaches_the_provider() -> None:
-    """A profile that carries the credential is the authority.
-
-    The settings value is deliberately a different identity, so a pass
-    here cannot be explained by the fallback: the resolved identity and
-    the settings the provider reads must both carry the profile's value.
-    """
-
-    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
-    with override_settings(cadrumo_clave_movil_dni_nie=SecretStr(_OTHER_TAX_ID)) as settings:
-        bound, expected_identity = prepare_clave_auth(
-            settings,
-            AuthProviderKind.CLAVE_MOVIL,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=leased_profile_decode_context(),
-        )
-
-    assert expected_identity == _TAX_ID
-    assert bound.cadrumo_clave_movil_dni_nie is not None
-    assert bound.cadrumo_clave_movil_dni_nie.get_secret_value() == _TAX_ID
 
 
 @pytest.mark.parametrize(
@@ -544,33 +521,33 @@ def test_every_provider_carries_an_expectation_for_the_session_check() -> None:
     )
 
 
-def test_a_clave_identity_disagreeing_with_the_profile_is_refused_for_every_clave_mode() -> None:
-    """The refusal itself, not just the expectation, covers each Cl@ve mode.
+@pytest.mark.parametrize(
+    ("provider", "setting"),
+    [
+        (AuthProviderKind.CLAVE_MOVIL, "cadrumo_clave_movil_dni_nie"),
+        (AuthProviderKind.CLAVE_PERMANENTE, "cadrumo_clave_permanente_dni_nie"),
+    ],
+)
+def test_a_stale_stored_clave_identity_neither_wins_nor_blocks(provider: AuthProviderKind, setting: str) -> None:
+    """A DNI/NIE an earlier flow stored apart from the tax identifier is not an input.
 
-    Permanente previously returned before this comparison, so a
-    credential belonging to another taxpayer was accepted without
-    complaint on that provider.
+    The operator corrected ``identity.tax_id`` after the old setup flow wrote a
+    different value under ``auth.dni_nie``, which no surface asks for any more.
+    Were the stored copy read, every session would refuse with an identity
+    mismatch the operator has no field to repair; the tax identifier is the one
+    source, so the session proceeds as the corrected taxpayer.
     """
 
     _register_profile(**{"auth.dni_nie": _OTHER_TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
-    refused: dict[str, bool] = {}
-    for kind in (AuthProviderKind.CLAVE_MOVIL, AuthProviderKind.CLAVE_PERMANENTE):
-        with override_settings(
-            cadrumo_clave_movil_dni_nie=SecretStr(_OTHER_TAX_ID),
-            cadrumo_clave_permanente_dni_nie=SecretStr(_OTHER_TAX_ID),
-        ) as settings:
-            try:
-                prepare_clave_auth(
-                    settings,
-                    kind,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    profile_decode_context=leased_profile_decode_context(),
-                )
-            except AuthProfileIdentityMismatchError:
-                refused[kind.value] = True
-            else:
-                refused[kind.value] = False
+    with override_settings(**{setting: SecretStr(_OTHER_TAX_ID)}) as settings:
+        bound, expected_identity = prepare_clave_auth(
+            settings,
+            provider,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            profile_decode_context=leased_profile_decode_context(),
+        )
 
-    assert all(refused.values()), (
-        f"a mismatched Cl@ve identity was accepted by: {[k for k, v in refused.items() if not v]}"
-    )
+    assert expected_identity == _TAX_ID
+    bound_identity = getattr(bound, setting)
+    assert isinstance(bound_identity, SecretStr)
+    assert bound_identity.get_secret_value() == _TAX_ID

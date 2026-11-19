@@ -145,15 +145,11 @@ def _clave_readiness(
         raise ValueError("Cl@ve credential resolver returned no credentials")
     classification = operator_probe_ports.clave_identity.classify(credentials.dni_nie)
     valid_identity = bool(credentials.dni_nie) and not isinstance(classification, ClaveIdentityFailure)
-    # The Cl@ve identity is the profile's tax identifier unless a distinct one
-    # was stored, so an absent identity is the missing tax identifier already
-    # required above and is not asked for a second time.
+    # The Cl@ve identity is the profile's tax identifier, so an absent identity
+    # is the missing tax identifier already required above and is not asked for
+    # a second time.
     if credentials.dni_nie:
-        require(
-            "auth.dni_nie" if facts.dni_nie else "identity.tax_id",
-            valid_identity,
-            "clave_identity_required",
-        )
+        require("identity.tax_id", valid_identity, "clave_identity_required")
         require(
             "auth.identity_alignment",
             bool(facts.tax_id) and valid_identity and same_tax_identifier(facts.tax_id, credentials.dni_nie),

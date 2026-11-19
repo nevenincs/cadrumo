@@ -90,7 +90,6 @@ def _expectation_for(kind: AuthProviderKind) -> str | None:
     """
     facts = ClaveAuthFacts(
         tax_id=_TAX_ID,
-        dni_nie=_TAX_ID,
         clave_movil_route=ClaveMovilRoute.QR,
     )
     with override_settings(
