@@ -27,7 +27,9 @@ editing surface earns the non-official token instead, never this one.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping, Sequence
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING, Final, TypeGuard
 
@@ -36,9 +38,11 @@ from pydantic import BaseModel
 from ...core.identity.documents import IdentityError
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.parsing.dates import parse_ddmmyyyy_date
+from ...core.text_fold import fold_diacritics
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ...domain.user_profile.values import UserProfileFact
-from .censal_observation import CensalObservation, CensalObservationAddress
+from .censal_observation import CensalConsultation, CensalObservation, CensalObservationAddress
 from .censo_errors import CensoSyncError
 
 if TYPE_CHECKING:
@@ -70,7 +74,30 @@ CENSAL_ADOPTABLE_PATHS: Final = (
     "contact.fiscal_address",
     "contact.postcode",
     "contact.fiscal_address_cadastral_reference",
+    "contact.fiscal_address_province_code",
+    "contact.fiscal_address_municipality_code",
+    "contact.fiscal_address_municipality_name",
+    "censo.aeat_delegacion_code",
+    "censo.aeat_administracion_code",
+    "censo.aeat_administracion_name",
+    "censo.activity_start_date",
+    "censo.activity_end_date",
 )
+
+#: ``<code> - <name>`` as the consulta renders *Municipio* and
+#: *Administración de su domicilio fiscal*.
+_CODED_NAME_RE: Final = re.compile(r"^\s*(\d+)\s*-\s*(\S.*?)\s*$")
+#: The 036 registro design stores the municipio as its five-digit INE code
+#: (``00000`` when unknown); the INE code's first two digits are the
+#: two-digit provincia code the same design stores beside it.
+_INE_MUNICIPIO_CODE_RE: Final = re.compile(r"^\d{5}$")
+_UNKNOWN_INE_MUNICIPIO: Final = "00000"
+#: The Modelo 840 design carries the AEAT office as a two-digit Delegación
+#: followed by a three-digit Administración; the consulta prints the five
+#: digits as one code.
+_AEAT_OFFICE_CODE_RE: Final = re.compile(r"^(\d{2})(\d{3})$")
+_ACTIVITY_START_COLUMN: Final = "finicio"
+_ACTIVITY_END_COLUMN: Final = "fbaja"
 
 
 class CensalIdentityMismatchError(CensoSyncError):
@@ -222,7 +249,7 @@ def _compose_address(domicilio: CensalObservationAddress) -> str | None:
     ).strip()
     tail = " ".join(
         part
-        for part in (domicilio.codigo_postal, domicilio.municipio, domicilio.provincia)
+        for part in (domicilio.codigo_postal, _municipality_name(domicilio.municipio), domicilio.provincia)
         if _visible_address_part(part)
     ).strip()
     composed = ", ".join(part for part in (street, tail) if part)
@@ -259,16 +286,101 @@ def censal_facts_from_read(result: CensalObservation) -> tuple[UserProfileFact, 
         The projected facts in :data:`CENSAL_ADOPTABLE_PATHS` order,
         omitting any path the read left empty.
     """
-    candidates: dict[str, str | None] = {
+    municipio = _coded_name(result.domicilio_fiscal.municipio)
+    municipio_code = municipio[0] if municipio is not None else None
+    if municipio_code is not None and (
+        not _INE_MUNICIPIO_CODE_RE.fullmatch(municipio_code) or municipio_code == _UNKNOWN_INE_MUNICIPIO
+    ):
+        municipio_code = None
+    office = _coded_name(result.identity.administracion_domicilio_fiscal)
+    office_code = _AEAT_OFFICE_CODE_RE.fullmatch(office[0]) if office is not None else None
+    start_date, end_date = _activity_dates(result.consultations)
+    candidates: dict[str, str | date | None] = {
         "contact.fiscal_address": _compose_address(result.domicilio_fiscal),
         "contact.postcode": result.domicilio_fiscal.codigo_postal,
         "contact.fiscal_address_cadastral_reference": result.domicilio_fiscal.referencia_catastral,
+        "contact.fiscal_address_province_code": municipio_code[:2] if municipio_code is not None else None,
+        "contact.fiscal_address_municipality_code": municipio_code,
+        "contact.fiscal_address_municipality_name": municipio[1] if municipio is not None else None,
+        "censo.aeat_delegacion_code": office_code.group(1) if office_code is not None else None,
+        "censo.aeat_administracion_code": office_code.group(2) if office_code is not None else None,
+        "censo.aeat_administracion_name": office[1] if office is not None else None,
+        "censo.activity_start_date": start_date,
+        "censo.activity_end_date": end_date,
     }
-    return tuple(
-        UserProfileFact(path=path, value=value, source=CENSO_SOURCE_TAG)
-        for path in CENSAL_ADOPTABLE_PATHS
-        if (value := (candidates[path] or "").strip())
-    )
+    facts: list[UserProfileFact] = []
+    for path in CENSAL_ADOPTABLE_PATHS:
+        candidate = candidates[path]
+        if isinstance(candidate, date):
+            facts.append(UserProfileFact(path=path, value=candidate, source=CENSO_SOURCE_TAG))
+        elif value := (candidate or "").strip():
+            facts.append(UserProfileFact(path=path, value=value, source=CENSO_SOURCE_TAG))
+    return tuple(facts)
+
+
+def _municipality_name(rendered: str | None) -> str | None:
+    """The municipio as a reader writes it: its name, without the INE code."""
+    coded = _coded_name(rendered)
+    return coded[1] if coded is not None else rendered
+
+
+def _coded_name(rendered: str | None) -> tuple[str, str] | None:
+    """Split a ``<code> - <name>`` consulta value; anything else is not read.
+
+    A value without the code is left unprojected rather than guessed: the
+    code and the name are separate profile facts and only the rendered pair
+    says which part is which.
+    """
+    if rendered is None or (match := _CODED_NAME_RE.fullmatch(rendered)) is None:
+        return None
+    return str(match.group(1)), str(match.group(2))
+
+
+def _consulta_column_key(column: str) -> str:
+    return re.sub(r"[^\w]+", "", fold_diacritics(column).casefold())
+
+
+def _consulta_date(text: str | None) -> date | None:
+    if text is None or not text.strip():
+        return None
+    try:
+        return parse_ddmmyyyy_date(text.strip())
+    except ValueError:
+        return None
+
+
+def _activity_dates(consultations: Sequence[CensalConsultation]) -> tuple[date | None, date | None]:
+    """Read the census activity start and end from the activities consultation.
+
+    The start is the earliest *F.Inicio* AEAT lists. The end exists only
+    when every listed activity carries an *F.Baja*: while one activity is
+    open the taxpayer has not ceased, so a partial baja is no end date.
+    A row whose start cannot be read makes the start unknown rather than a
+    later date, and no activities consultation leaves both unknown.
+    """
+    starts: list[date] = []
+    ends: list[date] = []
+    rows = 0
+    for consultation in consultations:
+        if consultation.kind != "actividades":
+            continue
+        for section in consultation.sections:
+            for row in section.rows:
+                by_column = {
+                    _consulta_column_key(cell.column): cell.text for cell in row.cells if cell.column is not None
+                }
+                if _ACTIVITY_START_COLUMN not in by_column:
+                    continue
+                rows += 1
+                start = _consulta_date(by_column.get(_ACTIVITY_START_COLUMN))
+                if start is None:
+                    return None, None
+                starts.append(start)
+                if (end := _consulta_date(by_column.get(_ACTIVITY_END_COLUMN))) is not None:
+                    ends.append(end)
+    if not rows:
+        return None, None
+    return min(starts), (max(ends) if len(ends) == rows else None)
 
 
 def reconcile_censal_read(

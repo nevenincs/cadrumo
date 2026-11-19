@@ -500,6 +500,14 @@ _CENSUS_FIELD_CATEGORIES: Final[dict[str, AeatSyncCensusCategory]] = {
     "contact.fiscal_address": AeatSyncCensusCategory.ADDRESS,
     "contact.postcode": AeatSyncCensusCategory.ADDRESS,
     "contact.fiscal_address_cadastral_reference": AeatSyncCensusCategory.ADDRESS,
+    "contact.fiscal_address_province_code": AeatSyncCensusCategory.ADDRESS,
+    "contact.fiscal_address_municipality_code": AeatSyncCensusCategory.ADDRESS,
+    "contact.fiscal_address_municipality_name": AeatSyncCensusCategory.ADDRESS,
+    "censo.aeat_delegacion_code": AeatSyncCensusCategory.OTHER,
+    "censo.aeat_administracion_code": AeatSyncCensusCategory.OTHER,
+    "censo.aeat_administracion_name": AeatSyncCensusCategory.OTHER,
+    "censo.activity_start_date": AeatSyncCensusCategory.ACTIVITY,
+    "censo.activity_end_date": AeatSyncCensusCategory.ACTIVITY,
 }
 """Which censo field each comparable path belongs to.
 

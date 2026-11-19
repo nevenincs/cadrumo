@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import secrets
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
 from enum import StrEnum
@@ -164,7 +164,20 @@ class CensalProfileBaseline(BaseModel):
 #: bare default so the number has one home: a reader can find every site bound
 #: to this shape, and a bump cannot land on the model while a writer stamping
 #: the old number silently disagrees with it.
-CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION: Final[Literal[2]] = 2
+CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION: Final[Literal[3]] = 3
+
+#: The adoptable paths each operand version decides, in canonical order.
+#: Version 2 preimages stay readable after the read learned more paths: the
+#: AEAT sync workspace re-reads a settled review's observation, and an
+#: operand reviewed before the widening decided exactly these three.
+_INTENT_PATHS_BY_SCHEMA_VERSION: Final[Mapping[int, tuple[str, ...]]] = {
+    2: (
+        "contact.fiscal_address",
+        "contact.postcode",
+        "contact.fiscal_address_cadastral_reference",
+    ),
+    CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION: CENSAL_ADOPTABLE_PATHS,
+}
 
 
 class CensalReviewedOperand(BaseModel):
@@ -172,27 +185,23 @@ class CensalReviewedOperand(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[2] = CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION
+    schema_version: Literal[2, 3] = CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION
     observation: CensalObservation
     baseline: CensalProfileBaseline
     field_intents: tuple[CensalReviewedFieldIntent, ...]
     session_write_recorded: bool = False
     proposed_effect_digest: ContentDigestOrAbsent = ""
 
-    @field_validator("field_intents")
-    @classmethod
+    @model_validator(mode="after")
     @pydantic_validation_boundary
-    def _require_unique_field_intents(
-        cls,
-        value: tuple[CensalReviewedFieldIntent, ...],
-    ) -> tuple[CensalReviewedFieldIntent, ...]:
-        paths = tuple(item.path for item in value)
-        if paths != CENSAL_ADOPTABLE_PATHS:
+    def _require_complete_field_intents(self) -> CensalReviewedOperand:
+        paths = tuple(item.path for item in self.field_intents)
+        if paths != _INTENT_PATHS_BY_SCHEMA_VERSION[self.schema_version]:
             raise ValueError(
                 "censal reviewed operand field intents must cover every canonical "
                 "adoptable path exactly once and in canonical order"
             )
-        return value
+        return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
