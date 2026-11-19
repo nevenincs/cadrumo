@@ -240,7 +240,7 @@ function parseList(
 
 /** The addresses a reply may open: those the host opens outside the window. */
 const OPENABLE = /^(?:https:\/\/[^\s/?#@]+[^\s]*|mailto:[^\s]+)$/i;
-const BARE_URL = /https:\/\/[^\s<>"'`]+/y;
+const BARE_URL = /(?:https|cadrumo):\/\/[^\s<>"'`]+/y;
 const PUNCTUATION = /[\\!"#$%&'()*+,\-./:;<=>?@[\]^_`{|}~]/;
 
 /** A bare address without the punctuation that closes the sentence around
@@ -431,7 +431,9 @@ function inline(text: string, onOpenLink: OpenLink | undefined): ReactNode[] {
       }
     }
     if (char === "<") {
-      const auto = /^<((?:https:\/\/|mailto:)[^\s<>]+)>/i.exec(text.slice(at));
+      const auto = /^<((?:https:\/\/|cadrumo:\/\/|mailto:)[^\s<>]+)>/i.exec(
+        text.slice(at),
+      );
       if (auto?.[1]) {
         push(
           <Link url={auto[1]} onOpenLink={onOpenLink}>
@@ -442,7 +444,7 @@ function inline(text: string, onOpenLink: OpenLink | undefined): ReactNode[] {
         continue;
       }
     }
-    if (char === "h" && !/[\p{L}\p{N}]/u.test(previous)) {
+    if ((char === "h" || char === "c") && !/[\p{L}\p{N}]/u.test(previous)) {
       BARE_URL.lastIndex = at;
       const bare = BARE_URL.exec(text);
       if (bare) {
