@@ -79,7 +79,6 @@ def test_native_censo_password_setup_persists_for_next_invocation(
             facts={
                 "identity.name": "Synthetic",
                 "identity.surnames": "Censo Password",
-                "auth.dni_nie": "12345678Z",
                 "activities.description": "synthetic test profile",
             },
         )

@@ -62,7 +62,6 @@ def test_the_refusal_text_carries_no_raw_identifier_for_the_field() -> None:
 
 
 _CLAVE_FIELD_PATHS = (
-    "auth.dni_nie",
     "auth.numero_soporte",
     "auth.fecha_validez",
 )

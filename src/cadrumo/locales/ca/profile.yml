@@ -258,8 +258,6 @@ profile:
       auth:
         clave_movil_route:
           label: Ruta de Cl@ve Mòbil
-        dni_nie:
-          label: DNI o NIE per a Cl@ve
         fecha_validez:
           label: Data de validesa
         numero_soporte:

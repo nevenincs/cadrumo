@@ -921,10 +921,6 @@ export const UserProfilePage = memo(function UserProfilePage({
         <ProfileSync
           sync={sync}
           compact={!maximized}
-          onTaxId={() => {
-            const row = rowById("identity.tax_id");
-            if (row && writable) editRow(row);
-          }}
           onSetup={() => {
             if (writable) setAeat(data);
           }}
@@ -1050,6 +1046,10 @@ export const UserProfilePage = memo(function UserProfilePage({
           onRefresh={profile.refresh}
           onSave={profile.save}
           onSettled={sync.retry}
+          onSaved={() => {
+            setAeat(null);
+            onNotice(t("desktop.profile.aeat.saved_notice"));
+          }}
           onClose={() => setAeat(null)}
         />
       )}
