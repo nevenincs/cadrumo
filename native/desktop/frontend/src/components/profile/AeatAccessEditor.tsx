@@ -173,12 +173,13 @@ export function AeatAccessEditor({
   const readinessRoute =
     readiness.state === "known" ? readiness.value.route : "";
   const routeNow = route || readinessRoute || DEFAULT_ROUTE;
-  // The NIF/NIE is asked for only when the profile opened without one, and
-  // stays in the form once given here.
-  const taxIdMissing = (() => {
+  // The NIF/NIE is asked for only when the profile opened without one. The
+  // answer is taken once, so neither the editor's own save nor a profile read
+  // again while it is open takes the field away from under the person.
+  const [taxIdMissing] = useState(() => {
     const field = fieldAt(base, TAX_ID);
     return field !== undefined && isEmpty(field);
-  })();
+  });
   const shownFacts = FACTS.map((path) => stored(path)).filter(
     (field): field is ProfileField =>
       field !== undefined &&
