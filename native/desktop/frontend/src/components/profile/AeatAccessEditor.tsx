@@ -358,9 +358,22 @@ export function AeatAccessEditor({
     readiness.value.requirements.some(
       (item) => item.field === "certificate.file" && item.satisfied,
     );
+  // What the form already holds for a requirement is not asked for again
+  // while it waits to be saved: the stored requirements are read against what
+  // is drafted here.
+  const drafting = new Set<string>([
+    ...(method !== "" ? [AEAT_PROVIDER] : []),
+    ...shownFacts.filter(factChanged).map((field) => field.path),
+    ...(certified && certificate ? ["certificate.file"] : []),
+  ]);
   const missing =
     readiness.state === "known"
-      ? readiness.value.requirements.filter((item) => !item.satisfied)
+      ? readiness.value.requirements.filter(
+          (item) =>
+            !item.satisfied &&
+            !drafting.has(item.field) &&
+            !(item.secret && secretShown && typedSecret),
+        )
       : [];
 
   return (
@@ -372,7 +385,6 @@ export function AeatAccessEditor({
     >
       <DialogContent
         modalLayer={false}
-        closeLabel={idle ? t("desktop.profile.cancel") : undefined}
         onCloseAutoFocus={(event) => {
           if (returnFocus instanceof HTMLElement && returnFocus.isConnected) {
             event.preventDefault();
@@ -565,7 +577,7 @@ export function AeatAccessEditor({
                 </span>
               ) : readiness.value.ready ? (
                 t("desktop.profile.censo.ready")
-              ) : (
+              ) : missing.length === 0 ? null : (
                 <>
                   {t("desktop.profile.censo.blocked")}
                   <ul className="mt-0.5 list-disc pl-5">

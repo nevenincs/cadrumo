@@ -436,3 +436,25 @@ test("the Censo band offers one configurator that asks for everything missing", 
     label("auth.sync.requirement.auth_method_required"),
   );
 });
+test("the access dialog has one way to cancel and drops the method requirement once one is chosen", async ({
+  page,
+}) => {
+  await open(page);
+  await profileAction(page, "desktop.profile.action.aeat_access");
+  const editor = aeatEditor(page);
+  await expect(
+    editor.getByRole("button", {
+      name: label("desktop.profile.cancel"),
+      exact: true,
+    }),
+  ).toHaveCount(1);
+  await expect(editor).toContainText(
+    label("auth.sync.requirement.auth_method_required"),
+  );
+  await editor
+    .getByLabel("Authentication method", { exact: true })
+    .selectOption("clave_movil");
+  await expect(editor).not.toContainText(
+    label("auth.sync.requirement.auth_method_required"),
+  );
+});
