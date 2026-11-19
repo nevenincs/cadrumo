@@ -72,10 +72,12 @@ pub fn refusal(status: u16, body: &[u8]) -> Refused {
             context_tokens: tokens(detail, "context_tokens"),
             lane: (code == "conversation_lane_fixed")
                 .then(|| lane_fact(detail))
-                .flatten(),
+                .flatten()
+                .map(Box::new),
             selection_change: (code == "selection_change_unacknowledged")
                 .then(|| selection_change(detail))
-                .flatten(),
+                .flatten()
+                .map(Box::new),
             ..Refused::new(format!("agent_gateway_{code}"))
         },
         _ => Refused::new(format!("agent_gateway_{status}")),
