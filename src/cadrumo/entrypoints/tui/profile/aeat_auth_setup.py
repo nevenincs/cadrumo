@@ -24,7 +24,9 @@ from ..components.language import localized, refresh_localized_widgets
 from ..components.theme import BASE_CSS, tokenised
 from .auth_fields import AeatAuthFieldSaveError
 
-_FACT_PATHS = ("identity.tax_id", "auth.dni_nie", "auth.fecha_validez", "auth.numero_soporte")
+# Cl@ve signs in as the taxpayer the profile describes, so the profile's own tax
+# identifier is the Cl@ve identity and is the one identity field asked for.
+_FACT_PATHS = ("identity.tax_id", "auth.fecha_validez", "auth.numero_soporte")
 
 
 class AeatAuthSetupPort(Protocol):
@@ -68,8 +70,8 @@ def readiness_text(readiness: AuthSyncReadiness | None) -> str:
     )
 
 
-def _fact_visible(index: int, path: str, *, certificate: bool, method_selected: bool, app_request: bool) -> bool:
-    return index == 0 or (not certificate and method_selected and (path == "auth.dni_nie" or app_request))
+def _fact_visible(index: int, *, certificate: bool, method_selected: bool, app_request: bool) -> bool:
+    return index == 0 or (not certificate and method_selected and app_request)
 
 
 class AeatAuthSetupScreen(Screen[tuple[ProfileOverview, AuthSyncReadiness] | None]):
@@ -177,10 +179,9 @@ class AeatAuthSetupScreen(Screen[tuple[ProfileOverview, AuthSyncReadiness] | Non
         for selector in ("#aeat-auth-route", "#aeat-auth-route-label"):
             self.query_one(selector).display = movil
         self.query_one("#aeat-auth-document-hint").display = movil and route == ClaveMovilRoute.APP_REQUEST.value
-        for index, path in enumerate(_FACT_PATHS):
+        for index in range(len(_FACT_PATHS)):
             visible = _fact_visible(
                 index,
-                path,
                 certificate=certificate,
                 method_selected=method is not Select.NULL,
                 app_request=movil and route == ClaveMovilRoute.APP_REQUEST.value,

@@ -407,13 +407,13 @@ export function userProfileFixture(
           ),
         );
       else if (provider === "clave_movil" || provider === "clave_permanente") {
-        requirements.push(
-          need(
-            "auth.dni_nie",
-            !!value("auth.dni_nie"),
-            "clave_identity_required",
-          ),
-        );
+        // As the product reads it: the Cl@ve identity is the stored one, else
+        // the profile's NIF/NIE, whose absence is already required above.
+        const identity = value("auth.dni_nie")
+          ? "auth.dni_nie"
+          : "identity.tax_id";
+        if (value(identity))
+          requirements.push(need(identity, true, "clave_identity_required"));
         if (route === "app_request") {
           const nie = /^[XYZ]/i.test(value("identity.tax_id"));
           requirements.push(

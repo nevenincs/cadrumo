@@ -68,6 +68,24 @@ def test_qr_does_not_require_app_contrast(route: str, ready: bool) -> None:
     assert ("auth.fecha_validez" in {item.field for item in result.requirements}) is (route == "app_request")
 
 
+@pytest.mark.parametrize("provider", [AuthProviderKind.CLAVE_MOVIL, AuthProviderKind.CLAVE_PERMANENTE])
+def test_recorded_tax_id_is_the_clave_identity(provider: AuthProviderKind) -> None:
+    result = _read(
+        provider,
+        {"identity.tax_id": "12345678Z", "auth.clave_movil_route": "qr"},
+        password=SecretStr("private-password"),
+    )
+    assert result.ready
+    assert "auth.dni_nie" not in {item.field for item in result.requirements}
+
+
+@pytest.mark.parametrize("provider", [AuthProviderKind.CLAVE_MOVIL, AuthProviderKind.CLAVE_PERMANENTE])
+def test_missing_identity_is_asked_once_as_the_tax_id(provider: AuthProviderKind) -> None:
+    result = _read(provider, {"auth.clave_movil_route": "qr"}, password=SecretStr("private-password"))
+    assert not result.ready
+    assert [item.field for item in result.requirements if not item.satisfied] == ["identity.tax_id"]
+
+
 def test_nie_requires_support_instead_of_date() -> None:
     result = _read(
         AuthProviderKind.CLAVE_MOVIL,

@@ -42,9 +42,12 @@ import {
   type UserProfile,
 } from "../../shell/userProfile";
 
-const DNI_NIE = "auth.dni_nie";
+/** The taxpayer's NIF/NIE. Cl@ve signs in as the taxpayer the profile
+ * describes, so the backend reads this as the Cl@ve identity: it is asked here
+ * only while the profile has none, and is written to the profile's own fact. */
+const TAX_ID = "identity.tax_id";
 /** The facts Cl@ve asks for, in the order the person is asked for them. */
-const FACTS = [DNI_NIE, "auth.numero_soporte", "auth.fecha_validez"] as const;
+const FACTS = [TAX_ID, "auth.numero_soporte", "auth.fecha_validez"] as const;
 /** The route Cl@ve Móvil uses until the person or the product chooses one. */
 const DEFAULT_ROUTE = "app_request";
 
@@ -170,11 +173,17 @@ export function AeatAccessEditor({
   const readinessRoute =
     readiness.state === "known" ? readiness.value.route : "";
   const routeNow = route || readinessRoute || DEFAULT_ROUTE;
+  // The NIF/NIE is asked for only when the profile opened without one, and
+  // stays in the form once given here.
+  const taxIdMissing = (() => {
+    const field = fieldAt(base, TAX_ID);
+    return field !== undefined && isEmpty(field);
+  })();
   const shownFacts = FACTS.map((path) => stored(path)).filter(
     (field): field is ProfileField =>
       field !== undefined &&
-      (field.path === DNI_NIE
-        ? movil || permanente
+      (field.path === TAX_ID
+        ? (movil || permanente) && taxIdMissing
         : movil && routeNow === "app_request"),
   );
   const factChanged = (field: ProfileField) => {

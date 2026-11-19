@@ -11,6 +11,9 @@ import {
 
 // The profile page's AEAT access editor: Cl@ve and certificate setup, masked write-only facts and stale-profile refusal.
 
+/** The profile's NIF/NIE, which Cl@ve signs in with. */
+const TAX_ID_LABEL = "Tax ID (NIF/NIE/CIF)";
+
 test("saved Cl@ve setup asks specifically for the NIE support number", async ({
   page,
 }) => {
@@ -110,7 +113,12 @@ test("the method and its route are edited in the window, with the facts each ask
   );
   await expect(save(editor)).toBeDisabled();
   const method = editor.getByLabel("Authentication method", { exact: true });
-  const dni = editor.getByLabel("DNI or NIE for Cl@ve", { exact: true });
+  // The profile has no NIF/NIE yet, so Cl@ve asks for it once, as the
+  // profile's own tax identifier.
+  const dni = editor.getByLabel(TAX_ID_LABEL, { exact: true });
+  await expect(
+    editor.getByLabel("DNI or NIE for Cl@ve", { exact: true }),
+  ).toHaveCount(0);
   const supportNumber = editor.getByLabel("Support number", { exact: true });
   const validity = editor.getByLabel("Validity date", { exact: true });
   const route = editor.getByLabel("Cl@ve Móvil route", { exact: true });
@@ -157,6 +165,54 @@ test("the method and its route are edited in the window, with the facts each ask
   );
   await expect(row(profile, "auth.fecha_validez")).toContainText("••••");
   await expect(profile).not.toContainText("2030-01-31");
+  // The one NIF/NIE typed is the profile's identification fact.
+  await expect(row(profile, "identity.tax_id")).toContainText("12345678Z");
+  await expect(row(profile, "auth.dni_nie")).not.toContainText("12345678Z");
+});
+
+test("a NIF/NIE added to the profile is not asked for again when Cl@ve is set up", async ({
+  page,
+}) => {
+  const profile = await open(page);
+  const region = band(page);
+  await region
+    .getByRole("button", {
+      name: label("desktop.profile.censo.identity"),
+      exact: true,
+    })
+    .click();
+  const identity = page.getByRole("dialog", {
+    name: TAX_ID_LABEL,
+    exact: true,
+  });
+  await identity.getByRole("textbox").fill("X0001500M");
+  await save(identity).click();
+  await expect(identity).toHaveCount(0);
+  await profileAction(page, "desktop.profile.action.aeat_access");
+  const editor = aeatEditor(page);
+  const method = editor.getByLabel("Authentication method", { exact: true });
+  for (const choice of ["clave_movil", "clave_permanente"]) {
+    await method.selectOption(choice);
+    await expect(editor.getByLabel(TAX_ID_LABEL, { exact: true })).toHaveCount(
+      0,
+    );
+    await expect(
+      editor.getByLabel("DNI or NIE for Cl@ve", { exact: true }),
+    ).toHaveCount(0);
+  }
+  await method.selectOption("clave_movil");
+  await editor
+    .getByLabel("Cl@ve Móvil route", { exact: true })
+    .selectOption("qr");
+  await save(editor).click();
+  await expect(editor).toContainText(label("desktop.profile.aeat.saved"));
+  // The identity, then only the method: nothing was asked for twice.
+  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(2);
+  await expect(editor).toContainText(label("desktop.profile.censo.ready"));
+  await expect(editor).not.toContainText(
+    label("auth.sync.requirement.clave_identity_required"),
+  );
+  await expect(row(profile, "auth.dni_nie")).not.toContainText("X0001500M");
 });
 
 test("a certificate is chosen in the native dialog and its passphrase is kept out of the page", async ({
@@ -234,9 +290,7 @@ test("a credential that did not reach the runtime or was left unconfirmed is rep
   await editor
     .getByLabel("Authentication method", { exact: true })
     .selectOption("clave_permanente");
-  await editor
-    .getByLabel("DNI or NIE for Cl@ve", { exact: true })
-    .fill("12345678Z");
+  await editor.getByLabel(TAX_ID_LABEL, { exact: true }).fill("12345678Z");
   const item = label("desktop.profile.aeat.password", {
     method: "Cl@ve Permanente",
   });
