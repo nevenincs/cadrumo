@@ -618,3 +618,39 @@ export function ranSelection(
   const entry = lane.catalog.models?.find((held) => held.model === ran.model);
   return entry ? { ...base, modelId: entry.entry_id, ...effort } : null;
 }
+
+/**
+ * What a conversation fixed to the lane `way` runs with next: the first of
+ * `held` in that lane the catalog still offers, else where that lane starts;
+ * null while the lane cannot be chosen. A choice in another lane is never
+ * taken in its place: a conversation keeps its lane, and the person changes
+ * lanes only by starting a new conversation.
+ */
+export function laneSelection(
+  choices: CatalogChoices,
+  held: readonly (AgentSelection | null | undefined)[],
+  way: string,
+): AgentSelection | null {
+  const providers = choices.providers.flatMap((provider) => {
+    const ways = provider.ways.filter((one) => one.id === way);
+    return ways.length > 0 ? [{ ...provider, ways }] : [];
+  });
+  return restoredSelection(
+    { ...choices, providers },
+    held.filter((selection) => selection?.wayId === way),
+  );
+}
+
+/**
+ * Whether the catalog shows some lane's packaged model list in place of the
+ * account's own while the account's is still being read: the service
+ * answers a cold read with the packaged list as stale and serves the
+ * account's on a later read.
+ */
+export function catalogStillReading(catalog: ServedCatalogAnswer): boolean {
+  return servedLanes(catalog).some(
+    (lane) =>
+      lane.catalog.model_list_source === "packaged" &&
+      lane.catalog.state.status === "stale",
+  );
+}

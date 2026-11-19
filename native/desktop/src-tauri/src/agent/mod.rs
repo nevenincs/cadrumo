@@ -53,6 +53,43 @@ pub struct Refused {
     /// The reference of the service's log line that says why, where it gives one.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub log_ref: Option<String>,
+    /// The lane a conversation is fixed to, where the agent's refusal states it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lane: Option<LaneFact>,
+    /// The model change a send must acknowledge, where the agent's refusal
+    /// states it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selection_change: Option<SelectionChange>,
+}
+
+/// The provider and transport a conversation stays on.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct LaneFact {
+    pub provider: String,
+    pub transport: String,
+}
+
+/// A model and the effort it runs at; `effort` is null where none is set.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct ModelChoice {
+    pub model: String,
+    pub effort: Option<String>,
+}
+
+/// What switching the model would drop from the conversation's history.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct HistoryLoss {
+    pub retained_messages: u32,
+    pub estimated_tokens: u32,
+    pub omitted_messages: u32,
+}
+
+/// A change of model the person must acknowledge before the run starts.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct SelectionChange {
+    pub previous: ModelChoice,
+    pub requested: ModelChoice,
+    pub history: HistoryLoss,
 }
 
 impl Refused {
@@ -62,6 +99,8 @@ impl Refused {
             needed_tokens: None,
             context_tokens: None,
             log_ref: None,
+            lane: None,
+            selection_change: None,
         }
     }
 }

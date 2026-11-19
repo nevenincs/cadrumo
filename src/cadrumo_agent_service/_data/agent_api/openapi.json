@@ -112,7 +112,14 @@
             "description": "The run was gone by the time its first dispatch settled."
           },
           "409": {
-            "description": "The run was not started as asked: its id already belongs to a different request, its nickname is taken, its predecessor cannot be continued, another run is live on a service that runs one at a time (code run_live, naming that run in live_run_id), its conversation is being deleted (code conversation_deleting), or the worker refused the first dispatch with the typed code every run action shares."
+            "description": "The run was not started as asked: its id already belongs to a different request, its nickname is taken, its predecessor cannot be continued, another run is live on a service that runs one at a time (code run_live, naming that run in live_run_id), its conversation is being deleted (code conversation_deleting), it names another provider or transport than the conversation it continues (code conversation_lane_fixed, naming the conversation's), the conversation's provider and transport are recorded but cannot be read (code conversation_lane_unreadable), it changes the model or effort of the run it continues without acknowledge_selection_change (code selection_change_unacknowledged, disclosing the change and the history the new model reads), the run it carries from cannot be carried (code carry_source_not_found, carry_source_not_settled, carry_source_other_workspace, carry_source_unreadable or carry_source_deleting, naming that run in carries_from_run_id), or the worker refused the first dispatch with the typed code every run action shares.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunStartRefusalResponse"
+                }
+              }
+            }
           },
           "413": {
             "description": "The dispatch this action would deliver is larger than the worker admits. Nothing was delivered, and a retry sends the same bytes."
@@ -5472,6 +5479,45 @@
         "title": "CapabilityProof",
         "description": "How far one capability had been proven on a lane, as this host found it.\n\n``entry`` names the tool-server entry the state is for. It is given exactly\nfor tool access and writing, the capabilities proven together with an\nentry. ``generation`` names the models' multi-agent generation the state is\nfor, where the lane's proof covers some generations only; a frozen selection\nkeeps the state of its own model's generation."
       },
+      "CarryRefusalCode": {
+        "type": "string",
+        "enum": [
+          "carry_source_not_found",
+          "carry_source_not_settled",
+          "carry_source_other_workspace",
+          "carry_source_unreadable",
+          "carry_source_deleting"
+        ],
+        "title": "CarryRefusalCode",
+        "description": "Why a run could not carry an earlier conversation."
+      },
+      "CarryRefusalDetail": {
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/CarryRefusalCode"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 1024,
+            "title": "Message"
+          },
+          "carries_from_run_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9_-]{0,127}$",
+            "title": "Carries From Run Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "carries_from_run_id"
+        ],
+        "title": "CarryRefusalDetail",
+        "description": "Why a start that carries an earlier conversation was refused.\n\nThe source must be a settled run of the same workspace whose conversation\ncan be read and is not being deleted. Nothing was started, and the source\nconversation is unchanged."
+      },
       "CatalogStatus": {
         "type": "string",
         "enum": [
@@ -5642,6 +5688,74 @@
         ],
         "title": "ConversationAttachmentRecord",
         "description": "One attachment of the named conversation."
+      },
+      "ConversationCarry": {
+        "properties": {
+          "source_run_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Source Run Id"
+          },
+          "source_lane": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Lane"
+          },
+          "carried_turns": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Carried Turns"
+          },
+          "omitted_turns": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Omitted Turns"
+          },
+          "carried_tokens": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Carried Tokens"
+          },
+          "omitted_tokens": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Omitted Tokens"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "receipts",
+                  "cut"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_run_id",
+          "carried_turns",
+          "omitted_turns",
+          "carried_tokens",
+          "omitted_tokens"
+        ],
+        "title": "ConversationCarry",
+        "description": "What a new conversation took from an earlier one, and what it left behind.\n\nA carry takes whole turns, newest first, within a budget of estimated\ntokens and a count of turns. ``carried_turns`` and ``carried_tokens`` are\nwhat entered the new conversation's prompt; ``omitted_turns`` and\n``omitted_tokens`` are the older turns that did not, which the new\nconversation cannot read. ``limit`` is set only when the newest turn alone\nwas larger than the budget: ``receipts`` says its tool evidence was reduced\nto receipts, ``cut`` that its text was cut at the budget as well.\n``source_lane`` is the provider and transport, as ``provider/transport``,\nthat the earlier conversation's newest run used, when it recorded one."
       },
       "ConversationChainDeleteRequest": {
         "properties": {
@@ -5886,6 +6000,56 @@
         ],
         "title": "ConversationDeletingRefusalResponse",
         "description": "The body served for a rename refused because the conversation is deleting."
+      },
+      "ConversationLaneFixedRefusalDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "const": "conversation_lane_fixed",
+            "title": "Code",
+            "default": "conversation_lane_fixed"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 1024,
+            "title": "Message"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/Provider"
+          },
+          "transport": {
+            "$ref": "#/components/schemas/ProviderTransport"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "provider",
+          "transport"
+        ],
+        "title": "ConversationLaneFixedRefusalDetail",
+        "description": "Why a continuing run was refused for naming another provider or transport.\n\nA conversation stays on the provider and transport of its newest run.\n``provider`` and ``transport`` name that lane, so a host can correct its\npicker; another lane is reached only by starting a new conversation with\n``carries_from_run_id``. Nothing was started and no other lane was\nsubstituted."
+      },
+      "ConversationLaneUnreadableRefusalDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "const": "conversation_lane_unreadable",
+            "title": "Code",
+            "default": "conversation_lane_unreadable"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 1024,
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "ConversationLaneUnreadableRefusalDetail",
+        "description": "Why a continuing run was refused because its lane could not be read.\n\nThe run being continued holds a record of the provider and transport it\nran on, and the record cannot be read. The conversation's lane is then not\nknown, so no lane is chosen for it and none is allowed to change. Nothing\nwas started. A run stored before lanes were recorded holds no record and is\nnot refused."
       },
       "ConversationTitleRefusalDetail": {
         "properties": {
@@ -7542,6 +7706,15 @@
         "title": "ModelLicenceResponse",
         "description": "One model's licence, as its lane's catalog states it, with the text.\n\n``spdx``, ``name`` and ``digest`` are the catalog entry's ``licence``;\n``digest`` is ``sha256:`` and the hex SHA-256 of ``text`` encoded as UTF-8.\n``installed`` is the entry's own."
       },
+      "ModelListSource": {
+        "type": "string",
+        "enum": [
+          "account",
+          "packaged"
+        ],
+        "title": "ModelListSource",
+        "description": "Where a lane's model list was read from.\n\nValues:\n    ACCOUNT: The signed-in account's own listing, read in the person's\n        provider home. It decides which models the lane offers.\n    PACKAGED: The document this service ships. A lane whose runtime\n        publishes an account listing serves it when the listing could not\n        be read, or while it is still being read, so a host can say that\n        the account's list is not the one in view."
+      },
       "ModelPullFailure": {
         "properties": {
           "code": {
@@ -8303,6 +8476,7 @@
           "credits_exhausted",
           "budget_exhausted",
           "invalid_request",
+          "model_unavailable",
           "model_does_not_fit",
           "no_answer",
           "unknown"
@@ -8435,6 +8609,16 @@
             "type": "array",
             "maxItems": 32,
             "title": "Native Controls"
+          },
+          "model_list_source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelListSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -9137,6 +9321,33 @@
         "title": "RunHistoryResponse",
         "description": "The full read of one run, including terminal and archived ones.\n\nDeliberately distinct from run-status, which is the BOUNDED recovery\nsnapshot a client reconciles from. This is the wide read - transcript,\nagents, plan, pending answers, and the run's metadata - for a consumer that\nwants the whole record rather than the authority fields.\n\nThe state snapshot is embedded by reference rather than restated field by\nfield, so the two cannot drift apart as the snapshot evolves.\n\nThe transcript is the one part of the record this verb cannot always\ndeliver, because it lives only in the checkpoint. ``transcript_available``\nand ``transcript_status`` say so outright, so ``state.messages`` is never\nread as \"this run had no conversation\" when the truth is that its\nconversation could not be read. They are the transcript's counterpart to the\nsnapshot's own ``snapshot_complete`` / ``degraded_reasons`` pairing.\n\n``permission_decisions`` is the settled counterpart to the snapshot's PENDING\npermissions. A gate leaves the pending list the moment it is answered or the\nrun ends, so this is where the record of a decision a human actually made is\nreadable: without it a run read whole would show no trace that anyone had\napproved anything.\n\n``usage`` is the run's token accounting, the same kind of disclosure: the\ncounts are recorded on every turn and this is the surface that serves them.\nIt is ``null`` when the run recorded no accounting rows, rather than a\nzeroed object a reader would take for a run that spent nothing.\nRun-status stays the bounded recovery snapshot and carries none of\nthis, so counts are a cost of the wide read by design."
       },
+      "RunLiveRefusalDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "const": "run_live",
+            "title": "Code",
+            "default": "run_live"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 1024,
+            "title": "Message"
+          },
+          "live_run_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Live Run Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "live_run_id"
+        ],
+        "title": "RunLiveRefusalDetail",
+        "description": "Why a run start was refused while another run is live.\n\nA service that allows one live run at a time refuses a start, rather than\nqueueing it, until the live run has settled. ``live_run_id`` names that run,\nso a caller can offer to wait for it or to cancel it."
+      },
       "RunMessageRefusalCode": {
         "type": "string",
         "enum": [
@@ -9606,6 +9817,39 @@
         "title": "RunReplyResponse",
         "description": "A run's final reply, and what produced it.\n\n``reply`` is the text of the last thing the run's agent said, once the run\nhas settled; ``None`` before that, or when the run ended without saying\nanything. ``provider``, ``transport``, ``model`` and ``effort`` are the\nlane the run was frozen with, ``None`` when its stored selection cannot be\nread; ``agent_version`` is this service's version. ``provider_condition``\nis why the run's provider failed, typed as on the run status; ``None``\nunless the run failed with one."
       },
+      "RunStartRefusalResponse": {
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RunLiveRefusalDetail"
+              },
+              {
+                "$ref": "#/components/schemas/ConversationDeletingRefusalDetail"
+              },
+              {
+                "$ref": "#/components/schemas/ConversationLaneFixedRefusalDetail"
+              },
+              {
+                "$ref": "#/components/schemas/ConversationLaneUnreadableRefusalDetail"
+              },
+              {
+                "$ref": "#/components/schemas/SelectionChangeUnacknowledgedRefusalDetail"
+              },
+              {
+                "$ref": "#/components/schemas/CarryRefusalDetail"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "RunStartRefusalResponse",
+        "description": "The typed body of a 409 that refused a run start before any run existed.\n\nThe refusals of a start that cannot be told apart by status. Any other 409\nof this verb carries a plain sentence, or the shared dispatch refusal."
+      },
       "RunStartRequest": {
         "properties": {
           "run_id": {
@@ -9649,6 +9893,27 @@
               }
             ],
             "title": "Continues Run Id"
+          },
+          "carries_from_run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_-]{0,127}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Carries From Run Id",
+            "description": "Start a new conversation seeded with a bounded text carry of the conversation of this settled run, which must belong to the same workspace. The carry takes whole turns, newest first, within the service's token and turn budget, and the response's carry field discloses what was taken and what was left out. The source conversation is left unchanged. It cannot be combined with continues_run_id: a conversation stays on one provider and transport, and another lane is reached only by this field."
+          },
+          "acknowledge_selection_change": {
+            "type": "boolean",
+            "title": "Acknowledge Selection Change",
+            "description": "Accept, for this one run, a model or effort that differs from the run it continues. Without it such a start is refused with the code selection_change_unacknowledged, which discloses the cost. It applies only to a run that continues another, covers only this run and is never remembered.",
+            "default": false
           },
           "metadata": {
             "anyOf": [
@@ -9748,6 +10013,16 @@
           },
           "selection": {
             "$ref": "#/components/schemas/FrozenSelectionSummary"
+          },
+          "carry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConversationCarry"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -10267,6 +10542,93 @@
         ],
         "title": "RunUsage",
         "description": "One run's token accounting, totalled."
+      },
+      "SeededHistory": {
+        "properties": {
+          "retained_messages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Retained Messages"
+          },
+          "estimated_tokens": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Estimated Tokens"
+          },
+          "omitted_messages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Omitted Messages"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "retained_messages",
+          "estimated_tokens",
+          "omitted_messages"
+        ],
+        "title": "SeededHistory",
+        "description": "The history a continuing run reads uncached, as the service estimates it.\n\n``retained_messages`` enter the run's prompt and ``estimated_tokens`` is\ntheir size by the same estimator the context budget uses, not a provider\ntokenizer. ``omitted_messages`` older ones stay reachable only through the\nconversation history tool."
+      },
+      "SelectedModel": {
+        "properties": {
+          "model": {
+            "type": "string",
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "Model"
+          },
+          "effort": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Effort"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "model"
+        ],
+        "title": "SelectedModel",
+        "description": "One model and effort, as a run was frozen with them or asked for them."
+      },
+      "SelectionChangeUnacknowledgedRefusalDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "const": "selection_change_unacknowledged",
+            "title": "Code",
+            "default": "selection_change_unacknowledged"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 1024,
+            "title": "Message"
+          },
+          "previous": {
+            "$ref": "#/components/schemas/SelectedModel"
+          },
+          "requested": {
+            "$ref": "#/components/schemas/SelectedModel"
+          },
+          "history": {
+            "$ref": "#/components/schemas/SeededHistory"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "previous",
+          "requested",
+          "history"
+        ],
+        "title": "SelectionChangeUnacknowledgedRefusalDetail",
+        "description": "Why a continuing run that changes model or effort was refused.\n\nAny change of model or effort makes the next request read the whole\nretained history uncached. ``previous`` is what the run being continued\nused, ``requested`` what this start asked for, and ``history`` the size of\nthe history the new model would read. Sending the same start with\n``acknowledge_selection_change: true`` accepts the change for that one run."
       },
       "SemanticPhase": {
         "type": "string",

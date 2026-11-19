@@ -367,6 +367,7 @@ const mountProbe = (target: Page) =>
         listChanges: 0,
         chosen: null,
         ranWith: undefined,
+        fixedWay: null,
       });
       react.useLayoutEffect(() => {
         held.kind = view.catalog.kind;

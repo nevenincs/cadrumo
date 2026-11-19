@@ -263,6 +263,7 @@ test("an agent column whose service stays busy past the quiet bound records one 
         listChanges: 0,
         chosen: null,
         ranWith: undefined,
+        fixedWay: null,
       });
       return null;
     }

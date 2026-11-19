@@ -45,7 +45,19 @@ desktop:
     can_write: escriure fitxers
     cancel: Cancel·la
     capabilities: 'Pot: {list}'
+    carried_turns: Aquesta conversa va començar amb {carried} torns de l'anterior;
+      es van ometre {omitted} torns més antics.
+    carry_back: Torna a aquella conversa
+    carry_pending: El teu proper missatge comença una conversa nova que porta els
+      torns més recents de «{title}».
+    carry_pending_untitled: El teu proper missatge comença una conversa nova que porta
+      els torns més recents de l'anterior.
+    carry_source_not_settled: La resposta de la conversa anterior encara no ha acabat.
+      Espera que acabi i torna a enviar.
+    carry_source_unavailable: No es pot portar la conversa anterior. Torna a enviar
+      per començar la conversa nova sense ella.
     catalog_unavailable: No s'ha pogut llegir la llista de proveïdors de l'agent.
+    choose_another_model: Tria un altre model
     choose_model: Tria un model
     choose_provider: Tria un proveïdor
     close_documents: Tanca els documents
@@ -54,6 +66,10 @@ desktop:
     condition_invalid_request: El proveïdor ha rebutjat la petició
     condition_model_does_not_fit: El model no cap en els recursos que aquest ordinador
       pot donar-li. Tria un model més petit o un altre proveïdor.
+    condition_model_unavailable: Aquest model no està disponible en aquest proveïdor.
+      Tria un altre model de la llista.
+    condition_model_unavailable_named: '{model} no està disponible a {provider} ({connection}).
+      Tria un altre model de la llista.'
     condition_network_unreachable: No es pot contactar amb el proveïdor
     condition_no_answer: El model no ha donat cap resposta utilitzable per a aquest
       document. Prova un altre model (instruct) o torna-ho a provar.
@@ -79,6 +95,7 @@ desktop:
       document que llegeixi aquest model.
     consent_recall: El que ja s'ha enviat no es pot recuperar.
     consent_title: Vols enviar això a {provider}?
+    continue_in_new_conversation: Continua en una conversa nova
     conversation_deleting: Aquesta conversa s'està eliminant, així que no admet fitxers.
     conversation_id_taken: Aquesta conversa no pot desar fitxers. Comença una conversa
       nova per adjuntar-los.
@@ -120,6 +137,8 @@ desktop:
     history: Historial
     history_empty: Encara no hi ha converses
     history_no_match: Cap conversa no coincideix amb «{query}».
+    lane_fixed_refused: Aquesta conversa continua amb el proveïdor amb què va començar.
+      Per fer-ne servir un altre, tria'l i continua en una conversa nova.
     lane_no_catalog: No s’han pogut carregar els models. Torna-ho a provar.
     lane_no_installed_model: Encara no hi ha cap model baixat. Baixa'n un als ajustos.
     lane_not_admitted: No està disponible en aquest ordinador. Tria'n un altre.
@@ -129,6 +148,9 @@ desktop:
     lane_notice: Les converses d'aquesta versió no estan xifrades.
     lane_signed_out: Inicia la sessió en aquest proveïdor des dels ajustos.
     lane_unreachable: No es pot connectar. Revisa aquest proveïdor als ajustos.
+    lane_unreadable_refused: No es pot llegir el proveïdor amb què va funcionar aquesta
+      conversa. Torna a enviar el teu missatge per continuar en una conversa nova
+      que porti aquesta.
     members_multiple: '{count} fitxers'
     members_single: 1 fitxer
     mention_empty: Cap document desat no coincideix
@@ -151,6 +173,9 @@ desktop:
     model_not_installed: '{name} (sense baixar)'
     model_not_installed_refused: El model triat no és en aquest ordinador. Baixa'l
       o tria'n un altre.
+    model_not_offered_refused: El teu compte no ofereix aquest model. Tria'n un altre
+      de la llista.
+    model_with_effort: '{model} ({effort})'
     model_written: Aquest proveïdor no llista els seus models. Escriu el nom del model
       tal com l'escriu el proveïdor.
     models_to_download: Alguns models encara no són en aquest ordinador. Baixa'ls
@@ -209,6 +234,13 @@ desktop:
     row_documents: 'Documents: {count}'
     search_history: Cerca converses
     search_placeholder: Cerca
+    selection_change_asked: Aquest missatge canvia el model de {previous} a {requested}.
+    selection_change_confirm: Canvia i envia
+    selection_change_history: El model nou rep {retained} missatges d'aquesta conversa
+      (uns {tokens} tokens); s'ometen {omitted} missatges anteriors.
+    selection_change_keep: Mantén el model
+    selection_change_refused: Canviar el model necessita la teva confirmació. Torna
+      a enviar el missatge.
     send: Envia
     send_nothing: Primer escriu un missatge o afegeix un fitxer
     send_too_long: Aquest missatge té {count} caràcters; el màxim és {max}

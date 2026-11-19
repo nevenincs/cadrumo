@@ -9,6 +9,7 @@ import type {
 } from "./agentCatalogContract";
 import type {
   AttachmentPolicyResponse,
+  ConversationCarry,
   ModelLicenceResponse,
   Provider,
   ProviderCondition,
@@ -165,6 +166,14 @@ export type AgentSendRequest = {
    * at most 8 unique names of the agent's inventory. Absent when none is
    * named. */
   skills?: string[];
+  /** The person accepted, for this one message, a model or effort other
+   * than the one the conversation last ran with, after the agent said what
+   * the new one is given of its history. Never kept for a later message. */
+  acknowledge_selection_change?: boolean;
+  /** For a conversation's first message only: the conversation, by its
+   * id, whose newest turns this one begins with, on a lane of its own. The
+   * source conversation is left as it is. */
+  carries_from?: string;
 };
 
 /** A file picked for a conversation's storage, as the host stages it. */
@@ -214,6 +223,9 @@ export type AgentSendResult = {
   /** The run the message started: the handle of the reply the stream reports
    * on. It is the id history gives the reply's records as `reply_id`. */
   reply_id: string;
+  /** What a carried first message took over from its source conversation,
+   * as the agent counted it; absent for every other message. */
+  carry?: ConversationCarry;
 };
 
 // A questionnaire and an approval are cadrumo-agent's own, as the host maps

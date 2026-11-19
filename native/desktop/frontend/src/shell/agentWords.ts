@@ -37,6 +37,7 @@ const CONDITIONS = {
   credits_exhausted: "desktop.agent.condition_credits_exhausted",
   budget_exhausted: "desktop.agent.condition_budget_exhausted",
   invalid_request: "desktop.agent.condition_invalid_request",
+  model_unavailable: "desktop.agent.condition_model_unavailable",
   model_does_not_fit: "desktop.agent.condition_model_does_not_fit",
   no_answer: "desktop.agent.condition_no_answer",
   unknown: "desktop.agent.condition_unknown",

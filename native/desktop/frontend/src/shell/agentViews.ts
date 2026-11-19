@@ -306,14 +306,41 @@ function replyState(status: ThreadStatus | null): AgentReplyState {
 }
 
 /** Why a reply failed, in localized words from its typed provider condition.
- * The agent's failure prose remains for diagnostics and is not shown here. */
+ * A model the lane cannot run is named with the lane it ran on, as the run
+ * recorded them. The agent's failure prose remains for diagnostics and is
+ * not shown here. */
 function failureWords(
   t: Translate,
   reply: AgentReplyRecord,
 ): string | undefined {
+  const ran = reply.selection;
+  if (reply.provider_condition === "model_unavailable" && ran?.model)
+    return t("desktop.agent.condition_model_unavailable_named", {
+      model: ran.model_display_name ?? ran.model,
+      provider: ran.provider_display_name ?? ran.provider ?? "",
+      connection: t(
+        ran.transport === "api"
+          ? "desktop.providers.connection_api"
+          : "desktop.providers.connection_app",
+      ),
+    });
   return reply.provider_condition
     ? conditionWords(t, reply.provider_condition)
     : undefined;
+}
+
+/** The way on a failed reply offers: the provider settings for a lane that is
+ * signed out, the model picker for a model the lane cannot run. Neither is
+ * retried as it is. */
+function failureAction(reply: AgentReplyRecord) {
+  switch (reply.provider_condition) {
+    case "unauthenticated":
+      return "provider_settings" as const;
+    case "model_unavailable":
+      return "choose_model" as const;
+    default:
+      return undefined;
+  }
 }
 
 /** When a message was sent, in words: the time today, else the day too. */
@@ -388,12 +415,11 @@ export function transcriptItems(
   const drawn = (reply: AgentReplyRecord) => {
     const state = replyState(reply.status);
     const reason = state === "failed" ? failureWords(t, reply) : undefined;
+    const action = state === "failed" ? failureAction(reply) : undefined;
     return {
       state,
       ...(reason ? { failureReason: reason } : {}),
-      ...(state === "failed" && reply.provider_condition === "unauthenticated"
-        ? { failureAction: "provider_settings" as const }
-        : {}),
+      ...(action ? { failureAction: action } : {}),
       ...(reply.status === "input_required"
         ? { waitingOnPerson: true as const }
         : {}),

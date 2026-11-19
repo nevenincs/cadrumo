@@ -7,7 +7,9 @@ import {
 } from "../../shell/catalogReadPolicy";
 import {
   catalogChoices,
+  catalogStillReading,
   intendedProvider,
+  laneSelection,
   laneEngines,
   ranSelection,
   readingSelection,
@@ -30,6 +32,11 @@ import type { Translate } from "../../shell/strings";
 import type { AgentSelection } from "./types";
 import type { AgentRanWith } from "../../shell/agentSnapshotContract";
 
+/** How long the column waits before reading a catalog again that still shows
+ * a packaged model list in place of the account's, and how many times. */
+const ACCOUNT_LIST_PAUSE_MS = 2_000;
+const ACCOUNT_LIST_READS = 3;
+
 /**
  * What the agent can run, which is the agent's own catalog, every lane of
  * it, and what the next message runs with. While the agent starts, the
@@ -49,6 +56,7 @@ export function useAgentCatalog({
   listChanges,
   chosen,
   ranWith,
+  fixedWay,
 }: {
   t: Translate;
   reader: string | null;
@@ -68,6 +76,9 @@ export function useAgentCatalog({
   chosen: AgentSelection | null;
   /** What the conversation shown last ran with. */
   ranWith: AgentRanWith | undefined;
+  /** The lane the conversation shown is fixed to, by way id; null for a
+   * conversation that has not run. */
+  fixedWay: string | null;
 }) {
   const ready = status?.state === "ready";
   const starting = status?.state === "starting";
@@ -214,6 +225,24 @@ export function useAgentCatalog({
     );
     return () => window.clearTimeout(again);
   }, [catalog, followBusy, status]);
+  // A cold read answers a lane's packaged model list as stale while the
+  // account's own is still being read; the account's list is served on a
+  // later read, so the catalog is read again, a bounded number of times.
+  const accountReads = useRef({ reader, count: 0 });
+  if (accountReads.current.reader !== reader)
+    accountReads.current = { reader, count: 0 };
+  const stillReading =
+    catalog.kind === "ready" && catalogStillReading(catalog.value);
+  useEffect(() => {
+    if (!stillReading) return;
+    const reads = accountReads.current;
+    if (reads.count >= ACCOUNT_LIST_READS) return;
+    const again = window.setTimeout(() => {
+      reads.count += 1;
+      setCatalogAgain((count) => count + 1);
+    }, ACCOUNT_LIST_PAUSE_MS);
+    return () => window.clearTimeout(again);
+  }, [stillReading, catalog]);
   // What the next message runs with: what the person chose while this
   // conversation is shown, else what the conversation last ran with, else the
   // profile's last choice, each only where the catalog still offers it.
@@ -287,7 +316,13 @@ export function useAgentCatalog({
     remembered,
     servedReading,
   ];
-  const selection = offer ? restoredSelection(offer, heldChoices) : null;
+  // A conversation fixed to a lane runs on it or not at all: a choice the
+  // catalog offers only in another lane is never sent in its place.
+  const selection = offer
+    ? fixedWay !== null
+      ? laneSelection(offer, heldChoices, fixedWay)
+      : restoredSelection(offer, heldChoices)
+    : null;
   // The provider the person is on. Where no way can run there is no selection,
   // and it is the provider they chose last, else the first the catalog serves.
   const provider = offer

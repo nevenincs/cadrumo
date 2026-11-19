@@ -24,8 +24,28 @@ export function sendRefusalStep(code: string | null): SendRefusalStep | null {
   }
 }
 
+/** Whether a send refused with `code` was refused for a choice the catalog
+ * offered, so what is offered is read again: a model this computer lacks or
+ * cannot run, or one the signed-in account is not offered. */
+export function sendRefusalStaleCatalog(code: string | null): boolean {
+  return (
+    sendRefusalStep(code) !== null || code === "agent_gateway_model_not_offered"
+  );
+}
+
+/** The refusals the column answers in place rather than as a failed call:
+ * the agent asks the person to confirm a change of model, the conversation
+ * runs on another lane than the one sent, or the model chosen is not one the
+ * account is offered. */
+const ANSWERED = new Set([
+  "agent_gateway_selection_change_unacknowledged",
+  "agent_gateway_conversation_lane_fixed",
+  "agent_gateway_conversation_lane_unreadable",
+  "agent_gateway_model_not_offered",
+]);
+
 /** How a send's refusal is recorded: one the column words with its next
- * step is answered, not failed. */
+ * step, or answers in place, is answered, not failed. */
 export const SEND_PLAN: CallPlan = {
-  answered: (code) => sendRefusalStep(code) !== null,
+  answered: (code) => sendRefusalStep(code) !== null || ANSWERED.has(code),
 };

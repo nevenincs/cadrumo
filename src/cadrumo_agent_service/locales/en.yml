@@ -44,7 +44,19 @@ desktop:
     can_write: write files
     cancel: Cancel
     capabilities: 'Can: {list}'
+    carried_turns: This conversation began with {carried} turns of the earlier one;
+      {omitted} older turns were left out.
+    carry_back: Back to that conversation
+    carry_pending: Your next message starts a new conversation that carries the newest
+      turns of “{title}”.
+    carry_pending_untitled: Your next message starts a new conversation that carries
+      the newest turns of the earlier one.
+    carry_source_not_settled: The earlier conversation's reply hasn't finished yet.
+      Wait for it, then send again.
+    carry_source_unavailable: The earlier conversation can't be carried over. Send
+      again to start the new conversation without it.
     catalog_unavailable: Couldn't read the agent's list of providers.
+    choose_another_model: Choose another model
     choose_model: Choose a model
     choose_provider: Choose a provider
     close_documents: Close the documents
@@ -53,6 +65,10 @@ desktop:
     condition_invalid_request: The provider rejected the request
     condition_model_does_not_fit: The model doesn't fit in what this computer can
       give it. Choose a smaller model or another provider.
+    condition_model_unavailable: This model isn't available on this provider. Choose
+      another model from the list.
+    condition_model_unavailable_named: '{model} isn''t available on {provider} ({connection}).
+      Choose another model from the list.'
     condition_network_unreachable: The provider can't be reached
     condition_no_answer: The model gave no usable answer for this document. Try a
       different (instruct) model, or try again.
@@ -77,6 +93,7 @@ desktop:
       this computer. Allowing them for later covers any document read by this model.
     consent_recall: What has already been sent can't be recalled.
     consent_title: Send this to {provider}?
+    continue_in_new_conversation: Continues in a new conversation
     conversation_deleting: This conversation is being deleted, so it takes no files.
     conversation_id_taken: This conversation can't hold files. Start a new conversation
       to attach them.
@@ -117,6 +134,8 @@ desktop:
     history: History
     history_empty: No conversations yet
     history_no_match: No conversations match “{query}”.
+    lane_fixed_refused: This conversation continues with the provider it started on.
+      To use another one, choose it and continue in a new conversation.
     lane_no_catalog: Could not load models. Try again.
     lane_no_installed_model: No model downloaded yet. Download one in settings.
     lane_not_admitted: Not available on this computer. Choose another.
@@ -125,6 +144,9 @@ desktop:
     lane_notice: Conversations in this version aren't encrypted.
     lane_signed_out: Sign in to this provider in settings.
     lane_unreachable: Can't connect. Check this provider in settings.
+    lane_unreadable_refused: The provider this conversation ran on can't be read.
+      Send your message again to continue in a new conversation that carries this
+      one.
     members_multiple: '{count} files'
     members_single: 1 file
     mention_empty: No stored document matches
@@ -147,6 +169,9 @@ desktop:
     model_not_installed: '{name} (not downloaded)'
     model_not_installed_refused: The chosen model isn't on this computer. Download
       it, or choose another model.
+    model_not_offered_refused: Your account isn't offered this model. Choose another
+      one from the list.
+    model_with_effort: '{model} ({effort})'
     model_written: This provider doesn't list its models. Enter the model name exactly
       as the provider writes it.
     models_to_download: Some models aren't on this computer yet. Download them in
@@ -205,6 +230,13 @@ desktop:
     row_documents: 'Documents: {count}'
     search_history: Search conversations
     search_placeholder: Search
+    selection_change_asked: This message changes the model from {previous} to {requested}.
+    selection_change_confirm: Change and send
+    selection_change_history: The new model gets {retained} messages of this conversation
+      (about {tokens} tokens); {omitted} older messages are left out.
+    selection_change_keep: Keep the model
+    selection_change_refused: Changing the model needs your confirmation. Send the
+      message again.
     send: Send
     send_nothing: Write a message or add a file first
     send_too_long: This message has {count} characters; {max} is the most

@@ -3,7 +3,10 @@
 ``src/shell/agentGatewayContract.ts`` holds every definition of the answers the host relays from the
 agent unchanged: a model's licence (``ModelLicenceResponse``), the skill inventory
 (``SkillListResponse``), one skill (``SkillDetailRecord``) and its checks (``SkillVerificationRecord``),
-the attachment policy (``AttachmentPolicyResponse``), a failed run's ``ProviderCondition``, and the
+the attachment policy (``AttachmentPolicyResponse``), a failed run's ``ProviderCondition``, the facts a
+run start's refusal states for a conversation's fixed lane (``ConversationLaneFixedRefusalDetail``) and for
+an unacknowledged change of model (``SelectionChangeUnacknowledgedRefusalDetail``), what a carried start
+took over (``ConversationCarry``), and the
 vocabularies of a run the host passes on as the agent serves them: a run's ``ThreadStatus``, a tool
 call's ``ToolCallStatus`` and ``ToolKind``, and a pending clarification's ``ClarificationQuestion``, as
 ``cadrumo_agent_service.providers.application.served_catalog.agent_definitions`` states the agent's pinned
@@ -31,17 +34,21 @@ from cadrumo_agent_service.providers.application.served_catalog import agent_def
 RELAYED_ANSWERS: Final = (
     "AttachmentPolicyResponse",
     "ClarificationQuestion",
+    "ConversationCarry",
+    "ConversationLaneFixedRefusalDetail",
     "ModelLicenceResponse",
     "ProviderCondition",
     "SkillDetailRecord",
     "SkillListResponse",
+    "SelectionChangeUnacknowledgedRefusalDetail",
     "SkillVerificationRecord",
     "ThreadStatus",
     "ToolCallStatus",
     "ToolKind",
 )
 """The agent definitions the host relays unchanged: the attachment policy's, the licence route's, the
-skill list's, one skill's and its checks' answers, a failed run's provider condition, a run's status, a
+skill list's, one skill's and its checks' answers, a failed run's provider condition, a run start's lane
+and model-change refusal facts and its carry, a run's status, a
 tool call's status and kind, and a pending clarification's questions, which the host passes through as
 the agent states them."""
 

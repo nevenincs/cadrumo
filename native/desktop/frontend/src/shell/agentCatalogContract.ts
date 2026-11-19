@@ -382,6 +382,18 @@ export type ModelArtefacts = {
 export type ModelDownload = "required" | "none";
 
 /**
+ * Where a lane's model list was read from.
+ *
+ * Values: ACCOUNT: The signed-in account's own listing, read in the person's
+ * provider home. It decides which models the lane offers. PACKAGED: The
+ * document this service ships. A lane whose runtime publishes an account
+ * listing serves it when the listing could not be read, or while it is still
+ * being read, so a host can say that the account's list is not the one in
+ * view.
+ */
+export type ModelListSource = "account" | "packaged";
+
+/**
  * The multi-agent runtime a model runs its native subagents on.
  *
  * A lane whose models differ here bounds their subagents differently: on
@@ -570,6 +582,7 @@ export type ServedLaneCatalog = {
   recommended?: { [key: string]: string };
   models?: ServedCatalogModel[];
   native_controls?: ProviderNativeControlResponse[];
+  model_list_source?: ModelListSource | null;
 };
 
 /**

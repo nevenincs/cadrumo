@@ -236,6 +236,26 @@ export function useProviderSettings(
     readStatus !== null &&
     answer.kind === "ready" &&
     answer.value.reads_pending;
+  // The last complete answer, kept while the service says a later one is
+  // still being completed: such an answer carries only part of what the apps
+  // and sign-in routes behind it will say, so it does not unsay a lane's
+  // standing. A complete answer, or a change the person made to a lane,
+  // replaces it.
+  const [complete, setComplete] = useState<{
+    owner: typeof owner;
+    from: ProviderSettingsAnswer;
+    providers: ReadonlyMap<string, ProviderSettingsRecord>;
+  } | null>(null);
+  if (answer.kind === "ready" && !answer.value.reads_pending) {
+    if (complete?.from !== answer.value || complete.owner !== owner)
+      setComplete({
+        owner,
+        from: answer.value,
+        providers: new Map(
+          answer.value.providers.map((lane) => [lane.id, lane]),
+        ),
+      });
+  }
   const pauses = useRef(0);
   useEffect(() => {
     if (!busy) following.current = null;
@@ -263,50 +283,63 @@ export function useProviderSettings(
     );
     return () => window.clearTimeout(again);
   }, [answer, busy, pending]);
-  const read = useMemo(
-    (): ProviderSettingsView["read"] =>
-      answer.kind === "ready"
-        ? {
-            kind: "ready",
-            value: {
-              providers: answer.value.providers.map(providerStatus),
-              signInProviders: Array.isArray(answer.value.sign_in_providers)
-                ? [...new Set<string>(answer.value.sign_in_providers)]
+  const read = useMemo((): ProviderSettingsView["read"] => {
+    if (answer.kind !== "ready") return answer;
+    const earlier =
+      answer.value.reads_pending && complete?.owner === owner ? complete : null;
+    const served = earlier
+      ? {
+          ...answer.value,
+          providers: answer.value.providers.map((lane) => {
+            const before = earlier.providers.get(lane.id);
+            // Only a lane the store left as it was keeps its earlier standing.
+            return before &&
+              before.mode === lane.mode &&
+              before.credential_saved === lane.credential_saved
+              ? { ...before, revision: lane.revision }
+              : lane;
+          }),
+          sign_in_providers: earlier.from.sign_in_providers,
+          sign_in_methods: earlier.from.sign_in_methods,
+        }
+      : answer.value;
+    return {
+      kind: "ready",
+      value: {
+        providers: served.providers.map(providerStatus),
+        signInProviders: Array.isArray(served.sign_in_providers)
+          ? [...new Set<string>(served.sign_in_providers)]
+          : [],
+        signInMethods: Object.fromEntries(
+          Object.entries(served.sign_in_methods ?? {}).flatMap(
+            ([provider, methods]) =>
+              Array.isArray(methods)
+                ? [
+                    [
+                      provider,
+                      [
+                        ...new Set(
+                          methods.filter(
+                            (method): method is ProviderSignInMethod =>
+                              method === "browser" ||
+                              method === "device" ||
+                              method === "browser-code",
+                          ),
+                        ),
+                      ],
+                    ],
+                  ]
                 : [],
-              signInMethods: Object.fromEntries(
-                Object.entries(answer.value.sign_in_methods ?? {}).flatMap(
-                  ([provider, methods]) =>
-                    Array.isArray(methods)
-                      ? [
-                          [
-                            provider,
-                            [
-                              ...new Set(
-                                methods.filter(
-                                  (method): method is ProviderSignInMethod =>
-                                    method === "browser" ||
-                                    method === "device" ||
-                                    method === "browser-code",
-                                ),
-                              ),
-                            ],
-                          ],
-                        ]
-                      : [],
-                ),
-              ),
-              ...servedCommand(answer.value.console_sign_in_command),
-              revisions: Object.fromEntries(
-                answer.value.providers.map(
-                  ({ id, revision }) => [id, revision] as const,
-                ),
-              ),
-              readsPending: answer.value.reads_pending,
-            },
-          }
-        : answer,
-    [answer],
-  );
+          ),
+        ),
+        ...servedCommand(served.console_sign_in_command),
+        revisions: Object.fromEntries(
+          served.providers.map(({ id, revision }) => [id, revision] as const),
+        ),
+        readsPending: answer.value.reads_pending,
+      },
+    };
+  }, [answer, complete, owner]);
   const revisionOf = (providerId: string) =>
     answer.kind === "ready"
       ? answer.value.providers.find((record) => record.id === providerId)
@@ -331,7 +364,18 @@ export function useProviderSettings(
       ),
     }));
     act(host, revision).then(
-      () =>
+      () => {
+        // What the lane stands on is the change's to say, not the earlier answer's.
+        setComplete((held) =>
+          held
+            ? {
+                ...held,
+                providers: new Map(
+                  [...held.providers].filter(([id]) => id !== providerId),
+                ),
+              }
+            : held,
+        );
         setState((held) =>
           mine !== generation.current
             ? held
@@ -341,7 +385,8 @@ export function useProviderSettings(
                 again: held.again + 1,
                 changes: held.changes + 1,
               },
-        ),
+        );
+      },
       (error: unknown) => {
         const code = failureCode(error);
         const served =

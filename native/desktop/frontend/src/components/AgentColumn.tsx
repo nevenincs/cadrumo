@@ -63,6 +63,7 @@ import { useAgentCatalog } from "./agent/useAgentCatalog";
 import { useLocalModelHosts } from "./agent/useLocalModelHosts";
 import type { SkillCommand } from "../shell/agentSkills";
 import { Transcript } from "./agent/Transcript";
+import { LaneSwitchNotice } from "./agent/LaneSwitchNotice";
 import type {
   AgentSelection,
   ModelOption,
@@ -167,6 +168,9 @@ export function AgentColumn({
     archived: false,
     conversationId: null,
     chosen: null,
+    carryFrom: null,
+    carried: null,
+    changeAsk: null,
     sending: false,
     interactionId: null,
     pending: null,
@@ -184,6 +188,9 @@ export function AgentColumn({
       archived: false,
       conversationId: null,
       chosen: null,
+      carryFrom: null,
+      carried: null,
+      changeAsk: null,
       sending: false,
       interactionId: null,
       pending: null,
@@ -232,11 +239,13 @@ export function AgentColumn({
   // also refreshes reads after the service has recovered.
   const serviceReadable = readable && (!session || ready);
   // The conversations are read while the history is open, and while one of
-  // them is shown, for its title. Opening the history asks again, so it is
-  // never the list from the last time.
+  // them is shown or is about to be carried into a new one, for its title.
+  // Opening the history asks again, so it is never the list from the last
+  // time.
   const historyOpen = panel === "history";
   const documentsOpen = panel === "documents";
-  const wanted = historyOpen || conversationId !== null;
+  const wanted =
+    historyOpen || conversationId !== null || view.carryFrom !== null;
   const readConversations = useMemo(
     () =>
       reader !== null && serviceReadable && agent && (historyOpen || wanted)
@@ -370,6 +379,11 @@ export function AgentColumn({
     conversationId !== null && live.read.kind === "ready"
       ? newestRanWith(live.read.value)
       : undefined;
+  // A conversation that has run is fixed to the lane it ran on: its next
+  // message goes there, and another lane is a new conversation carrying it.
+  const fixedWay = ranWith?.provider
+    ? `${ranWith.provider}/${ranWith.transport}`
+    : null;
   const agentCatalog = useAgentCatalog({
     t,
     reader,
@@ -382,6 +396,7 @@ export function AgentColumn({
     listChanges,
     chosen: view.chosen,
     ranWith,
+    fixedWay,
   });
   const {
     catalog,
@@ -397,6 +412,11 @@ export function AgentColumn({
   const current =
     conversations.kind === "ready" && conversationId !== null
       ? conversations.value.find((record) => record.id === conversationId)
+      : undefined;
+  // The conversation a first message is about to carry from.
+  const carrySource =
+    conversations.kind === "ready" && view.carryFrom !== null
+      ? conversations.value.find((record) => record.id === view.carryFrom)
       : undefined;
   // Archiving is the agent's, for the whole chain and for good: the history
   // offers it where the host does, and never an undo.
@@ -433,6 +453,8 @@ export function AgentColumn({
               pending: null,
               sending: false,
               chosen: null,
+              carryFrom: null,
+              changeAsk: null,
               draft: { key: held.draft.key + 1, text: "" },
             }
           : {}),
@@ -464,6 +486,8 @@ export function AgentColumn({
       interactionId: null,
       // A conversation opened runs with its own choice, not the last one's.
       chosen: held.conversationId === id ? held.chosen : null,
+      carryFrom: null,
+      changeAsk: null,
       sendFailure: null,
       archiveFailure: null,
     }));
@@ -650,27 +674,36 @@ export function AgentColumn({
     },
   });
 
-  const { questionnaire, answering, answer, decide, send, stop } = agentSending(
-    {
-      session,
-      reader,
-      conversationId,
-      catalog,
-      selection,
-      newest,
-      ready,
-      sending: view.sending,
-      live,
-      staging,
-      setView,
-      currentReader,
-      currentSend,
-      promptOwner,
-      currentPromptOwner,
-      pendingPrompt,
-      refreshCatalog: agentCatalog.refresh,
-    },
-  );
+  const {
+    questionnaire,
+    answering,
+    answer,
+    decide,
+    send,
+    stop,
+    confirmChange,
+    withdrawChange,
+  } = agentSending({
+    session,
+    reader,
+    conversationId,
+    carryFrom: view.carryFrom,
+    changeAsk: view.changeAsk,
+    catalog,
+    selection,
+    newest,
+    ready,
+    sending: view.sending,
+    live,
+    staging,
+    setView,
+    currentReader,
+    currentSend,
+    promptOwner,
+    currentPromptOwner,
+    pendingPrompt,
+    refreshCatalog: agentCatalog.refresh,
+  });
 
   // No provider the agent can run: a key is missing, or every lane is held
   // back. That is not a failure, and the way to a key is offered.
@@ -776,6 +809,8 @@ export function AgentColumn({
                   sending: false,
                   interactionId: null,
                   chosen: null,
+                  carryFrom: null,
+                  changeAsk: null,
                   sendFailure: null,
                 });
               }
@@ -916,6 +951,7 @@ export function AgentColumn({
             <Transcript
               items={history.value}
               onOpenProviderSettings={openSettings}
+              onChooseModel={openModelPicker}
               onOpenLink={(url) => {
                 // Cadrumo's own addresses never reach the browser.
                 if (!isCadrumoLink(url)) {
@@ -1006,6 +1042,25 @@ export function AgentColumn({
             onDownloadModels={noModelHeld ? openSettings : undefined}
             onOpenModelSettings={openSettings}
           />
+          <LaneSwitchNotice
+            changeAsk={view.changeAsk?.facts ?? null}
+            carryFrom={
+              view.carryFrom !== null
+                ? { title: carrySource?.title || null }
+                : null
+            }
+            carried={
+              view.carried !== null &&
+              view.carried.conversationId === conversationId
+                ? view.carried.carry
+                : null
+            }
+            onConfirmChange={confirmChange}
+            onWithdrawChange={withdrawChange}
+            onBackToSource={() => {
+              if (view.carryFrom !== null) open(view.carryFrom);
+            }}
+          />
           <Composer
             key={view.draft.key}
             defaultDraft={view.draft.text}
@@ -1029,11 +1084,33 @@ export function AgentColumn({
             onSkillCommand={
               reviewSkill || verifySkill ? setSkillShown : undefined
             }
+            fixedWayId={fixedWay ?? undefined}
             onSelectionChange={
               offer
                 ? (chosen) => {
-                    change({ chosen });
                     remember(chosen);
+                    // Another lane than the conversation's continues in a
+                    // new conversation that carries this one's newest turns.
+                    if (
+                      fixedWay !== null &&
+                      conversationId !== null &&
+                      chosen.wayId !== fixedWay
+                    ) {
+                      pendingPrompt.current = null;
+                      change({
+                        panel: "none",
+                        conversationId: null,
+                        carryFrom: conversationId,
+                        chosen,
+                        pending: null,
+                        sending: false,
+                        interactionId: null,
+                        changeAsk: null,
+                        sendFailure: null,
+                      });
+                      return;
+                    }
+                    change({ chosen, changeAsk: null });
                   }
                 : undefined
             }
