@@ -149,6 +149,8 @@ test("the method and its route are edited in the window, with the facts each ask
   await expect(editor).toContainText(label("desktop.profile.aeat.saved"));
   // The facts, then the method: each under the revision the one before left.
   expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(3);
+  // Saved, the NIF/NIE stays in the form with what was given.
+  await expect(dni).toHaveValue("12345678Z");
   await expect(editor).not.toContainText(
     label("auth.sync.requirement.auth_method_required"),
   );
@@ -353,8 +355,12 @@ test("the AEAT editor does not save over a profile that changed elsewhere", asyn
   await editor
     .getByLabel("Authentication method", { exact: true })
     .selectOption("clave_permanente");
+  const taxId = editor.getByLabel(TAX_ID_LABEL, { exact: true });
+  await taxId.fill("12345678Z");
   await page.evaluate(() => window.__scenarioProfile!.update("Elsewhere"));
   await expect(editor).toContainText(label("desktop.profile.conflict"));
   await expect(save(editor)).toBeDisabled();
+  // The profile read again does not take the NIF/NIE field or its text away.
+  await expect(taxId).toHaveValue("12345678Z");
   expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(0);
 });

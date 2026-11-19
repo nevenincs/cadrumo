@@ -97,13 +97,14 @@ def test_nie_requires_support_instead_of_date() -> None:
     assert "auth.fecha_validez" not in {item.field for item in result.requirements}
 
 
-def test_identity_mismatch_blocks_even_with_contrast() -> None:
+def test_stale_stored_clave_identity_does_not_block_a_corrected_tax_id() -> None:
     result = _read(
         AuthProviderKind.CLAVE_MOVIL,
         {"identity.tax_id": "12345678Z", "auth.dni_nie": "00001005Q", "auth.fecha_validez": "2030-01-01"},
     )
-    assert not result.ready
-    assert any(item.field == "auth.identity_alignment" and not item.satisfied for item in result.requirements)
+    assert result.ready
+    assert all(item.satisfied for item in result.requirements)
+    assert "auth.dni_nie" not in {item.field for item in result.requirements}
 
 
 @pytest.mark.parametrize("password,ready", [(None, False), (SecretStr("private-password"), True)])
