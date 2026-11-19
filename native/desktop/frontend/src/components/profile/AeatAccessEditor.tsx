@@ -60,10 +60,9 @@ const CREDENTIAL_WORDS = {
 
 type Readiness =
   | { state: "loading" }
-  | { state: "failed" }
+  | { state: "failed"; code: string }
   | { state: "known"; value: CensoReadiness };
 type Outcome =
-  | { kind: "saved" }
   | { kind: "failed"; item: string }
   | {
       kind: "credential";
@@ -87,8 +86,10 @@ const factsOf = (profile: UserProfile) =>
  * Cl@ve Móvil route, the facts Cl@ve asks for, the certificate file and the
  * one secret the method keeps apart from the profile, with what AEAT
  * synchronization still needs. A save writes the changed facts, then the
- * method, then the secret, each under the revision the one before left, and
- * reads the requirements again. The secret is read from its input when the
+ * method, then the secret, each under the revision the one before left. A
+ * save confirmed whole, with every profile write read back at least as new as
+ * the one before it, hands back to the page, which closes the editor and says
+ * so; anything short of that stays in the editor and is told there. The secret is read from its input when the
  * form is sent and cleared there; no state holds it, and it is not retried
  * after an outcome that was not confirmed.
  */
@@ -104,6 +105,7 @@ export function AeatAccessEditor({
   onRefresh,
   onSave,
   onSettled,
+  onSaved,
   onClose,
 }: {
   /** The profile as the editor opened on it. */
@@ -125,6 +127,9 @@ export function AeatAccessEditor({
   onSave: (base: UserProfile, edit: ProfileEdit) => Promise<boolean>;
   /** Called once a save has ended, whatever came of it. */
   onSettled: () => void;
+  /** Called once every edit the save sent was confirmed saved: the page
+   * closes the editor and tells the person outside it. */
+  onSaved: () => void;
   onClose: () => void;
 }) {
   const t = useStrings(),
@@ -159,8 +164,13 @@ export function AeatAccessEditor({
       .then((value) => {
         if (live) setReadiness({ state: "known", value });
       })
-      .catch(() => {
-        if (live) setReadiness({ state: "failed" });
+      .catch((failure: unknown) => {
+        const code = (failure as { code?: unknown } | null)?.code;
+        if (live)
+          setReadiness({
+            state: "failed",
+            code: typeof code === "string" ? code : "unavailable",
+          });
       });
     return () => {
       live = false;
@@ -202,11 +212,15 @@ export function AeatAccessEditor({
     shownFacts.some(factChanged) ||
     methodChanged ||
     (secretShown && typedSecret);
+  // The page's read can trail the editor's own save for a moment; only a
+  // profile newer than the one the editor knows, or another at its revision,
+  // changed elsewhere.
   const changed =
     !working &&
     (!current ||
-      current.record_revision !== known.record_revision ||
-      current.content_digest !== known.content_digest);
+      current.record_revision > known.record_revision ||
+      (current.record_revision === known.record_revision &&
+        current.content_digest !== known.content_digest));
   const idle = !(working || busy);
   const canSave = idle && !changed && !blocked && method !== "" && drafted;
   const providerField = stored(AEAT_PROVIDER);
@@ -266,10 +280,13 @@ export function AeatAccessEditor({
     setOutcome(null);
     setWorking(true);
     let at = known;
+    let saved = false;
     // Each edit is made under the revision the one before left.
     const apply = async (edit: ProfileEdit, item: string) => {
       const next = (await onSave(at, edit)) ? latest() : null;
-      if (!next) {
+      // A readback older than the profile the edit was made on does not show
+      // the edit saved.
+      if (!next || next.record_revision < at.record_revision) {
         setOutcome({ kind: "failed", item });
         return false;
       }
@@ -314,11 +331,12 @@ export function AeatAccessEditor({
           return;
         }
       }
-      setOutcome({ kind: "saved" });
+      saved = true;
     } finally {
       setWorking(false);
-      setRecheck((count) => count + 1);
       onSettled();
+      if (saved) onSaved();
+      else setRecheck((count) => count + 1);
     }
   };
 
@@ -530,7 +548,7 @@ export function AeatAccessEditor({
                 </span>
               ) : readiness.state === "failed" ? (
                 <span className="flex flex-wrap items-center gap-2">
-                  {t("desktop.profile.censo.unavailable")}
+                  {t("desktop.profile.censo.unavailable")} ({readiness.code})
                   <Button
                     type="button"
                     size="xs"
@@ -567,9 +585,6 @@ export function AeatAccessEditor({
           {changed && (
             <Alert tone="warning">{t("desktop.profile.conflict")}</Alert>
           )}
-          {outcome?.kind === "saved" && (
-            <Alert tone="success">{t("desktop.profile.aeat.saved")}</Alert>
-          )}
           {said && (
             <Alert role="alert" tone="danger">
               {said}
@@ -597,11 +612,7 @@ export function AeatAccessEditor({
               disabled={!idle}
               onClick={close}
             >
-              {t(
-                outcome?.kind === "saved"
-                  ? "desktop.profile.aeat.done"
-                  : "desktop.profile.cancel",
-              )}
+              {t("desktop.profile.cancel")}
             </Button>
             <Button type="submit" disabled={!canSave}>
               {!idle && <Spinner />}

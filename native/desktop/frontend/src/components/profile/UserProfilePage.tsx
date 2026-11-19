@@ -1053,6 +1053,10 @@ export const UserProfilePage = memo(function UserProfilePage({
           onRefresh={profile.refresh}
           onSave={profile.save}
           onSettled={sync.retry}
+          onSaved={() => {
+            setAeat(null);
+            onNotice(t("desktop.profile.aeat.saved_notice"));
+          }}
           onClose={() => setAeat(null)}
         />
       )}

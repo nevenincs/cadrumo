@@ -28,6 +28,8 @@ declare global {
       release(): void;
       holdReadiness(): void;
       releaseReadiness(): void;
+      /** Every requirements check from now on fails with this code. */
+      failReadiness(code: string): void;
       holdStatus(): void;
       releaseStatus(): void;
       /** The pull begins at the host without this window asking, as the AEAT
@@ -77,6 +79,7 @@ export function censoFixture(
   let held: Promise<void> | null = null;
   let release = () => {};
   let readinessHeld: Promise<void> | null = null;
+  let readinessFailure: string | null = null;
   let releaseReadiness = () => {};
   const controls = {
     fail() {
@@ -99,6 +102,9 @@ export function censoFixture(
       });
     },
     release: () => release(),
+    failReadiness(code: string) {
+      readinessFailure = code;
+    },
     holdReadiness() {
       readinessHeld ??= new Promise<void>((resolve) => {
         releaseReadiness = () => {
@@ -170,6 +176,7 @@ export function censoFixture(
     async readiness(id) {
       await readinessHeld;
       readinessChecks++;
+      if (readinessFailure) throw { code: readinessFailure };
       // What the profile saved satisfies: the setup the scenario seeded, and
       // whatever the person has entered since.
       return profile.readiness(id);

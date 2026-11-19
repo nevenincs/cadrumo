@@ -4883,12 +4883,11 @@ desktop:
       description: Tria com accedeix aquest perfil a l’AEAT i mira què falta encara.
       document_hint: Per sol·licitar l’accés a l’app, introdueix la data de validesa
         del DNI o el número de suport del NIE, segons el teu document.
-      done: Fet
       failed: 'No s’ha pogut desar: {item}. Revisa-ho i torna-ho a provar.'
       passphrase: Contrasenya del certificat
       password: Contrasenya de {method}
       readiness: Requisits
-      saved: Desat. Els requisits de sota reflecteixen el que hi ha emmagatzemat.
+      saved_notice: Accés a l'AEAT desat.
       saved_value: Hi ha un valor desat que no es mostra. Escriu-ne un de nou per
         substituir-lo o deixa-ho en blanc per conservar-lo.
       secret_help: Es desa a part del teu perfil i no es torna a mostrar. Deixa-la

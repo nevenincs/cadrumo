@@ -4892,12 +4892,11 @@ desktop:
       description: Elige cómo accede este perfil a la AEAT y mira qué falta todavía.
       document_hint: Para solicitar el acceso en la aplicación, introduce la fecha
         de validez del DNI o el número de soporte del NIE, según tu documento.
-      done: Hecho
       failed: 'No se pudo guardar: {item}. Revisa el valor y vuelve a intentarlo.'
       passphrase: Contraseña del certificado
       password: Contraseña de {method}
       readiness: Requisitos
-      saved: Guardado. Los requisitos de abajo reflejan lo almacenado.
+      saved_notice: Acceso a la AEAT guardado.
       saved_value: Hay un valor guardado que no se muestra. Escribe uno nuevo para
         sustituirlo o déjalo en blanco para conservarlo.
       secret_help: Se guarda aparte de tu perfil y no vuelve a mostrarse. Déjala en

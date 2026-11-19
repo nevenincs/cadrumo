@@ -41,13 +41,7 @@ test("saved Cl@ve setup asks specifically for the NIE support number", async ({
   );
   await editor.getByLabel("Support number", { exact: true }).fill("ABC123456");
   await save(editor).click();
-  await expect(editor).toContainText(label("desktop.profile.aeat.saved"));
-  await expect(editor).not.toContainText(
-    label("auth.sync.requirement.nie_support_required"),
-  );
-  await editor
-    .getByRole("button", { name: label("desktop.profile.aeat.done") })
-    .click();
+  await expect(editor).toHaveCount(0);
   // The band asks again and finds the prerequisites met.
   await expect(region).not.toContainText(
     label("auth.sync.requirement.nie_support_required"),
@@ -146,21 +140,13 @@ test("the method and its route are edited in the window, with the facts each ask
   await dni.fill("12345678Z");
   await validity.fill("2030-01-31");
   await save(editor).click();
-  await expect(editor).toContainText(label("desktop.profile.aeat.saved"));
+  // Saved whole, the editor closes and the page says so.
+  await expect(editor).toHaveCount(0);
+  await expect(
+    page.getByText(label("desktop.profile.aeat.saved_notice")),
+  ).toBeVisible();
   // The facts, then the method: each under the revision the one before left.
   expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(3);
-  // Saved, the NIF/NIE stays in the form with what was given.
-  await expect(dni).toHaveValue("12345678Z");
-  await expect(editor).not.toContainText(
-    label("auth.sync.requirement.auth_method_required"),
-  );
-  await expect(editor).not.toContainText(
-    label("auth.sync.requirement.dni_validity_required"),
-  );
-  await editor
-    .getByRole("button", { name: label("desktop.profile.aeat.done") })
-    .click();
-  await expect(editor).toHaveCount(0);
   await expect(row(profile, "auth.provider")).toContainText("Cl@ve Móvil");
   await expect(row(profile, "auth.clave_movil_route")).toContainText(
     "Request in app",
@@ -207,11 +193,11 @@ test("a NIF/NIE added to the profile is not asked for again when Cl@ve is set up
     .getByLabel("Cl@ve Móvil route", { exact: true })
     .selectOption("qr");
   await save(editor).click();
-  await expect(editor).toContainText(label("desktop.profile.aeat.saved"));
+  await expect(editor).toHaveCount(0);
   // The identity, then only the method: nothing was asked for twice.
   expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(2);
-  await expect(editor).toContainText(label("desktop.profile.censo.ready"));
-  await expect(editor).not.toContainText(
+  await expect(region).toContainText(label("desktop.profile.censo.ready"));
+  await expect(region).not.toContainText(
     label("auth.sync.requirement.clave_identity_required"),
   );
   await expect(row(profile, "auth.dni_nie")).not.toContainText("X0001500M");
@@ -253,17 +239,7 @@ test("a certificate is chosen in the native dialog and its passphrase is kept ou
   await expect(secret).toHaveAttribute("autocomplete", "new-password");
   await secret.fill("correct horse battery");
   await save(editor).click();
-  await expect(editor).toContainText(label("desktop.profile.aeat.saved"));
-  await expect(secret).toHaveValue("");
-  await expect(editor).not.toContainText(
-    label("auth.sync.requirement.certificate_file_required"),
-  );
-  await expect(editor).not.toContainText(
-    label("auth.sync.requirement.certificate_passphrase_required"),
-  );
-  await expect(editor).toContainText(
-    label("desktop.profile.aeat.certificate_saved"),
-  );
+  await expect(editor).toHaveCount(0);
   expect(
     await page.evaluate(() => ({
       saved: window.__scenarioProfile!.credentials(),
@@ -273,13 +249,20 @@ test("a certificate is chosen in the native dialog and its passphrase is kept ou
   expect(
     await page.evaluate(() => document.documentElement.outerHTML),
   ).not.toContain("correct horse battery");
-  // Closed and opened again, no passphrase is kept for the next time.
-  await editor
-    .getByRole("button", { name: label("desktop.profile.aeat.done") })
-    .click();
+  // Opened again, the file is saved, the requirements are met and no
+  // passphrase is kept for the next time.
   await row(profile, "auth.provider").focus();
   await page.keyboard.press("Enter");
   await expect(secret).toHaveValue("");
+  await expect(editor).toContainText(
+    label("desktop.profile.aeat.certificate_saved"),
+  );
+  await expect(editor).not.toContainText(
+    label("auth.sync.requirement.certificate_file_required"),
+  );
+  await expect(editor).not.toContainText(
+    label("auth.sync.requirement.certificate_passphrase_required"),
+  );
 });
 
 test("a credential that did not reach the runtime or was left unconfirmed is reported and never retried", async ({
@@ -335,12 +318,9 @@ test("a credential that did not reach the runtime or was left unconfirmed is rep
   // The person's own next attempt is the only retry.
   await secret.fill("last try");
   await save(editor).click();
-  await expect(editor).toContainText(label("desktop.profile.aeat.saved"));
+  await expect(editor).toHaveCount(0);
   expect(await attempts()).toBe(sent + 1);
   expect(await credentials()).toEqual(["clave_permanente"]);
-  await expect(editor).not.toContainText(
-    label("auth.sync.requirement.clave_password_required"),
-  );
   // No profile edit was repeated for it.
   expect(await writes()).toBe(2);
 });
@@ -363,4 +343,62 @@ test("the AEAT editor does not save over a profile that changed elsewhere", asyn
   // The profile read again does not take the NIF/NIE field or its text away.
   await expect(taxId).toHaveValue("12345678Z");
   expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(0);
+});
+
+test("a saved access setup closes the dialog and the band reads what it saved", async ({
+  page,
+}) => {
+  await open(page, "censo-nie");
+  const region = band(page);
+  await region
+    .getByRole("button", {
+      name: label("desktop.profile.censo.setup"),
+      exact: true,
+    })
+    .click();
+  const editor = aeatEditor(page);
+  await editor.getByLabel("Support number", { exact: true }).fill("ABC123456");
+  await save(editor).click();
+  await expect(editor).toHaveCount(0);
+  await expect(region).not.toContainText(
+    label("auth.sync.requirement.nie_support_required"),
+  );
+  await expect(
+    region.getByRole("button", {
+      name: label("desktop.profile.censo.pull"),
+      exact: true,
+    }),
+  ).toBeEnabled();
+});
+
+test("a refused access save is told in the dialog, which stays open", async ({
+  page,
+}) => {
+  await open(page, "censo-nie");
+  await band(page)
+    .getByRole("button", {
+      name: label("desktop.profile.censo.setup"),
+      exact: true,
+    })
+    .click();
+  const editor = aeatEditor(page);
+  await page.evaluate(() => window.__scenarioProfile!.refuse());
+  await editor.getByLabel("Support number", { exact: true }).fill("ABC123456");
+  await save(editor).click();
+  await expect(editor.getByRole("alert").first()).toBeVisible();
+  await expect(editor).toHaveCount(1);
+});
+
+test("a requirements check that fails is told with its reason, not hidden", async ({
+  page,
+}) => {
+  await open(page, "censo-nie");
+  await page.evaluate(() =>
+    window.__scenarioCenso!.failReadiness("not_signed_in"),
+  );
+  await profileAction(page, "desktop.profile.action.aeat_access");
+  const editor = aeatEditor(page);
+  await expect(editor).toContainText(
+    `${label("desktop.profile.censo.unavailable")} (not_signed_in)`,
+  );
 });
