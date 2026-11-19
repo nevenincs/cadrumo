@@ -13,6 +13,11 @@ many minutes, so it is a scheduled or manual proof, not part of the fast check.
 ``clean`` removes only outputs a family declares generated; committed outputs
 are refused, never deleted.
 
+A producer, and a check that adopts outputs, runs observed (``observed_run.py``):
+the stamp keys a family's observed groups on the files its processes read, so
+an edit elsewhere in the product source leaves it fresh. A run that was not
+completely observed keys them whole, on digests taken before it ran.
+
 The window projections belong to the selected CMake build tree
 (``location.py``). A seed that leaves every window family fresh records their
 outputs in the window index, which the frontend's type check verifies; one that
@@ -53,6 +58,7 @@ from .location import (
     output_directory,
     window_projections,
 )
+from .observed_run import ObservedRun, observed_run
 from .registry import (
     FAMILIES,
     OUTPUT,
@@ -68,8 +74,10 @@ from .stamps import (
     FixtureState,
     InputDigests,
     InputRecord,
+    closure_inputs,
     family_inputs,
     family_status,
+    observed_files,
     output_digests,
     output_paths,
     stamp_path,
@@ -159,16 +167,21 @@ def child_environment(command: Command, root: Path, inherited: Mapping[str, str]
     return environment
 
 
-def _run(workspace: Workspace, command: Command, *, output: Path | None = None) -> int:
+def _run(
+    workspace: Workspace, command: Command, *, output: Path | None = None, observed: ObservedRun | None = None
+) -> int:
     argv = _argv(command, workspace.root, output=output)
     executable = shutil.which(argv[0])
     if executable is None:
         print(f"  cannot run {argv[0]!r}: not on PATH", file=sys.stderr)
         return 127
+    environment = child_environment(command, workspace.root, os.environ)
+    if observed is not None:
+        environment = observed.environment(environment)
     return run_command(
         [executable, *argv[1:]],
         cwd=workspace.root,
-        environment=child_environment(command, workspace.root, os.environ),
+        environment=environment,
         inherit_output=True,
     ).returncode
 
@@ -212,7 +225,9 @@ def status(names: Sequence[str], workspace: Workspace | None = None) -> int:
     unfresh = False
     for family in _selected(workspace, names):
         inputs = _inputs(family, digests, authority)
-        result = family_status(family, workspace.root, inputs, cache_directory=workspace.cache_directory)
+        result = family_status(
+            family, workspace.root, inputs, digests=digests, cache_directory=workspace.cache_directory
+        )
         print(f"{family.name}: {result.state}")
         for reason in result.reasons[:12]:
             print(f"  {reason}")
@@ -224,13 +239,47 @@ def status(names: Sequence[str], workspace: Workspace | None = None) -> int:
     return 0
 
 
-def _adopted(workspace: Workspace, family: FixtureFamily, inputs: InputRecord) -> bool:
-    """Stamp unstamped outputs when the family's check proves their bytes; produce nothing."""
+def _observed_commands(
+    workspace: Workspace, family: FixtureFamily, commands: Sequence[Command], inputs: InputRecord, digests: InputDigests
+) -> bool:
+    """Run ``commands`` observed and stamp the outputs they leave; whether all passed and an output stands.
+
+    The observed groups' whole digests are taken before the commands run, so an edit made during the run keys a
+    fallback stamp on the older content and shows as stale, never as fresh.
+    """
+    closure = closure_inputs(family, digests)
+    with observed_run(workspace.root, _scratch(workspace, f"fixture-observation-{family.name}")) as run:
+        if not all(_run(workspace, command, observed=run) == 0 for command in commands):
+            return False
+        if not output_digests(family, workspace.root):
+            print(f"  {family.name} produced no declared output", file=sys.stderr)
+            return False
+        reads, reasons = run.reads(family, cache_directory=workspace.cache_directory)
+    if reads is None:
+        print(f"  {family.name}: keyed on its whole product source, its run was not fully observed:", flush=True)
+        for reason in reasons[:5]:
+            print(f"    {reason}", flush=True)
+    write_stamp(
+        family,
+        workspace.root,
+        inputs,
+        reads=reads,
+        closure=closure if reads is None else None,
+        reasons=reasons,
+        cache_directory=workspace.cache_directory,
+    )
+    return True
+
+
+def _adopted(workspace: Workspace, family: FixtureFamily, inputs: InputRecord, digests: InputDigests) -> bool:
+    """Stamp unstamped outputs when the family's check proves their bytes; produce nothing.
+
+    The check renders every output afresh, so it reads what the producer reads, and it runs observed.
+    """
     print(f"{family.name}: checking its unstamped outputs", flush=True)
-    if not all(_run(workspace, command) == 0 for command in family.check):
+    if not _observed_commands(workspace, family, family.check, inputs, digests):
         print(f"  {family.name}: the check failed, so it is produced", flush=True)
         return False
-    write_stamp(family, workspace.root, inputs, cache_directory=workspace.cache_directory)
     print(f"{family.name}: adopted, its check proved the stored outputs")
     return True
 
@@ -252,7 +301,9 @@ def record_window_index(workspace: Workspace, digests: InputDigests, authority: 
     families: dict[str, dict[str, str]] = {}
     for family in window_families(workspace.families):
         inputs = _inputs(family, digests, authority)
-        current = family_status(family, workspace.root, inputs, cache_directory=workspace.cache_directory)
+        current = family_status(
+            family, workspace.root, inputs, digests=digests, cache_directory=workspace.cache_directory
+        )
         if current.state is not FixtureState.FRESH:
             index.unlink(missing_ok=True)
             print(f"The window projections are incomplete: {family.name} is {current.state}", file=sys.stderr)
@@ -279,6 +330,7 @@ def window_dependencies(workspace: Workspace, digests: InputDigests) -> tuple[Pa
             paths.update(workspace.root / member for member in digests.group(group.paths))
         paths.update(output_paths(family, workspace.root))
         paths.add(stamp_path(family, workspace.root))
+        paths.update(observed_files(family, workspace.root))
     return tuple(sorted(path for path in paths if path.is_file()))
 
 
@@ -362,7 +414,7 @@ def _seed_family(
     # Inputs are read before the producer runs: an input edited during the
     # run then shows as stale, never as a fresh stamp over older outputs.
     inputs = _inputs(family, digests, authority)
-    current = family_status(family, workspace.root, inputs, cache_directory=workspace.cache_directory)
+    current = family_status(family, workspace.root, inputs, digests=digests, cache_directory=workspace.cache_directory)
     if current.state is FixtureState.FRESH and not force:
         print(f"{family.name}: fresh")
         return True
@@ -375,22 +427,12 @@ def _seed_family(
         current.state is FixtureState.UNSTAMPED
         and family.check_proves_outputs
         and not force
-        and _adopted(workspace, family, inputs)
+        and _adopted(workspace, family, inputs, digests)
     ):
         return True
     print(f"{family.name}: producing ({current.state})", flush=True)
-    return _produced(workspace, family, producer, inputs)
-
-
-def _produced(workspace: Workspace, family: FixtureFamily, producer: Command, inputs: InputRecord) -> bool:
-    """Run the producer and stamp what it wrote; whether it wrote a declared output."""
-    if _run(workspace, producer) != 0:
-        return False
-    if not output_digests(family, workspace.root):
-        print(f"  {family.name} produced no declared output", file=sys.stderr)
-        return False
-    write_stamp(family, workspace.root, inputs, cache_directory=workspace.cache_directory)
-    return True
+    # A failed producer leaves its earlier stamp, which no longer matches the outputs it may have half written.
+    return _observed_commands(workspace, family, (producer,), inputs, digests)
 
 
 def seed(
@@ -437,9 +479,9 @@ def _write_depfile(workspace: Workspace, digests: InputDigests, depfile: Path | 
     return 0
 
 
-def _determinism_scratch(workspace: Workspace) -> Path:
+def _scratch(workspace: Workspace, purpose: str) -> Path:
     stamp = datetime.now(UTC).date().isoformat()
-    scratch = workspace.scratch_root / f"{stamp}-fixture-projections-{uuid.uuid4().hex[:12]}"
+    scratch = workspace.scratch_root / f"{stamp}-{purpose}-{uuid.uuid4().hex[:12]}"
     # The checkout's scratch goes through its admission; an isolated workspace
     # names its own. Only the directory made here is ever removed.
     if workspace.scratch_root == TEMP_ROOT:
@@ -464,7 +506,7 @@ def _determinism_findings(workspace: Workspace, family: FixtureFamily) -> tuple[
         return ()
     if family.determinism is None:
         return (DETERMINISM_UNDECLARED,)
-    scratch = _determinism_scratch(workspace)
+    scratch = _scratch(workspace, "fixture-projections")
     try:
         trees: list[dict[str, bytes]] = []
         for run in ("first", "second"):

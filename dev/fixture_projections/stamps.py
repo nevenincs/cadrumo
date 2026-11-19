@@ -6,6 +6,13 @@ published authority's database digest, the family's declaration digest and the
 sha256 of every output. Status compares those records with the files as they
 stand now: modification times never enter.
 
+An observed group (the product source) is keyed by what the run read. When
+every process of the run was observed, the stamp records each file and
+directory listing those processes read, with the digest of the bytes they
+consumed, and the group's other files do not key the family. When the
+observation is incomplete, the stamp records the whole group's digests, taken
+before the producer ran, and the reasons the observation fell short.
+
 A family whose outputs are committed in place keeps its stamp in the
 development cache, which is per-checkout, ignored and relocatable, because a
 source directory holds no ignored stamp beside its tracked outputs. A family
@@ -26,13 +33,18 @@ from typing import Any, Final
 from cadrumo.core.hashing import sha256_file
 
 from ..cache_root import dev_cache_dir
+from ..dependency_observation.observation import file_digest, listing_digest
 from ..source_tree import normalised_contents, repository_files
 from .location import WINDOW_INDEX, output_directory
 from .registry import FixtureFamily
 
-STAMP_FORMAT: Final[str] = "cadrumo-fixture-projection-stamp-v1"
+STAMP_FORMAT: Final[str] = "cadrumo-fixture-projection-stamp-v2"
 STAMP_CACHE: Final[str] = "fixture-projections"
 AUTHORITY_GROUP: Final[str] = "authority"
+#: The stamp's record of how its observed groups were keyed.
+OBSERVATION: Final[str] = "observation"
+OBSERVED_MODE: Final[str] = "observed"
+CLOSURE_MODE: Final[str] = "closure"
 
 #: Per input group, each member's content digest.
 InputRecord = dict[str, dict[str, str]]
@@ -83,16 +95,40 @@ class InputDigests:
         return cached
 
 
+@dataclass(frozen=True, slots=True)
+class ObservedReads:
+    """What a completely observed run read: checkout files and listings, each with its first-seen digest.
+
+    A path inside the checkout is given relative to it, in POSIX form; one outside it is absolute.
+    """
+
+    files: Mapping[str, str]
+    listings: Mapping[str, str]
+
+
 def declaration_digest(family: FixtureFamily) -> str:
     """Name the family's declaration, so a changed command, input or output set is a changed producer."""
     return hashlib.sha256(json.dumps(asdict(family), sort_keys=True).encode()).hexdigest()
 
 
 def family_inputs(family: FixtureFamily, digests: InputDigests, authority: Mapping[str, str]) -> InputRecord:
-    """Every input digest of ``family``, by group, with the authority identity as its own group."""
-    record = {group.label: digests.group(group.paths) for group in family.inputs}
+    """The digests of ``family``'s declared groups, by group, with the authority identity as its own group.
+
+    Observed groups are not among them: their key is the run's observation, or :func:`closure_inputs`.
+    """
+    record = {group.label: digests.group(group.paths) for group in family.inputs if not group.observed}
     record[AUTHORITY_GROUP] = dict(authority)
     return record
+
+
+def closure_inputs(family: FixtureFamily, digests: InputDigests) -> InputRecord:
+    """The whole-group digests of ``family``'s observed groups: their key when a run was not completely observed."""
+    return {group.label: digests.group(group.paths) for group in family.inputs if group.observed}
+
+
+def _observed_path(root: Path, member: str) -> Path:
+    path = Path(member)
+    return path if path.is_absolute() else root / member
 
 
 def input_digest(inputs: InputRecord) -> str:
@@ -142,14 +178,43 @@ def stamp_path(family: FixtureFamily, root: Path, *, cache_directory: Path | Non
     return output_directory(family.output_root, root) / _stamp_name(family)
 
 
-def write_stamp(family: FixtureFamily, root: Path, inputs: InputRecord, *, cache_directory: Path | None = None) -> Path:
-    """Record that the family's outputs on disk now were produced from ``inputs``."""
+def write_stamp(
+    family: FixtureFamily,
+    root: Path,
+    inputs: InputRecord,
+    *,
+    reads: ObservedReads | None = None,
+    closure: InputRecord | None = None,
+    reasons: Sequence[str] = (),
+    cache_directory: Path | None = None,
+) -> Path:
+    """Record that the family's outputs on disk now were produced from ``inputs`` and its observed groups' key.
+
+    That key is ``reads`` when the run was completely observed, else ``closure``, the whole observed groups'
+    digests taken before the run, with ``reasons`` naming what the observation could not see.
+
+    Raises:
+        ValueError: When neither key covers an observed group the family declares.
+    """
+    if reads is not None:
+        observation: dict[str, Any] = {
+            "mode": OBSERVED_MODE,
+            "files": dict(reads.files),
+            "listings": dict(reads.listings),
+        }
+    else:
+        groups = dict(closure or {})
+        missing = sorted(group.label for group in family.inputs if group.observed and group.label not in groups)
+        if missing:
+            raise ValueError(f"{family.name}: no key for the observed groups {', '.join(missing)}")
+        observation = {"mode": CLOSURE_MODE, "groups": groups, "reasons": list(reasons)}
     document = {
         "format": STAMP_FORMAT,
         "family": family.name,
         "producer_version": declaration_digest(family),
         "input_digest": input_digest(inputs),
         "inputs": inputs,
+        OBSERVATION: observation,
         "outputs": output_digests(family, root),
     }
     path = stamp_path(family, root, cache_directory=cache_directory)
@@ -184,10 +249,53 @@ def _usable_stamp(family: FixtureFamily, path: Path) -> dict[str, Any] | FamilyS
     return stamp
 
 
+def _observed_changes(
+    family: FixtureFamily, root: Path, observation: Mapping[str, Any], digests: InputDigests
+) -> list[str]:
+    """What changed in the key of the family's observed groups; an unreadable record is a change."""
+    mode = observation.get("mode")
+    if mode == OBSERVED_MODE:
+        files, listings = observation.get("files"), observation.get("listings")
+        if not isinstance(files, dict) or not isinstance(listings, dict):
+            return ["observation: unreadable record"]
+        changes = [
+            f"observed: {member} changed"
+            for member, recorded in sorted(files.items())
+            if file_digest(_observed_path(root, member)) != recorded
+        ]
+        changes += [
+            f"observed: listing of {member} changed"
+            for member, recorded in sorted(listings.items())
+            if listing_digest(_observed_path(root, member)) != recorded
+        ]
+        return changes
+    if mode == CLOSURE_MODE:
+        groups = observation.get("groups")
+        if not isinstance(groups, dict):
+            return ["observation: unreadable record"]
+        current = closure_inputs(family, digests)
+        group_changes: list[str] = []
+        for label in sorted(groups.keys() | current.keys()):
+            recorded = groups.get(label, {})
+            group_changes += _changed_members(
+                label, recorded if isinstance(recorded, dict) else {}, current.get(label, {})
+            )
+        return group_changes
+    return ["observation: unreadable record"]
+
+
 def family_status(
-    family: FixtureFamily, root: Path, inputs: InputRecord, *, cache_directory: Path | None = None
+    family: FixtureFamily,
+    root: Path,
+    inputs: InputRecord,
+    *,
+    digests: InputDigests | None = None,
+    cache_directory: Path | None = None,
 ) -> FamilyStatus:
-    """Compare the family's stamp with ``inputs`` and the outputs on disk."""
+    """Compare the family's stamp with ``inputs``, its observed key and the outputs on disk.
+
+    ``digests`` reads the observed groups whole when the stamp keyed them so; it defaults to the checkout's.
+    """
     if family.producer is None:
         return FamilyStatus(family.name, FixtureState.CHECK_ONLY)
     path = stamp_path(family, root, cache_directory=cache_directory)
@@ -205,7 +313,30 @@ def family_status(
     recorded_inputs = stamp.get("inputs", {})
     for label in sorted(recorded_inputs.keys() | inputs.keys()):
         reasons += _changed_members(label, recorded_inputs.get(label, {}), inputs.get(label, {}))
+    if not reasons:
+        # A family's declaration names its observed groups, so an unchanged declaration has the same ones.
+        observation = stamp.get(OBSERVATION)
+        if not isinstance(observation, dict):
+            reasons.append("observation: unreadable record")
+        else:
+            reasons += _observed_changes(family, root, observation, digests or InputDigests(root))
     reasons += _changed_members("output", stamp.get("outputs", {}), outputs)
     if reasons:
         return FamilyStatus(family.name, FixtureState.STALE, tuple(reasons))
     return FamilyStatus(family.name, FixtureState.FRESH)
+
+
+def observed_files(family: FixtureFamily, root: Path, *, cache_directory: Path | None = None) -> tuple[Path, ...]:
+    """The files the family's stamp keys it on by observation, so a build depending on them reruns its seed."""
+    if family.producer is None:
+        return ()
+    stamp = _usable_stamp(family, stamp_path(family, root, cache_directory=cache_directory))
+    if isinstance(stamp, FamilyStatus):
+        return ()
+    observation = stamp.get(OBSERVATION)
+    if not isinstance(observation, dict) or observation.get("mode") != OBSERVED_MODE:
+        return ()
+    files = observation.get("files")
+    if not isinstance(files, dict):
+        return ()
+    return tuple(_observed_path(root, member) for member in files)

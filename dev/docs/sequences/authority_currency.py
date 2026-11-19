@@ -18,7 +18,8 @@ from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from .dependency_observation import unobserved
+from dev.dependency_observation.observation import unobserved
+
 from .errors import SequenceEngineError
 
 if TYPE_CHECKING:

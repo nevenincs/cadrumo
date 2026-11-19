@@ -1,8 +1,8 @@
-"""Observe the checkout files and directory listings a sequence's processes actually read.
+"""Observe the checkout files and directory listings an observed process and its children actually read.
 
-A documented sequence runs the CLI in the checking interpreter and its profile
-workers in child interpreters. Each process that runs under observation
-installs a Python audit hook before it imports any product module. The hook
+A tool runs a command in the checking interpreter and may start child
+interpreters (profile workers, Python ``-m`` modules). Each process that runs
+under observation installs a Python audit hook before it imports any product module. The hook
 captures the checkout files it opens (source and bytecode imports, data files,
 SQLite databases) and the directories it lists. Each file and listing is hashed
 the first time it is seen, before the read it announces proceeds. So the
@@ -16,10 +16,18 @@ Existence and metadata probes (``os.stat``, ``os.path.exists`` and the
 ``pathlib`` predicates built on them) raise no audit event, so the observer
 wraps those functions when it is installed: a probed path is recorded as its
 digest, ``directory`` or ``absent``. A child process is covered only when it
-journals itself: an observed docs worker, or a Python ``-m`` child of a checkout
-module, which an observed process starts through a bootstrap
+journals itself: an observed worker script, or a Python ``-m`` child of a
+checkout module, which an observed process starts through a bootstrap
 (``observed_child.py``) that installs this observer first. A child killed
 before that leaves an empty journal or none, having run no product code.
+
+A run can instead hand its whole process tree an inherited bootstrap
+(:func:`prepare_inherited_journals`): every Python process that keeps the run's
+environment observes itself as it starts, whoever launches it. Such a process
+covers a Python child that keeps that environment and starts without ``-I``,
+``-E`` or ``-S``, and a ``-m`` checkout child, which it starts through the
+journalling child bootstrap; any other child it starts is unobserved. A run in which no
+process journalled at all was not observed.
 
 What the hook cannot see is reported, never guessed:
 
@@ -33,8 +41,8 @@ What the hook cannot see is reported, never guessed:
   the same file;
 - a worker journal that never began, or that says it is incomplete.
 
-Each makes the observation incomplete, and the verdict cache then keys the
-sequence on the whole product source instead.
+Each makes the observation incomplete, and the consumer then keys on the whole
+product source instead.
 """
 
 from __future__ import annotations
@@ -43,28 +51,26 @@ import ast
 import atexit
 import hashlib
 import os
-import shutil
+import shlex
 import subprocess
 import sys
 import tempfile
 import threading
 import time
 import uuid
-from collections.abc import Callable, Generator, Iterable, Iterator
+from collections.abc import Callable, Generator, Iterable, Iterator, Mapping
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, TextIO, cast
 from urllib.parse import unquote, urlsplit
 
-#: The directory, beside a sandbox's profile storage root, that collects worker journals.
-JOURNAL_DIRECTORY_NAME: Final[str] = "docs-dependency-observations"
-#: The observed worker script's name, in the checkout and as copied beside the journals.
-WORKER_SCRIPT_NAME: Final[str] = "observed_worker.py"
 #: The bootstrap an observed process starts its Python ``-m`` checkout children through.
 CHILD_SCRIPT_NAME: Final[str] = "observed_child.py"
 #: The file, beside the script copies, that names the checkout root.
 CHECKOUT_ROOT_FILE: Final[str] = "checkout-root.txt"
-_JOURNAL_SUFFIX: Final[str] = ".journal"
+#: The suffix of every journal file an observed process writes.
+JOURNAL_SUFFIX: Final[str] = ".journal"
 _BEGIN: Final[str] = "B"
 _FILE: Final[str] = "F"
 _LISTING: Final[str] = "D"
@@ -84,6 +90,18 @@ _OTHER_SPAWN_EVENTS: Final[frozenset[str]] = frozenset(
 #: buffer next; a lookup with no command line seen afterwards stays unknown.
 _NATIVE_SPAWN_PREFIX: Final[str] = "CreateProcess"
 #: Checkout trees that hold environments, scratch, build output and caches, never verdict inputs.
+#: Names an inherited run's journal directory to every process below it; see :func:`prepare_inherited_journals`.
+INHERITED_JOURNALS_VARIABLE: Final[str] = "CADRUMO_OBSERVED_JOURNALS"
+#: The directory, inside an inherited run's journals, that is put first on ``PYTHONPATH``.
+INHERITED_SITE_DIRECTORY: Final[str] = "site"
+#: Names the observer's checkout and the observed checkout, one per line, for the inherited bootstrap.
+INHERITED_ROOTS_FILE: Final[str] = "observer-roots.txt"
+_INHERITED_BOOTSTRAP: Final[str] = "inherited_bootstrap.py"
+_SITE_HOOK: Final[str] = "sitecustomize.py"
+_PYTHON_PATH: Final[str] = "PYTHONPATH"
+#: Interpreter options under which a child would not import the inherited bootstrap.
+_ISOLATING_OPTIONS: Final[frozenset[str]] = frozenset("IES")
+
 STRUCTURAL_EXCLUSIONS: Final[tuple[str, ...]] = (".venv", ".tmp", "build", "node_modules", ".git", ".cache")
 
 
@@ -205,6 +223,7 @@ class Observation:
     """The checkout files and listings one process consumed, each with its first-seen digest."""
 
     def __init__(self, root: Path, *, started_ns: int) -> None:
+        """Observe reads under the checkout ``root`` made by a process started at ``started_ns``."""
         self.root = root.resolve()
         self._excluded = tuple(self.root / name for name in STRUCTURAL_EXCLUSIONS)
         self.started_ns = started_ns
@@ -223,6 +242,8 @@ class Observation:
         self._busy = threading.local()
         self._launches = threading.local()
         self._pending_native: dict[int, str] = {}
+        #: An inherited run's journal directory, when this process observes itself as part of one.
+        self.inherited_journals: Path | None = None
         given = Path(os.path.abspath(root))
         self._aliases = tuple(dict.fromkeys((self.root, given)))
         self._real_parents: dict[str, Path] = {}
@@ -321,6 +342,7 @@ class Observation:
                 handle.write(line)
 
     def note_file(self, raw: str) -> None:
+        """Record the file ``raw`` names, and the listing that would reveal a new sibling, if it is a checkout input."""
         canonical = self._canonical(raw)
         if canonical is None:
             external = self._external(raw)
@@ -347,6 +369,7 @@ class Observation:
             self._write(_FILE, digest, path)
 
     def note_listing(self, raw: str) -> None:
+        """Record the listing of the directory ``raw`` names, when it is a checkout input."""
         canonical = self._canonical(raw)
         if canonical is None:
             directory = self._external(raw)
@@ -366,6 +389,7 @@ class Observation:
             self._write(_LISTING, digest, directory)
 
     def note_incomplete(self, reason: str) -> None:
+        """Mark the observation incomplete for ``reason``, journalling it."""
         with self._lock:
             self.incomplete.append(reason)
             self._write(_INCOMPLETE, "-", reason.replace("\t", " ").replace("\n", " "))
@@ -404,7 +428,13 @@ class Observation:
         if event == _POPEN_EVENT:
             command = arguments[1]
             words = [command] if isinstance(command, (str, bytes)) else list(cast("Iterable[object]", command))
-            self._judge_launch([os.fsdecode(word) for word in words if isinstance(word, (str, bytes, os.PathLike))])
+            decoded = [os.fsdecode(word) for word in words if isinstance(word, (str, bytes, os.PathLike))]
+            if self.inherited_journals is not None:
+                if isinstance(command, (str, bytes)):
+                    decoded = _command_line_words(decoded[0]) if decoded else decoded
+                self._judge_inherited_launch(arguments[0], decoded, arguments[3] if len(arguments) > 3 else None)
+            else:
+                self._judge_launch(decoded)
             self._launches.covered = True
         elif event in _NATIVE_LAUNCH_EVENTS:
             if getattr(self._launches, "covered", False):
@@ -413,6 +443,34 @@ class Observation:
             self.note_incomplete(f"unjudged child process ({event})")
         else:
             self.note_incomplete(f"unobserved child process ({event})")
+
+    def _judge_inherited_launch(self, executable: object, words: list[str], environment: object) -> None:
+        """Cover a Python child that keeps the inherited bootstrap; any other child makes the run incomplete."""
+        line = " ".join(words)
+        folded = line.casefold()
+        if any(script.casefold() in folded for script in self.worker_scripts):
+            return
+        program = os.fsdecode(executable) if isinstance(executable, (str, bytes, os.PathLike)) else ""
+        program = program or (words[0] if words else "")
+        if not _is_python(program):
+            self.note_incomplete(f"unobserved child process {line[:200]}")
+        elif _isolating(words):
+            self.note_incomplete(f"child process isolated from the inherited observer {line[:200]}")
+        elif not self._keeps_inherited(os.environ if environment is None else environment):
+            self.note_incomplete(f"child process without the inherited observer's environment {line[:200]}")
+
+    def _keeps_inherited(self, environment: object) -> bool:
+        journals = self.inherited_journals
+        if journals is None or not isinstance(environment, Mapping):
+            return False
+        entries = {os.fsdecode(name): value for name, value in environment.items() if isinstance(name, (str, bytes))}
+        named, path = entries.get(INHERITED_JOURNALS_VARIABLE), entries.get(_PYTHON_PATH)
+        if not isinstance(named, (str, bytes)) or not isinstance(path, (str, bytes)):
+            return False
+        site = journals / INHERITED_SITE_DIRECTORY
+        return _same_path(os.fsdecode(named), journals) and any(
+            _same_path(part, site) for part in os.fsdecode(path).split(os.pathsep) if part
+        )
 
     def end_launch(self) -> None:
         """Forget a judged Popen once it returns; a POSIX Popen raises no native event to consume it."""
@@ -445,11 +503,11 @@ class Observation:
             script = str(self.journal_directory / CHILD_SCRIPT_NAME)
             return [*words[:index], script, token, module, *words[index + 2 :]]
 
-    def adopt_journal_directory(self, directory: Path) -> None:
-        """Journal instrumented children in ``directory`` and recognise launches of its script copies."""
+    def adopt_journal_directory(self, directory: Path, script_names: Iterable[str] = (CHILD_SCRIPT_NAME,)) -> None:
+        """Journal instrumented children in ``directory`` and recognise launches of its ``script_names`` copies."""
         with self.suspended():
             self.journal_directory = directory
-            for name in (WORKER_SCRIPT_NAME, CHILD_SCRIPT_NAME):
+            for name in script_names:
                 copy = directory / name
                 self.worker_scripts.update({str(copy), str(copy.resolve())})
 
@@ -585,7 +643,7 @@ class Observation:
         """
         with self.suspended():
             try:
-                journals = sorted(path for path in directory.iterdir() if path.suffix == _JOURNAL_SUFFIX)
+                journals = sorted(path for path in directory.iterdir() if path.suffix == JOURNAL_SUFFIX)
             except OSError as error:
                 self.note_incomplete(f"unreadable worker journal directory: {type(error).__name__}")
                 return
@@ -640,6 +698,51 @@ def _allowed_outside(path: Path, allowed: Iterable[Path]) -> bool:
         return True
     real = Path(os.path.realpath(path))
     return any(real.is_relative_to(directory) or path.is_relative_to(directory) for directory in allowed)
+
+
+def _same_path(raw: str, path: Path) -> bool:
+    return os.path.normcase(os.path.realpath(raw)) == os.path.normcase(os.path.realpath(path))
+
+
+def _command_line_words(line: str) -> list[str]:
+    """Split a command line into its words.
+
+    Windows hands the audit event the command line ``subprocess`` built, one string, not the argument list.
+    """
+    try:
+        words = shlex.split(line, posix=os.name != "nt")
+    except ValueError:
+        return [line]
+    return [word[1:-1] if len(word) > 1 and word[0] == word[-1] == '"' else word for word in words] or [line]
+
+
+def _is_python(program: str) -> bool:
+    name = Path(program).name.casefold()
+    known = {Path(path).name.casefold() for path in (sys.executable, getattr(sys, "_base_executable", "")) if path}
+    return name.startswith("python") or name in known
+
+
+def _isolating(words: list[str]) -> bool:
+    """Whether a ``python`` command line's options stop it importing the inherited bootstrap."""
+    takes_value = False
+    for word in words[1:]:
+        if takes_value:
+            takes_value = False
+            continue
+        if word == "-" or not word.startswith("-"):
+            return False
+        if word.startswith("--"):
+            continue
+        for index, option in enumerate(word[1:], start=1):
+            if option in _ISOLATING_OPTIONS:
+                return True
+            if option in "cm":
+                return False
+            if option in "XW":
+                # The value is the rest of this word, or the next word.
+                takes_value = index == len(word) - 1
+                break
+    return False
 
 
 def _python_module(words: list[str]) -> str | None:
@@ -724,57 +827,90 @@ def unobserved() -> Generator[None]:
         yield
 
 
-def prepare_worker_journals(storage_root: Path) -> Path | None:
-    """Prepare the journal directory and worker script for a sandbox, when this process is observed.
+def populate_journal_directory(observation: Observation, directory: Path, scripts: Mapping[str, Path]) -> None:
+    """Copy each script in ``scripts`` (copy name to source file) and the checkout pointer into ``directory``.
 
-    Returns:
-        The directory holding the worker script copy (``observed_worker.py``)
-        and the journals its workers write, or ``None`` when unobserved.
+    The observation then journals instrumented children there and recognises
+    launches of the copies.
     """
-    if _ACTIVE is None:
-        return None
-    directory = storage_root.parent / JOURNAL_DIRECTORY_NAME
-    _populate_journal_directory(_ACTIVE, directory)
-    return directory
-
-
-def _populate_journal_directory(observation: Observation, directory: Path) -> None:
-    """Copy the observing scripts and the checkout pointer into ``directory`` and journal children there."""
     with observation.suspended():
         directory.mkdir(parents=True, exist_ok=True)
-        for name in (WORKER_SCRIPT_NAME, CHILD_SCRIPT_NAME):
-            (directory / name).write_bytes(Path(__file__).with_name(name).read_bytes())
+        for name, source in scripts.items():
+            (directory / name).write_bytes(source.read_bytes())
         (directory / CHECKOUT_ROOT_FILE).write_text(str(observation.root), encoding="utf-8")
-    observation.adopt_journal_directory(directory)
-
-
-def observe_check(root: Path) -> Observation:
-    """Observe the ``check`` process, with a journal directory of its own for children it starts itself.
-
-    The directory sits under the checkout's ``.tmp`` and is removed when the process exits.
-    """
-    observation = observe_process(root)
-    if observation.own_journals is None:
-        scratch = observation.root / ".tmp"
-        with observation.suspended():
-            scratch.mkdir(exist_ok=True)
-            directory = Path(tempfile.mkdtemp(prefix="docs-observed-", dir=scratch))
-        atexit.register(shutil.rmtree, directory, ignore_errors=True)
-        observation.own_journals = directory
-        _populate_journal_directory(observation, directory)
-    return observation
-
-
-def observe_worker(root: Path, journals: Path) -> None:
-    """Observe this docs profile worker, streaming what it reads into a journal under ``journals``."""
-    observation = observe_process(root)
-    observation.adopt_journal_directory(journals)
-    journal = (journals / f"{os.getpid()}{_JOURNAL_SUFFIX}").open("a", encoding="utf-8", errors="surrogateescape")
-    observation.attach_journal(journal)
+    observation.adopt_journal_directory(directory, scripts)
 
 
 def observe_child(root: Path, journals: Path, token: str) -> None:
-    """Observe an instrumented child, journalling under ``journals`` by the token its parent gave it."""
+    """Observe an instrumented child, journalling under ``journals`` by the token its parent gave it.
+
+    Every script copy in ``journals`` is a journalling launch for this child too.
+    """
     observation = observe_process(root)
-    observation.adopt_journal_directory(journals)
-    observation.attach_journal_path(journals / f"{token}{_JOURNAL_SUFFIX}")
+    with observation.suspended():
+        copies = sorted(path.name for path in journals.glob("*.py"))
+    observation.adopt_journal_directory(journals, {CHILD_SCRIPT_NAME, *copies})
+    observation.attach_journal_path(journals / f"{token}{JOURNAL_SUFFIX}")
+
+
+@dataclass(frozen=True, slots=True)
+class InheritedJournals:
+    """An inherited run's journal directory and the environment that makes its processes observe themselves."""
+
+    directory: Path
+
+    def environment(self, environment: Mapping[str, str]) -> dict[str, str]:
+        """``environment`` naming this directory, with its bootstrap first on ``PYTHONPATH``."""
+        result = dict(environment)
+        result[INHERITED_JOURNALS_VARIABLE] = str(self.directory)
+        parts = [str(self.directory / INHERITED_SITE_DIRECTORY), *result.get(_PYTHON_PATH, "").split(os.pathsep)]
+        result[_PYTHON_PATH] = os.pathsep.join(dict.fromkeys(part for part in parts if part))
+        return result
+
+
+def prepare_inherited_journals(directory: Path, *, observed_root: Path, tooling_root: Path) -> InheritedJournals:
+    """Prepare ``directory`` so every Python process given its environment observes reads under ``observed_root``.
+
+    ``tooling_root`` is the checkout this observer is imported from; it is the observed checkout itself except
+    when a tool observes another tree.
+    """
+    directory = directory.resolve()
+    site = directory / INHERITED_SITE_DIRECTORY
+    site.mkdir(parents=True, exist_ok=True)
+    (site / _SITE_HOOK).write_bytes(Path(__file__).with_name(_INHERITED_BOOTSTRAP).read_bytes())
+    roots = f"{tooling_root.resolve()}\n{observed_root.resolve()}\n"
+    (directory / INHERITED_ROOTS_FILE).write_text(roots, encoding="utf-8")
+    # A ``-m`` checkout child that skips site start-up (``-S``) is started through this bootstrap instead.
+    (directory / CHILD_SCRIPT_NAME).write_bytes(Path(__file__).with_name(CHILD_SCRIPT_NAME).read_bytes())
+    (directory / CHECKOUT_ROOT_FILE).write_text(str(observed_root.resolve()), encoding="utf-8")
+    return InheritedJournals(directory)
+
+
+def allow_observer_outside(observation: Observation, journals: Path) -> None:
+    """Admit the journal directory and this observer, when imported from another checkout, as non-reads."""
+    package = Path(__file__).resolve().parent
+    for location in (journals, package, package.parent / "__init__.py"):
+        observation.allow_outside(location)
+
+
+def observe_inherited(root: Path, journals: Path) -> Observation:
+    """Observe this process as part of an inherited run, journalling under ``journals`` until it exits."""
+    observation = observe_process(root)
+    allow_observer_outside(observation, journals)
+    observation.inherited_journals = journals
+    # A Python ``-m`` checkout child is started through the journalling child bootstrap, which covers it even when
+    # its options skip the inherited one.
+    observation.adopt_journal_directory(journals, (CHILD_SCRIPT_NAME,))
+    observation.attach_journal_path(journals / f"{uuid.uuid4().hex}{JOURNAL_SUFFIX}")
+    atexit.register(observation.note_imported_modules)
+    return observation
+
+
+def harvest_inherited(journals: InheritedJournals, root: Path) -> Observation:
+    """Fold every journal of an inherited run over ``root``; a run in which no process began was not observed."""
+    observation = Observation(root, started_ns=time.time_ns())
+    began = any(path.suffix == JOURNAL_SUFFIX and path.stat().st_size > 0 for path in journals.directory.iterdir())
+    if not began:
+        observation.note_incomplete("no process of the run was observed")
+    observation.harvest(journals.directory)
+    return observation
