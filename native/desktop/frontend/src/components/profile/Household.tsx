@@ -136,6 +136,9 @@ type Opened = Open & { read: ProfileHousehold };
 
 type Notice = { kind: "saved" } | { kind: "failed"; failure: Failure } | null;
 
+/** The key the page folds the household's section by, beside its sections'. */
+export const HOUSEHOLD_KEY = "household";
+
 export type HouseholdProps = {
   reads: Pick<ProfileCompanionPort, "household" | "householdDraft">;
   change: UserProfilePort["change"];
@@ -147,6 +150,14 @@ export type HouseholdProps = {
   /** Whether the window asked the signed-in session to end. The host tells
    * every observer of the end, and nothing wants a household read after it. */
   sessionEnded?: () => boolean;
+  /** Whether the section is folded: its heading is a section's, and the
+   * page folds it with the others. */
+  collapsed?: boolean;
+  onToggle?: () => void;
+  /** The detail the page's arrow keys stand on, and the page's way to be told
+   * this heading took focus, so the page keeps one stop in its tab order. */
+  active?: string | null;
+  onActive?: (id: string) => void;
 };
 
 /** The facts one person states, in the order their group serves its leaves. */
@@ -451,9 +462,14 @@ export function Household({
   language,
   writable = true,
   sessionEnded,
+  collapsed = false,
+  onToggle,
+  active = null,
+  onActive,
 }: HouseholdProps) {
   const t = useStrings();
   const heading = useId();
+  const bodyId = useId();
   const [read, setRead] = useState<Read>({ phase: "reading" });
   const [open, setOpen] = useState<Opened | null>(null);
   const [saving, setSaving] = useState(false);
@@ -714,10 +730,28 @@ export function Household({
       data-household=""
       className="flex flex-col gap-3 rounded-lg border bg-card p-4"
     >
-      <h3 id={heading} className="text-base font-semibold text-foreground">
-        {t("desktop.profile.household.title")}
+      <h3 className="text-base font-semibold text-foreground">
+        <button
+          type="button"
+          id={heading}
+          data-nav="head:household"
+          data-kind="head"
+          tabIndex={active === "head:household" ? 0 : -1}
+          onFocus={() => onActive?.("head:household")}
+          aria-expanded={!collapsed}
+          aria-controls={bodyId}
+          onClick={onToggle}
+          className="flex w-full cursor-pointer items-center gap-1.5 rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Icon name={collapsed ? "forward" : "chevronDown"} />
+          <span className="truncate">
+            {t("desktop.profile.household.title")}
+          </span>
+        </button>
       </h3>
-      {body}
+      <div id={bodyId} hidden={collapsed} className="flex flex-col gap-3">
+        {body}
+      </div>
     </section>
   );
 }

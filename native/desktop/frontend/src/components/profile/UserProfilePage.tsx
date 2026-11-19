@@ -48,7 +48,7 @@ import {
 } from "../../shell/userProfile";
 import type { MenuEntry, OpenMenu } from "../ContextMenu";
 import { AeatAccessEditor } from "./AeatAccessEditor";
-import { Household } from "./Household";
+import { Household, HOUSEHOLD_KEY } from "./Household";
 import { PasswordChange, ProfileShortcuts } from "./ProfileDialogs";
 import { ProfileDetails, STATUS_GROUPS } from "./ProfileDetails";
 import { ProfileEditor, type ProfileDraft } from "./ProfileEditor";
@@ -622,6 +622,7 @@ export const UserProfilePage = memo(function UserProfilePage({
       ...(data?.sections.map((section) => section.key) ?? []),
       ...STATUS_GROUPS.map((state) => `status-${state}`),
       "all",
+      HOUSEHOLD_KEY,
     ];
   }
 
@@ -1013,6 +1014,10 @@ export const UserProfilePage = memo(function UserProfilePage({
                   language={language}
                   writable={writable}
                   sessionEnded={sessionEnded}
+                  collapsed={collapsed.has(HOUSEHOLD_KEY)}
+                  onToggle={() => toggle(HOUSEHOLD_KEY)}
+                  active={active}
+                  onActive={setActive}
                 />
               )}
               {nothing && (
