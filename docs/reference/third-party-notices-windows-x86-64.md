@@ -139,7 +139,7 @@ Public License.
 | shellingham | 1.5.4 | ISC License (ISCL) | `cadrumo/site-packages/shellingham-1.5.4.dist-info` |
 | sniffio | 1.3.1 | Apache Software License / MIT License | `cadrumo/site-packages/sniffio-1.3.1.dist-info` |
 | snowballstemmer | 3.1.1 | BSD-3-Clause | `cadrumo/site-packages/snowballstemmer-3.1.1.dist-info` |
-| soupsieve | 3.0.4 | MIT | `cadrumo/site-packages/soupsieve-3.0.4.dist-info` |
+| soupsieve | 4.1.2 | MIT | `cadrumo/site-packages/soupsieve-4.1.2.dist-info` |
 | sqlalchemy | 2.1.6 | MIT | `cadrumo/site-packages/sqlalchemy-2.1.6.dist-info` |
 | sqlite-vec | 0.1.9 | MIT License, Apache License, Version 2.0 | `cadrumo/site-packages/sqlite_vec-0.1.9.dist-info` |
 | sse-starlette | 3.6.0 | BSD-3-Clause | `cadrumo/site-packages/sse_starlette-3.6.0.dist-info` |
