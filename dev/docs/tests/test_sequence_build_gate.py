@@ -170,7 +170,8 @@ def test_an_unpublished_authority_fails_the_build_before_any_verdict_is_reused(t
 def test_full_gate_bounds_actual_page_workers_and_keeps_failures(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, problems: list[str]
 ) -> None:
-    from ..sequences import authority_currency, checks, verdict_cache
+    """The full build shards pages two at a time and consults the per-sequence verdicts inside the check."""
+    from ..sequences import authority_currency, checks
 
     app = cast(
         Sphinx,
@@ -188,8 +189,6 @@ def test_full_gate_bounds_actual_page_workers_and_keeps_failures(
 
     monkeypatch.delenv("CADRUMO_DOCS_SKIP_SEQUENCE_CHECK", raising=False)
     monkeypatch.setattr(authority_currency, "require_current_authority", lambda: currency_checks.append(True))
-    monkeypatch.setattr(verdict_cache, "published_verdict_key", lambda **_kwargs: "fixture-key")
-    monkeypatch.setattr(verdict_cache, "check_reusing_verdict", lambda _key, run: (run(), None))
     monkeypatch.setattr(checks, "check_sequences_in_subprocess", execute)
     if problems:
         with pytest.raises(SphinxError, match="strict sequence failure"):
@@ -199,29 +198,45 @@ def test_full_gate_bounds_actual_page_workers_and_keeps_failures(
     assert observed == [(tmp_path, tmp_path / "goldens", 2)]
 
 
-def test_source_change_refusal_fails_the_sphinx_build(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from dev.cache_root import DEV_CACHE_ROOT_ENV
-
-    from ..sequences import authority_currency, checks, verdict_cache
+def test_a_page_scoped_gate_checks_each_changed_page_through_its_own_child(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from ..sequences import authority_currency, checks
 
     app = cast(Sphinx, SimpleNamespace(srcdir=str(tmp_path), config=SimpleNamespace()))
-    source = tmp_path / "source.py"
-    source.write_text("before", encoding="utf-8")
+    observed: list[tuple[Path, str | None]] = []
 
-    def execute(**_kwargs: object) -> tuple[str, ...]:
-        source.write_text("after", encoding="utf-8")
-        return ()
+    def execute(*, docs_root: Path, goldens_root: Path | None, page: str | None = None) -> list[str]:
+        observed.append((docs_root, page))
+        return []
 
     monkeypatch.delenv("CADRUMO_DOCS_SKIP_SEQUENCE_CHECK", raising=False)
-    monkeypatch.delenv(verdict_cache.FORCE_ENV, raising=False)
-    monkeypatch.setenv(DEV_CACHE_ROOT_ENV, str(tmp_path / "cache"))
     monkeypatch.setattr(authority_currency, "require_current_authority", lambda: None)
-    monkeypatch.setattr(verdict_cache, "published_verdict_key", lambda **_kwargs: source.read_text(encoding="utf-8"))
     monkeypatch.setattr(checks, "check_sequences_in_subprocess", execute)
+
+    check_sequence_goldens(app, pages=["how-to/alpha", "how-to/beta"])
+
+    assert observed == [(tmp_path, "how-to/alpha"), (tmp_path, "how-to/beta")]
+
+
+def test_an_engine_refusal_from_the_check_fails_the_sphinx_build(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A refusal raised inside the sharded check (for example inputs that moved during a run) reds the build."""
+    from ..sequences import authority_currency, checks
+    from ..sequences.errors import SequenceEngineError
+
+    app = cast(Sphinx, SimpleNamespace(srcdir=str(tmp_path), config=SimpleNamespace()))
+
+    def refuse(**_kwargs: object) -> tuple[str, ...]:
+        raise SequenceEngineError("cli-sequence inputs changed during execution (uv.lock)")
+
+    monkeypatch.delenv("CADRUMO_DOCS_SKIP_SEQUENCE_CHECK", raising=False)
+    monkeypatch.setattr(authority_currency, "require_current_authority", lambda: None)
+    monkeypatch.setattr(checks, "check_sequences_in_subprocess", refuse)
 
     with pytest.raises(SphinxError, match="inputs changed during execution"):
         check_sequence_goldens(app)
-    assert not list((tmp_path / "cache").rglob("*.json"))
 
 
 def test_no_golden_carries_a_version_literal() -> None:

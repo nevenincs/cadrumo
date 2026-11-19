@@ -60,6 +60,7 @@ from cadrumo_runtime.host.worker import run
 if __name__ == "__main__":
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
+from dev.docs.sequences.dependency_observation import WORKER_SCRIPT_NAME, active_observation, prepare_worker_journals
 from dev.docs.sequences.receipt_fixture import RECEIPT_FIXTURE_DIRECTORY, SequenceReceiptKeyring
 
 
@@ -246,6 +247,7 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
     pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="docs-runtime")
     owner.executor = pool
     primary: BaseException | None = None
+    journals = prepare_worker_journals(root)
     try:
         profiles = RuntimeProfileConnections(
             storage_root=root,
@@ -254,7 +256,7 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
             stop=stop,
             capture_login=lambda channel: SequenceLoginObservation(channel.peer.os_owner_id, str(boot)),
             secret_store=_UnavailableSecretStore,
-            worker_script=WORKER_SCRIPT.get() or Path(__file__).resolve(),
+            worker_script=_worker_script(journals),
         )
         profiles.prepare_registry()
         server = _SequenceRuntimeTransportServer(
@@ -287,6 +289,26 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
         raise
     finally:
         owner.close_from_sync(task_name="docs-runtime-close", primary_error=primary)
+        observation = active_observation()
+        if observation is not None and journals is not None:
+            observation.harvest(journals)
+
+
+def _worker_script(journals: Path | None) -> Path:
+    """Select the worker script: a scoped override, else this fixture, observed when the check is.
+
+    An override is an instrumented copy that installs no observer, so its
+    workers' reads are unknown and the check's observation is incomplete.
+    """
+    selected = WORKER_SCRIPT.get()
+    if selected is not None:
+        observation = active_observation()
+        if observation is not None:
+            observation.note_incomplete(f"unobserved worker script {selected.name}")
+        return selected
+    if journals is not None:
+        return (journals / WORKER_SCRIPT_NAME).resolve()
+    return Path(__file__).resolve()
 
 
 def _establish_synthetic_sign_in(profile_id: UUID) -> None:

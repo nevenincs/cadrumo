@@ -188,10 +188,20 @@ CHANGE_CLASS_RULES: Final[tuple[ChangeClassRule, ...]] = (
     # Each pattern holds an input of the goldens gate's verdict: the pages with
     # their sequence contracts and goldens, the engine that executes them and
     # every dev module it imports, and the product and locked dependencies
-    # whose output the goldens record. The verdict key hashes the same set.
+    # whose output the goldens record, and the registry tooling that compiles the
+    # authority they read. The per-sequence verdict keys hash the same set.
     ChangeClassRule(
         name="documented-output",
-        patterns=("docs/**", "dev/docs/**", "src/cadrumo/**", "uv.lock", *engine_import_closure()),
+        patterns=(
+            "docs/**",
+            "dev/docs/**",
+            "dev/registry/**",
+            "src/cadrumo/**",
+            "src/cadrumo_client/**",
+            "src/cadrumo_runtime/**",
+            "uv.lock",
+            *engine_import_closure(),
+        ),
         sequence_goldens=True,
     ),
 )
