@@ -1048,10 +1048,10 @@ def build_profile_overview(
             )
         )
     # A requirement of a declaration the taxpayer's type is not concerned by is
-    # no requirement of this profile, and a page cannot show a row it left out.
+    # no requirement of this profile, and every reader refuses a missing path
+    # that names no row the overview carries.
     shown = {view.path for section in sections for view in section.fields}
-    shown_keys = {section_field_key(path) for path in shown}
-    missing_required = [path for path in missing_required if path in shown or section_field_key(path) in shown_keys]
+    missing_required = [path for path in missing_required if path in shown]
 
     from .cotejo_apply import censo_divergence_notice
 
