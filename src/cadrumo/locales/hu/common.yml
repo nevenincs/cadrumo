@@ -4902,10 +4902,18 @@ desktop:
         és az AEAT-hozzáférés beállításait, majd próbáld újra.
       reject: Módosítások elvetése
       review_count: 'Ellenőrzendő AEAT-értékek: {count}'
+      review_current: A profilod
+      review_description: Amit az AEAT Censo nyilvántart rólad, a profilodban tárolt
+        adatok mellett. Semmit sem mentünk, amíg meg nem erősíted.
+      review_field: Adat
       review_hint: A változások lent, a helyükön látszanak. Semmi sem mentődik, amíg
         meg nem erősíted.
-      scope: Adócím, irányítószám és kataszteri azonosító átvétele az adózói nyilvántartásból.
-        A profil többi adatát neked kell megadnod.
+      review_outcome: Mentéskor
+      review_title: AEAT-adatok áttekintése
+      scope: Importáld a Censo nyilvántartásából az adóügyi lakcímedet az irányítószámmal,
+        a kataszteri hivatkozással, a tartomány- és településkóddal, az AEAT-irodádat,
+        valamint a tevékenységed kezdő és záró dátumát. A neved, az e-mail-címed és
+        a profil többi adata a te válaszaidat igényli.
       session: A munkameneted véget ért. A folytatáshoz jelentkezz be újra.
       setup: AEAT-bejelentkezés beállítása
       source: Az AEAT adózói nyilvántartásából mentve

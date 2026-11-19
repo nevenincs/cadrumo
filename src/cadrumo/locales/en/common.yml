@@ -4828,9 +4828,17 @@ desktop:
         then try again.
       reject: Discard changes
       review_count: 'AEAT values to review: {count}'
+      review_current: Your profile
+      review_description: What the AEAT Censo holds about you, beside what your profile
+        holds. Nothing is saved until you confirm.
+      review_field: Detail
       review_hint: Changes are shown in place below. Nothing is saved until you confirm.
-      scope: Import your fiscal address, postcode and cadastral reference from Censo.
-        Other profile details still need your answers.
+      review_outcome: On save
+      review_title: Review AEAT data
+      scope: Import from Censo your fiscal address with its postcode, cadastral reference
+        and province and municipality codes, your AEAT office and your activity start
+        and end dates. Your name, your email and the other profile details need your
+        answers.
       session: Your session has ended. Sign in again to continue.
       setup: Set up AEAT sign-in
       source: Saved from AEAT Censo
