@@ -191,14 +191,14 @@ def censo_authentication_configure(client: FrontendClient, readiness: AuthSyncRe
 
 
 def _prompt_provider_fields(client: FrontendClient, kind: AuthProviderKind, route: ClaveMovilRoute | None) -> None:
+    # Cl@ve signs in as the taxpayer the profile describes, so the profile's tax
+    # identifier is also the Cl@ve identity and is the only identity asked for.
     _prompt_field(client, "identity.tax_id")
-    if kind is not AuthProviderKind.CERTIFICATE:
-        _prompt_field(client, "auth.dni_nie")
-        if kind is AuthProviderKind.CLAVE_MOVIL and route is ClaveMovilRoute.APP_REQUEST:
-            pending = read_censo_auth(client)
-            for item in pending.requirements:
-                if item.field in {"auth.fecha_validez", "auth.numero_soporte"}:
-                    _prompt_field(client, item.field)
+    if kind is AuthProviderKind.CLAVE_MOVIL and route is ClaveMovilRoute.APP_REQUEST:
+        pending = read_censo_auth(client)
+        for item in pending.requirements:
+            if item.field in {"auth.fecha_validez", "auth.numero_soporte"}:
+                _prompt_field(client, item.field)
     if kind in PASSWORD_CREDENTIAL_PROVIDERS:
         save_password(client, kind)
 

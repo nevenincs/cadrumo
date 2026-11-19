@@ -778,19 +778,23 @@ def resolve_clave_credentials(
         settings_dni_nie = _normalise_tax_identity(settings.cadrumo_clave_movil_dni_nie)
         settings_numero_soporte = _normalise_credential(settings.cadrumo_clave_movil_nie_soporte)
         settings_fecha_validez = _normalise_credential(settings.cadrumo_clave_movil_dni_fecha)
+    # The person signing in is always the taxpayer the profile describes:
+    # representation is refused and the identity guard refuses any divergence.
+    # So the profile's tax identifier IS the Cl@ve identity, and a profile that
+    # recorded it is never asked for it a second time.
+    profile_dni_nie = facts.dni_nie or facts.tax_id
     return ClaveCredentials(
         provider_kind=provider_kind,
-        dni_nie=facts.dni_nie or settings_dni_nie,
+        dni_nie=profile_dni_nie or settings_dni_nie,
         numero_soporte=facts.numero_soporte or settings_numero_soporte,
         fecha_validez=facts.fecha_validez or settings_fecha_validez,
         profile_tax_id=facts.tax_id,
-        profile_dni_nie=facts.dni_nie,
+        profile_dni_nie=profile_dni_nie,
         profile_numero_soporte=facts.numero_soporte,
         profile_fecha_validez=facts.fecha_validez,
     )
 
 
-_CLAVE_DNI_NIE_PATH = "auth.dni_nie"
 _CLAVE_NUMERO_SOPORTE_PATH = "auth.numero_soporte"
 _CLAVE_FECHA_VALIDEZ_PATH = "auth.fecha_validez"
 
@@ -840,7 +844,7 @@ def _require_clave_credentials(
             context={
                 "provider": credentials.provider_kind.value,
                 "identity_field": profile_field_label(
-                    _CLAVE_DNI_NIE_PATH,
+                    PROFILE_TAX_ID_PATH,
                     profile_decode_context=profile_decode_context,
                 ),
             },

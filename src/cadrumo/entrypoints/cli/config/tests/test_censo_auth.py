@@ -115,3 +115,14 @@ def test_password_uses_protected_channel_and_is_erased(monkeypatch: pytest.Monke
     monkeypatch.setattr(censo_authentication, "run_registered_operation", submit)
     censo_authentication.save_password(client, AuthProviderKind.CLAVE_PERMANENTE)
     assert observed and not any(observed[0])
+
+
+@pytest.mark.parametrize("kind", [AuthProviderKind.CLAVE_MOVIL, AuthProviderKind.CLAVE_PERMANENTE])
+def test_clave_setup_asks_for_the_identity_once_as_the_profile_tax_id(
+    monkeypatch: pytest.MonkeyPatch, kind: AuthProviderKind
+) -> None:
+    asked: list[str] = []
+    monkeypatch.setattr(censo_authentication, "_prompt_field", lambda _client, path: asked.append(path))
+    monkeypatch.setattr(censo_authentication, "save_password", lambda _client, _kind: None)
+    censo_authentication._prompt_provider_fields(cast("FrontendClient", object()), kind, None)
+    assert asked == ["identity.tax_id"]

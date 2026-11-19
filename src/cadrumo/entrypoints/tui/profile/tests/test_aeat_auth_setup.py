@@ -24,7 +24,7 @@ from ..overview import ProfileManagerScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_PATHS = ("identity.tax_id", "auth.dni_nie", "auth.fecha_validez", "auth.numero_soporte")
+_PATHS = ("identity.tax_id", "auth.fecha_validez", "auth.numero_soporte")
 
 
 def auth_setup_overview_projection(values: Mapping[str, str], revision: int = 1) -> ProfileOverview:
@@ -152,6 +152,8 @@ async def test_method_specific_editor_saves_then_reopens_stored_fields_and_hides
         await settle(pilot)
         assert door.calls[-1][0] is provider
         assert door.calls[-1][2]["identity.tax_id"] == "12345678Z"
+        # The profile's NIF/NIE is the Cl@ve identity: no second field asks for it.
+        assert "auth.dni_nie" not in door.calls[-1][2]
         assert secret.value == ""
         assert tr("tui.aeat_auth.ready") in str(screen.query_one("#aeat-auth-readiness", Static).render())
         assert "private-password-sentinel" not in " ".join(str(widget.render()) for widget in screen.query(Static))

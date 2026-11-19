@@ -110,25 +110,38 @@ def test_profile_dni_nie_wins_over_settings_and_reaches_the_provider() -> None:
     assert bound.cadrumo_clave_movil_dni_nie.get_secret_value() == _TAX_ID
 
 
-def test_settings_remain_the_identity_fallback_when_the_profile_chooses_qr() -> None:
-    """The environment-configured path must keep working untouched.
+@pytest.mark.parametrize(
+    ("provider", "setting"),
+    [
+        (AuthProviderKind.CLAVE_MOVIL, "cadrumo_clave_movil_dni_nie"),
+        (AuthProviderKind.CLAVE_PERMANENTE, "cadrumo_clave_permanente_dni_nie"),
+    ],
+)
+def test_profile_tax_id_is_the_clave_identity_when_none_is_stored_apart(
+    provider: AuthProviderKind,
+    setting: str,
+) -> None:
+    """A profile that recorded its NIF/NIE is never asked for it again.
 
-    An explicit profile route is honoured while the identity can still come
-    from the current environment configuration.
+    The person signing in is the taxpayer the profile describes, so the
+    recorded tax identifier is the Cl@ve identity. The settings carry a
+    different identity, so a pass cannot be explained by the fallback: the
+    profile's tax identifier must reach the settings the provider reads.
     """
 
     _register_profile(**{"auth.clave_movil_route": ClaveMovilRoute.QR.value})
-    with override_settings(cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID)) as settings:
+    with override_settings(**{setting: SecretStr(_OTHER_TAX_ID)}) as settings:
         bound, expected_identity = prepare_clave_auth(
             settings,
-            AuthProviderKind.CLAVE_MOVIL,
+            provider,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             profile_decode_context=leased_profile_decode_context(),
         )
 
     assert expected_identity == _TAX_ID
-    assert bound.cadrumo_clave_movil_dni_nie == settings.cadrumo_clave_movil_dni_nie
-    assert bound.cadrumo_clave_prefer_non_qr is False
+    bound_identity = getattr(bound, setting)
+    assert isinstance(bound_identity, SecretStr)
+    assert bound_identity.get_secret_value() == _TAX_ID
 
 
 def test_a_profile_that_never_chose_a_route_signs_in_with_the_app_request(
@@ -245,13 +258,13 @@ def test_rebinding_the_settings_preserves_every_other_secret() -> None:
 
 
 def test_clave_mode_without_any_dni_nie_refuses_naming_the_absent_credential() -> None:
-    """Neither the profile nor the settings carry the identity half.
+    """Neither the profile (no tax identifier) nor the settings carry the identity half.
 
     The refusal has to name what is absent, so the assertion pins the
     canonical locale key rather than an English fragment.
     """
 
-    _register_profile(**{"auth.clave_movil_route": ClaveMovilRoute.QR.value})
+    _register_profile(**{"identity.tax_id": "", "auth.clave_movil_route": ClaveMovilRoute.QR.value})
     with (
         override_settings(cadrumo_clave_movil_dni_nie=None) as settings,
         pytest.raises(ClaveCredentialsIncompleteError) as raised,
@@ -264,14 +277,15 @@ def test_clave_mode_without_any_dni_nie_refuses_naming_the_absent_credential() -
         )
 
     assert raised.value.translated_message == "application.auth.sessions.errors.clave_identity_missing"
-    # The refusal names the absent credential by the label the profile editor
-    # shows, derived from the schema here rather than spelled out, so this
-    # asserts the name is schema-sourced without pinning one wording.
+    # The refusal names the one fact to record - the profile's tax identifier,
+    # which is the Cl@ve identity - by the label the profile editor shows,
+    # derived from the schema here rather than spelled out, so this asserts the
+    # name is schema-sourced without pinning one wording.
     expected_label = build_profile_preflight_requirement(
-        "auth.dni_nie",
+        "identity.tax_id",
         schema=published_profile_schema(),
     ).label
-    assert expected_label != "auth.dni_nie", "label collapsed to the path; the assertion would be vacuous"
+    assert expected_label != "identity.tax_id", "label collapsed to the path; the assertion would be vacuous"
     assert raised.value.context == {"provider": "clave_movil", "identity_field": expected_label}
 
 
