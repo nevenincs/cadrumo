@@ -919,10 +919,6 @@ export const UserProfilePage = memo(function UserProfilePage({
         <ProfileSync
           sync={sync}
           compact={!maximized}
-          onTaxId={() => {
-            const row = rowById("identity.tax_id");
-            if (row && writable) editRow(row);
-          }}
           onSetup={() => {
             if (writable) setAeat(data);
           }}

@@ -4915,7 +4915,6 @@ desktop:
       done: Sincronización completada. Revisa los datos que aún faltan en tu perfil.
       failed: La sincronización ha fallado sin cambiar tu perfil. Comprueba el acceso
         a la AEAT e inténtalo de nuevo.
-      identity: Añadir NIF o NIE
       incoming: AEAT
       preserve: Conservar tu respuesta guardada.
       profile_mismatch: Estos datos del Censo no coinciden con el perfil con el que

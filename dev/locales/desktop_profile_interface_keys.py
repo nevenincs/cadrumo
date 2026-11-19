@@ -14,7 +14,6 @@ DESKTOP_PROFILE_INTERFACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.profile.censo.conflict",
         "desktop.profile.censo.session",
         "desktop.profile.censo.failed",
-        "desktop.profile.censo.identity",
         "desktop.profile.censo.setup",
         "desktop.profile.censo.pull",
         "desktop.profile.censo.reading",

@@ -133,7 +133,8 @@ test("the method and its route are edited in the window, with the facts each ask
   await expect(validity).toHaveCount(0);
   await method.selectOption("certificate");
   await expect(route).toHaveCount(0);
-  await expect(dni).toHaveCount(0);
+  // Every method signs in as this taxpayer, so the missing NIF/NIE stays asked.
+  await expect(dni).toBeVisible();
   await expect(passphrase).toBeVisible();
   await method.selectOption("clave_movil");
   await route.selectOption("app_request");
@@ -163,12 +164,9 @@ test("a NIF/NIE added to the profile is not asked for again when Cl@ve is set up
 }) => {
   const profile = await open(page);
   const region = band(page);
-  await region
-    .getByRole("button", {
-      name: label("desktop.profile.censo.identity"),
-      exact: true,
-    })
-    .click();
+  // The NIF/NIE recorded on the profile itself, as any detail is.
+  await row(profile, "identity.tax_id").focus();
+  await page.keyboard.press("Enter");
   const identity = page.getByRole("dialog", {
     name: TAX_ID_LABEL,
     exact: true,
@@ -400,5 +398,41 @@ test("a requirements check that fails is told with its reason, not hidden", asyn
   const editor = aeatEditor(page);
   await expect(editor).toContainText(
     `${label("desktop.profile.censo.unavailable")} (not_signed_in)`,
+  );
+});
+
+test("the Censo band offers one configurator that asks for everything missing", async ({
+  page,
+}) => {
+  const profile = await open(page);
+  const region = band(page);
+  // One way in: the configurator, not a separate NIF/NIE button beside it.
+  await expect(region.getByRole("button")).toHaveCount(1);
+  await region
+    .getByRole("button", {
+      name: label("desktop.profile.censo.setup"),
+      exact: true,
+    })
+    .click();
+  const editor = aeatEditor(page);
+  const taxId = editor.getByLabel(TAX_ID_LABEL, { exact: true });
+  const method = editor.getByLabel("Authentication method", { exact: true });
+  // The missing NIF/NIE is asked for whatever the method.
+  await expect(taxId).toBeVisible();
+  await method.selectOption("certificate");
+  await expect(taxId).toBeVisible();
+  await method.selectOption("clave_movil");
+  await editor
+    .getByLabel("Cl@ve Móvil route", { exact: true })
+    .selectOption("qr");
+  await taxId.fill("X0001500M");
+  await save(editor).click();
+  await expect(editor).toHaveCount(0);
+  await expect(row(profile, "identity.tax_id")).toContainText("X0001500M");
+  await expect(region).not.toContainText(
+    label("auth.sync.requirement.profile_tax_id_required"),
+  );
+  await expect(region).not.toContainText(
+    label("auth.sync.requirement.auth_method_required"),
   );
 });

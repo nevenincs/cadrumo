@@ -4814,7 +4814,6 @@ desktop:
       done: Synchronization complete. Review any remaining gaps in your profile.
       failed: The sync failed without changing your profile. Check AEAT access and
         try again.
-      identity: Add tax ID
       incoming: AEAT
       preserve: Keep your saved answer.
       profile_mismatch: This Censo data doesn't match the signed-in profile. Refresh

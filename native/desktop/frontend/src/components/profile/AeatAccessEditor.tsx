@@ -183,7 +183,8 @@ export function AeatAccessEditor({
   const readinessRoute =
     readiness.state === "known" ? readiness.value.route : "";
   const routeNow = route || readinessRoute || DEFAULT_ROUTE;
-  // The NIF/NIE is asked for only when the profile opened without one. The
+  // The NIF/NIE is asked for, whatever the method, only when the profile
+  // opened without one: every method signs in as that taxpayer. The
   // answer is taken once, so neither the editor's own save nor a profile read
   // again while it is open takes the field away from under the person.
   const [taxIdMissing] = useState(() => {
@@ -194,7 +195,7 @@ export function AeatAccessEditor({
     (field): field is ProfileField =>
       field !== undefined &&
       (field.path === TAX_ID
-        ? (movil || permanente) && taxIdMissing
+        ? taxIdMissing
         : movil && routeNow === "app_request"),
   );
   const factChanged = (field: ProfileField) => {

@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { label } from "../support/strings";
 import { profileStated } from "../support/profileFixture";
-import { open, band, row, save } from "../support/userProfilePage";
+import { open, band, row, save, aeatEditor } from "../support/userProfilePage";
 
 // The profile page's Censo review: prerequisites, approval before save, uncertain starts and late readiness.
 
-test("Censo checks saved prerequisites and edits the missing identity", async ({
+test("Censo checks saved prerequisites and sets up the missing identity in the one configurator", async ({
   page,
 }) => {
   await open(page);
@@ -21,20 +21,26 @@ test("Censo checks saved prerequisites and edits the missing identity", async ({
   ).toHaveCount(0);
   await region
     .getByRole("button", {
-      name: label("desktop.profile.censo.identity"),
+      name: label("desktop.profile.censo.setup"),
       exact: true,
     })
     .click();
-  const editor = page.getByRole("dialog", {
-    name: "Tax ID (NIF/NIE/CIF)",
-    exact: true,
-  });
-  await editor.getByRole("textbox").fill("X0001500M");
+  const editor = aeatEditor(page);
+  await editor
+    .getByLabel("Tax ID (NIF/NIE/CIF)", { exact: true })
+    .fill("X0001500M");
+  await editor
+    .getByLabel("Authentication method", { exact: true })
+    .selectOption("clave_movil");
+  await editor
+    .getByLabel("Cl@ve Móvil route", { exact: true })
+    .selectOption("qr");
   await save(editor).click();
+  await expect(editor).toHaveCount(0);
   await expect(region).not.toContainText(
     label("auth.sync.requirement.profile_tax_id_required"),
   );
-  await expect(region).toContainText(
+  await expect(region).not.toContainText(
     label("auth.sync.requirement.auth_method_required"),
   );
   expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(0);

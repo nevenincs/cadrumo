@@ -4888,7 +4888,6 @@ desktop:
       done: A szinkronizálás befejeződött. Ellenőrizd a profil még hiányzó adatait.
       failed: A szinkronizálás sikertelen volt, a profilod nem változott. Ellenőrizd
         az AEAT-hozzáférést, és próbáld újra.
-      identity: Adóazonosító megadása
       incoming: AEAT
       preserve: A mentett válasz megőrzése.
       profile_mismatch: Ezek a Censo-adatok nem egyeznek a bejelentkezett profillal.
