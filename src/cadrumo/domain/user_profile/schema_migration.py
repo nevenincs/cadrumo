@@ -41,6 +41,11 @@ two.
   premises, their Regla 14 surface classes and the Apartado VI A tax elements as
   repeatable rows. It only adds fields, so it clears nothing; a schema-14 record
   that already carries one of them is refused.
+- Schema 16 retires ``auth.dni_nie``. Cl@ve signs in as the taxpayer the profile
+  describes, so its identity is ``identity.tax_id``, and a separate stored copy
+  was never read after the identity moved there. The migration clears it,
+  whatever its value, and asks for nothing: the identity is already the
+  profile's tax identifier.
 
 Before each of those bumps the setup wizard pre-answered the affected
 questions and wrote its default as an ordinary ``manual_cli`` fact, so the
@@ -77,7 +82,7 @@ from .errors import UserProfileValidationError
 from .schema import ProfileSchemaDefinition
 from .values import UserProfileFact, UserProfileRecord, section_field_key
 
-MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 15
+MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 16
 """The profile schema version the migration writes."""
 
 _UNPROVEN_FALSE: Final[bool] = False
@@ -155,8 +160,11 @@ _NO_DEFAULTS: Final[Mapping[str, object]] = MappingProxyType({})
 RETIRED_RENTAL_TIER_PATH: Final[str] = "renta_rental.reduccion_art_23_2_tier_2024"
 """The schema-8 field that stored the art. 23.2 reduction tier for one ejercicio."""
 
+RETIRED_CLAVE_IDENTITY_PATH: Final[str] = "auth.dni_nie"
+"""The schema-15 copy of the Cl@ve identity, which is the profile's ``identity.tax_id``."""
+
 _RETIRED_PATHS_BY_TRANSITION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
-    {8: frozenset({RETIRED_RENTAL_TIER_PATH})},
+    {8: frozenset({RETIRED_RENTAL_TIER_PATH}), 15: frozenset({RETIRED_CLAVE_IDENTITY_PATH})},
 )
 """Paths the transition that LEAVES each version retires: cleared whatever value they hold.
 
@@ -718,6 +726,7 @@ __all__ = [
     "PATHS_INTRODUCED_IN_V15",
     "RETIRED_ASCENDANT_DISABILITY_KEY_GROUP",
     "RETIRED_ASCENDANT_DISABILITY_KEY_LEAF",
+    "RETIRED_CLAVE_IDENTITY_PATH",
     "RETIRED_RENTAL_TIER_PATH",
     "SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS",
     "ProfileSchemaMigration",

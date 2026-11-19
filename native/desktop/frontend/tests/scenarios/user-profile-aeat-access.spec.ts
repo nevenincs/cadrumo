@@ -156,7 +156,8 @@ test("the method and its route are edited in the window, with the facts each ask
   await expect(profile).not.toContainText("2030-01-31");
   // The one NIF/NIE typed is the profile's identification fact.
   await expect(row(profile, "identity.tax_id")).toContainText("12345678Z");
-  await expect(row(profile, "auth.dni_nie")).not.toContainText("12345678Z");
+  // The profile states no second Cl@ve identity to fall out of step with it.
+  await expect(row(profile, "auth.dni_nie")).toHaveCount(0);
 });
 
 test("a NIF/NIE added to the profile is not asked for again when Cl@ve is set up", async ({
@@ -198,7 +199,7 @@ test("a NIF/NIE added to the profile is not asked for again when Cl@ve is set up
   await expect(region).not.toContainText(
     label("auth.sync.requirement.clave_identity_required"),
   );
-  await expect(row(profile, "auth.dni_nie")).not.toContainText("X0001500M");
+  await expect(row(profile, "auth.dni_nie")).toHaveCount(0);
 });
 
 test("a certificate is chosen in the native dialog and its passphrase is kept out of the page", async ({

@@ -229,7 +229,6 @@ def live_clave_movil_profile_scope(base: Path) -> Generator[LiveAeatProfile]:
     support = settings.cadrumo_clave_movil_nie_soporte
     facts = {
         "identity.tax_id": tax_id,
-        "auth.dni_nie": tax_id,
         "auth.numero_soporte": support.get_secret_value() if support is not None else "",
         "auth.fecha_validez": settings.cadrumo_clave_movil_dni_fecha or "",
     }

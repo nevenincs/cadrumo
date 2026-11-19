@@ -204,7 +204,6 @@ def test_native_cli_auth_configure_records_the_clave_movil_route_and_refuses_unk
                 "identity.name": "Synthetic",
                 "identity.surnames": "Auth Route",
                 "identity.tax_id": "12345678Z",
-                "auth.dni_nie": "X0001502F",
                 "activities.description": "synthetic test profile",
             },
         )

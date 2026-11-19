@@ -55,11 +55,7 @@ export type ProfileFixture = UserProfilePort & {
 };
 
 /** The facts of the authentication section the host takes as field edits. */
-const AUTH_FACTS = [
-  "auth.dni_nie",
-  "auth.numero_soporte",
-  "auth.fecha_validez",
-];
+const AUTH_FACTS = ["auth.numero_soporte", "auth.fecha_validez"];
 
 /** The certificate file the scenario's dialog picks. */
 const PICKED = { token: "c".repeat(64), name: "firma-ana-soler.p12" };
@@ -80,17 +76,12 @@ export function userProfileFixture(
       "identity.tax_id": "X1234567L",
       "auth.provider": "clave_movil",
       "auth.clave_movil_route": "app_request",
-      "auth.dni_nie": "••••",
       ...(censoSetup === "nie" ? {} : { "auth.numero_soporte": "••••" }),
     };
     for (const field of data.sections.flatMap((section) => section.fields)) {
       if (field.path in values) {
         field.value = values[field.path]!;
-        if (
-          field.path === "auth.dni_nie" ||
-          field.path === "auth.numero_soporte"
-        )
-          field.masked = true;
+        if (field.path === "auth.numero_soporte") field.masked = true;
       }
     }
     data.missing_required = data.missing_required.filter(
@@ -407,13 +398,12 @@ export function userProfileFixture(
           ),
         );
       else if (provider === "clave_movil" || provider === "clave_permanente") {
-        // As the product reads it: the Cl@ve identity is the stored one, else
-        // the profile's NIF/NIE, whose absence is already required above.
-        const identity = value("auth.dni_nie")
-          ? "auth.dni_nie"
-          : "identity.tax_id";
-        if (value(identity))
-          requirements.push(need(identity, true, "clave_identity_required"));
+        // As the product reads it: the Cl@ve identity is the profile's NIF/NIE,
+        // whose absence is already required above.
+        if (value("identity.tax_id"))
+          requirements.push(
+            need("identity.tax_id", true, "clave_identity_required"),
+          );
         if (route === "app_request") {
           const nie = /^[XYZ]/i.test(value("identity.tax_id"));
           requirements.push(
