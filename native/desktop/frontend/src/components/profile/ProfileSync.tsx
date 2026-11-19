@@ -13,7 +13,8 @@ import { useStrings } from "../../shell/strings";
 /**
  * Censo synchronization as a band of the profile page: what it still needs,
  * the pull in progress, and its review, whose values are shown on the
- * details they would change. The review is answered as a whole.
+ * details they would change and listed together in the review dialog. The
+ * review is answered as a whole.
  */
 export function ProfileSync({
   sync,
@@ -176,7 +177,9 @@ export function ProfileSync({
               onClick={onReview}
             >
               {t("desktop.profile.censo.review_count", {
-                count: snapshot.fields.length,
+                count: snapshot.fields.filter(
+                  (field) => field.incoming !== null,
+                ).length,
               })}
             </button>
             {!compact && (

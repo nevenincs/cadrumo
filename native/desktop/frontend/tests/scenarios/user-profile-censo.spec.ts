@@ -52,13 +52,12 @@ test("a Censo review is shown on the details it changes and saves only after app
       exact: true,
     })
     .click();
-  await region
-    .getByRole("button", {
-      name: label("desktop.profile.censo.review_count", { count: 3 }),
-    })
-    .click();
+  await expect(
+    region.getByRole("button", {
+      name: label("desktop.profile.censo.review_count", { count: 10 }),
+    }),
+  ).toBeVisible();
   const address = row(profile, "contact.fiscal_address");
-  await expect(address).toBeFocused();
   await expect(address).toContainText("Calle Nueva 1");
   await expect(address).toContainText(label("desktop.profile.censo.preserve"));
   await expect(
@@ -87,7 +86,8 @@ test("a Censo review is shown on the details it changes and saves only after app
   // The address the review preserved is the one the profile already held.
   await expect(address).toContainText(profileStated("contact.fiscal_address"));
   await expect(address).not.toContainText("Calle Nueva 1");
-  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(1);
+  // The eight values the review adopts, and nothing it preserved.
+  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(8);
   await region
     .getByRole("button", {
       name: label("desktop.profile.dismiss"),
@@ -140,7 +140,7 @@ test("an initially unknown status recovers the admitted operation", async ({
   await expect(region).toContainText(label("desktop.profile.censo.unknown"));
   await page.evaluate(() => window.__scenarioCenso!.releaseStatus());
   await expect(region).toContainText(
-    label("desktop.profile.censo.review_count", { count: 3 }),
+    label("desktop.profile.censo.review_count", { count: 10 }),
   );
   expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(1);
 });
@@ -189,7 +189,7 @@ test("the profile page reads a pull it was left from before it offers another", 
     exact: true,
   });
   const review = region.getByRole("button", {
-    name: label("desktop.profile.censo.review_count", { count: 3 }),
+    name: label("desktop.profile.censo.review_count", { count: 10 }),
   });
   await pull.click();
   await expect(review).toBeVisible();
@@ -269,4 +269,71 @@ test("Censo progress notifications coalesce without starting another pull", asyn
       exact: true,
     }),
   ).toBeEnabled();
+});
+
+test("the Censo review lists every proposed value beside the profile's and saves from the list", async ({
+  page,
+}) => {
+  await open(page, "censo-ready");
+  const region = band(page);
+  await region
+    .getByRole("button", {
+      name: label("desktop.profile.censo.pull"),
+      exact: true,
+    })
+    .click();
+  await region
+    .getByRole("button", {
+      name: label("desktop.profile.censo.review_count", { count: 10 }),
+    })
+    .click();
+  const review = page.getByRole("dialog", {
+    name: label("desktop.profile.censo.review_title"),
+  });
+  await expect(review).toBeVisible();
+  // No field editor opens in its place.
+  await expect(page.getByRole("dialog")).toHaveCount(1);
+  const fields = review.locator("[data-censo-field]");
+  await expect(fields).toHaveCount(11);
+
+  const address = review.locator('[data-censo-field="contact.fiscal_address"]');
+  await expect(address.locator('[data-part="current"]')).toHaveText(
+    profileStated("contact.fiscal_address"),
+  );
+  await expect(address.locator('[data-part="incoming"]')).toHaveText(
+    "Calle Nueva 1, Málaga",
+  );
+  await expect(address.locator('[data-part="outcome"]')).toHaveText(
+    label("desktop.profile.censo.preserve"),
+  );
+
+  const office = review.locator(
+    '[data-censo-field="censo.aeat_administracion_name"]',
+  );
+  await expect(office.locator('[data-part="current"]')).toHaveText(
+    label("desktop.profile.not_set"),
+  );
+  await expect(office.locator('[data-part="incoming"]')).toHaveText(
+    "OFICINA EJEMPLO",
+  );
+  await expect(office.locator('[data-part="outcome"]')).toHaveText(
+    label("desktop.profile.censo.adopt"),
+  );
+
+  // What AEAT did not state is shown as such, not as an empty value to save.
+  const ended = review.locator('[data-censo-field="censo.activity_end_date"]');
+  await expect(ended.locator('[data-part="outcome"]')).toHaveText(
+    label("desktop.profile.censo.absent"),
+  );
+
+  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(0);
+  await review
+    .getByRole("button", {
+      name: label("desktop.profile.censo.apply"),
+      exact: true,
+    })
+    .click();
+  await expect(review).toBeHidden();
+  await expect(region).toContainText(label("desktop.profile.censo.done"));
+  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(8);
 });

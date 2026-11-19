@@ -4920,10 +4920,18 @@ desktop:
         ajustos d'accés a l'AEAT i torna-ho a provar.
       reject: Descarta els canvis
       review_count: 'Valors de l’AEAT per revisar: {count}'
+      review_current: El teu perfil
+      review_description: El que el Cens de l'AEAT té de tu, al costat del que desa
+        el teu perfil. No es desa res fins que no ho confirmis.
+      review_field: Dada
       review_hint: Els canvis es mostren a sota, al seu lloc. No es desa res fins
         que confirmis.
-      scope: Importa el domicili fiscal, el codi postal i la referència cadastral
-        del Cens. La resta de dades del perfil requereixen les teves respostes.
+      review_outcome: En desar
+      review_title: Revisa les dades de l'AEAT
+      scope: Importa del Cens el teu domicili fiscal amb el codi postal, la referència
+        cadastral i els codis de província i municipi, la teva Administració de l'AEAT
+        i les dates d'alta i baixa de la teva activitat. El teu nom, el teu correu
+        i les altres dades del perfil requereixen les teves respostes.
       session: La teva sessió ha acabat. Torna a iniciar sessió per continuar.
       setup: Configura l’accés a l’AEAT
       source: Desat des del cens de l’AEAT

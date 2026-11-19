@@ -48,6 +48,7 @@ import {
 } from "../../shell/userProfile";
 import type { MenuEntry, OpenMenu } from "../ContextMenu";
 import { AeatAccessEditor } from "./AeatAccessEditor";
+import { CensoReview } from "./CensoReview";
 import { Household } from "./Household";
 import { PasswordChange, ProfileShortcuts } from "./ProfileDialogs";
 import { ProfileDetails, STATUS_GROUPS } from "./ProfileDetails";
@@ -135,6 +136,7 @@ export const UserProfilePage = memo(function UserProfilePage({
   const [aeat, setAeat] = useState<UserProfile | null>(null);
   const [password, setPassword] = useState(false);
   const [shortcuts, setShortcuts] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
   const [fromAeat, setFromAeat] = useState<ReadonlySet<string>>(new Set());
   const pageId = useId();
   const scroller = useRef<HTMLDivElement>(null);
@@ -926,12 +928,7 @@ export const UserProfilePage = memo(function UserProfilePage({
           onSetup={() => {
             if (writable) setAeat(data);
           }}
-          onReview={() => {
-            const first = review?.fields.find((field) =>
-              allRows.some((row) => row.id === field.path),
-            );
-            if (first) showDetail(first.path);
-          }}
+          onReview={() => setReviewing(true)}
         />
       )}
       {error && (
@@ -1057,6 +1054,19 @@ export const UserProfilePage = memo(function UserProfilePage({
         />
       )}
       <ProfileShortcuts open={shortcuts} onClose={() => setShortcuts(false)} />
+      {review && (
+        <CensoReview
+          open={reviewing}
+          onOpenChange={setReviewing}
+          fields={review.fields.filter((field) => rowById(field.path))}
+          label={(path) => rowById(path)?.field.label ?? ""}
+          busy={sync.busy}
+          onAnswer={(decision) => {
+            setReviewing(false);
+            void sync.answer(decision);
+          }}
+        />
+      )}
       {changePassword && (
         <PasswordChange
           change={changePassword}
