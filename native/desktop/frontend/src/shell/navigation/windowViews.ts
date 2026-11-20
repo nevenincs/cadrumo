@@ -11,6 +11,7 @@ import type { ViewerPosition } from "./history";
 /** The window's pages that a register element opens. */
 export type WindowPage =
   | "profile"
+  | "home"
   | "calendar"
   | "ledger"
   | "declarations"
@@ -83,6 +84,7 @@ export const WINDOW_VIEWS: Readonly<Record<string, WindowViewEntry>> = {
       dialog: "aeat-access",
     },
   },
+  home: page("home", null, "views"),
   calendar: page("calendar", null, "views"),
   docs: page("docs", null, null),
   ledger: page("ledger", null, "ledger"),

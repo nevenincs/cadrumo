@@ -40,7 +40,7 @@ length = 64
 id = "home"
 label = "navigation.view.home.label"
 keywords = "navigation.view.home.keywords"
-surfaces = []
+surfaces = ["gui"]
 
 [[element]]
 id = "ledger"

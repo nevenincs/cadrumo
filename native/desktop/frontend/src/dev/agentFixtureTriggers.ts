@@ -36,6 +36,7 @@ export const RICH_REPLY = [
 const LINKS = /con enlaces/i;
 const LINKS_REPLY = [
   "Puedes seguir en:",
+  "- [el inicio](cadrumo://view/home)",
   "- [el calendario](cadrumo://view/calendar)",
   "- [los movimientos](cadrumo://view/ledger/movements)",
   "- [las operaciones](cadrumo://view/operations)",

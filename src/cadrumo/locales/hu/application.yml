@@ -4520,6 +4520,41 @@ application:
     explain:
       errors:
         modelo_blank: A nyomtatvány azonosítója nem lehet üres.
+    served:
+      home:
+        declaration_state:
+          discarded: Elvetve
+          draft: Piszkozat
+          filed: Benyújtottként rögzítve
+          needs_review: Ellenőrzésre vár
+          ready: Kész
+        ledger_summary: '%{entries} tétel; %{requiring_review} ellenőrzésre vár; %{unclassified}
+          besorolatlan; %{missing_evidence} hiányzó bizonylat'
+        reason:
+          blocked_dependency: A bevallás egyik függősége blokkolva van
+          blocked_evidence: Egy blokkolóhoz bizonylat kell
+          blocked_review: A blokkolt munka ellenőrzésre vár
+          declaration_needs_review: A bevallás ellenőrzésre vár
+          evidence_missing: Hiányzik egy bizonylat
+          ledger_classification_pending: Néhány nyilvántartási tétel besorolása még
+            hiányzik
+        zone:
+          calendar_aeat_reader_unavailable: Még nincs beolvasva - akkor jelenik meg,
+            amikor az AEAT-adatokat először beolvasták
+          calendar_taxpayer_model_undeclared: Nem érhető el - a profil még nem adja
+            meg, milyen típusú adózóról van szó
+          home_actions_projector_unavailable: Nem elérhető - a következő teendők akkor
+            jelennek meg, ha a nyilvántartásaidat mind ellenőrizték
+          home_agenda_projector_unavailable: Nem elérhető - a bevallási naptárt nem
+            sikerült kiszámítani
+          home_declarations_resume_projector_unavailable: Nem elérhető - a folytatandó
+            bevallásokat nem sikerült beolvasni
+          home_messages_never_pulled: Még nincs beolvasva - az AEAT-üzenetek akkor
+            jelennek meg, amikor az AEAT-adatokat először beolvasták
+          home_taxpayer_profile_incomplete: Nem érhető el - a profilból hiányoznak
+            kötelező válaszok; töltsd ki őket a profilodban
+          ledger_snapshot_projector_unavailable: Nem elérhető - akkor jelenik meg,
+            ha a nyilvántartásaidat mind ellenőrizték
   prorrata_register:
     served:
       gross_declaration_absent: 'A nyilvántartás elutasította a törlést: erre a bevallási

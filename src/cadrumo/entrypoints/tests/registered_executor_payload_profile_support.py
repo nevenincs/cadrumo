@@ -217,6 +217,17 @@ def _user_profile_imputation_election_set(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(ctx.raw_profile_subject, {**_baselined(ctx), "tax_year": 2025, "criterion": "devengo"})
 
 
+def _reference_corpus_search(ctx: PayloadContext) -> PayloadResult:
+    return ctx.request(
+        ctx.profile_subject,
+        {"profile_id": ctx.profile_id, "query": "recargo", "output_language": OutputLanguage.ES},
+    )
+
+
+def _operations_history_list(ctx: PayloadContext) -> PayloadResult:
+    return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id})
+
+
 def _workbench_generation(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(
         ctx.raw_profile_subject,
@@ -349,6 +360,8 @@ PROFILE_BUILDERS: dict[str, PayloadBuilder] = {
     "user-profile.imputation-election.set": _user_profile_imputation_election_set,
     "user-profile.record-groups": _user_profile_record_groups,
     "workbench.generation": _workbench_generation,
+    "reference.corpus.search": _reference_corpus_search,
+    "operations.history.list": _operations_history_list,
     "user-profile.repeatable-row-mutation": _user_profile_repeatable_row_mutation,
     "user-profile.repeatable-row-update": _user_profile_repeatable_row_existing,
     "user-profile.repeatable-row-remove": _user_profile_repeatable_row_existing,

@@ -34,6 +34,7 @@ export function railItems({
   firstPaneShown,
   profileOn,
   aeatSyncOn,
+  homeVisible,
   ledgerVisible,
   declarationsVisible,
   calendarVisible,
@@ -67,6 +68,7 @@ export function railItems({
   firstPaneShown: boolean;
   profileOn: boolean;
   aeatSyncOn: boolean;
+  homeVisible: boolean;
   ledgerVisible: boolean;
   declarationsVisible: boolean;
   calendarVisible: boolean;
@@ -118,6 +120,17 @@ export function railItems({
       pressed: docsVisible,
       onClick: () => runAction("docs.toggle"),
     },
+    ...(views
+      ? [
+          {
+            id: "home",
+            icon: "home",
+            label: t("desktop.home.title"),
+            pressed: homeVisible,
+            onClick: () => runAction("view.home"),
+          } satisfies RailItem,
+        ]
+      : []),
     ...(host.userProfile
       ? [
           {
