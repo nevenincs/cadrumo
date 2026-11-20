@@ -398,8 +398,16 @@ function logBytes() {
 /** The register entry a control matches, or a destructive variant. */
 function classify(control) {
   for (const entry of REGISTER.entries) {
+    // A label with placeholders ("Update {area}") matches any filling.
     const words = entry.key ? label(entry.key) : null;
-    if (words && control.name === words) return entry;
+    const literal = (part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const shape = words
+      ? words
+          .split(/\{[^}]+\}/)
+          .map(literal)
+          .join(".+")
+      : null;
+    if (shape && new RegExp(`^${shape}$`).test(control.name)) return entry;
     if (entry.pattern && new RegExp(entry.pattern).test(control.name))
       return entry;
   }
@@ -459,7 +467,7 @@ async function press(view, control) {
     effect: "",
     silent: false,
   };
-  if (kind?.kind === "external") {
+  if (kind?.kind === "external" || kind?.kind === "session") {
     row.effect = `not pressed: ${kind.reason}`;
     return row;
   }
