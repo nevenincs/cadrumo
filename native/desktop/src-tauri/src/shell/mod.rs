@@ -5,6 +5,7 @@ pub mod agent_access;
 pub mod automation_nonce;
 #[cfg(any(feature = "native-automation", test))]
 mod automation_picker;
+pub mod background_tasks;
 pub mod channel;
 mod clipboard;
 mod external;

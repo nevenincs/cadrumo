@@ -633,6 +633,28 @@ export interface HostCommands {
     args: Authorized;
     result: import("../shell/ledger").LedgerOutcome;
   };
+  /** Sends a typed cue each time a background job of the signed-in profile
+   * changes, until unobserved. A cue says only which job to read again and
+   * at which stored revision; read the revisions on subscribing and on
+   * focus, since a change before the subscription is not cued. */
+  background_tasks_observe: {
+    args: Authorized<{
+      updates: Channel<
+        import("../shell/backgroundTasksContract").BackgroundTaskCue
+      >;
+    }>;
+    result: number;
+  };
+  background_tasks_unobserve: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
+  /** Every background job's stored revision for the signed-in profile, read
+   * now; a failure rejects with `LedgerFailure`. */
+  background_tasks_revisions: {
+    args: Authorized;
+    result: import("../shell/backgroundTasksContract").BackgroundTaskRevisions;
+  };
   /** Every row of the signed-in profile's declarations list. */
   modelo_declarations: {
     args: Authorized<{

@@ -415,7 +415,7 @@ fn a_classification_review_holds_its_movement_and_every_other_definition_the_pro
 
 #[cfg(windows)]
 mod relayed {
-    use super::super::super::scripted::{OPERATION, PROFILE, holder, observed, step};
+    use super::super::super::scripted::{OPERATION, PROFILE, holder, observed, resulted, step};
     use super::*;
 
     fn subject() -> String {
@@ -932,5 +932,119 @@ mod relayed {
             }
         );
         assert!(operations.find(OPERATION).unwrap().shown.is_none());
+    }
+
+    const JOB: &str = "1111111111111111111111111111111111111111111111111111111111111111";
+    const RUN: &str = "ledger.classify.job.run";
+
+    fn run_observed(lifecycle: &str, extra: Value) -> Value {
+        observed(RUN, &subject(), lifecycle, extra)
+    }
+
+    #[tokio::test]
+    async fn a_classification_run_holds_the_serial_lock_only_while_it_is_submitted() {
+        let held = holder(|_| {
+            vec![
+                step(
+                    "operation_submit",
+                    json!([
+                        ["definition_id", RUN],
+                        ["subject_ref", subject()],
+                        ["payload.profile_id", PROFILE],
+                        ["payload.job_id", JOB]
+                    ]),
+                    json!({"kind":"operation_submitted","operation_id":OPERATION}),
+                    false,
+                ),
+                // Where the window is told the run stands.
+                step(
+                    "operation_observe",
+                    json!([["operation_id", OPERATION]]),
+                    run_observed("running", json!({"cancellable_now":true})),
+                    false,
+                ),
+                // The follow: its first sight, a committed batch, the end.
+                step(
+                    "operation_observe",
+                    json!([]),
+                    run_observed("running", json!({"cancellable_now":true})),
+                    false,
+                ),
+                step(
+                    "operation_observe",
+                    json!([]),
+                    run_observed("running", json!({"cancellable_now":true,"revision":2})),
+                    true,
+                ),
+                step(
+                    "operation_observe",
+                    json!([]),
+                    run_observed(
+                        "terminal",
+                        json!({"terminal_condition":"succeeded","effect":"updated","revision":3}),
+                    ),
+                    true,
+                ),
+                // The window's record of it is settled.
+                step(
+                    "operation_observe",
+                    json!([]),
+                    run_observed(
+                        "terminal",
+                        json!({"terminal_condition":"succeeded","effect":"updated","revision":3}),
+                    ),
+                    false,
+                ),
+                step(
+                    "operation_result",
+                    json!([["operation_id", OPERATION]]),
+                    resulted(RUN, json!({"profile_id":PROFILE,"outcome":"settled"})),
+                    false,
+                ),
+            ]
+        });
+        let serial = tokio::sync::Mutex::new(());
+        let operations = Operations::default();
+        let start = || {
+            start_on(
+                &serial,
+                &operations,
+                &held.person,
+                held.identity.clone(),
+                definition(RUN),
+                Wiped(json!({"job_id":JOB})),
+            )
+        };
+        // Another write holds the lock: the run is not submitted until it is let go.
+        let other = serial.lock().await;
+        assert!(
+            tokio::time::timeout(std::time::Duration::from_millis(200), start())
+                .await
+                .is_err()
+        );
+        drop(other);
+        let events = held.events.subscribe();
+        let tracked = start().await.unwrap();
+        // Submitted: nothing holds the lock while the run goes on, so a cancel
+        // or any other write is taken at once, and the window can follow it.
+        let other = serial
+            .try_lock()
+            .expect("the run let go of the serial lock");
+        assert_eq!(operations.find(OPERATION).unwrap().operation, OPERATION);
+        assert_eq!(
+            settle::observe_on(&tracked, &held.person).await.unwrap(),
+            Outcome::Running {
+                operation_id: OPERATION.into(),
+                revision: 1,
+                cancellable: true,
+            }
+        );
+        let moved = std::sync::atomic::AtomicUsize::new(0);
+        settle::follow_detached(events, tracked, held.person.clone(), || {
+            moved.fetch_add(1, Ordering::SeqCst);
+        })
+        .await;
+        drop(other);
+        assert_eq!(moved.load(Ordering::SeqCst), 3);
     }
 }

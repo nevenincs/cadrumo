@@ -753,6 +753,49 @@ pub(super) async fn cancel_on(
     observe_on(tracked, person).await
 }
 
+/// The one lock every submission of the window's profile is made under.
+pub(super) trait Serial: Sync {
+    fn serial(&self) -> impl Future<Output = tokio::sync::MutexGuard<'_, ()>> + Send;
+}
+impl Serial for ProfileHost {
+    fn serial(&self) -> impl Future<Output = tokio::sync::MutexGuard<'_, ()>> + Send {
+        ProfileHost::serial(self)
+    }
+}
+#[cfg(test)]
+impl Serial for tokio::sync::Mutex<()> {
+    fn serial(&self) -> impl Future<Output = tokio::sync::MutexGuard<'_, ()>> + Send {
+        self.lock()
+    }
+}
+
+/// Follows `tracked`, an operation whose run can outlast any one wait, until
+/// it is terminal, holding no lock: `advanced` is called each time its
+/// projection's revision moves, and the window's record of it is settled at
+/// the end. Ends early, leaving the record open, when the session is gone.
+pub(super) async fn follow_detached(
+    mut events: Receiver<PersonEvent>,
+    tracked: Tracked,
+    person: HeldPerson,
+    advanced: impl Fn(),
+) {
+    let relayed = tracked.relayed(&person);
+    let mut last: Option<u64> = None;
+    loop {
+        let seen = last;
+        let Ok(p) = relay::follow(&mut events, &relayed, |p| p["revision"].as_u64() != seen).await
+        else {
+            return;
+        };
+        last = p["revision"].as_u64();
+        advanced();
+        if p["lifecycle"] == "terminal" {
+            break;
+        }
+    }
+    let _ = observe_on(&tracked, &person).await;
+}
+
 /// The held person, only while it is the session that submitted `tracked`.
 pub(super) async fn holding(profile: &ProfileHost, tracked: &Tracked) -> Result<HeldPerson> {
     let person = profile
