@@ -5,7 +5,10 @@ encrypted repository. The enqueue meets a runtime with no model-run authority,
 so its lane lookup is refused as an unreachable reader before anything is
 stored. The run meets the same unreachable reader at its first movement, fails
 every movement as unavailable, settles the job and refuses with the reader's
-refusal; no ledger fact is written.
+refusal; no ledger fact is written. An authorise meets the same unreachable
+lane lookup and records nothing. A revoke on a job that reads on this computer
+is refused as needing no consent. An apply writes the one proposal the person
+accepted through the reviewed classification path and marks it applied.
 """
 
 from __future__ import annotations
@@ -16,15 +19,23 @@ from decimal import Decimal
 from ...adapters.persistence.profile.classification_jobs import ClassificationJobRepositoryAdapter
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...application.ledger.classification_job_contracts import (
+    LEDGER_CLASSIFY_JOB_APPLY_DEFINITION_ID,
+    LEDGER_CLASSIFY_JOB_AUTHORISE_DEFINITION_ID,
     LEDGER_CLASSIFY_JOB_CANCEL_DEFINITION_ID,
     LEDGER_CLASSIFY_JOB_DISMISS_DEFINITION_ID,
     LEDGER_CLASSIFY_JOB_ENQUEUE_DEFINITION_ID,
     LEDGER_CLASSIFY_JOB_LIST_DEFINITION_ID,
     LEDGER_CLASSIFY_JOB_READ_DEFINITION_ID,
     LEDGER_CLASSIFY_JOB_RETRY_DEFINITION_ID,
+    LEDGER_CLASSIFY_JOB_REVOKE_CONSENT_DEFINITION_ID,
     LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID,
+    LedgerClassifyJobAcceptedProposal,
+    LedgerClassifyJobApplyRequest,
+    LedgerClassifyJobApplyResult,
+    LedgerClassifyJobAuthoriseRequest,
     LedgerClassifyJobCancelRequest,
     LedgerClassifyJobChangeResult,
+    LedgerClassifyJobConsentGrant,
     LedgerClassifyJobDismissRequest,
     LedgerClassifyJobEnqueueRequest,
     LedgerClassifyJobListRequest,
@@ -33,13 +44,17 @@ from ...application.ledger.classification_job_contracts import (
     LedgerClassifyJobReadRequest,
     LedgerClassifyJobReadResult,
     LedgerClassifyJobRetryRequest,
+    LedgerClassifyJobRevokeConsentRequest,
     LedgerClassifyJobRunRequest,
 )
+from ...application.ledger.classification_job_errors import ClassificationJobConsentNotNeededError
+from ...application.ledger.classification_job_run import movement_revision_id
 from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderError
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.transactions.classification_job import (
+    ClassificationConsentScope,
     ClassificationItemFailureCause,
     ClassificationItemState,
     ClassificationJob,
@@ -47,7 +62,9 @@ from ...domain.transactions.classification_job import (
     ClassificationJobScope,
     ClassificationJobScopeKind,
     ClassificationJobStatus,
+    ClassificationProposal,
 )
+from ...domain.transactions.enums import BusinessClassification
 from .conformance_family_contract import (
     ConformanceFamily,
     ConformanceFamilyContext,
@@ -55,7 +72,7 @@ from .conformance_family_contract import (
     ConformancePreparation,
     RegisteredExecutorConformanceCase,
 )
-from .conformance_ledger_seed_support import ledger_unchanged_verifier, seed_manual_transaction
+from .conformance_ledger_seed_support import ledger_action_ports, ledger_unchanged_verifier, seed_manual_transaction
 
 #: A synthetic on-host lane: the stored job only names it, nothing reads with it here.
 _LANE = ClassificationJobLane(
@@ -217,6 +234,109 @@ def _prepare_run(context: ConformanceFamilyContext) -> ConformancePreparation:
     )
 
 
+def _prepare_authorise(context: ConformanceFamilyContext) -> ConformancePreparation:
+    job = _stored_job(context, failed=False)
+    ledger_unchanged = ledger_unchanged_verifier(context)
+
+    def verify(outcome: ConformanceOutcome) -> None:
+        ledger_unchanged(outcome)
+        assert _jobs(context).get(job.job_id) == job
+
+    return ConformancePreparation(
+        profile_operation_subject(str(context.profile_id)),
+        LedgerClassifyJobAuthoriseRequest(
+            profile_id=context.profile_id,
+            job_id=job.job_id,
+            expected_revision=job.revision,
+            consent=LedgerClassifyJobConsentGrant(
+                scope=ClassificationConsentScope.ONCE,
+                provider_id="conformance-remote",
+                connection="api",
+                model="conformance-remote-model",
+            ),
+        ),
+        verify=verify,
+    )
+
+
+def _prepare_revoke_consent(context: ConformanceFamilyContext) -> ConformancePreparation:
+    job = _stored_job(context, failed=False)
+
+    def verify(outcome: ConformanceOutcome) -> None:
+        del outcome
+        assert _jobs(context).get(job.job_id) == job
+
+    return ConformancePreparation(
+        profile_operation_subject(str(context.profile_id)),
+        LedgerClassifyJobRevokeConsentRequest(
+            profile_id=context.profile_id, job_id=job.job_id, expected_revision=job.revision
+        ),
+        verify=verify,
+    )
+
+
+def _prepare_apply(context: ConformanceFamilyContext) -> ConformancePreparation:
+    """Store a settled job whose single movement holds a personal proposal bound to its current revision."""
+    movement = seed_manual_transaction(
+        context, booked_date=date(2025, 4, 9), amount=Decimal("7.30"), description="classification job apply row"
+    )
+    transaction = ledger_action_ports(context).transaction_repository.load().transactions[movement]
+    jobs = _jobs(context)
+    job = ClassificationJob.enqueue(
+        bucket_id=str(context.profile_id),
+        scope=ClassificationJobScope(kind=ClassificationJobScopeKind.SINGLE),
+        movement_ids=(movement,),
+        lane=_LANE,
+        consent=None,
+        at=now(),
+    )
+    jobs.create(job)
+    running = job.successor(
+        at=now(),
+        status=ClassificationJobStatus.RUNNING,
+        items=tuple(item.transitioned(ClassificationItemState.RUNNING) for item in job.items),
+    )
+    jobs.update(running)
+    revision = movement_revision_id(transaction)
+    settled = running.successor(
+        at=now(),
+        status=ClassificationJobStatus.SETTLED,
+        items=tuple(
+            item.transitioned(
+                ClassificationItemState.PROPOSED,
+                proposal=ClassificationProposal(
+                    movement_revision_id=revision,
+                    classification=BusinessClassification.PERSONAL,
+                    confidence=Decimal("0.9"),
+                    provenance="llm:local-text:conformance-model",
+                    proposed_at=now(),
+                ),
+            )
+            for item in running.items
+        ),
+    )
+    jobs.update(settled)
+
+    def verify(outcome: ConformanceOutcome) -> None:
+        result = outcome.resolve_result(LedgerClassifyJobApplyResult)
+        assert [(item.movement_id, item.outcome) for item in result.items] == [(movement, "applied")]
+        stored = _jobs(context).get(job.job_id)
+        assert [item.state for item in stored.items] == [ClassificationItemState.APPLIED]
+        applied = ledger_action_ports(context).transaction_repository.load().transactions[movement]
+        assert applied.business_classification is BusinessClassification.PERSONAL
+
+    return ConformancePreparation(
+        profile_operation_subject(str(context.profile_id)),
+        LedgerClassifyJobApplyRequest(
+            profile_id=context.profile_id,
+            job_id=job.job_id,
+            expected_revision=settled.revision,
+            accepted=(LedgerClassifyJobAcceptedProposal(movement_id=movement, movement_revision_id=revision),),
+        ),
+        verify=verify,
+    )
+
+
 _PREPARE = {
     LEDGER_CLASSIFY_JOB_ENQUEUE_DEFINITION_ID: _prepare_enqueue,
     LEDGER_CLASSIFY_JOB_READ_DEFINITION_ID: _prepare_read,
@@ -225,6 +345,9 @@ _PREPARE = {
     LEDGER_CLASSIFY_JOB_RETRY_DEFINITION_ID: _prepare_change,
     LEDGER_CLASSIFY_JOB_DISMISS_DEFINITION_ID: _prepare_change,
     LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID: _prepare_run,
+    LEDGER_CLASSIFY_JOB_AUTHORISE_DEFINITION_ID: _prepare_authorise,
+    LEDGER_CLASSIFY_JOB_REVOKE_CONSENT_DEFINITION_ID: _prepare_revoke_consent,
+    LEDGER_CLASSIFY_JOB_APPLY_DEFINITION_ID: _prepare_apply,
 }
 
 
@@ -268,6 +391,21 @@ LEDGER_CLASSIFICATION_JOB_CONFORMANCE_FAMILY = ConformanceFamily(
             (LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID,),
             expected_refusal_ref=_READER_UNAVAILABLE_REFUSAL,
         ),
+        RegisteredExecutorConformanceCase(
+            LEDGER_CLASSIFY_JOB_AUTHORISE_DEFINITION_ID,
+            OperationTerminalCondition.REFUSED,
+            OperationEffect.NONE,
+            (LEDGER_CLASSIFY_JOB_AUTHORISE_DEFINITION_ID,),
+            expected_refusal_ref=_READER_UNAVAILABLE_REFUSAL,
+        ),
+        RegisteredExecutorConformanceCase(
+            LEDGER_CLASSIFY_JOB_REVOKE_CONSENT_DEFINITION_ID,
+            OperationTerminalCondition.REFUSED,
+            OperationEffect.NONE,
+            (LEDGER_CLASSIFY_JOB_REVOKE_CONSENT_DEFINITION_ID,),
+            expected_refusal_ref=get_registered_error_code(ClassificationJobConsentNotNeededError).code,
+        ),
+        _succeeded(LEDGER_CLASSIFY_JOB_APPLY_DEFINITION_ID, OperationEffect.UPDATED),
     ),
     prepare=_prepare,
 )

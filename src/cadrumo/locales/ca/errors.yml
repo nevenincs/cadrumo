@@ -1882,8 +1882,15 @@ errors:
     refused_iva_wallet_reconciliation_invariant: Les entrades de conciliació de la
       cartera IVA incompleixen un invariant obligatori. Comprova la configuració d'antiguitat
       de la cartera i torna-ho a intentar.
+    refused_ledger_classification_job_consent_not_needed: Aquest model llegeix en
+      aquest equip, així que no cal ni es registra cap consentiment per llegir fora
+      de l'equip.
     refused_ledger_classification_job_empty_scope: La sol·licitud no inclou cap moviment
       per classificar, així que no s'ha posat res a la cua.
+    refused_ledger_classification_job_lane_changed: L'agent ara llegeix amb un model
+      diferent del que té assignat aquesta tasca de classificació, així que no s'ha
+      llegit res. Torna a posar els moviments a la cua o permet les lectures fora
+      de l'equip de la tasca per al model amb què llegeix ara l'agent.
     refused_ledger_classification_job_movement_unknown: Alguns dels moviments indicats
       no són al llibre d'aquest perfil, així que no s'ha posat res a la cua.
     refused_ledger_classification_job_nothing_to_retry: La tasca de classificació

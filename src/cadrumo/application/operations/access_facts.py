@@ -219,11 +219,15 @@ _LOCAL_WRITES: Final = (
     "ledger.bienes_inversion.declare",
     "ledger.classify.bulk",
     "ledger.classify.iva-derive",
-    # The enqueue asks the local agent service which lane it would read with; it sends nothing to a model.
+    "ledger.classify.job.apply",
+    # The enqueue and the authorise ask the local agent service which lane it would read with; they send
+    # nothing to a model.
+    "ledger.classify.job.authorise",
     "ledger.classify.job.cancel",
     "ledger.classify.job.dismiss",
     "ledger.classify.job.enqueue",
     "ledger.classify.job.retry",
+    "ledger.classify.job.revoke-consent",
     "ledger.classify.single",
     "ledger.counterparty",
     "ledger.detach",

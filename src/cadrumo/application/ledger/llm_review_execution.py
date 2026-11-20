@@ -1,4 +1,11 @@
-"""Execution stages for the existing guarded ledger LLM review workflow."""
+"""Execution stages for the existing guarded ledger LLM review workflow.
+
+A classification proposal the person accepted outside the interactive review,
+from a classification job, is written through the same reviewed decision
+terminal: :func:`apply_reviewed_classification` applies it against the exact
+movement the person accepted it for, and the guarded writer refuses it when
+the movement changed since.
+"""
 
 from __future__ import annotations
 
@@ -34,6 +41,7 @@ from .id_resolution import resolve_transaction_id
 from .llm_classification import saturate_llm_classification, suggest_llm_classification
 from .llm_classification_ports import (
     LLMClassificationPorts,
+    LLMClassificationSuggestion,
     LLMSplitSuggestion,
 )
 from .llm_evidence_split import suggest_evidence_split
@@ -49,7 +57,12 @@ from .llm_review_contracts import (
 )
 from .llm_review_operand import LedgerLlmReviewedOperand
 from .llm_review_results import LedgerLlmExecutionResult, LedgerLlmOperationResult
-from .llm_review_workflow import LlmReviewDecision, LlmReviewInvocationOrigin, execute_reviewed_decision
+from .llm_review_workflow import (
+    LlmReviewDecision,
+    LlmReviewInvocationOrigin,
+    LlmReviewResult,
+    execute_reviewed_decision,
+)
 from .llm_review_writer_projection import (
     project_ledger_llm_writer_result,
     validate_ledger_llm_writer_effect,
@@ -97,6 +110,43 @@ def project_captured_ledger_llm_review(operand: LedgerLlmReviewedOperand) -> Led
             suggestion=operand.suggestion,
         )
     )
+
+
+def apply_reviewed_classification(
+    suggestion: LLMClassificationSuggestion,
+    *,
+    bucket_id: str,
+    baseline: Transaction,
+    business_pct: Decimal | None,
+    actor: str,
+    ports: LedgerActionPorts,
+    operation: PinnedAuthorityOperation,
+) -> LlmReviewResult:
+    """Apply one classification the person accepted, through the reviewed decision terminal.
+
+    ``baseline`` is the movement exactly as the person accepted the proposal
+    for it; the guarded writer compares it with the stored row in the same
+    write and refuses a movement that changed since. Nothing here decides
+    whether to apply: the caller passes only what the person accepted.
+
+    Raises:
+        LedgerPersistenceConflictError: The movement changed since ``baseline``.
+        TransactionNotFoundError: The movement is gone.
+        TransactionValidationError: The movement is not active, or the business
+            share does not fit the classification.
+    """
+    with validating_governed_facts(operation):
+        return execute_reviewed_decision(
+            suggestion,
+            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
+            decision=LlmReviewDecision.APPLY,
+            bucket_id=bucket_id,
+            business_pct=business_pct,
+            reason=suggestion.reason,
+            actor=actor,
+            ports=ports,
+            expected_current=baseline,
+        )
 
 
 def _expected_review_definition_id(request: LedgerLlmReviewRequest) -> str:

@@ -19,6 +19,8 @@ export type ClassificationItemFailureCause =
   | "model_unavailable"
   | "consent_required"
   | "consent_revoked"
+  | "consent_expired"
+  | "lane_changed"
   | "lane_refused"
   | "invalid_response"
   | "timed_out"
@@ -34,7 +36,8 @@ export type ClassificationItemState =
   | "failed"
   | "unknown"
   | "cancelled"
-  | "stale";
+  | "stale"
+  | "applied";
 
 /**
  * What the person asked to classify.
@@ -54,6 +57,79 @@ export type ClassificationJobStatus =
   | "dismissed";
 
 /**
+ * One movement whose proposal the person accepted, as the revision the
+ * proposal was made against.
+ *
+ * `business_pct` is the person's own business share, in canonical decimal text
+ * within 0..1, for a mixed classification; a model proposes no share.
+ */
+export type LedgerClassifyJobAcceptedProposal = {
+  movement_id: TransactionId;
+  movement_revision_id: string;
+  business_pct?: string | null;
+};
+
+/**
+ * What became of one accepted proposal: applied, or refused with its typed
+ * cause.
+ */
+export type LedgerClassifyJobApplyItemResult = {
+  movement_id: TransactionId;
+  outcome: "applied" | "refused";
+  refusal: LedgerClassifyJobApplyRefusal | null;
+};
+
+/**
+ * Why one accepted proposal was not applied, in a closed vocabulary the window
+ * renders.
+ */
+export type LedgerClassifyJobApplyRefusal =
+  | "stale"
+  | "not_proposed"
+  | "not_in_job"
+  | "movement_not_found"
+  | "business_pct_required"
+  | "business_pct_not_applicable"
+  | "category_unavailable"
+  | "rejected";
+
+/**
+ * Apply the proposals the person accepted, at the job revision the person saw.
+ *
+ * Only the named movements are applied; every other proposal stays a proposal.
+ * Nothing is applied that the person did not name.
+ */
+export type LedgerClassifyJobApplyRequest = {
+  profile_id: string;
+  job_id: string;
+  expected_revision: number;
+  accepted: LedgerClassifyJobAcceptedProposal[];
+};
+
+/**
+ * The job as stored after the apply, and what became of each accepted
+ * proposal, in request order.
+ */
+export type LedgerClassifyJobApplyResult = {
+  profile_id: string;
+  job: LedgerClassifyJobProjection;
+  items: LedgerClassifyJobApplyItemResult[];
+};
+
+/**
+ * Grant a job's off-host reads at the revision the person saw.
+ *
+ * The movements that failed for want of a usable consent, or because the agent
+ * now reads with another lane, are asked again under the new grant.
+ */
+export type LedgerClassifyJobAuthoriseRequest = {
+  profile_id: string;
+  job_id: string;
+  expected_revision: number;
+  consent: LedgerClassifyJobConsentGrant;
+};
+
+/**
  * Cancel a job at the revision the person saw.
  *
  * Movements not yet asked are cancelled at once. A movement whose model run is
@@ -70,8 +146,31 @@ export type LedgerClassifyJobCancelRequest = {
  */
 export type LedgerClassifyJobChangeResult = {
   profile_id: string;
-  outcome: "enqueued" | "cancelled" | "cancelling" | "retried" | "dismissed";
+  outcome:
+    | "enqueued"
+    | "cancelled"
+    | "cancelling"
+    | "retried"
+    | "dismissed"
+    | "authorised"
+    | "consent_revoked";
   job: LedgerClassifyJobProjection;
+};
+
+/**
+ * A person's consent to read a job's movements off this computer, for the lane
+ * they saw.
+ *
+ * `scope` is how long it lasts: this job only, the agent session, or until the
+ * person revokes it. The lane names what the person consented to; it must be
+ * the lane the agent reads with when the grant is recorded. `connection` is
+ * the lane's transport.
+ */
+export type LedgerClassifyJobConsentGrant = {
+  scope: ClassificationConsentScope;
+  provider_id: string;
+  connection: string;
+  model: string;
 };
 
 /**
@@ -100,6 +199,7 @@ export type LedgerClassifyJobEnqueueRequest = {
   movement_ids?: TransactionId[];
   period_start?: string | null;
   period_end?: string | null;
+  consent?: LedgerClassifyJobConsentGrant | null;
 };
 
 /**
@@ -212,6 +312,18 @@ export type LedgerClassifyJobRetryRequest = {
 };
 
 /**
+ * Withdraw the grant a job runs under, at the revision the person saw.
+ *
+ * A grant for the agent session or a remembered one covers other jobs too;
+ * revoking it withdraws it for every read from now on.
+ */
+export type LedgerClassifyJobRevokeConsentRequest = {
+  profile_id: string;
+  job_id: string;
+  expected_revision: number;
+};
+
+/**
  * Work one job's pending movements until none is left, the job is cancelled or
  * the run is stopped.
  *
@@ -248,11 +360,20 @@ export type LedgerClassifyJobStateCounts = {
   unknown: number;
   cancelled: number;
   stale: number;
+  applied: number;
 };
 
 /** Each ledger definition's registered request and result, as the runtime's
  * contract names them; a request names the profile the host fills. */
 export type LedgerClassifyJobContracts = {
+  "ledger.classify.job.apply": {
+    request: LedgerClassifyJobApplyRequest;
+    result: LedgerClassifyJobApplyResult;
+  };
+  "ledger.classify.job.authorise": {
+    request: LedgerClassifyJobAuthoriseRequest;
+    result: LedgerClassifyJobChangeResult;
+  };
   "ledger.classify.job.cancel": {
     request: LedgerClassifyJobCancelRequest;
     result: LedgerClassifyJobChangeResult;
@@ -277,11 +398,25 @@ export type LedgerClassifyJobContracts = {
     request: LedgerClassifyJobRetryRequest;
     result: LedgerClassifyJobChangeResult;
   };
+  "ledger.classify.job.revoke-consent": {
+    request: LedgerClassifyJobRevokeConsentRequest;
+    result: LedgerClassifyJobChangeResult;
+  };
   "ledger.classify.job.run": {
     request: LedgerClassifyJobRunRequest;
     result: LedgerClassifyJobRunResult;
   };
 };
+
+export type LedgerClassifyJobApplyWindowRequest = Omit<
+  LedgerClassifyJobApplyRequest,
+  "profile_id"
+>;
+
+export type LedgerClassifyJobAuthoriseWindowRequest = Omit<
+  LedgerClassifyJobAuthoriseRequest,
+  "profile_id"
+>;
 
 export type LedgerClassifyJobCancelWindowRequest = Omit<
   LedgerClassifyJobCancelRequest,
@@ -310,6 +445,11 @@ export type LedgerClassifyJobReadWindowRequest = Omit<
 
 export type LedgerClassifyJobRetryWindowRequest = Omit<
   LedgerClassifyJobRetryRequest,
+  "profile_id"
+>;
+
+export type LedgerClassifyJobRevokeConsentWindowRequest = Omit<
+  LedgerClassifyJobRevokeConsentRequest,
   "profile_id"
 >;
 

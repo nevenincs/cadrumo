@@ -24,6 +24,14 @@ overridden to raise, mirroring
 call fails loudly rather than minting a consent record that outlives the
 invocation.
 
+**A classification job reads under a recorded grant.** The person grants a
+job's off-host reads once for that job, for the agent session, or until
+revoked, and the consent ledger records the grant. The grant is the person's
+acknowledgement; it is not a token. Each read the grant still covers mints a
+fresh token bound to the movement it reads, through
+:func:`mint_granted_consent_token`, so the dispatch point and its ledger
+append are the same as for any other off-host read.
+
 **An agent dispatch decides from its lane.** The agent service resolves the
 lane a role runs on, and the lane carries its catalogue entry's typed
 ``reads_off_host`` declaration. That flag alone says whether the gate applies:
@@ -61,6 +69,7 @@ __all__ = [
     "classify_off_host_evidence_read",
     "cloud_evidence_read_permitted",
     "mint_evidence_consent_token",
+    "mint_granted_consent_token",
     "off_host_evidence_read_askable",
 ]
 
@@ -196,8 +205,9 @@ def cloud_evidence_read_permitted(settings: Settings, *, profile_eligible: bool,
        machine can serve several taxpayers, and one of them permitting an
        off-host read must not decide it for the others.
     4. The operator acknowledged this specific invocation (``acknowledged`` is
-       ``True``). The acknowledgement is never sticky; it must be re-affirmed at
-       every call.
+       ``True``). The acknowledgement is never assumed: either the operator
+       gives it for this call, or a grant the person recorded still covers
+       this call when it is made.
 
     ``profile_eligible`` is a REQUIRED keyword with no default, deliberately: a
     defaulted bar is one a caller can forget, and forgetting this one would
@@ -350,6 +360,45 @@ def mint_evidence_consent_token(
             ),
         )
     return EvidenceConsentToken(surface=surface, evidence_content_address=evidence_content_address)
+
+
+def mint_granted_consent_token(
+    *,
+    settings: Settings,
+    profile_eligible: bool,
+    grant_covers_read: bool,
+    surface: str,
+    evidence_content_address: str,
+) -> EvidenceConsentToken:
+    """Mint a token for one off-host read that a person's recorded grant covers, or refuse.
+
+    The grant stands in for the per-call acknowledgement only while it still
+    covers this read: the caller checks it against the consent ledger just
+    before the read, and every standing bar is decided again here. The token
+    is bound to the content address of what this one read sends.
+
+    Args:
+        settings: Resolved deployment settings carrying the consent posture.
+        profile_eligible: The active profile's standing eligibility bar.
+        grant_covers_read: Whether the recorded grant covers this read now:
+            not revoked, in scope, and for the lane and task kind the read uses.
+        surface: The operator surface the grant was given on.
+        evidence_content_address: SHA-256 content address of what this read sends.
+
+    Returns:
+        A token satisfying the dispatch-point gate for this one read.
+
+    Raises:
+        LLMConsentError: When the grant no longer covers the read, or a
+            standing bar refuses it.
+    """
+    return mint_evidence_consent_token(
+        settings=settings,
+        profile_eligible=profile_eligible,
+        acknowledged=grant_covers_read,
+        surface=surface,
+        evidence_content_address=evidence_content_address,
+    )
 
 
 def _token_serialization_refusal() -> LLMConsentError:

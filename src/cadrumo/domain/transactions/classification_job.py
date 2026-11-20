@@ -10,8 +10,13 @@ private beyond the proposal's typed fields is stored with it.
 
 Each item's result is a proposal bound to the movement revision it was made
 against. The job never applies it; the person accepts, edits or rejects it
-through the ledger review path. A movement that changed after its proposal
-makes the item stale.
+through the ledger review path, and an accepted proposal the ledger took is
+marked applied. A movement that changed after its proposal makes the item
+stale.
+
+An off-host job runs under a person-granted consent. The person may grant a
+new one, which may name the lane the agent now reads with; that is the only
+way a job's lane or consent changes, and never without a consent.
 
 A run interrupted mid-item leaves that item ``UNKNOWN``, never done, until it is
 reconciled. Every change to the record is a successor at the next revision, and
@@ -158,6 +163,8 @@ class ClassificationItemState(StrEnum):
     CANCELLED = "cancelled"
     STALE = "stale"
     """The movement changed after the proposal was made."""
+    APPLIED = "applied"
+    """The person accepted the proposal and the ledger took it."""
 
 
 class ClassificationItemFailureCause(StrEnum):
@@ -166,6 +173,10 @@ class ClassificationItemFailureCause(StrEnum):
     MODEL_UNAVAILABLE = "model_unavailable"
     CONSENT_REQUIRED = "consent_required"
     CONSENT_REVOKED = "consent_revoked"
+    CONSENT_EXPIRED = "consent_expired"
+    """The consent covered the agent session it was granted in, and that session ended."""
+    LANE_CHANGED = "lane_changed"
+    """The agent now reads with another lane than the one the job is bound to."""
     LANE_REFUSED = "lane_refused"
     INVALID_RESPONSE = "invalid_response"
     TIMED_OUT = "timed_out"
@@ -186,17 +197,20 @@ CLASSIFICATION_ITEM_TRANSITIONS: Final[Mapping[ClassificationItemState, frozense
                     ClassificationItemState.CANCELLED,
                 }
             ),
-            ClassificationItemState.PROPOSED: frozenset({ClassificationItemState.STALE}),
+            ClassificationItemState.PROPOSED: frozenset(
+                {ClassificationItemState.STALE, ClassificationItemState.APPLIED}
+            ),
             ClassificationItemState.FAILED: frozenset({ClassificationItemState.PENDING}),
             ClassificationItemState.UNKNOWN: frozenset(
                 {ClassificationItemState.PENDING, ClassificationItemState.FAILED, ClassificationItemState.CANCELLED}
             ),
             ClassificationItemState.STALE: frozenset({ClassificationItemState.PENDING}),
             ClassificationItemState.CANCELLED: frozenset[ClassificationItemState](),
+            ClassificationItemState.APPLIED: frozenset[ClassificationItemState](),
         }
     )
 )
-"""Which item state may follow which. A cancelled item is final."""
+"""Which item state may follow which. A cancelled or applied item is final."""
 
 
 class ClassificationProposal(BaseModel):
@@ -204,7 +218,8 @@ class ClassificationProposal(BaseModel):
 
     Category tokens are kept as the registry tokens the model chose and are
     resolved again when the person applies the proposal, so a stored job stays
-    readable after a registry generation retires a token.
+    readable after a registry generation retires a token. ``provenance`` is the
+    reader's own stamp, which an applied proposal records as who classified.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -216,8 +231,17 @@ class ClassificationProposal(BaseModel):
     iva_category: _OpaqueToken | None = None
     business_pct: UnitProportion | None = None
     multiple_components: bool | None = None
+    provenance: _OpaqueToken
     proposed_at: UtcInstant
 
+
+_STATES_WITH_PROPOSAL: Final = frozenset(
+    {ClassificationItemState.PROPOSED, ClassificationItemState.STALE, ClassificationItemState.APPLIED}
+)
+"""Item states that hold the proposal they were made or accepted with."""
+
+_KEEPS_PROPOSAL: Final = frozenset({ClassificationItemState.STALE, ClassificationItemState.APPLIED})
+"""Moves that keep the item's own proposal: one that went stale, or one the ledger took."""
 
 _STATES_BEFORE_ANY_RUN: Final = frozenset({ClassificationItemState.PENDING, ClassificationItemState.CANCELLED})
 """Item states reachable without a run: a pending item can be cancelled before it starts."""
@@ -238,7 +262,7 @@ class ClassificationJobItem(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _result_matches_state(self) -> Self:
-        carries_proposal = self.state in {ClassificationItemState.PROPOSED, ClassificationItemState.STALE}
+        carries_proposal = self.state in _STATES_WITH_PROPOSAL
         if carries_proposal != (self.proposal is not None):
             raise ClassificationJobError(
                 f"a {self.state.value} item {'needs' if carries_proposal else 'has no'} proposal"
@@ -265,16 +289,17 @@ class ClassificationJobItem(BaseModel):
         """Return this item moved to ``state``.
 
         A move to ``RUNNING`` starts a new attempt. A move to ``STALE`` keeps the
-        proposal that went stale, so the person still sees what was proposed.
+        proposal that went stale, so the person still sees what was proposed;
+        a move to ``APPLIED`` keeps the proposal the ledger took.
 
         Raises:
             ClassificationJobError: The transition table forbids the move.
         """
         if state not in CLASSIFICATION_ITEM_TRANSITIONS[self.state]:
             raise ClassificationJobError(f"an item cannot move from {self.state.value} to {state.value}")
-        kept_proposal = self.proposal if state is ClassificationItemState.STALE else proposal
-        if state is ClassificationItemState.STALE and proposal is not None:
-            raise ClassificationJobError("a stale item keeps its own proposal")
+        kept_proposal = self.proposal if state in _KEEPS_PROPOSAL else proposal
+        if state in _KEEPS_PROPOSAL and proposal is not None:
+            raise ClassificationJobError(f"a {state.value} item keeps its own proposal")
         return ClassificationJobItem(
             movement_id=self.movement_id,
             state=state,
@@ -477,25 +502,62 @@ class ClassificationJob(BaseModel):
         following.require_follows(self)
         return following
 
+    def authorised(
+        self,
+        *,
+        at: UtcInstant,
+        lane: ClassificationJobLane,
+        consent: ClassificationJobConsent,
+        status: ClassificationJobStatus,
+        items: Sequence[ClassificationJobItem],
+    ) -> ClassificationJob:
+        """Return the next revision of this job under a consent the person has just granted.
+
+        The new consent may name the lane the agent now reads with, which then
+        becomes the job's lane. Nothing else of the job's identity changes.
+
+        Raises:
+            ClassificationJobError: The consent is the one the job already holds,
+                or a status or item move is not allowed.
+        """
+        following = ClassificationJob(
+            job_id=self.job_id,
+            bucket_id=self.bucket_id,
+            scope=self.scope,
+            lane=lane,
+            consent=consent,
+            items=tuple(items),
+            status=status,
+            created_at=self.created_at,
+            updated_at=at,
+            revision=self.revision + 1,
+        )
+        following.require_follows(self)
+        return following
+
     def require_follows(self, previous: ClassificationJob) -> None:
         """Refuse this record unless it is a valid next revision of ``previous``.
 
-        The identity, scope, lane, consent, creation time and movements stay
-        fixed. The revision rises by one. A changed status follows the status
+        The identity, scope, creation time and movements stay fixed. The lane
+        and consent change only together with a new consent the person
+        granted. The revision rises by one. A changed status follows the status
         table; a changed item is exactly the transition of its predecessor.
 
         Raises:
             ClassificationJobError: The record does not follow ``previous``.
         """
-        if (self.job_id, self.bucket_id, self.scope, self.lane, self.consent, self.created_at) != (
+        if (self.job_id, self.bucket_id, self.scope, self.created_at) != (
             previous.job_id,
             previous.bucket_id,
             previous.scope,
-            previous.lane,
-            previous.consent,
             previous.created_at,
         ):
-            raise ClassificationJobError("a job's identity, scope, lane and consent never change")
+            raise ClassificationJobError("a job's identity and scope never change")
+        if (self.lane, self.consent) != (previous.lane, previous.consent) and (
+            self.consent is None
+            or (previous.consent is not None and self.consent.consent_reference == previous.consent.consent_reference)
+        ):
+            raise ClassificationJobError("a job's lane and consent never change without a new consent")
         if self.revision != previous.revision + 1:
             raise ClassificationJobError("a job's revision rises by exactly one")
         if self.updated_at < previous.updated_at:
@@ -512,7 +574,7 @@ class ClassificationJob(BaseModel):
                 continue
             expected = before.transitioned(
                 after.state,
-                proposal=None if after.state is ClassificationItemState.STALE else after.proposal,
+                proposal=None if after.state in _KEEPS_PROPOSAL else after.proposal,
                 failure_cause=after.failure_cause,
             )
             if after != expected:

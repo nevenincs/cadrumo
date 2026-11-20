@@ -237,12 +237,15 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
     "classificationJob": (
         "LedgerClassifyJobContracts",
         (
+            "ledger.classify.job.apply",
+            "ledger.classify.job.authorise",
             "ledger.classify.job.cancel",
             "ledger.classify.job.dismiss",
             "ledger.classify.job.enqueue",
             "ledger.classify.job.list",
             "ledger.classify.job.read",
             "ledger.classify.job.retry",
+            "ledger.classify.job.revoke-consent",
             "ledger.classify.job.run",
         ),
     ),

@@ -4,8 +4,11 @@ An enqueue resolves the movements its scope names in the profile's own
 catalogue, resolves the lane the agent service would read with, and stores a
 queued job with every movement pending. It runs no model and writes no ledger
 fact. A lane that reads off this computer needs a person-granted consent the
-job carries; without one the enqueue is refused with the ledger's typed
-off-host consent refusal and its two remedies, before anything is stored.
+job carries: the person grants one with the enqueue, for the lane they saw, or
+a remembered grant or one for the agent session open now already covers the
+lane. The grant is recorded in the consent ledger before the job is stored.
+Without one the enqueue is refused with the ledger's typed off-host consent
+refusal and its two remedies, before anything is stored.
 
 A cancel, retry or dismiss names the revision the person saw. A job that moved
 since is refused rather than changed, and each change follows the job's own
@@ -26,7 +29,7 @@ from typing import Final, Literal
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.model_runs import ModelRunRefusalCode, ModelRunTaskKind
+from cadrumo_client.contracts.model_runs import ModelRunTaskKind
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.operations import (
@@ -41,11 +44,12 @@ from ...core.time.clock import now
 from ...domain.transactions.classification_job import (
     ClassificationItemState,
     ClassificationJob,
+    ClassificationJobConsent,
     ClassificationJobItem,
-    ClassificationJobLane,
     ClassificationJobScope,
     ClassificationJobScopeKind,
     ClassificationJobStatus,
+    new_classification_job_id,
 )
 from ...domain.transactions.dates import transaction_filing_date
 from ...domain.transactions.enums import TransactionLifecycleState
@@ -67,6 +71,7 @@ from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .classification_job_consent import classification_job_lane, granted_lane, off_host_consent_refused
 from .classification_job_contracts import (
     LEDGER_CLASSIFY_JOB_CANCEL_DEFINITION_ID,
     LEDGER_CLASSIFY_JOB_DISMISS_DEFINITION_ID,
@@ -98,8 +103,6 @@ from .classification_job_repository import (
     ClassificationJobRevisionConflictError,
 )
 from .evidence_errors import LedgerOffHostConsentRequiredError
-from .off_host_consent_refusal import off_host_consent_required
-from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from .read_access import resolve_ledger_commit_access
 
 __all__ = [
@@ -180,20 +183,6 @@ def _scope_movements(payload: LedgerClassifyJobEnqueueRequest, catalogue: Transa
     return movements
 
 
-def _off_host_consent_missing() -> LedgerOffHostConsentRequiredError:
-    """The ledger's off-host consent refusal, stating the agent's own refusal code as its fact."""
-    return off_host_consent_required(
-        ledger_no_recovery_verdict(
-            LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
-            facts={
-                "model_run_refusal": ModelRunRefusalCode.CONSENT_MISSING.value,
-                "model_role": CLASSIFICATION_READING_ROLE.value,
-                "consent_token_present": False,
-            },
-        )
-    )
-
-
 class ClassificationJobEnqueueExecutor:
     """Store one queued job for the movements a scope names, on the lane the agent would read with."""
 
@@ -215,34 +204,58 @@ class ClassificationJobEnqueueExecutor:
         )
         movement_ids = _scope_movements(payload, catalogue)
         lane = await self._ports.resolve_lane(CLASSIFICATION_READING_ROLE, task_kind=ModelRunTaskKind.CLASSIFICATION)
-        if lane.reads_off_host:
-            # No consent is bound to an enqueue yet, so an off-host lane is refused before anything is stored.
-            raise _off_host_consent_missing()
-        job = ClassificationJob.enqueue(
-            bucket_id=bucket_id,
-            scope=ClassificationJobScope(
-                kind=payload.scope, period_start=payload.period_start, period_end=payload.period_end
-            ),
-            movement_ids=movement_ids,
-            lane=ClassificationJobLane(
-                provider_id=lane.provider_id,
-                transport=lane.transport,
-                model=lane.model,
-                reads_off_host=lane.reads_off_host,
-            ),
-            consent=None,
-            at=now(),
+        job_lane = classification_job_lane(lane)
+        standing: ClassificationJobConsent | None = None
+        if payload.consent is not None:
+            job_lane = granted_lane(payload.consent, lane)
+        elif lane.reads_off_host:
+            standing = await asyncio.to_thread(self._ports.consent.standing_grant, bucket_id=bucket_id, lane=job_lane)
+            if standing is None:
+                # Nothing is stored and nothing is sent: the person grants the reads, or picks a local lane.
+                raise off_host_consent_refused(consent_present=False)
+        job_id = new_classification_job_id()
+        scope = ClassificationJobScope(
+            kind=payload.scope, period_start=payload.period_start, period_end=payload.period_end
         )
         repository = await asyncio.to_thread(self._ports.jobs, bucket_id=bucket_id)
-        result = LedgerClassifyJobChangeResult(
-            profile_id=payload.profile_id, outcome="enqueued", job=LedgerClassifyJobProjection.from_job(job)
-        )
+
+        def granted() -> ClassificationJobConsent | None:
+            if payload.consent is None:
+                return standing
+            return self._ports.consent.grant(
+                bucket_id=bucket_id,
+                lane=job_lane,
+                scope=payload.consent.scope,
+                job_id=job_id,
+                surface=LEDGER_CLASSIFY_JOB_ENQUEUE_DEFINITION_ID,
+            )
+
+        def create() -> ClassificationJob:
+            job = ClassificationJob.enqueue(
+                bucket_id=bucket_id,
+                scope=scope,
+                movement_ids=movement_ids,
+                lane=job_lane,
+                consent=granted(),
+                at=now(),
+                job_id=job_id,
+            )
+            repository.create(job)
+            return job
 
         async def store() -> str:
             async with context.cancellation.irreversible_section():
                 await context.events.effect(OperationEffect.UNKNOWN)
-                await asyncio.to_thread(repository.create, job)
+                try:
+                    job = await asyncio.to_thread(create)
+                except LedgerOffHostConsentRequiredError:
+                    # A standing bar refused the grant before anything was recorded or stored.
+                    await context.events.effect(OperationEffect.NONE)
+                    raise
                 await context.events.effect(OperationEffect.UPDATED)
+                result = LedgerClassifyJobChangeResult(
+                    profile_id=payload.profile_id, outcome="enqueued", job=LedgerClassifyJobProjection.from_job(job)
+                )
                 return await context.operands.put(result, written_at=now())
 
         return await await_cancellation_complete(store(), task_name="ledger-classify-job-enqueue")

@@ -1760,8 +1760,15 @@ errors:
     refused_iva_wallet_reconciliation_invariant: Az IVA tárca egyeztetési bemenetek
       egy szükséges feltételt sértenek. Ellenőrizd a tárca-kor beállítást, és próbáld
       újra.
+    refused_ledger_classification_job_consent_not_needed: Ez a modell ezen a gépen
+      olvas, ezért nincs szükség gépen kívüli olvasáshoz adott hozzájárulásra, és
+      nem is rögzítünk ilyet.
     refused_ledger_classification_job_empty_scope: A kérés egyetlen besorolandó főkönyvi
       tételt sem tartalmaz, ezért semmi sem került sorba.
+    refused_ledger_classification_job_lane_changed: Az ügynök most más modellel olvas,
+      mint amelyhez ez a besorolási feladat kötve van, ezért semmit sem olvasott.
+      Tedd újra sorba a tételeket, vagy engedélyezd a feladat gépen kívüli olvasását
+      azzal a modellel, amellyel az ügynök most olvas.
     refused_ledger_classification_job_movement_unknown: A megnevezett főkönyvi tételek
       közül néhány nincs ennek a profilnak a könyvében, ezért semmi sem került sorba.
     refused_ledger_classification_job_nothing_to_retry: A besorolási feladatban nincs

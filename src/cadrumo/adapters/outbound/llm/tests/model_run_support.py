@@ -61,6 +61,11 @@ class RecordingModelRuns:
         self.runs: list[tuple[ModelRunHeader, ModelRunBody]] = []
         self.bodies: Queue[str] = Queue()
 
+    def serve_lane(self, lane: ModelRunLane) -> None:
+        """Resolve and serve ``lane`` from now on, as when the person picks another model in the agent settings."""
+        self._lane = lane
+        self._served = lane
+
     async def lookup(
         self, role: ModelRole, *, task_kind: ModelRunTaskKind | None = None
     ) -> ModelRunLane | ModelRunRefusal:

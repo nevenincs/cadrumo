@@ -5,7 +5,7 @@ tags:
 date: '2026-11-20'
 modified: '2026-11-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:d119cb2b9e5dbd48c1f73da79c317671b46389498dfe74fda371e10e6327c0fa'
+body_hash: 'sha256:a57fb03e7fb37badf3de2d04e4a051d9d0d86087eb28daad975e1bbf5b7ad11c'
 related:
   - "[[2026-11-20-ledger-classify-queue-plan]]"
 ---
@@ -84,6 +84,13 @@ related:
 - `S05` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
 - `S05` `verify:` `pytest job run+operations (46)` -> `pass`
 - `S05` `verify:` `desktop-host-unit-test (1048)` -> `pass`
+- `S06` `A` `src/cadrumo/domain/evidence_consent/grant.py`
+- `S06` `A` `src/cadrumo/application/ledger/classification_job_consent_operation.py`
+- `S06` `A` `src/cadrumo/application/ledger/classification_job_apply_operation.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/llm/consent_ledger.py`
+- `S06` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S06` `verify:` `pytest consent/run/operations/evidence_consent/errors (194)` -> `pass`
+- `S06` `verify:` `desktop-host-unit-test (1048)` -> `pass`
 
 ## Notes
 
@@ -91,3 +98,4 @@ related:
 - `S04` Broad sweep stopped as hung on PRIME order; focused tests only, broad sweeps left to QUALITY
 - `S08` No cadrumo-agent change needed; no re-pin
 - `S05` Tests written after code; defect-injection check done instead of fail-first. Off-host jobs refuse until S06.
+- `S06` Tests written alongside code; defect injection substituted for fail-first. Apply commits per movement then the job once (non-atomic; re-apply refused as stale).

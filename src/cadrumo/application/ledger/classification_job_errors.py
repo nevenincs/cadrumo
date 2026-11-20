@@ -16,7 +16,9 @@ from ...core.errors.hierarchy import CadrumoError
 
 __all__ = [
     "CLASSIFICATION_JOB_NOTHING_TO_RETRY_LOCALE_KEY",
+    "ClassificationJobConsentNotNeededError",
     "ClassificationJobEmptyScopeError",
+    "ClassificationJobLaneChangedError",
     "ClassificationJobMovementUnknownError",
     "ClassificationJobStaleRevisionError",
     "ClassificationJobStateRefusedError",
@@ -81,3 +83,33 @@ class ClassificationJobMovementUnknownError(CadrumoError):
     def __init__(self, *, unknown_count: int) -> None:
         """Carry how many named movements are unknown, never which."""
         super().__init__(context={"cause": "unknown_movement", "unknown_count": unknown_count})
+
+
+class ClassificationJobLaneChangedError(CadrumoError):
+    """The agent reads with another lane than the one the job, or the person's grant, names.
+
+    Nothing is read on the other lane. The person enqueues the movements again
+    on the lane the agent reads with, or grants the job's reads for that lane.
+    The lane the agent now reads with is named so a window can show what a new
+    grant would cover; a lane names no taxpayer fact.
+    """
+
+    def __init__(self, *, provider_id: str, transport: str, model: str, reads_off_host: bool) -> None:
+        """Carry the lane the agent now reads with."""
+        super().__init__(
+            context={
+                "cause": "lane_changed",
+                "provider_id": provider_id,
+                "transport": transport,
+                "model": model,
+                "reads_off_host": reads_off_host,
+            }
+        )
+
+
+class ClassificationJobConsentNotNeededError(CadrumoError):
+    """A consent was offered for a lane that reads on this computer, where none is needed or recorded."""
+
+    def __init__(self) -> None:
+        """Name the cause only."""
+        super().__init__(context={"cause": "consent_not_needed"})

@@ -21,6 +21,7 @@ from ..core.bucket_pointer import require_active_bucket_id
 from ..core.config import Settings
 from ..core.identity.bucket import canonical_bucket_id
 from ..domain.attachments.protocols import AttachmentStoreProtocol
+from ..domain.evidence_consent.record import EvidenceConsentRecordKind
 from .adapter_composition_ports import build_attachment_store
 
 
@@ -55,6 +56,8 @@ def _consent_entries(*, bucket_id: str) -> tuple[ConsentedDispatch, ...]:
             recorded_at=entry.recorded_at,
         )
         for entry in EvidenceConsentLedger().load_entries()
+        # A grant or a revocation transmitted nothing; only a dispatch is a read that left this computer.
+        if entry.record_kind is EvidenceConsentRecordKind.DISPATCH
     )
 
 

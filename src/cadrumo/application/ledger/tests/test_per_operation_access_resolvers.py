@@ -102,13 +102,18 @@ from ..check_operation import (
     LedgerCheckRequest,
     resolve_ledger_check_access,
 )
+from ..classification_job_apply_operation import resolve_ledger_classify_job_apply_access
+from ..classification_job_consent_operation import resolve_ledger_classify_job_consent_access
 from ..classification_job_contracts import (
+    LedgerClassifyJobApplyRequest,
+    LedgerClassifyJobAuthoriseRequest,
     LedgerClassifyJobCancelRequest,
     LedgerClassifyJobDismissRequest,
     LedgerClassifyJobEnqueueRequest,
     LedgerClassifyJobListRequest,
     LedgerClassifyJobReadRequest,
     LedgerClassifyJobRetryRequest,
+    LedgerClassifyJobRevokeConsentRequest,
     LedgerClassifyJobRunRequest,
 )
 from ..classification_job_operation import (
@@ -421,6 +426,27 @@ _RESOLVERS = [
         LedgerClassifyJobRunRequest,
         True,
         id="ledger.classify.job.run",
+    ),
+    pytest.param(
+        resolve_ledger_classify_job_consent_access,
+        "ledger.classify.job.authorise",
+        LedgerClassifyJobAuthoriseRequest,
+        True,
+        id="ledger.classify.job.authorise",
+    ),
+    pytest.param(
+        resolve_ledger_classify_job_consent_access,
+        "ledger.classify.job.revoke-consent",
+        LedgerClassifyJobRevokeConsentRequest,
+        True,
+        id="ledger.classify.job.revoke-consent",
+    ),
+    pytest.param(
+        resolve_ledger_classify_job_apply_access,
+        "ledger.classify.job.apply",
+        LedgerClassifyJobApplyRequest,
+        True,
+        id="ledger.classify.job.apply",
     ),
     pytest.param(
         resolve_ledger_split_check_access, "ledger.split.check", LedgerSplitCheckRequest, False, id="ledger.split.check"
