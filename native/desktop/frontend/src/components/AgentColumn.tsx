@@ -14,7 +14,10 @@ import { NAVIGATION } from "../shell/navigation/projection";
 import { Icon } from "@/components/ui/icon";
 import { failureCode } from "../errors";
 import { useAgentAccess, type AgentAccess } from "../shell/agentAccess";
-import { providerModelsToDownload } from "../shell/agentCatalog";
+import {
+  modelDisplayName,
+  providerModelsToDownload,
+} from "../shell/agentCatalog";
 import { acceptedExtensions, DocumentLister } from "../shell/agentDocuments";
 import { useDocumentInventory } from "../shell/agentDocumentInventory";
 import { useStagedDocuments } from "../shell/agentStaging";
@@ -275,7 +278,20 @@ export function AgentColumn({
     view.reader === reader && view.pending?.conversationId === conversationId
       ? view.pending
       : null;
-  const history = useShownTranscript(live.read, pending, locale, t);
+  // The conversations the window lists name the earlier one a message was
+  // carried from.
+  const titles = useMemo(
+    () =>
+      conversations.kind === "ready"
+        ? new Map(
+            conversations.value
+              .filter((record) => record.title)
+              .map((record) => [record.id, record.title] as const),
+          )
+        : undefined,
+    [conversations],
+  );
+  const history = useShownTranscript(live.read, pending, locale, t, titles);
   // What the agent served of the conversation's replies beside their words: the
   // state of the newest, what they ran with, and the tokens they used.
   const newest =
@@ -572,12 +588,24 @@ export function AgentColumn({
     reader: string | null;
     conversation: string | null;
   } | null>(null);
+  const readAttachmentPolicy = useMemo(
+    () =>
+      serviceReadable && session?.attachmentPolicy
+        ? session.attachmentPolicy.bind(session)
+        : null,
+    [serviceReadable, session],
+  );
+  const attachmentPolicy = useAgentRead(readAttachmentPolicy);
   const staging = useStagedDocuments({
     reader,
     conversationId,
     session,
     filterLabel: t("desktop.agent.attach_filter"),
     t,
+    maxFileBytes:
+      attachmentPolicy.kind === "ready"
+        ? attachmentPolicy.value.max_file_bytes
+        : null,
     onStored: () => setDocumentsVersion((held) => held + 1),
   });
   const documents = useDocumentInventory({
@@ -588,14 +616,6 @@ export function AgentColumn({
     enabled: serviceReadable,
     version: documentsVersion,
   });
-  const readAttachmentPolicy = useMemo(
-    () =>
-      serviceReadable && session?.attachmentPolicy
-        ? session.attachmentPolicy.bind(session)
-        : null,
-    [serviceReadable, session],
-  );
-  const attachmentPolicy = useAgentRead(readAttachmentPolicy);
   const removeDocument = async (name: string | null) => {
     if (await documents.remove?.(name))
       staging.remove(name === null ? null : `stored:${name}`);
@@ -604,7 +624,7 @@ export function AgentColumn({
     locale,
     archived,
     currentId: conversationId,
-    untitled: t("desktop.agent.unavailable"),
+    untitled: t("desktop.agent.new_conversation"),
     documentCounts: documents.counts,
   });
   useEffect(() => {
@@ -785,13 +805,9 @@ export function AgentColumn({
       className="relative flex min-h-0 flex-1 flex-col"
     >
       <AgentHeader
-        // A conversation not yet started has no title; one the agent was
-        // given none for says so.
-        title={
-          current
-            ? current.title || t("desktop.agent.unavailable")
-            : t("desktop.agent.new_conversation")
-        }
+        // A conversation keeps the new-conversation heading until the agent
+        // serves its title; an availability note is never a title.
+        title={current?.title || t("desktop.agent.new_conversation")}
         onRename={
           renameHost && current
             ? (title) => rename(current.id, title, "header")
@@ -1008,6 +1024,7 @@ export function AgentColumn({
               </Button>
             )}
           <RunPrompts
+            key={conversationId ?? "new"}
             session={session}
             approvals={live.approvals}
             questionnaire={questionnaire}
@@ -1072,6 +1089,11 @@ export function AgentColumn({
               view.carried.conversationId === conversationId
                 ? view.carried.carry
                 : null
+            }
+            modelName={(model) =>
+              catalog.kind === "ready"
+                ? modelDisplayName(catalog.value, fixedWay, model)
+                : model
             }
             onConfirmChange={confirmChange}
             onWithdrawChange={withdrawChange}

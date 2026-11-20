@@ -4899,6 +4899,56 @@ desktop:
         no té.
       uppercase: Aquest enllaç no és vàlid.
     sign_in: Inicia la sessió per obrir {view}.
+  operations:
+    cancellation_requested: Cancel·lació sol·licitada
+    count: Es mostren {shown} de {total} execucions
+    effect:
+      none: Cap
+      partial: Parcial
+      unknown: Desconegut
+      updated: Actualitzat
+    empty: Aquest perfil no té execucions registrades.
+    error_code: Codi d'error {code}
+    failed: L'historial no està disponible ({code}).
+    field_effect: Efecte
+    field_outcome: Resultat
+    lifecycle:
+      cancellation_requested: Cancel·lació sol·licitada
+      created: Creada
+      queued: En cua
+      running: En execució
+      settling: Tancant-se
+      terminal: Acabada
+      waiting_for_external: Esperant un tercer
+      waiting_for_interaction: Esperant la teva resposta
+    loading: Llegint l'historial…
+    loading_more: Llegint més execucions…
+    more_failed: No hi ha més execucions disponibles ({code}).
+    orientation: 'Les execucions registrades per a aquest perfil, de la més recent
+      a la més antiga. Aquesta pàgina només les llista: mai executa, reintenta ni
+      cancel·la res.'
+    outcome:
+      cancelled: Cancel·lada
+      failed: Fallida
+      interrupted: Interrompuda
+      refused: Rebutjada
+      succeeded: Correcta
+      timed_out: Temps esgotat
+    phase: Fase {phase}
+    read_again: Torna a llegir
+    refresh: Actualitza
+    refusal_ref: Referència del rebuig {ref}
+    result_not_stored: Sense resultat desat
+    result_stored: Resultat desat
+    settled: Tancada {time}
+    show_more: Mostra'n més
+    shown_on: Es mostra a
+    signed_out: Inicia la sessió per veure l'historial d'operacions.
+    started: Iniciada {time}
+    title: Operacions
+    unreadable: 'Registres que no s''han pogut llegir: {count}.'
+    unverifiable: 'Registres que no s''han pogut confirmar com d''aquest perfil: {count}.'
+    updated: Actualitzada {time}
   palette:
     actions: Accions
     close: Tanca la cerca

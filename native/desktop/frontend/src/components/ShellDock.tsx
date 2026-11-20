@@ -110,6 +110,7 @@ export function ShellDock({
   homeOn,
   withholdingOn,
   referenceOn,
+  operationsOn,
   calendarOn,
   ledgerOn,
   declarationsOn,
@@ -190,6 +191,7 @@ export function ShellDock({
   homeOn: boolean;
   withholdingOn: boolean;
   referenceOn: boolean;
+  operationsOn: boolean;
   calendarOn: boolean;
   ledgerOn: boolean;
   declarationsOn: boolean;
@@ -366,13 +368,15 @@ export function ShellDock({
                       ? "desktop.withholding.title"
                       : referenceOn
                         ? "desktop.reference.title"
-                        : declarationsOn
-                          ? "workspace.declarations.destination.overview"
-                          : browserOn
-                            ? "desktop.browser.title"
-                            : aeatSyncOn
-                              ? "desktop.aeat_sync.title"
-                              : "desktop.pane.docs",
+                        : operationsOn
+                          ? "desktop.operations.title"
+                          : declarationsOn
+                            ? "workspace.declarations.destination.overview"
+                            : browserOn
+                              ? "desktop.browser.title"
+                              : aeatSyncOn
+                                ? "desktop.aeat_sync.title"
+                                : "desktop.pane.docs",
           ),
           content: docsPane,
           pageActions:

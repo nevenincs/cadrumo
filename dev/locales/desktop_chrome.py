@@ -39,6 +39,7 @@ from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo_client.contracts.navigation import load_navigation_register
 
 from .chrome_projection import project_catalogue_strings
+from .desktop_agent_tool_keys import AGENT_TOOL_FAMILIES, AGENT_TOOL_KEYS
 from .desktop_assets_keys import (
     ASSET_FAMILIES,
     ASSET_KEYS,
@@ -62,6 +63,7 @@ from .desktop_ledger_catalogue_keys import DESKTOP_LEDGER_CATALOGUE_KEYS
 from .desktop_ledger_document_keys import DESKTOP_LEDGER_DOCUMENT_KEYS
 from .desktop_ledger_workflow_keys import DESKTOP_LEDGER_WORKFLOW_KEYS
 from .desktop_modelo_choice_keys import MODELO_CHOICE_FAMILIES, MODELO_CHOICE_KEYS
+from .desktop_operations_keys import DESKTOP_OPERATIONS_FAMILIES, DESKTOP_OPERATIONS_KEYS
 from .desktop_reference_keys import DESKTOP_REFERENCE_KEYS
 from .desktop_withholding_keys import DESKTOP_WITHHOLDING_KEYS
 from .desktop_workspace_keys import WORKSPACE_FAMILIES, WORKSPACE_KEYS
@@ -806,6 +808,8 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         **ENTRY_OPTION_FAMILIES,
         **ENTRY_TOKEN_WORD_FAMILIES,
         **MODELO_CHOICE_FAMILIES,
+        **DESKTOP_OPERATIONS_FAMILIES,
+        **AGENT_TOOL_FAMILIES,
     }
 )
 
@@ -815,6 +819,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = (
     | DESKTOP_LEDGER_CATALOGUE_KEYS
     | DESKTOP_INTERFACE_KEYS
     | DESKTOP_HOME_KEYS
+    | DESKTOP_OPERATIONS_KEYS
     | DESKTOP_REFERENCE_KEYS
     | DESKTOP_WITHHOLDING_KEYS
     | WORKSPACE_KEYS
@@ -824,6 +829,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = (
     | ENTRY_OPTION_KEYS
     | ENTRY_TOKEN_WORD_KEYS
     | MODELO_CHOICE_KEYS
+    | AGENT_TOOL_KEYS
     | FINDING_KEYS
     | RULE_FINDING_KEYS
     | RATE_SLOT_KEYS

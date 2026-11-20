@@ -210,9 +210,9 @@ test("a view the window does not draw is not offered", async ({
   page: target,
 }) => {
   await open(target);
-  const operations = label("navigation.view.operations.label");
-  await search(target, operations);
-  await expect(optionTitled(target, operations)).toHaveCount(0);
+  const installation = label("navigation.view.installation.label");
+  await search(target, installation);
+  await expect(optionTitled(target, installation)).toHaveCount(0);
 });
 
 test("the views keep their action ids, and their chords still toggle", async ({

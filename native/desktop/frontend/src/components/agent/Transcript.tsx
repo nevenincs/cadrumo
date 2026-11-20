@@ -127,6 +127,11 @@ const PersonTurn = memo(function PersonTurn({
             {message.text}
           </p>
         )}
+        {message.carriedLabel && (
+          <span className="text-xs text-muted-foreground wrap-anywhere">
+            {message.carriedLabel}
+          </span>
+        )}
         {message.sending ? (
           <span
             role="status"
@@ -247,6 +252,11 @@ const AgentTurn = memo(function AgentTurn({
         aria-label={t("desktop.agent.agent_replied")}
         className="grid min-w-0 gap-1.5"
       >
+        {message.carriedLabel && (
+          <span className="text-xs text-muted-foreground wrap-anywhere">
+            {message.carriedLabel}
+          </span>
+        )}
         {text && <Markdown text={text} onOpenLink={onOpenLink} />}
         {state === "working" && message.waitingOnPerson && (
           <p className="text-sm text-muted-foreground">
@@ -365,6 +375,11 @@ const ToolRow = memo(function ToolRow({
             </div>
           ) : undefined}
         </Disclosure>
+        {failed && activity.failureMessage && (
+          <span className="text-xs text-destructive wrap-anywhere">
+            {activity.failureMessage}
+          </span>
+        )}
         {activity.detail && (
           <span className="text-xs wrap-anywhere">{activity.detail}</span>
         )}

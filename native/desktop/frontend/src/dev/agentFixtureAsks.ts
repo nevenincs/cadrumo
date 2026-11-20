@@ -7,6 +7,7 @@ import {
   questionnaireFaults,
   type AnswerFault,
 } from "../shell/agentClarification";
+import type { ToolReach } from "../shell/agentGatewayContract";
 import type { AttachmentCardAnswer } from "../shell/attachmentAdminContract";
 import type { BarCode, BarredRead } from "../shell/attachmentRefusals";
 import type {
@@ -103,21 +104,33 @@ export const CANONICAL_OPTIONS: AgentApprovalOption[] = [
 
 export const PERMISSION_TARGETS: Record<
   string,
-  { tool: string; description: string }
+  { tool: string; server: string | null; description: string }
 > = {
-  status: { tool: "status", description: "Permission required: status" },
+  status: {
+    tool: "status",
+    server: "cadrumo",
+    description: "Permission required: status",
+  },
+  web: {
+    tool: "web_search",
+    server: "cadrumo_agent_tools",
+    description: "Permission required: web_search",
+  },
   file: {
     tool: "write_file",
+    server: null,
     description:
       'Permission required: write_file; workspace file path: "reports/2026 IVA.csv"',
   },
   attachment: {
     tool: "read_attachment",
+    server: null,
     description:
       'Permission required: read_attachment; attachment: "invoice.pdf"',
   },
   operation: {
     tool: "execute",
+    server: "cadrumo",
     description: "Cadrumo operation: user-profile.censo-prepare",
   },
 };
@@ -221,8 +234,25 @@ export function asked(questionnaire: AgentQuestionnaire): AgentQuestionnaire {
   return questionnaire;
 }
 
+/** How far the tools the fixture asks permission for reach, by server and
+ * name, as the agent serves it with the request. */
+const REACHES: Record<string, ToolReach> = {
+  "cadrumo/status": "local_read",
+  "cadrumo/execute": "local_write",
+  "cadrumo_agent_tools/web_search": "online",
+};
+
+/** The request with the name and the reach of its tool, where the agent
+ * knows them. */
+function identified(request: AgentApproval): AgentApproval {
+  const { tool_server: server, tool_call: tool } = request;
+  const reach = server && tool ? REACHES[`${server}/${tool}`] : undefined;
+  return reach ? { ...request, tool_name: tool, tool_reach: reach } : request;
+}
+
 /** What the fixture requests permission for, checked the same way. */
-export function requested(approval: AgentApproval): AgentApproval {
+export function requested(request: AgentApproval): AgentApproval {
+  const approval = identified(request);
   const notes = approvalFaults(approval);
   if (notes.length > 0)
     throw new Error(`The fixture requests what the agent would not: ${notes}`);

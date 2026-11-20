@@ -1,7 +1,11 @@
 import { useId } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
-import { toolKindWords } from "../../shell/agentWords";
+import {
+  toolIdentityWords,
+  toolKindWords,
+  toolReachWords,
+} from "../../shell/agentWords";
 import { useStrings, type Translate } from "../../shell/strings";
 import { AgentTextAction } from "./AgentAction";
 import type {
@@ -88,6 +92,8 @@ export function ApprovalPrompt({
   source,
   toolCall,
   toolServer,
+  toolName,
+  toolReach,
   toolKind,
   description,
   options,
@@ -98,6 +104,10 @@ export function ApprovalPrompt({
   /** What would run, as the agent names it. */
   toolCall?: string | null;
   toolServer?: string | null;
+  /** The tool's own name within its server, where the agent names one. */
+  toolName?: string | null;
+  /** How far the tool reaches, where the agent says. */
+  toolReach?: AgentApproval["tool_reach"];
   /** What kind of tool it is, one of the agent's ten. */
   toolKind?: AgentApproval["tool_kind"];
   description?: string | null;
@@ -111,6 +121,18 @@ export function ApprovalPrompt({
   const headingId = useId();
   const detail = descriptionWords(t, source, toolCall, description);
   const showKind = toolKind && toolKind !== "other";
+  // The agent's own tools are worded by what they are; a review is named as
+  // it was given.
+  const words =
+    source === "agent_tool" && toolCall
+      ? toolIdentityWords(t, {
+          server: toolServer,
+          name: toolName,
+          title: toolCall,
+          kind: toolKind,
+        })
+      : null;
+  const reach = source === "agent_tool" ? toolReachWords(t, toolReach) : null;
   // A stable sort: options of one kind keep the order the agent gave them.
   const ordered = [...options].sort(
     (a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind),
@@ -140,16 +162,25 @@ export function ApprovalPrompt({
               id={toolCall ? undefined : headingId}
               className="text-base font-semibold text-foreground wrap-anywhere"
             >
-              {toolCall ||
+              {words?.label ||
+                toolCall ||
                 title ||
                 (source === "agent_tool"
                   ? t("desktop.agent.approval_tool_title")
                   : t("desktop.agent.approval_review_title"))}
             </h3>
-            {(toolServer || showKind) && (
+            {words?.description && (
+              <p className="text-sm text-muted-foreground wrap-anywhere">
+                {words.description}
+              </p>
+            )}
+            {(toolServer || showKind || reach) && (
               <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                {toolServer && <Badge>{toolServer}</Badge>}
+                {toolServer && !words?.description && (
+                  <Badge>{toolServer}</Badge>
+                )}
                 {showKind && <Badge>{toolKindWords(t, toolKind)}</Badge>}
+                {reach && <Badge>{reach}</Badge>}
               </div>
             )}
             {detail && (

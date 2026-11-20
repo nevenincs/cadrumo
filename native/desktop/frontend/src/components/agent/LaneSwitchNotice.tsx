@@ -6,16 +6,21 @@ import type {
   ConversationCarry,
   SelectedModel,
 } from "../../shell/agentGatewayContract";
-import { useStrings, type Translate } from "../../shell/strings";
+import { countWords, useStrings, type Translate } from "../../shell/strings";
 
-/** A model as the agent named it, with its effort where one was chosen. */
-function modelWords(t: Translate, model: SelectedModel): string {
+/** A model as the picker names it, with its effort where one was chosen. */
+function modelWords(
+  t: Translate,
+  model: SelectedModel,
+  modelName: (model: string) => string,
+): string {
+  const name = modelName(model.model);
   return model.effort
     ? t("desktop.agent.model_with_effort", {
-        model: model.model,
+        model: name,
         effort: effortWords(t, model.effort),
       })
-    : model.model;
+    : name;
 }
 
 /**
@@ -29,6 +34,7 @@ export function LaneSwitchNotice({
   changeAsk,
   carryFrom,
   carried,
+  modelName,
   onConfirmChange,
   onWithdrawChange,
   onBackToSource,
@@ -40,6 +46,8 @@ export function LaneSwitchNotice({
   carryFrom: { title: string | null } | null;
   /** What the shown conversation took over when it began. */
   carried: ConversationCarry | null;
+  /** A model's name as the picker shows it, from the id a run names. */
+  modelName: (model: string) => string;
   onConfirmChange: () => void;
   onWithdrawChange: () => void;
   onBackToSource: () => void;
@@ -58,16 +66,32 @@ export function LaneSwitchNotice({
         <span className="grid justify-items-start gap-1.5">
           <span>
             {t("desktop.agent.selection_change_asked", {
-              previous: modelWords(t, previous),
-              requested: modelWords(t, requested),
+              previous: modelWords(t, previous, modelName),
+              requested: modelWords(t, requested, modelName),
             })}
           </span>
           <span className="text-muted-foreground">
-            {t("desktop.agent.selection_change_history", {
-              retained: counts.format(history.retained_messages),
-              tokens: counts.format(history.estimated_tokens),
-              omitted: counts.format(history.omitted_messages),
-            })}
+            {countWords(
+              t,
+              history.retained_messages,
+              {
+                one: "desktop.agent.selection_change_retained_one",
+                other: "desktop.agent.selection_change_retained",
+              },
+              {
+                retained: counts.format(history.retained_messages),
+                tokens: counts.format(history.estimated_tokens),
+              },
+            )}{" "}
+            {countWords(
+              t,
+              history.omitted_messages,
+              {
+                one: "desktop.agent.selection_change_omitted_one",
+                other: "desktop.agent.selection_change_omitted",
+              },
+              { omitted: counts.format(history.omitted_messages) },
+            )}
           </span>
           <span className="flex flex-wrap gap-1.5">
             <Button size="xs" onClick={onConfirmChange}>
@@ -108,10 +132,24 @@ export function LaneSwitchNotice({
       >
         <Icon name="info" className="mt-0.5" />
         <span>
-          {t("desktop.agent.carried_turns", {
-            carried: counts.format(carried.carried_turns),
-            omitted: counts.format(carried.omitted_turns),
-          })}
+          {countWords(
+            t,
+            carried.carried_turns,
+            {
+              one: "desktop.agent.carried_turns_one",
+              other: "desktop.agent.carried_turns",
+            },
+            { carried: counts.format(carried.carried_turns) },
+          )}{" "}
+          {countWords(
+            t,
+            carried.omitted_turns,
+            {
+              one: "desktop.agent.carried_omitted_one",
+              other: "desktop.agent.carried_omitted",
+            },
+            { omitted: counts.format(carried.omitted_turns) },
+          )}
         </span>
       </p>
     );

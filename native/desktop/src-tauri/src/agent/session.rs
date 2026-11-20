@@ -15,7 +15,7 @@ use super::{
         ReplyKind, ReplyRecord, Snapshot, ToolKindTag, ToolRecord, TurnRecord, Usage,
     },
     sse,
-    stream::{Approval, Mapping, Questionnaire, Step, StreamEvent},
+    stream::{Approval, Mapping, Questionnaire, Step, StreamEvent, failure_of, reach_of},
     supervisor::{Supervisor, protocol::Gateway, protocol::State},
 };
 use serde::Deserialize;
@@ -709,6 +709,13 @@ fn ran_with(status: &Value) -> Option<RanWith> {
     })
 }
 
+/// The run a message was carried from, where the agent names one.
+fn carried_from(message: &Value) -> Option<String> {
+    text(message, "carried_from_run_id")
+        .filter(|run| !run.is_empty())
+        .map(str::to_owned)
+}
+
 /// A conversation's records, oldest first: per run, the person's messages,
 /// its tool calls, the agent's messages, and the run's own record. Each
 /// message is listed once: a continuing run's seed is left out. Messages are
@@ -745,6 +752,7 @@ pub fn history_records(runs: &[(String, Value, Value)]) -> Vec<TurnRecord> {
                 sent_at: message.get("timestamp").cloned().unwrap_or(Value::Null),
                 attachments: echoed_documents(message),
                 skills: echoed_skills(message),
+                carried_from_run_id: carried_from(message),
             }));
         }
         for call in state
@@ -760,6 +768,10 @@ pub fn history_records(runs: &[(String, Value, Value)]) -> Vec<TurnRecord> {
                 title: text(call, "title").map(str::to_owned),
                 tool_kind: text(call, "kind").map(str::to_owned),
                 status: text(call, "status").map(str::to_owned),
+                tool_server: text(call, "tool_server").map(str::to_owned),
+                tool_name: text(call, "tool_name").map(str::to_owned),
+                tool_reach: reach_of(text(call, "tool_reach")),
+                failure: failure_of(call.get("failure")),
                 details: tool_details(call),
             }));
         }
@@ -769,6 +781,7 @@ pub fn history_records(runs: &[(String, Value, Value)]) -> Vec<TurnRecord> {
                 id: text(message, "message_id").map(str::to_owned),
                 reply_id: run.clone(),
                 text: text(message, "content").unwrap_or_default().to_owned(),
+                carried_from_run_id: carried_from(message),
             }));
         }
         let usage = history
@@ -2271,6 +2284,32 @@ mod tests {
         );
         assert_eq!(seeded(&previous, &[pair("user", "z")]), 0);
         assert_eq!(seeded(&[], &[pair("user", "a")]), 0);
+    }
+
+    #[test]
+    fn history_relays_a_tools_identity_and_failure_and_a_messages_carry() {
+        let history = json!({"state": {"status": "completed",
+            "messages": [
+                {"message_id": "u1", "role": "user", "content": "Hola", "timestamp": "2026-10-01T09:00:00Z",
+                 "carried_from_run_id": "run-0"},
+                {"message_id": "a1", "role": "assistant", "content": "Buenas", "carried_from_run_id": ""}],
+            "tool_calls": [{"tool_call_id": "t1", "title": "web_search", "kind": "fetch", "status": "failed",
+                "tool_server": "cadrumo_agent_tools", "tool_name": "web_search", "tool_reach": "online",
+                "failure": {"code": "unreachable", "message": "No connection."}, "content": []}]},
+            "usage": null});
+        let status = json!({"status": "completed", "queued_messages": 0, "agent": null});
+        let records =
+            serde_json::to_value(history_records(&[("c1".into(), status, history)])).unwrap();
+        assert_eq!(records[0]["carried_from_run_id"], "run-0");
+        assert_eq!(records[0]["sent_at"], "2026-10-01T09:00:00Z");
+        assert_eq!(
+            records[1],
+            json!({"kind": "tool", "reply_id": "c1", "id": "t1", "title": "web_search", "tool_kind": "fetch",
+                   "status": "failed", "tool_server": "cadrumo_agent_tools", "tool_name": "web_search",
+                   "tool_reach": "online", "failure": {"code": "unreachable", "message": "No connection."},
+                   "details": []})
+        );
+        assert!(records[2].get("carried_from_run_id").is_none());
     }
 
     #[test]

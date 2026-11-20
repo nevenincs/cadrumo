@@ -44,6 +44,7 @@ import {
   HOME_SHAPES,
   type HomeShape,
 } from "./fixtures/home";
+import { operationsFixture } from "./fixtures/operations";
 import { referenceFixture } from "./fixtures/reference";
 import { fixtureAgent } from "./agentFixtureHost";
 import type {
@@ -267,6 +268,16 @@ declare global {
     __scenarioReferenceRefused?: boolean;
     /** The Reference search stays in flight while this is true. */
     __scenarioReferenceHeld?: boolean;
+    /** The operation history is refused while this is true. */
+    __scenarioOperationsRefused?: boolean;
+    /** Only a request for more runs is refused while this is true. */
+    __scenarioOperationsMoreRefused?: boolean;
+    /** The operation history stays in flight while this is true. */
+    __scenarioOperationsHeld?: boolean;
+    /** The history says that records could not be read or attributed. */
+    __scenarioOperationsDamaged?: boolean;
+    /** The first run names a lifecycle the window has no word for. */
+    __scenarioOperationsUnrecognised?: boolean;
     /** The signed-in profile's runtime stops answering, or answers again. */
     __scenarioRuntime?: { lose(): void; restore(): void };
     /** Plays the host's console environment event with this payload, as
@@ -658,6 +669,22 @@ export function scenarioHost(
       if (!readable() || window.__scenarioReferenceRefused)
         throw failure("timed_out", "cli");
       return referenceFixture(query);
+    },
+    async operations(limit, after) {
+      say(`operations ${limit} ${after === null ? "-" : after.operation_id}`);
+      await wait(options.latencyMs);
+      while (window.__scenarioOperationsHeld) await wait(20);
+      if (
+        !readable() ||
+        window.__scenarioOperationsRefused ||
+        (after !== null && window.__scenarioOperationsMoreRefused)
+      )
+        throw failure("timed_out", "cli");
+      return operationsFixture(limit, after, {
+        empty: scenario.views === "empty",
+        damaged: window.__scenarioOperationsDamaged,
+        unrecognised: window.__scenarioOperationsUnrecognised,
+      });
     },
   };
 

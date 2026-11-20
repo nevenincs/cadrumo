@@ -4879,6 +4879,56 @@ desktop:
         nincs meg.
       uppercase: Ez a hivatkozás nem érvényes.
     sign_in: 'Jelentkezz be a megnyitáshoz: {view}.'
+  operations:
+    cancellation_requested: Megszakítás kérve
+    count: '{shown} / {total} futtatás látható'
+    effect:
+      none: Nincs
+      partial: Részleges
+      unknown: Ismeretlen
+      updated: Frissítve
+    empty: Ehhez a profilhoz nincs rögzített futtatás.
+    error_code: 'Hibakód: {code}'
+    failed: Az előzmények nem érhetők el ({code}).
+    field_effect: Hatás
+    field_outcome: Eredmény
+    lifecycle:
+      cancellation_requested: Megszakítás kérve
+      created: Létrehozva
+      queued: Sorban áll
+      running: Fut
+      settling: Lezárás alatt
+      terminal: Befejezve
+      waiting_for_external: Külső félre vár
+      waiting_for_interaction: A te válaszodra vár
+    loading: Az előzmények beolvasása…
+    loading_more: További futtatások beolvasása…
+    more_failed: További futtatások nem érhetők el ({code}).
+    orientation: 'Az ehhez a profilhoz rögzített futtatások, a legújabbal kezdve.
+      Ez az oldal csak felsorolja őket: soha nem futtat, nem próbál újra és nem szakít
+      meg semmit.'
+    outcome:
+      cancelled: Megszakítva
+      failed: Sikertelen
+      interrupted: Megszakadt
+      refused: Elutasítva
+      succeeded: Sikeres
+      timed_out: Időtúllépés
+    phase: 'Fázis: {phase}'
+    read_again: Olvasd be újra
+    refresh: Frissítés
+    refusal_ref: 'Az elutasítás hivatkozása: {ref}'
+    result_not_stored: Nincs mentett eredmény
+    result_stored: Az eredmény mentve
+    settled: 'Lezárva: {time}'
+    show_more: Továbbiak
+    shown_on: Itt jelenik meg
+    signed_out: Jelentkezz be a műveleti előzmények megtekintéséhez.
+    started: 'Indítva: {time}'
+    title: Műveletek
+    unreadable: 'Nem olvasható rekordok: {count}.'
+    unverifiable: 'Nem igazolható, hogy ehhez a profilhoz tartoznak: {count}.'
+    updated: 'Frissítve: {time}'
   palette:
     actions: Műveletek
     close: Keresés bezárása

@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -91,6 +92,19 @@ export function AttachmentReadPrompt({
     [session, approval, allowOnce, onSettled],
   );
 
+  // The person's refusal is told to the agent first, so the model hears that
+  // they declined; the request is declined whether or not that was recorded.
+  const decline = useMemo(() => {
+    if (!onDecline) return undefined;
+    return () => {
+      if (!allowOnce) return onDecline();
+      session
+        .attachmentRelease(approval, allowOnce, "decline")
+        .catch(() => undefined)
+        .finally(onDecline);
+    };
+  }, [session, approval, allowOnce, onDecline]);
+
   useEffect(() => {
     if (asked.current) return;
     asked.current = true;
@@ -167,7 +181,7 @@ export function AttachmentReadPrompt({
         onAllow={active ? () => void answer("once") : undefined}
         onAllowSession={active ? () => void answer("session") : undefined}
         onAllowRemember={active ? () => void answer("remember") : undefined}
-        onDecline={onDecline}
+        onDecline={decline}
       />
     </div>
   );
