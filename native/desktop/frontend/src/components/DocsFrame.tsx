@@ -19,6 +19,7 @@ import {
   docsTravelLapsed,
   docsVisited,
   NO_DOCS_HISTORY,
+  readDocsPlace,
   type DocsHistory,
 } from "../shell/docsHistory";
 import { onDocsOrigin } from "../shell/docsOrigin";
@@ -226,7 +227,13 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
             ready.current = true;
             if (typeof data.url === "string") {
               window.clearTimeout(travelTimer.current);
-              remember(docsVisited(history.current, data.url));
+              remember(
+                docsVisited(
+                  history.current,
+                  data.url,
+                  readDocsPlace(data.entry, data.traversed),
+                ),
+              );
             }
             const announced: unknown[] = Array.isArray(data.features)
               ? data.features
@@ -253,7 +260,13 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
           case "location":
             if (typeof data.url === "string") {
               window.clearTimeout(travelTimer.current);
-              remember(docsVisited(history.current, data.url));
+              remember(
+                docsVisited(
+                  history.current,
+                  data.url,
+                  readDocsPlace(data.entry, data.traversed),
+                ),
+              );
             }
             break;
           case "language-change":

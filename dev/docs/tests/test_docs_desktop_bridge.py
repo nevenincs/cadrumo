@@ -9,7 +9,8 @@ stand-in window that plays the application's part of the protocol.
 * The bridge talks only to a parent window at a listed origin, takes a shell
   chord in the capture phase before any page listener (the palette's Ctrl+K
   listener included), routes off-origin links outside the frame, reports the
-  context menu, theme and location, applies commands and zoom, ignores unknown
+  context menu, theme and location with the place of its history entry,
+  whoever moved the page, applies commands and zoom, ignores unknown
   types, refuses another version and malformed values, and never carries a
   field it does not define.
 * The bridge announces the later features it serves, answers a bounded search
@@ -63,8 +64,8 @@ _FEATURES = ["search", "navigate", "home", "appearance", "language"]
 
 #: Every field each outbound message type may carry, envelope included.
 _OUTBOUND_FIELDS = {
-    "ready": {"url", "title", "lang", "theme", "features"},
-    "location": {"url", "title"},
+    "ready": {"url", "title", "lang", "theme", "features", "entry", "traversed"},
+    "location": {"url", "title", "entry", "traversed"},
     "theme": {"theme"},
     "language-change": {"language"},
     "shortcut": {"id"},
@@ -463,6 +464,50 @@ def test_commands_open_the_palette_and_walk_history(open_window: Callable[..., _
     window.send("command", name="reload")
     window.settle()
     assert "cadrumo-desktop-bridge: refused message: unknown command" in _bridge_logs(window)
+
+
+def test_reports_place_each_history_entry_whoever_moved_the_page(
+    open_window: Callable[..., _Window], bridge_site: _Origins
+) -> None:
+    """Each report names the entry's place in the frame's history and whether the page came back to it.
+
+    The window cannot read the frame's history across origins; these places
+    are how it knows whether Back and Forward can move the page after a move
+    the page made itself.
+    """
+    window = open_window(bridge_site.shell_origin)
+    (ready,) = window.wait_for("ready")
+    assert (ready["entry"], ready["traversed"]) == (0, False)
+    page = f"{bridge_site.docs}/fixture.html"
+
+    window.frame.click("article p a[href='#second']")
+    (location,) = window.wait_for("location")
+    assert (location["url"], location["entry"], location["traversed"]) == (f"{page}#second", 1, False)
+    # The page goes back on its own, without a command from the window.
+    window.frame.evaluate("setTimeout(() => window.history.back(), 0)")
+    locations = window.wait_for("location", 2)
+    assert (locations[-1]["url"], locations[-1]["entry"], locations[-1]["traversed"]) == (page, 0, True)
+    window.frame.evaluate("setTimeout(() => window.history.forward(), 0)")
+    locations = window.wait_for("location", 3)
+    assert (locations[-1]["entry"], locations[-1]["traversed"]) == (1, True)
+
+    # A new document is one past the entry the frame was on; a reload comes
+    # back to its own entry, although Sphinx replaces the entry's state on
+    # every load.
+    window.send("command", name="navigate", url=f"{page}?another=1")
+    readies = window.wait_for("ready", 2)
+    assert (readies[-1]["entry"], readies[-1]["traversed"]) == (2, False)
+    window.frame.evaluate("setTimeout(() => window.location.reload(), 0)")
+    readies = window.wait_for("ready", 3)
+    assert (readies[-1]["entry"], readies[-1]["traversed"]) == (2, True)
+    window.frame.evaluate("setTimeout(() => window.history.go(-2), 0)")
+    readies = window.wait_for("ready", 4)
+    assert (readies[-1]["url"], readies[-1]["entry"], readies[-1]["traversed"]) == (page, 0, True)
+    # A page script's own new entry is reported, and drops what lay ahead.
+    window.frame.evaluate("window.history.pushState({ kept: 1 }, '', '#pushed')")
+    locations = window.wait_for("location", 4)
+    assert (locations[-1]["url"], locations[-1]["entry"], locations[-1]["traversed"]) == (f"{page}#pushed", 1, False)
+    assert window.frame.evaluate("window.history.state.kept") == 1
 
 
 def test_zoom_applies_within_bounds_and_each_page_starts_unzoomed(
