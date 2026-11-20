@@ -115,11 +115,11 @@ test("the IVA calculation reads the one IVA category field and follows it", asyn
   await expect(derive).toContainText(
     label("desktop.ledger.inspector.derive.choose"),
   );
+  // Asking for it opens the field's own list, as pressing the field would.
   await derive
     .getByRole("button", { name: label("desktop.ledger.column.iva_category") })
     .click();
-  await expect(field).toBeFocused();
-  await field.click();
+  await expect(field).toHaveAttribute("aria-expanded", "true");
   await choose(target, label("desktop.ledger.iva_category.domestic_general"));
   await expect(stage).toBeEnabled();
   await stage.click();

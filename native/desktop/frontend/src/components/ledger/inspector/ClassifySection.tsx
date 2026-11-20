@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useEffectEvent, useId, useMemo, useState } from "react";
 import { MoneyEditor } from "@/components/editors/MoneyEditor";
 import { PercentEditor } from "@/components/editors/PercentEditor";
 import { TaxIdEditor } from "@/components/editors/TaxIdEditor";
@@ -13,7 +13,10 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { facts } from "@/shell/compose";
-import type { LedgerHistoryTypedProjection } from "../../../shell/ledgerMovementCheckContract";
+import type {
+  LedgerHistoryTypedProjection,
+  StageFieldName,
+} from "../../../shell/ledgerMovementCheckContract";
 import type { LedgerPort } from "../../../shell/ledger";
 import {
   isIvaDerivableReason,
@@ -68,6 +71,10 @@ import {
 } from "../suggestions/SuggestionsProvider";
 import { formatTime } from "../../../shared/dateFormats";
 import { formatPercent, heldDecimal } from "../../../shared/numbers";
+
+/** A press on the missing-fact list: one fact's editor, or the IVA figures
+ * worked out from the category. */
+type Press = { kind: "open"; field: string } | { kind: "derive" };
 
 /** The classify command of a stored classification; none for a disposition. */
 const KIND_OF: Readonly<Record<string, ClassifyKind>> = Object.fromEntries(
@@ -136,12 +143,36 @@ export function ClassifySection({
     (action): action is Extract<StagedAction, { kind: "iva_derive" }> =>
       action.kind === "iva_derive",
   );
+  // A press made before the ledger has said what can change on the movement
+  // waits for that answer and is then carried out, so a lock that only means
+  // "not read yet" never takes the place of the editor asked for.
+  const [held, setHeld] = useState<Press | null>(null);
+  const answered = scope.transferLocked !== null;
+  const waitsForAnswer = (name: StageFieldName) =>
+    !answered && fieldLock({ ...scope, transferLocked: [] }, name) === null;
+  const carryOut = useEffectEvent((press: Press) => {
+    if (press.kind === "open") open(press.field);
+    else deriveMissing();
+  });
+  useEffect(() => {
+    if (!answered || held === null) return;
+    setHeld(null);
+    carryOut(held);
+  }, [answered, held]);
+  const hold = (press: Press) => {
+    setHeld(press);
+    say(t("desktop.ledger.apply.reading"));
+  };
   /** Opens the editor of one fact. A fact that cannot change says why, and
    * one the page cannot reach says so: a press is never answered by nothing. */
   const open = (name: string) => {
     const known = STAGE_FIELDS.find((each) => each === name);
     const named = known ? fieldName(t, known) : name;
     const why = known ? fieldLock(scope, known) : null;
+    if (known && why && waitsForAnswer(known)) {
+      hold({ kind: "open", field: name });
+      return;
+    }
     if (why) {
       say(
         t("desktop.ledger.inspector.fix.locked", { field: named, reason: why }),
@@ -168,6 +199,10 @@ export function ClassifySection({
    * person saves with the rest, and the category first where there is none. */
   const deriveMissing = () => {
     const why = fieldLock(scope, "iva_category");
+    if (why && waitsForAnswer("iva_category")) {
+      hold({ kind: "derive" });
+      return;
+    }
     if (why) {
       say(
         t("desktop.ledger.inspector.fix.locked", {
