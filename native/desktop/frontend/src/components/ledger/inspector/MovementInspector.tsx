@@ -6,8 +6,6 @@ import {
   useRef,
   useState,
   type ReactNode,
-  type Ref,
-  type RefObject,
 } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,7 +21,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { chordAria, chordText } from "@/shared/chords";
 import { INSPECTOR_CHORD } from "../ledgerChords";
 import { facts, listed, noted } from "../../../shell/compose";
-import type { LedgerPort } from "../../../shell/ledger";
+import type { LedgerPort, LedgerResult } from "../../../shell/ledger";
 import { isTransactionPrefix } from "../../../shell/ledgerGrammar";
 import type { ClassifySelection } from "../../../shell/ledgerCommands";
 import { takesChanges } from "../../../shell/ledgerContract";
@@ -64,7 +62,7 @@ import {
   sectionNames,
 } from "./inspectorWords";
 import { JumpIndex } from "./JumpIndex";
-import { useLedgerRead } from "./useInspectorReads";
+import { useLedgerRead, type InspectorRead } from "./useInspectorReads";
 import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { formatAmount } from "../../../shared/numbers";
 import { formatDay } from "../../../shared/dateFormats";
@@ -83,40 +81,21 @@ export type InspectorFocus = {
   tick: number;
 };
 
-/** Reports when `element` first scrolls into the inspector's view. */
-function useSeen(
-  root: RefObject<HTMLElement | null>,
-  key: string,
-): [Ref<HTMLElement>, boolean] {
-  const [seen, setSeen] = useState<string | null>(null);
-  const [element, setElement] = useState<HTMLElement | null>(null);
-  useEffect(() => {
-    if (!element || seen === key) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) setSeen(key);
-      },
-      { root: root.current, rootMargin: "50%" },
-    );
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [element, root, key, seen]);
-  return [setElement, seen === key];
-}
-
 /**
  * The inspector of one movement: its stored state in the header, the
  * actions behind ⋯, and one scroll of sections with a jump index that
- * follows the reading. The movement's own reads, its history among them,
- * are made with the inspector, whether or not the window draws them; the
- * documents and invoices lists are read when their section first comes
- * into view. Every change it makes is staged into the page's changes; the
+ * follows the reading. Its reads are made with the inspector, whether or
+ * not the window draws them: a window behind another, or read by an
+ * assistive technology without scrolling, reports nothing in view. The
+ * profile's documents and invoices come read from the panel. Every change it makes is staged into the page's changes; the
  * header and the counts show what is stored.
  */
 export function MovementInspector({
   port,
   row,
   rows,
+  evidence,
+  invoices,
   generation,
   stage,
   onStage,
@@ -137,6 +116,9 @@ export function MovementInspector({
 }: {
   port: LedgerPort;
   row: LedgerTransactionReviewProjection;
+  /** The profile's documents and invoices, as the panel read them. */
+  evidence: InspectorRead<LedgerResult<"ledger.evidence.list">> | null;
+  invoices: InspectorRead<LedgerResult<"ledger.invoice.list">> | null;
   /** The window's movements. */
   rows: readonly LedgerTransactionReviewProjection[];
   /** Which read of the window `row` comes from. */
@@ -181,8 +163,6 @@ export function MovementInspector({
   );
 
   // ---- Reads -----------------------------------------------------------------
-  const [documentsRef, documentsSeen] = useSeen(scroll, key);
-  const [invoiceRef, invoiceSeen] = useSeen(scroll, key);
   const prefix = isTransactionPrefix(id) ? { transaction_prefix: id } : null;
   const track = useLedgerRead(port, "ledger.track", prefix, key, true);
   const view = useLedgerRead(port, "ledger.view", prefix, key, true);
@@ -193,21 +173,6 @@ export function MovementInspector({
     key,
     true,
   );
-  const evidence = useLedgerRead(
-    port,
-    "ledger.evidence.list",
-    {},
-    `evidence:${generation}`,
-    documentsSeen,
-  );
-  const invoices = useLedgerRead(
-    port,
-    "ledger.invoice.list",
-    {},
-    `invoices:${generation}`,
-    invoiceSeen,
-  );
-
   const tracked = track?.kind === "ready" ? track.result : null;
   const sealing = (tracked?.participated_in ?? []).filter(seals);
   const sealed = sealing.length > 0;
@@ -323,13 +288,8 @@ export function MovementInspector({
     });
   }, [history, byId]);
 
-  const section = (
-    name: InspectorSection,
-    body: ReactNode,
-    ref?: Ref<HTMLElement>,
-  ) => (
+  const section = (name: InspectorSection, body: ReactNode) => (
     <section
-      ref={ref}
       key={name}
       data-section-body={name}
       aria-labelledby={`inspector-${name}`}
@@ -540,7 +500,6 @@ export function MovementInspector({
             locale={locale}
             say={say}
           />,
-          documentsRef,
         )}
         {section(
           "invoice",
@@ -558,7 +517,6 @@ export function MovementInspector({
             onOpenInvoice={onOpenInvoice}
             say={say}
           />,
-          invoiceRef,
         )}
         {section(
           "details",

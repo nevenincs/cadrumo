@@ -14,6 +14,7 @@ import { MovementInspector, type InspectorFocus } from "./MovementInspector";
 import { RightPanel, type RightPanelMode } from "./RightPanel";
 import { SelectionInspector } from "./SelectionInspector";
 import { SplitDialog } from "./SplitDialog";
+import { useLedgerRead } from "./useInspectorReads";
 import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /**
@@ -112,6 +113,23 @@ export function LedgerInspector({
   };
 
   const one = ids.length === 1 ? byId.get(ids[0]!)! : null;
+  // The profile's documents and invoices, which a movement's sections draw
+  // from: read once for the window's read while a movement is inspected, not
+  // again for each movement shown.
+  const evidence = useLedgerRead(
+    port,
+    "ledger.evidence.list",
+    {},
+    `evidence:${generation}`,
+    one !== null,
+  );
+  const invoices = useLedgerRead(
+    port,
+    "ledger.invoice.list",
+    {},
+    `invoices:${generation}`,
+    one !== null,
+  );
   let body: ReactNode;
   if (one)
     body = (
@@ -120,6 +138,8 @@ export function LedgerInspector({
         port={port}
         row={one}
         rows={rows}
+        evidence={evidence}
+        invoices={invoices}
         generation={generation}
         stage={stage}
         onStage={onStage}
