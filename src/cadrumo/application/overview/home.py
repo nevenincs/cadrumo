@@ -33,6 +33,7 @@ from .calendar_models import (
     OverviewPeriodState,
     decide_filing_status,
 )
+from .filing_status_words import filing_status_words
 
 HOME_PREVIEW_LIMIT: Final = 3
 """How many next actions and agenda entries the Home zone previews."""
@@ -124,14 +125,23 @@ class HomeZoneState(BaseModel):
     in; a reason code alone sends the operator to guess which of dozens of
     fields the refusal meant.
     """
+    reason_words: str | None = Field(default=None, min_length=1, max_length=512)
+    """The reason said in ``reason_words_language``; served with the projection, absent where the catalogue has none."""
+    reason_words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _require_honest_availability_evidence(self) -> Self:
+        _validate_words_language(self.reason_words, self.reason_words_language)
         _validate_missing_paths_reason(self)
         _validate_reason_matches_availability(self)
         _validate_observation_matches_availability(self)
         return self
+
+
+def _validate_words_language(words: str | None, language: OutputLanguage | None) -> None:
+    if (words is None) != (language is None):
+        raise ValueError("served Home words and their language travel together")
 
 
 def _validate_missing_paths_reason(state: HomeZoneState) -> None:
@@ -185,10 +195,18 @@ class HomeNextAction(BaseModel):
     modelo: ModeloId | None = None
     filing_year: FilingYear | None = None
     period: Period | None = None
+    action_words: str | None = Field(default=None, min_length=1, max_length=256)
+    """What the action does, said in ``words_language``; served with the projection."""
+    reason_words: str | None = Field(default=None, min_length=1, max_length=256)
+    """Why the action is offered, said in ``words_language``; served with the projection."""
+    period_words: str | None = Field(default=None, min_length=1, max_length=128)
+    """The period the action names, said in ``words_language``; served with the projection."""
+    words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _enforce_complete_natural_address(self) -> Self:
+        _validate_words_language(self.action_words or self.reason_words or self.period_words, self.words_language)
         address = (self.modelo, self.filing_year, self.period)
         if any(value is not None for value in address) and not all(value is not None for value in address):
             raise ValueError("a next-action declaration address must be complete or absent")
@@ -209,10 +227,16 @@ class HomeDeclarationResume(BaseModel):
     name: str = Field(min_length=1, max_length=256)
     state: HomeDeclarationState
     revision_id: RevisionId | None = None
+    state_words: str | None = Field(default=None, min_length=1, max_length=128)
+    """The state said in ``words_language``; served with the projection."""
+    period_words: str | None = Field(default=None, min_length=1, max_length=128)
+    """The period said in ``words_language``; served with the projection."""
+    words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _enforce_period_year(self) -> Self:
+        _validate_words_language(self.state_words or self.period_words, self.words_language)
         if self.filing_year != self.period.filing_year:
             raise ValueError("declaration filing_year must match its period year")
         return self
@@ -227,10 +251,14 @@ class HomeLedgerReadiness(BaseModel):
     requiring_review: NonNegativeInt
     unclassified: NonNegativeInt
     missing_evidence: NonNegativeInt
+    summary_words: str | None = Field(default=None, min_length=1, max_length=512)
+    """The counts said in ``words_language``; served with the projection."""
+    words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _enforce_subsets(self) -> Self:
+        _validate_words_language(self.summary_words, self.words_language)
         if any(value > self.entries for value in (self.requiring_review, self.unclassified, self.missing_evidence)):
             raise ValueError("Ledger issue counts cannot exceed the entry count")
         return self
@@ -256,6 +284,8 @@ class HomeAgendaEntry(BaseModel):
     due_on_text: str = Field(min_length=1, max_length=64)
     period_words: str = Field(min_length=1, max_length=128)
     words_language: OutputLanguage
+    filing_status_words: str | None = Field(default=None, min_length=1, max_length=128)
+    """The filing status said in ``words_language``, from the decided status."""
 
     @classmethod
     def worded(
@@ -270,7 +300,12 @@ class HomeAgendaEntry(BaseModel):
         aeat_submission_state: OverviewAeatSubmissionState,
         language: OutputLanguage,
     ) -> Self:
-        """Build the row with its date and period said in ``language``."""
+        """Build the row with its date, period and filing status said in ``language``."""
+        status = decide_filing_status(
+            aeat_submission_state=aeat_submission_state,
+            local_filing_state=local_filing_state,
+            period_state=period_state,
+        )
         return cls(
             modelo=modelo,
             filing_year=filing_year,
@@ -282,6 +317,7 @@ class HomeAgendaEntry(BaseModel):
             due_on_text=date_text(due_on, language),
             period_words=period_words(period, language),
             words_language=language,
+            filing_status_words=filing_status_words(status, language),
         )
 
     @computed_field

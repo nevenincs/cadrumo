@@ -63,6 +63,17 @@ const evidenceStaged = (action: StagedAction, id: string) =>
     action.evidenceId !== null) ||
   (action.kind === "attach_file" && action.transactionId === id);
 
+/** The category the movement's staged derivation works from, if any. */
+function ivaDeriveStaged(
+  id: string,
+  actions: readonly StagedAction[],
+): string | null {
+  for (const action of actions)
+    if (action.kind === "iva_derive" && action.transactionId === id)
+      return action.ivaCategory;
+  return null;
+}
+
 function stagedRow(
   id: string,
   changes: StagedRowChanges | undefined,
@@ -84,6 +95,7 @@ function stagedRow(
     m210_staged: actions.some(
       (action) => action.kind === "m210" && actionRows(action).includes(id),
     ),
+    iva_derive_staged: ivaDeriveStaged(id, actions),
   };
 }
 

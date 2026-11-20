@@ -113,6 +113,8 @@ def test_composes_only_exact_declaration_and_ledger_reader_outputs() -> None:
         "requiring_review": 2,
         "unclassified": 1,
         "missing_evidence": 1,
+        "summary_words": None,
+        "words_language": None,
     }
 
 

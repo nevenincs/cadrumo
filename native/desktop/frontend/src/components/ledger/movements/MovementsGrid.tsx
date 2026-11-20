@@ -313,7 +313,7 @@ function movementColumns(
     ),
     classified_by: (row) => (
       <TextCell
-        text={classifiedByLabel(t, row.transaction.classified_by)}
+        text={classifiedByLabel(t, row.transaction.classification_decided_by)}
         quiet
       />
     ),

@@ -1533,6 +1533,12 @@ application:
             entró o salió.'
           cannot_clear: 'Este valor no se puede vaciar: el campo tiene que tener un
             valor.'
+          derive_and_figures: Calcular los importes sustituiría la base, el tipo o
+            el IVA que has escrito.
+          derive_category_differs: El cálculo usa otra categoría de IVA que la del
+            movimiento.
+          derive_needs_business: Solo se calcula el IVA de un movimiento empresarial
+            o mixto.
           draft_incomplete: Un movimiento nuevo necesita fecha contable, importe,
             moneda, sentido y descripción antes de poder guardarse.
           mixed_needs_share: Un movimiento Mixto necesita una parte profesional.
@@ -1548,6 +1554,10 @@ application:
           amount_signed: Escribe el importe sin signo y deja que el sentido diga si
             entró o salió.
           cannot_clear: Conserva el valor guardado.
+          derive_and_figures: Quita los importes que has escrito para que Cadrumo
+            los calcule, o quita el cálculo.
+          derive_category_differs: Calcula con la categoría del movimiento.
+          derive_needs_business: Clasifícalo como Empresarial o Mixto.
           draft_incomplete: Completa lo que le falta al movimiento nuevo.
           mixed_needs_share: Indica la parte profesional como porcentaje, por ejemplo
             50 para el 50 %.
@@ -4583,6 +4593,40 @@ application:
     explain:
       errors:
         modelo_blank: El identificador de modelo no puede estar en blanco.
+    served:
+      home:
+        declaration_state:
+          discarded: Descartada
+          draft: Borrador
+          filed: Registrada como presentada
+          needs_review: Necesita revisión
+          ready: Lista
+        ledger_summary: '%{entries} apuntes; %{requiring_review} necesitan revisión;
+          %{unclassified} sin clasificar; %{missing_evidence} sin justificante'
+        reason:
+          blocked_dependency: Una dependencia de la declaración está bloqueada
+          blocked_evidence: Un bloqueo necesita un justificante
+          blocked_review: El trabajo bloqueado necesita revisión
+          declaration_needs_review: La declaración necesita revisión
+          evidence_missing: Falta un justificante
+          ledger_classification_pending: Faltan apuntes por clasificar
+        zone:
+          calendar_aeat_reader_unavailable: Aún sin leer - aparece cuando se leen
+            por primera vez los datos de la AEAT
+          calendar_taxpayer_model_undeclared: No disponible - el perfil aún no indica
+            qué tipo de contribuyente es
+          home_actions_projector_unavailable: No disponible - las próximas acciones
+            aparecen cuando se han comprobado todos tus registros
+          home_agenda_projector_unavailable: No disponible - no se pudo calcular el
+            calendario de presentación
+          home_declarations_resume_projector_unavailable: No disponible - no se pudieron
+            leer las declaraciones que retomar
+          home_messages_never_pulled: Aún sin leer - los mensajes de la AEAT aparecen
+            cuando se leen por primera vez los datos de la AEAT
+          home_taxpayer_profile_incomplete: No disponible - al perfil le faltan respuestas
+            obligatorias; complétalas en tu perfil
+          ledger_snapshot_projector_unavailable: No disponible - se muestra cuando
+            se han comprobado todos tus registros
   prorrata_register:
     served:
       gross_declaration_absent: 'El registro ha rechazado la eliminación: no hay ninguna

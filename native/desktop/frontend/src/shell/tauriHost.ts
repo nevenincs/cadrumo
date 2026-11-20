@@ -236,6 +236,7 @@ export function tauriHost(): Host {
           to: range.to,
           language,
         }),
+      home: (language) => bound("profile_views_home", { language }),
     },
     ledger: tauriLedger(token, call),
     modelo: tauriModelo(token, call),

@@ -187,7 +187,12 @@ def home_ledger_readiness(ledger: LedgerWorkspaceProjectionV1 | None) -> HomeLed
         if state is None or state.status is LedgerWorkspaceStatus.UNMEASURED:
             return None
         counts[field] = state.item_count
-    return HomeLedgerReadiness(**counts)
+    return HomeLedgerReadiness(
+        entries=counts["entries"],
+        requiring_review=counts["requiring_review"],
+        unclassified=counts["unclassified"],
+        missing_evidence=counts["missing_evidence"],
+    )
 
 
 HOME_DECLARATION_STATES: Final[dict[CalculationRevisionState, HomeDeclarationState]] = {

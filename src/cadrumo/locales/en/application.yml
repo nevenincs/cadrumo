@@ -1453,6 +1453,11 @@ application:
           amount_signed: 'An amount is a magnitude: the direction already says whether
             the money came in or went out.'
           cannot_clear: 'This value can''t be cleared: the field has to hold a value.'
+          derive_and_figures: Calculating the amounts would replace the base, rate
+            or IVA you typed.
+          derive_category_differs: The calculation uses a different IVA category than
+            the movement has.
+          derive_needs_business: IVA is only calculated for a Business or Mixed movement.
           draft_incomplete: A new movement needs a booked date, an amount, a currency,
             a direction and a description before it can be saved.
           mixed_needs_share: A Mixed movement needs a business share.
@@ -1466,6 +1471,10 @@ application:
           amount_signed: Write the amount without a sign, and let the direction say
             whether it came in or went out.
           cannot_clear: Keep the stored value.
+          derive_and_figures: Remove the amounts you typed so Cadrumo calculates them,
+            or remove the calculation.
+          derive_category_differs: Calculate with the movement's category.
+          derive_needs_business: Classify it as Business or Mixed.
           draft_incomplete: Fill in what the new movement is missing.
           mixed_needs_share: Enter the business share as a percentage, such as 50
             for 50%.
@@ -4352,6 +4361,40 @@ application:
     explain:
       errors:
         modelo_blank: Modelo identifier must not be blank.
+    served:
+      home:
+        declaration_state:
+          discarded: Discarded
+          draft: Draft
+          filed: Recorded as filed
+          needs_review: Needs review
+          ready: Ready
+        ledger_summary: '%{entries} entries; %{requiring_review} need review; %{unclassified}
+          unclassified; %{missing_evidence} missing supporting documents'
+        reason:
+          blocked_dependency: A declaration dependency is blocked
+          blocked_evidence: A blocker needs a supporting document
+          blocked_review: Blocked work needs review
+          declaration_needs_review: Declaration needs review
+          evidence_missing: A supporting document is missing
+          ledger_classification_pending: Ledger entries still need classifying
+        zone:
+          calendar_aeat_reader_unavailable: Not read yet - appears once AEAT data
+            has been read for the first time
+          calendar_taxpayer_model_undeclared: Unavailable - the profile does not yet
+            say what kind of taxpayer this is
+          home_actions_projector_unavailable: Unavailable - next actions appear once
+            all your records have been checked
+          home_agenda_projector_unavailable: Unavailable - the filing calendar could
+            not be worked out
+          home_declarations_resume_projector_unavailable: Unavailable - the declarations
+            to resume could not be read
+          home_messages_never_pulled: Not read yet - AEAT messages appear once AEAT
+            data has been read for the first time
+          home_taxpayer_profile_incomplete: Unavailable - the profile is missing required
+            answers; complete them in your profile
+          ledger_snapshot_projector_unavailable: Unavailable - shown once all your
+            records have been checked
   prorrata_register:
     served:
       gross_declaration_absent: 'The register refused the removal: no gross base is

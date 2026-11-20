@@ -37,6 +37,7 @@ from cadrumo_client.transport.frontend_client_contracts import (
     FrontendRefusedError,
 )
 
+from .bounded_pages import REPLY_BYTES, ROWS_MAX
 from .view_register import VIEW_PAGE_MAX
 
 
@@ -220,13 +221,18 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "authority",
         "Read bundled public reference data from one pinned published tax authority generation, with the content "
         "the command line prints as JSON. modelos lists the registry's modelos (filing_year and domain narrow it); "
-        "support is the per-modelo capability matrix; describe, casillas, casilla (named by casilla) and formulas "
-        "read one modelo: give period alone for its latest revision, or filing_year with period to compose an exact "
-        "one (as_of needs the exact form); casillas narrows by input_kind, required, form_number and casilla_number; "
-        "bindings lists a modelo's bindings for a filing_year; categories lists the spending and IRPF category "
-        "vocabularies; portals lists the AEAT portal catalogue (narrow it by category or modelo, not both) and "
-        "portal reads one by id; auth_providers lists the sign-in providers; apoderado_scopes lists the "
-        "representative scopes. A ceded autonomic tax such as 600 or 650 is answered with its regional redirect",
+        "support is the per-modelo capability matrix (modelo narrows it to one and pages its renames); describe, "
+        "casillas, casilla (named by casilla) and formulas read one modelo: give period alone for its latest "
+        "revision, or filing_year with period to compose an exact one (as_of needs the exact form); casillas "
+        "narrows by input_kind, required, form_number and casilla_number; bindings lists a modelo's bindings for a "
+        "filing_year; categories lists the spending and IRPF category vocabularies; portals lists the AEAT portal "
+        "catalogue (narrow it by category or modelo, not both) and portal reads one by id; auth_providers lists "
+        "the sign-in providers; apoderado_scopes lists the representative scopes. A ceded autonomic tax such as "
+        "600 or 650 is answered with its regional redirect. A list is one page of at most "
+        f"{REPLY_BYTES // 1000} KB, never the whole: paging gives total and next_call, so pass next_cursor as "
+        "cursor for the next page, limit for a shorter one, and narrow before you page. casillas and formulas "
+        "rows are summaries; read one casilla whole with casilla. A formula expression too long for one reply "
+        "comes as formula_expression_json in windows, to join in order",
         _schema(
             {
                 "query": {
@@ -260,6 +266,8 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
                 "casilla_number": _TEXT,
                 "category": {"type": "string", "enum": [category.value for category in PortalCategory]},
                 "portal": _TEXT,
+                "limit": {"type": "integer", "minimum": 1, "maximum": ROWS_MAX},
+                "cursor": {"type": "integer", "minimum": 0},
             },
         ),
         _reads("Read published tax reference data"),
@@ -267,8 +275,12 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
     (
         "corpus_search",
         "Search the bundled BOE/AEAT legal corpus and approved tax terminology; "
-        "an exact citation id resolves to its published verbatim text",
-        _schema({"query": _TEXT}, {"limit": {"type": "integer", "minimum": 1, "maximum": 50}}),
+        "an exact citation id resolves to its published verbatim text, in windows of at most "
+        f"{REPLY_BYTES // 1000} KB when it is longer: pass paging.next_cursor as cursor for the next window",
+        _schema(
+            {"query": _TEXT},
+            {"limit": {"type": "integer", "minimum": 1, "maximum": 50}, "cursor": {"type": "integer", "minimum": 0}},
+        ),
         _reads("Search the bundled legal corpus"),
     ),
     (

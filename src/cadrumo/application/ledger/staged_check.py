@@ -384,7 +384,7 @@ def _transfer_blocker(
     after: dict[str, str | None],
 ) -> _Blocked | None:
     # Any write revalidates the whole row, so a cell far from the tax fields is refused for them too.
-    if not row.cells and not row.m210_staged and not row.evidence_staged:
+    if not row.cells and not row.m210_staged and not row.evidence_staged and row.iva_derive_staged is None:
         return None
     found: list[str] = [field for field in TRANSFER_TAX_FIELDS if after.get(field) is not None]
     found.extend(_stored_transfer_tax_fields(row, transaction))
@@ -468,6 +468,26 @@ def _stored_transfer_blockers(row: LedgerStagedRow, transaction: Transaction, st
     return [] if blocker is None else [blocker]
 
 
+_DERIVED_FIGURE_FIELDS: Final[tuple[str, ...]] = ("taxable_base", "iva_rate", "iva_amount")
+"""The figures a staged derivation computes and would overwrite."""
+
+
+def _derive_blockers(row: LedgerStagedRow, state: _StagedState) -> list[_Blocked]:
+    """What a staged derivation of the IVA figures would refuse, judged on the row as its cells leave it."""
+    if row.iva_derive_staged is None:
+        return []
+    blockers: list[_Blocked] = []
+    typed = tuple(cell.field for cell in row.cells if cell.field in _DERIVED_FIGURE_FIELDS)
+    if typed:
+        blockers.append(_Blocked(kind="derive_and_figures", fields=typed))
+    category = state.after["iva_category"]
+    if _filled(category) and category != row.iva_derive_staged:
+        blockers.append(_Blocked(kind="derive_category_differs", fields=("iva_category",)))
+    if state.classification not in BUSINESS_BEARING_STATES:
+        blockers.append(_Blocked(kind="derive_needs_business", fields=("business_classification",)))
+    return blockers
+
+
 def _row_findings(
     row: LedgerStagedRow,
     transaction: Transaction,
@@ -507,6 +527,8 @@ def _row_findings(
             check_gross=bool(row.cells),
         )
     )
+
+    blockers.extend(_derive_blockers(row, state))
 
     identity = staged_identity_fields(row, state.before, state.after)
     if identity:
