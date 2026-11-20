@@ -58,12 +58,22 @@ test("the documentation pane offers visible Back and Forward controls", async ({
   });
   await expect(back).toBeVisible();
   await expect(forward).toBeVisible();
+  // On the first page there is nowhere to go either way.
+  await expect(frame.locator("h1")).toHaveText("Stand-in documentation");
+  await expect(back).toBeDisabled();
+  await expect(forward).toBeDisabled();
   await frame.getByRole("link", { name: "Second page" }).click();
   await expect(frame.locator("h1")).toHaveText("Second page");
+  await expect(back).toBeEnabled();
+  await expect(forward).toBeDisabled();
   await back.click();
   await expect(frame.locator("h1")).toHaveText("Stand-in documentation");
+  await expect(back).toBeDisabled();
+  await expect(forward).toBeEnabled();
   await forward.click();
   await expect(frame.locator("h1")).toHaveText("Second page");
+  await expect(back).toBeEnabled();
+  await expect(forward).toBeDisabled();
 
   await calendarButton(target).click();
   await expect(back).toHaveCount(0);

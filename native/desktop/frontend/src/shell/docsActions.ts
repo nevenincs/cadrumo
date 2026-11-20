@@ -6,10 +6,12 @@ import { POINTER_BACK, POINTER_FORWARD } from "./historyActions";
 import type { Layout } from "./layout";
 import type { Translate } from "./strings";
 
-/** The documentation's: its search, home, history and zoom. */
+/** The documentation's: its search, home, history and zoom. Back and
+ * Forward are offered only where the page can move that way. */
 export function useDocsActions({
   t,
   docsSearchReady,
+  docsHistory,
   docsEntry,
   docs,
   goHome,
@@ -19,6 +21,7 @@ export function useDocsActions({
 }: {
   t: Translate;
   docsSearchReady: boolean;
+  docsHistory: { back: boolean; forward: boolean };
   docsEntry: DocsLanguage | null;
   docs: RefObject<DocsFrameApi | null>;
   goHome: () => void;
@@ -51,7 +54,7 @@ export function useDocsActions({
         icon: "back",
         chords: [{ alt: true, code: "ArrowLeft", key: "←", scope: "docs" }],
         buttons: [POINTER_BACK],
-        enabled: () => !pageOn,
+        enabled: () => !pageOn && docsHistory.back,
         run: () => docs.current?.back(),
       },
       {
@@ -61,7 +64,7 @@ export function useDocsActions({
         icon: "forward",
         chords: [{ alt: true, code: "ArrowRight", key: "→", scope: "docs" }],
         buttons: [POINTER_FORWARD],
-        enabled: () => !pageOn,
+        enabled: () => !pageOn && docsHistory.forward,
         run: () => docs.current?.forward(),
       },
       {
@@ -98,6 +101,16 @@ export function useDocsActions({
         run: () => patch({ zoom: 1 }),
       },
     ],
-    [t, docsSearchReady, docsEntry, docs, goHome, pageOn, patch, layout.zoom],
+    [
+      t,
+      docsSearchReady,
+      docsHistory,
+      docsEntry,
+      docs,
+      goHome,
+      pageOn,
+      patch,
+      layout.zoom,
+    ],
   );
 }
