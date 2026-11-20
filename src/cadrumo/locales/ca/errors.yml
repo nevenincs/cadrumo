@@ -1882,6 +1882,19 @@ errors:
     refused_iva_wallet_reconciliation_invariant: Les entrades de conciliació de la
       cartera IVA incompleixen un invariant obligatori. Comprova la configuració d'antiguitat
       de la cartera i torna-ho a intentar.
+    refused_ledger_classification_job_empty_scope: La sol·licitud no inclou cap moviment
+      per classificar, així que no s'ha posat res a la cua.
+    refused_ledger_classification_job_movement_unknown: Alguns dels moviments indicats
+      no són al llibre d'aquest perfil, així que no s'ha posat res a la cua.
+    refused_ledger_classification_job_nothing_to_retry: La tasca de classificació
+      no té cap moviment fallit o interromput pel qual tornar a preguntar.
+    refused_ledger_classification_job_revision_stale: La tasca de classificació ha
+      canviat des que la vas llegir; torna a llegir-la i decideix sobre el que conté
+      ara.
+    refused_ledger_classification_job_state: L'estat actual de la tasca de classificació
+      no permet aquest canvi.
+    refused_ledger_classification_job_unknown: Aquest perfil no té cap tasca de classificació
+      amb aquesta identitat.
     refused_ledger_confirmation_blocked: Aquest document té troballes que una persona
       ha de resoldre abans de poder-lo confirmar.
     refused_ledger_counterparty_establishment_conflict: Aquesta contrapart ja està

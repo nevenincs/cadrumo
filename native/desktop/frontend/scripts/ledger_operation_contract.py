@@ -234,11 +234,23 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.import",
         ),
     ),
+    "classificationJob": (
+        "LedgerClassifyJobContracts",
+        (
+            "ledger.classify.job.cancel",
+            "ledger.classify.job.dismiss",
+            "ledger.classify.job.enqueue",
+            "ledger.classify.job.list",
+            "ledger.classify.job.read",
+            "ledger.classify.job.retry",
+        ),
+    ),
 }
 
 #: The families whose modules a family imports its types from rather than writing them again, in the order
 #: they are written; a family's types are in the first of these that reaches them.
 EARLIER: dict[str, tuple[str, ...]] = {
+    "classificationJob": ("classification",),
     "document": ("invoice",),
     "documentReview": ("invoice", "document"),
     "movement": ("classification", "invoice", "document", "documentReview"),

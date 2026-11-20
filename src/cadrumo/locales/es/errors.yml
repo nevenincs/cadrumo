@@ -1863,6 +1863,20 @@ errors:
     refused_iva_wallet_reconciliation_invariant: Las entradas de conciliación de la
       cartera IVA incumplen un invariante obligatorio. Comprueba la configuración
       de antigüedad de la cartera y vuelve a intentarlo.
+    refused_ledger_classification_job_empty_scope: La solicitud no incluye ningún
+      movimiento que clasificar, así que no se ha puesto nada en cola.
+    refused_ledger_classification_job_movement_unknown: Algunos de los movimientos
+      indicados no están en el libro de este perfil, así que no se ha puesto nada
+      en cola.
+    refused_ledger_classification_job_nothing_to_retry: La tarea de clasificación
+      no tiene ningún movimiento fallido o interrumpido por el que volver a preguntar.
+    refused_ledger_classification_job_revision_stale: La tarea de clasificación ha
+      cambiado desde que la leíste; vuelve a leerla y decide sobre lo que contiene
+      ahora.
+    refused_ledger_classification_job_state: El estado actual de la tarea de clasificación
+      no permite este cambio.
+    refused_ledger_classification_job_unknown: Este perfil no tiene ninguna tarea
+      de clasificación con esa identidad.
     refused_ledger_confirmation_blocked: Este documento tiene hallazgos que una persona
       debe resolver antes de poder confirmarlo.
     refused_ledger_counterparty_establishment_conflict: Esta contraparte ya está confirmada

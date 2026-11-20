@@ -339,6 +339,56 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.ledger.classification_job_errors.ClassificationJobUnknownError",
+        ErrorCode(
+            code="REFUSED_LEDGER_CLASSIFICATION_JOB_UNKNOWN",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_classification_job_unknown",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.classification_job_errors.ClassificationJobStaleRevisionError",
+        ErrorCode(
+            code="REFUSED_LEDGER_CLASSIFICATION_JOB_REVISION_STALE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_classification_job_revision_stale",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.classification_job_errors.ClassificationJobStateRefusedError",
+        ErrorCode(
+            code="REFUSED_LEDGER_CLASSIFICATION_JOB_STATE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_classification_job_state",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.classification_job_errors.ClassificationJobEmptyScopeError",
+        ErrorCode(
+            code="REFUSED_LEDGER_CLASSIFICATION_JOB_EMPTY_SCOPE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_classification_job_empty_scope",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.classification_job_errors.ClassificationJobMovementUnknownError",
+        ErrorCode(
+            code="REFUSED_LEDGER_CLASSIFICATION_JOB_MOVEMENT_UNKNOWN",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_classification_job_movement_unknown",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.credit_resolution_repository.CreditResolutionPersistenceError",
         ErrorCode(
             code="FAIL_CREDIT_RESOLUTION_PERSISTENCE",

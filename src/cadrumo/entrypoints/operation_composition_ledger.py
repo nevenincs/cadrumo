@@ -19,6 +19,7 @@ from ..application.operations.contract_manifest import (
 )
 
 if TYPE_CHECKING:
+    from ..application.ledger.classification_job_repository import ClassificationJobRepository
     from ..application.ledger.import_operation import LedgerImportOperationPorts
     from ..application.ledger.llm_review_execution import LedgerLlmOperationPorts
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -516,6 +517,77 @@ def compose_ledger_llm_review_operation(inputs: OperationCompositionInputs) -> O
     )
     return built(
         (classify, split), (build_ledger_llm_review_registration(classify), build_ledger_llm_review_registration(split))
+    )
+
+
+def compose_ledger_classification_job_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the enqueue, cancel, retry and dismiss of ledger classification jobs."""
+    from ..application.ledger.classification_job_contracts import (
+        LEDGER_CLASSIFY_JOB_CANCEL_DEFINITION_ID,
+        LEDGER_CLASSIFY_JOB_DISMISS_DEFINITION_ID,
+        LEDGER_CLASSIFY_JOB_RETRY_DEFINITION_ID,
+    )
+    from ..application.ledger.classification_job_operation import (
+        build_ledger_classify_job_change_definition,
+        build_ledger_classify_job_change_registration,
+        build_ledger_classify_job_enqueue_definition,
+        build_ledger_classify_job_enqueue_registration,
+    )
+    from ..application.ledger.classification_job_ports import ClassificationJobEnqueuePorts
+    from ..domain.transactions.models import TransactionCatalogue
+    from .ledger_llm_composition import resolve_reading_lane
+
+    jobs, reads = _classification_job_repository, inputs.ledger_reads()
+
+    def movements(*, bucket_id: str, operation: PinnedAuthorityOperation) -> TransactionCatalogue:
+        return reads(bucket_id=bucket_id, operation=operation).transaction_repository.load()
+
+    enqueue = build_ledger_classify_job_enqueue_definition(
+        ClassificationJobEnqueuePorts(jobs=jobs, movements=movements, resolve_lane=resolve_reading_lane)
+    )
+    changes = tuple(
+        build_ledger_classify_job_change_definition(definition_id, jobs)
+        for definition_id in (
+            LEDGER_CLASSIFY_JOB_CANCEL_DEFINITION_ID,
+            LEDGER_CLASSIFY_JOB_RETRY_DEFINITION_ID,
+            LEDGER_CLASSIFY_JOB_DISMISS_DEFINITION_ID,
+        )
+    )
+    return built(
+        (enqueue, *changes),
+        (
+            build_ledger_classify_job_enqueue_registration(enqueue),
+            *(build_ledger_classify_job_change_registration(definition) for definition in changes),
+        ),
+    )
+
+
+def compose_ledger_classification_job_read_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the reads of one ledger classification job and of the profile's newest jobs."""
+    from ..application.ledger.classification_job_read_operation import (
+        build_ledger_classify_job_list_definition,
+        build_ledger_classify_job_list_registration,
+        build_ledger_classify_job_read_definition,
+        build_ledger_classify_job_read_registration,
+    )
+
+    del inputs
+    jobs = _classification_job_repository
+    read = build_ledger_classify_job_read_definition(jobs)
+    listing = build_ledger_classify_job_list_definition(jobs)
+    return built(
+        (read, listing),
+        (build_ledger_classify_job_read_registration(read), build_ledger_classify_job_list_registration(listing)),
+    )
+
+
+def _classification_job_repository(*, bucket_id: str) -> ClassificationJobRepository:
+    """Bind one profile's classification jobs to that profile's own encrypted store."""
+    from ..adapters.persistence.profile.classification_jobs import ClassificationJobRepositoryAdapter
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+
+    return ClassificationJobRepositoryAdapter(
+        objects=secure_object_repository_for_bucket(bucket_id), bucket_id=bucket_id
     )
 
 

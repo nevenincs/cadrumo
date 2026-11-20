@@ -102,6 +102,22 @@ from ..check_operation import (
     LedgerCheckRequest,
     resolve_ledger_check_access,
 )
+from ..classification_job_contracts import (
+    LedgerClassifyJobCancelRequest,
+    LedgerClassifyJobDismissRequest,
+    LedgerClassifyJobEnqueueRequest,
+    LedgerClassifyJobListRequest,
+    LedgerClassifyJobReadRequest,
+    LedgerClassifyJobRetryRequest,
+)
+from ..classification_job_operation import (
+    resolve_ledger_classify_job_change_access,
+    resolve_ledger_classify_job_enqueue_access,
+)
+from ..classification_job_read_operation import (
+    resolve_ledger_classify_job_list_access,
+    resolve_ledger_classify_job_read_access,
+)
 from ..classify_operation import (
     resolve_ledger_classify_access,
 )
@@ -354,6 +370,48 @@ _RESOLVERS = [
     ),
     pytest.param(
         resolve_ledger_rule_trial_access, "ledger.rule.trial", LedgerRuleTrialRequest, False, id="ledger.rule.trial"
+    ),
+    pytest.param(
+        resolve_ledger_classify_job_enqueue_access,
+        "ledger.classify.job.enqueue",
+        LedgerClassifyJobEnqueueRequest,
+        True,
+        id="ledger.classify.job.enqueue",
+    ),
+    pytest.param(
+        resolve_ledger_classify_job_read_access,
+        "ledger.classify.job.read",
+        LedgerClassifyJobReadRequest,
+        False,
+        id="ledger.classify.job.read",
+    ),
+    pytest.param(
+        resolve_ledger_classify_job_list_access,
+        "ledger.classify.job.list",
+        LedgerClassifyJobListRequest,
+        False,
+        id="ledger.classify.job.list",
+    ),
+    pytest.param(
+        resolve_ledger_classify_job_change_access,
+        "ledger.classify.job.cancel",
+        LedgerClassifyJobCancelRequest,
+        True,
+        id="ledger.classify.job.cancel",
+    ),
+    pytest.param(
+        resolve_ledger_classify_job_change_access,
+        "ledger.classify.job.retry",
+        LedgerClassifyJobRetryRequest,
+        True,
+        id="ledger.classify.job.retry",
+    ),
+    pytest.param(
+        resolve_ledger_classify_job_change_access,
+        "ledger.classify.job.dismiss",
+        LedgerClassifyJobDismissRequest,
+        True,
+        id="ledger.classify.job.dismiss",
     ),
     pytest.param(
         resolve_ledger_split_check_access, "ledger.split.check", LedgerSplitCheckRequest, False, id="ledger.split.check"

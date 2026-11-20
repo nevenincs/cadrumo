@@ -1716,6 +1716,18 @@ errors:
       margin cannot be grounded for that ejercicio.
     refused_iva_wallet_reconciliation_invariant: The IVA wallet reconciliation inputs
       violate a required invariant. Check the wallet age configuration and retry.
+    refused_ledger_classification_job_empty_scope: The request names no movement to
+      classify, so nothing was queued.
+    refused_ledger_classification_job_movement_unknown: Some of the named movements
+      are not in this profile's ledger, so nothing was queued.
+    refused_ledger_classification_job_nothing_to_retry: The classification job has
+      no failed or interrupted movement to ask about again.
+    refused_ledger_classification_job_revision_stale: The classification job changed
+      since you last read it; read it again and decide on what it holds now.
+    refused_ledger_classification_job_state: The classification job's current state
+      does not allow this change.
+    refused_ledger_classification_job_unknown: This profile holds no such classification
+      job.
     refused_ledger_confirmation_blocked: This document has findings a human must answer
       before it can be confirmed.
     refused_ledger_counterparty_establishment_conflict: This counterparty is already
