@@ -13,6 +13,14 @@ import type {
   DocsSearchResult,
   DocsTheme,
 } from "../ipc/docsBridge";
+import {
+  docsCan,
+  docsTravel,
+  docsTravelLapsed,
+  docsVisited,
+  NO_DOCS_HISTORY,
+  type DocsHistory,
+} from "../shell/docsHistory";
 import { onDocsOrigin } from "../shell/docsOrigin";
 
 const CHANNEL = "cadrumo-desktop";
@@ -23,6 +31,9 @@ const SEARCH_TOTAL_TIMEOUT_MS = 30000;
 const EXTERNAL_BURST = 3;
 const EXTERNAL_WINDOW_MS = 10000;
 const MAX_SELECTION = 65536;
+// How long a Back or Forward the window asked for is awaited; a page that
+// never reports the move leaves the record where it was.
+const TRAVEL_TIMEOUT_MS = 3000;
 // The page's own bounds; a request beyond them is refused without an answer.
 const MAX_QUERY = 256;
 const MAX_URL = 4096;
@@ -72,6 +83,8 @@ type Props = {
   onShortcut: (id: string) => void;
   onOpenExternal: (url: string) => void;
   onMenu: (request: DocsMenuRequest) => void;
+  /** Whether Back and Forward can move the page, each time that changes. */
+  onHistory?: (can: { back: boolean; forward: boolean }) => void;
 };
 
 function readTheme(value: unknown): DocsTheme {
@@ -145,6 +158,8 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
     );
     const nextId = useRef(1);
     const externals = useRef<number[]>([]);
+    const history = useRef<DocsHistory>(NO_DOCS_HISTORY);
+    const travelTimer = useRef<number | undefined>(undefined);
     const live = useRef(props);
     live.current = props;
 
@@ -162,6 +177,31 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
       },
       [origin],
     );
+
+    // Keeps the record and tells the window only when what Back and Forward
+    // can do has changed.
+    const remember = useCallback((next: DocsHistory) => {
+      const was = docsCan(history.current);
+      history.current = next;
+      const now = docsCan(next);
+      if (now.back !== was.back || now.forward !== was.forward)
+        live.current.onHistory?.(now);
+    }, []);
+    const travel = useCallback(
+      (direction: "back" | "forward") => {
+        const next = docsTravel(history.current, direction);
+        if (next === history.current) return;
+        remember(next);
+        window.clearTimeout(travelTimer.current);
+        travelTimer.current = window.setTimeout(
+          () => remember(docsTravelLapsed(history.current)),
+          TRAVEL_TIMEOUT_MS,
+        );
+        post("command", { name: direction });
+      },
+      [post, remember],
+    );
+    useEffect(() => () => window.clearTimeout(travelTimer.current), []);
 
     useEffect(() => {
       const searches = pending.current;
@@ -184,6 +224,10 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
         switch (data.type) {
           case "ready": {
             ready.current = true;
+            if (typeof data.url === "string") {
+              window.clearTimeout(travelTimer.current);
+              remember(docsVisited(history.current, data.url));
+            }
             const announced: unknown[] = Array.isArray(data.features)
               ? data.features
               : [];
@@ -206,6 +250,12 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
             });
             break;
           }
+          case "location":
+            if (typeof data.url === "string") {
+              window.clearTimeout(travelTimer.current);
+              remember(docsVisited(history.current, data.url));
+            }
+            break;
           case "language-change":
             if (
               typeof data.language === "string" &&
@@ -292,7 +342,7 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
         for (const request of searches.values()) request.receive(null);
         searches.clear();
       };
-    }, [origin, post]);
+    }, [origin, post, remember]);
 
     useEffect(() => {
       if (
@@ -321,8 +371,8 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
       ref,
       () => ({
         focus: () => frame.current?.focus(),
-        back: () => post("command", { name: "back" }),
-        forward: () => post("command", { name: "forward" }),
+        back: () => travel("back"),
+        forward: () => travel("forward"),
         home: () => {
           if (!features.current.includes("home")) return false;
           post("command", { name: "home" });
@@ -389,7 +439,7 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
             });
           }),
       }),
-      [post, origin],
+      [post, origin, travel],
     );
 
     return (

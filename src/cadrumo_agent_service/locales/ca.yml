@@ -6,6 +6,7 @@ desktop:
       desada, ajuda'm amb els requisits pendents i continua la nostra tasca quan estigui
       llesta.
     agent_replied: L'agent ha respost
+    already_new: Ja ets en una conversa nova
     approval_allow_once: Permet-ho un cop
     approval_allow_session: Permet-ho durant aquesta sessió
     approval_attachment: 'Adjunt: {target}'

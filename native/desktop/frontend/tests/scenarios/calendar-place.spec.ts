@@ -76,6 +76,38 @@ test("the months come back to the month the reader left them on, in a pane and b
   await expect(heading(fixtureMonth(10))).not.toBeInViewport();
 });
 
+test("the way back to today is offered only once the reader has left it", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  const heading = (month: string) =>
+    page.locator(`.calendar-month[data-month="${month}"] h2`);
+  const toToday = page.locator(".calendar-to-today");
+  // The calendar opens where it stands: there is nowhere to go back to.
+  await expect(heading(fixtureMonth(10))).toBeInViewport();
+  await expect(toToday).toHaveAttribute("aria-disabled", "true");
+  await page.evaluate(
+    (element, key) => {
+      const month = element.querySelector(`[data-month="${key}"]`);
+      if (!month) throw new Error("no January");
+      element.scrollTop +=
+        month.getBoundingClientRect().top -
+        element.getBoundingClientRect().top -
+        100;
+    },
+    fixtureMonth(1, 1),
+  );
+  await expect(heading(fixtureMonth(10))).not.toBeInViewport();
+  await expect(toToday).not.toHaveAttribute("aria-disabled");
+  await toToday.click();
+  await expect(heading(fixtureMonth(10))).toBeInViewport();
+  await expect(toToday).toHaveAttribute("aria-disabled", "true");
+});
+
 test("the reader's month does not drift however often the months are laid out anew", async ({
   page: target,
 }) => {

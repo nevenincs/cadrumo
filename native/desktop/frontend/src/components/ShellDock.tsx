@@ -385,6 +385,7 @@ export function ShellDock({
                 <IconButton
                   label={t("desktop.action.docs_back")}
                   shortcut={primaryChord(byId("docs.back"))}
+                  disabled={!(byId("docs.back")?.enabled?.() ?? true)}
                   onClick={() => runAction("docs.back")}
                 >
                   <Icon name="back" />
@@ -392,6 +393,7 @@ export function ShellDock({
                 <IconButton
                   label={t("desktop.action.docs_forward")}
                   shortcut={primaryChord(byId("docs.forward"))}
+                  disabled={!(byId("docs.forward")?.enabled?.() ?? true)}
                   onClick={() => runAction("docs.forward")}
                 >
                   <Icon name="forward" />

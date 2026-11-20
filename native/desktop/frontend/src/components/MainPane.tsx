@@ -146,6 +146,7 @@ export function MainPane({
   chords,
   setDocsTheme,
   setDocsSearchReady,
+  setDocsHistory,
   runShortcut,
   docsMenu,
 }: {
@@ -245,6 +246,7 @@ export function MainPane({
   chords: ReturnType<typeof useShellShortcuts>["chords"];
   setDocsTheme: ComponentProps<typeof DocsFrame>["onTheme"];
   setDocsSearchReady: (ready: boolean) => void;
+  setDocsHistory: (can: { back: boolean; forward: boolean }) => void;
   runShortcut: ReturnType<typeof useShellShortcuts>["runShortcut"];
   docsMenu: ReturnType<typeof useShellMenus>["docsMenu"];
 }) {
@@ -726,6 +728,7 @@ export function MainPane({
             onShortcut={runShortcut}
             onOpenExternal={openLink}
             onMenu={docsMenu}
+            onHistory={setDocsHistory}
           />
         ) : environment.state === "ready" &&
           environment.value.docs.state !== "bundled" ? (

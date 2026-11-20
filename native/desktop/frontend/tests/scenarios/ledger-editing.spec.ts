@@ -1104,6 +1104,35 @@ test("the tray counts movements, new movements and actions on every section", as
   expect(await trayCount(target)).toBe(2);
 });
 
+test("an undo from the tray says so, also where the count stays the same", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const row = rowOf(target, "PAPELERIA TRAZO");
+  const staged = cellOf(row, "counterparty").locator("[data-staged]");
+  for (const name of ["Trazo SL", "Trazo SA", "Trazo SC"])
+    await typeInto(target, cellOf(row, "counterparty"), name);
+  expect(await trayCount(target)).toBe(1);
+  await tray(target).locator(".ledger-tray-toggle").click();
+  const undo = tray(target).getByRole("button", {
+    name: label("desktop.ledger.tray.undo"),
+  });
+  const said = tray(target).locator(".ledger-tray-undone");
+  await expect(said).toBeEmpty();
+  // Each edit taken back leaves an earlier one: one change on one movement
+  // still, so only the words show that something happened, each time.
+  await undo.click();
+  await expect(said).toHaveText(label("desktop.ledger.tray.undone.one"));
+  await expect(staged).toContainText("Trazo SA");
+  expect(await trayCount(target)).toBe(1);
+  await undo.click();
+  await expect(said).toHaveText(
+    label("desktop.ledger.tray.undone.other", { count: 2 }),
+  );
+  await expect(staged).toContainText("Trazo SL");
+  expect(await trayCount(target)).toBe(1);
+});
+
 test("neither the grid nor a cell editor takes a shell chord", async ({
   page: target,
 }) => {

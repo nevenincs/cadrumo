@@ -57,6 +57,11 @@
       "reason": "opens the Google sign-in in the system browser"
     },
     {
+      "key": "desktop.logs.reveal",
+      "kind": "external",
+      "reason": "opens the records folder in the system file manager, outside the window"
+    },
+    {
       "key": "desktop.profile.censo.title",
       "kind": "remote",
       "reason": "starts a live AEAT census read"
