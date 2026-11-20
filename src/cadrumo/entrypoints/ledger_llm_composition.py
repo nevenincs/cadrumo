@@ -12,6 +12,7 @@ import httpx
 from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunRefusal, ModelRunRefusalCode, ModelRunTaskKind
 
 from ..adapters.inbound.einvoice.shape import probe_document_shape
+from ..adapters.outbound.llm.consent import EvidenceConsentToken, mint_granted_consent_token
 from ..adapters.outbound.llm.errors import (
     LLMCacheError,
     LLMConfigError,
@@ -28,17 +29,12 @@ from ..adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ..adapters.persistence.storage.attachment import AttachmentStore
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ..application.ledger.classification_job_ports import (
-    CLASSIFICATION_READING_ROLE,
-    ClassificationJobReader,
-    ClassificationJobReaderFactory,
-)
+from ..application.ledger.classification_job_consent import off_host_consent_refused
+from ..application.ledger.classification_job_contracts import LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID
+from ..application.ledger.classification_job_ports import ClassificationJobReader, ClassificationJobReaderFactory
 from ..application.ledger.classification_job_run import MODEL_RUN_REFUSAL_CONTEXT_KEY
 from ..application.ledger.evidence import PurchaseInvoiceEvidenceService
-from ..application.ledger.evidence_errors import (
-    LedgerOffHostConsentRequiredError,
-    PurchaseInvoiceEvidenceReaderError,
-)
+from ..application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderError
 from ..application.ledger.evidence_input import (
     resolve_attachment_evidence_input,
     resolve_purchase_invoice_evidence_input,
@@ -54,7 +50,7 @@ from ..application.ledger.llm_classification_ports import (
     ResolvedEvidenceInput,
 )
 from ..application.ledger.off_host_consent_refusal import off_host_consent_required
-from ..application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
+from ..application.ledger.preconditions import LedgerPreconditionCondition
 from ..application.ledger.read_ports import LedgerReadPortsFactory
 from ..application.ledger.reading_model_refusal import (
     model_run_refusal_code,
@@ -63,16 +59,19 @@ from ..application.ledger.reading_model_refusal import (
 )
 from ..application.operations.model_runs import current_model_run_port
 from ..application.operator_actions.models import PreconditionVerdict
-from ..core.config import Settings
+from ..application.user_profile.capabilities import cloud_evidence_upload_eligible_for_active_profile
+from ..core.config import Settings, load_settings
 from ..core.model_roles import ModelRole
 from ..core.time.clock import now
 from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+from ..domain.evidence_consent.grant import ConsentGrantStanding
 from ..domain.transactions.classification_job import ClassificationJobConsent, ClassificationJobLane
 from ..domain.transactions.errors import LLMClassifierError, TransactionValidationError
 from ..domain.transactions.llm import LLMClassificationResponse, LLMClassifier, PromptSpec
 from ..domain.transactions.models import Transaction
 from .adapter_composition_work_ports import build_ledger_evidence_ports
+from .ledger_classification_consent_composition import LedgerClassificationConsentGrants
 from .ledger_evidence_extraction_composition import evidence_text_layer_ports
 
 
@@ -319,30 +318,45 @@ def _typed_run_failures(run: Callable[[], object]) -> Callable[[], object]:
     return guarded
 
 
-def _off_host_job_refused(consent: ClassificationJobConsent | None) -> LedgerOffHostConsentRequiredError:
-    """The ledger's off-host consent refusal for a job whose consent cannot be bound to a read."""
-    return off_host_consent_required(
-        ledger_no_recovery_verdict(
-            LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
-            facts={
-                "model_run_refusal": ModelRunRefusalCode.CONSENT_MISSING.value,
-                "model_role": CLASSIFICATION_READING_ROLE.value,
-                "consent_token_present": consent is not None,
-            },
-        )
+def _granted_read_token(
+    grants: LedgerClassificationConsentGrants,
+    *,
+    bucket_id: str,
+    lane: ClassificationJobLane,
+    consent: ClassificationJobConsent | None,
+    job_id: str,
+    content_address: str,
+) -> EvidenceConsentToken:
+    """Mint the consent of one off-host read from the job's grant, checked in the consent ledger now."""
+    standing = (
+        ConsentGrantStanding.MISSING
+        if consent is None
+        else grants.standing(bucket_id=bucket_id, lane=lane, consent=consent, job_id=job_id)
     )
+    settings = load_settings()
+    try:
+        return mint_granted_consent_token(
+            settings=settings,
+            profile_eligible=cloud_evidence_upload_eligible_for_active_profile(settings=settings),
+            grant_covers_read=standing is ConsentGrantStanding.VALID,
+            surface=LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID,
+            evidence_content_address=content_address,
+        )
+    except LLMConsentError as exc:
+        raise off_host_consent_refused(consent_present=consent is not None, standing=standing) from exc
 
 
 def classification_job_reader_factory(
-    *, settings: Settings, reads: LedgerReadPortsFactory
+    *, settings: Settings, reads: LedgerReadPortsFactory, grants: LedgerClassificationConsentGrants
 ) -> ClassificationJobReaderFactory:
     """Bind the reader a classification job's run reads with: the review's own classification reader.
 
     The reader is the one :func:`compose_ledger_llm` composes for a review, with
-    each failed model run naming its cause. A lane that reads off this computer
-    is refused before anything is read: a job's consent names a grant its owner
-    holds, and no owner here can confirm that grant for this read, so nothing is
-    sent on its strength.
+    each failed model run naming its cause. On a lane that reads off this
+    computer each read mints its own consent from the job's grant, checked in
+    the consent ledger at that moment and bound to the revision of the movement
+    it sends; the dispatch point records the read in the consent ledger before
+    anything leaves. A read the grant no longer covers is refused unsent.
     """
 
     def compose(
@@ -351,18 +365,29 @@ def classification_job_reader_factory(
         operation: PinnedAuthorityOperation,
         lane: ClassificationJobLane,
         consent: ClassificationJobConsent | None,
+        job_id: str,
     ) -> ClassificationJobReader:
-        if lane.reads_off_host:
-            raise _off_host_job_refused(consent)
         llm = compose_ledger_llm(bucket_id=bucket_id, settings=settings).ports
         shared_reader = llm.run_reader
 
         def run_reader(role: ModelRole, run: Callable[[], object]) -> object:
             return shared_reader(role, _typed_run_failures(run))
 
+        def llm_for(content_address: str) -> LLMClassificationPorts:
+            if not lane.reads_off_host:
+                return replace(llm, run_reader=run_reader)
+            token = _granted_read_token(
+                grants, bucket_id=bucket_id, lane=lane, consent=consent, job_id=job_id, content_address=content_address
+            )
+
+            def make_text_classifier(spec: PromptSpec, /) -> LLMClassifier:
+                return TextReader(TextLLMClassifier(spec=spec, settings=settings, consent_token=token))
+
+            return replace(llm, run_reader=run_reader, make_text_classifier=make_text_classifier)
+
         return ClassificationJobReader(
             transactions=reads(bucket_id=bucket_id, operation=operation).transaction_repository,
-            llm=replace(llm, run_reader=run_reader),
+            llm_for=llm_for,
             settings=settings,
         )
 

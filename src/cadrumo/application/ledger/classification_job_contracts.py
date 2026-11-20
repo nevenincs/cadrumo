@@ -11,6 +11,12 @@ scope only, never by the reference its owner holds it under.
 The job's ``revision`` rises with every stored change, and the list carries one
 ``queue_revision`` over every job of the profile, so a window re-reads only when
 what it holds has moved.
+
+A consent a person grants names the lane they saw: its provider, transport and
+model. A grant for a lane the agent no longer reads with is refused, never
+moved to another lane. Applying a job's proposals names each accepted movement
+with the movement revision its proposal was made against, so a movement that
+changed since is refused for that movement alone.
 """
 
 from __future__ import annotations
@@ -18,11 +24,14 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Iterable
 from datetime import date, datetime
+from decimal import Decimal
+from enum import StrEnum
 from typing import Annotated, Final, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.hashing import sha256_hex
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
@@ -42,6 +51,8 @@ from ..operations.models import CredentialFreeOperationRequest
 from .actions_common import display_decimal
 
 __all__ = [
+    "LEDGER_CLASSIFY_JOB_APPLY_DEFINITION_ID",
+    "LEDGER_CLASSIFY_JOB_AUTHORISE_DEFINITION_ID",
     "LEDGER_CLASSIFY_JOB_CANCEL_DEFINITION_ID",
     "LEDGER_CLASSIFY_JOB_CHANGE_DEFINITION_IDS",
     "LEDGER_CLASSIFY_JOB_DISMISS_DEFINITION_ID",
@@ -51,9 +62,17 @@ __all__ = [
     "LEDGER_CLASSIFY_JOB_PAGE_MAX",
     "LEDGER_CLASSIFY_JOB_READ_DEFINITION_ID",
     "LEDGER_CLASSIFY_JOB_RETRY_DEFINITION_ID",
+    "LEDGER_CLASSIFY_JOB_REVOKE_CONSENT_DEFINITION_ID",
     "LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID",
+    "LedgerClassifyJobAcceptedProposal",
+    "LedgerClassifyJobApplyItemResult",
+    "LedgerClassifyJobApplyRefusal",
+    "LedgerClassifyJobApplyRequest",
+    "LedgerClassifyJobApplyResult",
+    "LedgerClassifyJobAuthoriseRequest",
     "LedgerClassifyJobCancelRequest",
     "LedgerClassifyJobChangeResult",
+    "LedgerClassifyJobConsentGrant",
     "LedgerClassifyJobDismissRequest",
     "LedgerClassifyJobEnqueueRequest",
     "LedgerClassifyJobItemProjection",
@@ -65,6 +84,7 @@ __all__ = [
     "LedgerClassifyJobReadRequest",
     "LedgerClassifyJobReadResult",
     "LedgerClassifyJobRetryRequest",
+    "LedgerClassifyJobRevokeConsentRequest",
     "LedgerClassifyJobRunRequest",
     "LedgerClassifyJobRunResult",
     "LedgerClassifyJobStateCounts",
@@ -78,6 +98,9 @@ LEDGER_CLASSIFY_JOB_CANCEL_DEFINITION_ID: Final = "ledger.classify.job.cancel"
 LEDGER_CLASSIFY_JOB_RETRY_DEFINITION_ID: Final = "ledger.classify.job.retry"
 LEDGER_CLASSIFY_JOB_DISMISS_DEFINITION_ID: Final = "ledger.classify.job.dismiss"
 LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID: Final = "ledger.classify.job.run"
+LEDGER_CLASSIFY_JOB_AUTHORISE_DEFINITION_ID: Final = "ledger.classify.job.authorise"
+LEDGER_CLASSIFY_JOB_REVOKE_CONSENT_DEFINITION_ID: Final = "ledger.classify.job.revoke-consent"
+LEDGER_CLASSIFY_JOB_APPLY_DEFINITION_ID: Final = "ledger.classify.job.apply"
 LEDGER_CLASSIFY_JOB_CHANGE_DEFINITION_IDS: Final = frozenset(
     {
         LEDGER_CLASSIFY_JOB_CANCEL_DEFINITION_ID,
@@ -92,6 +115,22 @@ LEDGER_CLASSIFY_JOB_PAGE_MAX: Final = 50
 
 _Token = Annotated[str, Field(min_length=1, max_length=256)]
 _DecimalText = Annotated[str, Field(min_length=1, max_length=64)]
+class LedgerClassifyJobConsentGrant(BaseModel):
+    """A person's consent to read a job's movements off this computer, for the lane they saw.
+
+    ``scope`` is how long it lasts: this job only, the agent session, or until
+    the person revokes it. The lane names what the person consented to; it
+    must be the lane the agent reads with when the grant is recorded.
+    ``connection`` is the lane's transport.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    scope: ClassificationConsentScope
+    provider_id: _Token
+    # The lane's transport, under a name a journalled request may carry.
+    connection: _Token
+    model: _Token
 
 
 class LedgerClassifyJobEnqueueRequest(BaseModel):
@@ -111,6 +150,8 @@ class LedgerClassifyJobEnqueueRequest(BaseModel):
     movement_ids: Annotated[tuple[TransactionId, ...], Field(max_length=10_000)] = ()
     period_start: date | None = None
     period_end: date | None = None
+    consent: LedgerClassifyJobConsentGrant | None = None
+    """The person's consent for a lane that reads off this computer; a lane that does not refuses one."""
 
     @model_validator(mode="after")
     def _scope_shape(self) -> LedgerClassifyJobEnqueueRequest:
@@ -183,6 +224,95 @@ class LedgerClassifyJobRunRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     job_id: Hex64Str
+
+
+class LedgerClassifyJobAuthoriseRequest(CredentialFreeOperationRequest):
+    """Grant a job's off-host reads at the revision the person saw.
+
+    The movements that failed for want of a usable consent, or because the
+    agent now reads with another lane, are asked again under the new grant.
+    """
+
+    profile_id: UUID
+    job_id: Hex64Str
+    expected_revision: Annotated[int, Field(ge=1)]
+    consent: LedgerClassifyJobConsentGrant
+
+
+class LedgerClassifyJobRevokeConsentRequest(CredentialFreeOperationRequest):
+    """Withdraw the grant a job runs under, at the revision the person saw.
+
+    A grant for the agent session or a remembered one covers other jobs too;
+    revoking it withdraws it for every read from now on.
+    """
+
+    profile_id: UUID
+    job_id: Hex64Str
+    expected_revision: Annotated[int, Field(ge=1)]
+
+
+class LedgerClassifyJobAcceptedProposal(BaseModel):
+    """One movement whose proposal the person accepted, as the revision the proposal was made against.
+
+    ``business_pct`` is the person's own business share, in canonical decimal
+    text within 0..1, for a mixed classification; a model proposes no share.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    movement_id: TransactionId
+    movement_revision_id: _Token
+    business_pct: _DecimalText | None = None
+
+    @field_validator("business_pct")
+    @classmethod
+    def _canonical_share(cls, value: str | None) -> str | None:
+        if value is not None:
+            parsed = try_parse_canonical_decimal(value, signed=False)
+            if parsed is None or display_decimal(parsed) != value or not Decimal("0") <= parsed <= Decimal("1"):
+                raise ValueError("business percentage must use canonical decimal text within 0..1")
+        return value
+
+
+class LedgerClassifyJobApplyRequest(BaseModel):
+    """Apply the proposals the person accepted, at the job revision the person saw.
+
+    Only the named movements are applied; every other proposal stays a
+    proposal. Nothing is applied that the person did not name.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    job_id: Hex64Str
+    expected_revision: Annotated[int, Field(ge=1)]
+    accepted: Annotated[tuple[LedgerClassifyJobAcceptedProposal, ...], Field(min_length=1, max_length=10_000)]
+
+    @model_validator(mode="after")
+    def _each_movement_once(self) -> LedgerClassifyJobApplyRequest:
+        movements = [proposal.movement_id for proposal in self.accepted]
+        if len(set(movements)) != len(movements):
+            raise ValueError("an apply names each movement once")
+        return self
+
+
+class LedgerClassifyJobApplyRefusal(StrEnum):
+    """Why one accepted proposal was not applied, in a closed vocabulary the window renders."""
+
+    STALE = "stale"
+    """The movement changed after the proposal was made; the person reads it again."""
+    NOT_PROPOSED = "not_proposed"
+    """The job holds no current proposal for the movement, or the accepted revision is not the proposal's."""
+    NOT_IN_JOB = "not_in_job"
+    MOVEMENT_NOT_FOUND = "movement_not_found"
+    BUSINESS_PCT_REQUIRED = "business_pct_required"
+    """A mixed classification needs the person's business share."""
+    BUSINESS_PCT_NOT_APPLICABLE = "business_pct_not_applicable"
+    """A business share applies only to a mixed classification."""
+    CATEGORY_UNAVAILABLE = "category_unavailable"
+    """The proposed category is not in the registry the ledger now reads."""
+    REJECTED = "rejected"
+    """The ledger refused the classification for this movement as it stands now."""
 
 
 class LedgerClassifyJobLaneProjection(BaseModel):
@@ -267,6 +397,7 @@ class LedgerClassifyJobStateCounts(BaseModel):
     unknown: Annotated[int, Field(ge=0)]
     cancelled: Annotated[int, Field(ge=0)]
     stale: Annotated[int, Field(ge=0)]
+    applied: Annotated[int, Field(ge=0)]
 
     @classmethod
     def of(cls, items: Iterable[ClassificationJobItem]) -> LedgerClassifyJobStateCounts:
@@ -324,8 +455,34 @@ class LedgerClassifyJobChangeResult(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    outcome: Literal["enqueued", "cancelled", "cancelling", "retried", "dismissed"]
+    outcome: Literal["enqueued", "cancelled", "cancelling", "retried", "dismissed", "authorised", "consent_revoked"]
     job: LedgerClassifyJobProjection
+
+
+class LedgerClassifyJobApplyItemResult(BaseModel):
+    """What became of one accepted proposal: applied, or refused with its typed cause."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    movement_id: TransactionId
+    outcome: Literal["applied", "refused"]
+    refusal: LedgerClassifyJobApplyRefusal | None
+
+    @model_validator(mode="after")
+    def _refusal_matches_outcome(self) -> LedgerClassifyJobApplyItemResult:
+        if (self.outcome == "refused") != (self.refusal is not None):
+            raise ValueError("only a refused proposal names its cause")
+        return self
+
+
+class LedgerClassifyJobApplyResult(BaseModel):
+    """The job as stored after the apply, and what became of each accepted proposal, in request order."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    job: LedgerClassifyJobProjection
+    items: tuple[LedgerClassifyJobApplyItemResult, ...]
 
 
 class LedgerClassifyJobRunResult(BaseModel):

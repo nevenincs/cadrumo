@@ -51,6 +51,7 @@ def _proposal(revision: str = "rev-1") -> ClassificationProposal:
         movement_revision_id=revision,
         classification=BusinessClassification.BUSINESS,
         confidence=Decimal("0.8"),
+        provenance="llm:local-text:synthetic-model",
         proposed_at=_LATER,
     )
 

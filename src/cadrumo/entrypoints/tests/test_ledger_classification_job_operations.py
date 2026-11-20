@@ -230,6 +230,7 @@ def _settled_job(queue: _Queue) -> ClassificationJob:
         classification=BusinessClassification.BUSINESS,
         confidence=Decimal("0.81"),
         category="synthetic_category",
+        provenance="llm:local-text:synthetic-model",
         proposed_at=now(),
     )
     first, second, third = running.items

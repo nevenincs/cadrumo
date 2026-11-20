@@ -184,6 +184,22 @@
         "path": []
       }
     },
+    "ledger.classify.job.apply": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.classify.job.authorise": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.classify.job.cancel": {
       "may_write": true,
       "review": false,
@@ -225,6 +241,14 @@
       }
     },
     "ledger.classify.job.retry": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.classify.job.revoke-consent": {
       "may_write": true,
       "review": false,
       "subject": {

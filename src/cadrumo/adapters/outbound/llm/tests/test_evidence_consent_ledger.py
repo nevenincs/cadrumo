@@ -43,8 +43,15 @@ from cadrumo_client.contracts.model_runs import ModelRunLane
 from .....core.config import Settings
 from .....core.config_support import LLMProvider
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.hashing import sha256_hex
 from .....core.model_roles import ModelRole
-from .....domain.evidence_consent.record import EvidenceConsentLedgerEntry
+from .....domain.evidence_consent.record import (
+    EvidenceConsentGrantTerms,
+    EvidenceConsentLedgerEntry,
+    EvidenceConsentRecordKind,
+    evidence_consent_grant_address,
+)
+from .....domain.transactions.classification_job import ClassificationConsentScope
 from ....persistence.llm import consent_ledger as consent_ledger_module
 from ....persistence.llm.consent_ledger import EvidenceConsentLedger
 from ....persistence.storage.master_key.active_session import close_active_bucket_session
@@ -275,3 +282,55 @@ def test_a_failed_append_refuses_even_a_cache_hit(secure_object_test_profile: ob
     with pytest.raises(LLMConsentError):
         asyncio.run(refused.complete(_evidence_request()))
     assert refused.service.runs == []
+
+
+def _grant_terms(
+    scope: ClassificationConsentScope = ClassificationConsentScope.REMEMBERED,
+) -> EvidenceConsentGrantTerms:
+    return EvidenceConsentGrantTerms(
+        grant_id=sha256_hex(b"synthetic grant"),
+        scope=scope,
+        task_kind="classification",
+        transport="api",
+        job_id=sha256_hex(b"synthetic job") if scope is ClassificationConsentScope.ONCE else None,
+    )
+
+
+def test_a_grant_and_its_revocation_are_recorded_as_their_own_kinds_and_round_trip(
+    secure_object_test_profile: object,
+) -> None:
+    _ = secure_object_test_profile
+    ledger = EvidenceConsentLedger()
+
+    granted = ledger.append_grant(provider="example", model="example-model-1", surface=_SURFACE, grant=_grant_terms())
+    revoked = ledger.append_revocation(granted=granted, surface=_SURFACE)
+
+    assert ledger.load_entries() == (granted, revoked)
+    assert granted.record_kind is EvidenceConsentRecordKind.GRANT
+    assert revoked.record_kind is EvidenceConsentRecordKind.REVOCATION
+    assert revoked.revoked_grant_id == _grant_terms().grant_id
+    assert granted.evidence_content_address == evidence_consent_grant_address(
+        profile_bucket_id=granted.profile_bucket_id, provider="example", model="example-model-1", grant=_grant_terms()
+    )
+
+
+def test_only_a_grant_of_the_open_profile_can_be_revoked(secure_object_test_profile: object) -> None:
+    _ = secure_object_test_profile
+    ledger = EvidenceConsentLedger()
+    granted = ledger.append_grant(provider="example", model="example-model-1", surface=_SURFACE, grant=_grant_terms())
+    foreign = granted.model_copy(update={"profile_bucket_id": "5e7a9b1d-2f4a-4b6c-8d0e-4f6a8b0c1d2e"})
+
+    with pytest.raises(LLMConsentError):
+        ledger.append_revocation(granted=foreign, surface=_SURFACE)
+
+    assert ledger.load_entries() == (granted,)
+
+
+def test_a_grant_is_refused_unrecorded_without_an_open_profile_session(secure_object_test_profile: object) -> None:
+    _ = secure_object_test_profile
+    close_active_bucket_session()
+
+    with pytest.raises(LLMConsentError):
+        EvidenceConsentLedger().append_grant(
+            provider="example", model="example-model-1", surface=_SURFACE, grant=_grant_terms()
+        )

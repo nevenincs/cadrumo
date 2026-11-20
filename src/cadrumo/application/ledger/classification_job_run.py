@@ -19,10 +19,19 @@ then finishes the cancel. A stop asked of the operation itself is honoured at
 the next boundary where nothing is in flight; a movement whose result could
 not be committed stays ``running`` and is reconciled as ``unknown``.
 
-A refusal that concerns the lane rather than one movement, no consent to read
-off this computer or no reader at all, fails every movement still to ask with
-its typed cause, settles the job and then refuses the run with the ledger's
-typed refusal and the step that puts it right. A failure of one movement, a
+Before the first movement and before every batch, the run asks the agent which
+lane it reads with. A lane other than the job's is refused as changed: nothing
+is read on another lane. On a lane that reads off this computer the job's grant
+must still cover it in the consent ledger: recorded, not revoked, for this job,
+the agent session open now or remembered, and for this lane and the
+classification task kind. Each read then sends under its own consent, bound to
+the revision of the movement it sends, and the dispatch is recorded in the
+consent ledger before anything leaves.
+
+A refusal that concerns the lane rather than one movement, a changed lane, no
+usable consent to read off this computer or no reader at all, fails every
+movement still to ask with its typed cause, settles the job and then refuses
+the run with the ledger's typed refusal and the step that puts it right. A failure of one movement, a
 model refusal, a reply that does not parse or a movement that changed or went
 away, is recorded on that movement and the run goes on.
 
@@ -42,7 +51,7 @@ from typing import Final, Literal
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode, ModelRunTaskKind
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import CadrumoError
@@ -59,6 +68,7 @@ from ...core.operations import (
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.evidence_consent.grant import ConsentGrantStanding
 from ...domain.transactions.classification_job import (
     ClassificationItemFailureCause,
     ClassificationItemState,
@@ -86,6 +96,7 @@ from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .classification_job_consent import lane_changed, off_host_consent_refused, reads_with, standing_failure_cause
 from .classification_job_contracts import (
     LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID,
     LedgerClassifyJobProjection,
@@ -97,7 +108,7 @@ from .classification_job_errors import (
     ClassificationJobStateRefusedError,
     ClassificationJobUnknownError,
 )
-from .classification_job_ports import ClassificationJobReader, ClassificationJobReaderFactory, ClassificationJobRunPorts
+from .classification_job_ports import CLASSIFICATION_READING_ROLE, ClassificationJobReader, ClassificationJobRunPorts
 from .classification_job_repository import (
     ClassificationJobNotFoundError,
     ClassificationJobRepository,
@@ -387,13 +398,14 @@ def _read_movement(
             return _Settled(position, cause=ClassificationItemFailureCause.MOVEMENT_NOT_FOUND)
         read_revision = movement_revision_id(transaction)
         try:
+            # The read's consent, where its lane needs one, is bound to the revision it sends.
             suggestion = suggest_llm_classification(
                 bucket_id=bucket_id,
                 transaction_id=movement_id,
                 operation=operation,
                 transaction_repository=reader.transactions,
                 settings=reader.settings,
-                ports=reader.llm,
+                ports=reader.llm_for(read_revision),
                 reviewed_transaction=transaction,
             )
         except LedgerOffHostConsentRequiredError as exc:
@@ -408,6 +420,7 @@ def _read_movement(
             confidence=suggestion.confidence,
             category=None if suggestion.category is None else suggestion.category.value,
             multiple_components=suggestion.multiple_components,
+            provenance=suggestion.provenance,
             proposed_at=now(),
         )
         # The movement may have changed while the model read it: the proposal then
@@ -458,10 +471,12 @@ class _JobRun:
         context: OperationExecutorContext,
         repository: ClassificationJobRepository,
         payload: LedgerClassifyJobRunRequest,
+        ports: ClassificationJobRunPorts,
     ) -> None:
         self._context = context
         self._repository = repository
         self._payload = payload
+        self._ports = ports
         self._wrote = False
 
     def _stored(self) -> ClassificationJob:
@@ -545,7 +560,36 @@ class _JobRun:
         )
         raise error
 
-    async def run(self, readers: ClassificationJobReaderFactory, *, bucket_id: str) -> str | None:
+    async def _lane_refused(self, job: ClassificationJob, *, bucket_id: str) -> _LaneRefused | None:
+        """Return why no movement of ``job`` may be read now, or ``None`` when its lane and grant still hold."""
+        try:
+            lane = await self._ports.resolve_lane(
+                CLASSIFICATION_READING_ROLE, task_kind=ModelRunTaskKind.CLASSIFICATION
+            )
+        except LedgerOffHostConsentRequiredError as exc:
+            return _LaneRefused(ClassificationItemFailureCause.CONSENT_REQUIRED, exc)
+        except PurchaseInvoiceEvidenceReaderError as exc:
+            return _LaneRefused(ClassificationItemFailureCause.MODEL_UNAVAILABLE, exc)
+        if not reads_with(job.lane, lane):
+            # Never read on a lane the job was not bound to: the person enqueues again or grants the new lane.
+            return _LaneRefused(ClassificationItemFailureCause.LANE_CHANGED, lane_changed(lane))
+        if not job.lane.reads_off_host:
+            return None
+        consent = job.consent
+        if consent is None:
+            return _LaneRefused(
+                ClassificationItemFailureCause.CONSENT_REQUIRED, off_host_consent_refused(consent_present=False)
+            )
+        standing = await asyncio.to_thread(
+            self._ports.consent.standing, bucket_id=bucket_id, lane=job.lane, consent=consent, job_id=job.job_id
+        )
+        if standing is ConsentGrantStanding.VALID:
+            return None
+        return _LaneRefused(
+            standing_failure_cause(standing), off_host_consent_refused(consent_present=True, standing=standing)
+        )
+
+    async def run(self, *, bucket_id: str) -> str | None:
         """Reconcile what an earlier run left, then work the pending movements until none is left."""
         job = await asyncio.to_thread(self._stored)
         if job.status in _FINISHED:
@@ -561,20 +605,15 @@ class _JobRun:
             return await self._publish(job)
         try:
             reader = await asyncio.to_thread(
-                readers,
+                self._ports.readers,
                 bucket_id=bucket_id,
                 operation=self._context.authority_operation,
                 lane=job.lane,
                 consent=job.consent,
+                job_id=job.job_id,
             )
         except LedgerOffHostConsentRequiredError as exc:
-            # A job's consent names a grant its owner holds; a read it cannot be bound to is never sent.
-            cause = (
-                ClassificationItemFailureCause.CONSENT_REVOKED
-                if job.consent is not None
-                else ClassificationItemFailureCause.CONSENT_REQUIRED
-            )
-            return await self._refuse_onwards(cause, exc)
+            return await self._refuse_onwards(ClassificationItemFailureCause.CONSENT_REQUIRED, exc)
         if reader.transactions.bucket_id != bucket_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         return await self._work(job, reader, bucket_id=bucket_id)
@@ -585,6 +624,11 @@ class _JobRun:
             if cancellation.cancellation_requested:
                 await cancellation.acknowledge_cancellation()
                 return None
+            if job.status is not ClassificationJobStatus.CANCELLING and (
+                lane_refused := await self._lane_refused(job, bucket_id=bucket_id)
+            ):
+                # The lane or the grant changed since the last batch: what is left is not read.
+                return await self._refuse_onwards(lane_refused.cause, lane_refused.error)
             started = await self._store(lambda stored, taken=batch: _started(stored, taken, at=_at(stored)))
             if started is None:
                 return None
@@ -649,7 +693,7 @@ class ClassificationJobRunExecutor:
         await context.events.phase(LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID)
         bucket_id = str(payload.profile_id)
         repository = await asyncio.to_thread(self._ports.jobs, bucket_id=bucket_id)
-        return await _JobRun(context, repository, payload).run(self._ports.readers, bucket_id=bucket_id)
+        return await _JobRun(context, repository, payload, self._ports).run(bucket_id=bucket_id)
 
 
 def build_ledger_classify_job_run_definition(ports: ClassificationJobRunPorts) -> OperationDefinition:

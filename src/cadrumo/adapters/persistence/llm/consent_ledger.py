@@ -19,6 +19,11 @@ same "the address, never the bytes" line
 trail from becoming a second copy of the confidentiality problem it exists to
 document.
 
+**It also records a person's standing grants and their revocation.** A grant
+entry names the lane, the task kind and the scope the person consented to; a
+revocation entry withdraws one. Neither names a document or a movement. Grants
+and dispatches share the ledger so that a withdrawal reads one history.
+
 **It is deliberately not pruned.** Its three sibling LLM stores (cache, usage,
 run-record) are swept by
 :meth:`~llm.LLMClient._sweep_retention_stores` because they
@@ -49,7 +54,13 @@ from uuid import uuid4
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import canonical_json_bytes
 from ....core.time.clock import now
-from ....domain.evidence_consent.record import EvidenceConsentLedgerEntry, evidence_consent_ledger_entry_object_key
+from ....domain.evidence_consent.record import (
+    EvidenceConsentGrantTerms,
+    EvidenceConsentLedgerEntry,
+    EvidenceConsentRecordKind,
+    evidence_consent_grant_address,
+    evidence_consent_ledger_entry_object_key,
+)
 from ...outbound.llm.errors import LLMConsentError
 from ..storage.master_key.active_session import current_active_bucket_session
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -91,6 +102,71 @@ class EvidenceConsentLedger:
         self._before_save = before_save
         self._after_save = after_save
 
+    def append_grant(
+        self,
+        *,
+        provider: str,
+        model: str,
+        surface: str,
+        grant: EvidenceConsentGrantTerms,
+    ) -> EvidenceConsentLedgerEntry:
+        """Record a person's grant of off-host reads of one task kind on one lane.
+
+        Raises on any failure, as :meth:`append` does: a grant that is not
+        recorded covers nothing, so the caller refuses rather than proceeding.
+        """
+        bucket_id = self._bound_bucket_id("grant")
+        return self._save(
+            EvidenceConsentLedgerEntry(
+                entry_id=uuid4().hex,
+                profile_bucket_id=bucket_id,
+                evidence_content_address=evidence_consent_grant_address(
+                    profile_bucket_id=bucket_id, provider=provider, model=model, grant=grant
+                ),
+                provider=provider,
+                model=model,
+                surface=surface,
+                recorded_at=now(),
+                record_kind=EvidenceConsentRecordKind.GRANT,
+                grant=grant,
+            )
+        )
+
+    def append_revocation(self, *, granted: EvidenceConsentLedgerEntry, surface: str) -> EvidenceConsentLedgerEntry:
+        """Record that the person withdrew ``granted``; it covers no read from then on.
+
+        Raises:
+            LLMConsentError: ``granted`` is not a grant of the open profile, or
+                the write fails. An unrecorded revocation leaves the grant in
+                force, so the caller must not report it as withdrawn.
+        """
+        bucket_id = self._bound_bucket_id("revocation")
+        grant = granted.grant
+        if grant is None or granted.profile_bucket_id != bucket_id:
+            msg = "Only a grant of the open profile can be revoked."
+            raise LLMConsentError(msg)
+        return self._save(
+            EvidenceConsentLedgerEntry(
+                entry_id=uuid4().hex,
+                profile_bucket_id=bucket_id,
+                evidence_content_address=granted.evidence_content_address,
+                provider=granted.provider,
+                model=granted.model,
+                surface=surface,
+                recorded_at=now(),
+                record_kind=EvidenceConsentRecordKind.REVOCATION,
+                revoked_grant_id=grant.grant_id,
+            )
+        )
+
+    @staticmethod
+    def _bound_bucket_id(record: str) -> str:
+        session = current_active_bucket_session()
+        if session is None:
+            msg = f"Cannot record an off-host consent {record}: no profile bucket session is open."
+            raise LLMConsentError(msg)
+        return session.bucket_id
+
     def append(
         self,
         *,
@@ -123,15 +199,20 @@ class EvidenceConsentLedger:
                 "so the consented dispatch would leave no audit trail."
             )
             raise LLMConsentError(msg)
-        entry = EvidenceConsentLedgerEntry(
-            entry_id=uuid4().hex,
-            profile_bucket_id=session.bucket_id,
-            evidence_content_address=evidence_content_address,
-            provider=provider,
-            model=model,
-            surface=surface,
-            recorded_at=now(),
+        return self._save(
+            EvidenceConsentLedgerEntry(
+                entry_id=uuid4().hex,
+                profile_bucket_id=session.bucket_id,
+                evidence_content_address=evidence_content_address,
+                provider=provider,
+                model=model,
+                surface=surface,
+                recorded_at=now(),
+            )
         )
+
+    def _save(self, entry: EvidenceConsentLedgerEntry) -> EvidenceConsentLedgerEntry:
+        """Write one entry, reporting custody around the save; any failure raises the consent refusal."""
         if self._before_save is not None:
             self._before_save()
         saved = False

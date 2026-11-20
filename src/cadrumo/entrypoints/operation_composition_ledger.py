@@ -535,6 +535,7 @@ def compose_ledger_classification_job_operation(inputs: OperationCompositionInpu
     )
     from ..application.ledger.classification_job_ports import ClassificationJobEnqueuePorts
     from ..domain.transactions.models import TransactionCatalogue
+    from .ledger_classification_consent_composition import LedgerClassificationConsentGrants
     from .ledger_llm_composition import resolve_reading_lane
 
     jobs, reads = _classification_job_repository, inputs.ledger_reads()
@@ -543,7 +544,12 @@ def compose_ledger_classification_job_operation(inputs: OperationCompositionInpu
         return reads(bucket_id=bucket_id, operation=operation).transaction_repository.load()
 
     enqueue = build_ledger_classify_job_enqueue_definition(
-        ClassificationJobEnqueuePorts(jobs=jobs, movements=movements, resolve_lane=resolve_reading_lane)
+        ClassificationJobEnqueuePorts(
+            jobs=jobs,
+            movements=movements,
+            resolve_lane=resolve_reading_lane,
+            consent=LedgerClassificationConsentGrants(),
+        )
     )
     changes = tuple(
         build_ledger_classify_job_change_definition(definition_id, jobs)
@@ -569,13 +575,62 @@ def compose_ledger_classification_job_run_operation(inputs: OperationComposition
         build_ledger_classify_job_run_definition,
         build_ledger_classify_job_run_registration,
     )
-    from .ledger_llm_composition import classification_job_reader_factory
+    from .ledger_classification_consent_composition import LedgerClassificationConsentGrants
+    from .ledger_llm_composition import classification_job_reader_factory, resolve_reading_lane
 
-    readers = classification_job_reader_factory(settings=inputs.resolved_settings, reads=inputs.ledger_reads())
+    grants = LedgerClassificationConsentGrants()
+    readers = classification_job_reader_factory(
+        settings=inputs.resolved_settings, reads=inputs.ledger_reads(), grants=grants
+    )
     definition = build_ledger_classify_job_run_definition(
-        ClassificationJobRunPorts(jobs=_classification_job_repository, readers=readers)
+        ClassificationJobRunPorts(
+            jobs=_classification_job_repository, readers=readers, resolve_lane=resolve_reading_lane, consent=grants
+        )
     )
     return built((definition,), (build_ledger_classify_job_run_registration(definition),))
+
+
+def compose_ledger_classification_job_consent_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the grant and the withdrawal of a ledger classification job's off-host reads."""
+    from ..application.ledger.classification_job_consent_operation import (
+        build_ledger_classify_job_authorise_definition,
+        build_ledger_classify_job_consent_registration,
+        build_ledger_classify_job_revoke_consent_definition,
+    )
+    from ..application.ledger.classification_job_ports import ClassificationJobConsentPorts
+    from .ledger_classification_consent_composition import LedgerClassificationConsentGrants
+    from .ledger_llm_composition import resolve_reading_lane
+
+    del inputs
+    ports = ClassificationJobConsentPorts(
+        jobs=_classification_job_repository,
+        resolve_lane=resolve_reading_lane,
+        consent=LedgerClassificationConsentGrants(),
+    )
+    authorise = build_ledger_classify_job_authorise_definition(ports)
+    revoke = build_ledger_classify_job_revoke_consent_definition(ports)
+    return built(
+        (authorise, revoke),
+        (
+            build_ledger_classify_job_consent_registration(authorise),
+            build_ledger_classify_job_consent_registration(revoke),
+        ),
+    )
+
+
+def compose_ledger_classification_job_apply_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the apply of the classification proposals a person accepted from a job."""
+    from ..application.ledger.classification_job_apply_operation import (
+        build_ledger_classify_job_apply_definition,
+        build_ledger_classify_job_apply_registration,
+    )
+    from ..application.ledger.classification_job_ports import ClassificationJobApplyPorts
+
+    definition = build_ledger_classify_job_apply_definition(
+        ClassificationJobApplyPorts(jobs=_classification_job_repository, ledger=inputs.ledger_actions()),
+        execution_caller_reader=inputs.execution_caller_reader,
+    )
+    return built((definition,), (build_ledger_classify_job_apply_registration(definition),))
 
 
 def compose_ledger_classification_job_read_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:

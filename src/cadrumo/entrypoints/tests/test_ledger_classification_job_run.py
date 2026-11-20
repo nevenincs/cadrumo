@@ -40,6 +40,7 @@ from ...application.ledger.classification_job_contracts import (
     LedgerClassifyJobRunResult,
 )
 from ...application.ledger.classification_job_errors import (
+    ClassificationJobLaneChangedError,
     ClassificationJobStateRefusedError,
     ClassificationJobUnknownError,
 )
@@ -444,37 +445,41 @@ def test_a_movement_replaced_before_or_while_it_is_read_fails_as_not_found(queue
 # -- refusals ----------------------------------------------------------------------------------------------------------------
 
 
-def test_a_stored_off_host_consent_that_cannot_be_bound_fails_every_movement_and_refuses_with_both_remedies(
-    queue: _Queue,
+def test_a_stored_off_host_consent_the_consent_ledger_does_not_hold_fails_every_movement_with_both_remedies(
+    tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
-    job = _stored_job(
-        queue,
-        lane=ClassificationJobLane(
-            provider_id=DEFAULT_LANE.provider_id,
-            transport=DEFAULT_LANE.transport,
-            model=DEFAULT_LANE.model,
-            reads_off_host=True,
-        ),
-        consent=ClassificationJobConsent(
-            scope=ClassificationConsentScope.ONCE, consent_reference="synthetic-grant", granted_at=now()
-        ),
-    )
-    catalogue_before = queue.catalogue()
-
-    detail = _refusal(queue.run(job.job_id), LedgerOffHostConsentRequiredError)
+    answers = _Answers()
+    with operation_runtime(tmp_path, None, lane=DEFAULT_LANE, answer=answers) as runtime:
+        queue = _Queue(runtime=runtime, operation=operation, movements=_seed(runtime, operation), answers=answers)
+        job = _stored_job(
+            queue,
+            lane=ClassificationJobLane(
+                provider_id=DEFAULT_LANE.provider_id,
+                transport=DEFAULT_LANE.transport,
+                model=DEFAULT_LANE.model,
+                reads_off_host=True,
+            ),
+            consent=ClassificationJobConsent(
+                scope=ClassificationConsentScope.ONCE, consent_reference="synthetic-grant", granted_at=now()
+            ),
+        )
+        catalogue_before = queue.catalogue()
+        detail = _refusal(queue.run(job.job_id), LedgerOffHostConsentRequiredError)
+        stored = queue.jobs().get(job.job_id)
+        catalogue_after = queue.catalogue()
+        runs = list(runtime.service.runs)
 
     assert detail.message_key == OFF_HOST_CONSENT_REQUIRED_LOCALE_KEY
     step = detail.next_step
     assert isinstance(step, OperationResolveOffHostConsentStepV1)
     assert [remedy.kind for remedy in step.remedies] == ["authorise_off_host", "switch_to_local_lane"]
-    stored = queue.jobs().get(job.job_id)
     assert stored.status is ClassificationJobStatus.SETTLED
-    assert _causes(stored) == [ClassificationItemFailureCause.CONSENT_REVOKED] * 3
-    assert queue.runtime.service.runs == [], "an off-host read was sent without a bound consent"
-    assert queue.catalogue() == catalogue_before
+    assert _causes(stored) == [ClassificationItemFailureCause.CONSENT_REQUIRED] * 3
+    assert runs == [], "an off-host read was sent without a recorded grant"
+    assert catalogue_after == catalogue_before
 
 
-def test_a_lane_that_now_reads_off_host_refuses_at_dispatch_and_fails_every_movement_for_consent(
+def test_a_lane_that_changed_since_the_job_was_bound_refuses_before_any_read_and_fails_every_movement(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     answers = _Answers()
@@ -491,13 +496,15 @@ def test_a_lane_that_now_reads_off_host_refuses_at_dispatch_and_fails_every_move
             ),
             consent=None,
         )
-        detail = _refusal(queue.run(job.job_id), LedgerOffHostConsentRequiredError)
+        detail = _refusal(queue.run(job.job_id), ClassificationJobLaneChangedError)
         stored = queue.jobs().get(job.job_id)
+        runs = list(runtime.service.runs)
 
-    step = detail.next_step
-    assert isinstance(step, OperationResolveOffHostConsentStepV1)
+    context = {entry.key: entry.value for entry in detail.context}
+    assert (context["cause"], context["model"]) == ("lane_changed", DEFAULT_LANE.model)
     assert stored.status is ClassificationJobStatus.SETTLED
-    assert _causes(stored) == [ClassificationItemFailureCause.CONSENT_REQUIRED] * 3
+    assert _causes(stored) == [ClassificationItemFailureCause.LANE_CHANGED] * 3
+    assert runs == [], "a movement was read on a lane the job was not bound to"
 
 
 def test_no_reading_model_fails_every_movement_as_unavailable_and_refuses_with_the_step_to_pick_one(

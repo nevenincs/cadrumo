@@ -78,6 +78,7 @@ def _proposal(revision: str) -> ClassificationProposal:
         iva_category="synthetic_iva",
         business_pct=Decimal("0.4"),
         multiple_components=False,
+        provenance="llm:local-text:synthetic-model",
         proposed_at=_LATER,
     )
 
