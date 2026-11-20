@@ -14,6 +14,17 @@
 // A radio or menu radio already checked before its press is recorded as a
 // no-op by design, not as silent: choosing what is chosen changes nothing.
 //
+// Every control listed is reached again before it is pressed, though earlier
+// presses changed the view. The items of a menu or list are pressed right
+// after the control that opened it, in the view it opened in; an opener whose
+// name an earlier press changed (a "Group: Section" opener that now reads
+// "Group: Status") is found at its place in its pane; a section an
+// earlier press collapsed is expanded again; a menu whose opener is gone is
+// looked for behind the pane's other openers; a panel an earlier press
+// expanded, or the window it made full screen, is restored to the layout the
+// audit started in; and the view is entered afresh before a control is given
+// up. A row that is still not found says what was tried and what was there.
+//
 // Before a control is armed, the window is let settle: no dialog, menu or
 // popper is still closing and the page takes pointer input again. A layer the
 // previous press opened and the audit closed is otherwise still on its way
@@ -107,6 +118,9 @@ let signedInAt = 0;
 let lastPressed = null;
 /** Signatures of the log lines the host wrote while the window was idle. */
 const background = new Set();
+/** The window's layout before the first press, which every view is entered
+ * in: an expanded panel or full screen a press left is undone first. */
+let baseline = null;
 
 before(async () => {
   runDir =
@@ -191,6 +205,47 @@ function pageControls(scopeSel) {
       norm(document.getElementById(`tab-${id}`)?.textContent).slice(0, 60) || id
     );
   };
+  // Where the control stands in its pane or pane header, by element position:
+  // a place that holds while its name changes. Outside both (a portal, the
+  // title bar) it has no such place.
+  const pathOf = (el) => {
+    const parts = [];
+    for (let node = el; node && node !== document.body;) {
+      for (const attr of ["data-dock-pane", "data-dock-header"]) {
+        const value = node.getAttribute(attr);
+        if (value) {
+          parts.unshift(`[${attr}="${value}"]`);
+          return parts.join(" > ");
+        }
+      }
+      const parent = node.parentElement;
+      if (!parent) return null;
+      const same = [...parent.children].filter(
+        (child) => child.tagName === node.tagName,
+      );
+      parts.unshift(
+        `${node.tagName.toLowerCase()}:nth-of-type(${same.indexOf(node) + 1})`,
+      );
+      node = parent;
+    }
+    return null;
+  };
+  // The regions a disclosure control shows and hides that hold the control:
+  // an earlier press may have collapsed one.
+  const revealOf = (el) => {
+    const ids = [];
+    for (let node = el.parentElement; node && node !== document.body;) {
+      if (
+        node.id &&
+        document.querySelector(
+          `[aria-controls~="${CSS.escape(node.id)}"][aria-expanded]`,
+        )
+      )
+        ids.unshift(node.id);
+      node = node.parentElement;
+    }
+    return ids;
+  };
   const seen = new Set();
   const out = [];
   const selector =
@@ -221,6 +276,10 @@ function pageControls(scopeSel) {
         el.getAttribute("aria-pressed") === "true" ||
         el.getAttribute("aria-current") === "page",
       href: el.tagName === "A" ? el.getAttribute("href") : null,
+      path: pathOf(el),
+      reveal: revealOf(el),
+      // What it opens: a menu or list holds items of its own.
+      popup: el.getAttribute("aria-haspopup"),
       external:
         el.tagName === "A" &&
         /^(https?:|mailto:)/i.test(el.getAttribute("href") ?? ""),
@@ -230,13 +289,21 @@ function pageControls(scopeSel) {
 }
 
 /**
- * Mark the control whose key is `key` and start watching the page. Returns
- * whether it was found and, when a person could not press it where it is (it
- * lies under a modal layer or something else is drawn over its centre), why.
+ * Mark the control `spec` names and start watching the page. The control is
+ * the shown one of its key. An opener (`spec.byPlace`) may also be the one at
+ * its place in its pane (`spec.path`) with its role and region: choosing an
+ * item renames a "Group: Section" opener to "Group: Status", and the next
+ * item is opened from it all the same. Only an opener is found so: what it
+ * opens is checked for the item, which is judged by its own name. An item
+ * another control opens (`spec.via`) may also be its role and name in an
+ * open menu. Returns whether it was found, how, and, when a person could not
+ * press it where it is (it lies under a modal layer or something else is
+ * drawn over its centre), why.
  * Changes learned as idle noise are kept per `noiseScope` (the view), never
  * for the whole run.
  */
-function pageArm(key, noiseScope) {
+function pageArm(spec, noiseScope) {
+  const key = spec.key;
   const norm = (t) => (t ?? "").replace(/\s+/g, " ").trim();
   for (const old of document.querySelectorAll("[data-silent-target]"))
     old.removeAttribute("data-silent-target");
@@ -279,7 +346,8 @@ function pageArm(key, noiseScope) {
     const name = el.getAttribute?.("aria-label");
     return `${el.tagName.toLowerCase()}${role ? `[role=${role}]` : ""}${slot ? `[${slot}]` : ""}${name ? `(${norm(name).slice(0, 40)})` : ""}`;
   };
-  const target = [
+  let foundBy = null;
+  let target = [
     ...document.querySelectorAll(
       'button, a[href], [role="button"], [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="tab"], [role="link"], [role="option"], summary',
     ),
@@ -288,6 +356,51 @@ function pageArm(key, noiseScope) {
       el.getClientRects().length &&
       `${roleOf(el)}|${scopeOf(el)}|${nameOf(el)}` === key,
   );
+  if (!target && spec.byPlace && spec.path) {
+    let placed = null;
+    try {
+      placed = document.querySelector(spec.path);
+    } catch {
+      // A place that no longer parses as a selector names nothing.
+    }
+    if (
+      placed?.getClientRects().length &&
+      roleOf(placed) === spec.role &&
+      scopeOf(placed) === spec.scope
+    ) {
+      if (
+        placed.disabled === true ||
+        placed.getAttribute("aria-disabled") === "true"
+      )
+        return {
+          found: false,
+          covered: null,
+          why: `its place holds it disabled, now named "${nameOf(placed)}"`,
+        };
+      target = placed;
+      foundBy = `found at its place, now named "${nameOf(placed)}"`;
+    }
+  }
+  // A menu titled by its opener is titled anew when the opener's name
+  // changes ("Group: Section" to "Group: Status"), and so are its items' keys:
+  // an item another control opens is also its role and name in an open menu.
+  if (!target && spec.via) {
+    target =
+      [...document.querySelectorAll('[role="menu"], [role="listbox"]')]
+        .filter((layer) => layer.getClientRects().length)
+        .flatMap((layer) => [
+          ...layer.querySelectorAll(
+            '[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="option"], button, a[href]',
+          ),
+        ])
+        .find(
+          (el) =>
+            el.getClientRects().length &&
+            roleOf(el) === spec.role &&
+            nameOf(el) === spec.name,
+        ) ?? null;
+    if (target) foundBy = `found in the open menu "${scopeOf(target)}"`;
+  }
   if (!target) return { found: false, covered: null };
   window.__silent?.observer.disconnect();
   window.__silent = null;
@@ -300,6 +413,7 @@ function pageArm(key, noiseScope) {
     return {
       found: true,
       covered: `inside ${hidden.hasAttribute("inert") ? "an inert" : "an aria-hidden"} ${describe(hidden)}`,
+      foundBy,
     };
   const box = target.getBoundingClientRect();
   const hit = document.elementFromPoint(
@@ -312,6 +426,7 @@ function pageArm(key, noiseScope) {
       covered: hit
         ? `${describe(hit)} is drawn over its centre`
         : "its centre lies outside the window",
+      foundBy,
     };
   target.setAttribute("data-silent-target", "1");
   const state = {
@@ -427,7 +542,7 @@ function pageArm(key, noiseScope) {
     return out;
   };
   window.__silent = { observer, state, target, ownState };
-  return { found: true, covered: null };
+  return { found: true, covered: null, foundBy };
 }
 
 function pagePress() {
@@ -522,6 +637,72 @@ function pageDisarm() {
   window.__silent = null;
   for (const old of document.querySelectorAll("[data-silent-target]"))
     old.removeAttribute("data-silent-target");
+}
+
+/** Expand every collapsed disclosure region of `ids` (outermost first) and
+ * return how many were expanded. Setup, not a press under audit. */
+function pageReveal(ids) {
+  let opened = 0;
+  for (const id of ids) {
+    const control = document.querySelector(
+      `[aria-controls~="${CSS.escape(id)}"][aria-expanded="false"]`,
+    );
+    if (!control || !control.getClientRects().length) continue;
+    control.click();
+    opened += 1;
+  }
+  return opened;
+}
+
+/** The window's layout as far as an earlier press can change it for every
+ * later view: a panel expanded over the workspace (its header offers
+ * `restoreWords`) and native full screen. */
+function pageLayout(restoreWords) {
+  const restore = [
+    ...document.querySelectorAll("[data-dock-header] button"),
+  ].find(
+    (el) =>
+      el.getClientRects().length &&
+      (el.getAttribute("aria-label") ?? el.textContent ?? "").trim() ===
+        restoreWords,
+  );
+  return {
+    expanded: !!restore,
+    fullscreen: !!document.querySelector(".titlebar[data-fullscreen]"),
+  };
+}
+
+/** Press a panel header's restore button, as setup. */
+function pageRestorePanel(restoreWords) {
+  const restore = [
+    ...document.querySelectorAll("[data-dock-header] button"),
+  ].find(
+    (el) =>
+      el.getClientRects().length &&
+      (el.getAttribute("aria-label") ?? el.textContent ?? "").trim() ===
+        restoreWords,
+  );
+  restore?.click();
+  return !!restore;
+}
+
+/** The names of up to `limit` shown controls outside the rail, for saying
+ * what a view holds when a control was not found in it. */
+function pageShownNames(limit) {
+  return [
+    ...document.querySelectorAll(
+      'button, [role="button"], [role="menuitem"], [role="menuitemradio"], [role="tab"], [role="option"]',
+    ),
+  ]
+    .filter((el) => el.getClientRects().length && !el.closest("[data-rail]"))
+    .map((el) =>
+      (el.getAttribute("aria-label") || el.textContent || "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 40),
+    )
+    .filter(Boolean)
+    .slice(0, limit);
 }
 
 /** The shown rail buttons. */
@@ -804,12 +985,17 @@ function classify(control) {
   return null;
 }
 
-/** Close every layer a press opened, then come back to `view`. */
-async function settle(view) {
+/** Close every open dialog, menu, list and popper. */
+async function closeLayers() {
   for (let i = 0; i < 4 && (await exec(pageOpenLayers)) > 0; i += 1) {
     await win.browser.keys("Escape");
     await sleep(300);
   }
+}
+
+/** Close every layer a press opened, then come back to `view`. */
+async function settle(view) {
+  await closeLayers();
   await settled();
   await goTo(view);
 }
@@ -846,6 +1032,164 @@ async function goTo(view) {
     await exec(pageChooseTab, view.tab.list, view.tab.tab);
     await sleep(700);
   }
+  await restoreLayout();
+}
+
+/** Undo an expanded panel or full screen an earlier press left, back to the
+ * layout the audit started in: either changes which controls every later
+ * view shows (a pane's narrow header folds its actions into menus). */
+async function restoreLayout() {
+  if (!baseline) return;
+  const words = label("desktop.dock.restore");
+  const now = await exec(pageLayout, words);
+  if (now.fullscreen && !baseline.fullscreen) {
+    await win.browser.keys("F11");
+    await sleep(800);
+  }
+  if (now.expanded && !baseline.expanded) {
+    await exec(pageRestorePanel, words);
+    await sleep(600);
+  }
+}
+
+/** Leave `view` for another rail and enter it again. */
+async function reenter(view) {
+  await closeLayers();
+  const other = (await exec(pageRails)).find(
+    (rail) => rail.id !== view.rail.id && !rail.popover,
+  );
+  if (other) {
+    await exec(
+      (id) => document.querySelector(`[data-rail="${id}"]`)?.click(),
+      other.id,
+    );
+    await sleep(1200);
+  }
+  await goTo(view);
+  await settled();
+}
+
+/** Whether an open menu or list shows the item `control` names, by its key
+ * or, in a menu titled anew, by its role and name. */
+async function menuShows(control) {
+  return (await exec(pageControls, '[role="menu"], [role="listbox"]')).some(
+    (item) =>
+      item.key === control.key ||
+      (item.role === control.role && item.name === control.name),
+  );
+}
+
+/** Press a control as setup, not as a press under audit. */
+async function pressAsSetup(view, control) {
+  const armed = await exec(pageArm, control, view.name);
+  if (!armed.found || armed.covered) return armed;
+  await pressLikeAPerson();
+  await exec(pageDisarm);
+  await sleep(800);
+  return armed;
+}
+
+/**
+ * Open the menu or list that holds `control` (an item another control opens):
+ * through its own opener, found by key or at its place; else behind another
+ * opener of the same pane, as a narrower or wider pane offers the same items
+ * from another button. Returns how it was opened, or why it was not.
+ */
+async function openVia(view, control) {
+  const via = control.via;
+  const opener = await pressAsSetup(view, via);
+  if (opener.found && !opener.covered && (await menuShows(control)))
+    return {
+      opened: true,
+      how: opener.foundBy ? `its opener was ${opener.foundBy}` : null,
+    };
+  const own = !opener.found
+    ? `its opener "${via.name}" was not shown${opener.why ? ` (${opener.why})` : ""}`
+    : opener.covered
+      ? `its opener "${via.name}" was covered (${opener.covered})`
+      : `its opener "${via.name}" opened no menu holding it`;
+  await closeLayers();
+  const others = (await exec(pageControls))
+    .filter(
+      (other) =>
+        ["menu", "listbox", "true"].includes(other.popup) &&
+        other.pane === via.pane &&
+        other.key !== via.key,
+    )
+    .slice(0, 8);
+  for (const other of others) {
+    const armed = await pressAsSetup(view, other);
+    if (armed.found && !armed.covered && (await menuShows(control)))
+      return { opened: true, how: `${own}; opened from "${other.name}"` };
+    await closeLayers();
+  }
+  return {
+    opened: false,
+    why: `${own}; no other opener of its pane (${others.length} tried) showed it`,
+  };
+}
+
+/**
+ * Come back to `control` in `view` and mark it, recovering from what earlier
+ * presses changed: a menu to open again, a renamed control, a collapsed
+ * section, a view left elsewhere. Returns pageArm's answer, how it was
+ * reached when not directly, and what was tried when it was not.
+ */
+async function reach(view, control) {
+  const tried = [];
+  const attempt = async () => {
+    await closeLayers();
+    await goTo(view);
+    await settled();
+    if (control.via) {
+      const opened = await openVia(view, control);
+      if (!opened.opened) return { found: false, why: opened.why };
+      if (opened.how) tried.push(opened.how);
+    }
+    return exec(pageArm, control, view.name);
+  };
+  const done = (armed) => ({
+    armed,
+    how: [...tried, armed.foundBy].filter(Boolean).join("; ") || null,
+  });
+  let armed = await attempt();
+  if (armed.found) return done(armed);
+  tried.push(armed.why ?? "not shown in the view");
+  // A section an earlier press collapsed hides what it holds.
+  const regions = [...(control.via?.reveal ?? []), ...(control.reveal ?? [])];
+  if (regions.length) {
+    await closeLayers();
+    const expanded = await exec(pageReveal, regions);
+    if (expanded) {
+      await sleep(600);
+      tried.push(`expanded ${expanded} collapsed section(s)`);
+      armed = await attempt();
+      if (armed.found) return done(armed);
+      tried.push(armed.why ?? "still not shown");
+    }
+  }
+  await reenter(view);
+  tried.push("entered the view afresh");
+  armed = await attempt();
+  if (armed.found) return done(armed);
+  tried.push(armed.why ?? "still not shown");
+  await closeLayers();
+  tried.push(`the view showed: ${(await exec(pageShownNames, 12)).join(", ")}`);
+  return { armed, how: null, tried: tried.join("; ") };
+}
+
+/** What identifies an opener again: its key, its place and its region. */
+function openerOf(control) {
+  return {
+    key: control.key,
+    path: control.path,
+    role: control.role,
+    scope: control.scope,
+    name: control.name,
+    pane: control.pane,
+    reveal: control.reveal,
+    byPlace: true,
+  };
 }
 
 /** The session as the window shows it, believing a signed-out reading only
@@ -881,10 +1225,7 @@ function sessionEnded(row, cause, session) {
  */
 async function renewSession() {
   if (Date.now() - signedInAt < RENEW_MS) return false;
-  for (let i = 0; i < 4 && (await exec(pageOpenLayers)) > 0; i += 1) {
-    await win.browser.keys("Escape");
-    await sleep(300);
-  }
+  await closeLayers();
   assert.ok(
     (await readSession()).signedIn,
     `the session had ended before it was renewed (${sinceSignIn()}; last press: ${lastPressed ?? "none"})`,
@@ -975,27 +1316,17 @@ async function press(view, control) {
       `before pressing ${pressName}, after ${lastPressed ?? "no press"}`,
       session,
     );
-  await goTo(view);
+  const reached = await reach(view, control);
+  const armed = reached.armed;
   let calm = await settled();
-  if (control.via) {
-    // An item of a menu or list another control opens: open it first.
-    const opener = await exec(pageArm, control.via, view.name);
-    if (opener.found && !opener.covered) {
-      await pressLikeAPerson();
-      await exec(pageDisarm);
-      await sleep(800);
-    }
-  }
-  const armed = await exec(pageArm, control.key, view.name);
+  if (reached.how) row.reached = reached.how;
   if (armed.found && armed.covered) {
     row.effect = `not pressed: covered (${armed.covered})`;
     return row;
   }
   if (!armed.found) {
     row.effect = "not found again after returning to the view";
-    if (view.renewed)
-      row.note =
-        "the view was entered again after the session was renewed; a page reached by an earlier press may not have been restored";
+    row.note = `${reached.tried}${view.renewed ? "; the session was renewed while in this view" : ""}`;
     session = await readSession();
     if (!session.signedIn)
       sessionEnded(
@@ -1133,7 +1464,7 @@ function writeReport() {
     "|---|---|---|---|---|---|",
     ...rows.map(
       (r) =>
-        `| ${cell(r.view)} | ${cell(r.pane)} | ${cell(r.control)} | ${cell(r.role)} | ${cell(r.method)} | ${r.silent ? "**SILENT** " : ""}${cell(r.effect)}${r.note ? ` (${cell(r.note)})` : ""} |`,
+        `| ${cell(r.view)} | ${cell(r.pane)} | ${cell(r.control)} | ${cell(r.role)} | ${cell(r.method)} | ${r.silent ? "**SILENT** " : ""}${cell(r.effect)}${r.note ? ` (${cell(r.note)})` : ""}${r.reached ? ` [reached: ${cell(r.reached)}]` : ""} |`,
     ),
   ];
   writeFileSync(path, `${lines.join("\n")}\n`);
@@ -1148,8 +1479,11 @@ test(
   { timeout: 4 * 3600_000 },
   async () => {
     const pressed = new Set();
+    await closeLayers();
+    baseline = await exec(pageLayout, label("desktop.dock.restore"));
     for (const view of await views()) {
-      await goTo(view);
+      // A layer the previous view left open is not this view's.
+      await settle(view);
       const controls = await exec(pageControls);
       for (let i = 0; i < controls.length; i += 1) {
         const control = controls[i];
@@ -1162,11 +1496,17 @@ test(
         // Choosing the tab already shown changes nothing, by design.
         if (control.role === "tab" && control.selected) continue;
         const row = await press(view, control);
-        for (const item of row.opened ?? [])
-          if (
-            !controls.some((c) => c.key === item.key && c.via === control.key)
+        // A menu's items are pressed next, while the view is as it was when
+        // their opener opened them.
+        const opened = (row.opened ?? [])
+          .filter(
+            (item) =>
+              !controls.some(
+                (c) => c.key === item.key && c.via?.key === control.key,
+              ),
           )
-            controls.push({ ...item, via: control.key });
+          .map((item) => ({ ...item, via: openerOf(control) }));
+        controls.splice(i + 1, 0, ...opened);
         delete row.opened;
         rows.push(row);
       }
