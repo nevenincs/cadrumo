@@ -2,7 +2,7 @@
 
 ``src/shell/localModelsContract.ts`` holds the answers the agent service gives its ``local_models`` and
 ``local_engine`` reads and the changes to them (``local_model_add``, ``local_model_remove``,
-``local_models_reset``, ``reading_model_choose`` and ``local_engine_choose``), written with
+``local_models_reset``, ``reading_model_choose``, ``task_model_choose`` and ``local_engine_choose``), written with
 ``dev.fixture_projections.typescript_wire_types`` from the JSON schema of
 ``LocalModelListStatus`` and ``LocalEngineStatus`` in serialization mode: the service answers each with
 ``model_dump(mode="json")``, without aliases or exclusions, and the desktop host passes that document on

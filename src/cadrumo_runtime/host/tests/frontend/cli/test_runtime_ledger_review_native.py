@@ -44,6 +44,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
+    ModelRunTaskKind,
 )
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
@@ -99,7 +100,8 @@ class _Agent:
     observed: list[_Run] = field(default_factory=list)
     unexpected: Queue[str] = field(default_factory=Queue)
 
-    def lookup(self, role: str) -> ModelRunLane | ModelRunRefusal:
+    def lookup(self, role: str, *, task_kind: ModelRunTaskKind | None = None) -> ModelRunLane | ModelRunRefusal:
+        del task_kind
         try:
             return _lane(ModelRole(role))
         except ValueError:

@@ -9,10 +9,13 @@ from uuid import uuid4
 
 import httpx
 
+from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunRefusal, ModelRunRefusalCode, ModelRunTaskKind
+
 from ..adapters.inbound.einvoice.shape import probe_document_shape
 from ..adapters.outbound.llm.errors import LLMCacheError, LLMConfigError, LLMConsentError, LLMProviderError
 from ..adapters.outbound.llm.models import MultimodalImageInput
 from ..adapters.outbound.llm.pdf_rasterisation import rasterise_pdf_pages_to_base64_png
+from ..adapters.outbound.llm.providers.agent import model_run_refusal_error
 from ..adapters.outbound.llm.text_classifier import TextLLMClassifier
 from ..adapters.outbound.llm.vision_classifier import VisionLLMClassifier
 from ..adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
@@ -42,6 +45,7 @@ from ..application.ledger.reading_model_refusal import (
     reader_refusal_locale_key,
     reader_refusal_next_step,
 )
+from ..application.operations.model_runs import current_model_run_port
 from ..application.operator_actions.models import PreconditionVerdict
 from ..core.config import Settings
 from ..core.model_roles import ModelRole
@@ -114,6 +118,34 @@ class TextReader:
 
     def classify(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMClassificationResponse:
         return self._reader.classify(transaction, evidence_text=evidence_text)
+
+
+async def resolve_reading_lane(role: ModelRole, *, task_kind: ModelRunTaskKind | None = None) -> ModelRunLane:
+    """Return the lane the agent service would read with for ``role`` doing ``task_kind``.
+
+    The agent service answers with the lane the person set for ``task_kind``, else the one ``role`` reads with,
+    as the classification review resolves it.
+
+    The lookup is the running operation's own model-run port; outside an
+    operation there is none, and the read is refused as an unreachable service.
+    A refused lookup is raised as the ledger's reader refusal with the
+    service's verdict, or as the off-host consent refusal with its remedies.
+    Nothing is sent to a model.
+    """
+    port = current_model_run_port()
+    answer = (
+        ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
+        if port is None
+        else await port.lookup(role, task_kind=task_kind)
+    )
+    if isinstance(answer, ModelRunLane):
+        return answer
+    error = model_run_refusal_error(answer, role=role)
+    if isinstance(error, LLMConsentError) and error.terminal_precondition_verdict is not None:
+        raise off_host_consent_required(error.terminal_precondition_verdict) from error
+    if isinstance(error, LLMConfigError) and error.terminal_precondition_verdict is not None:
+        raise _reader_unavailable(error.terminal_precondition_verdict) from error
+    raise error
 
 
 @dataclass(frozen=True)
@@ -235,4 +267,4 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
     )
 
 
-__all__ = ["LedgerLlmComposition", "compose_ledger_llm"]
+__all__ = ["LedgerLlmComposition", "compose_ledger_llm", "resolve_reading_lane"]

@@ -54,6 +54,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutcome,
     ModelRunOutput,
     ModelRunRefusal,
+    ModelRunTaskKind,
 )
 from cadrumo_client.contracts.view_stream import SEDE_VIEW_DEFINITION_ID
 from cadrumo_runtime.contracts.worker_authorization import (
@@ -539,9 +540,11 @@ class ProfileWorkerOperationAuthority:
             async with self.guard(identity, AccessAction.COMMIT):
                 yield
 
-    async def model_run_lookup(self, identity: OperationIdentity, role: str) -> ModelRunLane | ModelRunRefusal:
-        """Ask which admitted lane serves the requested role."""
-        return await model_run_lookup(self._model_run, identity, role)
+    async def model_run_lookup(
+        self, identity: OperationIdentity, role: str, *, task_kind: ModelRunTaskKind | None = None
+    ) -> ModelRunLane | ModelRunRefusal:
+        """Ask which admitted lane serves the requested role doing ``task_kind``."""
+        return await model_run_lookup(self._model_run, identity, role, task_kind)
 
     async def model_run(
         self, identity: OperationIdentity, header: ModelRunHeader, body: ModelRunBody
@@ -553,6 +556,7 @@ class ProfileWorkerOperationAuthority:
         self,
         identity: OperationIdentity,
         role: str,
+        task_kind: ModelRunTaskKind | None,
         header: ModelRunHeader | None,
         body: bytearray,
         answer_seconds: float,
@@ -569,7 +573,9 @@ class ProfileWorkerOperationAuthority:
                 if lease is None:
                     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
                 return await await_cancellation_complete(
-                    asyncio.to_thread(lease.model_run, role, header, body, answer_seconds=answer_seconds),
+                    asyncio.to_thread(
+                        lease.model_run, role, header, body, answer_seconds=answer_seconds, task_kind=task_kind
+                    ),
                     task_name="worker-model-run",
                 )
         finally:

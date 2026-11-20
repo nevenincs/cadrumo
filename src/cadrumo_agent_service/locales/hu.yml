@@ -335,8 +335,7 @@ desktop:
           description: Elolvassa, mit csinál egy művelet, és mire van szüksége.
           label: Művelet leírása
         execute:
-          description: Elküld egy műveletet a profilodban. Módosíthatja az
-            adataidat.
+          description: Elküld egy műveletet a profilodban. Módosíthatja az adataidat.
           label: Művelet futtatása
         observe:
           description: Ellenőrzi, hogyan halad egy elküldött művelet.
@@ -354,8 +353,8 @@ desktop:
           description: Elolvas egy olyan felülvizsgálatot, amely a válaszodra vár.
           label: Felülvizsgálat olvasása
         search:
-          description: Megkeresi azokat a műveleteket, amelyeket az ügynök
-            a profilodban futtathat.
+          description: Megkeresi azokat a műveleteket, amelyeket az ügynök a profilodban
+            futtathat.
           label: Műveletek keresése
         status:
           description: Ellenőrzi, melyik profilban engedélyezted az ügynök munkáját,
@@ -673,6 +672,15 @@ desktop:
     status_setup_needed: Nincs beállítva
     status_sign_in_needed: Nincs bejelentkezve
     status_unconfirmed: A bejelentkezés nincs megerősítve
+    task_model_effort: 'Ráfordítás ehhez: {task}'
+    task_model_model: 'Modell ehhez: {task}'
+    task_model_reading: Az olvasási modellt használja
+    task_model_refused: Nem sikerült módosítani, mivel fut ez a feladat. Próbáld újra.
+    task_model_saved: Mentve.
+    task_models_intro: Válaszd ki, melyik modellel fusson az egyes feladattípusok.
+      Az a feladat, amelyet nem állítasz be, a dokumentumok olvasásához használt modellel
+      fut.
+    task_models_title: Modellek feladatonként
     title: MI-szolgáltatók
     use_in_agent: '{provider} ({connection}) használata az ügynökben'
   rail:

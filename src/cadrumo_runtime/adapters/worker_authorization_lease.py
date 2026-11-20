@@ -18,7 +18,7 @@ from cadrumo.core.time.clock import wall_now
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
-from cadrumo_client.contracts.model_runs import ModelRunHeader, ModelRunOutcome
+from cadrumo_client.contracts.model_runs import ModelRunHeader, ModelRunOutcome, ModelRunTaskKind
 from cadrumo_client.contracts.profile_access import AccessRefusal
 from cadrumo_client.contracts.submission_payload import SubmissionPayloadDescriptor
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
@@ -188,11 +188,18 @@ class WorkerAuthorizationLease:
         return EnrollmentTransition(receipt=reply.receipt, published=reply.published)
 
     def model_run(
-        self, role: str, header: ModelRunHeader | None, body: bytearray, *, answer_seconds: float
+        self,
+        role: str,
+        header: ModelRunHeader | None,
+        body: bytearray,
+        *,
+        answer_seconds: float,
+        task_kind: ModelRunTaskKind | None = None,
     ) -> tuple[ModelRunOutcome, bytearray]:
         """Ask the runtime, over this exact held START channel, to have the agent service answer.
 
-        A lookup sends no header and an empty body. ``answer_seconds`` bounds the
+        A lookup sends no header and an empty body, and names its ``task_kind``
+        itself; a run's header names it. ``answer_seconds`` bounds the
         wait for the service's answer; the body is wiped once sent, and the
         reply text belongs to the caller, who wipes it.
         """
@@ -211,6 +218,7 @@ class WorkerAuthorizationLease:
             permit_id=permit.permit_id,
             command_id=uuid4(),
             role=role,
+            task_kind=task_kind if header is None else header.task_kind,
             header=header,
             body_byte_count=len(body),
         )

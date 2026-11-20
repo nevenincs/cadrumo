@@ -338,8 +338,7 @@ desktop:
           description: Llegeix què fa una operació i què necessita.
           label: Descriure una operació
         execute:
-          description: Envia una operació al teu perfil. Pot canviar les
-            teves dades.
+          description: Envia una operació al teu perfil. Pot canviar les teves dades.
           label: Executar una operació
         observe:
           description: Comprova com va una operació enviada.
@@ -357,8 +356,7 @@ desktop:
           description: Llegeix una revisió que espera la teva resposta.
           label: Llegir una revisió
         search:
-          description: Cerca les operacions que l'agent pot executar al
-            teu perfil.
+          description: Cerca les operacions que l'agent pot executar al teu perfil.
           label: Cercar operacions
         status:
           description: Comprova en quin perfil has autoritzat que treballi l'agent
@@ -686,6 +684,15 @@ desktop:
     status_setup_needed: Sense configurar
     status_sign_in_needed: Sense sessió iniciada
     status_unconfirmed: Inici de sessió sense confirmar
+    task_model_effort: Esforç per a {task}
+    task_model_model: Model per a {task}
+    task_model_reading: Fa servir el model de lectura
+    task_model_refused: No s'ha pogut canviar amb què s'executa aquesta tasca. Torna-ho
+      a provar.
+    task_model_saved: Desat.
+    task_models_intro: Tria amb quin model s'executa cada tipus de tasca. Una tasca
+      que no configuris fa servir el model amb què es llegeixen els documents.
+    task_models_title: Models per tasca
     title: Proveïdors d'IA
     use_in_agent: Fes servir {provider} ({connection}) a l'agent
   rail:

@@ -1,7 +1,12 @@
 """Which lane and model answer a tax model run, and the run itself, for one admitted profile.
 
-A tax worker's model run names its role and never a lane or a model. Every
-role runs with the one model documents are read with: the model the person
+A tax worker's model run names its role, and may name its task kind, and never
+a lane or a model. A run naming a task kind the person set a lane, model and
+effort for runs with that setting, and nothing stands in for it: a setting
+whose lane the profile's engine does not serve refuses ``lane_unavailable``,
+a local model since taken off its lane's list refuses ``no_selection``, and
+one the live catalogue says the server lacks refuses ``model_not_installed``.
+Every other run runs with the one model documents are read with: the model the person
 selected in the agent's model picker, which the desktop stores in the person's
 model record, on any lane, local or not, while it is still usable; otherwise
 the first installed local model. That choice is made by
@@ -25,7 +30,10 @@ record says nothing about any model, so every role refuses
 ``lane_unavailable``. Whether a lane takes an attachment,
 and which run options it honours, is what the ready agent's live catalog
 reports for background requests, never inferred from its transport. Effort is
-honoured only where the lane states it and the run's model offers a level. One
+honoured only where the lane states it and the run's model offers a level; a
+task setting's effort is sent only when the lane honours effort and its model
+lists that level, else the run is refused ``option_not_supported`` before
+anything is sent. One
 lookup, and one run, reads the live catalog once: its entries, media and
 options come from that one snapshot, which no later lookup or run reuses.
 Whether a lane reads off-host is the catalogue entry's typed declaration,
@@ -39,6 +47,7 @@ The run goes to cadrumo-agent as a background request through
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, Protocol
 
@@ -51,6 +60,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
+    ModelRunTaskKind,
     model_run_media_kind,
 )
 
@@ -64,9 +74,9 @@ from ..domain.catalog import (
     ProviderCatalogEntry,
     ProviderConsumer,
 )
-from ..domain.record import ListedModel, LocalEngine, LocalModelListRecord
+from ..domain.record import ListedModel, LocalEngine, LocalModelListRecord, TaskModel
 from .lane_entries import current_lane_entries
-from .local_model_list import effective_reading
+from .local_model_list import TaskModelUsability, effective_reading, task_model_usability
 from .ports import (
     LiveCatalogModels,
     LocalModelListRead,
@@ -151,11 +161,14 @@ class ModelRunService:
         self._live_models = live_models
         self._gateway = gateway
 
-    def lookup(self, role: str) -> ModelRunLane | ModelRunRefusal:
-        """Return the lane and model ``role`` resolves to now; nothing in the answer is secret."""
-        return self._lookup(role, self._lane_answers())
+    def lookup(self, role: str, *, task_kind: ModelRunTaskKind | None = None) -> ModelRunLane | ModelRunRefusal:
+        """Return the lane and model ``role`` doing ``task_kind`` resolves to now; nothing in the answer is secret."""
+        resolved = self._lookup(role, task_kind, self._lane_answers())
+        return resolved if isinstance(resolved, ModelRunRefusal) else resolved.lane
 
-    def _lookup(self, role: str, lanes: _LaneAnswers) -> ModelRunLane | ModelRunRefusal:
+    def _lookup(
+        self, role: str, task_kind: ModelRunTaskKind | None, lanes: _LaneAnswers
+    ) -> _Resolution | ModelRunRefusal:
         try:
             model_role = ModelRole(role)
         except ValueError:
@@ -164,7 +177,7 @@ class ModelRunService:
         read = self._read_list()
         if isinstance(read, ModelRunRefusal):
             return read
-        return self._resolve(model_role, read, lanes, self._selected_engine())
+        return self._resolve(model_role, task_kind, read, lanes, self._selected_engine())
 
     def _read_list(self) -> LocalModelListRead | ModelRunRefusal:
         read = self._model_list.read()
@@ -181,14 +194,23 @@ class ModelRunService:
 
     @staticmethod
     def _resolve(
-        model_role: ModelRole, read: LocalModelListRead, lanes: _LaneAnswers, engine: LocalEngine | None
-    ) -> ModelRunLane | ModelRunRefusal:
-        """Return the lane the role runs on or the refusal."""
+        model_role: ModelRole,
+        task_kind: ModelRunTaskKind | None,
+        read: LocalModelListRead,
+        lanes: _LaneAnswers,
+        engine: LocalEngine | None,
+    ) -> _Resolution | ModelRunRefusal:
+        """Return the lane the role runs on, with the task setting's effort, or the refusal."""
         if isinstance(read, UnreadableLocalModelList):
             # An unreadable record says nothing about any model, so no role reads as served or unserved.
             return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
         record = read.record if isinstance(read, StoredLocalModelList) else None
-        return lanes.resolve(ROLE_CAPABILITIES[model_role], record, engine)
+        capability = ROLE_CAPABILITIES[model_role]
+        task = None if record is None or task_kind is None else record.task(task_kind.value)
+        if task is not None and record is not None:
+            return lanes.resolve_task(capability, task, record.models, engine)
+        lane = lanes.resolve(capability, record, engine)
+        return lane if isinstance(lane, ModelRunRefusal) else _Resolution(lane=lane, effort=None)
 
     def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
         """Run one request on the lane its role resolves to now.
@@ -202,23 +224,44 @@ class ModelRunService:
         anything is sent.
         """
         lanes = self._lane_answers()
-        lane = self._lookup(header.role, lanes)
-        if isinstance(lane, ModelRunRefusal):
-            return lane
+        resolved = self._lookup(header.role, header.task_kind, lanes)
+        if isinstance(resolved, ModelRunRefusal):
+            return resolved
+        lane = resolved.lane
         if not header.consent_admits(lane):
             return ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
         if lane.accepted_media is not None:
             for attachment in body.attachments:
                 if model_run_media_kind(attachment.media_type) not in lane.accepted_media:
                     return ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED)
-        # Only a task-kind setting names an effort, and none is stored yet, so a run names none.
+        if resolved.effort is not None and not lanes.offers_effort(lane, resolved.effort):
+            # A lane that ignored the effort would answer at another one, so nothing is sent.
+            return ModelRunRefusal(code=ModelRunRefusalCode.OPTION_NOT_SUPPORTED)
         return self._gateway.run(
             lane=lane,
             body=body,
             deadline_seconds=header.deadline_seconds,
             options=lanes.honoured_options(lane),
-            effort=None,
+            effort=resolved.effort,
         )
+
+
+@dataclass(frozen=True, slots=True)
+class _Resolution:
+    """The lane a run resolves to, and the effort its task setting names; ``None`` names none."""
+
+    lane: ModelRunLane
+    effort: EffortLevel | None
+
+
+_TASK_REFUSALS: Final[Mapping[TaskModelUsability, ModelRunRefusalCode]] = MappingProxyType(
+    {
+        TaskModelUsability.LANE_NOT_SERVED: ModelRunRefusalCode.LANE_UNAVAILABLE,
+        TaskModelUsability.NOT_LISTED: ModelRunRefusalCode.NO_SELECTION,
+        TaskModelUsability.NOT_INSTALLED: ModelRunRefusalCode.MODEL_NOT_INSTALLED,
+    }
+)
+"""How a task setting that cannot run now is refused; nothing stands in for it."""
 
 
 type _DecidedLane = tuple[tuple[ModelRunMediaKind, ...] | None, tuple[CatalogModelFacts, ...]]
@@ -271,6 +314,38 @@ class _LaneAnswers:
             return decided
         accepted, entries = decided
         return _selected_model_lane(entry, accepted, entries, reading, capability)
+
+    def resolve_task(
+        self,
+        capability: ModelCapability,
+        task: TaskModel,
+        added: tuple[ListedModel, ...],
+        engine: LocalEngine | None,
+    ) -> _Resolution | ModelRunRefusal:
+        """Return the lane of the model the person set for a task kind, with its effort, or the refusal."""
+        catalog = self._read_catalog()
+        if isinstance(catalog, ModelRunRefusal):
+            return catalog
+        entry = next((held for held in catalog.providers if held.id == task.lane), None)
+        if entry is None:
+            return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+        chosen = ListedModel(lane=task.lane, model=task.model)
+        usability = task_model_usability(chosen, added, entry, engine, self._live_models)
+        if usability is not TaskModelUsability.USABLE:
+            return ModelRunRefusal(code=_TASK_REFUSALS[usability])
+        decided = self._decided(entry)
+        if isinstance(decided, ModelRunRefusal):
+            return decided
+        accepted, entries = decided
+        lane = _selected_model_lane(entry, accepted, entries, chosen, capability)
+        return lane if isinstance(lane, ModelRunRefusal) else _Resolution(lane=lane, effort=task.effort)
+
+    def offers_effort(self, lane: ModelRunLane, effort: EffortLevel) -> bool:
+        """Return whether ``lane`` honours effort, from the same snapshot, and lists ``effort`` for its model."""
+        background = self._live_models.lane_background(lane.provider_id, lane.transport)
+        if background is None or BackgroundOption.EFFORT not in background.options:
+            return False
+        return effort in background.model_efforts.get(lane.model, ())
 
     def _decided(self, entry: ProviderCatalogEntry) -> _DecidedLane | ModelRunRefusal:
         decided = self._lanes.get(entry.id)

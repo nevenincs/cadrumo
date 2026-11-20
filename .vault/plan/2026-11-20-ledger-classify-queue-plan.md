@@ -8,7 +8,7 @@ related:
   - '[[2026-11-20-ledger-classify-queue-adr]]'
 modified: '2026-11-20'
 body_schema: body-v2
-body_hash: 'sha256:9ba25d06700448e5ad7bb7191b9b6295c0dbdbd6ecad9c89e81ad5e3ec87832c'
+body_hash: 'sha256:7bcb099757c368a66b5f80fd5285204f022382cf62e997ae5d143d3610299571'
 ---
 
 # `ledger-classify-queue` plan
@@ -62,7 +62,7 @@ Measure classification speed before changing it, and stop off-host refusals from
 Persist classification jobs with per-item proposals, worked by a cooperative resumable operation.
 
 - [x] `P02.S03` - Declare the classification job record, its secure namespace and repository with revision-guarded writes; `src/cadrumo/domain/transactions/classification_job.py, adapters/persistence/storage/secure_object_namespaces.py, namespace_registry.py, adapters/persistence/profile/classification_jobs.py`.
-- [ ] `P02.S04` - Register enqueue, read, cancel, retry and dismiss operations with generated contracts and the manifest regenerated; `src/cadrumo/application/ledger/classification_job_*.py, operation_composition_ledger.py, operation contract manifest`.
+- [x] `P02.S04` - Register enqueue, read, cancel, retry and dismiss operations with generated contracts and the manifest regenerated; `src/cadrumo/application/ledger/classification_job_*.py, operation_composition_ledger.py, operation contract manifest`.
 - [ ] `P02.S05` - Register the cooperative resumable run operation that classifies pending items, commits proposals per batch and reconciles interrupted items as UNKNOWN; `src/cadrumo/application/ledger/classification_job_run.py, ledger_llm_composition.py`.
 - [ ] `P02.S06` - Bind consent per job with once, session and remembered scopes for off-host lanes and apply proposals through the existing review and apply path; `src/cadrumo/adapters/outbound/llm/consent.py, application/ledger/classification_job_*.py, llm_review_execution.py`.
 
@@ -71,8 +71,8 @@ Persist classification jobs with per-item proposals, worked by a cooperative res
 cadrumo-agent serves task kinds and background effort; the agent service resolves a task setting before the picker.
 
 - [x] `P03.S07` - Serve task kinds and a background effort option in cadrumo-agent's catalogue on a cadrumo-agent branch merged to its main; `cadrumo-agent catalogue and background run sources`.
-- [ ] `P03.S08` - Store per-task-kind lane, model and effort in model-role-selections, resolve task setting before the picker, send effort, and re-pin cadrumo-agent; `src/cadrumo_agent_service/providers, adapters/agent_background_runs.py, _data/agent_api/pin.json`.
-- [ ] `P03.S09` - Offer the per-task-kind setting in the agent settings surface from served vocabulary; `native/desktop/frontend agent settings components, generated agent catalogue contract`.
+- [x] `P03.S08` - Store per-task-kind lane, model and effort in model-role-selections, resolve task setting before the picker, send effort, and re-pin cadrumo-agent; `src/cadrumo_agent_service/providers, adapters/agent_background_runs.py, _data/agent_api/pin.json`.
+- [x] `P03.S09` - Offer the per-task-kind setting in the agent settings surface from served vocabulary; `native/desktop/frontend agent settings components, generated agent catalogue contract`.
 
 ### Phase `P04` - Signal, indicator and Libro actions
 

@@ -64,17 +64,19 @@ export type LocalModelListEntry = {
  * (`default`, never written to the record), or `none`, when `reading` is
  * `None`. Every reading of a document uses this same selection. `local_lanes`
  * are the catalogue's local lane ids, whose models a picker offers from their
- * lists; none when the catalogue cannot be read. `unreadable` means a stored
- * list record cannot be read. Then no model is listed or selected, because
- * nothing is known, and `revision` guards the reset that removes the record.
- * Every state carries a revision, so an unreadable record always has a reset
- * route.
+ * lists; none when the catalogue cannot be read. `tasks` are the settings the
+ * person stored per task kind, in the order stored; a kind without one runs on
+ * `reading`. `unreadable` means a stored list record cannot be read. Then no
+ * model is listed or selected, because nothing is known, and `revision` guards
+ * the reset that removes the record. Every state carries a revision, so an
+ * unreadable record always has a reset route.
  */
 export type LocalModelListStatus = {
   unreadable: boolean;
   models: LocalModelListEntry[];
   reading: LocalModelListEntry | null;
   reading_source: ReadingSource;
+  tasks: TaskModelEntry[];
   local_lanes: string[];
   revision: string;
 };
@@ -89,3 +91,17 @@ export type LocalPlacement = "auto" | "cpu_only";
  * Where the model documents are read with comes from.
  */
 export type ReadingSource = "chosen" | "default" | "none";
+
+/**
+ * The lane, model and effort the person set for one task kind.
+ *
+ * `task_kind` is the agent's id for the kind, from its served catalogue.
+ * `effort` is `None` when the person set none, and the run then names no
+ * effort. A kind with no entry runs on the model documents are read with.
+ */
+export type TaskModelEntry = {
+  task_kind: string;
+  lane: string;
+  model: string;
+  effort: string | null;
+};

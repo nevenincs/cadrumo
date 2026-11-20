@@ -32,7 +32,7 @@ from cadrumo_agent_service.providers.application.tests.synthetic_catalog import 
     synthetic_catalog,
 )
 from cadrumo_agent_service.providers.domain.record import LocalEngine
-from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunRefusal
+from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunRefusal, ModelRunTaskKind
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 from cadrumo_runtime.host.tests.frontend.cli.ledger_ux_support import open_ledger_ux_session
 from cadrumo_runtime.host.tests.frontend.cli.portable_human_cli_runtime import serving_portable_agent
@@ -66,9 +66,11 @@ class _UnservedAgent(RecordingModelRuns):
         )
 
     @override
-    async def lookup(self, role: ModelRole) -> ModelRunLane | ModelRunRefusal:
+    async def lookup(
+        self, role: ModelRole, *, task_kind: ModelRunTaskKind | None = None
+    ) -> ModelRunLane | ModelRunRefusal:
         self.lookups.append(role)
-        return self.models.lookup(role.value)
+        return self.models.lookup(role.value, task_kind=task_kind)
 
 
 @pytest.mark.parametrize(

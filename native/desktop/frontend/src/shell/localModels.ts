@@ -1,5 +1,5 @@
 import { createContext, useCallback, useEffect, useState } from "react";
-import type { AgentSession } from "./agentSession";
+import type { AgentSession, TaskModelChoice } from "./agentSession";
 import { failureCode } from "../errors";
 import type {
   LocalEngine,
@@ -29,6 +29,13 @@ export type LocalModelHost = {
     expectedRevision: string,
   ) => Promise<LocalModelListStatus>;
   reset: (expectedRevision: string) => Promise<LocalModelListStatus>;
+  /** Sets or, with `choice` null, clears what one task kind runs with,
+   * where the host offers it. */
+  chooseTask?: (
+    taskKind: string,
+    choice: TaskModelChoice | null,
+    expectedRevision: string,
+  ) => Promise<LocalModelListStatus>;
   /** The local engine, where the host offers it. It shares the lists'
    * revision, so a change to either is read again from the other. */
   engine?: LocalEngineHost;
@@ -71,6 +78,7 @@ export function localModelHostOf(
   const add = session.addLocalModel.bind(session);
   const remove = session.removeLocalModel.bind(session);
   const reset = session.resetLocalModels.bind(session);
+  const chooseTask = session.chooseTaskModel?.bind(session);
   const readEngine = session.localEngine?.bind(session);
   const choose = session.chooseLocalEngine?.bind(session);
   return {
@@ -79,6 +87,12 @@ export function localModelHostOf(
     remove: (lane, model, revision) =>
       told("list", remove(lane, model, revision)),
     reset: (revision) => told("list", reset(revision)),
+    ...(chooseTask
+      ? {
+          chooseTask: (taskKind, choice, revision) =>
+            told("list", chooseTask(taskKind, choice, revision)),
+        }
+      : {}),
     ...(readEngine && choose
       ? {
           engine: {

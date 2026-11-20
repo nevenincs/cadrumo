@@ -16,9 +16,10 @@ and string rendering masks it. Only :func:`provider_settings_record_document`
 reveals it, for the one caller that encrypts the record at rest.
 
 A separate per-profile record, kept in a record capability of its own, holds
-the models the person added by name to a local lane's model list and the local
-engine setting: which engine runs models on this computer and where they run.
-It holds no secret.
+the models the person added by name to a local lane's model list, the local
+engine setting (which engine runs models on this computer and where they run)
+and the lane, model and effort the person set per task kind. It holds no
+secret.
 """
 
 from __future__ import annotations
@@ -46,7 +47,7 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo_client.contracts.model_runs import MODEL_RUN_MODEL_ID_PATTERN
 
-from .catalog import BASE_URL_MAX_LENGTH, LaneId, validate_https_base_url
+from .catalog import BASE_URL_MAX_LENGTH, MAX_TASK_KINDS, EffortLevel, LaneId, TaskKindId, validate_https_base_url
 
 PROVIDER_SETTINGS_RECORD_SCHEMA_VERSION: Final[Literal[1]] = 1
 CREDENTIAL_SECRET_MIN_LENGTH: Final[int] = 8
@@ -175,7 +176,7 @@ class ProviderSettingsRecord(BaseModel):
         return self
 
 
-LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION: Final[Literal[3]] = 3
+LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION: Final[Literal[4]] = 4
 
 LOCAL_MODEL_LIST_MAX_MODELS: Final[int] = 64
 """The most models a person adds to the local model list."""
@@ -211,6 +212,23 @@ class ListedModel(BaseModel):
     model: ModelId
 
 
+class TaskModel(BaseModel):
+    """The lane, model and effort the person set for one task kind; nothing here is secret.
+
+    ``task_kind`` is the agent's own id for the kind, from its served
+    vocabulary. ``effort`` is one of the levels the agent states for the
+    model on its lane, or ``None`` when the person set none: then the run
+    names no effort.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    task_kind: TaskKindId
+    lane: LaneId
+    model: ModelId
+    effort: EffortLevel | None = None
+
+
 class LocalModelListRecord(BaseModel):
     """The models one profile added to its local lanes' model lists, the model it reads with and its local engine.
 
@@ -221,8 +239,44 @@ class LocalModelListRecord(BaseModel):
     picker, on any lane, local or not; ``None`` when none is stored.
     ``engine`` and ``placement`` are the local engine setting as the person
     chose it; ``None`` where the person chose none, which reads as the default
-    engine the package serves and follows it.
+    engine the package serves and follows it. ``tasks`` holds the lane, model
+    and effort the person set per task kind, at most one per kind; a kind it
+    does not name runs on the model documents are read with.
     """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    schema_version: Literal[4]
+    models: tuple[ListedModel, ...] = Field(max_length=LOCAL_MODEL_LIST_MAX_MODELS)
+    reading: ListedModel | None = None
+    engine: LocalEngine | None = None
+    placement: LocalPlacement | None = None
+    tasks: tuple[TaskModel, ...] = Field(default=(), max_length=MAX_TASK_KINDS)
+    generation: Hex64Str
+    updated_at: UtcInstant
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _one_entry_per_model(self) -> Self:
+        pairs = [(entry.lane, entry.model) for entry in self.models]
+        if len(pairs) != len(set(pairs)):
+            raise ValueError("a lane lists a model at most once")
+        kinds = [task.task_kind for task in self.tasks]
+        if len(kinds) != len(set(kinds)):
+            raise ValueError("a task kind has at most one setting")
+        return self
+
+    def lane_models(self, lane: str) -> tuple[str, ...]:
+        """Return the models added to ``lane``'s list, in the order they were added."""
+        return tuple(entry.model for entry in self.models if entry.lane == lane)
+
+    def task(self, task_kind: str) -> TaskModel | None:
+        """Return the setting the person stored for ``task_kind``, or ``None`` when there is none."""
+        return next((task for task in self.tasks if task.task_kind == task_kind), None)
+
+
+class _EngineListRecord(BaseModel):
+    """Schema version 3 of the record: the model list, the reading model and the local engine, before task kinds."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -233,18 +287,6 @@ class LocalModelListRecord(BaseModel):
     placement: LocalPlacement | None = None
     generation: Hex64Str
     updated_at: UtcInstant
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _one_entry_per_model(self) -> Self:
-        pairs = [(entry.lane, entry.model) for entry in self.models]
-        if len(pairs) != len(set(pairs)):
-            raise ValueError("a lane lists a model at most once")
-        return self
-
-    def lane_models(self, lane: str) -> tuple[str, ...]:
-        """Return the models added to ``lane``'s list, in the order they were added."""
-        return tuple(entry.model for entry in self.models if entry.lane == lane)
 
 
 class _ModelListRecord(BaseModel):
@@ -289,6 +331,9 @@ def local_model_list_record_document(record: LocalModelListRecord) -> bytes:
 def parse_local_model_list_record(payload: bytes) -> LocalModelListRecord:
     """Parse at-rest JSON back into a model list record.
 
+    A schema version 3 record holds no task kind setting: every kind runs on
+    the model documents are read with, so it is read with none set.
+
     A schema version 2 record holds no local engine setting: the person chose
     none, so it is read with none chosen.
 
@@ -310,6 +355,20 @@ def parse_local_model_list_record(payload: bytes) -> LocalModelListRecord:
         return LocalModelListRecord.model_validate_json(text)
     except ValidationError:
         pass
+    try:
+        engine_record = _EngineListRecord.model_validate_json(text)
+    except ValidationError:
+        pass
+    else:
+        return LocalModelListRecord(
+            schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+            models=engine_record.models,
+            reading=engine_record.reading,
+            engine=engine_record.engine,
+            placement=engine_record.placement,
+            generation=engine_record.generation,
+            updated_at=engine_record.updated_at,
+        )
     try:
         listed_record = _ModelListRecord.model_validate_json(text)
     except ValidationError:
@@ -370,6 +429,7 @@ __all__ = [
     "ProviderCredential",
     "ProviderPreferences",
     "ProviderSettingsRecord",
+    "TaskModel",
     "credential_secret_refusal",
     "local_model_list_record_document",
     "new_settings_generation",

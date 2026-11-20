@@ -26,6 +26,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunMediaKind,
     ModelRunRefusal,
     ModelRunRefusalCode,
+    ModelRunTaskKind,
 )
 
 from ....application.operations.model_runs import ModelRunPort, current_model_run_port
@@ -229,6 +230,7 @@ class _AgentDispatch:
 
     port: ModelRunPort
     role: ModelRole
+    task_kind: ModelRunTaskKind | None
     lane: ModelRunLane
 
 
@@ -730,12 +732,12 @@ class LLMClient:
         port = self.model_runs or current_model_run_port()
         if port is None:
             raise model_run_refusal_error(ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE), role=role)
-        lane = await port.lookup(role)
+        lane = await port.lookup(role, task_kind=request.task_kind)
         if isinstance(lane, ModelRunRefusal):
             raise model_run_refusal_error(lane, role=role)
         if request.images and lane.accepted_media is not None and ModelRunMediaKind.IMAGE not in lane.accepted_media:
             raise model_run_refusal_error(ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED), role=role)
-        return _AgentDispatch(port=port, role=role, lane=lane)
+        return _AgentDispatch(port=port, role=role, task_kind=request.task_kind, lane=lane)
 
     def _build_adapter(self, *, agent: _AgentDispatch, request: LLMRequest) -> ProviderAdapter:
         timeout_s = self.settings.cadrumo_llm_default_timeout_s
@@ -743,6 +745,7 @@ class LLMClient:
         return AgentAdapter(
             port=agent.port,
             role=agent.role,
+            task_kind=agent.task_kind,
             lane=agent.lane,
             consent=consent,
             deadline_seconds=max(1, min(timeout_s, MODEL_RUN_MAX_DEADLINE_SECONDS)),

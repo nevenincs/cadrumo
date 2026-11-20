@@ -3,6 +3,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import type { AgentAccess, useAgentAccess } from "../../shell/agentAccess";
+import type { ServedCatalogAnswer } from "../../shell/agentCatalogContract";
 import type { AgentEngineHealth } from "../../shell/agentSession";
 import type { CatalogLane } from "../../shell/localModelLanes";
 import type { LocalModelHost } from "../../shell/localModels";
@@ -14,6 +15,7 @@ import { useStrings } from "../../shell/strings";
 import { AgentAccess as AgentAccessSection } from "../settings/AgentAccess";
 import { LocalModels } from "../settings/LocalModels";
 import { ProviderSettings as ProviderSettingsSection } from "../settings/ProviderSettings";
+import { TaskModels } from "../settings/TaskModels";
 import { LocalAi } from "../setup/LocalAi";
 import { ReadState, SectionFailure } from "./ReadState";
 
@@ -77,6 +79,7 @@ export function AgentSettingsPanel({
   engines,
   localProviderId,
   catalogStatus,
+  catalog,
   onRetryCatalog,
   onLocalModelRemoved,
 }: {
@@ -107,6 +110,9 @@ export function AgentSettingsPanel({
   /** The provider lane on this computer, the local AI. */
   localProviderId: string | undefined;
   catalogStatus: "ready" | "loading" | "failed";
+  /** The catalogue the agent serves, once read: the kinds of task it runs
+   * and what each can run with. */
+  catalog: ServedCatalogAnswer | null;
   onRetryCatalog: () => void;
   onLocalModelRemoved: () => void;
 }) {
@@ -117,6 +123,11 @@ export function AgentSettingsPanel({
     Boolean(query) && title.toLocaleLowerCase().includes(query);
   const providerTitleMatches = titleMatches(t("desktop.providers.title"));
   const accessTitleMatches = titleMatches(t("desktop.automation_access.title"));
+  const tasksTitleMatches = titleMatches(
+    t("desktop.providers.task_models_title"),
+  );
+  const tasksOffered = Boolean(localModelHost?.chooseTask);
+  const tasksVisible = tasksOffered && (!query || tasksTitleMatches);
   // Each section is drawn as soon as its own read answers, and says on its
   // own while it is read; one that has not answered yet cannot be said not to
   // match a search, so it stays shown.
@@ -262,7 +273,21 @@ export function AgentSettingsPanel({
             ))}
         </SettingsDisclosure>
       )}
-      {query && !providerVisible && !accessVisible && (
+      {localModelHost && tasksOffered && (
+        <SettingsDisclosure
+          title={t("desktop.providers.task_models_title")}
+          visible={tasksVisible}
+          searching={Boolean(query)}
+        >
+          <TaskModels
+            host={localModelHost}
+            catalog={catalog}
+            catalogStatus={catalogStatus}
+            onRetryCatalog={onRetryCatalog}
+          />
+        </SettingsDisclosure>
+      )}
+      {query && !providerVisible && !accessVisible && !tasksVisible && (
         <p role="status">{t("desktop.settings.agent_search_empty")}</p>
       )}
     </div>

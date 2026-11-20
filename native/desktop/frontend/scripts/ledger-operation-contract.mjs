@@ -36,6 +36,7 @@ const outputs = {
   capitalGoods: "src/shell/ledgerCapitalGoodsContract.ts",
   ownAccount: "src/shell/ledgerOwnAccountContract.ts",
   transfer: "src/shell/ledgerTransferContract.ts",
+  classificationJob: "src/shell/ledgerClassificationJobContract.ts",
 };
 
 const frontend = fileURLToPath(new URL("..", import.meta.url));

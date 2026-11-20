@@ -24,6 +24,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo_client.contracts.model_runs import ModelRunTaskKind
 
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....core.config import load_settings
@@ -365,6 +366,7 @@ class TestExtractorRequestShape:
         assert request.provider_override is LLMProvider.AGENT
         assert request.model_override is None
         assert request.model_role is ModelRole.TEXT_EXTRACTION
+        assert request.task_kind is ModelRunTaskKind.EXTRACTION
         assert request.expects_json is True
         assert request.evidence_derived is True
         assert request.images == ()

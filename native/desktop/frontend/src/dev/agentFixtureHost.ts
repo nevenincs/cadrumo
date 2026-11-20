@@ -26,6 +26,7 @@ import type {
   LocalModelListStatus,
   LocalPlacement,
 } from "../shell/localModelsContract";
+import { fixtureTaskModels } from "./fixtureTaskModels";
 import {
   catalogsUnderEngine,
   FIXTURE_CATALOG,
@@ -263,6 +264,7 @@ export function fixtureAgent({
   // revision names.
   const added: { lane: string; model: string }[] = [];
   let reading: { lane: string; model: string } | null = null;
+  const tasks = fixtureTaskModels(FIXTURE_CATALOG);
   let committed = 0;
   // The engine record shares the lists' revision, as one stored record
   // holds both. The bundled llama.cpp is the engine until a scenario starts
@@ -301,6 +303,7 @@ export function fixtureAgent({
       : readingDefault
         ? { reading: { ...readingDefault }, reading_source: "default" as const }
         : { reading: null, reading_source: "none" as const }),
+    tasks: tasks.entries(),
     local_lanes: [...FIXTURE_LISTED_LANES],
     revision: revisionOf(committed),
   });
@@ -1029,6 +1032,7 @@ export function fixtureAgent({
       await guarded(expectedRevision);
       added.splice(0, added.length);
       reading = null;
+      tasks.clear();
       committed += 1;
       return listSnapshot();
     },
@@ -1060,6 +1064,14 @@ export function fixtureAgent({
         return listSnapshot();
       reading = { lane, model };
       committed += 1;
+      return listSnapshot();
+    },
+    async chooseTaskModel(taskKind, choice, expectedRevision) {
+      say(`agentTaskModelChoose ${taskKind} ${choice?.model ?? "-"}`);
+      await guarded(expectedRevision);
+      if (!tasks.served(taskKind, choice))
+        throw coded("agent_local_models_unknown");
+      if (tasks.choose(taskKind, choice)) committed += 1;
       return listSnapshot();
     },
     async modelLicence(provider, transport, model) {

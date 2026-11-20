@@ -1,5 +1,6 @@
 import type {
   AuthKind,
+  BackgroundOption,
   BackgroundRequestSupportResponse,
   DeclaredLicence,
   DeclaredModel,
@@ -219,6 +220,8 @@ type Fixture = {
   recommended?: string;
   /** What the lane recommends per capability, by model. */
   recommendedFor?: Partial<Record<"vision" | "text", string>>;
+  /** The run options a background request on the lane takes. */
+  background?: BackgroundOption[];
   /** Controls beyond efforts that the lane advertises; the column offers none. */
   extraControls?: ProviderNativeControlResponse[];
   /** The capabilities that have been proven on this made-up host; every
@@ -278,6 +281,7 @@ const FIXTURES: Record<string, Fixture> = {
       { entry_id: "fixture-plain", display_name: "Fixture Plain", efforts: [] },
     ],
     proven: ["tool_access", "web_retrieval", "pdf_reading"],
+    background: ["effort"],
   },
   "kimi/cli": { held: "signedOut" },
   // The compatible API contract advertises no efforts or controls.
@@ -447,7 +451,9 @@ function lane(declared: DeclaredLane): ServedProviderLane {
           : null,
       state: fixture.proven?.includes(capability) ? "proven" : "unproven",
     })),
-    background_requests: BACKGROUND,
+    background_requests: fixture.background
+      ? { ...BACKGROUND, options: fixture.background }
+      : BACKGROUND,
   };
 }
 

@@ -38,7 +38,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunMediaKind, ModelRunRefusalCode
+from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunMediaKind, ModelRunRefusalCode, ModelRunTaskKind
 
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....core.decimal.coercion import coerce_finite_european_decimal
@@ -340,8 +340,10 @@ class TestVisionDocumentTranscriber:
         assert transcription.transcriber.transport == "agent"
         assert transcription.transcriber.revision.startswith("prompt-v")
         assert service.lookups == [ModelRole.VISION_TRANSCRIPTION]
+        assert service.lookup_task_kinds == [ModelRunTaskKind.EXTRACTION]
         ((header, body),) = service.runs
         assert header.role == ModelRole.VISION_TRANSCRIPTION.value
+        assert header.task_kind is ModelRunTaskKind.EXTRACTION
         # The lane stays on this computer, so no consent rides the run.
         assert header.consent is None
         assert [(item.media_type, item.base64_data) for item in body.attachments] == [

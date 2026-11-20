@@ -8,6 +8,8 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import JsonValue
 
+from cadrumo_client.contracts.model_runs import ModelRunTaskKind
+
 from .. import served_catalog as served_catalog_module
 from ..served_catalog import PinnedSchemaError, catalog_nonconformance, pinned_agent_components, served_schema
 from .served_catalog_documents import changed, declared_catalog, served_catalog
@@ -110,3 +112,10 @@ def test_a_lane_whose_background_requests_honour_effort_conforms() -> None:
     answer = changed(served_catalog(), ("providers", 0, "background_requests", "options"), ["effort"])
 
     assert catalog_nonconformance(answer) is None
+
+
+def test_the_task_kinds_a_run_names_are_the_agent_s_pinned_background_task_kinds() -> None:
+    """A tax run names its kind in the agent's own spelling, so the setting it keys is one the window can offer."""
+    pinned = pinned_agent_components()["BackgroundTaskKind"]["enum"]
+
+    assert [kind.value for kind in ModelRunTaskKind] == pinned

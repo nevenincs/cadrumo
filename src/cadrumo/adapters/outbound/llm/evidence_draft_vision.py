@@ -55,6 +55,8 @@ from __future__ import annotations
 import asyncio
 from typing import Final
 
+from cadrumo_client.contracts.model_runs import ModelRunTaskKind
+
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ....core.config import Settings, load_settings
@@ -259,6 +261,7 @@ class VisionDocumentTranscriber:
             evidence_derived=not self._public_corpus,
             consent_token=self._consent_token,
             model_role=ModelRole.VISION_TRANSCRIPTION,
+            task_kind=ModelRunTaskKind.EXTRACTION,
         )
         response = asyncio.run(self._client.complete(request))
         text = response.text.strip()

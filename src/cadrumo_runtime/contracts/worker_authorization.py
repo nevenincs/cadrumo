@@ -21,6 +21,7 @@ from cadrumo_client.contracts.model_runs import (
     MODEL_RUN_MAX_BODY_BYTES,
     ModelRunHeader,
     ModelRunOutcome,
+    ModelRunTaskKind,
     require_run_carries_a_body,
 )
 from cadrumo_client.contracts.profile_access import AccessRefusal
@@ -250,7 +251,7 @@ class WorkerAuthorizationReleased(BaseModel):
 class WorkerModelRun(BaseModel):
     """Ask the runtime to have the profile's agent service answer one lookup or run.
 
-    Sent under a held START permit. A lookup names its role and carries no
+    Sent under a held START permit. A lookup names its role and task kind and carries no
     header and no body; a run's body follows on secret frames. Nothing here, and nothing in the
     reply, is a credential.
     """
@@ -261,12 +262,15 @@ class WorkerModelRun(BaseModel):
     permit_id: UUID
     command_id: UUID
     role: Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,63}$")]
+    task_kind: ModelRunTaskKind | None = None
     header: ModelRunHeader | None = None
     body_byte_count: Annotated[NonNegativeInt, Field(le=MODEL_RUN_MAX_BODY_BYTES)] = 0
 
     @model_validator(mode="after")
     def _run_carries_a_body(self) -> WorkerModelRun:
-        require_run_carries_a_body(header=self.header, role=self.role, body_byte_count=self.body_byte_count)
+        require_run_carries_a_body(
+            header=self.header, role=self.role, task_kind=self.task_kind, body_byte_count=self.body_byte_count
+        )
         return self
 
 

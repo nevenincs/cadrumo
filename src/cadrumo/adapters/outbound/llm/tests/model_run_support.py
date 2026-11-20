@@ -23,6 +23,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
+    ModelRunTaskKind,
 )
 
 from .....application.operations.model_runs import bound_model_runs
@@ -56,11 +57,15 @@ class RecordingModelRuns:
         self._lookup_refusal = lookup_refusal
         self._run_refusal = run_refusal
         self.lookups: list[ModelRole] = []
+        self.lookup_task_kinds: list[ModelRunTaskKind | None] = []
         self.runs: list[tuple[ModelRunHeader, ModelRunBody]] = []
         self.bodies: Queue[str] = Queue()
 
-    async def lookup(self, role: ModelRole) -> ModelRunLane | ModelRunRefusal:
+    async def lookup(
+        self, role: ModelRole, *, task_kind: ModelRunTaskKind | None = None
+    ) -> ModelRunLane | ModelRunRefusal:
         self.lookups.append(role)
+        self.lookup_task_kinds.append(task_kind)
         if self._lookup_refusal is not None:
             return ModelRunRefusal(code=self._lookup_refusal)
         return self._lane

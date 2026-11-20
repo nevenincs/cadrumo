@@ -28,6 +28,7 @@ from ...domain.record import (
     LocalEngine,
     LocalModelListRecord,
     LocalPlacement,
+    TaskModel,
     local_model_list_record_document,
     new_settings_generation,
     parse_local_model_list_record,
@@ -151,6 +152,22 @@ def _model_list_v2(*, reading: ListedModel | None = _OTHER) -> bytes:
     return json.dumps(document, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
 
+def _engine_list_v3(*, tasks: bool = False) -> bytes:
+    """A schema version 3 document as it was stored: the models, the reading model and the engine, no task kinds."""
+    document: dict[str, object] = {
+        "schema_version": 3,
+        "models": [{"lane": _ADDED.lane, "model": _ADDED.model}],
+        "reading": {"lane": _OTHER.lane, "model": _OTHER.model},
+        "engine": "llamacpp",
+        "placement": "cpu_only",
+        "generation": "c" * 64,
+        "updated_at": "2026-11-19T09:00:00Z",
+    }
+    if tasks:
+        document["tasks"] = []
+    return json.dumps(document, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
 def _role_choices(*choices: tuple[str, str, str]) -> bytes:
     """A schema version 1 document as it was stored: the lane and model chosen per role."""
     return json.dumps(
@@ -163,6 +180,16 @@ def _role_choices(*choices: tuple[str, str, str]) -> bytes:
         sort_keys=True,
         separators=(",", ":"),
     ).encode("utf-8")
+
+
+_TASK = TaskModel(task_kind="classification", lane="example_api", model="synthetic-text-1", effort="high")
+
+
+def _with_tasks(*tasks: TaskModel) -> bytes:
+    """The current document with ``tasks`` written in as stored bytes, bypassing the record's own validation."""
+    document = json.loads(local_model_list_record_document(_record(_ADDED)))
+    document["tasks"] = [task.model_dump(mode="json") for task in tasks]
+    return json.dumps(document, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
 
 def test_the_record_keeps_the_capability_and_key_the_runtime_descriptor_declares() -> None:
@@ -294,12 +321,15 @@ def test_a_write_or_delete_against_a_stale_revision_is_refused_and_changes_nothi
     [
         b"not json",
         b"\xff\xfe",
-        local_model_list_record_document(_record(_ADDED)).replace(b'"schema_version":3', b'"schema_version":4'),
+        local_model_list_record_document(_record(_ADDED)).replace(b'"schema_version":4', b'"schema_version":5'),
         local_model_list_record_document(_record(_ADDED)).replace(b"local_api", b"Local API"),
         local_model_list_record_document(_record(_ADDED)).replace(b'"engine":"ollama"', b'"engine":"vllm"'),
         local_model_list_record_document(_record(_ADDED)).replace(b'"placement":"auto"', b'"placement":"gpu_only"'),
         _model_list_v2().replace(b'"updated_at"', b'"engine":"ollama","updated_at"'),
+        _engine_list_v3(tasks=True),
         _role_choices(("Vision", "local_api", "custom-vision:1")),
+        _with_tasks(_TASK, _TASK),
+        _with_tasks(_TASK.model_copy(update={"effort": "High"})),
     ],
     ids=[
         "not-json",
@@ -309,7 +339,10 @@ def test_a_write_or_delete_against_a_stale_revision_is_refused_and_changes_nothi
         "unknown-engine",
         "unknown-placement",
         "earlier-schema-with-engine-field",
+        "earlier-schema-with-tasks-field",
         "malformed-earlier-role",
+        "task-kind-set-twice",
+        "malformed-effort",
     ],
 )
 def test_a_stored_record_that_does_not_validate_is_unreadable_never_absent(payload: bytes) -> None:
@@ -365,3 +398,39 @@ def test_a_stored_record_reported_without_a_revision_refuses_rather_than_reading
     records.revisionless = True
 
     assert _store(records).read() == StoreRefusal(code=StoreRefusalCode.UNKNOWN)
+
+
+def test_a_stored_engine_record_reads_with_no_task_setting_and_is_not_rewritten() -> None:
+    records = _Records()
+    stored = _engine_list_v3()
+    records.rows[LOCAL_MODEL_LIST_KEY] = ("a" * 64, stored)
+
+    read = _store(records).read()
+
+    assert isinstance(read, StoredLocalModelList)
+    assert read.revision == "a" * 64
+    assert read.record.schema_version == LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION == 4
+    assert read.record.models == (_ADDED,)
+    assert read.record.reading == _OTHER
+    assert (read.record.engine, read.record.placement) == (LocalEngine.LLAMACPP, LocalPlacement.CPU_ONLY)
+    assert read.record.tasks == ()
+    assert read.record.generation == "c" * 64
+    assert records.rows[LOCAL_MODEL_LIST_KEY] == ("a" * 64, stored)
+
+
+def test_task_settings_round_trip_through_the_document_and_the_store() -> None:
+    extraction = TaskModel(task_kind="extraction", lane="local_api", model="custom-model:7b", effort=None)
+    record = _record(_ADDED).model_copy(update={"tasks": (_TASK, extraction)})
+
+    document = local_model_list_record_document(record)
+    assert b'"schema_version":4' in document
+    assert parse_local_model_list_record(document) == record
+
+    records = _Records()
+    store = _store(records)
+    assert store.write(record, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) is None
+    read = store.read()
+    assert isinstance(read, StoredLocalModelList)
+    assert read.record.tasks == (_TASK, extraction)
+    assert read.record.task("classification") == _TASK
+    assert read.record.task("summary") is None

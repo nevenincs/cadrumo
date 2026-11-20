@@ -13,20 +13,24 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
+    ModelRunTaskKind,
     encode_model_run_body,
 )
 
 ModelRunCall = Callable[
-    [OperationIdentity, str, ModelRunHeader | None, bytearray, float],
+    [OperationIdentity, str, ModelRunTaskKind | None, ModelRunHeader | None, bytearray, float],
     Awaitable[tuple[ModelRunOutcome, bytearray]],
 ]
+"""Relay one lookup or run: the role, the task kind, the header (``None`` for a lookup), the body and the wait."""
 _MODEL_RUN_LOOKUP_SECONDS = 30.0
 _MODEL_RUN_ANSWER_MARGIN_SECONDS = 130.0
 
 
-async def model_run_lookup(run: ModelRunCall, identity: OperationIdentity, role: str) -> ModelRunLane | ModelRunRefusal:
-    """Ask the profile's agent service which lane and model it would use for ``role``."""
-    outcome, text = await run(identity, role, None, bytearray(), _MODEL_RUN_LOOKUP_SECONDS)
+async def model_run_lookup(
+    run: ModelRunCall, identity: OperationIdentity, role: str, task_kind: ModelRunTaskKind | None
+) -> ModelRunLane | ModelRunRefusal:
+    """Ask the profile's agent service which lane and model it would use for ``role`` doing ``task_kind``."""
+    outcome, text = await run(identity, role, task_kind, None, bytearray(), _MODEL_RUN_LOOKUP_SECONDS)
     text[:] = bytes(len(text))
     if outcome.lane is not None:
         return outcome.lane
@@ -38,7 +42,9 @@ async def model_run_result(
 ) -> ModelRunOutput | ModelRunRefusal:
     """Have the profile's agent service run one tool-less request for this running operation."""
     answer_seconds = header.deadline_seconds + _MODEL_RUN_ANSWER_MARGIN_SECONDS
-    outcome, text = await run(identity, header.role, header, encode_model_run_body(body), answer_seconds)
+    outcome, text = await run(
+        identity, header.role, header.task_kind, header, encode_model_run_body(body), answer_seconds
+    )
     try:
         return model_run_output(outcome, text)
     finally:

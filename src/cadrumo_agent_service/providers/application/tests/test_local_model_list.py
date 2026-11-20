@@ -122,6 +122,7 @@ def test_a_fresh_profile_lists_no_added_model() -> None:
         models=(),
         reading=None,
         reading_source=ReadingSource.NONE,
+        tasks=(),
         local_lanes=(KEYLESS_LANE,),
         revision=ABSENT_SECURE_OBJECT_REVISION_ID,
     )
@@ -237,6 +238,7 @@ def test_an_unreadable_record_lists_no_model_refuses_changes_and_only_a_guarded_
         models=(),
         reading=None,
         reading_source=ReadingSource.NONE,
+        tasks=(),
         local_lanes=(KEYLESS_LANE,),
         revision="d" * 64,
     )
@@ -252,6 +254,7 @@ def test_an_unreadable_record_lists_no_model_refuses_changes_and_only_a_guarded_
         models=(),
         reading=None,
         reading_source=ReadingSource.NONE,
+        tasks=(),
         local_lanes=(KEYLESS_LANE,),
         revision=ABSENT_SECURE_OBJECT_REVISION_ID,
     )
