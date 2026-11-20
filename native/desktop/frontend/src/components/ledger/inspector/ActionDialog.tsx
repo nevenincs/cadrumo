@@ -205,7 +205,7 @@ export function ActionDialog({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className="ledger-action-dialog w-dialog-md"
-        closeLabel={t("desktop.ledger.inspector.cancel")}
+        closeLabel={t("desktop.ledger.form.close")}
         onCloseAutoFocus={(event) => {
           if (!onClosed) return;
           event.preventDefault();

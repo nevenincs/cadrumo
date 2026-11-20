@@ -3727,7 +3727,7 @@ desktop:
     iva_category:
       domestic_exempt: Adómentes
       domestic_general: Általános kulcs
-      domestic_not_subject: Nem adóköteles
+      domestic_not_subject: Nem adóköteles (LIVA 7. cikk)
       domestic_reduced: Kedvezményes kulcs
       domestic_reverse_charge: Belföldi fordított adózás
       domestic_super_reduced: Különösen kedvezményes kulcs
@@ -3742,7 +3742,7 @@ desktop:
       intra_community_service_supply: Közösségen belüli szolgáltatásnyújtás
       intra_community_supply: Közösségen belüli értékesítés
       intra_community_triangulation: Háromszögügylet
-      operacion_no_sujeta: Nem adóköteles ügylet
+      operacion_no_sujeta: Nem adóköteles a teljesítés helye miatt (LIVA 68–70. cikk)
       reagp_compensation: REAGP-kompenzáció
       recargo_equivalencia: Recargo de equivalencia
       regimen_simplificado: Régimen simplificado

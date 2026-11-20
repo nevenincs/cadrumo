@@ -1016,6 +1016,8 @@ export type LedgerTransactionProjection = {
   notes: string;
   lifecycle_state: string;
   classified_by: string;
+  classification_decided_by: string;
+  figures_derived: boolean;
   classified_at: string | null;
   classification_reason: string;
   classification_confidence: string | null;

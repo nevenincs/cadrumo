@@ -96,6 +96,9 @@ def _check(language: OutputLanguage, authority: PinnedAuthorityOperation) -> Led
         "c" * 64: _stored(classification=BusinessClassification.BUSINESS, category_id="office_supplies"),
         "d" * 64: _stored(classification=BusinessClassification.BUSINESS),
         "e" * 64: _stored(direction=TransactionDirection.INCOMING, classification=BusinessClassification.BUSINESS),
+        "f" * 64: _stored(classification=BusinessClassification.BUSINESS),
+        "1" * 64: _stored(classification=BusinessClassification.BUSINESS),
+        "2" * 64: _stored(),
     }
     rows = (
         # Clearing a booked date: no write takes a blank date.
@@ -126,6 +129,20 @@ def _check(language: OutputLanguage, authority: PinnedAuthorityOperation) -> Led
                 LedgerStagedCell(field="iva_amount", value="7.35"),
             ),
         ),
+        # Calculating the IVA figures over figures typed by hand.
+        LedgerStagedRow(
+            transaction_id="f" * 64,
+            cells=(LedgerStagedCell(field="taxable_base", value="30.00"),),
+            iva_derive_staged="domestic_general",
+        ),
+        # Calculating from another category than the movement's own.
+        LedgerStagedRow(
+            transaction_id="1" * 64,
+            cells=(LedgerStagedCell(field="iva_category", value="domestic_reduced"),),
+            iva_derive_staged="domestic_general",
+        ),
+        # Calculating the IVA of a movement nobody classified as business.
+        LedgerStagedRow(transaction_id="2" * 64, iva_derive_staged="domestic_general"),
     )
     request = LedgerStagedCheckRequest(
         profile_id=profile,

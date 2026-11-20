@@ -136,6 +136,7 @@ def row_answer(text: str) -> dict[str, Any]:
                 "cells": question["cells"],
                 "evidence_staged": question["evidence_staged"],
                 "m210_staged": question["m210_staged"],
+                "iva_derive_staged": question.get("iva_derive_staged"),
             }
         )
     )

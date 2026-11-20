@@ -815,27 +815,6 @@ test("a staged approval left with the page lets its review go", async ({
   await expect.poll(() => waitingReviews(target)).toEqual([]);
 });
 
-test("IVA worked out from a category is staged as its own write", async ({
-  page: target,
-}) => {
-  await openLedger(target);
-  await inspect(target, "SOFTNUBE IRELAND SUSCRIPCION");
-  const derive = body(target).locator(".ledger-derive");
-  await derive.locator("[data-field=iva-derive]").click();
-  await choose(target, label("desktop.ledger.iva_category.domestic_general"));
-  await derive
-    .getByRole("button", {
-      name: label("desktop.ledger.inspector.derive.stage"),
-    })
-    .click();
-  await expect(derive).toContainText(
-    label("desktop.ledger.inspector.derive.staged", {
-      category: label("desktop.ledger.iva_category.domestic_general"),
-    }),
-  );
-  expect(await trayCount(target)).toBe(1);
-});
-
 test("a link is permanent, and an invoice staged for one movement is held for every other", async ({
   page: target,
 }) => {

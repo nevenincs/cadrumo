@@ -118,6 +118,8 @@ def _projection(operation_id: LedgerLifecycleOperationId) -> LedgerLifecycleMuta
                 else "ACTIVE"
             ),
             classified_by="manual",
+            classification_decided_by="manual",
+            figures_derived=False,
             classified_at=None,
             classification_reason="",
             classification_confidence=None,

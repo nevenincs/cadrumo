@@ -78,6 +78,8 @@ def _transaction_payload(**overrides: object) -> dict[str, object]:
         "business_classification": "BUSINESS",
         "lifecycle_state": "ACTIVE",
         "classified_by": "manual",
+        "classification_decided_by": "manual",
+        "figures_derived": False,
         "created_at": "2024-04-10T09:30:00+00:00",
         "modified_at": "2024-06-01T16:45:00+00:00",
     }
@@ -245,6 +247,8 @@ def test_list_row_payload_carries_full_contract_and_round_trips() -> None:
             "lifecycle_state": "ACTIVE",
             "review_status": "pending",
             "classified_by": "manual",
+            "classification_decided_by": "manual",
+            "figures_derived": False,
             "created_at": "2024-04-10T09:30:00+00:00",
             "modified_at": "2024-06-01T16:45:00+00:00",
             "group_label": "Proyecto Acme",

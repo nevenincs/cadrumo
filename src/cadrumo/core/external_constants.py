@@ -67,6 +67,13 @@ CLASSIFIED_BY_MANUAL: Final[str] = "manual"
 #: by the rule engine with no operator override.
 CLASSIFIED_BY_AUTO: Final[str] = "auto"
 
+#: Prefix of a ``classified_by`` stamp that records Cadrumo computing figures for a row (a derivation)
+#: rather than anyone deciding its classification.
+CLASSIFIED_BY_DERIVED_PREFIX: Final[str] = "derived:"
+
+#: Stamp of the derivation that works a row's base, rate and IVA out from a chosen IVA category.
+CLASSIFIED_BY_IVA_CATEGORY_DERIVATION: Final[str] = CLASSIFIED_BY_DERIVED_PREFIX + "iva-category"
+
 
 class _Frozen(BaseModel):
     """Strict, frozen base for external-constant submodels.

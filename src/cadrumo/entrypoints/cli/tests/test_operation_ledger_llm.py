@@ -135,6 +135,8 @@ def _classified(*, profile: UUID = _PROFILE, transaction_id: str = _TRANSACTION)
         notes="",
         lifecycle_state="active",
         classified_by=_PROVENANCE,
+        classification_decided_by=_PROVENANCE,
+        figures_derived=False,
         classified_at="2026-01-01T00:00:00Z",
         classification_reason="Reviewed invoice",
         classification_confidence="0.9",

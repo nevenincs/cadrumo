@@ -197,6 +197,7 @@ export function entryOperations(
     if (JSON.stringify(next) === JSON.stringify(movement.transaction))
       return "skipped";
     next.classified_by = by;
+    next.classification_decided_by = by === "operator" ? "manual" : by;
     next.classified_at = now();
     next.classification_reason = by;
     next.modified_at = next.classified_at;
@@ -412,6 +413,9 @@ export function entryOperations(
       notes: text(request.notes) ?? "",
       lifecycle_state: "ACTIVE",
       classified_by: classification === "NOT_YET_PROCESSED" ? "" : "operator",
+      classification_decided_by:
+        classification === "NOT_YET_PROCESSED" ? "" : "manual",
+      figures_derived: false,
       classified_at: null,
       classification_reason: "",
       classification_confidence: null,

@@ -1517,6 +1517,12 @@ application:
           amount_signed: 'L''import és una magnitud: el sentit ja diu si el diner
             va entrar o va sortir.'
           cannot_clear: 'Aquest valor no es pot buidar: el camp ha de tenir un valor.'
+          derive_and_figures: Calcular els imports substituiria la base, el tipus
+            o l'IVA que has escrit.
+          derive_category_differs: El càlcul fa servir una altra categoria d'IVA que
+            la del moviment.
+          derive_needs_business: Només es calcula l'IVA d'un moviment empresarial
+            o mixt.
           draft_incomplete: Un moviment nou necessita data comptable, import, moneda,
             sentit i descripció abans de poder-se desar.
           mixed_needs_share: Un moviment Mixt necessita una part professional.
@@ -1532,6 +1538,10 @@ application:
           amount_signed: Escriu l'import sense signe i deixa que el sentit digui si
             va entrar o va sortir.
           cannot_clear: Conserva el valor desat.
+          derive_and_figures: Treu els imports que has escrit perquè Cadrumo els calculi,
+            o treu el càlcul.
+          derive_category_differs: Calcula amb la categoria del moviment.
+          derive_needs_business: Classifica'l com a Empresarial o Mixt.
           draft_incomplete: Completa el que li falta al moviment nou.
           mixed_needs_share: Indica la part professional com a percentatge, per exemple
             50 per al 50 %.
