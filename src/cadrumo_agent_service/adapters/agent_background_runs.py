@@ -37,7 +37,7 @@ from cadrumo_client.contracts.model_runs import (
 )
 
 from ..providers.application.model_runs import BackgroundRunGateway
-from ..providers.domain.catalog import BackgroundOption
+from ..providers.domain.catalog import BackgroundOption, EffortLevel
 
 _LOGGER = get_logger(__name__)
 
@@ -78,11 +78,14 @@ _REFUSALS: Final[Mapping[str, ModelRunRefusalCode]] = {
     "model_not_installed": ModelRunRefusalCode.MODEL_NOT_INSTALLED,
     "model_does_not_fit": ModelRunRefusalCode.MODEL_DOES_NOT_FIT,
     "background_option_unsupported": ModelRunRefusalCode.OPTION_NOT_SUPPORTED,
+    "effort_unsupported": ModelRunRefusalCode.OPTION_NOT_SUPPORTED,
+    "effort_value_unsupported": ModelRunRefusalCode.OPTION_NOT_SUPPORTED,
 }
 """The agent's admission refusals, in the closed set a tax worker reads.
 
-``model_required`` and the effort codes are absent: a background request names
-its model and no effort, so the agent cannot answer one with them.
+``model_required`` is absent: a background request names its model, so the
+agent cannot answer one with it. An effort the lane or its model does not take
+is an option the run should not have named.
 """
 
 _START_UNAVAILABLE: Final = 503
@@ -150,15 +153,27 @@ class HostedBackgroundRuns(BackgroundRunGateway):
 
     @override
     def run(
-        self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int, options: tuple[BackgroundOption, ...]
+        self,
+        *,
+        lane: ModelRunLane,
+        body: ModelRunBody,
+        deadline_seconds: int,
+        options: tuple[BackgroundOption, ...],
+        effort: EffortLevel | None,
     ) -> ModelRunOutput | ModelRunRefusal:
         """Upload the attachments, start the request, wait for its reply, then delete what it left.
 
-        ``options`` are the reply options the lane honours. One ``body`` names
-        and the lane does not honour is left out rather than sent: the agent
-        refuses a request naming one, and each option only tunes a reply the
-        caller validates anyway.
+        ``options`` are the run options the lane honours. A reply option
+        ``body`` names and the lane does not honour is left out rather than
+        sent: the agent refuses a request naming one, and each reply option
+        only tunes a reply the caller validates anyway. ``effort`` goes in the
+        request's ``agent.effort``, as a foreground run names it, and only when
+        ``options`` holds ``effort``; otherwise the run is refused
+        ``option_not_supported`` before anything is sent, because a run at
+        another effort is not the run that was asked for.
         """
+        if effort is not None and BackgroundOption.EFFORT not in options:
+            return ModelRunRefusal(code=ModelRunRefusalCode.OPTION_NOT_SUPPORTED)
         endpoint = self._endpoint()
         if endpoint is None or not self._bearer or not self._host_token:
             return ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
@@ -175,7 +190,7 @@ class HostedBackgroundRuns(BackgroundRunGateway):
                 if refusal is not None:
                     return refusal
             bounded = min(max(deadline_seconds, BACKGROUND_MIN_DEADLINE_SECONDS), BACKGROUND_MAX_DEADLINE_SECONDS)
-            refusal = self._start(endpoint, run_id, lane, body, files, bounded, options)
+            refusal = self._start(endpoint, run_id, lane, body, files, bounded, options, effort)
             if refusal is not None:
                 return refusal
             started = True
@@ -214,9 +229,10 @@ class HostedBackgroundRuns(BackgroundRunGateway):
         files: list[tuple[str, str, bytes]],
         deadline_seconds: int,
         options: tuple[BackgroundOption, ...],
+        effort: EffortLevel | None,
     ) -> ModelRunRefusal | None:
-        named = {option.value: getattr(body, option.value) for option in options}
         bound = {} if body.max_output_tokens is None else {"max_output_tokens": body.max_output_tokens}
+        named_effort = {} if effort is None else {"effort": effort}
         request: dict[str, object] = {
             "run_id": run_id,
             "message": body.prompt,
@@ -224,13 +240,14 @@ class HostedBackgroundRuns(BackgroundRunGateway):
                 "provider": lane.provider_id,
                 "transport": lane.transport,
                 "model": lane.model,
+                **named_effort,
                 "workspace_root": str(endpoint.workspace_root),
             },
             "background": {
                 "system": body.system or "",
                 **bound,
                 "deadline_seconds": deadline_seconds,
-                **{name: value for name, value in named.items() if value is not None},
+                **_reply_options(body, options),
             },
         }
         if files:
@@ -316,6 +333,19 @@ class HostedBackgroundRuns(BackgroundRunGateway):
             raise _GatewayUnreachableError from error
         finally:
             connection.close()
+
+
+def _reply_options(body: ModelRunBody, options: tuple[BackgroundOption, ...]) -> dict[str, object]:
+    """Return the reply options ``body`` names that the lane honours, keyed as the ``background`` member names them.
+
+    Effort is not a reply option: it travels in the request's ``agent`` member.
+    """
+    named: dict[BackgroundOption, object] = {
+        BackgroundOption.TEMPERATURE: body.temperature,
+        BackgroundOption.CONTEXT_TOKENS: body.context_tokens,
+        BackgroundOption.RESPONSE_SCHEMA: body.response_schema,
+    }
+    return {option.value: named[option] for option in options if named.get(option) is not None}
 
 
 def _run_files(body: ModelRunBody) -> list[tuple[str, str, bytes]] | ModelRunRefusal:

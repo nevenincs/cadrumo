@@ -215,6 +215,29 @@ def test_a_lanes_background_support_is_read_as_its_media_and_honoured_options() 
     assert background == LiveLaneBackground(
         accepted_media=(ModelRunMediaKind.IMAGE,),
         options=(BackgroundOption.TEMPERATURE, BackgroundOption.RESPONSE_SCHEMA),
+        model_efforts={},
+    )
+
+
+def test_a_lane_that_honours_effort_is_read_with_the_levels_each_of_its_models_offers() -> None:
+    document = _document(
+        _entry("synthetic-levels:1", efforts=["low", "high"]),
+        _entry("synthetic-none:1"),
+        {key: value for key, value in _entry("synthetic-unstated:1").items() if key != "efforts"},
+        _entry("synthetic-misspelt:1", efforts=["low", "HIGH"]),
+    )
+    document["providers"][1]["background_requests"] = {
+        "accepts_images": False,
+        "accepts_pdfs": False,
+        "options": ["effort"],
+    }
+
+    background = ServedCatalogModels(lambda: document).lane_background("llamacpp", "api")
+
+    assert background == LiveLaneBackground(
+        accepted_media=(),
+        options=(BackgroundOption.EFFORT,),
+        model_efforts={"synthetic-levels:1": ("low", "high")},
     )
 
 
@@ -223,12 +246,12 @@ def test_a_lanes_background_support_is_read_as_its_media_and_honoured_options() 
     [
         pytest.param(
             {"accepts_images": "yes", "accepts_pdfs": True, "options": ["temperature"]},
-            LiveLaneBackground(accepted_media=None, options=(BackgroundOption.TEMPERATURE,)),
+            LiveLaneBackground(accepted_media=None, options=(BackgroundOption.TEMPERATURE,), model_efforts={}),
             id="media-flag-not-a-bool",
         ),
         pytest.param(
             {"accepts_images": False, "accepts_pdfs": False, "options": "temperature"},
-            LiveLaneBackground(accepted_media=(), options=()),
+            LiveLaneBackground(accepted_media=(), options=(), model_efforts={}),
             id="options-not-a-list",
         ),
         pytest.param(None, None, id="no-background-record"),

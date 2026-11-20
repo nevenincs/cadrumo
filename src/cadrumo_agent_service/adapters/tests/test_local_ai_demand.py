@@ -19,7 +19,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRefusalCode,
 )
 
-from ...providers.domain.catalog import BackgroundOption
+from ...providers.domain.catalog import BackgroundOption, EffortLevel
 from ...providers.domain.record import LocalEngine
 from ..local_ai_demand import (
     DEMAND_PIPE_VARIABLE,
@@ -44,13 +44,21 @@ class _Runs:
 
     def __init__(self, *, during: float = 0.0) -> None:
         self.lanes: list[ModelRunLane] = []
+        self.efforts: list[EffortLevel | None] = []
         self._during = during
 
     def run(
-        self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int, options: tuple[BackgroundOption, ...]
+        self,
+        *,
+        lane: ModelRunLane,
+        body: ModelRunBody,
+        deadline_seconds: int,
+        options: tuple[BackgroundOption, ...],
+        effort: EffortLevel | None,
     ) -> ModelRunOutput | ModelRunRefusal:
         del body, deadline_seconds, options
         self.lanes.append(lane)
+        self.efforts.append(effort)
         time.sleep(self._during)
         return ModelRunOutput(
             text="read", provider_id=lane.provider_id, transport=lane.transport, model=lane.model, agent_version="1"
@@ -83,7 +91,7 @@ def _gateway(runs: _Runs, manager: _Manager | None, *, listens: bool = True, **t
 
 
 def _run(gateway: LocalAiDemandingRuns, lane: ModelRunLane) -> ModelRunOutput | ModelRunRefusal:
-    return gateway.run(lane=lane, body=_BODY, deadline_seconds=30, options=())
+    return gateway.run(lane=lane, body=_BODY, deadline_seconds=30, options=(), effort=None)
 
 
 @pytest.mark.unit

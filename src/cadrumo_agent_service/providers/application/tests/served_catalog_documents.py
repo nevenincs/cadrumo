@@ -13,6 +13,8 @@ from typing import Any
 
 from pydantic import JsonValue, TypeAdapter
 
+from ...domain.tests.synthetic_task_kinds import synthetic_task_kinds
+
 _DIGEST = "sha256:" + "0" * 64
 _DOCUMENT: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
 
@@ -105,6 +107,7 @@ def served_catalog() -> dict[str, JsonValue]:
         {
             "api_version": "v1",
             "providers": [_lane("deepseek", "api", local=False), _lane("llamacpp", "api", local=True)],
+            "task_kinds": synthetic_task_kinds(),
         }
     )
 
@@ -137,7 +140,15 @@ def declared_catalog() -> dict[str, JsonValue]:
     }
     attribution = dict.fromkeys(("title", "url", "pin", "licence", "notice", "trademarks"), "Synthetic attribution")
     return _DOCUMENT.validate_python(
-        {"kind": "declared", "catalog": {"schema_version": 7, "providers": [lane], "icon_attribution": attribution}}
+        {
+            "kind": "declared",
+            "catalog": {
+                "schema_version": 8,
+                "providers": [lane],
+                "icon_attribution": attribution,
+                "task_kinds": synthetic_task_kinds(),
+            },
+        }
     )
 
 

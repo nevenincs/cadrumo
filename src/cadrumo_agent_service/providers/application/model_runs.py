@@ -23,8 +23,9 @@ reported, turned on, signed in or runnable refuses with its answer or
 ``lane_unavailable``. An unreadable
 record says nothing about any model, so every role refuses
 ``lane_unavailable``. Whether a lane takes an attachment,
-and which reply options it honours, is what the ready agent's live catalog
-reports for background requests, never inferred from its transport. One
+and which run options it honours, is what the ready agent's live catalog
+reports for background requests, never inferred from its transport. Effort is
+honoured only where the lane states it and the run's model offers a level. One
 lookup, and one run, reads the live catalog once: its entries, media and
 options come from that one snapshot, which no later lookup or run reuses.
 Whether a lane reads off-host is the catalogue entry's typed declaration,
@@ -57,6 +58,7 @@ from ..domain.catalog import (
     BackgroundInput,
     BackgroundOption,
     CatalogModelFacts,
+    EffortLevel,
     ModelCapability,
     ProviderCatalog,
     ProviderCatalogEntry,
@@ -107,9 +109,20 @@ class BackgroundRunGateway(Protocol):
     """cadrumo-agent's background runs: tool-less, outside the conversation listing, readable by id."""
 
     def run(
-        self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int, options: tuple[BackgroundOption, ...]
+        self,
+        *,
+        lane: ModelRunLane,
+        body: ModelRunBody,
+        deadline_seconds: int,
+        options: tuple[BackgroundOption, ...],
+        effort: EffortLevel | None,
     ) -> ModelRunOutput | ModelRunRefusal:
-        """Run ``body`` on ``lane``, sending only the reply ``options`` it honours; refuse with one closed code."""
+        """Run ``body`` on ``lane``, sending only the run ``options`` it honours; refuse with one closed code.
+
+        ``effort`` is the run's agent effort. It is sent only when ``options``
+        holds ``effort``; otherwise the run is refused before anything is sent,
+        because a lane that ignored it would answer at another effort.
+        """
         ...
 
 
@@ -198,8 +211,13 @@ class ModelRunService:
             for attachment in body.attachments:
                 if model_run_media_kind(attachment.media_type) not in lane.accepted_media:
                     return ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED)
+        # Only a task-kind setting names an effort, and none is stored yet, so a run names none.
         return self._gateway.run(
-            lane=lane, body=body, deadline_seconds=header.deadline_seconds, options=lanes.honoured_options(lane)
+            lane=lane,
+            body=body,
+            deadline_seconds=header.deadline_seconds,
+            options=lanes.honoured_options(lane),
+            effort=None,
         )
 
 
@@ -270,9 +288,17 @@ class _LaneAnswers:
         return accepted, current_lane_entries(entry, self._live_models)
 
     def honoured_options(self, lane: ModelRunLane) -> tuple[BackgroundOption, ...]:
-        """Return the reply options ``lane`` honours, from the same snapshot; none when the snapshot does not say."""
+        """Return the run options ``lane`` honours, from the same snapshot; none when the snapshot does not say.
+
+        Effort is honoured only where the lane states it and the snapshot
+        states effort levels for the lane's model: a model without one takes
+        no effort, whatever its lane can send.
+        """
         background = self._live_models.lane_background(lane.provider_id, lane.transport)
-        return () if background is None else background.options
+        if background is None:
+            return ()
+        offers_effort = bool(background.model_efforts.get(lane.model))
+        return tuple(option for option in background.options if option is not BackgroundOption.EFFORT or offers_effort)
 
     def _read_catalog(self) -> ProviderCatalog | ModelRunRefusal:
         if self._catalog is None:

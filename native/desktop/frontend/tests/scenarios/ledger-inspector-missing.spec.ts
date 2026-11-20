@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { captureUnrecordedQuestions } from "../support/stagedCheckCapture";
 import { label } from "../support/strings";
 import { servedPeriodName } from "../support/servedPeriods";
 import { fixtureYear } from "../../src/dev/fixtureDates";
@@ -21,6 +22,7 @@ const search = (target: Page) =>
   });
 
 async function openLedger(target: Page) {
+  await captureUnrecordedQuestions(target);
   await target.goto("/scenarios.html?scenario=ledger&latency=0&bar=off");
   await target.locator("[data-rail=ledger]").click();
   await expect(grid(target)).toBeVisible();
@@ -114,8 +116,9 @@ const missingItem = (target: Page, reason: string) =>
     .locator(".ledger-missing li")
     .filter({ hasText: label(`desktop.ledger.reason_detail.${reason}`) });
 
-const toast = (target: Page) =>
-  panel(target).locator(".ledger-inspector-toast");
+// The inspector's notices sit at the bottom of the window, beside the panel
+// rather than inside it, so they outlast the panel closing.
+const toast = (target: Page) => target.locator(".ledger-inspector-toast");
 
 test("each missing IVA fact opens the editor of exactly that fact", async ({
   page: target,

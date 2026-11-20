@@ -47,7 +47,7 @@ from cadrumo_client.transport.windows_native_io import (
 )
 
 from ..providers.application.model_runs import BackgroundRunGateway
-from ..providers.domain.catalog import BackgroundOption
+from ..providers.domain.catalog import BackgroundOption, EffortLevel
 from ..providers.domain.record import LocalEngine
 
 DEMAND_PIPE_VARIABLE: Final = "CADRUMO_LOCAL_AI_DEMAND_PIPE"
@@ -255,12 +255,20 @@ class LocalAiDemandingRuns(BackgroundRunGateway):
 
     @override
     def run(
-        self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int, options: tuple[BackgroundOption, ...]
+        self,
+        *,
+        lane: ModelRunLane,
+        body: ModelRunBody,
+        deadline_seconds: int,
+        options: tuple[BackgroundOption, ...],
+        effort: EffortLevel | None,
     ) -> ModelRunOutput | ModelRunRefusal:
         """Demand the server, wait until it listens, and run while renewing the demand."""
         engine = _local_engine(lane)
         if engine is None or self._demand is None:
-            return self._runs.run(lane=lane, body=body, deadline_seconds=deadline_seconds, options=options)
+            return self._runs.run(
+                lane=lane, body=body, deadline_seconds=deadline_seconds, options=options, effort=effort
+            )
         demand = self._demand
         if not self._started(demand, engine):
             return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
@@ -268,7 +276,9 @@ class LocalAiDemandingRuns(BackgroundRunGateway):
         renewal = Thread(target=self._renew, args=(demand, stop), name="local-ai-demand", daemon=True)
         renewal.start()
         try:
-            return self._runs.run(lane=lane, body=body, deadline_seconds=deadline_seconds, options=options)
+            return self._runs.run(
+                lane=lane, body=body, deadline_seconds=deadline_seconds, options=options, effort=effort
+            )
         finally:
             stop.set()
             renewal.join()

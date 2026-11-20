@@ -57,10 +57,13 @@ export type BackgroundInputState =
   "unsupported" | "unproven" | "unproven_version" | "proven";
 
 /**
- * One reply option of a background request, named as its request member is.
+ * One run option of a background request.
+ *
+ * The reply options are named as their background request members are;
+ * `effort` is the run's agent effort, the member a foreground run names it by.
  */
 export type BackgroundOption =
-  "temperature" | "context_tokens" | "response_schema";
+  "temperature" | "context_tokens" | "response_schema" | "effort";
 
 /**
  * How a lane takes each input a host's background request carries.
@@ -84,6 +87,11 @@ export type BackgroundRequestSupportResponse = {
    */
   accepts_pdfs: boolean;
 };
+
+/**
+ * One kind of background task, in served order.
+ */
+export type BackgroundTaskKind = "classification" | "extraction";
 
 /**
  * How far one capability had been proven on a lane, as this host found it.
@@ -122,9 +130,10 @@ export type ControlKind =
  * inputs: The inputs the lane's transport carries in a background request's
  * turn (`text`, `image`, `pdf`), in that order. Empty where the lane is not
  * runnable. On a lane whose models differ, a model must also read the input:
- * see each model's `vision`. options: The reply options the lane honours
- * (`temperature`, `context_tokens`, `response_schema`), in that order. A
- * request naming any other is refused.
+ * see each model's `vision`. options: The run options the lane honours
+ * (`temperature`, `context_tokens`, `response_schema`, `effort`), in that
+ * order. A request naming any other is refused. `effort` is named by the run's
+ * agent effort, at one of the levels the model's `effort` states.
  */
 export type DeclaredBackground = {
   runnable: boolean;
@@ -218,6 +227,22 @@ export type DeclaredModel = {
   context_length: number | null;
   licence: DeclaredLicence | null;
   artefacts: ModelArtefacts | null;
+};
+
+/**
+ * One kind of task a host runs background requests for.
+ *
+ * A background request does not name its kind: the host resolves the kind to a
+ * lane, a model and an effort, and the request carries those.
+ *
+ * Attributes: id: The value the kind is keyed by. display_name: The kind's
+ * name as shown to a person. description: One sentence saying what a task of
+ * the kind does.
+ */
+export type DeclaredTaskKind = {
+  id: BackgroundTaskKind;
+  display_name: string;
+  description: string;
 };
 
 /**
@@ -532,9 +557,10 @@ export type ServedCatalogModel = {
  * The catalog the agent declares before it runs, as the service relays it.
  */
 export type ServedDeclaredCatalogDocument = {
-  schema_version?: 7;
+  schema_version?: 8;
   providers: ServedDeclaredLane[];
   icon_attribution: DeclaredIconAttribution;
+  task_kinds: DeclaredTaskKind[];
 };
 
 /**
@@ -591,6 +617,7 @@ export type ServedLaneCatalog = {
 export type ServedProviderCatalog = {
   api_version?: "v1";
   providers?: ServedProviderLane[];
+  task_kinds: DeclaredTaskKind[];
 };
 
 /**

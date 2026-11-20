@@ -112,13 +112,21 @@ def test_the_agent_is_asked_for_its_offline_declaration_in_a_credential_free_env
         pytest.param(
             _ok(
                 json.dumps(
+                    {key: value for key, value in json.loads(synthetic_document()).items() if key != "task_kinds"}
+                )
+            ),
+            ProviderCatalogUnavailableReason.CATALOG_MALFORMED,
+            id="version-eight-without-task-kinds",
+        ),
+        pytest.param(
+            _ok(
+                json.dumps(
                     {
-                        "schema_version": 6,
+                        **json.loads(synthetic_document()),
                         "providers": [
                             {key: value for key, value in lane.items() if key != "reads_off_host"}
                             for lane in json.loads(synthetic_document())["providers"]
                         ],
-                        "icon_attribution": {},
                     }
                 )
             ),

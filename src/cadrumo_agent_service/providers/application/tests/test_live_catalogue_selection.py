@@ -62,8 +62,10 @@ def _installed_text() -> LiveCatalogModel:
 
 
 class _NoMediaGateway:
-    def run(self, *, lane: ModelRunLane, body: object, deadline_seconds: int, options: object) -> ModelRunRefusal:
-        del lane, body, deadline_seconds, options
+    def run(
+        self, *, lane: ModelRunLane, body: object, deadline_seconds: int, options: object, effort: object
+    ) -> ModelRunRefusal:
+        del lane, body, deadline_seconds, options, effort
         return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
 
 

@@ -148,7 +148,9 @@ test("an amount moved with a base that agrees saves", async ({
   await save(target);
 
   await expect(headline(target)).toHaveText(titled("applied", 1));
-  await expect(review(target).locator("[data-outcome]")).toHaveCount(0);
+  // One movement saved: its one row says so, and nothing was refused.
+  await expect(review(target).locator("[data-outcome]")).toHaveCount(1);
+  await expect(review(target).locator("[data-outcome=applied]")).toHaveCount(1);
   await review(target).locator(".ledger-apply-done").click();
   await expect(tray(target)).toHaveCount(0);
   const saved = dataRows(target)

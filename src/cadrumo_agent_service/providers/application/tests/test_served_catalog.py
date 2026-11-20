@@ -6,6 +6,7 @@ import json
 from datetime import UTC, datetime
 
 import pytest
+from pydantic import JsonValue
 
 from .. import served_catalog as served_catalog_module
 from ..served_catalog import PinnedSchemaError, catalog_nonconformance, pinned_agent_components, served_schema
@@ -92,3 +93,20 @@ def test_a_declared_lane_without_its_stamp_is_a_departure() -> None:
     answer = changed(declared_catalog(), ("catalog", "providers", 0, "model_download"), ...)
 
     assert catalog_nonconformance(answer) is not None
+
+
+@pytest.mark.parametrize(
+    ("answer", "path"),
+    [(served_catalog(), ("task_kinds",)), (declared_catalog(), ("catalog", "task_kinds"))],
+    ids=["served", "declared"],
+)
+def test_a_catalog_without_its_task_kinds_is_a_departure(
+    answer: dict[str, JsonValue], path: tuple[str | int, ...]
+) -> None:
+    assert catalog_nonconformance(changed(answer, path, ...)) is not None
+
+
+def test_a_lane_whose_background_requests_honour_effort_conforms() -> None:
+    answer = changed(served_catalog(), ("providers", 0, "background_requests", "options"), ["effort"])
+
+    assert catalog_nonconformance(answer) is None
