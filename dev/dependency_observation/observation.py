@@ -56,6 +56,7 @@ import ast
 import atexit
 import hashlib
 import os
+import platform
 import shlex
 import subprocess
 import sys
@@ -70,6 +71,9 @@ from pathlib import Path
 from typing import Final, TextIO, cast
 from urllib.parse import unquote, urlsplit
 
+from .catalogue_keys import install as install_keyed_catalogue
+from .catalogue_keys import key_identity
+
 #: The bootstrap an observed process starts its Python ``-m`` checkout children through.
 CHILD_SCRIPT_NAME: Final[str] = "observed_child.py"
 #: The file, beside the script copies, that names the checkout root.
@@ -81,6 +85,7 @@ _FILE: Final[str] = "F"
 _LISTING: Final[str] = "D"
 _INCOMPLETE: Final[str] = "X"
 _CREATED: Final[str] = "C"
+_KEY: Final[str] = "K"
 _CONSTRUCTOR: Final[str] = "__init__"
 _BYTECODE_DIRECTORY: Final[str] = "__pycache__"
 _ABSENT: Final[str] = "absent"
@@ -102,6 +107,8 @@ INHERITED_JOURNALS_VARIABLE: Final[str] = "CADRUMO_OBSERVED_JOURNALS"
 INHERITED_SITE_DIRECTORY: Final[str] = "site"
 #: Names the observer's checkout and the observed checkout, one per line, for the inherited bootstrap.
 INHERITED_ROOTS_FILE: Final[str] = "observer-roots.txt"
+#: Present in an inherited run's journals when its processes key the locale catalogue by the keys they look up.
+INHERITED_KEYED_CATALOGUE_FILE: Final[str] = "keyed-catalogue"
 _INHERITED_BOOTSTRAP: Final[str] = "inherited_bootstrap.py"
 _SITE_HOOK: Final[str] = "sitecustomize.py"
 _PYTHON_PATH: Final[str] = "PYTHONPATH"
@@ -235,6 +242,8 @@ class Observation:
         self.started_ns = started_ns
         self.files: dict[Path, str] = {}
         self.listings: dict[Path, str] = {}
+        #: Keyed reads (see ``catalogue_keys``): each identity with the digest of what was answered for it.
+        self.keys: dict[str, str] = {}
         self.incomplete: list[str] = []
         #: Directories the run created; nothing under them was an input.
         self.created: set[Path] = set()
@@ -320,6 +329,8 @@ class Observation:
                 self._write(_FILE, digest, path)
             for directory, digest in self.listings.items():
                 self._write(_LISTING, digest, directory)
+            for identity, digest in self.keys.items():
+                self._write(_KEY, digest, identity)
             for directory in self.created:
                 self._write(_CREATED, "-", directory)
             for reason in self.incomplete:
@@ -339,6 +350,8 @@ class Observation:
                 self._write(_FILE, digest, path)
             for directory, digest in self.listings.items():
                 self._write(_LISTING, digest, directory)
+            for identity, digest in self.keys.items():
+                self._write(_KEY, digest, identity)
             for directory in self.created:
                 self._write(_CREATED, "-", directory)
             for reason in self.incomplete:
@@ -399,6 +412,26 @@ class Observation:
                 return
             self.listings[directory] = digest
             self._write(_LISTING, digest, directory)
+
+    def note_key(self, raw_directory: str, key: str, digest: str) -> None:
+        """Record a keyed read: ``key`` looked up in the catalogue whose shards ``raw_directory`` holds.
+
+        A catalogue outside the checkout is recorded by its absolute path, as a file read there would be.
+        """
+        canonical = self._canonical(raw_directory)
+        directory = self._external(raw_directory) if canonical is None else canonical
+        if directory is None or (canonical is not None and not self._admitted(canonical)):
+            return
+        identity = key_identity(str(directory), key)
+        with self._lock:
+            recorded = self.keys.get(identity)
+            if recorded == digest:
+                return
+            if recorded is not None:
+                self.note_incomplete(f"{identity} answered differently within one process")
+                return
+            self.keys[identity] = digest
+            self._write(_KEY, digest, identity)
 
     def note_incomplete(self, reason: str) -> None:
         """Mark the observation incomplete for ``reason``, journalling it."""
@@ -675,6 +708,10 @@ class Observation:
                 self._merge_entry(self.files, Path(location), digest)
             elif kind == _LISTING:
                 self._merge_entry(self.listings, Path(location), digest)
+            elif kind == _KEY:
+                recorded = self.keys.setdefault(location, digest)
+                if recorded != digest:
+                    self.note_incomplete(f"{location} answered differently to the processes that read it")
             elif kind == _CREATED:
                 self.created.add(Path(location))
             elif kind == _INCOMPLETE:
@@ -857,6 +894,11 @@ def observe_process(root: Path) -> Observation:
     sys.addaudithook(observation.audit)
     _wrap_probes(observation)
     _wrap_child_launches(observation)
+    with observation.suspended():
+        # The interpreter's own question of the system it runs on, which libraries ask at import. On Windows a
+        # failed system query falls back to starting ``cmd /c ver``, which reads nothing of the checkout; asked here
+        # first, the answer is cached and the program's own question starts no child the run would count unobserved.
+        platform.uname()
     return observation
 
 
@@ -942,11 +984,14 @@ class InheritedJournals:
         return result
 
 
-def prepare_inherited_journals(directory: Path, *, observed_root: Path, tooling_root: Path) -> InheritedJournals:
+def prepare_inherited_journals(
+    directory: Path, *, observed_root: Path, tooling_root: Path, keyed_catalogue: bool = False
+) -> InheritedJournals:
     """Prepare ``directory`` so every Python process given its environment observes reads under ``observed_root``.
 
     ``tooling_root`` is the checkout this observer is imported from; it is the observed checkout itself except
-    when a tool observes another tree.
+    when a tool observes another tree. With ``keyed_catalogue`` each process keys the locale catalogue by the keys it
+    looks up (see ``catalogue_keys``), and its consumer must judge those keys as well as the files.
     """
     directory = directory.resolve()
     site = directory / INHERITED_SITE_DIRECTORY
@@ -957,6 +1002,8 @@ def prepare_inherited_journals(directory: Path, *, observed_root: Path, tooling_
     # A ``-m`` checkout child that skips site start-up (``-S``) is started through this bootstrap instead.
     (directory / CHILD_SCRIPT_NAME).write_bytes(Path(__file__).with_name(CHILD_SCRIPT_NAME).read_bytes())
     (directory / CHECKOUT_ROOT_FILE).write_text(str(observed_root.resolve()), encoding="utf-8")
+    if keyed_catalogue:
+        (directory / INHERITED_KEYED_CATALOGUE_FILE).write_text("", encoding="utf-8")
     return InheritedJournals(directory)
 
 
@@ -976,6 +1023,10 @@ def observe_inherited(root: Path, journals: Path) -> Observation:
     # its options skip the inherited one.
     observation.adopt_journal_directory(journals, (CHILD_SCRIPT_NAME,))
     observation.attach_journal_path(journals / f"{uuid.uuid4().hex}{JOURNAL_SUFFIX}")
+    with observation.suspended():
+        keyed = (journals / INHERITED_KEYED_CATALOGUE_FILE).is_file()
+    if keyed:
+        install_keyed_catalogue(observation)
     atexit.register(observation.note_imported_modules)
     return observation
 

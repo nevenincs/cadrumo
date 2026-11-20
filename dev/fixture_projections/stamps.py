@@ -9,7 +9,10 @@ stand now: modification times never enter.
 An observed group (the product source) is keyed by what the run read. When
 every process of the run was observed, the stamp records each file and
 directory listing those processes read, with the digest of the bytes they
-consumed, and the group's other files do not key the family. When the
+consumed, and the group's other files do not key the family. The locale
+catalogue is keyed by the keys the processes looked up in it, each with the
+digest of what it answered, so an edit to another sentence of a shared shard
+leaves the family fresh. When the
 observation is incomplete, the stamp records the whole group's digests, taken
 before the producer ran, and the reasons the observation fell short.
 
@@ -26,19 +29,20 @@ import enum
 import hashlib
 import json
 from collections.abc import Mapping, Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Final
 
 from cadrumo.core.hashing import sha256_file
 
 from ..cache_root import dev_cache_dir
+from ..dependency_observation.catalogue_keys import CatalogueReader, catalogue_shards, split_identity
 from ..dependency_observation.observation import file_digest, listing_digest
 from ..source_tree import normalised_contents, repository_files
 from .location import WINDOW_INDEX, output_directory
 from .registry import FixtureFamily
 
-STAMP_FORMAT: Final[str] = "cadrumo-fixture-projection-stamp-v2"
+STAMP_FORMAT: Final[str] = "cadrumo-fixture-projection-stamp-v3"
 STAMP_CACHE: Final[str] = "fixture-projections"
 AUTHORITY_GROUP: Final[str] = "authority"
 #: The stamp's record of how its observed groups were keyed.
@@ -76,6 +80,8 @@ class InputDigests:
         """Read files below ``root``, the repository whose ignore and attribute rules apply."""
         self._root = root
         self._groups: dict[tuple[str, ...], dict[str, str]] = {}
+        #: Answers the keyed catalogue reads a stamp records, each catalogue read once per instance.
+        self.catalogues = CatalogueReader()
 
     def group(self, paths: Sequence[str]) -> dict[str, str]:
         """Return each repository file under ``paths`` with the digest of its normalised content.
@@ -99,11 +105,13 @@ class InputDigests:
 class ObservedReads:
     """What a completely observed run read: checkout files and listings, each with its first-seen digest.
 
-    A path inside the checkout is given relative to it, in POSIX form; one outside it is absolute.
+    A path inside the checkout is given relative to it, in POSIX form; one outside it is absolute. ``keys`` are the
+    catalogue keys it looked up, each named by its catalogue's directory and the key (see ``catalogue_keys``).
     """
 
     files: Mapping[str, str]
     listings: Mapping[str, str]
+    keys: Mapping[str, str] = field(default_factory=dict[str, str])
 
 
 def declaration_digest(family: FixtureFamily) -> str:
@@ -201,6 +209,7 @@ def write_stamp(
             "mode": OBSERVED_MODE,
             "files": dict(reads.files),
             "listings": dict(reads.listings),
+            "keys": dict(reads.keys),
         }
     else:
         groups = dict(closure or {})
@@ -255,8 +264,8 @@ def _observed_changes(
     """What changed in the key of the family's observed groups; an unreadable record is a change."""
     mode = observation.get("mode")
     if mode == OBSERVED_MODE:
-        files, listings = observation.get("files"), observation.get("listings")
-        if not isinstance(files, dict) or not isinstance(listings, dict):
+        files, listings, keys = observation.get("files"), observation.get("listings"), observation.get("keys")
+        if not isinstance(files, dict) or not isinstance(listings, dict) or not isinstance(keys, dict):
             return ["observation: unreadable record"]
         changes = [
             f"observed: {member} changed"
@@ -268,6 +277,10 @@ def _observed_changes(
             for member, recorded in sorted(listings.items())
             if listing_digest(_observed_path(root, member)) != recorded
         ]
+        for identity, recorded in sorted(keys.items()):
+            directory, key = split_identity(identity)
+            if digests.catalogues.entry_digest(_observed_path(root, directory), key) != recorded:
+                changes.append(f"observed: {key} in {directory} changed")
         return changes
     if mode == CLOSURE_MODE:
         groups = observation.get("groups")
@@ -326,8 +339,29 @@ def family_status(
     return FamilyStatus(family.name, FixtureState.FRESH)
 
 
+def stamp_mismatch(family: FixtureFamily, root: Path, *, cache_directory: Path | None = None) -> tuple[str, ...]:
+    """Why the family's stamp does not record its outputs as its declaration now produces them; none when it does.
+
+    A stamp that does is a consistent snapshot: the outputs were produced from the inputs it records, whatever has
+    changed since.
+    """
+    if family.producer is None:
+        return ()
+    stamp = _usable_stamp(family, stamp_path(family, root, cache_directory=cache_directory))
+    if isinstance(stamp, FamilyStatus):
+        return stamp.reasons
+    reasons = [] if stamp.get("producer_version") == declaration_digest(family) else ["declaration changed"]
+    recorded = stamp.get("outputs")
+    reasons += _changed_members("output", recorded if isinstance(recorded, dict) else {}, output_digests(family, root))
+    return tuple(reasons)
+
+
 def observed_files(family: FixtureFamily, root: Path, *, cache_directory: Path | None = None) -> tuple[Path, ...]:
-    """The files the family's stamp keys it on by observation, so a build depending on them reruns its seed."""
+    """The files the family's stamp keys it on by observation, so a build depending on them reruns its seed.
+
+    A keyed catalogue is named by every shard file it has: an edit to one reruns the seed, which then finds the
+    family fresh unless a key it looked up answers otherwise.
+    """
     if family.producer is None:
         return ()
     stamp = _usable_stamp(family, stamp_path(family, root, cache_directory=cache_directory))
@@ -336,7 +370,9 @@ def observed_files(family: FixtureFamily, root: Path, *, cache_directory: Path |
     observation = stamp.get(OBSERVATION)
     if not isinstance(observation, dict) or observation.get("mode") != OBSERVED_MODE:
         return ()
-    files = observation.get("files")
-    if not isinstance(files, dict):
+    files, keys = observation.get("files"), observation.get("keys")
+    if not isinstance(files, dict) or not isinstance(keys, dict):
         return ()
-    return tuple(_observed_path(root, member) for member in files)
+    catalogues = sorted({split_identity(identity)[0] for identity in keys})
+    shards = [shard for directory in catalogues for shard in catalogue_shards(_observed_path(root, directory))]
+    return (*(_observed_path(root, member) for member in files), *shards)
