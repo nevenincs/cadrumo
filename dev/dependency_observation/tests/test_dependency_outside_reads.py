@@ -287,7 +287,7 @@ def checkout(tmp_path: Path) -> Path:
     directory = tmp_path / "real-checkout"
     for package in ("dev", _PACKAGE):
         _write(directory / package / "__init__.py")
-    for name in ("observation.py", CHILD_SCRIPT_NAME):
+    for name in ("observation.py", "catalogue_keys.py", CHILD_SCRIPT_NAME):
         shutil.copyfile(_WORKTREE / _PACKAGE / name, directory / _PACKAGE / name)
     return directory.resolve()
 

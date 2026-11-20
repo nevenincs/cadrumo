@@ -7,6 +7,9 @@ the producer itself, a Python child it starts, and a Python process a declared
 non-Python driver starts with the environment it inherited. After the run, the
 journals give the checkout files and listings those processes read.
 
+The run's processes key the locale catalogue by the keys they look up, so a
+family is keyed on the sentences it read, not on the shards that hold them.
+
 The family's own outputs and stamp are not inputs: a producer that reads what
 it is writing would otherwise never be fresh. A run that was not completely
 observed gives no reads, only the reasons, and the family is then keyed on its
@@ -21,6 +24,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
+from ..dependency_observation.catalogue_keys import key_identity, split_identity
 from ..dependency_observation.observation import InheritedJournals, harvest_inherited, prepare_inherited_journals
 from ..paths import REPO_ROOT
 from .location import output_directory
@@ -51,7 +55,15 @@ class ObservedRun:
         listings = {
             self._member(path): digest for path, digest in observation.listings.items() if not own.listing(path)
         }
-        return ObservedReads(files=dict(sorted(files.items())), listings=dict(sorted(listings.items()))), ()
+        keys = {self._key(identity): digest for identity, digest in observation.keys.items()}
+        reads = ObservedReads(
+            files=dict(sorted(files.items())), listings=dict(sorted(listings.items())), keys=dict(sorted(keys.items()))
+        )
+        return reads, ()
+
+    def _key(self, identity: str) -> str:
+        directory, key = split_identity(identity)
+        return key_identity(self._member(Path(directory)), key)
 
     def _member(self, path: Path) -> str:
         root = self.root.resolve()
@@ -89,7 +101,7 @@ class _OwnRecords:
 def observed_run(root: Path, scratch: Path) -> Generator[ObservedRun]:
     """Prepare a journal directory at ``scratch`` and remove it after the run."""
     try:
-        journals = prepare_inherited_journals(scratch, observed_root=root, tooling_root=REPO_ROOT)
+        journals = prepare_inherited_journals(scratch, observed_root=root, tooling_root=REPO_ROOT, keyed_catalogue=True)
         yield ObservedRun(root=root, journals=journals)
     finally:
         shutil.rmtree(scratch, ignore_errors=True)

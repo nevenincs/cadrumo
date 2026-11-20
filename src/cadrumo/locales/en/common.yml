@@ -2423,6 +2423,8 @@ desktop:
         refused: Not accepted
       cancel: Cancel
       check: Check
+      check_failed: Couldn't check the outcome ({code}). It is still unknown. Press
+        Check again.
       checked_not_saved: It was not saved.
       checked_saved: It was saved.
       choose_files: Choose files…
@@ -3383,6 +3385,8 @@ desktop:
       nothing: Select a movement to see it here.
       panel: Movement details
       panel_match: Movements to match
+      period_unread: The quarter of the new date couldn't be read ({code}), so any
+        move between quarters isn't shown. Try again.
       ratio_missing: 'None: Mixed needs one before calculation'
       ratio_not_needed: Not needed
       read_as: Read as
