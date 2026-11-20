@@ -3265,6 +3265,7 @@ desktop:
       from_value_date: the value date
       fx_rate: Rate {rate}
       history:
+        none: No recorded history
         parts: 'Parts: {count}'
         reason_withheld: The model's reason is not shown
         split_parts: Parts

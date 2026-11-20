@@ -280,6 +280,46 @@ for (const width of [1280, 1440])
     );
   });
 
+test("History reads the movement's recorded events even where the window draws nothing, never an endless reading line", async ({
+  page: target,
+}) => {
+  // A window the system does not draw (behind another, or read by an
+  // assistive technology without scrolling) reports no intersections.
+  await target.addInitScript(() => {
+    window.IntersectionObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+      takeRecords() {
+        return [];
+      }
+    } as unknown as typeof IntersectionObserver;
+  });
+  await target.setViewportSize({ width: 1440, height: 900 });
+  await openLedger(target);
+  await inspect(target, "PAPELERIA TRAZO");
+  await jumpTo(
+    target,
+    "history",
+    label("desktop.ledger.inspector.section.history"),
+  );
+  const history = body(target).locator(".ledger-history");
+  await expect(history.getByRole("status")).toHaveCount(0);
+  // The movement's first event is how it reached the ledger.
+  await expect(
+    history.locator("li").filter({
+      hasText: new RegExp(
+        [
+          label("desktop.ledger.inspector.event.created"),
+          label("desktop.ledger.inspector.event.imported"),
+        ]
+          .map((text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+          .join("|"),
+      ),
+    }),
+  ).toHaveCount(1);
+});
+
 test("jumping to a section scrolls to it and focuses its heading", async ({
   page: target,
 }) => {

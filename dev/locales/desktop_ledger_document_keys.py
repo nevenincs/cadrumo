@@ -91,6 +91,7 @@ DESKTOP_LEDGER_DOCUMENT_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.inspector.from_booked_date",
         "desktop.ledger.inspector.from_value_date",
         "desktop.ledger.inspector.fx_rate",
+        "desktop.ledger.inspector.history.none",
         "desktop.ledger.inspector.history.parts",
         "desktop.ledger.inspector.history.reason_withheld",
         "desktop.ledger.inspector.history.split_parts",
