@@ -30,10 +30,17 @@ import {
 } from "./ledgerRequestFixture";
 import { inPeriod, issues, resolve, reviewStatus } from "./ledgerQueryFixture";
 import { parseCsv } from "./ledgerFileFixture";
+import { MovementActionStopped } from "./ledgerMovementActionFixture";
 import type {
   LedgerReviewStatus,
   LedgerTransactionProjection,
 } from "../shell/ledgerInvoiceContract";
+
+/** The sentence the worker serves when a movement's base, IVA amount and
+ * surcharge do not add up to its amount, in the language the scenario
+ * speaks. */
+export const grossMismatchWords = (added: string, amount: string) =>
+  `The base, the IVA amount and any equivalence surcharge add up to ${added}, but the amount is ${amount}. Correct the base and the IVA amount, or the amount, so they agree, then save again.`;
 
 /** The scenario ledger's entry answers over its movements. */
 export function entryOperations(
@@ -136,6 +143,28 @@ export function entryOperations(
       }
     }
     next.date = next.value_date ?? next.booked_date;
+    // The ledger's gross identity: the base, the IVA amount and any
+    // surcharge add up to the amount. It refuses the write as the worker
+    // does, recording its validation outcome as the refusal's detail. Two
+    // shapes are not held to it: a received invoice settled net of a
+    // withholding, whose amount falls short of its figures, and a
+    // reverse-charge purchase, whose base is the amount.
+    if (
+      next.taxable_base !== null &&
+      next.iva_amount !== null &&
+      !next.iva_category?.endsWith("reverse_charge")
+    ) {
+      const added =
+        cents(next.taxable_base) +
+        cents(next.iva_amount) +
+        cents(next.recargo_amount ?? "0");
+      const net = next.direction === "INCOMING" && added > cents(next.amount);
+      if (added !== cents(next.amount) && !net)
+        throw new MovementActionStopped(
+          "REFUSED_CLI_VALIDATION_BOUNDARY",
+          refused(grossMismatchWords(money(added), next.amount)),
+        );
+    }
     const changed =
       JSON.stringify(next) !== JSON.stringify(movement.transaction) ||
       group !== movement.group_label ||

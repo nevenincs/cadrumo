@@ -156,6 +156,16 @@ function validationOf(result: JsonObject): StepOutcome | null {
   return null;
 }
 
+/** The sentences a refused write served in the detail it settled with: a
+ * write the ledger refused for its values answers with the same validation
+ * outcome a settled one does, and says why in its messages. */
+function servedMessages(detail: LedgerErrorDetail | null): string[] {
+  const validation = detail
+    ? validationOf(detail as unknown as JsonObject)
+    : null;
+  return validation?.kind === "refused" ? validation.messages : [];
+}
+
 /** What a settled result says happened, row by row. */
 function settledOutcome(
   step: PlanStep,
@@ -255,7 +265,7 @@ function outcomeOf(
   if (outcome.kind === "settled") return settledOutcome(step, outcome.result);
   const found: StepOutcome =
     outcome.kind === "refused"
-      ? refused(outcome.reason, [], outcome.detail)
+      ? refused(outcome.reason, servedMessages(outcome.detail), outcome.detail)
       : // Still running or waiting: its settlement was not observed.
         { kind: "unknown", operationId: outcome.operation_id };
   return {

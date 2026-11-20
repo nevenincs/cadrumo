@@ -34,6 +34,8 @@ desktop:
       not_signed_in: Sign in to answer this.
       profile_not_eligible: Your profile doesn't allow documents to leave this computer.
         The profile setting “Off-host document reading” controls it.
+      profile_unreadable: The profile setting “Off-host document reading” couldn't
+        be read just now, so nothing was sent. Try again in a moment.
       reference_unknown: The agent isn't waiting on this file any more.
       service_failed: The permission couldn't be recorded, so nothing was sent.
     attachment_refused: This file wasn't sent. {reason}

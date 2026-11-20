@@ -32,6 +32,8 @@ must exceed the agent's own bound on one provider probe plus the service's
 work around the read, or a cold catalog whose slowest probe runs to its bound
 is told busy every time; it stays well inside the desktop's six-second
 catalog exchange."""
+PROFILE_READ_SECONDS = 4.0
+"""How long one read of the profile's settings may take, inside the desktop's six-second attachment exchange."""
 ADMIN_READ_FRESH_SECONDS = 5.0
 """How long a finished catalog read is served to the requests that follow it."""
 SERVED_CATALOG_READ_POLICY = TimeoutPolicy(timeout_seconds=6.0)

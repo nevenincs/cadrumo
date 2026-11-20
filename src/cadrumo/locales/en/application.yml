@@ -1397,7 +1397,14 @@ application:
         reader_unavailable: 'The automatic reader could not run, so the %{count} field(s)
           the labels did not cover stay empty: %{fields}. Fill them in yourself.'
       next_step:
+        authorise_off_host: Allow this document to be read off this computer
+        authorise_off_host_unavailable: Allowing off-host reads is not available here
+          yet. It will come with the classification queue.
         choose_reading_model: Choose a reading model
+        resolve_off_host_consent: Choose how to read this document
+        switch_to_local_lane: Switch to a model that runs on this computer
+        switch_to_local_lane_unavailable: Pick a model that runs on this computer
+          in the agent's model picker.
       structured:
         fact:
           currency: Currency

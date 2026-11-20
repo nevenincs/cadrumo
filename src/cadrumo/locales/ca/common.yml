@@ -3334,8 +3334,14 @@ desktop:
         updated: Actualitzat
       file_row: '{file}, fila {row}'
       fix:
-        derive: Calcula imports
+        derive_already: El càlcul ja és entre els teus canvis sense desar.
+        derive_from_category: Calcula amb la categoria d'IVA
+        derive_needs_category: 'Tria primer la categoria d''IVA: els imports es calculen
+          a partir d''ella.'
         go: Corregeix
+        locked: 'No es pot canviar {field}: {reason}'
+        unreachable: No es pot obrir {field} des d'aquí. Cerca'l entre els camps de
+          més avall i selecciona'l.
       from_booked_date: la data comptable
       from_value_date: la data valor
       fx_rate: Tipus {rate}
@@ -3401,6 +3407,8 @@ desktop:
         description: Totes les parts tornen al moviment del qual es van dividir.
         title: Uneix {count} parts
       missing: El que encara falta
+      missing_why: Sense aquestes dades, aquest moviment no entra en el càlcul de
+        l'IVA. Escriu-les o calcula-les; no es desa res fins que revisis els canvis.
       mode: Tauler
       mode_match: Per vincular
       mode_movement: Moviment

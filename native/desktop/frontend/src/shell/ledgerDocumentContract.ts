@@ -518,7 +518,21 @@ export type OperationNextStepV1 =
   | OperationOpenMovementStepV1
   | OperationOpenIvaWalletStepV1
   | OperationOpenIvaWalletOpeningBalanceStepV1
-  | OperationChooseReadingModelStepV1;
+  | OperationChooseReadingModelStepV1
+  | OperationResolveOffHostConsentStepV1;
+
+/**
+ * One way to put an off-host consent refusal right, and the words that offer
+ * it.
+ *
+ * `unavailable_words` is the sentence a surface shows when it has no door to
+ * the remedy: it says where the person puts the refusal right instead.
+ */
+export type OperationOffHostConsentRemedyV1 = {
+  kind: "authorise_off_host" | "switch_to_local_lane";
+  words: string;
+  unavailable_words: string;
+};
 
 /**
  * Record the opening IVA balance the period's carry reads, in the IVA balance
@@ -574,6 +588,20 @@ export type OperationOpenWorkStepV1 = {
   kind: "open_work";
   work_unit_id: WorkUnitId;
   words: string;
+};
+
+/**
+ * Resolve the refusal to send a document to an off-host model without consent.
+ *
+ * The person either authorises the off-host read for this document or switches
+ * the role to a model that runs on this computer. Each remedy is typed so a
+ * frontend offers the control it already knows for that kind; the backend
+ * serves the words and keeps no say in how a surface presents them.
+ */
+export type OperationResolveOffHostConsentStepV1 = {
+  kind: "resolve_off_host_consent";
+  words: string;
+  remedies: OperationOffHostConsentRemedyV1[];
 };
 
 /**

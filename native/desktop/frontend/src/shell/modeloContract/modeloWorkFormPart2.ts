@@ -11,7 +11,59 @@
 
 import type { BindingSourceKind } from "./modelo";
 import type { SourceSurface } from "./modeloWork";
-import type { SourceFamily } from "./modeloWorkForm";
+import type { OperationNextStepV1 } from "./modeloWorkForm";
+
+/**
+ * Typed local-human workbench view of the governed SpanishTaxIdFormat.
+ */
+export type PublicSpanishTaxIdFormat = {
+  width: number;
+  country_prefix: string;
+  country_prefixed_width: number;
+  country_prefix_strip_width: number;
+  prefixed_nif_leaders: string;
+  nie_leaders: string;
+  cif_leaders: string;
+  nif_letters: string;
+  nif_check_modulus: number;
+  nie_prefix_substitutions: [string, string][];
+  cif_digit_only_kinds: string;
+  cif_letter_only_kinds: string;
+  cif_letter_table: string;
+};
+
+/**
+ * One source declaration the to-do list names before the summary can be worked
+ * out, and its door.
+ */
+export type ReconciliationSourceRequirementV1 = {
+  words: string;
+  next_step: OperationNextStepV1;
+};
+
+/**
+ * Which fact settled the outcome.
+ */
+export type RefundEligibilityBasis =
+  "final_period" | "redeme" | "non_final_period";
+
+/**
+ * What may be done with a negative Modelo 303 result in one period.
+ */
+export type RefundEligibilityOutcome =
+  "refund_allowed" | "carry_forward_only" | "undetermined_redeme_unstated";
+
+/**
+ * The kind of place a value comes from, as a filer thinks of it.
+ */
+export type SourceFamily =
+  | "records"
+  | "registers"
+  | "profile"
+  | "earlier_filings"
+  | "aeat_draft"
+  | "your_entries"
+  | "fixed_by_design";
 
 /**
  * What a filer may do about a value this source supplies.

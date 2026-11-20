@@ -1476,7 +1476,14 @@ application:
           los %{count} campo(s) que las etiquetas no cubrían siguen vacíos: %{fields}.
           Rellénalos tú.'
       next_step:
+        authorise_off_host: Permite que este documento se lea fuera de tu equipo
+        authorise_off_host_unavailable: Aún no puedes permitir lecturas fuera de tu
+          equipo desde aquí. Llegará con la cola de clasificación.
         choose_reading_model: Elegir un modelo de lectura
+        resolve_off_host_consent: Elige cómo leer este documento
+        switch_to_local_lane: Cambia a un modelo que se ejecute en tu equipo
+        switch_to_local_lane_unavailable: Elige un modelo que se ejecute en tu equipo
+          en el selector de modelos del agente.
       structured:
         fact:
           currency: Moneda

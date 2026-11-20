@@ -10,7 +10,7 @@ from uuid import uuid4
 import httpx
 
 from ..adapters.inbound.einvoice.shape import probe_document_shape
-from ..adapters.outbound.llm.errors import LLMCacheError, LLMConfigError, LLMProviderError
+from ..adapters.outbound.llm.errors import LLMCacheError, LLMConfigError, LLMConsentError, LLMProviderError
 from ..adapters.outbound.llm.models import MultimodalImageInput
 from ..adapters.outbound.llm.pdf_rasterisation import rasterise_pdf_pages_to_base64_png
 from ..adapters.outbound.llm.text_classifier import TextLLMClassifier
@@ -35,6 +35,7 @@ from ..application.ledger.llm_classification_ports import (
     LLMClassificationPorts,
     ResolvedEvidenceInput,
 )
+from ..application.ledger.off_host_consent_refusal import off_host_consent_required
 from ..application.ledger.preconditions import LedgerPreconditionCondition
 from ..application.ledger.reading_model_refusal import (
     model_run_refusal_code,
@@ -173,6 +174,14 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
             verdict = exc.terminal_precondition_verdict
             if verdict is not None:
                 raise _reader_unavailable(verdict) from exc
+            raise LLMClassifierError("ledger.evidence.reader.operation_failed") from exc
+        except LLMConsentError as exc:
+            # A read the selected off-host model may not take without consent is
+            # neither a fault of the document nor an unavailable reader: it is
+            # refused as what it is, with the two remedies it serves.
+            consent_verdict = exc.terminal_precondition_verdict
+            if consent_verdict is not None:
+                raise off_host_consent_required(consent_verdict) from exc
             raise LLMClassifierError("ledger.evidence.reader.operation_failed") from exc
         except (httpx.HTTPError, LLMProviderError) as exc:
             raise LLMClassifierError("ledger.evidence.reader.operation_failed") from exc

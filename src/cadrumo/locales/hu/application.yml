@@ -1456,7 +1456,15 @@ application:
           által nem lefedett %{count} mező üres marad: %{fields}. Töltsd ki ezeket
           a mezőket.'
       next_step:
+        authorise_off_host: Engedélyezd, hogy a dokumentumot a gépeden kívül olvassák
+          be
+        authorise_off_host_unavailable: A gépeden kívüli olvasás engedélyezése itt
+          még nem érhető el. A besorolási sorral érkezik majd.
         choose_reading_model: Olvasómodell kiválasztása
+        resolve_off_host_consent: Válaszd ki, hogyan olvassuk be ezt a dokumentumot
+        switch_to_local_lane: Válts a gépeden futó modellre
+        switch_to_local_lane_unavailable: Válassz a gépeden futó modellt az ügynök
+          modellválasztójában.
       structured:
         fact:
           currency: Pénznem

@@ -32,6 +32,7 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...application.ledger.evidence_errors import (
     EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
+    LedgerOffHostConsentRequiredError,
     PurchaseInvoiceEvidenceReaderError,
 )
 from ...application.ledger.llm_review_contracts import (
@@ -45,13 +46,14 @@ from ...application.ledger.llm_review_operation import (
     build_ledger_llm_review_registration,
 )
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
+from ...application.ledger.off_host_consent_refusal import OFF_HOST_CONSENT_REQUIRED_LOCALE_KEY
 from ...application.ledger.reading_model_refusal import NO_READING_MODEL_LOCALE_KEY
 from ...application.operations.error_detail import (
     OperationErrorDetailKind,
     OperationErrorDetailV1,
 )
 from ...application.operations.models import OperationRequest
-from ...application.operations.next_step import OperationChooseReadingModelStepV1
+from ...application.operations.next_step import OperationChooseReadingModelStepV1, OperationResolveOffHostConsentStepV1
 from ...application.operations.registry import OperationRegistry
 from ...core.config import load_settings
 from ...core.errors.error_codes import get_registered_error_code
@@ -77,6 +79,7 @@ _YEAR = filing_year_envelope().horizon
 
 _PROFILE = UUID("8e3f5a7b-9c2d-4e4f-8a6b-7c8d9e0f1a2b")
 _REGISTERED = get_registered_error_code(PurchaseInvoiceEvidenceReaderError)
+_CONSENT_REGISTERED = get_registered_error_code(LedgerOffHostConsentRequiredError)
 
 #: The row's own text: it is what the model would read, so it must never reach the published detail.
 _PRIVATE_DESCRIPTION = "synthetic private classification row 5f2c"
@@ -229,3 +232,27 @@ def test_a_classification_with_no_text_selection_settles_naming_the_role_that_ne
     step = detail.next_step
     assert isinstance(step, OperationChooseReadingModelStepV1)
     assert step.words == tr("application.ledger.evidence.next_step.choose_reading_model", locale=language.value)
+
+
+def test_a_classification_needing_off_host_consent_settles_as_a_consent_refusal_with_its_remedies(
+    tmp_path: Path, profile: TestRuntimeProfile
+) -> None:
+    with agent_refusing(ModelRunRefusalCode.CONSENT_MISSING) as service:
+        refused, refusal_ref, detail = _settle_and_read_detail(tmp_path, profile, service)
+
+    assert refused is OperationTerminalCondition.REFUSED
+    assert refusal_ref == _CONSENT_REGISTERED.code
+    assert detail.error_code == _CONSENT_REGISTERED.code
+    assert detail.message_key == OFF_HOST_CONSENT_REQUIRED_LOCALE_KEY
+    verdict = detail.precondition_verdict()
+    assert verdict is not None
+    assert verdict.evidence[0].values["model_run_refusal"] == ModelRunRefusalCode.CONSENT_MISSING.value
+    language = detail.refusal_words_language
+    assert language is not None
+    assert detail.refusal_words == tr(OFF_HOST_CONSENT_REQUIRED_LOCALE_KEY, locale=language.value)
+    step = detail.next_step
+    assert isinstance(step, OperationResolveOffHostConsentStepV1)
+    assert [remedy.kind for remedy in step.remedies] == ["authorise_off_host", "switch_to_local_lane"]
+    assert all(remedy.words.strip() for remedy in step.remedies)
+    assert _PRIVATE_DESCRIPTION not in detail.model_dump_json()
+    assert service.runs == []

@@ -7,7 +7,8 @@ own form says what it still lacks, filling in one profile detail the refusal
 named, declaring the profile setup complete, opening the ledger movement
 that stops a calculation, opening the Saldo de IVA of a Modelo 303 whose
 carried compensation has no authority yet, recording the opening IVA
-balance a period's carry reads, or choosing the model documents are read with.
+balance a period's carry reads, choosing the model documents are read with, or settling the consent an
+off-host read lacks.
 The step says which kind, what it concerns and the words that offer it, so a
 frontend does what it already knows for that kind and keeps no table of
 operator action identifiers. The kind is closed; an address that cannot be run
@@ -171,6 +172,36 @@ class OperationChooseReadingModelStepV1(BaseModel):
     words: _Words
 
 
+class OperationOffHostConsentRemedyV1(BaseModel):
+    """One way to put an off-host consent refusal right, and the words that offer it.
+
+    ``unavailable_words`` is the sentence a surface shows when it has no door
+    to the remedy: it says where the person puts the refusal right instead.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["authorise_off_host", "switch_to_local_lane"]
+    words: _Words
+    unavailable_words: _Words
+
+
+class OperationResolveOffHostConsentStepV1(BaseModel):
+    """Resolve the refusal to send a document to an off-host model without consent.
+
+    The person either authorises the off-host read for this document or
+    switches the role to a model that runs on this computer. Each remedy is
+    typed so a frontend offers the control it already knows for that kind; the
+    backend serves the words and keeps no say in how a surface presents them.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["resolve_off_host_consent"] = "resolve_off_host_consent"
+    words: _Words
+    remedies: Annotated[tuple[OperationOffHostConsentRemedyV1, ...], Field(min_length=1, max_length=2)]
+
+
 type OperationNextStepV1 = Annotated[
     OperationCreateWorkStepV1
     | OperationCalculateWorkStepV1
@@ -181,7 +212,8 @@ type OperationNextStepV1 = Annotated[
     | OperationOpenMovementStepV1
     | OperationOpenIvaWalletStepV1
     | OperationOpenIvaWalletOpeningBalanceStepV1
-    | OperationChooseReadingModelStepV1,
+    | OperationChooseReadingModelStepV1
+    | OperationResolveOffHostConsentStepV1,
     Field(discriminator="kind"),
 ]
 """The step a refusal serves: a closed kind, what it concerns, and the words that offer it."""
@@ -229,11 +261,13 @@ __all__ = [
     "OperationNextStepErrorMixin",
     "OperationNextStepV1",
     "OperationNextStepWording",
+    "OperationOffHostConsentRemedyV1",
     "OperationOpenIvaWalletOpeningBalanceStepV1",
     "OperationOpenIvaWalletStepV1",
     "OperationOpenMovementStepV1",
     "OperationOpenProfileFieldStepV1",
     "OperationOpenWorkStepV1",
+    "OperationResolveOffHostConsentStepV1",
     "OperationVerifyWorkStepV1",
     "error_next_step",
     "is_profile_field_path",

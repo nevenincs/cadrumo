@@ -2,6 +2,7 @@ import "./support/servedLimits";
 import { expect, test } from "@playwright/test";
 import type {
   JsonObject,
+  LedgerErrorDetail,
   LedgerOutcome,
   LedgerPort,
 } from "../src/shell/ledger";
@@ -261,6 +262,53 @@ test("a refused row stays staged with its reason, and its later steps are not se
     rows: { [A]: ["description"] },
     drafts: [],
     actions: ["link"],
+  });
+});
+
+test("a write the ledger refused for its values carries the sentences it served, and stays staged", async () => {
+  const served =
+    "La base, la cuota de IVA y el recargo de equivalencia, si lo hay, suman 800.00, pero el importe es 850.00. Corrige la base y la cuota, o el importe, para que coincidan y guarda otra vez.";
+  // A refused operation settles without a result: its detail is the
+  // validation outcome the worker recorded, not a settled answer.
+  const detail = {
+    outcome: "validation_error",
+    profile_id: PROFILE,
+    source_transaction_id: null,
+    transaction: null,
+    bucket_event_ids: [],
+    validation_messages: [served],
+  } as unknown as LedgerErrorDetail;
+  const content: StagedContent = {
+    rows: { [A]: { description: set("OTRA") } },
+    drafts: [],
+    actions: [],
+  };
+  const { report } = await apply(content, rowsOf(business(A)), {
+    "ledger.update": [
+      {
+        outcome: {
+          kind: "refused",
+          operation_id: "op-1",
+          revision: 3,
+          reason: "REFUSED_CLI_VALIDATION_BOUNDARY",
+          detail,
+        },
+      },
+    ],
+  });
+  expect(report.steps.map((step) => step.outcome)).toEqual([
+    {
+      kind: "refused",
+      reason: "REFUSED_CLI_VALIDATION_BOUNDARY",
+      messages: [served],
+      detail,
+    },
+  ]);
+  expect(report.steps[0]!.rows.map((row) => row.outcome)).toEqual([
+    report.steps[0]!.outcome,
+  ]);
+  expect(keepAfterApply(content, report).rows).toEqual({
+    [A]: ["description"],
   });
 });
 

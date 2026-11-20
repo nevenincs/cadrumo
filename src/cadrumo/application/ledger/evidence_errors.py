@@ -24,6 +24,7 @@ from .preconditions import LedgerPreconditionErrorMixin
 
 __all__ = [
     "EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY",
+    "LedgerOffHostConsentRequiredError",
     "PurchaseInvoiceEvidenceInputError",
     "PurchaseInvoiceEvidenceNotFoundError",
     "PurchaseInvoiceEvidenceReaderError",
@@ -51,6 +52,16 @@ class PurchaseInvoiceEvidenceReaderError(PurchaseInvoiceEvidenceInputError):
     absent or answered unusably. It is RETRYABLE for the same reason -- the same
     command run again against a reachable reader is the remedy. A refusal the
     person puts right by choosing a model carries the step that leads there.
+    """
+
+
+class LedgerOffHostConsentRequiredError(OperationNextStepErrorMixin, LedgerPreconditionErrorMixin, CadrumoError):
+    """Raised when a document read is refused for want of consent to send it off this computer.
+
+    Neither the document nor the reader is at fault: the selected model runs
+    off-host and the read carries no consent. It is not an unavailable reader,
+    so it is not retried as one; the step it serves names the two remedies, to
+    authorise the off-host read or to switch the role to a model on this computer.
     """
 
 
