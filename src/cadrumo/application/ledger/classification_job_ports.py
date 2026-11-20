@@ -11,6 +11,10 @@ would read with, naming the classification task kind. The agent service owns
 which lane, model and effort that is: a setting the person makes for the
 classification task kind answers the lookup, else the model documents are read
 with does, and Cadrumo names no model of its own.
+
+A run reads each movement through the same classification reader the review
+asks, composed for the job's lane and consent. A lane that reads off this
+computer is read only under a consent its owner still confirms.
 """
 
 from __future__ import annotations
@@ -23,15 +27,22 @@ from ...core.model_roles import ModelRole
 if TYPE_CHECKING:
     from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunTaskKind
 
+    from ...core.config import Settings
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.transactions.classification_job import ClassificationJobConsent, ClassificationJobLane
     from ...domain.transactions.models import TransactionCatalogue
     from .classification_job_repository import ClassificationJobRepository
+    from .llm_classification_ports import LLMClassificationPorts
+    from .protocols import TransactionCatalogueCoCommitWriterProtocol
 
 __all__ = [
     "CLASSIFICATION_READING_ROLE",
     "ClassificationJobEnqueuePorts",
     "ClassificationJobMovementSource",
+    "ClassificationJobReader",
+    "ClassificationJobReaderFactory",
     "ClassificationJobRepositoryFactory",
+    "ClassificationJobRunPorts",
     "ClassificationLaneResolver",
 ]
 
@@ -75,3 +86,41 @@ class ClassificationJobEnqueuePorts:
     jobs: ClassificationJobRepositoryFactory
     movements: ClassificationJobMovementSource
     resolve_lane: ClassificationLaneResolver
+
+
+@dataclass(frozen=True, slots=True)
+class ClassificationJobReader:
+    """The profile's movements and the classification reader one run reads them with."""
+
+    transactions: TransactionCatalogueCoCommitWriterProtocol
+    llm: LLMClassificationPorts
+    settings: Settings
+
+
+class ClassificationJobReaderFactory(Protocol):
+    """Compose the reader a job's run reads with, for the job's own lane and consent."""
+
+    def __call__(
+        self,
+        *,
+        bucket_id: str,
+        operation: PinnedAuthorityOperation,
+        lane: ClassificationJobLane,
+        consent: ClassificationJobConsent | None,
+    ) -> ClassificationJobReader:
+        """Return the profile's reader, or refuse a lane that reads off this computer without a usable consent.
+
+        Raises:
+            LedgerOffHostConsentRequiredError: The lane reads off this computer
+                and the job's consent cannot be bound to the read; the refusal
+                carries both remedies.
+        """
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class ClassificationJobRunPorts:
+    """The repository a run reads and writes the job through, and the reader it classifies with."""
+
+    jobs: ClassificationJobRepositoryFactory
+    readers: ClassificationJobReaderFactory

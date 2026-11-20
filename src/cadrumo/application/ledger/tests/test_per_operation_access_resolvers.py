@@ -109,6 +109,7 @@ from ..classification_job_contracts import (
     LedgerClassifyJobListRequest,
     LedgerClassifyJobReadRequest,
     LedgerClassifyJobRetryRequest,
+    LedgerClassifyJobRunRequest,
 )
 from ..classification_job_operation import (
     resolve_ledger_classify_job_change_access,
@@ -118,6 +119,7 @@ from ..classification_job_read_operation import (
     resolve_ledger_classify_job_list_access,
     resolve_ledger_classify_job_read_access,
 )
+from ..classification_job_run import resolve_ledger_classify_job_run_access
 from ..classify_operation import (
     resolve_ledger_classify_access,
 )
@@ -412,6 +414,13 @@ _RESOLVERS = [
         LedgerClassifyJobDismissRequest,
         True,
         id="ledger.classify.job.dismiss",
+    ),
+    pytest.param(
+        resolve_ledger_classify_job_run_access,
+        "ledger.classify.job.run",
+        LedgerClassifyJobRunRequest,
+        True,
+        id="ledger.classify.job.run",
     ),
     pytest.param(
         resolve_ledger_split_check_access, "ledger.split.check", LedgerSplitCheckRequest, False, id="ledger.split.check"

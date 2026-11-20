@@ -223,6 +223,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.classify.job.list",
   "ledger.classify.job.read",
   "ledger.classify.job.retry",
+  "ledger.classify.job.run",
   "ledger.classify.review",
   "ledger.classify.single",
   "ledger.counterparty",
