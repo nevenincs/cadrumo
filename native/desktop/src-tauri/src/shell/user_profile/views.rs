@@ -1,7 +1,7 @@
 //! Named read-only views of the signed-in profile: the filing calendar, the
-//! counts of the last notifications capture and Home. Each runs fixed
-//! registered reads over the held person's relay; the window names no
-//! operation. Nothing
+//! counts of the last notifications capture, Home and the bundled reference
+//! corpus. Each runs fixed registered reads over the held person's relay; the
+//! window names no operation. Nothing
 //! read here is kept, logged or written: it is passed on and dropped. The
 //! calendar is passed on as the product served it, under the product's names,
 //! so the window's types are generated from the product's schema alone; the
@@ -80,6 +80,27 @@ struct HomeGeneration {
 #[derive(Debug, Serialize)]
 #[serde(transparent)]
 pub struct HomeState(Value);
+
+// Only what the host checks before passing a corpus answer on: whose it is,
+// in which language it was written, and that it holds a retrieval and the
+// terminology hits. The answer itself stays the product's value.
+#[derive(Deserialize)]
+struct CorpusAnswer {
+    profile_id: String,
+    output_language: String,
+    retrieval: Retrieval,
+    terminology: Vec<Value>,
+}
+#[derive(Deserialize)]
+struct Retrieval {
+    hits: Vec<Value>,
+}
+
+/// What the bundled corpus answered, as the product served it: ranked
+/// passages or one resolved citation, and the terminology the query names.
+#[derive(Debug, Serialize)]
+#[serde(transparent)]
+pub struct ReferenceAnswer(Value);
 
 /// A calendar day as the product writes it, `YYYY-MM-DD`, as its year.
 fn iso_year(day: &str) -> Option<u32> {
@@ -200,6 +221,58 @@ fn home_state(projection: Value, profile: &str) -> Result<HomeState> {
         return Err(protocol());
     }
     Ok(HomeState(read.generation.home))
+}
+
+/// The registered read the bundled reference corpus is searched through.
+pub(super) const REFERENCE_DEFINITION: &str = "reference.corpus.search";
+
+/// The longest query and the most results the product's read accepts. The
+/// host refuses what it would refuse, before submitting anything.
+const REFERENCE_QUERY_MAX_CHARS: usize = 200;
+const REFERENCE_LIMIT_MAX: u32 = 25;
+
+/// The text the person typed, as the product reads it: without the white
+/// space around it, between one and 200 characters. Nothing else of it is
+/// changed.
+fn admit_reference_query(query: &str) -> Result<&str> {
+    let query = query.trim();
+    match query.chars().count() {
+        1..=REFERENCE_QUERY_MAX_CHARS => Ok(query),
+        _ => Err(Failure::new("refused")),
+    }
+}
+
+fn admit_reference_limit(limit: u32) -> Result<u32> {
+    if (1..=REFERENCE_LIMIT_MAX).contains(&limit) {
+        Ok(limit)
+    } else {
+        Err(Failure::new("refused"))
+    }
+}
+
+/// The search for the held profile, the typed query and limit and the
+/// language the window shows its words in: nothing else is asked.
+fn reference_request(profile: &str, query: &str, language: &str, limit: u32) -> Value {
+    json!({"profile_id":profile, "query":query, "output_language":language, "limit":limit})
+}
+
+/// Passes on a corpus answer only if it is the held profile's, in the language
+/// asked for, and holds no more passages than were asked for.
+fn reference_answer(
+    answer: Value,
+    profile: &str,
+    language: &str,
+    limit: u32,
+) -> Result<ReferenceAnswer> {
+    let read: CorpusAnswer = serde_json::from_value(answer.clone()).map_err(|_| protocol())?;
+    if read.profile_id != profile
+        || read.output_language != language
+        || read.retrieval.hits.len() as u64 > u64::from(limit)
+        || read.terminology.len() as u64 > u64::from(limit)
+    {
+        return Err(protocol());
+    }
+    Ok(ReferenceAnswer(answer))
 }
 
 /// The registered read the record groups come from.
@@ -338,6 +411,40 @@ impl ProfileHost {
                 .await?;
             self.still_held(&person, &profile).await?;
             home_state(projection, &profile)
+        })
+        .await
+        .unwrap_or_else(|_| Err(protocol()))
+    }
+    /// Searches the bundled reference corpus for the signed-in profile: one
+    /// `reference.corpus.search` read of the typed query. It reads no profile
+    /// data and never reaches the network, and the host keeps nothing of it:
+    /// the query and the answer are passed on and dropped, and neither is
+    /// logged.
+    pub(super) async fn reference_search(
+        &self,
+        query: String,
+        limit: u32,
+        language: String,
+    ) -> Result<ReferenceAnswer> {
+        if !super::super::language::supported(&language) {
+            return Err(protocol());
+        }
+        let query = admit_reference_query(&query)?;
+        let limit = admit_reference_limit(limit)?;
+        tokio::time::timeout(PROFILE_READ_LIMIT, async {
+            let _serial = self.operation.lock().await;
+            let person = self.person(None).await?;
+            let profile = Self::profile_of(&person).await?;
+            let answer = self
+                .run(
+                    &person,
+                    REFERENCE_DEFINITION,
+                    reference_request(&profile, query, &language, limit),
+                    false,
+                )
+                .await?;
+            self.still_held(&person, &profile).await?;
+            reference_answer(answer, &profile, &language, limit)
         })
         .await
         .unwrap_or_else(|_| Err(protocol()))
@@ -493,6 +600,73 @@ mod tests {
             .remove("home");
         assert!(home_state(homeless, PROFILE).is_err());
         assert!(home_state(json!(null), PROFILE).is_err());
+    }
+
+    fn corpus_answer(profile: &str, language: &str, hits: usize) -> Value {
+        json!({"result_version":1, "profile_id":profile, "output_language":language,
+            "authority_generation":"sha256:00",
+            "retrieval":{"query":"synthetic", "mode":"lexical_only",
+                "hits":vec![json!({"chunk_id":"c", "corpus_ref":"r", "doc_title":"Synthetic",
+                    "text":"Synthetic passage", "score":1.0, "rank":0, "lexical_rank":0}); hits],
+                "citation":null},
+            "terminology":[]})
+    }
+
+    #[test]
+    fn reference_asks_for_the_held_profile_the_typed_query_and_nothing_else() {
+        assert_eq!(REFERENCE_DEFINITION, "reference.corpus.search");
+        assert_eq!(
+            reference_request(PROFILE, "synthetic query", "hu", 8),
+            json!({"profile_id":PROFILE, "query":"synthetic query",
+                "output_language":"hu", "limit":8})
+        );
+    }
+
+    #[test]
+    fn only_a_query_of_one_to_two_hundred_characters_and_a_bounded_limit_are_read() {
+        assert_eq!(admit_reference_query("  a  ").unwrap(), "a");
+        assert_eq!(
+            admit_reference_query(&"ñ".repeat(200))
+                .unwrap()
+                .chars()
+                .count(),
+            200
+        );
+        for refused in ["", "   ", "\t\n"] {
+            assert_eq!(admit_reference_query(refused).unwrap_err().code, "refused");
+        }
+        assert_eq!(
+            admit_reference_query(&"a".repeat(201)).unwrap_err().code,
+            "refused"
+        );
+        assert_eq!(admit_reference_limit(1).unwrap(), 1);
+        assert_eq!(admit_reference_limit(25).unwrap(), 25);
+        for refused in [0, 26, u32::MAX] {
+            assert_eq!(admit_reference_limit(refused).unwrap_err().code, "refused");
+        }
+    }
+
+    #[test]
+    fn a_corpus_answer_is_passed_on_as_the_product_served_it() {
+        let served = corpus_answer(PROFILE, "es", 2);
+        let sent =
+            serde_json::to_value(reference_answer(served.clone(), PROFILE, "es", 8).unwrap())
+                .unwrap();
+        assert_eq!(sent, served);
+    }
+
+    #[test]
+    fn a_corpus_answer_of_another_profile_or_language_or_of_too_many_passages_is_refused() {
+        assert!(reference_answer(corpus_answer("another", "es", 1), PROFILE, "es", 8).is_err());
+        assert!(reference_answer(corpus_answer(PROFILE, "en", 1), PROFILE, "es", 8).is_err());
+        assert!(reference_answer(corpus_answer(PROFILE, "es", 3), PROFILE, "es", 2).is_err());
+        let mut headless = corpus_answer(PROFILE, "es", 1);
+        headless.as_object_mut().unwrap().remove("profile_id");
+        assert!(reference_answer(headless, PROFILE, "es", 8).is_err());
+        let mut unranked = corpus_answer(PROFILE, "es", 1);
+        unranked.as_object_mut().unwrap().remove("retrieval");
+        assert!(reference_answer(unranked, PROFILE, "es", 8).is_err());
+        assert!(reference_answer(json!(null), PROFILE, "es", 8).is_err());
     }
 
     #[test]

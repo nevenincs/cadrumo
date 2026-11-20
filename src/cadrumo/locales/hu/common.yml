@@ -5158,6 +5158,29 @@ desktop:
     search: Keresés
     settings: Beállítások
     tui: Munkaterület
+  reference:
+    article: '{article}. cikk'
+    citation: Pontos hivatkozás
+    empty: 'A csomagolt forrásokban nincs találat erre: „{query}”.'
+    failed: A keresés nem érhető el ({code}).
+    idle: Még nem kerestél semmit. Írj be egy szót, egy témát vagy egy hivatkozási
+      azonosítót, és válaszd a Keresés gombot.
+    matched_on: 'Egyezés: {term}'
+    orientation: 'Az eredmények a mellékelt forrásokból származnak. Tájékozódásra
+      szolgálnak, nem ellenőrzött hatályos jogszabályok: támaszkodás előtt ellenőrizd
+      a hivatalos szöveget.'
+    passages: Szövegrészek
+    query_label: Keresés a kézikönyvben
+    query_placeholder: Egy szó, egy téma vagy egy hivatkozási azonosító
+    results: 'Találatok erre: „{query}”'
+    search: Keresés
+    search_again: Keresés újra
+    searching: Keresés…
+    section: '{section}. szakasz'
+    signed_out: Jelentkezz be, hogy keress a kézikönyvben.
+    source: 'Forrás: {source}'
+    terminology: Szakkifejezések
+    title: Kézikönyv
   refusal:
     action_unroutable: Itt nem érhető el.
   session:

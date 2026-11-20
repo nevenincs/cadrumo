@@ -5,10 +5,12 @@
 // product keeps apart stays apart on screen. The notifications are counts
 // only, taken by the host, so that no row of them reaches the window. Home is
 // the `home` state of the product's workbench generation, served by the host
-// under the product's names with the rest of the generation left behind.
+// under the product's names with the rest of the generation left behind. Reference
+// is the bundled corpus search, served as the product answers it.
 
 import type { FilingCalendarServed } from "./calendarContract";
 import type { HomeServed } from "./homeContract";
+import type { ReferenceServed } from "./referenceContract";
 
 /** What the last capture of the tax agency's notifications held, as counts.
  * The rows carry names and tax numbers, and the window has no use for them:
@@ -38,4 +40,14 @@ export interface ProfileViews {
    * profile's local records only; it never asks the tax agency. Refused when
    * nobody is signed in. */
   home(language: string): Promise<HomeServed>;
+  /** What the bundled reference corpus answers for the text typed, at most
+   * `limit` passages, its words in `language`: orientation from bundled
+   * sources, not verified current law. Reads no profile data and never asks
+   * the tax agency; the host keeps nothing of the query. Refused when nobody
+   * is signed in. */
+  reference(
+    query: string,
+    limit: number,
+    language: string,
+  ): Promise<ReferenceServed>;
 }

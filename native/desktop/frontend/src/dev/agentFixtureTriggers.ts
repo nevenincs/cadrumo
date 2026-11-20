@@ -40,6 +40,7 @@ const LINKS_REPLY = [
   "- [el calendario](cadrumo://view/calendar)",
   "- [los movimientos](cadrumo://view/ledger/movements)",
   "- [las retenciones](cadrumo://view/withholding)",
+  "- [la referencia](cadrumo://view/reference)",
   "- [las operaciones](cadrumo://view/operations)",
   "- [los datos de la AEAT](cadrumo://view/aeat-sync)",
   "- [el espacio de trabajo](cadrumo://view/terminal)",
