@@ -56,6 +56,7 @@ from .desktop_entry_option_keys import (
     ENTRY_TOKEN_WORD_KEYS,
     WITHHOLDING_CERTIFICATE_FIGURE_KEYS,
 )
+from .desktop_home_keys import DESKTOP_HOME_KEYS
 from .desktop_interface_keys import DESKTOP_INTERFACE_KEYS
 from .desktop_ledger_catalogue_keys import DESKTOP_LEDGER_CATALOGUE_KEYS
 from .desktop_ledger_document_keys import DESKTOP_LEDGER_DOCUMENT_KEYS
@@ -794,6 +795,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = (
     | DESKTOP_LEDGER_WORKFLOW_KEYS
     | DESKTOP_LEDGER_CATALOGUE_KEYS
     | DESKTOP_INTERFACE_KEYS
+    | DESKTOP_HOME_KEYS
     | WORKSPACE_KEYS
     | ASSET_KEYS
     | INVENTORY_KEYS

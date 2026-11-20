@@ -510,6 +510,10 @@ class PublicHomeNextAction(BaseModel):
     modelo: str | None
     filing_year: int | None
     period: PublicPeriod | None
+    action_words: str | None
+    reason_words: str | None
+    period_words: str | None
+    words_language: OutputLanguage | None
 
 
 class PublicDeclaredNextAction(BaseModel):
@@ -536,6 +540,7 @@ class PublicHomeAgendaEntry(BaseModel):
     due_on_text: str
     period_words: str
     words_language: OutputLanguage
+    filing_status_words: str | None
     filing_status: OverviewFilingStatus
 
     @model_validator(mode="after")
@@ -565,6 +570,9 @@ class PublicHomeDeclarationResume(BaseModel):
     name: str
     state: HomeDeclarationState
     revision_id: str | None
+    state_words: str | None
+    period_words: str | None
+    words_language: OutputLanguage | None
 
 
 class PublicLedgerGenerationStateV1(BaseModel):

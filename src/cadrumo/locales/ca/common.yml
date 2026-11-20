@@ -1575,6 +1575,28 @@ desktop:
     title: Compte de Google
     unknown: Ara no s'ha pogut llegir l'accés a Google.
     waiting: Acaba d'iniciar la sessió a Google al teu navegador.
+  home:
+    aeat_evidence: 'Dades de l''AEAT: {state}'
+    availability_locked: 'Blocat: desbloqueja aquest perfil per veure-ho'
+    availability_never_captured: Encara sense llegir
+    availability_stale: Desactualitzat
+    availability_stale_observed: 'Desactualitzat: darrera lectura el {date}'
+    availability_unavailable: No disponible
+    empty: No hi ha res per mostrar aquí.
+    failed: No s'ha pogut llegir l'Inici ({code}). Prova d'actualitzar-lo.
+    heading_actions: Properes accions
+    heading_agenda: Dates de presentació
+    heading_declarations: Declaracions
+    heading_ledger: Estat dels registres
+    heading_messages: Missatges
+    loading: Carregant l'Inici…
+    messages_attention: '{count} requereixen atenció'
+    modelo: Modelo {modelo}
+    observed: (darrera lectura el {date})
+    refresh: Actualitza
+    signed_out: Inicia la sessió per veure l'Inici.
+    title: Inici
+    unworded: Encara no hi ha descripció en el teu idioma.
   host:
     failed: Aquesta part no s'ha pogut carregar.
     unavailable: Aquesta part necessita l'aplicació d'escriptori.

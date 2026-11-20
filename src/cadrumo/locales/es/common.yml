@@ -1585,6 +1585,28 @@ desktop:
     title: Cuenta de Google
     unknown: Ahora no se ha podido leer el acceso a Google.
     waiting: Termina de iniciar sesión en Google en tu navegador.
+  home:
+    aeat_evidence: 'Datos de la AEAT: {state}'
+    availability_locked: 'Bloqueado: desbloquea este perfil para verlo'
+    availability_never_captured: Aún sin leer
+    availability_stale: Desactualizado
+    availability_stale_observed: 'Desactualizado: última lectura el {date}'
+    availability_unavailable: No disponible
+    empty: No hay nada que mostrar aquí.
+    failed: No se pudo leer el Inicio ({code}). Prueba a actualizarlo.
+    heading_actions: Próximas acciones
+    heading_agenda: Fechas de presentación
+    heading_declarations: Declaraciones
+    heading_ledger: Estado de los registros
+    heading_messages: Mensajes
+    loading: Cargando el Inicio…
+    messages_attention: '{count} requieren atención'
+    modelo: Modelo {modelo}
+    observed: (última lectura el {date})
+    refresh: Actualizar
+    signed_out: Inicia sesión para ver el Inicio.
+    title: Inicio
+    unworded: Aún no hay descripción en tu idioma.
   host:
     failed: Esta parte no se ha podido cargar.
     unavailable: Esta parte necesita la aplicación de escritorio.

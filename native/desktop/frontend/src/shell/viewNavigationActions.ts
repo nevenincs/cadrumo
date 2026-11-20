@@ -105,6 +105,7 @@ export function useViewActions({
         t,
         {
           profile: { icon: "user", group: "views" },
+          home: { icon: "home", group: "views" },
           calendar: {
             id: "view.calendar",
             icon: "calendar",

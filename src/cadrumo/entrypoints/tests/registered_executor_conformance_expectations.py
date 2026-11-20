@@ -115,6 +115,8 @@ EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = expectations_own
                 "ledger.evidence.consent.list",
                 "ledger.evidence.review.list",
                 "ledger.evidence.review.view",
+                "operations.history.list",
+                "reference.corpus.search",
             )
         ),
         *(

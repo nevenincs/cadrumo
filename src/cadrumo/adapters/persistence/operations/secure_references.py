@@ -117,15 +117,41 @@ class OperationSecureReferenceRepository:
             task_name="operation-secure-reference-resolve",
         )
 
+    async def resolve_if_held[OperandT: BaseModel](
+        self,
+        reference: ContentDigest,
+        operand_type: type[OperandT],
+    ) -> OperandT | None:
+        """Resolve as :meth:`resolve` does, or ``None`` when this custody holds no operand at ``reference``.
+
+        An operand this custody holds and cannot read still refuses, so a record
+        another profile's custody owns is told from a damaged one of this profile's.
+        """
+
+        def resolve_operand() -> OperandT | None:
+            payload = self._held_payload(reference)
+            return None if payload is None else self._hydrate(payload, operand_type)
+
+        return await await_cancellation_complete(
+            asyncio.to_thread(resolve_operand),
+            task_name="operation-secure-reference-resolve",
+        )
+
     def _resolve[OperandT: BaseModel](self, reference: ContentDigest, operand_type: type[OperandT]) -> OperandT:
         """Finish the fresh read and strict hydration before its caller releases custody."""
-        payload = self._verified_payload(reference)
+        payload = self._held_payload(reference)
+        if payload is None:
+            raise RepositoryError("operation secure reference is absent")
+        return self._hydrate(payload, operand_type)
+
+    @staticmethod
+    def _hydrate[OperandT: BaseModel](payload: bytes, operand_type: type[OperandT]) -> OperandT:
         try:
             return operand_type.model_validate_json(payload, strict=True)
         except ValidationError as exc:
             raise RepositoryError("operation secure reference payload does not match requested operand type") from exc
 
-    def _verified_payload(self, reference: ContentDigest) -> bytes:
+    def _held_payload(self, reference: ContentDigest) -> bytes | None:
         record = self._repository().load(
             self._namespace.namespace,
             reference,
@@ -133,7 +159,7 @@ class OperationSecureReferenceRepository:
             max_supported_version=self._namespace.schema_version,
         )
         if record is None:
-            raise RepositoryError("operation secure reference is absent")
+            return None
         self._require_matching_digest(reference, record.payload)
         return record.payload
 

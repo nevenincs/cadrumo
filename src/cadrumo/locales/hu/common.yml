@@ -1555,6 +1555,28 @@ desktop:
     title: Google-fiók
     unknown: A Google-bejelentkezést most nem sikerült beolvasni.
     waiting: Fejezd be a bejelentkezést a Google-be a böngésződben.
+  home:
+    aeat_evidence: 'AEAT-adatok: {state}'
+    availability_locked: Zárolva - oldd fel ezt a profilt, hogy lásd
+    availability_never_captured: Még nincs beolvasva
+    availability_stale: Elavult
+    availability_stale_observed: 'Elavult - utolsó beolvasás: {date}'
+    availability_unavailable: Nem érhető el
+    empty: Itt nincs mit mutatni.
+    failed: A Kezdőlapot nem sikerült beolvasni ({code}). Próbáld meg frissíteni.
+    heading_actions: Következő teendők
+    heading_agenda: Benyújtási határidők
+    heading_declarations: Bevallások
+    heading_ledger: Nyilvántartás állapota
+    heading_messages: Üzenetek
+    loading: Kezdőlap betöltése…
+    messages_attention: '{count} igényel figyelmet'
+    modelo: Modelo {modelo}
+    observed: '(utolsó beolvasás: {date})'
+    refresh: Frissítés
+    signed_out: Jelentkezz be a Kezdőlap megtekintéséhez.
+    title: Kezdőlap
+    unworded: Még nincs leírás a te nyelveden.
   host:
     failed: Ezt a részt nem sikerült betölteni.
     unavailable: Ehhez a részhez az asztali alkalmazás kell.

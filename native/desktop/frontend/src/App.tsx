@@ -153,6 +153,7 @@ export function App({ host }: { host: Host }) {
     firstPaneShown,
     activePanes,
     docsVisible,
+    homeVisible,
     calendarVisible,
     ledgerVisible,
     declarationsVisible,
@@ -188,6 +189,7 @@ export function App({ host }: { host: Host }) {
   const reads = useWindowReads({
     host,
     reader,
+    homeVisible,
     calendarVisible,
     recheckAccount: signIn.recheckAccount,
     locale,
@@ -316,6 +318,7 @@ export function App({ host }: { host: Host }) {
     profilePage: navigation.profilePage,
     ledgerPage: navigation.ledgerPage,
     declarationsPage: navigation.declarationsPage,
+    homePage: navigation.homePage,
     calendarPage: navigation.calendarPage,
     aeatSyncPage: navigation.aeatSyncPage,
     docs,
@@ -461,6 +464,7 @@ export function App({ host }: { host: Host }) {
     profilePage: navigation.profilePage,
     ledgerPage: navigation.ledgerPage,
     declarationsPage: navigation.declarationsPage,
+    homePage: navigation.homePage,
     calendarPage: navigation.calendarPage,
     aeatSyncPage: navigation.aeatSyncPage,
     docs,
@@ -500,6 +504,7 @@ export function App({ host }: { host: Host }) {
     firstPaneShown,
     profileOn: visibility.profileOn,
     aeatSyncOn: visibility.aeatSyncOn,
+    homeVisible,
     ledgerVisible,
     declarationsVisible,
     calendarVisible,
@@ -533,6 +538,7 @@ export function App({ host }: { host: Host }) {
       browserReader={memories.browserReader}
       profileOn={visibility.profileOn}
       aeatSyncOn={visibility.aeatSyncOn}
+      homeOn={visibility.homeOn}
       calendarOn={visibility.calendarOn}
       openDeclaration={memories.openDeclaration}
       openWorkUnit={memories.openWorkUnit}
@@ -555,6 +561,7 @@ export function App({ host }: { host: Host }) {
       browserPage={navigation.browserPage}
       profilePage={navigation.profilePage}
       aeatSyncPage={navigation.aeatSyncPage}
+      homePage={navigation.homePage}
       calendarPage={navigation.calendarPage}
       toggleMaximize={toggleMaximize}
       maximizeControl={maximizeControl}
@@ -581,6 +588,7 @@ export function App({ host }: { host: Host }) {
       censoHandled={pageAsks.censoHandled}
       profileStep={pageAsks.profileStep}
       profileStepHandled={pageAsks.profileStepHandled}
+      home={reads.home}
       calendar={reads.calendar}
       calendarProfile={reads.calendarProfile}
       calendarMemory={memories.calendarMemory}
@@ -734,6 +742,7 @@ export function App({ host }: { host: Host }) {
               activePanes={activePanes}
               pageOn={pageOn}
               profileOn={visibility.profileOn}
+              homeOn={visibility.homeOn}
               calendarOn={visibility.calendarOn}
               ledgerOn={visibility.ledgerOn}
               declarationsOn={visibility.declarationsOn}
