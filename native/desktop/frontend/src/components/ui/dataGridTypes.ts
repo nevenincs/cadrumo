@@ -52,6 +52,10 @@ export type GridColumn<R> = {
   /** Default true. */
   resizable?: boolean;
   cell: (row: R, context: CellContext) => React.ReactNode;
+  /** The cell's accessible name where it draws nothing, so a person using a
+   * screen reader or an accessibility tool is told it is empty rather than
+   * given the cell's generated id. Undefined where the cell draws text. */
+  emptyName?: (row: R) => string | undefined;
   /** Null makes the cell read-only for that row. */
   editor?: (row: R, context: EditorContext) => React.ReactNode | null;
   /** Announced when an edit is asked of a cell that cannot take one. */

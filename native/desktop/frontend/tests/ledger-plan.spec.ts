@@ -6,6 +6,7 @@ import { classifyCells, ratioCoverage } from "../src/shell/ledgerCommands";
 import {
   bulkCsv,
   payloadSize,
+  planApply,
   splitBulk,
   type BulkRow,
   type LedgerPlan,
@@ -1127,4 +1128,70 @@ test("a movement whose sealed state was not read is held, neither sealed nor sav
   expect(plan.summary.blockers).toMatchObject({ sealed_unread: 1, sealed: 1 });
   expect(plan.summary.together).toBe(1);
   expect(plan.held.rows.sort()).toEqual([id(unread), id(sealed)].sort());
+});
+
+test("a classification edit and the IVA derivation on one row compose in order, and the ledger's blockers hold the row with its words", () => {
+  const A = hexId("a");
+  const edits = { [A]: { description: set("NUEVA") } };
+  const derive: StagedAction = {
+    id: "derive",
+    kind: "iva_derive",
+    transactionId: A,
+    ivaCategory: "domestic_general",
+  };
+  const context = contextOf(business(A));
+  const content = staged(edits, [derive]);
+  // The check is the recorded one for the edits; the derivation adds no
+  // blocker of the page's own.
+  const check = recordedCheck(staged(edits), context.rows);
+  const plan = planApply(content, { ...context, check });
+  expect(blockersOf(plan, A)).toEqual([]);
+  expect(stepKinds(plan)).toEqual(["update", "action:iva_derive"]);
+  expect(plan.held.rows).toEqual([]);
+
+  // What the ledger says holds the row, in its own words.
+  const served = {
+    kind: "derive_and_figures" as const,
+    fields: ["iva_amount" as const],
+    words: "Las cifras y la derivación se contradicen.",
+    fix_words: "Quita una de las dos.",
+    words_language: "es" as const,
+  };
+  const held = new Map(check.rows);
+  held.set(A, { ...held.get(A)!, blockers: [served] });
+  const refused = planApply(content, {
+    ...context,
+    check: { ...check, rows: held },
+  });
+  expect(refused.entries[0]!.blockers).toEqual([
+    {
+      kind: "derive_and_figures",
+      fields: ["iva_amount"],
+      words: served.words,
+      fixWords: served.fix_words,
+      wordsLanguage: "es",
+    },
+  ]);
+  expect(refused.held.rows).toEqual([A]);
+});
+
+test("an allocation still cannot meet classifying edits on its row", () => {
+  const A = hexId("a");
+  const edits = { [A]: { category_id: set("telefono") } };
+  const context = contextOf(business(A));
+  const plan = planApply(
+    staged(edits, [
+      {
+        id: "alloc",
+        kind: "allocate",
+        transactionId: A,
+        businessPct: "0.5",
+        categoryId: null,
+        usageRatioId: null,
+        prorrataReference: null,
+      },
+    ]),
+    { ...context, check: recordedCheck(staged(edits), context.rows) },
+  );
+  expect(blockersOf(plan, A)).toContain("action_and_edits");
 });

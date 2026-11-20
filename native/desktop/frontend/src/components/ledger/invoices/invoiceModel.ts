@@ -1020,6 +1020,20 @@ export function filterCatalogue(
   });
 }
 
+/** How many invoices `filter`'s other clauses keep and its period alone
+ * hides: the ones another period shows. Zero where no period is set, and where
+ * the period's days are not served, since nothing then says what it hides. */
+export function hiddenByPeriod(
+  invoices: readonly CatalogueInvoiceSnapshot[],
+  filter: CatalogueFilter,
+): number {
+  if (filter.period === null || periodBounds(filter.period) === null) return 0;
+  return (
+    filterCatalogue(invoices, { ...filter, period: null }).length -
+    filterCatalogue(invoices, filter).length
+  );
+}
+
 function sortValue(
   invoice: CatalogueInvoiceSnapshot,
   key: CatalogueSortKey,

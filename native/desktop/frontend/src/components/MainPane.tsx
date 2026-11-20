@@ -8,7 +8,9 @@ import { EmptyState } from "@/components/ui/empty";
 import type { DocsLanguage } from "../ipc/environment";
 import type { Action } from "../shell/actions";
 import { ModelListContext, type ModelList } from "../shell/agentModelList";
+import { ProfileStepContext } from "../shell/profileStepDoor";
 import type { useFilingCalendar } from "../shell/calendar";
+import type { useHome } from "../shell/home";
 import type { Host } from "../shell/host";
 import type { LedgerProfileStep } from "../shell/ledger";
 import type {
@@ -33,6 +35,7 @@ import { BrowserPage } from "./browser/BrowserPage";
 import type { OpenMenu } from "./ContextMenu";
 import { DocsFrame, type DocsFrameApi } from "./DocsFrame";
 import { FilingCalendarView, type CalendarMemory } from "./FilingCalendar";
+import { HomePage } from "./home/HomePage";
 import type { LeaveGuard } from "./ledger/editing/LedgerEditing";
 import { LedgerPage, type LedgerMemory } from "./ledger/LedgerPage";
 import { DeclarationsPane } from "./modelo/declarations/DeclarationsPane";
@@ -67,6 +70,7 @@ export function MainPane({
   browserReader,
   profileOn,
   aeatSyncOn,
+  homeOn,
   calendarOn,
   openDeclaration,
   openWorkUnit,
@@ -89,6 +93,7 @@ export function MainPane({
   browserPage,
   profilePage,
   aeatSyncPage,
+  homePage,
   calendarPage,
   toggleMaximize,
   maximizeControl,
@@ -115,6 +120,7 @@ export function MainPane({
   censoHandled,
   profileStep,
   profileStepHandled,
+  home,
   calendar,
   calendarProfile,
   calendarMemory,
@@ -150,6 +156,7 @@ export function MainPane({
   browserReader: string | null;
   profileOn: boolean;
   aeatSyncOn: boolean;
+  homeOn: boolean;
   calendarOn: boolean;
   openDeclaration: {
     workUnitId: string | null;
@@ -177,6 +184,7 @@ export function MainPane({
   browserPage: PageRef;
   profilePage: PageRef;
   aeatSyncPage: PageRef;
+  homePage: PageRef;
   calendarPage: PageRef;
   toggleMaximize: (area: Area) => void;
   maximizeControl: (area: Area, labelKey: string) => PaneControl;
@@ -203,6 +211,7 @@ export function MainPane({
   censoHandled: () => void;
   profileStep: LedgerProfileStep | null;
   profileStepHandled: () => void;
+  home: ReturnType<typeof useHome>;
   calendar: ReturnType<typeof useFilingCalendar>;
   calendarProfile: ReturnType<typeof useUserProfile>;
   calendarMemory: { current: CalendarMemory };
@@ -347,47 +356,53 @@ export function MainPane({
         />
       ) : ledgerOn && routedLedger ? (
         <ModelListContext.Provider value={modelList}>
-          <LedgerPage
-            key={reader ?? ""}
-            port={routedLedger}
-            reader={reader}
-            withheld={
-              <SignedOut
-                account={account}
-                lead={t("desktop.ledger.signed_out")}
-                quiet
-                onSignIn={askSignIn}
-              />
-            }
-            locale={locale}
-            shown={firstPaneShown}
-            page={ledgerPage}
-            view={layout.ledgerView}
-            onViewChange={changeLedgerView}
-            memory={ledgerMemory}
-            contribute={contribute}
-            copy={(text) => host.writeClipboard(text)}
-            paste={() => host.readClipboard()}
-            onOpenLink={openLink}
-            onFloor={setLedgerFloor}
-            pane={{
-              title: t("desktop.ledger.title"),
-              onToggleMaximize: () => toggleMaximize("docs"),
-              controls: [
-                maximizeControl("docs", "desktop.ledger.maximize"),
-                ...splitControls.map((control) => ({
-                  ...control,
-                  yields: true,
-                })),
-                {
-                  id: "close",
-                  icon: "close",
-                  label: t("desktop.ledger.close"),
-                  run: closePage,
-                },
-              ],
-            }}
-          />
+          {/* The door a refusal here names for the profile, as the declarations
+              page offers it: only a window with a profile page, signed in. */}
+          <ProfileStepContext.Provider
+            value={signedIn && host.userProfile ? askProfileStep : null}
+          >
+            <LedgerPage
+              key={reader ?? ""}
+              port={routedLedger}
+              reader={reader}
+              withheld={
+                <SignedOut
+                  account={account}
+                  lead={t("desktop.ledger.signed_out")}
+                  quiet
+                  onSignIn={askSignIn}
+                />
+              }
+              locale={locale}
+              shown={firstPaneShown}
+              page={ledgerPage}
+              view={layout.ledgerView}
+              onViewChange={changeLedgerView}
+              memory={ledgerMemory}
+              contribute={contribute}
+              copy={(text) => host.writeClipboard(text)}
+              paste={() => host.readClipboard()}
+              onOpenLink={openLink}
+              onFloor={setLedgerFloor}
+              pane={{
+                title: t("desktop.ledger.title"),
+                onToggleMaximize: () => toggleMaximize("docs"),
+                controls: [
+                  maximizeControl("docs", "desktop.ledger.maximize"),
+                  ...splitControls.map((control) => ({
+                    ...control,
+                    yields: true,
+                  })),
+                  {
+                    id: "close",
+                    icon: "close",
+                    label: t("desktop.ledger.close"),
+                    run: closePage,
+                  },
+                ],
+              }}
+            />
+          </ProfileStepContext.Provider>
         </ModelListContext.Provider>
       ) : null}
       {browserMounted && host.sedeView && (
@@ -505,6 +520,38 @@ export function MainPane({
             onSignIn={askSignIn}
           />
         ))}
+      {homeOn && (
+        <HomePage
+          page={homePage}
+          state={home.state}
+          attempt={home.attempt}
+          locale={locale}
+          refreshing={home.refreshing}
+          onRefresh={home.refresh}
+          pane={{
+            onToggleMaximize: () => toggleMaximize("docs"),
+            controls: [
+              maximizeControl("docs", "desktop.pane.maximize_docs"),
+              ...splitControls.map((control) => ({
+                ...control,
+                yields: true,
+              })),
+            ],
+          }}
+          // Withheld, it says what the TUI pane says of the account, with
+          // the same ways on.
+          withheld={
+            <SignedOut
+              account={account}
+              lead={t("desktop.home.signed_out")}
+              quiet
+              onSignIn={askSignIn}
+            />
+          }
+          // A row names a view of the window and opens it as a link does.
+          onOpen={(destination) => openView(destination)}
+        />
+      )}
       {calendarOn && (
         <FilingCalendarView
           page={calendarPage}

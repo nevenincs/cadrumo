@@ -188,6 +188,31 @@ def compose_workbench_generation_operation(inputs: OperationCompositionInputs) -
     return built((definition,), (build_workbench_generation_operation_registration(definition),))
 
 
+def compose_reference_corpus_search_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose reference corpus search operation."""
+    from ..application.corpus_search.search_operation import (
+        build_reference_corpus_search_definition,
+        build_reference_corpus_search_registration,
+    )
+
+    del inputs
+    definition = build_reference_corpus_search_definition()
+    return built((definition,), (build_reference_corpus_search_registration(definition),))
+
+
+def compose_operation_history_list_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose operation history list operation."""
+    from ..application.operation_history.list_operation import (
+        build_operation_history_list_definition,
+        build_operation_history_list_registration,
+    )
+    from .operation_history_composition import compose_operation_history_ports
+
+    del inputs
+    definition = build_operation_history_list_definition(compose_operation_history_ports)
+    return built((definition,), (build_operation_history_list_registration(definition),))
+
+
 def compose_actividad_asset_registered_operations(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose actividad asset registered operations."""
     from ..application.actividad_asset.registered_operations import (

@@ -210,8 +210,14 @@ export function readingFieldOf(
  * a correctable row of its own. */
 export type ReadingRow =
   | { kind: "read"; field: ReadingField }
-  | { kind: "correctable"; field: CorrectionField };
-export function readingRows(kind: InvoiceKind | null): ReadingRow[] {
+  | { kind: "correctable"; field: CorrectionField }
+  | { kind: "breakdown"; field: "iva_breakdown" };
+/** A reading that states IVA at more than one rate is shown by rate, in
+ * place of the one rate row it cannot fill. */
+export function readingRows(
+  kind: InvoiceKind | null,
+  byRate = false,
+): ReadingRow[] {
   const parties: ReadingRow[] = kind
     ? [
         { kind: "correctable", field: "counterparty_name" },
@@ -229,7 +235,9 @@ export function readingRows(kind: InvoiceKind | null): ReadingRow[] {
     { kind: "correctable", field: "series" },
     { kind: "correctable", field: "invoice_date" },
     { kind: "correctable", field: "taxable_base" },
-    { kind: "correctable", field: "iva_rate" },
+    byRate
+      ? { kind: "breakdown", field: "iva_breakdown" }
+      : { kind: "correctable", field: "iva_rate" },
     { kind: "correctable", field: "iva_amount" },
     { kind: "correctable", field: "recargo_amount" },
     { kind: "correctable", field: "retention_rate" },
@@ -455,7 +463,8 @@ export type ConfirmHold =
 
 /**
  * The confirmation for one reading, or what holds it. The kind and the
- * country are always the person's: neither has a default. The currency is
+ * country are the person's to state: the page shows what the document
+ * says for each, and a confirmation without them is held. The currency is
  * the reading's unless it read none. Only corrections that change the
  * reading are sent, and every finding must be answered.
  */
@@ -533,13 +542,76 @@ export function duplicateQuestion(
   };
 }
 
+/** What a stored reading does not keep: facts of how the document was read,
+ * not of what it says. A reading served from the store lacks them while a
+ * fresh read of the same document has them, so a side that states none says
+ * nothing about a change. */
+const READING_PATH_FACTS: ReadonlySet<string> = new Set([
+  "facturae_invoice_class",
+]);
+
+/** The members of a reading that differ between two readings of one
+ * document, compared by their typed meaning: the order of keys and of
+ * absent-or-null never counts. */
+export function changedReadingMembers(
+  left: InvoiceDraftProjectionV1,
+  right: InvoiceDraftProjectionV1,
+): string[] {
+  const held = left as Record<string, unknown>;
+  const now = right as Record<string, unknown>;
+  return [...new Set([...Object.keys(held), ...Object.keys(now)])].filter(
+    (member) =>
+      !(
+        READING_PATH_FACTS.has(member) &&
+        (held[member] == null || now[member] == null)
+      ) && stable(held[member]) !== stable(now[member]),
+  );
+}
+
 /** Whether two readings say the same: a fresh reading equal to the one
  * shown is the reading the person reviewed. */
 export function sameReading(
   left: InvoiceDraftProjectionV1,
   right: InvoiceDraftProjectionV1,
 ): boolean {
-  return stable(left) === stable(right);
+  return changedReadingMembers(left, right).length === 0;
+}
+
+/** The members a fresh reading changed that the page has a name for, in the
+ * reading's order; empty where only members it has no name for changed. */
+export function changedReadingFields(
+  left: InvoiceDraftProjectionV1,
+  right: InvoiceDraftProjectionV1,
+  named: readonly string[],
+): string[] {
+  return changedReadingMembers(left, right).filter((member) =>
+    named.includes(member),
+  );
+}
+
+/** The country the counterparty's VAT-number prefix names, as the backend
+ * suggests it for a `kind` of invoice: the supplier's of one received, the
+ * customer's of one issued. It names the State that issued the number, not
+ * where the party is established, so the page offers it as a suggestion. */
+export function vatPrefixCountryOf(
+  suggestion: { supplier: string | null; customer: string | null } | null,
+  kind: InvoiceKind | null,
+): string | null {
+  if (suggestion === null) return null;
+  if (kind === "issued") return suggestion.customer;
+  if (kind === "received") return suggestion.supplier;
+  return null;
+}
+
+/** The country the reading states for the counterparty of a `kind` of
+ * invoice: the supplier's of one received, the customer's of one issued. */
+export function readCountryOf(
+  draft: InvoiceDraftProjectionV1,
+  kind: InvoiceKind | null,
+): string | null {
+  if (kind === "issued") return draft.customer_country_code ?? null;
+  if (kind === "received") return draft.supplier_country_code ?? null;
+  return null;
 }
 function stable(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;

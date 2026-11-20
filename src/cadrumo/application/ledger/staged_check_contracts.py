@@ -87,6 +87,9 @@ StagedBlockerKind = Literal[
     "draft_incomplete",
     "amount_signed",
     "needs_withholding_category",
+    "derive_and_figures",
+    "derive_category_differs",
+    "derive_needs_business",
 ]
 
 _Text = Annotated[str, Field(max_length=4096)]
@@ -111,6 +114,11 @@ class LedgerStagedRow(BaseModel):
     cells: Annotated[tuple[LedgerStagedCell, ...], Field(max_length=len(get_args(StageFieldName)))] = ()
     evidence_staged: bool = False
     m210_staged: bool = False
+    iva_derive_staged: _Key | None = None
+    """The IVA category a staged ``ledger.classify.iva-derive`` works the base, rate and IVA out from.
+
+    It is sent after the row's own writes.
+    """
 
     @model_validator(mode="after")
     def _one_cell_per_field(self) -> LedgerStagedRow:

@@ -1523,6 +1523,12 @@ application:
           amount_signed: 'L''import és una magnitud: el sentit ja diu si el diner
             va entrar o va sortir.'
           cannot_clear: 'Aquest valor no es pot buidar: el camp ha de tenir un valor.'
+          derive_and_figures: Calcular els imports substituiria la base, el tipus
+            o l'IVA que has escrit.
+          derive_category_differs: El càlcul fa servir una altra categoria d'IVA que
+            la del moviment.
+          derive_needs_business: Només es calcula l'IVA d'un moviment empresarial
+            o mixt.
           draft_incomplete: Un moviment nou necessita data comptable, import, moneda,
             sentit i descripció abans de poder-se desar.
           mixed_needs_share: Un moviment Mixt necessita una part professional.
@@ -1538,6 +1544,10 @@ application:
           amount_signed: Escriu l'import sense signe i deixa que el sentit digui si
             va entrar o va sortir.
           cannot_clear: Conserva el valor desat.
+          derive_and_figures: Treu els imports que has escrit perquè Cadrumo els calculi,
+            o treu el càlcul.
+          derive_category_differs: Calcula amb la categoria del moviment.
+          derive_needs_business: Classifica'l com a Empresarial o Mixt.
           draft_incomplete: Completa el que li falta al moviment nou.
           mixed_needs_share: Indica la part professional com a percentatge, per exemple
             50 per al 50 %.
@@ -4572,6 +4582,40 @@ application:
     explain:
       errors:
         modelo_blank: L'identificador de model no pot estar en blanc.
+    served:
+      home:
+        declaration_state:
+          discarded: Descartada
+          draft: Esborrany
+          filed: Registrada com a presentada
+          needs_review: Necessita revisió
+          ready: Llesta
+        ledger_summary: '%{entries} apunts; %{requiring_review} necessiten revisió;
+          %{unclassified} sense classificar; %{missing_evidence} sense justificant'
+        reason:
+          blocked_dependency: Una dependència de la declaració està blocada
+          blocked_evidence: Un bloqueig necessita un justificant
+          blocked_review: La feina blocada necessita revisió
+          declaration_needs_review: La declaració necessita revisió
+          evidence_missing: Falta un justificant
+          ledger_classification_pending: Falten apunts per classificar
+        zone:
+          calendar_aeat_reader_unavailable: Encara sense llegir - apareix quan es
+            llegeixen per primera vegada les dades de l'AEAT
+          calendar_taxpayer_model_undeclared: No disponible - el perfil encara no
+            indica quin tipus de contribuent és
+          home_actions_projector_unavailable: No disponible - les properes accions
+            apareixen quan s'han comprovat tots els teus registres
+          home_agenda_projector_unavailable: No disponible - no s'ha pogut calcular
+            el calendari de presentació
+          home_declarations_resume_projector_unavailable: No disponible - no s'han
+            pogut llegir les declaracions per reprendre
+          home_messages_never_pulled: Encara sense llegir - els missatges de l'AEAT
+            apareixen quan es llegeixen per primera vegada les dades de l'AEAT
+          home_taxpayer_profile_incomplete: No disponible - al perfil li falten respostes
+            obligatòries; completa-les al teu perfil
+          ledger_snapshot_projector_unavailable: No disponible - es mostra quan s'han
+            comprovat tots els teus registres
   prorrata_register:
     served:
       gross_declaration_absent: 'El registre ha rebutjat l''eliminació: no hi ha cap

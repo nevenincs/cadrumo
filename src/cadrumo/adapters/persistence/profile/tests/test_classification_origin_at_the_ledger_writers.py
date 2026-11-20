@@ -22,6 +22,7 @@ from cadrumo.application.ledger.actions_manual import link_manual_transaction_in
 from cadrumo.application.ledger.actions_split_merge import split_transaction, split_transaction_with_classified_children
 from cadrumo.application.ledger.llm_classification import apply_llm_classification, derive_operator_iva_substrate
 from cadrumo.application.ledger.llm_classification_ports import LLMClassificationSuggestion
+from cadrumo.application.ledger.manual_read import ledger_transaction_payload
 from cadrumo.application.ledger.manual_update import detach_manual_transaction_attachments
 from cadrumo.application.ledger.models import (
     ManualLedgerTransactionPatch,
@@ -337,3 +338,58 @@ def test_a_link_replaces_the_invoice_a_row_already_links_under_either_label(
 
     assert ledger.row(row).invoice_id == second.invoice_id
     assert row in ledger.invoices.load().invoices[second.invoice_id].linked_transaction_ids
+
+
+def test_a_derivation_on_a_persons_classification_keeps_the_person_as_its_decider_and_marks_the_figures(
+    ledger: Ledger,
+) -> None:
+    by_hand = add_row(ledger, description="classified by hand", classification=BusinessClassification.BUSINESS)
+    before = ledger_transaction_payload(ledger.row(by_hand))
+    assert (before.classification_decided_by, before.figures_derived) == ("manual", False)
+
+    derive(ledger, by_hand, actor=PERSON)
+
+    derived = ledger.row(by_hand)
+    payload = ledger_transaction_payload(derived)
+    assert payload.classified_by == "derived:iva-category"
+    assert payload.classification_decided_by == "manual"
+    assert payload.figures_derived is True
+    assert derived.classification_origin is ClassificationOrigin.PERSON
+
+
+def test_a_derivation_on_a_rules_classification_becomes_the_runners_decision_and_marks_the_figures(
+    ledger: Ledger,
+) -> None:
+    by_rule = add_row_classified_by_a_rule(ledger, description="classified by a rule")
+    ruled = ledger_transaction_payload(ledger.row(by_rule))
+    assert (ruled.classification_decided_by, ruled.figures_derived) == ("rule:synthetic", False)
+
+    derive(ledger, by_rule, actor=PERSON)
+
+    payload = ledger_transaction_payload(ledger.row(by_rule))
+    assert payload.figures_derived is True
+    assert payload.classification_decided_by == "manual"
+
+
+def test_a_derivation_by_an_automation_keeps_the_derivation_stamp_as_the_decider(ledger: Ledger) -> None:
+    by_automation = add_row(
+        ledger,
+        description="classified by an automation",
+        actor=AUTOMATION,
+        classification=BusinessClassification.BUSINESS,
+    )
+
+    derive(ledger, by_automation, actor=AUTOMATION)
+
+    payload = ledger_transaction_payload(ledger.row(by_automation))
+    assert payload.figures_derived is True
+    assert payload.classification_decided_by == payload.classified_by == "derived:iva-category"
+
+
+def test_an_unprocessed_row_serves_its_own_stamp_and_no_derived_figures(ledger: Ledger) -> None:
+    unprocessed = add_row(ledger, description="not yet processed")
+
+    payload = ledger_transaction_payload(ledger.row(unprocessed))
+
+    assert payload.classification_decided_by == payload.classified_by
+    assert payload.figures_derived is False

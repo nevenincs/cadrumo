@@ -157,6 +157,7 @@ def _public_home_payload(filing_status: str) -> dict[str, object]:
         "due_on_text": "20 oct",
         "period_words": "3T",
         "words_language": "es",
+        "filing_status_words": None,
         "filing_status": filing_status,
     }
 

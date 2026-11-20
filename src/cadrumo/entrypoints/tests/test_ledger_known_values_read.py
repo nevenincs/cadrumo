@@ -80,6 +80,7 @@ def _movement(
     row: str,
     *,
     booked: date = date(2028, 3, 1),
+    value_date: date | None = None,
     counterparty: str = "",
     description: str = "movimiento",
     **fields: object,
@@ -87,6 +88,7 @@ def _movement(
     raw = RawTransaction(
         provider_transaction_id=row,
         booked_date=booked,
+        value_date=value_date,
         amount=Decimal("10.00"),
         currency="EUR",
         counterparty=counterparty,
@@ -414,6 +416,48 @@ def test_m210_values_and_asset_references_come_from_their_own_stated_fields(
         ("exp-2024/17", 2, date(2026, 3, 1)),
         ("CERT-9", 1, date(2025, 3, 1)),
     ]
+
+
+@pytest.mark.usefixtures("profile")
+def test_ledger_years_are_those_of_movements_and_of_invoices_alike(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """A year only an invoice holds is offered, a shared year once, and the years read oldest first."""
+    _save_movements(
+        (
+            _movement("late", booked=date(2028, 6, 1)),
+            _movement("early", booked=date(2021, 2, 1)),
+            _movement("valued-later", booked=date(2025, 12, 30), value_date=date(2026, 1, 2)),
+        )
+    )
+    _save_invoices(
+        _invoice("Y-1", name="Proveedor Uno SL", tax_id="B00015016", issued=date(2024, 11, 15)),
+        _invoice("Y-2", name="Proveedor Dos SL", tax_id="B00010157", issued=date(2028, 1, 2)),
+    )
+
+    result = _read(authority_operation, LedgerKnownValueKind.LEDGER_YEAR)
+
+    assert result.ledger_years == (2021, 2024, 2026, 2028)
+    assert result.truncated == ()
+    # Only the kind asked for is read and returned.
+    assert result.counterparties == ()
+    assert result.descriptions == ()
+
+
+@pytest.mark.usefixtures("profile")
+def test_ledger_years_come_from_invoices_when_no_movement_is_held(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    _save_invoices(_invoice("Y-3", name="Proveedor Tres SL", tax_id="B00015016", issued=date(2024, 11, 15)))
+
+    assert _read(authority_operation, LedgerKnownValueKind.LEDGER_YEAR).ledger_years == (2024,)
+
+
+@pytest.mark.usefixtures("profile")
+def test_ledger_years_are_not_read_unless_asked_for(authority_operation: PinnedAuthorityOperation) -> None:
+    _save_invoices(_invoice("Y-4", name="Proveedor Cuatro SL", tax_id="B00015016", issued=date(2024, 11, 15)))
+
+    assert _read(authority_operation, LedgerKnownValueKind.DESCRIPTION).ledger_years == ()
 
 
 def test_a_request_names_at_least_one_kind_and_each_once() -> None:

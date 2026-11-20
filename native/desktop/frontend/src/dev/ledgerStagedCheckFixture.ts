@@ -75,6 +75,11 @@ export function rowQuestion(
     cells: asked.cells,
     evidence_staged: asked.evidence_staged,
     m210_staged: asked.m210_staged,
+    // Left out where nothing is staged, so the questions recorded before it
+    // existed are still the ones asked.
+    ...(asked.iva_derive_staged
+      ? { iva_derive_staged: asked.iva_derive_staged }
+      : {}),
   });
 }
 

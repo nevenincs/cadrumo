@@ -12,14 +12,14 @@ import {
 const LAYERS =
   '[role="dialog"], [role="alertdialog"], [role="menu"], [data-modal-layer]';
 
-/** The area a key or button event came from: a terminal or the browser
- * keeps its own keys; everything else is the window's chrome. */
+/** The area a key or button event came from: a terminal keeps its own keys,
+ * the browser page keeps all but the few a real browser keeps for its chrome;
+ * everything else is the window's chrome. */
 function areaOf(target: EventTarget | null): FocusArea {
-  return (target as HTMLElement | null)?.closest?.(
-    ".xterm, [data-browser-surface]",
-  )
-    ? "terminal"
-    : "chrome";
+  const element = target as HTMLElement | null;
+  if (element?.closest?.(".xterm")) return "terminal";
+  if (element?.closest?.("[data-browser-surface]")) return "browser";
+  return "chrome";
 }
 
 /** Shares one action keymap and modal policy between native keys and docs. */

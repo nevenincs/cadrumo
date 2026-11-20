@@ -16,6 +16,7 @@ import {
   scenarioHost,
   type CalendarShape,
 } from "./scenarioHost";
+import { HOME_SHAPES, type HomeShape } from "./fixtures/home";
 import { HOUSEHOLD_SCENARIOS } from "./householdFixture";
 import { BORRADOR_SCENARIOS } from "./borradorFixture";
 import { ELECTION_SCENARIOS } from "./imputationElectionFixture";
@@ -98,6 +99,11 @@ function readParams() {
       shape !== null && shape in CALENDAR_SHAPES
         ? (shape as CalendarShape)
         : null)(params.get("calendar")),
+    // Another shape of Home, for each standing its zones can have.
+    home: ((shape) =>
+      shape !== null && shape in HOME_SHAPES ? (shape as HomeShape) : null)(
+      params.get("home"),
+    ),
     // The agent's reply with a piece of its stream missing, for how the
     // column recovers it.
     agentStream: params.get("stream") === "gap" ? ("gap" as const) : undefined,
@@ -336,6 +342,7 @@ function Scenarios() {
       logAttachFailures: initial.logAttachFailures,
       logLevel: initial.logLevel,
       calendar: initial.calendar,
+      home: initial.home,
       agentStream: initial.agentStream,
       agentAsks: initial.agentAsks,
       agentDocuments: initial.agentDocuments,

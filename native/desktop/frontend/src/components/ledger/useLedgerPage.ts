@@ -16,7 +16,6 @@ import type { OutputLanguage } from "../../shell/ledgerClassificationContract";
 import type { OpenRuleFromSelection } from "../../shell/ledgerCommands";
 import type { LedgerPeriod } from "../../shell/ledgerGrammar";
 import {
-  annualCode,
   neighbourPeriod,
   periodsHoldingToday,
   periodsHoldingTodayFailed,
@@ -222,11 +221,10 @@ export function useLedgerPage({
   // What an import brought in, as the person asked to see it.
   const [shownImport, setShownImport] = useState<ImportedBatches | null>(null);
   // Read with the page, so the period list never grows under the pointer.
-  // The walk counts each year under the code the backend names the year by.
   const { years, refresh: refreshYears } = useLedgerYears(
     port,
     reader,
-    readable && annualCode() !== null,
+    readable,
   );
   // Where the period dropdown opens while every period is shown: the year
   // that holds today as served, else the calendar year the window is in.

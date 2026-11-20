@@ -11,6 +11,7 @@ import {
 import { takesBusinessShare } from "../../../shell/ledgerClassifications";
 import type { ClassifyBlock } from "../../../shell/ledgerCommands";
 import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
+import { counted } from "../../../shell/compose";
 import type { Translate } from "../../../shell/strings";
 import { wordOrToken } from "../../../shell/tokenWords";
 import { formatPercent } from "../../../shared/numbers";
@@ -174,10 +175,15 @@ export function blockText(t: Translate, block: ClassifyBlock): string {
     case "nothing_selected":
       return t("desktop.ledger.classify.nothing");
     case "hidden":
-      return t("desktop.ledger.selection.hidden", {
-        hidden: block.hidden,
-        selected: block.selected,
-      });
+      return counted(
+        t,
+        block.selected,
+        {
+          one: "desktop.ledger.selection.hidden_one",
+          many: "desktop.ledger.selection.hidden",
+        },
+        { hidden: block.hidden, selected: block.selected },
+      );
     case "transfers_only":
       return t("desktop.ledger.classify.transfers_only");
     case "inactive_only":

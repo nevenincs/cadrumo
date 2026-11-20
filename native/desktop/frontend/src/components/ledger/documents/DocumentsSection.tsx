@@ -1,5 +1,6 @@
 import settings from "virtual:operational-settings";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty";
@@ -27,6 +28,7 @@ import { DraftReview } from "./DraftReview";
 import { fileName, referenceOf } from "./documentsModel";
 import { reasonLabel } from "./documentWords";
 import { EvidenceRecords } from "./EvidenceRecords";
+import { ServedStep } from "./ServedStep";
 import { useLedgerRead } from "./useLedgerRead";
 import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
@@ -145,6 +147,11 @@ export function DocumentsSection({
     () => queue.read.value?.rows ?? [],
     [queue.read.value],
   );
+  // A profile fact every confirm needs and the profile does not state: said
+  // once for the whole queue, in the backend's words, with the step that
+  // supplies it. A draft with no finding of its own is not ready while it
+  // stands.
+  const precondition = queue.read.value?.confirm_precondition ?? null;
   const recordList = useMemo(
     () => records.read.value?.rows ?? [],
     [records.read.value],
@@ -247,144 +254,170 @@ export function DocumentsSection({
     );
   else
     review = (
-      <div className="flex min-h-0 flex-1">
-        <div
-          className={`ledger-review-list flex min-h-0 shrink-0 flex-col border-r border-border ${
-            listOpen ? "w-1/3" : "w-rail"
-          }`}
-          data-open={listOpen || undefined}
-        >
-          <div
-            className={`flex border-b border-border p-1 ${listOpen ? "justify-end" : "justify-center"}`}
+      <div className="flex min-h-0 flex-1 flex-col">
+        {precondition !== null && (
+          <Alert
+            tone="warning"
+            icon={<Icon name="alert" />}
+            className="ledger-review-precondition rounded-none"
           >
-            <IconButton
-              className="ledger-review-list-toggle"
-              label={
-                listOpen
-                  ? t("desktop.ledger.documents.list_hide")
-                  : t("desktop.ledger.documents.list_show")
-              }
-              aria-expanded={listOpen}
-              onClick={() => setListOpen(!listOpen)}
-            >
-              <Icon name={listOpen ? "back" : "forward"} size="sm" />
-            </IconButton>
-          </div>
-          <ul
-            ref={queueList}
-            className="ledger-review-queue min-h-0 flex-1 overflow-y-auto"
-            aria-label={t("desktop.ledger.documents.queue")}
-          >
-            {waiting.map((row) => {
-              const name = nameOf(row.evidence_reference);
-              const confirmedHere = done.has(row.evidence_reference);
-              const state = confirmedHere ? (
-                <span className="inline-flex items-center gap-1">
-                  <Icon name="check" size="xs" className="text-success" />
-                  {listOpen && t("desktop.ledger.documents.confirmed_short")}
-                </span>
-              ) : row.blocking_count > 0 ? (
-                <Badge
-                  variant="warning"
-                  aria-label={t("desktop.ledger.documents.findings_open", {
-                    count: row.blocking_count,
-                  })}
-                  title={facts(
-                    t,
-                    (row.reasons ?? []).map((_, at) =>
-                      reasonLabel(t, row.reason_words?.[at]),
-                    ),
-                  )}
-                >
-                  <Icon name="alert" size="xs" />
-                  {row.blocking_count}
-                </Badge>
-              ) : listOpen ? (
-                <span>{t("desktop.ledger.documents.ready_to_confirm")}</span>
-              ) : (
-                <span className="sr-only">
-                  {t("desktop.ledger.documents.ready_to_confirm")}
-                </span>
-              );
-              const item = (
-                <button
-                  type="button"
-                  className={`ledger-review-item grid w-full cursor-pointer gap-0.5 border-b border-border text-left hover-wash aria-[current=true]:bg-selected ${
-                    listOpen ? "px-3 py-2" : "justify-items-center px-1 py-2"
-                  }`}
-                  aria-current={
-                    row.evidence_reference === selected?.evidence_reference ||
-                    undefined
-                  }
-                  data-reference={row.evidence_reference}
-                  onClick={() => choose(row.evidence_reference)}
-                >
-                  {listOpen ? (
-                    <>
-                      <span className="truncate font-medium">{name}</span>
-                      <span className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
-                        {state}
-                        <span className="ml-auto tabular-nums">
-                          {formatInstantDay(locale, row.drafted_at)}
-                        </span>
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="page" size="sm" />
-                      <span className="sr-only">{name}</span>
-                      {state}
-                    </>
-                  )}
-                </button>
-              );
-              return (
-                <li key={row.evidence_reference}>
-                  {listOpen ? (
-                    item
-                  ) : (
-                    <Tooltip>
-                      <TooltipTrigger asChild>{item}</TooltipTrigger>
-                      <TooltipContent side="right">{name}</TooltipContent>
-                    </Tooltip>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-        <div className="flex min-h-0 min-w-0 flex-1">
-          {selected && (
-            <DraftReview
-              key={selected.evidence_reference}
-              port={port}
-              reader={reader}
-              locale={locale}
-              evidenceReference={selected.evidence_reference}
-              reference={referenceOf(selected.evidence_reference, recordList)}
-              record={
-                recordList.find(
-                  (found) => found.evidence_id === selected.evidence_reference,
-                ) ?? null
-              }
-              fileName={nameOf(selected.evidence_reference)}
-              invoices={invoices.read.value?.invoices ?? null}
-              rows={rows}
-              stage={stage}
-              onStage={onStage}
-              onWritten={() => {
-                records.reread();
-                invoices.reread();
-              }}
-              onConfirmed={(reference) =>
-                setDone((held) => new Set([...held, reference]))
-              }
-              onLinkStaged={focusNext}
-              viewerShare={viewerShare}
-              onViewerShare={setViewerShare}
-              say={setToast}
+            <span>{precondition.words}</span>
+            <ServedStep
+              step={precondition.next_step}
+              className="justify-self-start"
             />
-          )}
+          </Alert>
+        )}
+        <div className="flex min-h-0 flex-1">
+          <div
+            className={`ledger-review-list flex min-h-0 shrink-0 flex-col border-r border-border ${
+              listOpen ? "w-1/3" : "w-rail"
+            }`}
+            data-open={listOpen || undefined}
+          >
+            <div
+              className={`flex border-b border-border p-1 ${listOpen ? "justify-end" : "justify-center"}`}
+            >
+              <IconButton
+                className="ledger-review-list-toggle"
+                label={
+                  listOpen
+                    ? t("desktop.ledger.documents.list_hide")
+                    : t("desktop.ledger.documents.list_show")
+                }
+                aria-expanded={listOpen}
+                onClick={() => setListOpen(!listOpen)}
+              >
+                <Icon name={listOpen ? "back" : "forward"} size="sm" />
+              </IconButton>
+            </div>
+            <ul
+              ref={queueList}
+              className="ledger-review-queue min-h-0 flex-1 overflow-y-auto"
+              aria-label={t("desktop.ledger.documents.queue")}
+            >
+              {waiting.map((row) => {
+                const name = nameOf(row.evidence_reference);
+                const confirmedHere = done.has(row.evidence_reference);
+                const state = confirmedHere ? (
+                  <span className="inline-flex items-center gap-1">
+                    <Icon name="check" size="xs" className="text-success" />
+                    {listOpen && t("desktop.ledger.documents.confirmed_short")}
+                  </span>
+                ) : row.blocking_count > 0 ? (
+                  <Badge
+                    variant="warning"
+                    aria-label={t("desktop.ledger.documents.findings_open", {
+                      count: row.blocking_count,
+                    })}
+                    title={facts(
+                      t,
+                      (row.reasons ?? []).map((_, at) =>
+                        reasonLabel(t, row.reason_words?.[at]),
+                      ),
+                    )}
+                  >
+                    <Icon name="alert" size="xs" />
+                    {row.blocking_count}
+                  </Badge>
+                ) : precondition !== null ? (
+                  <span
+                    className="inline-flex items-center gap-1 text-warning"
+                    title={precondition.words}
+                  >
+                    <Icon name="alert" size="xs" />
+                    <span className={listOpen ? undefined : "sr-only"}>
+                      {precondition.words}
+                    </span>
+                  </span>
+                ) : listOpen ? (
+                  <span>{t("desktop.ledger.documents.ready_to_confirm")}</span>
+                ) : (
+                  <span className="sr-only">
+                    {t("desktop.ledger.documents.ready_to_confirm")}
+                  </span>
+                );
+                const item = (
+                  <button
+                    type="button"
+                    className={`ledger-review-item grid w-full cursor-pointer gap-0.5 border-b border-border text-left hover-wash aria-[current=true]:bg-selected ${
+                      listOpen ? "px-3 py-2" : "justify-items-center px-1 py-2"
+                    }`}
+                    aria-current={
+                      row.evidence_reference === selected?.evidence_reference ||
+                      undefined
+                    }
+                    data-reference={row.evidence_reference}
+                    onClick={() => choose(row.evidence_reference)}
+                  >
+                    {listOpen ? (
+                      <>
+                        <span className="truncate font-medium">{name}</span>
+                        <span className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
+                          {state}
+                          <span className="ml-auto tabular-nums">
+                            {formatInstantDay(locale, row.drafted_at)}
+                          </span>
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="page" size="sm" />
+                        <span className="sr-only">{name}</span>
+                        {state}
+                      </>
+                    )}
+                  </button>
+                );
+                return (
+                  <li key={row.evidence_reference}>
+                    {listOpen ? (
+                      item
+                    ) : (
+                      <Tooltip>
+                        <TooltipTrigger asChild>{item}</TooltipTrigger>
+                        <TooltipContent side="right">{name}</TooltipContent>
+                      </Tooltip>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+          <div className="flex min-h-0 min-w-0 flex-1">
+            {selected && (
+              <DraftReview
+                key={selected.evidence_reference}
+                port={port}
+                reader={reader}
+                locale={locale}
+                evidenceReference={selected.evidence_reference}
+                reference={referenceOf(selected.evidence_reference, recordList)}
+                record={
+                  recordList.find(
+                    (found) =>
+                      found.evidence_id === selected.evidence_reference,
+                  ) ?? null
+                }
+                fileName={nameOf(selected.evidence_reference)}
+                invoices={invoices.read.value?.invoices ?? null}
+                rows={rows}
+                stage={stage}
+                onStage={onStage}
+                onWritten={() => {
+                  records.reread();
+                  invoices.reread();
+                }}
+                onConfirmed={(reference) =>
+                  setDone((held) => new Set([...held, reference]))
+                }
+                onLinkStaged={focusNext}
+                viewerShare={viewerShare}
+                onViewerShare={setViewerShare}
+                say={setToast}
+              />
+            )}
+          </div>
         </div>
       </div>
     );
@@ -428,6 +461,7 @@ export function DocumentsSection({
             inReview={inReview}
             pending={pending}
             readings={queue.read.phase === "failed" ? null : waiting}
+            precondition={precondition?.words ?? null}
             selected={record}
             onSelect={setRecord}
             onWritten={rereadAll}

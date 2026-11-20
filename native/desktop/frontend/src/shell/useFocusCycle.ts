@@ -20,6 +20,7 @@ export function useFocusCycle({
   profilePage,
   ledgerPage,
   declarationsPage,
+  homePage,
   calendarPage,
   aeatSyncPage,
   docs,
@@ -38,6 +39,7 @@ export function useFocusCycle({
   profilePage: PageRef;
   ledgerPage: PageRef;
   declarationsPage: PageRef;
+  homePage: PageRef;
   calendarPage: PageRef;
   aeatSyncPage: PageRef;
   docs: RefObject<DocsFrameApi | null>;
@@ -56,6 +58,7 @@ export function useFocusCycle({
           (profilePage.current !== null ||
             ledgerPage.current !== null ||
             declarationsPage.current !== null ||
+            homePage.current !== null ||
             calendarPage.current !== null ||
             aeatSyncPage.current !== null ||
             !!docs.current),
@@ -64,6 +67,7 @@ export function useFocusCycle({
             profilePage.current ??
             ledgerPage.current ??
             declarationsPage.current ??
+            homePage.current ??
             calendarPage.current ??
             aeatSyncPage.current ??
             docs.current
@@ -126,6 +130,7 @@ export function useFocusCycle({
       profilePage,
       ledgerPage,
       declarationsPage,
+      homePage,
       calendarPage,
       aeatSyncPage,
       docs,

@@ -1058,6 +1058,15 @@ async fn profile_views_calendar(
 ) -> Result<views::FilingCalendar> {
     host.filing_calendar(from, to, language).await
 }
+/// Home: only the `home` state of the product's workbench generation read
+/// for the signed-in profile, in `language`.
+#[tauri::command]
+async fn profile_views_home(
+    host: State<'_, Arc<ProfileHost>>,
+    language: String,
+) -> Result<views::HomeState> {
+    host.home(language).await
+}
 #[tauri::command]
 async fn profile_views_record_groups(
     host: State<'_, Arc<ProfileHost>>,
@@ -1103,6 +1112,7 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         profile_aeat_credential_save,
         profile_views_notifications,
         profile_views_calendar,
+        profile_views_home,
         profile_views_record_groups
     ]
 }

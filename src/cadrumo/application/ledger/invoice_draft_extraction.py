@@ -741,6 +741,7 @@ def _extract_invoice_fields_from_structured_record(
     from .grounding_anchor import (
         country_code_value,
         resolved_country_code,
+        sole_stated_iva_rate,
         stated_country_code,
         structured_provenance,
     )
@@ -796,6 +797,11 @@ def _extract_invoice_fields_from_structured_record(
         rectifies_invoice_number=parsed.rectifies_invoice_number,
         invoice_date=parsed.invoice_date,
         taxable_base=parsed.taxable_base,
+        # The invoice-level rate exists only where one rate describes the whole
+        # invoice. A record charging several carries them in ``iva_breakdown``
+        # and leaves this unset: any single value here would be a rate part of
+        # the base was never charged at.
+        iva_rate=sole_stated_iva_rate(parsed.iva_breakdown),
         iva_amount=parsed.iva_amount,
         grand_total=parsed.grand_total,
         currency=parsed.currency,

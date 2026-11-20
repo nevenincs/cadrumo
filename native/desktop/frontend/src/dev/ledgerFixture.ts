@@ -148,6 +148,9 @@ export const LEDGER_SHAPES = [
   // The `documents` ledger on a computer whose local AI is set up but has no
   // model picked to read with.
   "no_reading_model",
+  // The `documents` ledger for a profile that states no fiscal-address
+  // postcode, which no confirmation can go without.
+  "missing_postcode",
 ] as const;
 export type LedgerShape = (typeof LEDGER_SHAPES)[number];
 
@@ -604,9 +607,11 @@ export function ledgerFixture(options: Options): LedgerPort {
     seed:
       shape === "documents" ||
       shape === "reader_missing" ||
-      shape === "no_reading_model",
+      shape === "no_reading_model" ||
+      shape === "missing_postcode",
     readerMissing: shape === "reader_missing",
     noReadingModel: shape === "no_reading_model",
+    missingPostcode: shape === "missing_postcode",
     language: options.language ?? "en",
   });
   const reads: Partial<

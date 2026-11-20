@@ -201,7 +201,7 @@ def test_the_shipped_register_declares_the_initial_elements() -> None:
     register = load_navigation_register()
     gui = NavigationSurface.GUI
     assert {element.id: set(element.surfaces) for element in register.elements} == {
-        "home": set(),
+        "home": {gui},
         "ledger": {gui},
         "ledger/movements": {gui},
         "ledger/invoices": {gui},

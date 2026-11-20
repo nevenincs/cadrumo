@@ -17,7 +17,7 @@ import { failureCode } from "../../../errors";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Toast } from "@/components/ui/toast";
-import { facts, labelled, listed } from "@/shell/compose";
+import { counted, facts, labelled, listed } from "@/shell/compose";
 import {
   ContextMenu,
   type MenuAnchor,
@@ -271,6 +271,18 @@ export function MovementsSection({
     inWindow ? [] : scopes,
     periodWindow.phase === "ready" ? periodWindow.generation : null,
   );
+  // A scope read that is not answered yet keeps no movement, and before the
+  // window is read it is not asked at all: either way the rows drawn are not
+  // yet the rows the filters keep, so nothing is concluded from them.
+  const scopedRead =
+    (inWindow ? [] : scopes).length > 0 &&
+    port !== undefined &&
+    reader !== null;
+  const filtering =
+    scopedRead &&
+    (membership.kind === "reading" ||
+      (membership.kind === "none" && periodWindow.phase !== "failed"));
+  const settling = filtering || periodWindow.phase === "reading";
   const members = useMemo(
     () =>
       membership.kind === "ready"
@@ -464,7 +476,7 @@ export function MovementsSection({
     shown: (id) => visibleSet.has(id),
     hiding: (id) => {
       const row = byId.get(id);
-      if (!row || membership.kind === "reading") return null;
+      if (!row || filtering) return null;
       const hiding = movementHiding(row, {
         filters,
         sets,
@@ -485,7 +497,7 @@ export function MovementsSection({
           );
       };
     },
-    settled: periodWindow.phase === "ready" && membership.kind !== "reading",
+    settled: periodWindow.phase === "ready" && !filtering,
     reveal: (id, focus) => {
       setSelection(new Set([id]));
       if (focus) grid.current?.focusCell(id);
@@ -539,21 +551,23 @@ export function MovementsSection({
     setSpoken("");
   }, [stagedUnits]);
 
-  // A filter that leads somewhere selects and focuses its first movement
-  // once the rows it keeps are drawn.
+  // A filter that leads somewhere focuses its first movement once the rows it
+  // keeps are drawn, and selects it where the filter is a door to fixing it;
+  // an import's movements are only shown, so the person selects what they mean.
   const [focusWanted, setFocusWanted] = useState<{
     column: ColumnId;
     rows: readonly string[];
+    select: boolean;
   } | null>(null);
   useEffect(() => {
     if (focusWanted === null || focusWanted.rows === visible) return;
-    if (membership.kind === "reading") return;
+    if (filtering) return;
     setFocusWanted(null);
     const first = visible[0];
     if (!first) return;
-    setSelection(new Set([first]));
+    if (focusWanted.select) setSelection(new Set([first]));
     grid.current?.focusCell(first, focusWanted.column);
-  }, [focusWanted, visible, membership.kind, setSelection]);
+  }, [focusWanted, visible, filtering, setSelection]);
 
   // An import's movements, when the person asks to see them.
   const [answeredImport, setAnsweredImport] = useState<ImportedBatches | null>(
@@ -562,7 +576,7 @@ export function MovementsSection({
   useEffect(() => {
     if (!shownImport || shownImport === answeredImport) return;
     setAnsweredImport(shownImport);
-    setFocusWanted({ column: "description", rows: visible });
+    setFocusWanted({ column: "description", rows: visible, select: false });
     replaceFilters({ ...NO_FILTERS, importBatches: [...shownImport.batches] });
   }, [shownImport, answeredImport, visible, replaceFilters]);
 
@@ -587,21 +601,14 @@ export function MovementsSection({
   const shownFields = pageEditing.shownFields ?? null;
   const onFieldsShown = pageEditing.onFieldsShown;
   useEffect(() => {
-    if (!shownFields || membership.kind === "reading") return;
+    if (!shownFields || filtering) return;
     if (!order.includes(shownFields.column)) return;
     const first = shownFields.ids.find((id) => visible.includes(id));
     onFieldsShown?.();
     if (!first) return;
     setSelection(new Set(shownFields.ids));
     grid.current?.focusCell(first, shownFields.column);
-  }, [
-    shownFields,
-    onFieldsShown,
-    order,
-    visible,
-    membership.kind,
-    setSelection,
-  ]);
+  }, [shownFields, onFieldsShown, order, visible, filtering, setSelection]);
 
   const setLayout = (nextOrder: ColumnId[], hidden: ColumnId[]) =>
     onViewChange((current) => ({
@@ -703,7 +710,7 @@ export function MovementsSection({
 
   // ---- Leading to the fix ----------------------------------------------------
   const leadTo = (next: MovementFilters, column: ColumnId) => {
-    setFocusWanted({ column, rows: visible });
+    setFocusWanted({ column, rows: visible, select: true });
     setFilters(next);
     onOpenInspector?.("classify");
   };
@@ -954,9 +961,15 @@ export function MovementsSection({
   // ---- What the toolbar and banners say --------------------------------------
   const selectedNote =
     selected.size > 0
-      ? t("desktop.ledger.selected", {
-          count: formatCount(locale, selected.size),
-        })
+      ? counted(
+          t,
+          selected.size,
+          {
+            one: "desktop.ledger.selected_one",
+            many: "desktop.ledger.selected",
+          },
+          { count: formatCount(locale, selected.size) },
+        )
       : "";
   const shownNote = partial
     ? t("desktop.ledger.loaded_of", {
@@ -971,7 +984,7 @@ export function MovementsSection({
           shown: formatCount(locale, filtered.length),
           total: formatCount(locale, rows.length),
         });
-  const status = facts(t, [shownNote, selectedNote]);
+  const status = facts(t, [settling ? "" : shownNote, selectedNote]);
   const unsaved = stageTally(stage.content).units;
   const stagedClassify = stagedClassifyCount(sets.toClassify, stage.content);
   const groupLabels = useMemo(
@@ -1062,7 +1075,7 @@ export function MovementsSection({
           selectionActions={selectionActions}
         />
       </div>
-      {membership.kind === "reading" && (
+      {filtering && (
         <p role="status" className="text-sm text-muted-foreground">
           {t("desktop.ledger.filters.reading")}
         </p>
@@ -1089,9 +1102,9 @@ export function MovementsSection({
         missing={t("desktop.ledger.reveal.movement_missing")}
       />
       <MovementWindowNotices
-        hiddenSelected={hiddenSelected.length}
+        hiddenSelected={settling ? 0 : hiddenSelected.length}
         selected={selected.size}
-        allShownSelected={extent === "all"}
+        allShownSelected={extent === "all" && !settling}
         hiddenByFilters={hiddenByFilters}
         shown={visible.length}
         loaded={rows.length}
@@ -1188,29 +1201,31 @@ export function MovementsSection({
           setLayout([...shown, ...rest], [...layout.hidden]);
         }}
         empty={
-          <EmptyState
-            className="ledger-filtered-empty"
-            icon="search"
-            heading={t("desktop.ledger.empty_filtered")}
-            description={t("desktop.ledger.empty_filtered_detail", {
-              count: hiddenByFilters,
-              period: shownPeriod,
-            })}
-          >
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setFilters(NO_FILTERS);
-                setSearch("");
-              }}
+          settling ? null : (
+            <EmptyState
+              className="ledger-filtered-empty"
+              icon="search"
+              heading={t("desktop.ledger.empty_filtered")}
+              description={t("desktop.ledger.empty_filtered_detail", {
+                count: hiddenByFilters,
+                period: shownPeriod,
+              })}
             >
-              {t("desktop.ledger.filters.clear_all")}
-            </Button>
-          </EmptyState>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setFilters(NO_FILTERS);
+                  setSearch("");
+                }}
+              >
+                {t("desktop.ledger.filters.clear_all")}
+              </Button>
+            </EmptyState>
+          )
         }
       />
-      {periodWindow.phase === "reading" && (
+      {!filtering && periodWindow.phase === "reading" && (
         <p role="status" className="text-xs text-muted-foreground">
           {t("desktop.ledger.loading")}
         </p>
