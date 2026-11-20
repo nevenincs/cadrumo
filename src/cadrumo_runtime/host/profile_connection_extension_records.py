@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo_client.contracts.access_refusals import AccessDenied
 from cadrumo_client.contracts.contracts import ByteChannel
 from cadrumo_client.contracts.extension_records import (
@@ -165,19 +166,26 @@ def run_extension_exchange(exchange: ExtensionExchange, payload: bytearray, acti
             if not exchange.active():
                 exchange.refuse(ExtensionRecordRefusal.LEASE_INACTIVE)
                 return
-            result, material = exchange.host.owner.extension_record(
-                ProfileWorkerExtensionRecordRequest(
-                    request_id=exchange.request.request_id, request=exchange.request, policy=exchange.policy
-                ),
-                payload if action == "write" else None,
+            ended = (
+                ExtensionRecordRefusal.OUTCOME_UNKNOWN
+                if action in {"write", "delete"}
+                else ExtensionRecordRefusal.LEASE_INACTIVE
             )
+            try:
+                result, material = exchange.host.owner.extension_record(
+                    ProfileWorkerExtensionRecordRequest(
+                        request_id=exchange.request.request_id, request=exchange.request, policy=exchange.policy
+                    ),
+                    payload if action == "write" else None,
+                )
+            except ProfileAccessRefusedError:
+                # The worker ended the session before the runtime's own sweep saw it:
+                # an expected end of this lease, answered to the service, not a runtime fault.
+                exchange.refuse(ended)
+                return
             status = exchange.status()
             if not isinstance(status, ProfileStatus) or status.status.denial is not None:
-                exchange.refuse(
-                    ExtensionRecordRefusal.OUTCOME_UNKNOWN
-                    if action in {"write", "delete"}
-                    else ExtensionRecordRefusal.LEASE_INACTIVE
-                )
+                exchange.refuse(ended)
                 return
             deadline = time.monotonic() + _REPLY_WRITE_SECONDS
             write_document(exchange.channel, result, deadline=deadline)

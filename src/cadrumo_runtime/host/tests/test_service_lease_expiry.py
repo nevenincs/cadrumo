@@ -20,6 +20,7 @@ from cadrumo_client.contracts.extension_records import (
 from cadrumo_client.contracts.profile_access import SessionRequest, SessionsLocked
 
 from ...application import session_authority_delegation
+from .. import profile_connection_extension_records as extension_records
 from .test_service_records import RECORD_CAPABILITY, service_record_runtime
 
 pytestmark = [
@@ -161,3 +162,38 @@ def test_service_read_cannot_reclaim_after_parent_retirement(tmp_path: Path, gen
         assert service.lease is None
         assert service.claim() is None
         assert service.claim() is None
+
+
+def test_a_lease_the_worker_ended_first_is_refused_and_the_runtime_keeps_serving(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with service_record_runtime(tmp_path) as runtime:
+        monkeypatch.setattr(session_authority_delegation, "ACCESS_LEASE_MAXIMUM", timedelta(seconds=4))
+        service = runtime.connect_service()
+        runtime.admit(service)
+        original = service.claim()
+        assert original is not None
+        # The worker ends the lapsed session on its own; the runtime's view of
+        # the lease is held current, as when its sweep has not run yet.
+        monkeypatch.setattr(extension_records, "extension_status_active", lambda *_args: True)
+        monkeypatch.setattr(extension_records, "extension_current", lambda *_args: True)
+        time.sleep(4.5)
+        request = ExtensionRecordRequest(
+            action="extension_record_read",
+            request_id=uuid4(),
+            profile_id=runtime.profile_id,
+            session_id=original.session_id,
+            lease_id=original.lease_id,
+            capability=RECORD_CAPABILITY,
+            object_key="synthetic-expiry",
+        )
+        stale, material = service.connection.extension_record(request, deadline=time.monotonic() + 10)
+        assert isinstance(stale, ExtensionRecordReply)
+        assert stale.refusal is ExtensionRecordRefusal.LEASE_INACTIVE and not material
+        monkeypatch.undo()
+        # The runtime still serves the same connection after the refusal.
+        again, material = service.connection.extension_record(
+            request.model_copy(update={"request_id": uuid4()}), deadline=time.monotonic() + 10
+        )
+        assert isinstance(again, ExtensionRecordReply)
+        assert again.refusal is ExtensionRecordRefusal.LEASE_INACTIVE and not material
