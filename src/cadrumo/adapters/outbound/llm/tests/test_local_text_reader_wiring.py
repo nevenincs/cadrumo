@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo_client.contracts.model_runs import ModelRunTaskKind
 
 from .....core.config_support import LLMProvider
 from .....core.model_roles import ModelRole
@@ -58,6 +59,9 @@ def test_the_text_reader_names_the_agent_and_its_role_and_carries_no_images() ->
     assert request.provider_override is LLMProvider.AGENT
     assert request.model_override is None, "the agent resolves the model for the role"
     assert request.model_role is ModelRole.TEXT_EXTRACTION
+    assert request.task_kind is ModelRunTaskKind.CLASSIFICATION, (
+        "the agent service runs it on the classification setting"
+    )
     assert request.evidence_derived
     assert not request.images, "a text read must carry no images"
     assert request.prompt == "classify this"
@@ -71,8 +75,10 @@ def test_an_on_host_lane_reads_the_evidence_without_consent(tmp_path: Path) -> N
 
     assert response.classification is BusinessClassification.BUSINESS
     assert service.lookups == [ModelRole.TEXT_EXTRACTION]
+    assert service.lookup_task_kinds == [ModelRunTaskKind.CLASSIFICATION]
     ((header, body),) = service.runs
     assert header.role == ModelRole.TEXT_EXTRACTION.value
+    assert header.task_kind is ModelRunTaskKind.CLASSIFICATION
     assert header.consent is None
     assert "Office supplies 12,10 EUR" in body.prompt
 

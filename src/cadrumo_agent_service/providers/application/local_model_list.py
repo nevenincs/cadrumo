@@ -10,7 +10,8 @@ kept in a record capability of its own, apart from the provider records.
 The same record keeps the model the person selected in the agent's model
 picker, on any lane the catalogue reports, local or not. Document reading runs
 with that one model. It also keeps the local engine setting: which engine runs
-models on this computer and where it runs them.
+models on this computer and where it runs them; and, per task kind the agent
+serves, the lane, model and effort the person set for that kind's runs.
 
 The service is bound to one profile's list store and performs the person's
 acts:
@@ -18,6 +19,7 @@ acts:
 * add a model to a local lane's list by name;
 * remove a model the person added;
 * store the model the person selected to read with;
+* set or clear the lane, model and effort of one task kind;
 * choose the local engine and its placement;
 * reset the record, readable or not, at the revision the caller read.
 
@@ -33,6 +35,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
+from enum import StrEnum
 from typing import Final
 
 from pydantic import TypeAdapter, ValidationError
@@ -42,11 +45,13 @@ from cadrumo.core.time.clock import now
 
 from ..domain.catalog import (
     BackgroundInput,
+    EffortLevel,
     LiveCatalogModel,
     ModelCapability,
     ProviderAuthKind,
     ProviderCatalog,
     ProviderCatalogEntry,
+    TaskKindId,
 )
 from ..domain.record import (
     DEFAULT_LOCAL_PLACEMENT,
@@ -57,6 +62,7 @@ from ..domain.record import (
     LocalModelListRecord,
     LocalPlacement,
     ModelId,
+    TaskModel,
     new_settings_generation,
 )
 from .contracts import (
@@ -68,6 +74,7 @@ from .contracts import (
     ProviderSettingsRefusal,
     ProviderSettingsRefusalCode,
     ReadingSource,
+    TaskModelEntry,
     is_provider_settings_revision,
 )
 from .ports import (
@@ -167,6 +174,41 @@ def effective_reading(
         if stand_in is not None:
             return EffectiveReading(model=ListedModel(lane=entry.id, model=stand_in), source=ReadingSource.DEFAULT)
     return EffectiveReading(model=None, source=ReadingSource.NONE)
+
+
+class TaskModelUsability(StrEnum):
+    """Whether the model a person set for a task kind can run now, and if not, why."""
+
+    USABLE = "usable"
+    LANE_NOT_SERVED = "lane_not_served"
+    """The lane belongs to a local engine the profile does not run."""
+    NOT_LISTED = "not_listed"
+    """A model on a lane on this computer that the lane's list no longer holds."""
+    NOT_INSTALLED = "not_installed"
+    """The live catalogue states the lane's local server does not hold the model."""
+
+
+def task_model_usability(
+    task: ListedModel,
+    added: tuple[ListedModel, ...],
+    entry: ProviderCatalogEntry,
+    engine: LocalEngine | None,
+    live_models: LiveCatalogModels,
+) -> TaskModelUsability:
+    """Judge a task kind's stored model on its catalogue ``entry`` by the rule the stored reading choice follows.
+
+    Unlike the reading choice, nothing stands in for an unusable task model:
+    the caller refuses it.
+    """
+    if not serves_engine_lane(entry.provider, engine):
+        return TaskModelUsability.LANE_NOT_SERVED
+    if entry.auth_kind is not ProviderAuthKind.NONE:
+        return TaskModelUsability.USABLE
+    if not _model_is_listed(entry, task.model, added):
+        return TaskModelUsability.NOT_LISTED
+    if _installed(entry, task.model, live_models) is False:
+        return TaskModelUsability.NOT_INSTALLED
+    return TaskModelUsability.USABLE
 
 
 def _choice_is_usable(
@@ -288,7 +330,9 @@ class LocalModelListService:
         if len(kept) >= LOCAL_MODEL_LIST_MAX_MODELS:
             return _refused(ProviderSettingsRefusalCode.MODEL_LIST_FULL)
         listed = (*kept, ListedModel(lane=entry.id, model=model))
-        return self._list_answer(self._commit(listed, _reading_of(record), _setting_of(record), expected_revision))
+        return self._list_answer(
+            self._commit(listed, _reading_of(record), _setting_of(record), _tasks_of(record), expected_revision)
+        )
 
     def remove(self, lane: str, *, model: str, expected_revision: str) -> LocalModelListResult:
         """Remove ``model``, which the person added to ``lane``'s list; a recommended model stays listed."""
@@ -303,7 +347,9 @@ class LocalModelListService:
         if not any(held.lane == lane and held.model == model for held in added):
             return _refused(ProviderSettingsRefusalCode.UNKNOWN)
         kept = tuple(held for held in _kept(added, catalog) if (held.lane, held.model) != (lane, model))
-        return self._list_answer(self._commit(kept, _reading_of(record), _setting_of(record), expected_revision))
+        return self._list_answer(
+            self._commit(kept, _reading_of(record), _setting_of(record), _tasks_of(record), expected_revision)
+        )
 
     def choose_reading(self, lane: str, *, model: str, expected_revision: str) -> LocalModelListResult:
         """Store ``model`` on ``lane`` as the model documents are read with.
@@ -327,7 +373,64 @@ class LocalModelListService:
         if _reading_of(record) == chosen:
             return self._list_status(read)
         added = () if record is None else record.models
-        return self._list_answer(self._commit(_kept(added, catalog), chosen, _setting_of(record), expected_revision))
+        return self._list_answer(
+            self._commit(_kept(added, catalog), chosen, _setting_of(record), _tasks_of(record), expected_revision)
+        )
+
+    def choose_task(
+        self,
+        task_kind: str,
+        *,
+        model: ListedModel | None,
+        effort: str | None,
+        expected_revision: str,
+    ) -> LocalModelListResult:
+        """Store ``model`` and ``effort`` as the setting of ``task_kind``, or clear it when ``model`` is ``None``.
+
+        The kind must be one the agent's catalogue serves, and the lane one
+        it reports to this profile; a model on a lane on this computer must be
+        on that lane's list, as the picker offers it. Whether the lane honours
+        ``effort`` for the model is decided when a run starts, against what
+        the running agent states then. A kind with no setting runs on the
+        model documents are read with. Storing the setting already stored
+        answers the record unchanged.
+        """
+        if not _is_task_kind(task_kind) or (model is None and effort is not None):
+            return _refused(ProviderSettingsRefusalCode.UNKNOWN)
+        if effort is not None and not _is_effort(effort):
+            return _refused(ProviderSettingsRefusalCode.UNKNOWN)
+        catalog = self._catalog()
+        if isinstance(catalog, ProviderSettingsRefusal):
+            return catalog
+        if not any(kind.id == task_kind for kind in catalog.task_kinds):
+            return _refused(ProviderSettingsRefusalCode.UNKNOWN)
+        current = self._current(expected_revision)
+        if isinstance(current, ProviderSettingsRefusal):
+            return current
+        record, read = current
+        added = () if record is None else record.models
+        if model is not None and not self._task_model_is_offered(catalog, model, added):
+            return _refused(ProviderSettingsRefusalCode.UNKNOWN)
+        setting = (
+            None if model is None else TaskModel(task_kind=task_kind, lane=model.lane, model=model.model, effort=effort)
+        )
+        stored = _tasks_of(record)
+        if (None if record is None else record.task(task_kind)) == setting:
+            return self._list_status(read)
+        tasks = _with_task(stored, task_kind, setting)
+        return self._list_answer(
+            self._commit(_kept(added, catalog), _reading_of(record), _setting_of(record), tasks, expected_revision)
+        )
+
+    def _task_model_is_offered(
+        self, catalog: ProviderCatalog, model: ListedModel, added: tuple[ListedModel, ...]
+    ) -> bool:
+        if not _is_model_id(model.model):
+            return False
+        entry = next((held for held in engine_lanes(catalog, self.selected_engine) if held.id == model.lane), None)
+        if entry is None:
+            return False
+        return entry.auth_kind is not ProviderAuthKind.NONE or _model_is_listed(entry, model.model, added)
 
     def engine_status(self) -> LocalEngineResult:
         """Return the local engine setting, or a typed refusal."""
@@ -353,7 +456,7 @@ class LocalModelListService:
         if _setting_of(record) == (engine, placement):
             return _engine_status(read, self._default_engine)
         added = () if record is None else record.models
-        committed = self._commit(added, _reading_of(record), (engine, placement), expected_revision)
+        committed = self._commit(added, _reading_of(record), (engine, placement), _tasks_of(record), expected_revision)
         if isinstance(committed, ProviderSettingsRefusal):
             return committed
         return _engine_status(committed, self._default_engine)
@@ -428,6 +531,7 @@ class LocalModelListService:
         models: tuple[ListedModel, ...],
         reading: ListedModel | None,
         setting: tuple[LocalEngine | None, LocalPlacement | None],
+        tasks: tuple[TaskModel, ...],
         expected_revision: str,
     ) -> StoredLocalModelList | ProviderSettingsRefusal:
         engine, placement = setting
@@ -437,6 +541,7 @@ class LocalModelListService:
             reading=reading,
             engine=engine,
             placement=placement,
+            tasks=tasks,
             generation=new_settings_generation(),
             updated_at=self._clock(),
         )
@@ -470,6 +575,19 @@ def _kept(added: Iterable[ListedModel], catalog: ProviderCatalog) -> tuple[Liste
 
 def _reading_of(record: LocalModelListRecord | None) -> ListedModel | None:
     return None if record is None else record.reading
+
+
+def _tasks_of(record: LocalModelListRecord | None) -> tuple[TaskModel, ...]:
+    return () if record is None else record.tasks
+
+
+def _with_task(tasks: tuple[TaskModel, ...], task_kind: str, setting: TaskModel | None) -> tuple[TaskModel, ...]:
+    """Return ``tasks`` with ``task_kind``'s setting replaced in place, appended, or removed when it is None."""
+    if setting is None:
+        return tuple(task for task in tasks if task.task_kind != task_kind)
+    if any(task.task_kind == task_kind for task in tasks):
+        return tuple(setting if task.task_kind == task_kind else task for task in tasks)
+    return (*tasks, setting)
 
 
 def _setting_of(record: LocalModelListRecord | None) -> tuple[LocalEngine | None, LocalPlacement | None]:
@@ -511,6 +629,22 @@ def _is_model_id(model: str) -> bool:
     return True
 
 
+def _is_task_kind(task_kind: str) -> bool:
+    try:
+        TypeAdapter(TaskKindId).validate_python(task_kind)
+    except ValidationError:
+        return False
+    return True
+
+
+def _is_effort(effort: str) -> bool:
+    try:
+        TypeAdapter(EffortLevel).validate_python(effort)
+    except ValidationError:
+        return False
+    return True
+
+
 def _list_revision(read: LocalModelListRead) -> str:
     if isinstance(read, AbsentLocalModelList):
         return ABSENT_SECURE_OBJECT_REVISION_ID
@@ -525,6 +659,7 @@ def _list_status(read: LocalModelListRead, lanes: tuple[str, ...], reading: Effe
             models=(),
             reading=None,
             reading_source=ReadingSource.NONE,
+            tasks=(),
             local_lanes=lanes,
             revision=read.revision,
         )
@@ -536,6 +671,10 @@ def _list_status(read: LocalModelListRead, lanes: tuple[str, ...], reading: Effe
         models=tuple(LocalModelListEntry(lane=held.lane, model=held.model) for held in models),
         reading=None if model is None else LocalModelListEntry(lane=model.lane, model=model.model),
         reading_source=reading.source,
+        tasks=tuple(
+            TaskModelEntry(task_kind=task.task_kind, lane=task.lane, model=task.model, effort=task.effort)
+            for task in (record.tasks if record is not None else ())
+        ),
         local_lanes=lanes,
         revision=_list_revision(read),
     )
@@ -548,9 +687,11 @@ def _refused(code: ProviderSettingsRefusalCode) -> ProviderSettingsRefusal:
 __all__ = [
     "EffectiveReading",
     "LocalModelListService",
+    "TaskModelUsability",
     "effective_reading",
     "engine_lanes",
     "listed_models",
     "local_lanes",
     "serves_engine_lane",
+    "task_model_usability",
 ]

@@ -62,6 +62,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRefusal,
     ModelRunRefusalCode,
     ModelRunServed,
+    ModelRunTaskKind,
     decode_model_run_body,
 )
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
@@ -131,7 +132,13 @@ class _AnsweringLease(WorkerAuthorizationLease):
 
     @override
     def model_run(
-        self, role: str, header: ModelRunHeader | None, body: bytearray, *, answer_seconds: float
+        self,
+        role: str,
+        header: ModelRunHeader | None,
+        body: bytearray,
+        *,
+        answer_seconds: float,
+        task_kind: ModelRunTaskKind | None = None,
     ) -> tuple[ModelRunOutcome, bytearray]:
         self._answers.append((self._fence, role, header, bytes(body)))
         outcome, text = self._outcome

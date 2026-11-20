@@ -21,6 +21,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
+    ModelRunTaskKind,
 )
 
 from ....adapters.agent_background_runs import HostedBackgroundRuns
@@ -31,6 +32,7 @@ from ...domain.record import (
     LocalEngine,
     LocalModelListRecord,
     LocalPlacement,
+    TaskModel,
     new_settings_generation,
 )
 from ..contracts import ProviderSettingsActionAccepted, ProviderSettingsStatus
@@ -129,9 +131,15 @@ def _harness(
     return runs, settings, gateway
 
 
-def _store(model_list: MemoryLocalModelListStore, *added: tuple[str, str], reading: tuple[str, str] | None) -> None:
-    """Store the models added to the local lists and the model the person selected to read with."""
+def _store(
+    model_list: MemoryLocalModelListStore,
+    *added: tuple[str, str],
+    reading: tuple[str, str] | None,
+    tasks: tuple[TaskModel, ...] = (),
+) -> None:
+    """Store the models added to the local lists, the model the person selected to read with and task settings."""
     record = LocalModelListRecord(
+        tasks=tasks,
         schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
         engine=LocalEngine.OLLAMA,
         placement=LocalPlacement.AUTO,
@@ -169,8 +177,13 @@ def _store_key(settings: ProviderSettingsService, lane: str) -> None:
     assert isinstance(stored, ProviderSettingsActionAccepted)
 
 
-def _header(*, role: str = "text_extraction", consent: ModelRunConsentBinding | None = None) -> ModelRunHeader:
-    return ModelRunHeader(role=role, deadline_seconds=30, consent=consent)
+def _header(
+    *,
+    role: str = "text_extraction",
+    consent: ModelRunConsentBinding | None = None,
+    task_kind: ModelRunTaskKind | None = None,
+) -> ModelRunHeader:
+    return ModelRunHeader(role=role, task_kind=task_kind, deadline_seconds=30, consent=consent)
 
 
 def _consent(provider_id: str, model: str = KEYLESS_TEXT_MODEL, *, transport: str = "api") -> ModelRunConsentBinding:
@@ -568,4 +581,151 @@ def test_a_tax_run_names_no_effort_even_where_the_lane_and_model_take_one() -> N
     assert isinstance(runs.run(_header(), _BODY), ModelRunOutput)
 
     assert gateway.options == [(BackgroundOption.EFFORT,)]
+    assert gateway.efforts == [None]
+
+
+def _tasked(
+    *tasks: TaskModel,
+    reading: tuple[str, str] = (KEYLESS_LANE, KEYLESS_TEXT_MODEL),
+    added: tuple[tuple[str, str], ...] = (),
+) -> MemoryLocalModelListStore:
+    """A list whose reading model is local, with ``tasks`` set per kind."""
+    model_list = MemoryLocalModelListStore()
+    _store(model_list, *added, reading=reading, tasks=tasks)
+    return model_list
+
+
+def _task(kind: ModelRunTaskKind, lane: str, model: str, effort: str | None = None) -> TaskModel:
+    return TaskModel(task_kind=kind.value, lane=lane, model=model, effort=effort)
+
+
+_CLASSIFY = ModelRunTaskKind.CLASSIFICATION
+_EXTRACT = ModelRunTaskKind.EXTRACTION
+
+
+def test_a_task_kind_with_a_setting_resolves_to_it_before_the_picked_reading_model() -> None:
+    runs, settings, gateway = _harness(MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, KEY_LANE, _HOSTED_TEXT)))
+    _store_key(settings, KEY_LANE)
+
+    assert runs.lookup("text_extraction", task_kind=_CLASSIFY) == _hosted(_HOSTED_TEXT)
+    assert isinstance(
+        runs.run(_header(task_kind=_CLASSIFY, consent=_consent("example", _HOSTED_TEXT)), _BODY), ModelRunOutput
+    )
+    assert gateway.runs[0][0] == _hosted(_HOSTED_TEXT)
+
+
+def test_a_task_kind_without_a_setting_and_a_run_naming_no_kind_use_the_picked_reading_model() -> None:
+    runs, settings, _ = _harness(MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, KEY_LANE, _HOSTED_TEXT)))
+    _store_key(settings, KEY_LANE)
+
+    assert runs.lookup("text_extraction", task_kind=_EXTRACT) == _declared(KEYLESS_TEXT_MODEL)
+    assert runs.lookup("text_extraction") == _declared(KEYLESS_TEXT_MODEL)
+
+
+def test_a_task_setting_that_cannot_run_refuses_and_the_reading_model_never_stands_in() -> None:
+    runs, settings, gateway = _harness(MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, KEY_LANE, _HOSTED_TEXT)))
+    _store_key(settings, OTHER_KEY_LANE)
+
+    assert runs.lookup("text_extraction", task_kind=_CLASSIFY) == _LANE_UNAVAILABLE
+    assert runs.run(_header(task_kind=_CLASSIFY), _BODY) == _LANE_UNAVAILABLE
+    assert gateway.runs == []
+
+
+def test_a_task_setting_on_a_lane_the_catalogue_no_longer_reports_is_unavailable() -> None:
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, "gone_api", "some-model")))
+
+    assert runs.lookup("text_extraction", task_kind=_CLASSIFY) == _LANE_UNAVAILABLE
+
+
+def test_a_task_setting_keeps_the_capability_refusals_of_the_role() -> None:
+    runs, settings, _ = _harness(MemoryProviderSettingsStore(), _tasked(_task(_EXTRACT, KEY_LANE, _HOSTED_TEXT)))
+    _store_key(settings, KEY_LANE)
+
+    assert runs.lookup("vision_transcription", task_kind=_EXTRACT) == _NO_IMAGES
+    assert runs.lookup("text_extraction", task_kind=_EXTRACT) == _hosted(_HOSTED_TEXT)
+
+
+def test_a_task_setting_on_a_local_model_taken_off_its_list_refuses_as_no_selection() -> None:
+    live = _installed((_ADDED, False, True))
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, KEYLESS_LANE, _ADDED)), live)
+
+    assert runs.lookup("text_extraction", task_kind=_CLASSIFY) == _NO_SELECTION
+
+
+def test_a_task_setting_on_a_local_model_the_server_lacks_refuses_as_not_installed() -> None:
+    live = _installed((_ADDED, False, False))
+    model_list = _tasked(_task(_CLASSIFY, KEYLESS_LANE, _ADDED), added=((KEYLESS_LANE, _ADDED),))
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), model_list, live)
+
+    assert runs.lookup("text_extraction", task_kind=_CLASSIFY) == ModelRunRefusal(
+        code=ModelRunRefusalCode.MODEL_NOT_INSTALLED
+    )
+
+
+def test_a_task_setting_on_an_added_local_model_the_server_holds_runs_on_it() -> None:
+    live = _installed((_ADDED, False, True))
+    model_list = _tasked(_task(_CLASSIFY, KEYLESS_LANE, _ADDED), added=((KEYLESS_LANE, _ADDED),))
+    runs, _, gateway = _harness(MemoryProviderSettingsStore(), model_list, live)
+
+    assert isinstance(runs.run(_header(task_kind=_CLASSIFY), _BODY), ModelRunOutput)
+    assert gateway.runs[0][0].model == _ADDED
+
+
+def test_consent_must_name_the_task_setting_s_off_host_lane_not_the_reading_model_s() -> None:
+    runs, settings, gateway = _harness(MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, KEY_LANE, _HOSTED_TEXT)))
+    _store_key(settings, KEY_LANE)
+
+    assert runs.run(_header(task_kind=_CLASSIFY), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
+    refused = runs.run(_header(task_kind=_CLASSIFY, consent=_consent("local")), _BODY)
+    assert refused == ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
+    assert gateway.runs == []
+
+
+def _effort_live(*options: BackgroundOption, levels: tuple[str, ...]) -> StaticLiveModels:
+    return StaticLiveModels(
+        {("local", "api"): (live_model(KEYLESS_TEXT_MODEL, vision=False, installed=True),)},
+        backgrounds={("local", "api"): _background(None, *options, model_efforts={KEYLESS_TEXT_MODEL: levels})},
+    )
+
+
+def test_a_task_setting_s_effort_is_sent_where_the_lane_honours_effort_and_the_model_lists_the_level() -> None:
+    live = _effort_live(BackgroundOption.EFFORT, levels=("low", "high"))
+    runs, _, gateway = _harness(
+        MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, KEYLESS_LANE, KEYLESS_TEXT_MODEL, "high")), live
+    )
+
+    assert isinstance(runs.run(_header(task_kind=_CLASSIFY), _BODY), ModelRunOutput)
+    assert gateway.efforts == ["high"]
+    assert gateway.options == [(BackgroundOption.EFFORT,)]
+
+
+@pytest.mark.parametrize(
+    ("options", "levels"),
+    [
+        pytest.param((BackgroundOption.TEMPERATURE,), ("low", "high"), id="lane-does-not-honour-effort"),
+        pytest.param((BackgroundOption.EFFORT,), ("low",), id="model-does-not-list-the-level"),
+        pytest.param((BackgroundOption.EFFORT,), (), id="model-states-no-level"),
+    ],
+)
+def test_a_task_setting_s_effort_the_lane_does_not_offer_refuses_before_anything_is_sent(
+    options: tuple[BackgroundOption, ...], levels: tuple[str, ...]
+) -> None:
+    live = _effort_live(*options, levels=levels)
+    runs, _, gateway = _harness(
+        MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, KEYLESS_LANE, KEYLESS_TEXT_MODEL, "high")), live
+    )
+
+    assert runs.run(_header(task_kind=_CLASSIFY), _BODY) == ModelRunRefusal(
+        code=ModelRunRefusalCode.OPTION_NOT_SUPPORTED
+    )
+    assert gateway.runs == []
+
+
+def test_a_task_setting_without_an_effort_names_none() -> None:
+    live = _effort_live(BackgroundOption.EFFORT, levels=("low", "high"))
+    runs, _, gateway = _harness(
+        MemoryProviderSettingsStore(), _tasked(_task(_CLASSIFY, KEYLESS_LANE, KEYLESS_TEXT_MODEL)), live
+    )
+
+    assert isinstance(runs.run(_header(task_kind=_CLASSIFY), _BODY), ModelRunOutput)
     assert gateway.efforts == [None]

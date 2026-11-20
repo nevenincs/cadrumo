@@ -18,6 +18,7 @@ from ..model_runs import (
     ModelRunOutcome,
     ModelRunRefusalCode,
     ModelRunServed,
+    ModelRunTaskKind,
     decode_model_run_body,
     encode_model_run_body,
     model_run_media_kind,
@@ -55,13 +56,20 @@ def test_the_three_well_formed_outcomes_are_accepted() -> None:
     assert ModelRunOutcome(refusal=ModelRunRefusalCode.CONSENT_MISSING).refusal is ModelRunRefusalCode.CONSENT_MISSING
 
 
-def _fetched(header: ModelRunHeader | None, body_byte_count: int, *, role: str = "text_extraction") -> ModelRunFetched:
+def _fetched(
+    header: ModelRunHeader | None,
+    body_byte_count: int,
+    *,
+    role: str = "text_extraction",
+    task_kind: ModelRunTaskKind | None = None,
+) -> ModelRunFetched:
     return ModelRunFetched(
         request_id=uuid4(),
         runtime_boot_id=uuid4(),
         connection_id=uuid4(),
         run_id=uuid4(),
         role=role,
+        task_kind=task_kind,
         header=header,
         body_byte_count=body_byte_count,
     )
@@ -81,6 +89,21 @@ def test_a_run_names_its_headers_role() -> None:
     header = ModelRunHeader(role="text_extraction", deadline_seconds=10)
     with pytest.raises(ValidationError):
         _fetched(header, 5, role="vision_transcription")
+
+
+def test_a_run_names_its_headers_task_kind_and_a_lookup_names_its_own() -> None:
+    header = ModelRunHeader(role="text_extraction", task_kind=ModelRunTaskKind.CLASSIFICATION, deadline_seconds=10)
+    assert _fetched(header, 5, task_kind=ModelRunTaskKind.CLASSIFICATION).task_kind is ModelRunTaskKind.CLASSIFICATION
+    assert _fetched(None, 0, task_kind=ModelRunTaskKind.EXTRACTION).task_kind is ModelRunTaskKind.EXTRACTION
+    with pytest.raises(ValidationError):
+        _fetched(header, 5, task_kind=ModelRunTaskKind.EXTRACTION)
+    with pytest.raises(ValidationError):
+        _fetched(header, 5)
+
+
+def test_a_task_kind_outside_the_agents_vocabulary_is_refused() -> None:
+    with pytest.raises(ValidationError):
+        ModelRunHeader.model_validate({"role": "text_extraction", "task_kind": "summary", "deadline_seconds": 10})
 
 
 def test_consent_matches_its_own_lane_and_no_other() -> None:

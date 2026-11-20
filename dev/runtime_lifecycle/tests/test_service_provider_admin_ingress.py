@@ -68,11 +68,13 @@ class _AdminRecorder:
         secret: bytearray | None = None,
         run_id: str | None = None,
         permission_request_id: str | None = None,
-        scope: Literal["once", "session", "remember"] | None = None,
+        scope: Literal["once", "session", "remember", "decline"] | None = None,
         grant_id: str | None = None,
         conversation_id: str | None = None,
         engine: LocalEngine | None = None,
         placement: LocalPlacement | None = None,
+        task_kind: str | None = None,
+        effort: str | None = None,
     ) -> dict[str, JsonValue]:
         values: dict[str, str | bytearray | None] = {
             "provider": provider,

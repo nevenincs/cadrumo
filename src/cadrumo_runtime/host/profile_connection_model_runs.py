@@ -194,6 +194,7 @@ class ProfileConnectionModelRunsMixin:
                     connection_id=context.connection_id,
                     run_id=request.run_id,
                     role=command.role,
+                    task_kind=command.task_kind,
                     header=command.header,
                     body_byte_count=len(pending.body),
                 ),

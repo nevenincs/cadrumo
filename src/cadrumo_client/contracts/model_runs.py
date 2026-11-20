@@ -94,12 +94,25 @@ class ModelRunRefusalCode(StrEnum):
     """
     INPUT_NOT_SUPPORTED = "input_not_supported"
     OPTION_NOT_SUPPORTED = "option_not_supported"
-    """The run named a reply option its lane does not honour: a caller defect, not a configuration gap."""
+    """The run named a reply option its lane does not honour, or an effort the lane does not offer its model."""
     RUN_FAILED = "run_failed"
     OUTPUT_INVALID = "output_invalid"
     TIMEOUT = "timeout"
     REFUSED_BY_PROVIDER = "refused_by_provider"
     CONSENT_MISSING = "consent_missing"
+
+
+class ModelRunTaskKind(StrEnum):
+    """The kind of task a run does, in cadrumo-agent's background task kind vocabulary.
+
+    The values are the agent's pinned API spelling. A run that names a kind
+    runs on the lane, model and effort the person set for that kind in the
+    agent's settings, else on the model documents are read with. The agent
+    service owns that setting; a run names only its kind.
+    """
+
+    CLASSIFICATION = "classification"
+    EXTRACTION = "extraction"
 
 
 class ModelRunMediaKind(StrEnum):
@@ -199,15 +212,17 @@ class ModelRunBody(BaseModel):
 
 
 class ModelRunHeader(BaseModel):
-    """The non-secret part of a run: the role, the bound on its time and the consent it carries.
+    """The non-secret part of a run: the role, its task kind, the bound on its time and the consent it carries.
 
     ``consent`` is required when the lane the role resolves to reads
-    off-host, and must then name that lane.
+    off-host, and must then name that lane. ``task_kind`` is ``None`` for a
+    run that names no kind, which runs on the model documents are read with.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     role: Annotated[str, Field(pattern=_ROLE)]
+    task_kind: ModelRunTaskKind | None = None
     deadline_seconds: Annotated[int, Field(ge=1, le=MODEL_RUN_MAX_DEADLINE_SECONDS)]
     consent: ModelRunConsentBinding | None = None
 
@@ -308,16 +323,23 @@ class ModelRunFetchRequest(BaseModel):
     run_id: UUID
 
 
-def require_run_carries_a_body(*, header: ModelRunHeader | None, role: str, body_byte_count: int) -> None:
+def require_run_carries_a_body(
+    *, header: ModelRunHeader | None, role: str, task_kind: ModelRunTaskKind | None, body_byte_count: int
+) -> None:
     """Refuse a run whose body and header disagree, on every hop that carries one."""
     if (header is None) != (body_byte_count == 0):
         raise ValueError("a run carries a body and a lookup carries none")
     if header is not None and header.role != role:
         raise ValueError("a run names the role its header names")
+    if header is not None and header.task_kind != task_kind:
+        raise ValueError("a run names the task kind its header names")
 
 
 class ModelRunFetched(BaseModel):
-    """The waiting request: a run when ``header`` is present, whose body follows, otherwise a lookup of ``role``."""
+    """The waiting request: a run when ``header`` is present, whose body follows, otherwise a lookup.
+
+    A lookup asks for ``role`` and ``task_kind``; a run's header names the same pair.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -327,12 +349,15 @@ class ModelRunFetched(BaseModel):
     connection_id: UUID
     run_id: UUID
     role: Annotated[str, Field(pattern=_ROLE)]
+    task_kind: ModelRunTaskKind | None = None
     header: ModelRunHeader | None = None
     body_byte_count: Annotated[NonNegativeInt, Field(le=MODEL_RUN_MAX_BODY_BYTES)] = 0
 
     @model_validator(mode="after")
     def _run_carries_a_body(self) -> Self:
-        require_run_carries_a_body(header=self.header, role=self.role, body_byte_count=self.body_byte_count)
+        require_run_carries_a_body(
+            header=self.header, role=self.role, task_kind=self.task_kind, body_byte_count=self.body_byte_count
+        )
         return self
 
 
@@ -407,6 +432,7 @@ __all__ = [
     "ModelRunRefusalCode",
     "ModelRunRequested",
     "ModelRunServed",
+    "ModelRunTaskKind",
     "decode_model_run_body",
     "encode_model_run_body",
     "model_run_media_kind",

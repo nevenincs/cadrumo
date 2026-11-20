@@ -16,6 +16,8 @@ from functools import wraps
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator
 
+from cadrumo_client.contracts.model_runs import ModelRunTaskKind
+
 from ....core.config_support import LLMProvider, RetiredLLMProvider
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.hashing import sha256_hex
@@ -162,6 +164,14 @@ class LLMRequest(BaseModel):
         description=(
             "The job this request does. The agent service selects the lane and model for it, "
             "so a request dispatched to the agent must name one."
+        ),
+    )
+    task_kind: ModelRunTaskKind | None = Field(
+        default=None,
+        exclude=True,
+        description=(
+            "The kind of task this request does. The agent service runs it on the model the person set "
+            "for that kind, else on the model documents are read with; ``None`` names no kind."
         ),
     )
     response_schema: dict[str, JsonValue] | None = Field(

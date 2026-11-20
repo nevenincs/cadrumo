@@ -1096,6 +1096,18 @@ export interface HostCommands {
     args: Authorized<{ lane: string; model: string; expectedRevision: string }>;
     result: LocalModelListStatus;
   };
+  /** Sets the lane, model and effort one task kind runs with, or with no lane
+   * and model clears it, at the revision read. */
+  agent_task_model_choose: {
+    args: Authorized<{
+      taskKind: string;
+      lane: string | null;
+      model: string | null;
+      effort: string | null;
+      expectedRevision: string;
+    }>;
+    result: LocalModelListStatus;
+  };
   /** One model's licence text, from the ready agent's licence route. */
   agent_model_licence: {
     args: Authorized<{ provider: string; transport: string; model: string }>;

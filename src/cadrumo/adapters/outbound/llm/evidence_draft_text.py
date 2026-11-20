@@ -51,6 +51,8 @@ import asyncio
 from collections.abc import Collection
 from typing import TYPE_CHECKING
 
+from cadrumo_client.contracts.model_runs import ModelRunTaskKind
+
 from ....application.ledger.document_transcription import DocumentTranscription
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ....application.ledger.invoice_draft_records import InvoiceDraft
@@ -292,6 +294,7 @@ class TextInvoiceFieldExtractor:
             evidence_derived=not self._public_corpus,
             consent_token=self._consent_token,
             model_role=ModelRole.TEXT_EXTRACTION,
+            task_kind=ModelRunTaskKind.EXTRACTION,
             expects_json=True,
             response_schema=invoice_extraction_response_schema(self._fields),
         )

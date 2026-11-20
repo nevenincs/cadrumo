@@ -19,6 +19,8 @@ from __future__ import annotations
 
 import asyncio
 
+from cadrumo_client.contracts.model_runs import ModelRunTaskKind
+
 from ....core.config import Settings, load_settings
 from ....core.config_support import LLMProvider
 from ....core.model_roles import ModelRole
@@ -132,5 +134,6 @@ class TextLLMClassifier:
             evidence_derived=True,
             consent_token=self._consent_token,
             model_role=ModelRole.TEXT_EXTRACTION,
+            task_kind=ModelRunTaskKind.CLASSIFICATION,
             expects_json=True,
         )

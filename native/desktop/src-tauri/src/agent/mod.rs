@@ -571,6 +571,7 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_local_model_remove,
         agent_local_models_reset,
         agent_reading_model_choose,
+        agent_task_model_choose,
         agent_local_engine,
         agent_local_engine_choose,
         agent_model_licence,
@@ -985,6 +986,46 @@ async fn agent_reading_model_choose(
         )
     })
     .await
+}
+
+/// Sets the lane, model and effort `task_kind` runs with, or, with no lane and
+/// model, clears it so the kind runs on the model documents are read with, at
+/// the revision the person read. The kind and the effort are the agent's own
+/// vocabulary, served in its catalogue; the service checks the kind against it.
+#[tauri::command]
+async fn agent_task_model_choose(
+    host: State<'_, Arc<AgentHost>>,
+    task_kind: String,
+    lane: Option<String>,
+    model: Option<String>,
+    effort: Option<String>,
+    expected_revision: String,
+) -> std::result::Result<Value, Refused> {
+    let chosen = match (&lane, &model) {
+        (Some(lane), Some(model)) => local_models::is_lane(lane) && local_models::is_model(model),
+        (None, None) => effort.is_none(),
+        _ => false,
+    };
+    if !chosen
+        || !local_models::is_task_kind(&task_kind)
+        || !effort.as_deref().is_none_or(local_models::is_effort)
+        || !local_models::is_revision(&expected_revision)
+    {
+        return refused("agent_invalid_request");
+    }
+    let mut request = serde_json::json!({
+        "action": "task_model_choose",
+        "task_kind": task_kind,
+        "expected_revision": expected_revision,
+    });
+    if let (Some(lane), Some(model)) = (lane, model) {
+        request["provider"] = Value::from(lane);
+        request["model"] = Value::from(model);
+    }
+    if let Some(effort) = effort {
+        request["effort"] = Value::from(effort);
+    }
+    blocking(&host, move |host| change_local_models(host, request)).await
 }
 
 /// Removes the list record, readable or not, at the revision the person read.

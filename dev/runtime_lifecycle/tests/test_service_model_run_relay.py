@@ -24,6 +24,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
+    ModelRunTaskKind,
     decode_model_run_body,
     encode_model_run_body,
 )
@@ -54,12 +55,14 @@ class _Runs:
     def __init__(self) -> None:
         self.bodies: list[ModelRunBody] = []
         self.lookups: list[str] = []
+        self.task_kinds: list[ModelRunTaskKind | None] = []
         self.started = Event()
         self.release = Event()
         self.block = False
 
-    def lookup(self, role: str) -> ModelRunLane | ModelRunRefusal:
+    def lookup(self, role: str, *, task_kind: ModelRunTaskKind | None = None) -> ModelRunLane | ModelRunRefusal:
         self.lookups.append(role)
+        self.task_kinds.append(task_kind)
         if role == "vision_transcription":
             return ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
         return _LANE
@@ -87,8 +90,8 @@ def _admitted_service(runtime: ServiceRecordRuntime, runs: _Runs) -> tuple[Insta
     return service, relay
 
 
-def _lookup(role: str = "text_extraction") -> WorkerModelRun:
-    return WorkerModelRun(request_id=uuid4(), permit_id=uuid4(), command_id=uuid4(), role=role)
+def _lookup(role: str = "text_extraction", task_kind: ModelRunTaskKind | None = None) -> WorkerModelRun:
+    return WorkerModelRun(request_id=uuid4(), permit_id=uuid4(), command_id=uuid4(), role=role, task_kind=task_kind)
 
 
 def _run(body: bytearray) -> WorkerModelRun:
@@ -115,6 +118,21 @@ def test_a_lookup_reaches_the_admitted_service_and_returns_its_lane(tmp_path: Pa
     assert outcome.lane == _LANE
     assert runs.lookups == ["text_extraction"]
     assert text == bytearray()
+
+
+def test_a_lookup_carries_its_task_kind_to_the_admitted_service(tmp_path: Path) -> None:
+    with service_record_runtime(tmp_path, model_runs=True) as runtime:
+        runs = _Runs()
+        _, relay = _admitted_service(runtime, runs)
+        try:
+            outcome, _ = runtime.profiles._relay_model_run(
+                runtime.profile_id, _lookup(task_kind=ModelRunTaskKind.CLASSIFICATION), bytearray()
+            )
+        finally:
+            relay.close()
+
+    assert outcome.lane == _LANE
+    assert runs.task_kinds == [ModelRunTaskKind.CLASSIFICATION]
 
 
 def test_a_lookup_returns_the_admitted_services_role_refusal(tmp_path: Path) -> None:

@@ -644,6 +644,14 @@ function tauriAgent(call: HostCall): {
         }),
       chooseReadingModel: (lane, model, expectedRevision) =>
         call("agent_reading_model_choose", { lane, model, expectedRevision }),
+      chooseTaskModel: (taskKind, choice, expectedRevision) =>
+        call("agent_task_model_choose", {
+          taskKind,
+          lane: choice?.lane ?? null,
+          model: choice?.model ?? null,
+          effort: choice?.effort ?? null,
+          expectedRevision,
+        }),
       modelLicence: (provider, transport, model) =>
         call("agent_model_licence", { provider, transport, model }),
       skills: () =>

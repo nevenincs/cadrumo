@@ -14,6 +14,7 @@ from typing import Any, get_args
 from pydantic import SecretStr
 
 from cadrumo.core.config import load_settings
+from cadrumo.core.logging import get_logger
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from .adapters.agent_attachment_gateway import GatewayAttachments
@@ -50,6 +51,7 @@ from .providers.application.attachment_releases import (
 from .providers.application.contracts import (
     LocalEngineStatus,
     LocalModelListResult,
+    ProviderSettingsRefusal,
     ServiceRefusalCode,
     SignInMethod,
 )
@@ -58,7 +60,7 @@ from .providers.application.model_runs import ModelRunService
 from .providers.application.ports import ProviderCatalogUnavailableError
 from .providers.application.resolution import ProviderCredentialResolver
 from .providers.application.service import AssistantAuthChoice, BaseUrlChange, ProviderSettingsService
-from .providers.domain.record import LocalEngine, LocalPlacement
+from .providers.domain.record import ListedModel, LocalEngine, LocalPlacement
 from .providers.persistence.attachment_disclosures import SecureAttachmentDisclosureStore
 from .providers.persistence.store import SecureLocalModelListStore, SecureProviderSettingsStore
 from .service_attachment_admin import answer_attachment_admin
@@ -72,6 +74,8 @@ from .service_support import (
     PROFILE_READ_SECONDS,
     HeldLaneLog,
 )
+
+_LOGGER = get_logger(__name__)
 
 
 class AgentServiceAdministration(ABC):
@@ -250,6 +254,8 @@ class AgentServiceAdministration(ABC):
         conversation_id: str | None = None,
         engine: str | None = None,
         placement: str | None = None,
+        task_kind: str | None = None,
+        effort: str | None = None,
     ) -> Any:
         """Apply one bounded masked administration request under the live lease."""
         if action.startswith("attachment_"):
@@ -283,6 +289,8 @@ class AgentServiceAdministration(ABC):
             "secret": secret,
             "engine": engine,
             "placement": placement,
+            "task_kind": task_kind,
+            "effort": effort,
         }
         return self._lifecycle_admin(action, arguments)
 
@@ -443,6 +451,8 @@ class AgentServiceAdministration(ABC):
         secret: bytearray | None,
         engine: str | None = None,
         placement: str | None = None,
+        task_kind: str | None = None,
+        effort: str | None = None,
     ) -> Any:
         refusal = self._admin_refusal(action)
         if refusal is not None:
@@ -455,6 +465,8 @@ class AgentServiceAdministration(ABC):
             return self._change_local_models(action, lane=provider, model=model, expected_revision=expected_revision)
         if action == "local_engine_choose":
             return self._choose_local_engine(engine, placement, expected_revision)
+        if action == "task_model_choose":
+            return self._choose_task_model(task_kind, provider, model, effort, expected_revision)
         if provider is None or expected_revision is None:
             return {"kind": "refused", "code": "invalid_request"}
         return self._provider_admin(action, provider, expected_revision, base_url, choice, method, secret)
@@ -534,6 +546,35 @@ class AgentServiceAdministration(ABC):
             controller.supersede()
             self._forget_reads()
             self._replace_superseded()
+        return result.model_dump(mode="json")
+
+    def _choose_task_model(
+        self,
+        task_kind: str | None,
+        lane: str | None,
+        model: str | None,
+        effort: str | None,
+        expected_revision: str | None,
+    ) -> dict[str, Any]:
+        """Set, or with no lane and model clear, the lane, model and effort one task kind runs with."""
+        if task_kind is None or expected_revision is None or (lane is None) != (model is None):
+            return {"kind": "refused", "code": "invalid_request"}
+        chosen = None if lane is None or model is None else ListedModel(lane=lane, model=model)
+        result = self._local_models.choose_task(
+            task_kind, model=chosen, effort=effort, expected_revision=expected_revision
+        )
+        # Every change of what a task kind runs with is recorded, and so is its refusal.
+        if isinstance(result, ProviderSettingsRefusal):
+            _LOGGER.info("task model setting refused task_kind=%s code=%s", task_kind, result.code.value)
+        else:
+            _LOGGER.info(
+                "task model setting stored task_kind=%s lane=%s model=%s effort=%s",
+                task_kind,
+                lane or "-",
+                model or "-",
+                effort or "-",
+            )
+        # Like the reading model, a task setting moves no provider-settings generation and no tree.
         return result.model_dump(mode="json")
 
     def _apply_local_model_change(

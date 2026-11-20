@@ -340,8 +340,7 @@ desktop:
           description: Lee qué hace una operación y qué necesita.
           label: Describir una operación
         execute:
-          description: Envía una operación en tu perfil. Puede cambiar
-            tus datos.
+          description: Envía una operación en tu perfil. Puede cambiar tus datos.
           label: Ejecutar una operación
         observe:
           description: Comprueba cómo va una operación enviada.
@@ -359,8 +358,7 @@ desktop:
           description: Lee una revisión que espera tu respuesta.
           label: Leer una revisión
         search:
-          description: Busca las operaciones que el agente puede ejecutar
-            en tu perfil.
+          description: Busca las operaciones que el agente puede ejecutar en tu perfil.
           label: Buscar operaciones
         status:
           description: Comprueba en qué perfil has autorizado trabajar al agente y
@@ -683,6 +681,15 @@ desktop:
     status_setup_needed: Sin configurar
     status_sign_in_needed: Sin sesión iniciada
     status_unconfirmed: Inicio de sesión sin confirmar
+    task_model_effort: Esfuerzo para {task}
+    task_model_model: Modelo para {task}
+    task_model_reading: Usa el modelo de lectura
+    task_model_refused: No se ha podido cambiar con qué se ejecuta esta tarea. Vuelve
+      a intentarlo.
+    task_model_saved: Guardado.
+    task_models_intro: Elige con qué modelo se ejecuta cada tipo de tarea. Una tarea
+      que no configures usa el modelo con el que se leen los documentos.
+    task_models_title: Modelos por tarea
     title: Proveedores de IA
     use_in_agent: Usar {provider} ({connection}) en el agente
   rail:

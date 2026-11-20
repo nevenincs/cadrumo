@@ -20,6 +20,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
+    ModelRunTaskKind,
 )
 
 from .....application.operations.model_runs import ModelRunPort
@@ -125,6 +126,7 @@ class AgentAdapter(ProviderAdapter):
         *,
         port: ModelRunPort,
         role: ModelRole,
+        task_kind: ModelRunTaskKind | None,
         lane: ModelRunLane,
         consent: ModelRunConsentBinding | None,
         deadline_seconds: int,
@@ -132,7 +134,9 @@ class AgentAdapter(ProviderAdapter):
     ) -> None:
         """Bind the adapter to one resolved lane."""
         self._port, self._role, self._lane = port, role, lane
-        self._header = ModelRunHeader(role=role.value, deadline_seconds=deadline_seconds, consent=consent)
+        self._header = ModelRunHeader(
+            role=role.value, task_kind=task_kind, deadline_seconds=deadline_seconds, consent=consent
+        )
         self._expects_json = expects_json
 
     @override

@@ -34,6 +34,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRefusalCode,
     ModelRunRequested,
     ModelRunServed,
+    ModelRunTaskKind,
     decode_model_run_body,
 )
 from cadrumo_client.contracts.profile_access import ProfileStatus
@@ -65,8 +66,8 @@ _ANSWERING_THREADS = 4
 class ModelRunAnswers(Protocol):
     """The agent-side answers to a profile's lane lookups and runs."""
 
-    def lookup(self, role: str) -> ModelRunLane | ModelRunRefusal:
-        """Return the lane a run for ``role`` would use."""
+    def lookup(self, role: str, *, task_kind: ModelRunTaskKind | None = None) -> ModelRunLane | ModelRunRefusal:
+        """Return the lane a run for ``role`` doing ``task_kind`` would use."""
         ...
 
     def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
@@ -96,11 +97,15 @@ def model_run_service_descriptor() -> InstalledServiceDescriptor:
 
 
 def _outcome(
-    answers: ModelRunAnswers, role: str, header: ModelRunHeader | None, body: bytearray
+    answers: ModelRunAnswers,
+    role: str,
+    task_kind: ModelRunTaskKind | None,
+    header: ModelRunHeader | None,
+    body: bytearray,
 ) -> tuple[ModelRunOutcome, bytearray]:
     """Shape one answer as the agent service's relay returns it to the runtime."""
     if header is None:
-        lane = answers.lookup(role)
+        lane = answers.lookup(role, task_kind=task_kind)
         if isinstance(lane, ModelRunRefusal):
             return ModelRunOutcome(refusal=lane.code), bytearray()
         return ModelRunOutcome(lane=lane), bytearray()
@@ -126,7 +131,7 @@ def _answer(service: InstalledServiceClient, answers: ModelRunAnswers, run_id: U
         return
     reply, body = fetched
     try:
-        outcome, text = _outcome(answers, reply.role, reply.header, body)
+        outcome, text = _outcome(answers, reply.role, reply.task_kind, reply.header, body)
     finally:
         body[:] = bytes(len(body))
     try:

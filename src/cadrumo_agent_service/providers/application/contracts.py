@@ -21,7 +21,15 @@ from cadrumo.core.hex import is_hex64
 from cadrumo.core.json_contract import OutputSchema
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 
-from ..domain.catalog import LaneId, ProviderAuthKind, ProviderConsumer, ProviderId, ProviderTransport
+from ..domain.catalog import (
+    EffortLevel,
+    LaneId,
+    ProviderAuthKind,
+    ProviderConsumer,
+    ProviderId,
+    ProviderTransport,
+    TaskKindId,
+)
 from ..domain.record import LocalEngine, LocalPlacement, ModelId
 
 ProviderSettingsRevision = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
@@ -332,6 +340,20 @@ class LocalModelListEntry(OutputSchema):
     model: ModelId
 
 
+class TaskModelEntry(OutputSchema):
+    """The lane, model and effort the person set for one task kind.
+
+    ``task_kind`` is the agent's id for the kind, from its served catalogue.
+    ``effort`` is ``None`` when the person set none, and the run then names
+    no effort. A kind with no entry runs on the model documents are read with.
+    """
+
+    task_kind: TaskKindId
+    lane: LaneId
+    model: ModelId
+    effort: EffortLevel | None
+
+
 class ReadingSource(StrEnum):
     """Where the model documents are read with comes from."""
 
@@ -354,7 +376,9 @@ class LocalModelListStatus(OutputSchema):
     is ``None``. Every reading of a document uses this same selection.
     ``local_lanes`` are the catalogue's
     local lane ids, whose models a picker offers from their lists; none when
-    the catalogue cannot be read. ``unreadable`` means a stored list
+    the catalogue cannot be read. ``tasks`` are the settings the person
+    stored per task kind, in the order stored; a kind without one runs on
+    ``reading``. ``unreadable`` means a stored list
     record cannot be read. Then no model is listed or selected, because
     nothing is known, and ``revision`` guards the reset that removes the
     record. Every state carries a revision, so an unreadable record always
@@ -365,13 +389,14 @@ class LocalModelListStatus(OutputSchema):
     models: tuple[LocalModelListEntry, ...]
     reading: LocalModelListEntry | None
     reading_source: ReadingSource
+    tasks: tuple[TaskModelEntry, ...]
     local_lanes: tuple[LaneId, ...]
     revision: ProviderSettingsRevision
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _models_follow_readability(self) -> Self:
-        if self.unreadable and (self.models or self.reading is not None):
+        if self.unreadable and (self.models or self.reading is not None or self.tasks):
             raise ValueError("an unreadable record lists and selects no model")
         if (self.reading is None) != (self.reading_source is ReadingSource.NONE):
             raise ValueError("a reading has a source, and no reading has none")
@@ -449,5 +474,6 @@ __all__ = [
     "ProviderStatusReason",
     "ReadingSource",
     "ServiceRefusalCode",
+    "TaskModelEntry",
     "is_provider_settings_revision",
 ]

@@ -38,6 +38,7 @@ for (const outcome of ["success", "failure"] as const)
         ...(chosen
           ? { reading: wanted, reading_source: "chosen" as const }
           : { reading: null, reading_source: "none" as const }),
+        tasks: [],
         local_lanes: [],
         revision,
       });

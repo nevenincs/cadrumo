@@ -20,6 +20,12 @@ const MODEL_LIMIT: usize = 512;
 const MODELS_LIMIT: usize = 64;
 /// The most local lanes a snapshot names.
 const LANES_LIMIT: usize = 64;
+/// The most task kind settings a snapshot names: the agent's catalogue bound on its kinds.
+const TASKS_LIMIT: usize = 64;
+/// The longest task kind id, as the agent names one.
+const TASK_KIND_LIMIT: usize = 64;
+/// The longest effort level, as the agent spells one.
+const EFFORT_LIMIT: usize = 32;
 
 /// One lane and one of its models: added to the lane's list, or selected to
 /// read documents with.
@@ -27,6 +33,16 @@ const LANES_LIMIT: usize = 64;
 pub struct ListedModel {
     pub lane: String,
     pub model: String,
+}
+
+/// The lane, model and effort the person set for one task kind the agent serves;
+/// `effort` is `None` when the person set none.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TaskModel {
+    pub task_kind: String,
+    pub lane: String,
+    pub model: String,
+    pub effort: Option<String>,
 }
 
 /// Where the model documents are read with comes from, as the service serves it:
@@ -50,6 +66,7 @@ pub enum LocalModels {
         models: Vec<ListedModel>,
         reading: Option<ListedModel>,
         reading_source: ReadingSource,
+        tasks: Vec<TaskModel>,
         local_lanes: Vec<String>,
         revision: String,
     },
@@ -117,10 +134,11 @@ pub fn served(answer: Value) -> Option<Value> {
 /// The snapshot in `answer`, or `None` when it breaks the contract.
 pub fn parse(answer: &Value) -> Option<LocalModels> {
     let object = answer.as_object()?;
-    if object.len() != 6 {
+    if object.len() != 7 {
         return None;
     }
     let models = object.get("models")?.as_array()?;
+    let tasks = tasks(object.get("tasks")?)?;
     let reading = object.get("reading")?;
     let reading_source = match object.get("reading_source")?.as_str()? {
         "chosen" => ReadingSource::Chosen,
@@ -139,10 +157,12 @@ pub fn parse(answer: &Value) -> Option<LocalModels> {
         .to_owned();
     let local_lanes = lanes(object.get("local_lanes")?)?;
     if object.get("unreadable")?.as_bool()? {
-        return (models.is_empty() && reading.is_null()).then_some(LocalModels::Unreadable {
-            local_lanes,
-            revision,
-        });
+        return (models.is_empty() && reading.is_null() && tasks.is_empty()).then_some(
+            LocalModels::Unreadable {
+                local_lanes,
+                revision,
+            },
+        );
     }
     let reading = if reading.is_null() {
         None
@@ -166,6 +186,7 @@ pub fn parse(answer: &Value) -> Option<LocalModels> {
         models,
         reading,
         reading_source,
+        tasks,
         local_lanes,
         revision,
     })
@@ -402,6 +423,64 @@ fn lanes(value: &Value) -> Option<Vec<String>> {
     (unique.len() == lanes.len()).then_some(lanes)
 }
 
+/// The task kind settings in `value`: at most [`TASKS_LIMIT`], each exactly a kind,
+/// a lane, a model and an effort or null, no kind named twice.
+fn tasks(value: &Value) -> Option<Vec<TaskModel>> {
+    let held = value.as_array()?;
+    if held.len() > TASKS_LIMIT {
+        return None;
+    }
+    let tasks = held.iter().map(task).collect::<Option<Vec<_>>>()?;
+    let mut kinds: Vec<&str> = tasks.iter().map(|task| task.task_kind.as_str()).collect();
+    kinds.sort_unstable();
+    kinds.dedup();
+    (kinds.len() == tasks.len()).then_some(tasks)
+}
+
+fn task(entry: &Value) -> Option<TaskModel> {
+    let object = entry.as_object()?;
+    if object.len() != 4 {
+        return None;
+    }
+    let task_kind = object
+        .get("task_kind")?
+        .as_str()
+        .filter(|text| is_task_kind(text))?;
+    let lane = object.get("lane")?.as_str().filter(|text| is_lane(text))?;
+    let model = object
+        .get("model")?
+        .as_str()
+        .filter(|text| is_model(text))?;
+    let effort = match object.get("effort")? {
+        Value::Null => None,
+        effort => Some(effort.as_str().filter(|text| is_effort(text))?.to_owned()),
+    };
+    Some(TaskModel {
+        task_kind: task_kind.to_owned(),
+        lane: lane.to_owned(),
+        model: model.to_owned(),
+        effort,
+    })
+}
+
+/// A lowercase slug of at most `limit` characters: a letter, then letters, digits and underscores.
+fn is_slug(text: &str, limit: usize) -> bool {
+    let mut bytes = text.bytes();
+    text.len() <= limit
+        && bytes.next().is_some_and(|b| b.is_ascii_lowercase())
+        && bytes.all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_')
+}
+
+/// A task kind id as the agent names one.
+pub fn is_task_kind(text: &str) -> bool {
+    is_slug(text, TASK_KIND_LIMIT)
+}
+
+/// An effort level as the agent spells one.
+pub fn is_effort(text: &str) -> bool {
+    is_slug(text, EFFORT_LIMIT)
+}
+
 fn listed(entry: &Value) -> Option<ListedModel> {
     let object = entry.as_object()?;
     if object.len() != 2 {
@@ -464,7 +543,7 @@ pub(crate) mod tests {
                 {"lane": "spare_api", "model": "synthetic-text:1"},
             ],
             "reading": {"lane": "keyed_api", "model": "synthetic-hosted:1"},
-            "reading_source": "chosen",
+            "reading_source": "chosen", "tasks": [],
             "local_lanes": ["local_api"],
             "revision": revision(),
         });
@@ -479,6 +558,7 @@ pub(crate) mod tests {
                 ],
                 reading: Some(entry("keyed_api", "synthetic-hosted:1")),
                 reading_source: ReadingSource::Chosen,
+                tasks: vec![],
                 local_lanes: local(),
                 revision: revision(),
             }
@@ -489,7 +569,7 @@ pub(crate) mod tests {
         );
         assert_eq!(refusal(&answer), None);
         let empty = json!({
-            "unreadable": false, "models": [], "reading": null, "reading_source": "none", "local_lanes": [], "revision": revision(),
+            "unreadable": false, "models": [], "reading": null, "reading_source": "none", "tasks": [], "local_lanes": [], "revision": revision(),
         });
         assert_eq!(
             parse(&empty),
@@ -497,6 +577,7 @@ pub(crate) mod tests {
                 models: vec![],
                 reading: None,
                 reading_source: ReadingSource::None,
+                tasks: vec![],
                 local_lanes: vec![],
                 revision: revision()
             })
@@ -507,11 +588,11 @@ pub(crate) mod tests {
     fn the_window_reads_the_services_own_answer_unreadable_flag_and_all() {
         for answer in [
             json!({
-                "unreadable": true, "models": [], "reading": null, "reading_source": "none", "local_lanes": ["local_api"], "revision": revision(),
+                "unreadable": true, "models": [], "reading": null, "reading_source": "none", "tasks": [], "local_lanes": ["local_api"], "revision": revision(),
             }),
             json!({
                 "unreadable": false, "models": [{"lane": "local_api", "model": "synthetic-text:1"}],
-                "reading": {"lane": "local_api", "model": "synthetic-text:1"}, "reading_source": "default",
+                "reading": {"lane": "local_api", "model": "synthetic-text:1"}, "reading_source": "default", "tasks": [],
                 "local_lanes": ["local_api"], "revision": revision(),
             }),
         ] {
@@ -547,7 +628,7 @@ pub(crate) mod tests {
     #[test]
     fn an_unreadable_record_lists_no_model_and_keeps_its_reset_guard() {
         let answer = json!({
-            "unreadable": true, "models": [], "reading": null, "reading_source": "none", "local_lanes": ["local_api"], "revision": revision(),
+            "unreadable": true, "models": [], "reading": null, "reading_source": "none", "tasks": [], "local_lanes": ["local_api"], "revision": revision(),
         });
         let parsed = parse(&answer).unwrap();
         assert_eq!(
@@ -561,6 +642,64 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn task_kind_settings_cross_with_their_effort_and_a_malformed_one_breaks_the_contract() {
+        let with_tasks = |tasks: Value| {
+            json!({
+                "unreadable": false, "models": [], "reading": null, "reading_source": "none", "tasks": tasks,
+                "local_lanes": ["local_api"], "revision": revision(),
+            })
+        };
+        let set = json!([
+            {"task_kind": "classification", "lane": "keyed_api", "model": "synthetic-hosted:1", "effort": "high"},
+            {"task_kind": "extraction", "lane": "local_api", "model": "synthetic-text:1", "effort": null},
+        ]);
+        let Some(LocalModels::Readable { tasks, .. }) = parse(&with_tasks(set.clone())) else {
+            panic!("a readable answer with task settings must parse");
+        };
+        assert_eq!(
+            tasks,
+            vec![
+                TaskModel {
+                    task_kind: "classification".to_owned(),
+                    lane: "keyed_api".to_owned(),
+                    model: "synthetic-hosted:1".to_owned(),
+                    effort: Some("high".to_owned()),
+                },
+                TaskModel {
+                    task_kind: "extraction".to_owned(),
+                    lane: "local_api".to_owned(),
+                    model: "synthetic-text:1".to_owned(),
+                    effort: None,
+                },
+            ]
+        );
+        assert_eq!(served(with_tasks(set.clone())), Some(with_tasks(set)));
+        let task = |kind: Value, effort: Value| json!({"task_kind": kind, "lane": "local_api", "model": "synthetic-text:1", "effort": effort});
+        let mut no_effort = task(json!("classification"), Value::Null);
+        no_effort.as_object_mut().unwrap().remove("effort");
+        let mut unreadable_with_task =
+            with_tasks(json!([task(json!("classification"), Value::Null)]));
+        unreadable_with_task["unreadable"] = json!(true);
+        let mut without_tasks = with_tasks(json!([]));
+        without_tasks.as_object_mut().unwrap().remove("tasks");
+        for broken in [
+            with_tasks(json!([
+                task(json!("classification"), Value::Null),
+                task(json!("classification"), json!("low"))
+            ])),
+            with_tasks(json!([task(json!("Classification"), Value::Null)])),
+            with_tasks(json!([task(json!("classification"), json!("High"))])),
+            with_tasks(json!([task(json!("classification"), json!(3))])),
+            with_tasks(json!([no_effort])),
+            with_tasks(json!({})),
+            unreadable_with_task,
+            without_tasks,
+        ] {
+            assert_eq!(parse(&broken), None, "{broken}");
+        }
+    }
+
+    #[test]
     fn an_answer_outside_the_contract_is_refused() {
         let model = |lane: &str, model: Value| json!({"lane": lane, "model": model});
         let many: Vec<Value> = (0..65)
@@ -571,6 +710,7 @@ pub(crate) mod tests {
                 "unreadable": unreadable,
                 "models": models,
                 "reading_source": if reading.is_null() { "none" } else { "chosen" },
+                "tasks": [],
                 "reading": reading,
                 "local_lanes": lanes,
                 "revision": revision(),
@@ -720,7 +860,7 @@ pub(crate) mod tests {
             );
         }
         let snapshot = json!({
-            "unreadable": false, "models": [], "reading": null, "reading_source": "none", "local_lanes": [], "revision": revision(),
+            "unreadable": false, "models": [], "reading": null, "reading_source": "none", "tasks": [], "local_lanes": [], "revision": revision(),
         });
         assert_eq!(change_refusal(&snapshot), None);
     }

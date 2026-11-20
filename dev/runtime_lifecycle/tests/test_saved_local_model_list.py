@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import socket
 import struct
 import time
@@ -38,6 +39,7 @@ from cadrumo_client.contracts.model_runs import (
     MODEL_RUN_LANE_ID_PATTERN,
     ModelRunOutcome,
     ModelRunRefusalCode,
+    ModelRunTaskKind,
 )
 from cadrumo_client.contracts.service_access import ServiceConnected
 from cadrumo_client.transport.framing import VerifiedConnection
@@ -104,6 +106,7 @@ def _unrecommended_catalog() -> ProviderCatalog:
 def test_authenticated_desktop_model_list_survives_new_store_and_runtime_lookup(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
     projection: OperationFrontendProjection,
 ) -> None:
     def declared_catalog(self: AgentProviderCatalogSource) -> ProviderCatalog:
@@ -192,3 +195,46 @@ def test_authenticated_desktop_model_list_survives_new_store_and_runtime_lookup(
         assert _admin(admin, bearer, "local_models")["revision"] == revision
         reread = SecureLocalModelListStore(client=client).read()
         assert reread == read
+
+        # A task kind the person sets resolves before the reading model; another kind keeps the reading model.
+        added = _admin(
+            admin, bearer, "local_model_add", provider="local_api", model="custom-model:2", expected_revision=revision
+        )
+        with caplog.at_level(logging.INFO, logger="cadrumo_agent_service.service_administration"):
+            tasked = _admin(
+                admin,
+                bearer,
+                "task_model_choose",
+                task_kind="classification",
+                provider="local_api",
+                model="custom-model:2",
+                expected_revision=added["revision"],
+            )
+        # The change is recorded with what the kind now runs with.
+        assert any(
+            "task_kind=classification lane=local_api model=custom-model:2 effort=-" in record.getMessage()
+            for record in caplog.records
+        ), [record.getMessage() for record in caplog.records]
+        assert tasked["tasks"] == [
+            {"task_kind": "classification", "lane": "local_api", "model": "custom-model:2", "effort": None}
+        ], tasked
+        assert tasked["reading"] == {"lane": "local_api", "model": "synthetic-text:1"}
+
+        def task_lookup(task_kind: ModelRunTaskKind) -> ModelRunOutcome:
+            request = WorkerModelRun(
+                request_id=uuid4(), permit_id=uuid4(), command_id=uuid4(), role="text_extraction", task_kind=task_kind
+            )
+            outcome, _ = runtime.profiles._relay_model_run(runtime.profile_id, request, bytearray())
+            return outcome
+
+        classified = task_lookup(ModelRunTaskKind.CLASSIFICATION).lane
+        assert classified is not None and classified.model == "custom-model:2"
+        extracted = task_lookup(ModelRunTaskKind.EXTRACTION).lane
+        assert extracted is not None and extracted.model == "synthetic-text:1"
+
+        cleared = _admin(
+            admin, bearer, "task_model_choose", task_kind="classification", expected_revision=tasked["revision"]
+        )
+        assert cleared["tasks"] == [], cleared
+        reset_lane = task_lookup(ModelRunTaskKind.CLASSIFICATION).lane
+        assert reset_lane is not None and reset_lane.model == "synthetic-text:1"

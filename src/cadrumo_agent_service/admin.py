@@ -26,6 +26,7 @@ from .local_ai_relay import LocalAiFacts, relay_local_ai
 from .providers.application.contracts import SignInMethod
 from .providers.application.ports import ProviderCatalogUnavailableError
 from .providers.application.served_catalog import catalog_nonconformance
+from .providers.domain.catalog import EffortLevel, TaskKindId
 from .providers.domain.record import LocalEngine, LocalPlacement
 
 _LOGGER = get_logger(__name__)
@@ -65,6 +66,7 @@ type AdminAction = Literal[
     "local_model_remove",
     "local_models_reset",
     "reading_model_choose",
+    "task_model_choose",
     "local_engine",
     "local_engine_choose",
     "attachment_card",
@@ -98,6 +100,8 @@ class AdminTarget(Protocol):
         conversation_id: str | None = None,
         engine: LocalEngine | None = None,
         placement: LocalPlacement | None = None,
+        task_kind: str | None = None,
+        effort: str | None = None,
     ) -> JsonValue:
         """Apply validated metadata and separately framed secret bytes under service authority."""
         ...
@@ -125,6 +129,8 @@ class AdminRequest(BaseModel):
     conversation_id: Annotated[str, Field(pattern=_AGENT_IDENTIFIER_PATTERN)] | None = None
     engine: LocalEngine | None = None
     placement: LocalPlacement | None = None
+    task_kind: TaskKindId | None = None
+    effort: EffortLevel | None = None
     # The runtime manager's served facts of the selected local engine, which a
     # catalogue read relays in place of the agent's probe of a sleeping server.
     local_ai: LocalAiFacts | None = None
@@ -316,6 +322,8 @@ class AdminServer:
             conversation_id=request.conversation_id,
             engine=request.engine,
             placement=request.placement,
+            task_kind=request.task_kind,
+            effort=request.effort,
         )
         if request.action != "catalog":
             return answer

@@ -330,8 +330,7 @@ desktop:
           description: Reads what one operation does and what it needs.
           label: Describe an operation
         execute:
-          description: Submits an operation in your profile. It can change
-            your data.
+          description: Submits an operation in your profile. It can change your data.
           label: Run an operation
         observe:
           description: Checks how a submitted operation is going.
@@ -349,8 +348,7 @@ desktop:
           description: Reads a review that is waiting for your answer.
           label: Read a review
         search:
-          description: Looks for the operations the agent may run in your
-            profile.
+          description: Looks for the operations the agent may run in your profile.
           label: Find operations
         status:
           description: Checks which profile you've authorized the agent to work in
@@ -648,6 +646,14 @@ desktop:
     status_setup_needed: Not set up
     status_sign_in_needed: Not signed in
     status_unconfirmed: Sign-in not confirmed
+    task_model_effort: Effort for {task}
+    task_model_model: Model for {task}
+    task_model_reading: Uses the reading model
+    task_model_refused: Couldn't change what this task runs with. Try again.
+    task_model_saved: Saved.
+    task_models_intro: Choose the model each kind of task runs with. A task you leave
+      unset uses the model documents are read with.
+    task_models_title: Models per task
     title: AI providers
     use_in_agent: Use {provider} ({connection}) in the agent
   rail:

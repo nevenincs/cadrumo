@@ -22,6 +22,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunLane,
     ModelRunOutput,
     ModelRunRefusal,
+    ModelRunTaskKind,
 )
 
 from ...core.model_roles import ModelRole
@@ -31,8 +32,10 @@ from .models import OperationIdentity
 class ModelRunPort(Protocol):
     """Model work for one running operation, answered by the agent service."""
 
-    async def lookup(self, role: ModelRole) -> ModelRunLane | ModelRunRefusal:
-        """Return the lane and model the service would use for ``role``; nothing secret."""
+    async def lookup(
+        self, role: ModelRole, *, task_kind: ModelRunTaskKind | None = None
+    ) -> ModelRunLane | ModelRunRefusal:
+        """Return the lane and model the service would use for ``role`` doing ``task_kind``; nothing secret."""
         ...
 
     async def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
@@ -44,8 +47,10 @@ class ModelRunPort(Protocol):
 class OperationModelRuns(Protocol):
     """The execution authority's door to model runs, keyed by the operation that asks."""
 
-    async def model_run_lookup(self, identity: OperationIdentity, role: str) -> ModelRunLane | ModelRunRefusal:
-        """Resolve the lane for ``role`` on behalf of the running operation ``identity``."""
+    async def model_run_lookup(
+        self, identity: OperationIdentity, role: str, *, task_kind: ModelRunTaskKind | None = None
+    ) -> ModelRunLane | ModelRunRefusal:
+        """Resolve the lane for ``role`` doing ``task_kind`` on behalf of the running operation ``identity``."""
         ...
 
     async def model_run(
@@ -83,8 +88,10 @@ class _OperationBoundModelRuns:
     def __init__(self, owner: OperationModelRuns, identity: OperationIdentity, loop: asyncio.AbstractEventLoop) -> None:
         self._owner, self._identity, self._loop = owner, identity, loop
 
-    async def lookup(self, role: ModelRole) -> ModelRunLane | ModelRunRefusal:
-        return await self._on_owner_loop(self._owner.model_run_lookup(self._identity, role.value))
+    async def lookup(
+        self, role: ModelRole, *, task_kind: ModelRunTaskKind | None = None
+    ) -> ModelRunLane | ModelRunRefusal:
+        return await self._on_owner_loop(self._owner.model_run_lookup(self._identity, role.value, task_kind=task_kind))
 
     async def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
         return await self._on_owner_loop(self._owner.model_run(self._identity, header, body))

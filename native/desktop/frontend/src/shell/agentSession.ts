@@ -143,6 +143,15 @@ export function parseEngineHealth(
  * as the catalog names it for a run, and the effort. It takes nothing else:
  * not the lane's execution mode or a catalog entry, which the service resolves
  * itself, and not a model's native controls. */
+/** The lane, model and effort a person sets for one task kind; `effort` is
+ * null when they set none, and is one of the levels the catalogue states for
+ * the model on its lane. */
+export type TaskModelChoice = {
+  lane: string;
+  model: string;
+  effort: string | null;
+};
+
 export type AgentSelectionRecord = {
   provider: string;
   transport: ProviderTransport;
@@ -394,6 +403,14 @@ export interface AgentSession {
   chooseReadingModel?(
     lane: string,
     model: string,
+    expectedRevision: string,
+  ): Promise<LocalModelListStatus>;
+  /** Sets the lane, model and effort the task kind `taskKind` runs with, or
+   * with `choice` null clears it, so the kind runs on the model documents are
+   * read with, at the revision read. */
+  chooseTaskModel?(
+    taskKind: string,
+    choice: TaskModelChoice | null,
     expectedRevision: string,
   ): Promise<LocalModelListStatus>;
   /** The licence text of one model a lane lists; only a ready agent has it. */
