@@ -38,6 +38,8 @@ _ProbeCause = Literal[
 ]
 CONFIRMATION_SECONDS = 20.0
 """The bound on one fresh read of every provider's status: the read that confirms a sign-in, and each refresh."""
+LOGOUT_SECONDS = 45.0
+"""The bound on the agent's logout: its start, the provider's logout (up to 10 s) and its confirming probe (20 s)."""
 _FRESH_SECONDS = 5.0
 """How long a kept reading is served before a status read asks for it again."""
 
@@ -191,7 +193,7 @@ class AgentProviderAuthStatusProbe:
         """
         try:
             with self._lock:
-                return self._run(root, ("auth", "logout", "--provider", provider), CONFIRMATION_SECONDS).status == 0
+                return self._run(root, ("auth", "logout", "--provider", provider), LOGOUT_SECONDS).status == 0
         except (AgentProgramRefusalError, AgentHostError, RefusalError, OSError, ValueError):
             return False
         finally:
