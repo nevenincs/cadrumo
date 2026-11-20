@@ -550,6 +550,17 @@ function pageSession() {
   };
 }
 
+/** Press a shown signed-out gate's button that reads `words`. */
+function pageGateSignIn(words) {
+  const button = [...document.querySelectorAll("button")].find(
+    (el) =>
+      el.getClientRects().length > 0 &&
+      (el.textContent ?? "").replace(/\s+/g, " ").trim() === words,
+  );
+  button?.click();
+  return !!button;
+}
+
 function pageOpenLayers() {
   return [
     ...document.querySelectorAll(
@@ -570,8 +581,11 @@ function logSizes() {
     if (depth > 6 || !existsSync(dir)) return;
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const path = join(dir, entry.name);
-      if (entry.isDirectory()) walk(path, depth + 1);
-      else if (/\.(log|jsonl)$/i.test(entry.name)) {
+      // The WebView's profile (LevelDB *.log files) holds page storage, not
+      // the host's logs.
+      if (entry.isDirectory()) {
+        if (!/^(webview|EBWebView)$/i.test(entry.name)) walk(path, depth + 1);
+      } else if (/\.(log|jsonl)$/i.test(entry.name)) {
         try {
           sizes.set(path, statSync(path).size);
         } catch {
@@ -807,15 +821,54 @@ async function renewSession() {
     await exec(pageChooseSignOut, label("desktop.account.sign_out")),
     "the account menu offers no sign-out",
   );
-  await waitFor(async () => (await exec(pageSession)).form, {
-    timeout: 30_000,
-    what: "the sign-in form after signing out to renew the session",
-  });
+  // A sign-out the person chose here does not ask for the password again:
+  // the window shows its signed-out gates, and the sign-in form opens only
+  // when asked for, from the account menu (or a gate's own button).
+  await waitFor(
+    async () => {
+      const now = await exec(pageSession);
+      return now.signedIn ? null : now;
+    },
+    { timeout: 30_000, what: "the account menu to leave the signed-in state" },
+  );
+  let asked = 0;
+  await waitFor(
+    async () => {
+      if ((await exec(pageSession)).form) return true;
+      // The dialog takes a moment to open: ask again only after a while.
+      if (Date.now() - asked > 5000) {
+        asked = Date.now();
+        await askSignIn();
+      }
+      return false;
+    },
+    {
+      timeout: 30_000,
+      what: "the sign-in form, asked for after signing out to renew the session",
+    },
+  );
   await signIn(profileCredential());
   signedInAt = Date.now();
   console.log("silent-controls: signed out and in again to renew the session");
   await settleSetup();
   return true;
+}
+
+/** Ask for the sign-in form as a signed-out person does: the account menu's
+ * sign-in item, else a signed-out gate's button of the same words. */
+async function askSignIn() {
+  const words = label("desktop.signin.submit");
+  if (await exec(pageOpenAccountMenu)) {
+    await sleep(500);
+    if (await exec(pageChooseSignOut, words)) {
+      await sleep(800);
+      return;
+    }
+    await win.browser.keys("Escape");
+    await sleep(300);
+  }
+  await exec(pageGateSignIn, words);
+  await sleep(800);
 }
 
 function queueCancel() {
