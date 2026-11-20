@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-11-15'
+modified: '2026-11-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:e68709893d39350c3b892b4d7c2dff5dd59e5ffca3817fe5e242d7bea47c83ae'
+body_hash: 'sha256:3bbd7597ce56cf2cdbc880c04e869269c83e6583f9e937fa16cf398c817167cf'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -242,7 +242,7 @@ shell to documentation:
 
 | Chord | Action | Scope |
 |---|---|---|
-| Mod+K | Open or close the palette | Not in a terminal |
+| Mod+K | Open or close the palette | Not in a terminal; reaches the shell from the browser page too (amendment 2026-11-20 in `2026-10-27-sede-browser-adr`) |
 | Mod+Shift+K | Open or close the palette | Everywhere |
 | Mod+Shift+T | Show or hide the TUI | Everywhere |
 | Ctrl+` (physical Backquote) | Show or hide the bottom panel | Everywhere |
@@ -428,7 +428,7 @@ Accepted by the user on 2026-10-27, who chose an in-app browser that streams Cad
 - **Nothing remote loads in the webview** still holds. The Browser page draws images, received as bytes, on a canvas. The webview fetches no remote resource, and the CSP is unchanged. The page shows the remote page's origin and path, never its query, and has no URL entry.
 - **Rail and palette.** The rail gains a Browser item that opens the Browser page. A click on the AEAT item opens the Browser page at the Sede, and its context menu offers "Open in external browser", the existing `link.aeat` action through `open_external`. The palette offers both actions, and the Browser toolbar offers "Open in external browser" for the current page. The register gains a `gui` element for the page.
 - **Host.** The host gains closed, token-checked commands to open, close, give input to, navigate, resize and credit a view, answer a page dialog, answer a download or file chooser, and open the current page externally. A download opens the native save dialog and its bytes go only to the path the person picks; a file chooser opens the native open dialog and the chosen file goes to the page. Neither enters Cadrumo custody unless the person imports it. For "Open in external browser" the window sends no URL; the host opens the view's current URL, which it holds and never forwards to the window, through `open_external`. Beside its person session, the host opens one view connection per open view, attached with the single-use token of `2026-10-04-application-sign-in-adr` (amendment 2026-10-27), and relays it on one Tauri `Channel` delivered to the top document only. Frames, titles, URLs and input never enter host logs, diagnostics, the log view, window storage or the documentation frame.
-- **Keys.** While the canvas has focus it receives keys as a terminal does, and the shell reserves only its everywhere chords.
+- **Keys.** While the canvas has focus it receives keys as a terminal does, and the shell reserves only its everywhere chords. Amended 2026-11-20 in `2026-10-27-sede-browser-adr`: Mod+K, a key a browser keeps for its chrome, also reaches the shell.
 - **Lifetime.** Leaving the page keeps the view running without frames. Closing the page or the window, or retiring the window's person session, ends it; it has no other time limit. The navigation guard reports the page `busy` only while the view publishes its session.
 - The shell still holds no session beyond its own person session, and no receipt, cookie, storage state, credential or DEK.
 
