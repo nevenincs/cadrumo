@@ -113,6 +113,7 @@ export type DisclosureRefusalCode =
   | "gestor_mode"
   | "cloud_upload_not_permitted"
   | "profile_not_eligible"
+  | "profile_unreadable"
   | "file_changed_during_read"
   | "not_signed_in"
   | "grant_revoked"

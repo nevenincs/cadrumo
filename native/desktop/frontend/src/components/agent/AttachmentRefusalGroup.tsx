@@ -10,7 +10,8 @@ import { AgentTextAction } from "./AgentAction";
  * What the person is told when the service bars every read that would leave
  * this computer: the files, once, with the reason and what controls it. A bar
  * that the profile's own setting controls offers the way to that setting;
- * the others have no setting to open and do not pretend to. Sending stays
+ * the others have no setting to open and do not pretend to, and a profile the
+ * service could not read is retried, not changed. Sending stays
  * declined, answering every read the agent is waiting on.
  */
 export function AttachmentRefusalGroup({

@@ -9,6 +9,7 @@ export const BAR_CODES = [
   "gestor_mode",
   "cloud_upload_not_permitted",
   "profile_not_eligible",
+  "profile_unreadable",
 ] as const satisfies readonly DisclosureRefusalCode[];
 
 export type BarCode = (typeof BAR_CODES)[number];
@@ -67,6 +68,8 @@ export const refusalKey = (code: string) => {
       return "desktop.agent.attachment_refusal.cloud_upload_not_permitted";
     case "profile_not_eligible":
       return "desktop.agent.attachment_refusal.profile_not_eligible";
+    case "profile_unreadable":
+      return "desktop.agent.attachment_refusal.profile_unreadable";
     case "file_changed_during_read":
       return "desktop.agent.attachment_refusal.file_changed_during_read";
     case "not_signed_in":

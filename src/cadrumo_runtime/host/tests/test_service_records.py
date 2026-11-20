@@ -169,6 +169,7 @@ def _descriptor(
     *,
     model_runs: bool,
     digest: str,
+    operation_scope: AccessScope | None = None,
 ) -> InstalledServiceDescriptor:
     return InstalledServiceDescriptor(
         service_id=service_id,
@@ -177,7 +178,8 @@ def _descriptor(
         image_digest="1" * 64,
         descriptor_digest=digest * 64,
         record_capabilities=record_capabilities,
-        operation_scope=AccessScope(
+        operation_scope=operation_scope
+        or AccessScope(
             operations=frozenset(),
             actions=frozenset(),
             disclosures=frozenset(),
@@ -196,12 +198,15 @@ def service_record_runtime(
     record_capabilities: tuple[ExtensionRecordCapability, ...] | None = None,
     model_runs: bool = False,
     other_service_model_runs: bool | None = None,
+    operation_scope: AccessScope | None = None,
 ) -> Generator[ServiceRecordRuntime]:
     """Start real encrypted profiles and workers with two controlled authority ports.
 
     ``model_runs`` says whether the installed descriptor of :data:`SERVICE_ID`
     admits model runs. ``other_service_model_runs``, when given, installs a
     second descriptor, :data:`OTHER_SERVICE_ID`, that does or does not.
+    ``operation_scope`` is the registered-operation ceiling of :data:`SERVICE_ID`;
+    none leaves it with no operation.
     """
     with worker_profiles(tmp_path) as (root, targets):
         endpoint = WindowsEndpoint(storage_root=root)
@@ -221,6 +226,7 @@ def service_record_runtime(
                 (policy,) if record_capabilities is None else record_capabilities,
                 model_runs=model_runs,
                 digest="2",
+                operation_scope=operation_scope,
             )
         ]
         if other_service_model_runs is not None:

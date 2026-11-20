@@ -36,6 +36,9 @@ desktop:
       profile_not_eligible: El teu perfil no permet que els documents surtin d'aquest
         ordinador. Ho controla l'ajust «Lectura de documents fora de l'equip» del
         teu perfil.
+      profile_unreadable: No s'ha pogut llegir l'ajust «Lectura de documents fora
+        de l'equip» del teu perfil, així que no s'ha enviat res. Torna-ho a provar
+        d'aquí a un moment.
       reference_unknown: L'agent ja no espera aquest fitxer.
       service_failed: No s'ha pogut registrar el permís, així que no s'ha enviat res.
     attachment_refused: Aquest fitxer no s'ha enviat. {reason}

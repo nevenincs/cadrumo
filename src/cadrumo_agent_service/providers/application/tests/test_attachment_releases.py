@@ -284,6 +284,7 @@ def test_the_agent_finding_other_bytes_refuses_as_changed(world: _World) -> None
         DisclosureRefusalCode.GESTOR_MODE,
         DisclosureRefusalCode.CLOUD_UPLOAD_NOT_PERMITTED,
         DisclosureRefusalCode.PROFILE_NOT_ELIGIBLE,
+        DisclosureRefusalCode.PROFILE_UNREADABLE,
     ],
 )
 def test_each_eligibility_bar_refuses_even_a_stored_grant(world: _World, code: DisclosureRefusalCode) -> None:
@@ -302,6 +303,7 @@ def test_each_eligibility_bar_refuses_even_a_stored_grant(world: _World, code: D
         DisclosureRefusalCode.GESTOR_MODE,
         DisclosureRefusalCode.CLOUD_UPLOAD_NOT_PERMITTED,
         DisclosureRefusalCode.PROFILE_NOT_ELIGIBLE,
+        DisclosureRefusalCode.PROFILE_UNREADABLE,
     ],
 )
 def test_a_deployment_bar_is_recorded_with_the_agent_and_still_answered(

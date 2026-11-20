@@ -33,6 +33,7 @@ class DisclosureRefusalCode(StrEnum):
     GESTOR_MODE = "gestor_mode"
     CLOUD_UPLOAD_NOT_PERMITTED = "cloud_upload_not_permitted"
     PROFILE_NOT_ELIGIBLE = "profile_not_eligible"
+    PROFILE_UNREADABLE = "profile_unreadable"
     FILE_CHANGED_DURING_READ = "file_changed_during_read"
     NOT_SIGNED_IN = "not_signed_in"
     GRANT_REVOKED = "grant_revoked"
