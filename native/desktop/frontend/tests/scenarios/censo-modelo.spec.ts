@@ -6,6 +6,26 @@ import { PROFILE_SURNAMES } from "../support/profileFixture";
 // opens the profile page and starts the pull, or reattaches to the one that
 // is running or awaiting review. It never starts a second.
 
+const confirmation = (page: Page) =>
+  page.getByRole("dialog", {
+    name: label("desktop.profile.censo.title"),
+    exact: true,
+  });
+
+// Starting a pull signs in to the AEAT, so the entry asks first.
+async function confirmPull(page: Page) {
+  await expect(confirmation(page)).toContainText(
+    label("desktop.profile.censo.confirm"),
+  );
+  await confirmation(page)
+    .getByRole("button", {
+      name: label("desktop.profile.censo.pull"),
+      exact: true,
+    })
+    .click();
+  await expect(confirmation(page)).toHaveCount(0);
+}
+
 async function openDeclarations(page: Page, scenario = "censo-ready") {
   await page.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
   await expect(page.locator(".rail")).toBeVisible();
@@ -32,6 +52,7 @@ test("the Modelo page's census entry starts the one Censo flow on the profile pa
     label("desktop.profile.censo.title"),
   );
   await page.locator(".declarations-census").click();
+  await confirmPull(page);
   await expect(page.locator(".user-profile-page")).toContainText(
     PROFILE_SURNAMES,
   );
@@ -44,6 +65,7 @@ test("leaving the profile page keeps the review until the person answers, and th
 }) => {
   await openDeclarations(page);
   await page.locator(".declarations-census").click();
+  await confirmPull(page);
   await expect(review(page)).toBeVisible();
   // The review is the pull's; leaving asks, and staying keeps it as it was.
   await page.locator("[data-rail=declarations]").click();
@@ -69,6 +91,7 @@ test("leaving the profile page keeps the review until the person answers, and th
     .click();
   await page.locator("[data-rail=declarations]").click();
   await page.locator(".declarations-census").click();
+  await confirmPull(page);
   await expect(review(page)).toBeVisible();
   expect(await page.evaluate(() => window.__scenarioCenso!.pulls())).toBe(2);
 });

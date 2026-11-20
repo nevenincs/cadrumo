@@ -5072,6 +5072,9 @@ desktop:
       checking: Comprobando qué necesita la sincronización…
       choice_accept: Aceptar
       choice_reject: Rechazar
+      confirm: Cadrumo iniciará sesión en la AEAT con el acceso configurado y consultará
+        tus datos censales. No se guarda nada en tu perfil hasta que revises los datos
+        obtenidos.
       conflict: La revisión ha cambiado. Actualiza la sincronización y vuelve a revisarla.
       device: Aprueba la solicitud de acceso en tu aplicación Cl@ve.
       done: Sincronización completada. Revisa los datos que aún faltan en tu perfil.

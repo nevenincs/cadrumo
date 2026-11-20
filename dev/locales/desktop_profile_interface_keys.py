@@ -30,6 +30,7 @@ DESKTOP_PROFILE_INTERFACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.profile.censo.apply",
         "desktop.profile.censo.reject",
         "desktop.profile.censo.cancel",
+        "desktop.profile.censo.confirm",
         "auth.sync.requirement.profile_tax_id_required",
         "auth.sync.requirement.auth_method_required",
         "auth.sync.requirement.certificate_file_required",

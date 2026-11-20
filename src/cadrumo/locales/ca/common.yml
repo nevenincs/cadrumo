@@ -5062,6 +5062,9 @@ desktop:
       checking: S’està comprovant què necessita la sincronització…
       choice_accept: Accepta
       choice_reject: Rebutja
+      confirm: Cadrumo iniciarà sessió a l’AEAT amb l’accés configurat i consultarà
+        les teves dades censals. No es desa res al teu perfil fins que revisis les
+        dades obtingudes.
       conflict: La revisió ha canviat. Actualitza la sincronització i torna-la a revisar.
       device: Aprova la sol·licitud d’accés a l’aplicació Cl@ve.
       done: Sincronització completada. Revisa les dades que encara falten al perfil.

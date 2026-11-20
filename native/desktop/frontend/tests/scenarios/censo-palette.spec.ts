@@ -31,6 +31,28 @@ const pullOption = (page: Page) =>
     exact: true,
   });
 
+const confirmation = (page: Page) =>
+  page.getByRole("dialog", {
+    name: label("desktop.profile.censo.title"),
+    exact: true,
+  });
+
+// Starting a pull signs in to the AEAT: the person is asked first, and
+// nothing reaches the host before they agree.
+async function confirmPull(page: Page) {
+  await expect(confirmation(page)).toContainText(
+    label("desktop.profile.censo.confirm"),
+  );
+  expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(0);
+  await confirmation(page)
+    .getByRole("button", {
+      name: label("desktop.profile.censo.pull"),
+      exact: true,
+    })
+    .click();
+  await expect(confirmation(page)).toHaveCount(0);
+}
+
 async function chooseFromPalette(page: Page) {
   await page.keyboard.press("Control+k");
   await expect(palette(page)).toBeVisible();
@@ -47,6 +69,7 @@ test("the palette starts the one Censo flow from a page that is not the profile"
   await expect(page.locator(".user-profile-page")).toContainText(
     PROFILE_SURNAMES,
   );
+  await confirmPull(page);
   await expect(
     band(page).getByRole("button", {
       name: label("desktop.profile.censo.review_count", { count: 10 }),
@@ -60,12 +83,14 @@ test("choosing it again while a pull awaits review reattaches and does not pull 
 }) => {
   await openApp(page);
   await chooseFromPalette(page);
+  await confirmPull(page);
   const review = band(page).getByRole("button", {
     name: label("desktop.profile.censo.review_count", { count: 10 }),
   });
   await expect(review).toBeVisible();
   await chooseFromPalette(page);
   await expect(review).toBeVisible();
+  await expect(confirmation(page)).toHaveCount(0);
   expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(1);
 });
 
@@ -87,6 +112,7 @@ test("the palette lists the Censo pull once on the profile page and starts it th
   await page.keyboard.type("census");
   await expect(pullOption(page)).toHaveCount(1);
   await pullOption(page).click();
+  await confirmPull(page);
   await expect(
     band(page).getByRole("button", {
       name: label("desktop.profile.censo.review_count", { count: 10 }),
@@ -101,6 +127,7 @@ test("a pull the check refuses is explained by the band and not started", async 
   await openApp(page, "censo-nie");
   await chooseFromPalette(page);
   await expect(band(page)).toBeVisible();
+  await expect(confirmation(page)).toHaveCount(0);
   expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(0);
 });
 
@@ -110,6 +137,9 @@ test("a pull the AEAT data run began is the one the palette reattaches to", asyn
   await openApp(page, "censo-running");
   await page.evaluate(() => window.__scenarioCenso!.begin());
   await chooseFromPalette(page);
+  // The window learns of a pull begun elsewhere only by asking the host to
+  // start one, so it asks the person first; the host answers with that pull.
+  await confirmPull(page);
   await expect(
     band(page).getByText(label("desktop.profile.censo.reading")),
   ).toBeVisible();
@@ -129,6 +159,7 @@ test("choosing it after leaving a review reads that pull first and starts no sec
 }) => {
   await openApp(page);
   await chooseFromPalette(page);
+  await confirmPull(page);
   const review = band(page).getByRole("button", {
     name: label("desktop.profile.censo.review_count", { count: 10 }),
   });
@@ -162,4 +193,23 @@ test("choosing it after leaving a review reads that pull first and starts no sec
   await expect(review).toBeVisible();
   expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(1);
   expect(await page.evaluate(() => window.__scenarioCenso!.pulls())).toBe(1);
+});
+
+test("declining the question starts no pull and says so in the band", async ({
+  page,
+}) => {
+  await openApp(page);
+  await chooseFromPalette(page);
+  await expect(confirmation(page)).toBeVisible();
+  await confirmation(page)
+    .getByRole("button", { name: label("desktop.profile.cancel"), exact: true })
+    .click();
+  await expect(confirmation(page)).toHaveCount(0);
+  await expect(
+    band(page).getByRole("button", {
+      name: label("desktop.profile.censo.pull"),
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(0);
 });
