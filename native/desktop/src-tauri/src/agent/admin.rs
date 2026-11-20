@@ -21,6 +21,11 @@ pub const CAPACITY: usize = 4;
 /// gateway (up to 20 s).
 pub const CONNECT_EXCHANGE: Duration = Duration::from_secs(60);
 
+/// How long a provider sign-out may take: the service runs the agent's logout, which
+/// waits for the provider's own logout and confirms it with a fresh status probe,
+/// within the service's 45 s logout bound.
+pub const SIGN_OUT_EXCHANGE: Duration = Duration::from_secs(60);
+
 /// How long a status exchange may take. Status also runs a contained supplier check: five
 /// seconds of execution, ten for tree cleanup, then output drain and profile-authority
 /// reads. Its deadline must encompass that work.
@@ -244,6 +249,7 @@ impl Endpoint {
         let address = SocketAddr::from(([127, 0, 0, 1], self.port));
         let bound = match request["action"].as_str() {
             Some("connect") => CONNECT_EXCHANGE,
+            Some("sign_out") => SIGN_OUT_EXCHANGE,
             Some("status") => STATUS_EXCHANGE,
             _ => EXCHANGE,
         };
@@ -331,6 +337,41 @@ mod tests {
         endpoint(port)
             .exchange(json!({"action": "catalog"}), None)
             .unwrap_err()
+    }
+
+    #[test]
+    fn sign_out_exchange_allows_the_agents_logout_and_its_confirmation() {
+        let port = serve(|mut stream| {
+            let mut header = [0u8; 4];
+            stream.read_exact(&mut header).unwrap();
+            let mut bearer = vec![0u8; u32::from_be_bytes(header) as usize];
+            stream.read_exact(&mut bearer).unwrap();
+            stream.read_exact(&mut header).unwrap();
+            let mut body = vec![0u8; u32::from_be_bytes(header) as usize];
+            stream.read_exact(&mut body).unwrap();
+            let request: Value = serde_json::from_slice(&body).unwrap();
+            assert_eq!(request["action"], "sign_out");
+
+            // Past the six-second bound of an ordinary exchange: the agent's
+            // logout and its confirming status probe take longer than that.
+            std::thread::sleep(Duration::from_secs(7));
+
+            let reply = serde_json::to_vec(&json!({
+                "version": 1,
+                "request_id": request["request_id"],
+                "result": {"kind": "accepted"},
+            }))
+            .unwrap();
+            stream
+                .write_all(&(reply.len() as u32).to_be_bytes())
+                .unwrap();
+            stream.write_all(&reply).unwrap();
+        });
+
+        let reply = endpoint(port)
+            .exchange(json!({"action": "sign_out"}), None)
+            .unwrap();
+        assert_eq!(reply["kind"], "accepted");
     }
 
     #[test]
