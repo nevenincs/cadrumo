@@ -36,6 +36,7 @@ import type { OpenMenu } from "./ContextMenu";
 import { DocsFrame, type DocsFrameApi } from "./DocsFrame";
 import { FilingCalendarView, type CalendarMemory } from "./FilingCalendar";
 import { HomePage } from "./home/HomePage";
+import { WithholdingPage } from "./withholding/WithholdingPage";
 import type { LeaveGuard } from "./ledger/editing/LedgerEditing";
 import { LedgerPage, type LedgerMemory } from "./ledger/LedgerPage";
 import { DeclarationsPane } from "./modelo/declarations/DeclarationsPane";
@@ -71,6 +72,7 @@ export function MainPane({
   profileOn,
   aeatSyncOn,
   homeOn,
+  withholdingOn,
   calendarOn,
   openDeclaration,
   openWorkUnit,
@@ -94,6 +96,7 @@ export function MainPane({
   profilePage,
   aeatSyncPage,
   homePage,
+  withholdingPage,
   calendarPage,
   toggleMaximize,
   maximizeControl,
@@ -157,6 +160,7 @@ export function MainPane({
   profileOn: boolean;
   aeatSyncOn: boolean;
   homeOn: boolean;
+  withholdingOn: boolean;
   calendarOn: boolean;
   openDeclaration: {
     workUnitId: string | null;
@@ -185,6 +189,7 @@ export function MainPane({
   profilePage: PageRef;
   aeatSyncPage: PageRef;
   homePage: PageRef;
+  withholdingPage: PageRef;
   calendarPage: PageRef;
   toggleMaximize: (area: Area) => void;
   maximizeControl: (area: Area, labelKey: string) => PaneControl;
@@ -550,6 +555,42 @@ export function MainPane({
           }
           // A row names a view of the window and opens it as a link does.
           onOpen={(destination) => openView(destination)}
+        />
+      )}
+      {withholdingOn && routedLedger && (
+        <WithholdingPage
+          key={reader ?? ""}
+          port={routedLedger}
+          reader={reader}
+          locale={locale}
+          page={withholdingPage}
+          pane={{
+            onToggleMaximize: () => toggleMaximize("docs"),
+            controls: [
+              maximizeControl("docs", "desktop.pane.maximize_docs"),
+              ...splitControls.map((control) => ({
+                ...control,
+                yields: true,
+              })),
+            ],
+          }}
+          withheld={
+            <SignedOut
+              account={account}
+              lead={t("desktop.withholding.signed_out")}
+              quiet
+              onSignIn={askSignIn}
+            />
+          }
+          // The certificates are recorded and changed in the Ledger's own
+          // register, which opens on the withholding area once shown.
+          onOpenLedger={() =>
+            openView("ledger/registers", {}, null, {
+              opened: () => {
+                ledgerMemory.current.registersArea = "withholding";
+              },
+            })
+          }
         />
       )}
       {calendarOn && (

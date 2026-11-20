@@ -124,6 +124,7 @@ export function useWindowNavigation({
     [guardNavigation, showPage, activatePane, layoutNow],
   );
   const homePage = useRef<HTMLElement>(null);
+  const withholdingPage = useRef<HTMLElement>(null);
   const calendarPage = useRef<HTMLElement>(null);
   const aeatSyncPage = useRef<HTMLElement>(null);
   const profilePage = useRef<HTMLElement>(null);
@@ -148,6 +149,7 @@ export function useWindowNavigation({
     const targets: [string, { current: HTMLElement | null }][] = [
       ["profile", profilePage],
       ["home", homePage],
+      ["withholding", withholdingPage],
       ["calendar", calendarPage],
       ["aeat-sync", aeatSyncPage],
       ["ledger", ledgerPage],
@@ -215,6 +217,7 @@ export function useWindowNavigation({
     showDocs,
     closePage,
     homePage,
+    withholdingPage,
     calendarPage,
     aeatSyncPage,
     profilePage,

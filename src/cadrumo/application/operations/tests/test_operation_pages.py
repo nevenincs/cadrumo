@@ -23,6 +23,12 @@ _EXCEPTIONS = {
     "modelo.reconcile.pull": "aeat-sync",
     "modelo.reconcile.import": "aeat-sync",
     "overview.calendar": "calendar",
+    "ledger.retencion_soportada.list": "withholding",
+    "ledger.retencion_soportada.list_absences": "withholding",
+    "ledger.retencion_soportada.record": "withholding",
+    "ledger.retencion_soportada.remove": "withholding",
+    "ledger.retencion_soportada.attest_absence": "withholding",
+    "ledger.retencion_soportada.withdraw_absence": "withholding",
 }
 
 
@@ -40,8 +46,10 @@ def test_every_registered_family_has_a_decided_page() -> None:
         page = operation_destination(definition_id)
         if family in pageless:
             assert page is None, definition_id
+        elif definition_id in _EXCEPTIONS:
+            assert page == _EXCEPTIONS[definition_id], definition_id
         elif family != "modelo":
-            assert page == _EXCEPTIONS.get(definition_id, _FAMILY_PAGES[family]), definition_id
+            assert page == _FAMILY_PAGES[family], definition_id
         assert page is None or register.element(page) is not None, definition_id
         assert page is None or page in register.ids_for(NavigationSurface.GUI), definition_id
 

@@ -127,7 +127,6 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     stays import-error-safe. If a domain import fails, ``get_registered_keys``
     will propagate the error with full context rather than a silent empty set.
     """
-    from cadrumo.application.overview.home import HOME_ACTION_REASON_CODES
     from cadrumo.application.storage_management.models import StorageAreaDisposition, StorageOccupancy
     from cadrumo.application.user_profile.validation import PROFILE_VALIDATION_ISSUE_CODES
     from cadrumo.application.wizard.catalogue import build_setup_flow
@@ -197,7 +196,6 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             profile_validation_codes=PROFILE_VALIDATION_ISSUE_CODES,
             row_fields=row_fields,
             topic_slugs=topic_slugs,
-            home_reason_codes=HOME_ACTION_REASON_CODES,
             wizard_reason_codes=WIZARD_VALIDATION_REASON_CODES,
             ledger_classification_fields=CLASSIFICATION_FIELD_NAMES,
         ),
@@ -970,11 +968,10 @@ def _dynamic_family_registrations(
     profile_validation_codes: Iterable[str],
     row_fields: Iterable[str],
     topic_slugs: Iterable[str],
-    home_reason_codes: Iterable[str],
     wizard_reason_codes: Iterable[str],
     ledger_classification_fields: Iterable[str],
 ) -> tuple[FStringKeyRegistration, ...]:
-    """Register the nine formerly-unbounded production f-string families.
+    """Register the formerly-unbounded production f-string families.
 
     Each iterable is supplied by the owning producer in ``_build_registrations``:
     no current locale catalogue is consulted.  The wizard profile-key values
@@ -1034,11 +1031,6 @@ def _dynamic_family_registrations(
             description="tui.ledger.link_picker.field.* (LINK_FAMILY_BY_FIELD)",
             key_factory=lambda v: f"tui.ledger.link_picker.field.{v}",
             values=tuple(_ledger_link_fields()),
-        ),
-        FStringKeyRegistration(
-            description="tui.home.reason.* (HOME_ACTION_REASON_CODES)",
-            key_factory=lambda v: f"tui.home.reason.{v}",
-            values=tuple(home_reason_codes),
         ),
         FStringKeyRegistration(
             description="tui.home.empty.* (the home screen's three retained list zones)",

@@ -35,7 +35,7 @@ from .overview.home import (
     HomeZoneState,
 )
 
-_ZONE_REASON_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+_ZONE_REASON_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
         "workbench.calendar.aeat_reader_unavailable": (
             "application.overview.served.home.zone.calendar_aeat_reader_unavailable"
@@ -63,7 +63,7 @@ _ZONE_REASON_KEYS: Final[Mapping[str, str]] = MappingProxyType(
 )
 """One catalogue key per unavailability reason Home words; any other reason is served unworded."""
 
-_REASON_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+_REASON_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
         HOME_REASON_BLOCKED_DEPENDENCY: "application.overview.served.home.reason.blocked_dependency",
         HOME_REASON_BLOCKED_EVIDENCE: "application.overview.served.home.reason.blocked_evidence",
@@ -77,7 +77,7 @@ _REASON_KEYS: Final[Mapping[str, str]] = MappingProxyType(
 )
 """One catalogue key per closed next-action reason code."""
 
-_DECLARATION_STATE_KEYS: Final[Mapping[HomeDeclarationState, str]] = MappingProxyType(
+_DECLARATION_STATE_LOCALE_KEYS: Final[Mapping[HomeDeclarationState, str]] = MappingProxyType(
     {
         HomeDeclarationState.DRAFT: "application.overview.served.home.declaration_state.draft",
         HomeDeclarationState.NEEDS_REVIEW: "application.overview.served.home.declaration_state.needs_review",
@@ -88,7 +88,7 @@ _DECLARATION_STATE_KEYS: Final[Mapping[HomeDeclarationState, str]] = MappingProx
 )
 """One catalogue key per closed resumable-declaration state."""
 
-_LEDGER_SUMMARY_KEY: Final = "application.overview.served.home.ledger_summary"
+_LEDGER_SUMMARY_LOCALE_KEY: Final = "application.overview.served.home.ledger_summary"
 
 
 def _words(key: str | None, language: OutputLanguage, **context: object) -> str | None:
@@ -108,7 +108,7 @@ def _serve_zone_state(state: HomeZoneState, language: OutputLanguage) -> HomeZon
     """
     words = None
     if state.reason_code is not None and state.availability is not HomeAvailability.STALE:
-        words = _words(_ZONE_REASON_KEYS.get(state.reason_code), language)
+        words = _words(_ZONE_REASON_LOCALE_KEYS.get(state.reason_code), language)
     return state.model_copy(
         update={"reason_words": words, "reason_words_language": None if words is None else language}
     )
@@ -118,7 +118,7 @@ def _serve_next_action(item: HomeNextAction, language: OutputLanguage) -> HomeNe
     """``item`` with its action, reason and period said in ``language``."""
     served_action = served_action_fields(str(item.action.action.action_id), language)["action_words"]
     action_words = served_action if isinstance(served_action, str) else None
-    reason = _words(_REASON_KEYS.get(item.reason_code), language)
+    reason = _words(_REASON_LOCALE_KEYS.get(item.reason_code), language)
     period = None if item.period is None else period_words(item.period, language)
     served = any(words is not None for words in (action_words, reason, period))
     return item.model_copy(
@@ -135,7 +135,7 @@ def _serve_declaration_resume(item: HomeDeclarationResume, language: OutputLangu
     """``item`` with its state and period said in ``language``."""
     return item.model_copy(
         update={
-            "state_words": _words(_DECLARATION_STATE_KEYS[item.state], language),
+            "state_words": _words(_DECLARATION_STATE_LOCALE_KEYS[item.state], language),
             "period_words": period_words(item.period, language),
             "words_language": language,
         }
@@ -145,7 +145,7 @@ def _serve_declaration_resume(item: HomeDeclarationResume, language: OutputLangu
 def _serve_ledger_readiness(ledger: HomeLedgerReadiness, language: OutputLanguage) -> HomeLedgerReadiness:
     """``ledger`` with its counts said in ``language``."""
     words = _words(
-        _LEDGER_SUMMARY_KEY,
+        _LEDGER_SUMMARY_LOCALE_KEY,
         language,
         entries=ledger.entries,
         requiring_review=ledger.requiring_review,

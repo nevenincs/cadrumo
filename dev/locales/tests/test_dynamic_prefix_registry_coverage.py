@@ -41,7 +41,6 @@ import inspect
 
 import pytest
 
-from cadrumo.application.overview.home import HOME_ACTION_REASON_CODES
 from cadrumo.application.user_profile.validation import PROFILE_VALIDATION_ISSUE_CODES
 from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.application.wizard.widgets import WIZARD_VALIDATION_REASON_CODES
@@ -222,7 +221,6 @@ def test_dynamic_family_registrations_match_their_producer_sources() -> None:
             *(f"topic.{value}.title" for value in topic_slugs),
             *(f"topic.{value}.body" for value in topic_slugs),
         },
-        "tui.home.reason": {f"tui.home.reason.{value}" for value in HOME_ACTION_REASON_CODES},
         "wizard.errors": {f"wizard.errors.{value}" for value in WIZARD_VALIDATION_REASON_CODES},
     }
     registered = frozenset(get_registered_keys())
