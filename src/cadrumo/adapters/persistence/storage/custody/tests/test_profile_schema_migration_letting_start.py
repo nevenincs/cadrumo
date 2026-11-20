@@ -28,13 +28,14 @@ _KEPT = (
 )
 
 
-def test_schema_16_is_the_written_schema_and_schema_13_still_opens() -> None:
-    assert MIGRATED_PROFILE_SCHEMA_VERSION == 16
+def test_schema_13_still_opens_and_migrates_forward() -> None:
+    assert MIGRATED_PROFILE_SCHEMA_VERSION > _PRIOR_VERSION
     assert _PRIOR_VERSION in SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS
 
 
 def test_the_transition_out_of_schema_13_clears_nothing() -> None:
-    assert cleared_payer_fact_paths_between(_PRIOR_VERSION, MIGRATED_PROFILE_SCHEMA_VERSION) == frozenset()
+    # This transition's own claim; a later transition may retire a path of its own.
+    assert cleared_payer_fact_paths_between(_PRIOR_VERSION, _PRIOR_VERSION + 1) == frozenset()
 
     kept, migration = migrate_profile_facts(_KEPT, from_version=_PRIOR_VERSION)
 
