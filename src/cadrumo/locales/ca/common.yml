@@ -1675,8 +1675,10 @@ desktop:
       action:
         allocate: Part professional · {share}
         archive: Arxiva
-        attach: Adjunta
-        attach_file: Adjunta {name}
+        attach_file_other: Adjunta {name} com a un altre document
+        attach_file_purchase: Adjunta {name} com a factura de compra
+        attach_other: Adjunta com a un altre document
+        attach_purchase: Adjunta com a factura de compra
         detach: Separa
         exclude: Exclou
         iva_derive: Calcula l'IVA · {category}
@@ -2485,6 +2487,8 @@ desktop:
         refused: No acceptat
       cancel: Cancel·la
       check: Comprova
+      check_failed: No s'ha pogut comprovar el resultat ({code}). Continua sense saber-se.
+        Prem Comprova de nou.
       checked_not_saved: No s'ha desat.
       checked_saved: S'ha desat.
       choose_files: Tria fitxers…
@@ -3280,19 +3284,26 @@ desktop:
         active_only: Només els moviments actius admeten documents.
         add_file: Afegeix des d'aquest ordinador
         add_staged: '{file} · adjunt encara sense desar'
-        adding: Afegir {file} · sense desar
+        adding_other: Afegir {file} com a un altre document · sense desar
+        adding_purchase: Afegir {file} com a factura de compra · sense desar
         advisory: No hi ha cap factura de compra adjunta. Pots desar el moviment;
           per calcular una deducció poden caldre les seves dades fiscals i la documentació
           justificativa.
         attach_existing: Adjunta un document
         attach_staged: Adjunt encara sense desar
-        attaching: Adjuntar {file} · sense desar
+        attaching_other: Adjuntar {file} com a un altre document · sense desar
+        attaching_purchase: Adjuntar {file} com a factura de compra · sense desar
         detach: Treu
         detach_named: Treu {file}
         detach_pending: Treure, encara sense desar
         detach_staged: Treure, encara sense desar
         detaching: Treure {file} · sense desar
         hint: Un PDF o una imatge, llegit d'aquest ordinador i desat xifrat.
+        kind:
+          choose: Tria primer si és la factura de compra del moviment o un altre document.
+          label: Adjunta com a
+          other: Un altre document
+          purchase: Factura de compra
         no_free: No hi ha cap altre document al llibre
         none: Sense documents
         pick_failed: No s'ha obert el diàleg de fitxers.
@@ -3452,6 +3463,8 @@ desktop:
       nothing: Selecciona un moviment per veure'l aquí.
       panel: Detall del moviment
       panel_match: Moviments per vincular
+      period_unread: No s'ha pogut llegir el trimestre de la nova data ({code}), així
+        que no es mostra si canvia de trimestre. Torna-ho a provar.
       ratio_missing: 'Cap: Mixt en necessita una abans de calcular'
       ratio_not_needed: No cal
       read_as: Llegit com a

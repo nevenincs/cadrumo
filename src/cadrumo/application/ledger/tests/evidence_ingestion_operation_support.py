@@ -33,6 +33,11 @@ from .export_link_operation_support import Events
 from .export_link_operation_support import Subject as ActionSubject
 
 
+def _synthetic_structured_document_probe(data: bytes) -> DocumentShape:
+    """Classify every synthetic document this fixture stores as structured, as its reader does."""
+    return DocumentShape.XML_CII
+
+
 def unused(*args: object, **kwargs: object) -> Never:
     """Detect any unexpected inference or reader route."""
     raise AssertionError("this structured synthetic fixture must not dispatch inference")
@@ -286,7 +291,9 @@ class Subject(ActionSubject):
             profile_id=profile_id,
             operation=operation,
             settings=load_settings(),
-            evidence=LedgerEvidencePorts(self.evidence, Ingestor(self), self.shared_events),
+            evidence=LedgerEvidencePorts(
+                self.evidence, Ingestor(self), self.shared_events, _synthetic_structured_document_probe
+            ),
             extraction=extraction,
             draft_factory=self.drafts.factory,
         )

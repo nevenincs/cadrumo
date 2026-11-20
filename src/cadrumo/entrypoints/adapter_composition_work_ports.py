@@ -485,6 +485,7 @@ def build_filing_action_ports(
 
 def build_ledger_evidence_ports(*, bucket_id: str) -> LedgerEvidencePorts:
     """Compose the encrypted catalogue, attachment custody, and event sink."""
+    from ..adapters.inbound.einvoice.shape import probe_document_shape
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.purchase_invoice_evidence import (
         LedgerEvidenceAttachmentIngestor,
@@ -500,6 +501,7 @@ def build_ledger_evidence_ports(*, bucket_id: str) -> LedgerEvidencePorts:
         evidence_repository=LedgerEvidenceRepositoryAdapter(objects=objects),
         attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=objects)),
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
+        document_shape_probe=probe_document_shape,
     )
 
 

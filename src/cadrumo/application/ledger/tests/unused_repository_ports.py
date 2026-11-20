@@ -112,3 +112,8 @@ class UnusedEvidenceAttachmentIngestor:
 
     def ingest(self, request: object) -> Never:
         raise AssertionError("this unit test does not ingest attachments")
+
+
+def unused_evidence_document_shape_probe(data: bytes) -> Never:
+    """Refuse a shape probe that a unit test isolating another owner must never reach."""
+    raise AssertionError("this unit test does not probe evidence bytes")

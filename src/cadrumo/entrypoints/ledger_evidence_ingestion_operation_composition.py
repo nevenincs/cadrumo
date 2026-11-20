@@ -7,6 +7,7 @@ from uuid import UUID
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ..adapters.inbound.einvoice.shape import probe_document_shape
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
 from ..adapters.persistence.profile.purchase_invoice_evidence import (
@@ -44,6 +45,7 @@ def build_ledger_evidence_ingestion_operation_ports(
         evidence_repository=LedgerEvidenceRepositoryAdapter(objects=objects, mutation_writer=mutation_writer),
         attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=store),
         bucket_event_repository=events,
+        document_shape_probe=probe_document_shape,
     )
 
     def draft_factory(*, bucket_id: str, settings: Settings) -> ExtractionDraftRepositoryProtocol:

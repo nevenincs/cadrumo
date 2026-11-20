@@ -26,7 +26,9 @@ export type ReviewNotice =
       words: string | null;
       step: OperationNextStepV1 | null;
     }
-  | { kind: "unknown" }
+  /** `checkFailed` is why the last check could not read the outcome, where
+   * it could not. */
+  | { kind: "unknown"; checkFailed?: string }
   | { kind: "failed"; code: string }
   | { kind: "checked"; saved: boolean };
 
@@ -91,6 +93,13 @@ export function ReviewNotices({
             >
               {t("desktop.ledger.documents.check")}
             </Button>
+            {notice.checkFailed !== undefined && (
+              <span className="ledger-draft-check-failed w-full" role="alert">
+                {t("desktop.ledger.documents.check_failed", {
+                  code: notice.checkFailed,
+                })}
+              </span>
+            )}
           </AlertDescription>
         </Alert>
       )}

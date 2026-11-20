@@ -25,7 +25,7 @@ from ...core.operations import (
 )
 from ...core.time.clock import now
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import (
     OperationRequest,
@@ -46,7 +46,9 @@ from .evidence import (
     PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidenceResult,
     PurchaseInvoiceEvidenceService,
+    admit_evidence_file,
     derive_keyed_purchase_invoice_evidence_id,
+    require_readable_evidence_file,
 )
 from .evidence_port_identity import require_exact_evidence_ports
 from .evidence_ports import LedgerEvidencePortsFactory
@@ -184,6 +186,14 @@ class LedgerEvidenceAddExecutor:
             ports = self._ports_factory(bucket_id=bucket_id)
             evidence_repository = require_exact_evidence_ports(ports, bucket_id=bucket_id)
             candidate = _candidate_record(payload, bucket_id=bucket_id)
+            # Every refusal about the file itself lands here, before the UNKNOWN
+            # effect below: a missing file, an unsupported type, and bytes that
+            # match no readable document shape change nothing, so they are
+            # refusals and never an ambiguous write.
+            require_readable_evidence_file(
+                ports=ports,
+                admitted=admit_evidence_file(payload.source_path, Path(payload.source_directory)),
+            )
             service = PurchaseInvoiceEvidenceService(ports=ports)
             event_ids = ("f" * 64,)
             execution_result = _execution_result(payload.profile_id, candidate, event_ids)
@@ -205,7 +215,10 @@ class LedgerEvidenceAddExecutor:
             async with context.cancellation.irreversible_section():
                 # Attachment bytes and their manifest are durable secure-custody
                 # writes inside add(), before the catalogue+event batch. UNKNOWN
-                # is therefore required before entering the service.
+                # is therefore required before entering the service. The file was
+                # admitted and probed in the preflight; add() probes the bytes it
+                # stores again, so a file changed in between is still refused
+                # before custody is written.
                 await context.events.effect(OperationEffect.UNKNOWN)
                 result = await asyncio.to_thread(
                     prepared.service.add,
@@ -400,7 +413,7 @@ def _build_definition(
         result_type=result_type,
         executor_type=LedgerEvidenceAddExecutor,
         build=lambda: LedgerEvidenceAddExecutor(ports_factory, execution_caller_reader=execution_caller_reader),
-        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES,
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
     )
 
 

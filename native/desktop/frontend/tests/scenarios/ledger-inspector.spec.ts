@@ -345,6 +345,11 @@ test("Documents and Invoice read the profile's records even where the window dra
   const attach = body(target).getByRole("button", {
     name: label("desktop.ledger.inspector.documents.attach_existing"),
   });
+  await body(target)
+    .getByRole("radio", {
+      name: label("desktop.ledger.inspector.documents.kind.other"),
+    })
+    .click();
   await attach.click();
   await expect(target.getByRole("option").first()).toBeVisible();
   await expect(target.getByRole("listbox")).not.toContainText(
@@ -1460,4 +1465,33 @@ test("at 1280 with the inspector open, a sideways scroll settles on a whole colu
       )
       .toBe(true);
   }
+});
+
+test("a changed value date whose quarter cannot be read says so instead of showing no move", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await inspect(target, "PAPELERIA TRAZO");
+  await target.evaluate(() => {
+    const port = window.__fixtureLedger!;
+    const submit = port.submit.bind(port);
+    port.submit = (definition, ...rest) =>
+      definition === "ledger.entry-options"
+        ? Promise.reject({ code: "host_unavailable" })
+        : submit(definition, ...rest);
+  });
+  await jumpTo(
+    target,
+    "details",
+    label("desktop.ledger.inspector.section.details"),
+  );
+  // The value date is the effective day; a day no row holds is not yet read.
+  await body(target).locator("[data-field=value_date]").click();
+  await body(target).locator("input:focus").fill(`${scenarioYear}-03-29`);
+  await target.keyboard.press("Enter");
+  await expect(body(target).getByRole("alert")).toContainText(
+    label("desktop.ledger.inspector.period_unread", {
+      code: "host_unavailable",
+    }),
+  );
 });

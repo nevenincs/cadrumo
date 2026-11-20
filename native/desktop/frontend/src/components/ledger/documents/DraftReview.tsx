@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { CountryEditor } from "@/components/editors/CountryEditor";
+import { failureCode } from "../../../errors";
 import { useInvoiceDuplicate } from "../../../shell/ledgerInvoiceDuplicate";
 import { useInvoiceMatches } from "../../../shell/ledgerInvoiceMatch";
 import { CurrencyEditor } from "@/components/editors/CurrencyEditor";
@@ -479,9 +480,10 @@ export function DraftReview({
         );
         setNotice({ kind: "checked", saved: !waiting });
         onWritten();
-      }
-    } catch {
-      // The outcome stays unknown.
+      } else setNotice({ kind: "unknown", checkFailed: "unavailable" });
+    } catch (error) {
+      // The outcome stays unknown, and the notice says the check failed.
+      setNotice({ kind: "unknown", checkFailed: failureCode(error) });
     } finally {
       setBusy(null);
     }

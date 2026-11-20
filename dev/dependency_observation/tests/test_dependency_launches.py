@@ -400,7 +400,7 @@ def checkout(tmp_path: Path) -> Path:
     directory = tmp_path / "real-checkout"
     for package in ("dev", _PACKAGE, "src/cadrumo/tests"):
         _write(directory / package / "__init__.py")
-    for name in ("observation.py", "census_admission.py", CHILD_SCRIPT_NAME):
+    for name in ("observation.py", "catalogue_keys.py", "census_admission.py", CHILD_SCRIPT_NAME):
         shutil.copyfile(_WORKTREE / _PACKAGE / name, directory / _PACKAGE / name)
     shutil.copyfile(_WORKTREE / _CENSUS_LOADER, directory / _CENSUS_LOADER)
     _write(directory / PRODUCT_CENSUS, _census("tiny_child"))

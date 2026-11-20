@@ -8,6 +8,7 @@ from typing import override
 
 import pytest
 
+from cadrumo.adapters.inbound.einvoice.shape import probe_document_shape
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
     LedgerEvidenceAttachmentIngestor,
@@ -29,6 +30,7 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 BUCKET_ID = "29292929-2929-4929-8929-292929292929"
 
@@ -67,6 +69,7 @@ def make_svc(isolated_settings: Settings, objects: SecureObjectRepository) -> Pu
             evidence_repository=LedgerEvidenceRepositoryAdapter(objects=objects),
             attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=objects)),
             bucket_event_repository=BucketEventHistoryRepository(objects=objects),
+            document_shape_probe=probe_document_shape,
         ),
     )
 
@@ -120,5 +123,5 @@ def secure_objects(runtime_profile: TestRuntimeProfile) -> SecureObjectRepositor
 @pytest.fixture
 def pdf_file(tmp_path: Path) -> Path:
     path = tmp_path / "receipt.pdf"
-    path.write_bytes(b"%PDF-1.4 test")
+    path.write_bytes(text_pdf_bytes(("synthetic purchase receipt",)))
     return path

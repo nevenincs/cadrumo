@@ -26,6 +26,7 @@ import type { OutputLanguage } from "../../../shell/ledgerClassificationContract
 import { useInvoiceMatches } from "../../../shell/ledgerInvoiceMatch";
 import {
   plannedStepsReported,
+  WORST_OUTCOMES,
   type StepOutcome,
 } from "../../../shell/ledgerApply";
 import {
@@ -78,14 +79,7 @@ type Apply = ReturnType<typeof useLedgerApply>;
 
 const minutesOf = (seconds: number) => Math.max(1, Math.round(seconds / 60));
 
-/** The outcomes worst first: the result is titled by the first it holds. */
-const WORST: readonly StepOutcome["kind"][] = [
-  "unknown",
-  "saved_unread",
-  "refused",
-  "not_sent",
-];
-/** Outcomes that saved: the result lists only the rest. */
+/** Outcomes that saved: a re-read is offered only for the rest. */
 const SAVED = new Set<StepOutcome["kind"]>(["applied", "settled"]);
 
 /** The plan in plain words: "92 together · 40 one by one (about 2 min) ·
@@ -136,9 +130,18 @@ export function actionText(
         }),
       });
     case "attach_file":
-      return t("desktop.ledger.apply.action.attach_file", {
-        name: action.name,
-      });
+      return t(
+        action.supplementary
+          ? "desktop.ledger.apply.action.attach_file_other"
+          : "desktop.ledger.apply.action.attach_file_purchase",
+        { name: action.name },
+      );
+    case "attach":
+      return t(
+        action.evidenceId === null
+          ? "desktop.ledger.apply.action.attach_other"
+          : "desktop.ledger.apply.action.attach_purchase",
+      );
     case "rule_apply":
       return t("desktop.ledger.apply.action.rule_apply", {
         count: action.transactionIds.length,
@@ -1081,7 +1084,8 @@ export function ReviewDialog({
     const counts = outcomeTally(state.report.steps);
     const saved = (counts.applied ?? 0) + (counts.settled ?? 0);
     // Titled by its worst outcome; "Saved" only where every part settled.
-    const worst = WORST.find((kind) => (counts[kind] ?? 0) > 0) ?? null;
+    const worst =
+      WORST_OUTCOMES.find((kind) => (counts[kind] ?? 0) > 0) ?? null;
     const headline: StepOutcome["kind"] =
       worst ?? (saved > 0 ? "applied" : "unchanged");
     title = (
@@ -1165,7 +1169,7 @@ export function ReviewDialog({
             <AlertTitle>{t("desktop.ledger.apply.stopped")}</AlertTitle>
           </Alert>
         )}
-        <Outcomes items={unsaved} />
+        <Outcomes items={items} />
       </div>
     );
     footer = (
