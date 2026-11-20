@@ -121,6 +121,12 @@ const update: NonNullable<Story["play"]> = async ({
   });
   await waitFor(() => expect(button).toBeEnabled());
   await userEvent.click(button);
+  // The update signs in to the AEAT, so it starts on the person's word.
+  const confirm = await within(canvasElement.ownerDocument.body).findByRole(
+    "button",
+    { name: words("desktop.aeat_sync.update") },
+  );
+  await userEvent.click(confirm);
 };
 
 /** What was brought and when, with "Update from AEAT". */

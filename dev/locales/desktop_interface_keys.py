@@ -242,6 +242,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.aeat_sync.before.phone_title",
         "desktop.aeat_sync.before.try_again",
         "desktop.aeat_sync.bring_all",
+        "desktop.aeat_sync.confirm",
         "desktop.aeat_sync.count.borrador_refused",
         "desktop.aeat_sync.count.filed_aeat_only",
         "desktop.aeat_sync.count.filed_differing",

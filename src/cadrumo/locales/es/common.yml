@@ -1129,6 +1129,8 @@ desktop:
       phone_title: Aprueba en tu móvil
       try_again: Inténtalo de nuevo
     bring_all: Actualizar desde la AEAT
+    confirm: Cadrumo iniciará sesión en la AEAT con tu acceso configurado y leerá
+      estos datos. No se presenta ni se cambia nada en la AEAT.
     count:
       borrador_refused: '{count} no se pueden usar'
       filed_aeat_only: '{count} solo en la AEAT'

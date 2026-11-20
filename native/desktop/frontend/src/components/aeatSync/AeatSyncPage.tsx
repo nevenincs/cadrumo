@@ -10,6 +10,14 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { useScrolls } from "@/components/ui/useScrolls";
@@ -166,6 +174,12 @@ export const AeatSyncPage = memo(function AeatSyncPage({
   const [stage, setStage] = useState<Stage>({ kind: "overview" });
   // A paused update the person chose to leave for now.
   const [parked, setParked] = useState(false);
+  // An update asked for and waiting for the person's word, since starting
+  // it signs in to the AEAT and reads from it.
+  const [asking, setAsking] = useState<{
+    areas: AeatSyncAreaId[];
+    title: string;
+  } | null>(null);
   const wanted = useRef<AeatSyncAreaId[]>([]);
   const preparing = useRef(false);
   const { refresh } = status;
@@ -375,7 +389,12 @@ export const AeatSyncPage = memo(function AeatSyncPage({
       {header(
         <Button
           disabled={starting || going || runUncertain || bringable.length === 0}
-          onClick={() => void start(bringable)}
+          onClick={() =>
+            setAsking({
+              areas: bringable,
+              title: t("desktop.aeat_sync.bring_all"),
+            })
+          }
         >
           {starting ? <Spinner /> : <Icon name="sync" size="sm" />}
           {t("desktop.aeat_sync.bring_all")}
@@ -451,7 +470,14 @@ export const AeatSyncPage = memo(function AeatSyncPage({
                             area: name,
                           })}
                           disabled={starting || going || runUncertain || !area}
-                          onClick={() => void start([id])}
+                          onClick={() =>
+                            setAsking({
+                              areas: [id],
+                              title: t("desktop.aeat_sync.update_area", {
+                                area: name,
+                              }),
+                            })
+                          }
                         >
                           {t("desktop.aeat_sync.update")}
                         </Button>
@@ -508,6 +534,37 @@ export const AeatSyncPage = memo(function AeatSyncPage({
           )}
         </div>
       </SyncBody>
+      <Dialog
+        open={asking !== null}
+        onOpenChange={(value) => {
+          if (!value) setAsking(null);
+        }}
+      >
+        <DialogContent closeLabel={t("desktop.aeat_sync.before.cancel")}>
+          <DialogHeader>
+            <DialogTitle>{asking?.title}</DialogTitle>
+            <DialogDescription>
+              {t("desktop.aeat_sync.confirm")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAsking(null)}>
+              {t("desktop.aeat_sync.before.cancel")}
+            </Button>
+            <Button
+              className="aeat-sync-confirm"
+              onClick={() => {
+                const areas = asking?.areas ?? [];
+                setAsking(null);
+                void start(areas);
+              }}
+            >
+              <Icon name="sync" size="xs" />
+              {t("desktop.aeat_sync.update")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 });
