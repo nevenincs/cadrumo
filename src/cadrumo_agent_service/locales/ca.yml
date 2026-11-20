@@ -430,6 +430,8 @@ desktop:
     reason_record_unreadable: No es pot llegir la clau API desada. Torna-la a afegir.
     refresh: Torna-ho a provar
     refused_base_url_rejected: Revisa l’adreça del servidor i torna-ho a provar.
+    refused_busy: Encara hi ha un altre canvi als teus proveïdors en curs. Torna-ho
+      a provar d'aquí a un moment.
     refused_invalid_key_format: Això no sembla una clau d'aquest proveïdor.
     refused_model_list_full: La llista de models és plena. Treu un model abans d'afegir-ne
       un altre.
@@ -440,6 +442,9 @@ desktop:
     refused_revision_conflict: Aquesta configuració ha canviat mentrestant. Es mostra
       la darrera; torna-ho a provar.
     refused_runtime_unavailable: Reinicia Cadrumo i torna-ho a provar.
+    refused_service_failed: No s'ha pogut completar el canvi.
+    refused_timed_out: Cadrumo no ha rebut resposta a temps. Actualitza per veure
+      si el canvi s'ha fet.
     remove_key: Elimina la clau API
     replace_key: Substitueix la clau API
     save: Desa
@@ -488,6 +493,11 @@ desktop:
       login_already_running: Ja hi ha un altre inici de sessió en curs per a aquest
         perfil.
       login_not_completed: L'inici de sessió no s'ha completat.
+      logout_agent_unavailable: No s'ha pogut iniciar l'agent que tanca la sessió
+        dels proveïdors.
+      logout_not_completed: L'aplicació del proveïdor no ha tancat la sessió, o el
+        proveïdor encara té la sessió iniciada.
+      logout_timed_out: Tancar la sessió ha trigat massa i s'ha aturat.
       prepare_failed: No s'ha pogut preparar l'inici de sessió.
       previous_cleanup_unconfirmed: No s'ha pogut confirmar que l'inici de sessió
         anterior es tanqués correctament.

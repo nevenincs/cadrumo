@@ -37,6 +37,9 @@ export const SIGN_IN_CAUSES = [
   "settings_change_failed",
   "prepare_failed",
   "previous_cleanup_unconfirmed",
+  "logout_agent_unavailable",
+  "logout_timed_out",
+  "logout_not_completed",
 ] as const;
 export type SignInCause = (typeof SIGN_IN_CAUSES)[number];
 

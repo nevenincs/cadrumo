@@ -419,6 +419,8 @@ desktop:
     reason_record_unreadable: The saved API key can't be read. Add it again.
     refresh: Try again
     refused_base_url_rejected: Check the server address and try again.
+    refused_busy: Another change to your providers is still running. Try again in
+      a moment.
     refused_invalid_key_format: That doesn't look like a key for this provider.
     refused_model_list_full: The model list is full. Remove a model before adding
       another.
@@ -428,6 +430,9 @@ desktop:
     refused_revision_conflict: These settings changed in the meantime. The latest
       are shown; try again.
     refused_runtime_unavailable: Restart Cadrumo and try again.
+    refused_service_failed: The change could not be completed.
+    refused_timed_out: Cadrumo did not hear back in time. Refresh to see whether the
+      change went through.
     remove_key: Remove API key
     replace_key: Replace API key
     save: Save
@@ -468,6 +473,10 @@ desktop:
       lane_not_signable: This provider can't be signed in to from here.
       login_already_running: Another sign-in is already running for this profile.
       login_not_completed: The sign-in wasn't completed.
+      logout_agent_unavailable: The agent that signs providers out could not be started.
+      logout_not_completed: The provider's app did not sign out, or the provider is
+        still signed in.
+      logout_timed_out: Signing out took too long and was stopped.
       prepare_failed: The sign-in couldn't be prepared.
       previous_cleanup_unconfirmed: It couldn't be confirmed that the previous sign-in
         closed cleanly.

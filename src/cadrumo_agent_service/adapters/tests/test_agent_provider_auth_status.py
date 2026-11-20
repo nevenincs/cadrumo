@@ -240,3 +240,21 @@ def test_a_runner_left_unsettled_refuses_later_reads_until_close_settles_it(
     assert len(_UnsettledRunner.instances) == 1
     probe.close()
     assert _UnsettledRunner.instances[0].settled
+
+
+@pytest.mark.parametrize(
+    ("step", "cause"),
+    [
+        (AgentInvocationResult(status=0, standard_output=b""), None),
+        (AgentInvocationResult(status=1, standard_output=b"signed in still"), "logout_not_completed"),
+        (AgentInvocationResult(status=None, standard_output=b""), "logout_timed_out"),
+        (OSError("an earlier agent invocation is unsettled"), "logout_agent_unavailable"),
+    ],
+    ids=["signed_out", "exit_nonzero", "ended_at_bound", "agent_unavailable"],
+)
+def test_a_logout_names_why_it_did_not_sign_the_provider_out(
+    probe: AgentProviderAuthStatusProbe, tmp_path: Path, step: AgentInvocationResult | BaseException, cause: str | None
+) -> None:
+    _Runner.script = [step]
+    assert probe.log_out("claude", root=tmp_path) == cause
+    assert _Runner.calls == [("-m", "cadrumo_agent.cli.main", "auth", "logout", "--provider", "claude")]

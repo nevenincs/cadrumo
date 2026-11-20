@@ -125,6 +125,9 @@ ServiceCause = Literal[
     "settings_change_failed",
     "prepare_failed",
     "previous_cleanup_unconfirmed",
+    "logout_agent_unavailable",
+    "logout_timed_out",
+    "logout_not_completed",
 ]
 """The closed words the service adds when it, not the helper, settles or refuses an attempt."""
 

@@ -47,6 +47,10 @@ const CAUSE_WORDS = {
   settings_change_failed:
     "desktop.providers.sign_in_cause.settings_change_failed",
   prepare_failed: "desktop.providers.sign_in_cause.prepare_failed",
+  logout_agent_unavailable:
+    "desktop.providers.sign_in_cause.logout_agent_unavailable",
+  logout_timed_out: "desktop.providers.sign_in_cause.logout_timed_out",
+  logout_not_completed: "desktop.providers.sign_in_cause.logout_not_completed",
   previous_cleanup_unconfirmed:
     "desktop.providers.sign_in_cause.previous_cleanup_unconfirmed",
   probe_start_failed: "desktop.providers.sign_in_cause.probe_start_failed",

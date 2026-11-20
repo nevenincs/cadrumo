@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, cast, get_args
 
 import pytest
 
@@ -13,7 +13,13 @@ from cadrumo.core.errors.hierarchy import CoreValidationError
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 
 from ...adapters.agent_provider_auth_status import AgentProviderAuthStatusProbe
-from ...providers.application.contracts import CliObservation, CliState, ProviderSettingsStatus, ProviderStatusEntry
+from ...providers.application.contracts import (
+    CliObservation,
+    CliState,
+    ProviderSettingsStatus,
+    ProviderStatusEntry,
+    ServiceCause,
+)
 from ...providers.application.ports import AbsentProviderRecord
 from ...providers.application.resolution import status_entry
 from ...providers.application.service import ProviderSettingsService
@@ -59,20 +65,20 @@ def _logged(answer: dict[str, Any]) -> dict[str, Any]:
 class _Agent:
     """The agent's signed-in state and its logout, observed as the probe would."""
 
-    def __init__(self, *, logout_succeeds: bool = True) -> None:
+    def __init__(self, *, logout_fails: ServiceCause | None = None) -> None:
         self.state = CliState.INSTALLED_SIGNED_IN
-        self.logout_succeeds = logout_succeeds
+        self.logout_fails = logout_fails
         self.logouts: list[tuple[str, Path]] = []
         self.forgotten = 0
 
     def probe(self, _entry: ProviderCatalogEntry) -> CliObservation:
         return CliObservation(self.state)
 
-    def log_out(self, provider: str, *, root: Path) -> bool:
+    def log_out(self, provider: str, *, root: Path) -> ServiceCause | None:
         self.logouts.append((provider, root))
-        if self.logout_succeeds:
+        if self.logout_fails is None:
             self.state = CliState.INSTALLED_SIGNED_OUT
-        return self.logout_succeeds
+        return self.logout_fails
 
     def forget(self) -> None:
         self.forgotten += 1
@@ -173,10 +179,12 @@ def test_a_stale_revision_is_refused_as_a_conflict_before_the_agent_runs() -> No
     assert agent.logouts == []
 
 
-def test_a_failed_logout_is_a_logged_service_failure_and_reads_back_nothing() -> None:
-    agent = _Agent(logout_succeeds=False)
+@pytest.mark.parametrize("cause", get_args(ServiceCause)[-3:])
+def test_a_failed_logout_is_a_logged_service_failure_with_its_cause_and_reads_back_nothing(cause: ServiceCause) -> None:
+    assert cause.startswith("logout_")
+    agent = _Agent(logout_fails=cause)
     answer = _answer(agent, catalog=_catalog(logout=True))
-    assert _logged(answer) == {"kind": "refused", "code": "service_failed", "cause": "settings_change_failed"}
+    assert _logged(answer) == {"kind": "refused", "code": "service_failed", "cause": cause}
     assert agent.logouts == [("example", _ROOT)]
     assert agent.forgotten == 1
 

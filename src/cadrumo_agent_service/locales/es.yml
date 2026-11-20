@@ -430,6 +430,8 @@ desktop:
     reason_record_unreadable: No se puede leer la clave API guardada. Vuelve a añadirla.
     refresh: Volver a intentar
     refused_base_url_rejected: Revisa la dirección del servidor y vuelve a intentarlo.
+    refused_busy: Todavía hay otro cambio en tus proveedores en curso. Vuelve a intentarlo
+      en un momento.
     refused_invalid_key_format: Eso no parece una clave de este proveedor.
     refused_model_list_full: La lista de modelos está llena. Quita un modelo antes
       de añadir otro.
@@ -440,6 +442,9 @@ desktop:
     refused_revision_conflict: Estos ajustes han cambiado mientras tanto. Se muestran
       los últimos; vuelve a intentarlo.
     refused_runtime_unavailable: Reinicia Cadrumo y vuelve a intentarlo.
+    refused_service_failed: No se ha podido completar el cambio.
+    refused_timed_out: Cadrumo no ha recibido respuesta a tiempo. Actualiza para ver
+      si el cambio se ha hecho.
     remove_key: Quitar clave API
     replace_key: Sustituir clave API
     save: Guardar
@@ -489,6 +494,11 @@ desktop:
       lane_not_signable: No se puede iniciar sesión en este proveedor desde aquí.
       login_already_running: Ya hay otro inicio de sesión en curso para este perfil.
       login_not_completed: El inicio de sesión no se completó.
+      logout_agent_unavailable: No se ha podido iniciar el agente que cierra la sesión
+        de los proveedores.
+      logout_not_completed: La aplicación del proveedor no ha cerrado la sesión, o
+        el proveedor sigue con la sesión iniciada.
+      logout_timed_out: Cerrar la sesión ha tardado demasiado y se ha detenido.
       prepare_failed: No se pudo preparar el inicio de sesión.
       previous_cleanup_unconfirmed: No se pudo confirmar que el inicio de sesión anterior
         se cerrara correctamente.
