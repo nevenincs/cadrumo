@@ -356,3 +356,54 @@ for (const [code, level] of [
       { level, command: "agent_send", code },
     ]);
   });
+
+// A Sede view open refused `conflict` while the previous view publishes its
+// session is the handover the panel waits on: noted below a warning while the
+// panel asks again within the wait it expects, a warning once the wait runs
+// long, and a warning when the panel does not ask again.
+for (const [scheduled, expected, level] of [
+  [true, true, "DEBUG"],
+  [true, false, "WARNING"],
+  [false, true, "WARNING"],
+] as const)
+  test(`a Sede view open refused conflict, scheduled=${scheduled} expected=${expected}, is reported at ${level}`, async ({
+    page,
+  }) => {
+    await page.goto("/scenarios.html");
+    const reports = await page.evaluate(
+      async ([scheduled, expected]) => {
+        const reports: Report[] = [];
+        Object.assign(window, {
+          __CADRUMO_SHELL__: { token: "e".repeat(64) },
+          __TAURI_INTERNALS__: {
+            transformCallback: () => 0,
+            async invoke(command: string, args: unknown) {
+              if (command === "desktop_frontend_diagnostic") {
+                reports.push((args as { report: Report }).report);
+                return null;
+              }
+              throw { code: "conflict" };
+            },
+          },
+        });
+        const { tauriHost } = await window.__scenarioModules!.tauriHost();
+        const refused = await tauriHost()
+          .sedeView!.open(
+            { cssWidth: 800, cssHeight: 600, scale: 1 },
+            () => undefined,
+            { scheduled: () => scheduled, expected: () => expected },
+          )
+          .then(
+            () => null,
+            (error: { code?: string }) => error.code ?? null,
+          );
+        await new Promise((resolve) => window.setTimeout(resolve, 0));
+        return { refused, reports };
+      },
+      [scheduled, expected] as const,
+    );
+    expect(reports.refused).toBe("conflict");
+    expect(reports.reports).toMatchObject([
+      { level, command: "sede_view_open", code: "conflict" },
+    ]);
+  });
