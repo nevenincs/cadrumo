@@ -3000,14 +3000,25 @@ desktop:
       apply_files: Pontosan ezek importálása ({count})
       applying: 'Importálás: {done}/{total}'
       back: Vissza
+      book_column: Oszlop a fájlban
+      book_columns: A könyv oszlopai
       book_created: 'Létrehozott számlák: {count}'
       book_kind: A könyv számlái
-      book_no_preview: A számlakönyveknek nincs előnézete
-      book_no_preview_note: 'A sorokat létrehozáskor ellenőrzi. A nem elfogadott sorok
-        utána sorszámmal és okkal jelennek meg; a többi megmarad. {kind}; ország:
-        {country}.'
+      book_missing: Az importáláshoz szükséges oszlopok még nincsenek hozzárendelve
+      book_missing_note: 'Válassz oszlopot ehhez: {roles}. A könyv addig nem importálható,
+        amíg mindegyikhez nincs oszlop.'
       book_note: 'Sorok: {rows} · már a katalógusban: {skipped} · nem elfogadva: {refused}'
+      book_preview_note: 'Importálás ide: {kind}; ország: {country}. A sorokat létrehozásukkor
+        ellenőrizzük: az el nem fogadottak utólag, sorszámmal és indoklással kerülnek
+        felsorolásra, a többi megmarad. Egy jelentés egyetlen oszlopé: ha másiknak
+        adod, az első elveszíti.'
+      book_reader_note: Csak azok az oszlopok lettek felismerve, amelyek nevét az
+        importálás ismeri. A többit kézzel rendelheted hozzá.
+      book_reader_unavailable: A helyi MI nem tudta javasolni az oszlopokat
       book_refused: A könyv nem lett importálva
+      book_role: Jelentés
+      book_rows: 'Beolvasott sorok: {rows}'
+      book_source: Ki döntötte el
       bound_note: Az importálás pontosan ezeket a fájlokat használja. Az előnézet
         után módosult fájlt nem fogadja el.
       cancel: Mégse
@@ -3140,6 +3151,24 @@ desktop:
         transaction_validation: Nem olvasható be bankszámlakivonatként.
       refused_rows: Nem elfogadott sorok
       remove: '{name} eltávolítása'
+      role:
+        counterparty_name: A másik fél neve
+        counterparty_nif: A másik fél adószáma
+        country_code: Ország
+        currency: Pénznem
+        invoice_date: Számla kelte
+        invoice_number: Számlaszám
+        iva_rate: IVA-kulcs
+        notes: Megjegyzések
+        retencion_amount: Retención összege
+        retencion_rate: Retención kulcsa
+        taxable_base: Adóalap
+        unmapped: Nincs használatban
+      role_source:
+        exact: Felismerve
+        model: A helyi MI javasolta
+        operator: Te választottad
+        unmapped: Nincs hozzárendelve
       row: Sor
       show_documents: Áttekintés a Dokumentumokban
       show_failed: Az importált tételeket nem sikerült beolvasni. Próbáld újra.

@@ -2951,15 +2951,26 @@ desktop:
       apply_files: Import exactly these files ({count})
       applying: Importing {done} of {total}
       back: Back
+      book_column: Column in the file
+      book_columns: Columns of the book
       book_created: 'Invoices created: {count}'
       book_kind: Invoices in the book
-      book_no_preview: Invoice books have no preview
-      book_no_preview_note: Rows are checked as they are created. Rows not accepted
-        are listed afterwards with their row number and reason; the rest are kept.
-        {kind}; country {country}.
+      book_missing: Some columns the import needs have no meaning yet
+      book_missing_note: 'Choose a column for: {roles}. The book can''t be imported
+        until each one has a column.'
       book_note: 'Rows: {rows} · already in the catalogue: {skipped} · not accepted:
         {refused}'
+      book_preview_note: 'Imported as: {kind}; country {country}. Rows are checked
+        as they are created: those not accepted are listed afterwards with their row
+        number and reason, and the rest are kept. A meaning belongs to one column:
+        giving it to another frees the first.'
+      book_reader_note: Only the columns whose names the import knows were recognised.
+        You can assign the rest by hand.
+      book_reader_unavailable: Local AI couldn't propose the columns
       book_refused: The book was not imported
+      book_role: Meaning
+      book_rows: 'Rows read: {rows}'
+      book_source: Settled by
       bound_note: Importing uses exactly these files. A file changed after this preview
         is not accepted.
       cancel: Cancel
@@ -3087,6 +3098,24 @@ desktop:
         transaction_validation: Couldn't be read as a bank statement.
       refused_rows: Rows not accepted
       remove: Remove {name}
+      role:
+        counterparty_name: Name of the other party
+        counterparty_nif: Tax ID of the other party
+        country_code: Country
+        currency: Currency
+        invoice_date: Invoice date
+        invoice_number: Invoice number
+        iva_rate: IVA rate
+        notes: Notes
+        retencion_amount: Withholding amount
+        retencion_rate: Withholding rate
+        taxable_base: Taxable base
+        unmapped: Not used
+      role_source:
+        exact: Recognised
+        model: Proposed by local AI
+        operator: Chosen by you
+        unmapped: Not assigned
       row: Row
       show_documents: Review in Documents
       show_failed: Couldn't read the imported movements. Try again.

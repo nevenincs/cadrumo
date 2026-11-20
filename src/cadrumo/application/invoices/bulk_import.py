@@ -48,6 +48,7 @@ from ...core.decimal.coercion import coerce_decimal, normalize_decimal_separator
 from ...core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue, try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import DEFAULT_CURRENCY, XLS_EXTENSION
+from ...core.field_role import FieldRole
 from ...core.hashing import sha256_hex
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -572,6 +573,8 @@ def _read_delimited_source(
     path: Path,
     *,
     mapper: ColumnRoleMapper | None,
+    operator_roles: Mapping[int, FieldRole] | None,
+    preview: bool,
     source_bytes: bytes,
     source_sha256: str,
     ingested_at: datetime,
@@ -586,9 +589,13 @@ def _read_delimited_source(
             context={"path_name": path.name, "detail": str(exc)},
         ) from exc
     resolution = resolve_bulk_import_columns(
-        table.headers, mapper=mapper, required_fields=BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
+        table.headers,
+        mapper=mapper,
+        required_fields=BULK_INVOICE_IMPORT_REQUIRED_COLUMNS,
+        operator_roles=operator_roles,
     )
-    _assert_required_fields_present(resolution)
+    if not preview:
+        _assert_required_fields_present(resolution)
     field_by_index = resolution.field_by_index
     rows = tuple(
         BulkImportSourceRow(
@@ -609,12 +616,15 @@ def _read_delimited_source(
     # ``1.234`` there is genuinely ambiguous and must refuse rather than be
     # guessed at. Only a book the mapping lane had to interpret -- foreign
     # headers, its own conventions -- is read under its detected separator,
-    # where the whole file's evidence settles what a comma means.
+    # where the whole file's evidence settles what a comma means. Columns the
+    # operator assigned are a book the product's own names did not read either.
     return BulkInvoiceImportSource(
         rows=rows,
         resolution=resolution,
         decimal_separator=(
-            table.dialect.decimal_separator if resolution.consulted_mapping_lane else DecimalSeparator.PERIOD
+            table.dialect.decimal_separator
+            if resolution.consulted_mapping_lane or resolution.operator_assigned
+            else DecimalSeparator.PERIOD
         ),
         source_sha256=source_sha256,
     )
@@ -673,6 +683,8 @@ def _workbook_source_from_rows(
     *,
     path: Path,
     mapper: ColumnRoleMapper | None,
+    operator_roles: Mapping[int, FieldRole] | None,
+    preview: bool,
     source_sha256: str,
     source_format: SourceFormat,
     ingested_at: datetime,
@@ -686,9 +698,13 @@ def _workbook_source_from_rows(
     _refuse_formula_cells(header_cells, path=path, row_number=1)
     headers = [coerce_cell_text(cell.value) for cell in header_cells]
     resolution = resolve_bulk_import_columns(
-        headers, mapper=mapper, required_fields=BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
+        headers,
+        mapper=mapper,
+        required_fields=BULK_INVOICE_IMPORT_REQUIRED_COLUMNS,
+        operator_roles=operator_roles,
     )
-    _assert_required_fields_present(resolution)
+    if not preview:
+        _assert_required_fields_present(resolution)
     return BulkInvoiceImportSource(
         rows=_workbook_source_rows(
             rows_iter,
@@ -707,6 +723,8 @@ def _read_workbook_source(
     path: Path,
     *,
     mapper: ColumnRoleMapper | None,
+    operator_roles: Mapping[int, FieldRole] | None,
+    preview: bool,
     source_bytes: bytes,
     source_sha256: str,
     ingested_at: datetime,
@@ -741,6 +759,8 @@ def _read_workbook_source(
             rows_iter,
             path=path,
             mapper=mapper,
+            operator_roles=operator_roles,
+            preview=preview,
             source_sha256=source_sha256,
             source_format=SourceFormat.XLSX,
             ingested_at=ingested_at,
@@ -753,6 +773,8 @@ def _read_xls_workbook_source(
     path: Path,
     *,
     mapper: ColumnRoleMapper | None,
+    operator_roles: Mapping[int, FieldRole] | None,
+    preview: bool,
     source_bytes: bytes,
     source_sha256: str,
     ingested_at: datetime,
@@ -775,6 +797,8 @@ def _read_xls_workbook_source(
         iter(worksheets[0].rows if worksheets else ()),
         path=path,
         mapper=mapper,
+        operator_roles=operator_roles,
+        preview=preview,
         source_sha256=source_sha256,
         source_format=SourceFormat.XLS,
         ingested_at=ingested_at,
@@ -786,6 +810,8 @@ def read_bulk_invoice_import_source(
     *,
     mapper: ColumnRoleMapper | None = None,
     expected_sha256: str | None = None,
+    operator_roles: Mapping[int, FieldRole] | None = None,
+    preview: bool = False,
 ) -> BulkInvoiceImportSource:
     """Read a CSV, TSV, XLSX/XLSM or XLS invoice book into rows keyed by importer field.
 
@@ -800,18 +826,25 @@ def read_bulk_invoice_import_source(
 
     Args:
         path: The invoice book to read.
-        mapper: Establishes roles for columns exact matching did not resolve.
+        mapper: Establishes roles for columns neither the operator nor exact
+            matching resolved.
         expected_sha256: Optional submitted source digest, checked against the
             single read before parsing or consulting the mapping lane. Without
             one the digest of that same read is computed and returned on the
             source.
+        operator_roles: The role the operator assigned to a column, by its
+            zero-based index; these bind before exact names and the mapper.
+        preview: Report a required field no column supplies on the returned
+            resolution instead of refusing the book. The source is then for
+            inspection, not for applying.
 
     Returns:
         The resolved source, ready to apply.
 
     Raises:
         InvoiceValidationError: The extension is unsupported, the file cannot be
-            read, or no column supplies a required field.
+            read, a stated role is invalid for the file, or (unless ``preview``)
+            no column supplies a required field.
         LedgerImportReaderUnavailableError: Only the mapping lane could read
             the book's columns, and its model could not be asked.
     """
@@ -838,6 +871,8 @@ def read_bulk_invoice_import_source(
         return _read_delimited_source(
             path,
             mapper=mapper,
+            operator_roles=operator_roles,
+            preview=preview,
             source_bytes=source_bytes,
             source_sha256=source_sha256,
             ingested_at=ingested_at,
@@ -846,6 +881,8 @@ def read_bulk_invoice_import_source(
     return read_workbook(
         path,
         mapper=mapper,
+        operator_roles=operator_roles,
+        preview=preview,
         source_bytes=source_bytes,
         source_sha256=source_sha256,
         ingested_at=ingested_at,
