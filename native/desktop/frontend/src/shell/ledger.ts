@@ -983,11 +983,14 @@ export type LedgerPort = {
   /** Asks to cancel at the revision the page observed. */
   cancel(operation: string, revision: number): Promise<LedgerOutcome>;
   /** Opens the native dialog for files of `purpose`; `filterLabel` names the
-   * kinds it offers in the page's language. */
+   * kinds it offers in the page's language. `kinds` are the extensions, with
+   * no dot, the page asks the dialog to offer; the host offers only those it
+   * allows for the purpose, and null or absent leaves it its full list. */
   pickFiles(
     purpose: Exclude<FilePurpose, "export">,
     pick: FilePick,
     filterLabel: string,
+    kinds?: readonly string[] | null,
   ): Promise<FilePicks>;
   /** Opens the native save dialog for an export in `format`. */
   saveFile(
@@ -1002,10 +1005,12 @@ export type LedgerPort = {
   /** Forgets tokens the page no longer shows. */
   forgetFiles(tokens: FileToken[]): Promise<void>;
   /** Calls `listener` as files of `purpose` are dragged over and dropped on
-   * the window, until the returned function stops it. */
+   * the window, until the returned function stops it. `kinds` bound what a
+   * drop takes as for `pickFiles`. */
   observeDrops(
     purpose: Exclude<FilePurpose, "export">,
     listener: (signal: LedgerDropSignal) => void,
+    kinds?: readonly string[] | null,
   ): Promise<() => void>;
   /** Adds an own account or changes its details with the bytes of
    * `ownAccountChange`, which this one call consumes and zeroes. */

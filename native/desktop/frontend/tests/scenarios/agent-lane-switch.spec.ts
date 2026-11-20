@@ -458,14 +458,19 @@ test.describe("a catalog that still shows the packaged model list", () => {
     expect(await resolved(target)).toBe(2);
   });
 
-  test("is read again at most three times", async ({ page: target }) => {
+  test("keeps being read while it is stale, after pauses that grow", async ({
+    page: target,
+  }) => {
     await target.addInitScript(() => {
       window.__fixtureCatalogStaleReads = 100;
     });
     await open(target);
     await expect.poll(() => resolved(target)).toBe(1);
+    // The pauses are about two, four and eight seconds, then sixteen: the
+    // fourth read is not before the first three pauses have passed.
     await expect.poll(() => resolved(target), { timeout: 20_000 }).toBe(4);
     await target.waitForTimeout(5_000);
     expect(await resolved(target)).toBe(4);
+    await expect.poll(() => resolved(target), { timeout: 30_000 }).toBe(5);
   });
 });

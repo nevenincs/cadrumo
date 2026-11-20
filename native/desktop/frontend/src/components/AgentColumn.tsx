@@ -298,6 +298,12 @@ export function AgentColumn({
   const [providerMatches, setProviderMatches] = useState(true);
   const [accessMatches, setAccessMatches] = useState(true);
   const [pickerRequests, setPickerRequests] = useState(0);
+  // How many times the model picker opened: each opening reads the catalog.
+  const [pickerOpened, setPickerOpened] = useState(0);
+  const onPickerOpened = useCallback(
+    () => setPickerOpened((count) => count + 1),
+    [],
+  );
   const openModelPicker = useCallback(() => {
     setView((held) => ({ ...held, panel: "none" }));
     setPickerRequests((count) => count + 1);
@@ -394,6 +400,7 @@ export function AgentColumn({
     settingsChanges: settings.changes,
     opened,
     listChanges,
+    pickerOpened,
     chosen: view.chosen,
     ranWith,
     fixedWay,
@@ -743,6 +750,9 @@ export function AgentColumn({
     !engineHeld &&
     onProvider !== undefined &&
     providerModelsToDownload(onProvider);
+  // Some lane can be chosen, so what is asked is a choice, not a setup.
+  const laneOffered =
+    offer?.providers.some((provider) => provider.selectable) === true;
   const serviceNotice = status ? serviceWords(t, status) : null;
   // A catalog the service refused as unavailable is said with the reference
   // of the service's log line, rather than as no providers.
@@ -761,7 +771,9 @@ export function AgentColumn({
           : noModelHeld
             ? t("desktop.agent.no_installed_model")
             : noProvider
-              ? t("desktop.agent.no_provider")
+              ? laneOffered
+                ? t("desktop.agent.choose_to_start")
+                : t("desktop.agent.no_provider")
               : offer !== null && !offer.observed
                 ? (serviceNotice ?? t("desktop.agent.lane_not_observed"))
                 : serviceNotice;
@@ -1035,7 +1047,7 @@ export function AgentColumn({
                   : undefined
             }
             onSetUpProviders={
-              noProvider && !noModelHeld && !engineHeld
+              noProvider && !noModelHeld && !engineHeld && !laneOffered
                 ? openSettings
                 : undefined
             }
@@ -1116,7 +1128,10 @@ export function AgentColumn({
             }
             pickerRequests={pickerRequests}
             onPickerClosed={() => setPickerRequests(0)}
+            onPickerOpened={onPickerOpened}
             onDownloadModels={openSettings}
+            onRetryCatalog={agentCatalog.refresh}
+            onSignIn={openSettings}
           />
         </div>
       )}

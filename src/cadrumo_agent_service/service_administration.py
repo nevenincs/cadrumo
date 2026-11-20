@@ -68,6 +68,7 @@ from .service_support import (
     ADMIN_READ_FRESH_SECONDS,
     ADMIN_READ_SECONDS,
     LIFECYCLE_ADMISSION_SECONDS,
+    HeldLaneLog,
 )
 
 
@@ -106,6 +107,7 @@ class AgentServiceAdministration(ABC):
         """
         self.client = client
         self._root = storage_root
+        self._held_lanes = HeldLaneLog()
         self._guard = RLock()
         self._closing = Event()
         self._startup_cancellation: InvocationCancellation | None = None
@@ -590,7 +592,9 @@ class AgentServiceAdministration(ABC):
                     self._clear_hosted_certifications()
                     raise
                 self._remember_hosted_certifications(controller, ready, document)
-                return self._picker_catalog(document)
+                picked = self._picker_catalog(document)
+                self._held_lanes.observe(picked)
+                return picked
         self._clear_hosted_certifications()
         return self._picker_catalog(declared_provider_catalog_response())
 

@@ -94,7 +94,7 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ..user_profile.record_row_words import record_row_summary_words
 from ..user_profile.rental_records import canonical_rental_ref
-from .actions_import import installed_ledger_providers
+from .actions_import import installed_ledger_extensions, installed_ledger_providers
 from .entry_limits import LedgerEntryLimitsProjection, ledger_entry_limits
 from .entry_option_families import EntryOptionFamily, LedgerLinkFieldProjection, served_link_fields
 from .invoice_label_vocabulary import CURRENCY_CODES
@@ -262,6 +262,14 @@ def _withholding_figure_options() -> tuple[LedgerEntryOptionProjection, ...]:
     )
 
 
+def _import_extension_options() -> tuple[LedgerEntryOptionProjection, ...]:
+    """Offer each file extension an installed import format reads, filed under its format."""
+    return tuple(
+        LedgerEntryOptionProjection(value=extension, group=str(provider))
+        for provider, extension in installed_ledger_extensions()
+    )
+
+
 def _plain(tokens: Iterable[object]) -> tuple[LedgerEntryOptionProjection, ...]:
     return tuple(LedgerEntryOptionProjection(value=str(token)) for token in tokens)
 
@@ -383,6 +391,7 @@ def ledger_entry_options(
         ("capital_good_kind", _plain(capital.kind_choices)),
         ("capital_good_disposal", _plain(capital.disposal_regime_choices)),
         ("import_format", _plain(installed_ledger_providers())),
+        ("import_extension", _import_extension_options()),
         ("export_format", _plain(ExportSerializationFormat)),
         ("gasto_capital_inmobiliario", _rental_concept_options(on_date, operation)),
         ("rental_lease", _rental_row_options(ARRENDAMIENTO_SECTION, profile_facts, language)),

@@ -3685,6 +3685,10 @@ cli:
         was imported.'
       file_refused_account_mismatch: 'Statement refused and skipped: {file} names
         a different own account than the one you chose.'
+      file_refused_format_not_installed: 'Statement not read: {file} is in a format
+        whose reader is not part of this installation.'
+      file_refused_statement_account_missing: 'Statement refused and skipped: {file}
+        names no valid account to register as your own.'
       help: Import bank statements or bookkeeping files into your records
       likely_duplicates: '{count} imported row(s) share a date and amount with another
         transaction already in your records or earlier in this file, so they may be

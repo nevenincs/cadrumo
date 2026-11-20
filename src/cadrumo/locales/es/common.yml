@@ -1585,6 +1585,28 @@ desktop:
     title: Cuenta de Google
     unknown: Ahora no se ha podido leer el acceso a Google.
     waiting: Termina de iniciar sesión en Google en tu navegador.
+  home:
+    aeat_evidence: 'Datos de la AEAT: {state}'
+    availability_locked: 'Bloqueado: desbloquea este perfil para verlo'
+    availability_never_captured: Aún sin leer
+    availability_stale: Desactualizado
+    availability_stale_observed: 'Desactualizado: última lectura el {date}'
+    availability_unavailable: No disponible
+    empty: No hay nada que mostrar aquí.
+    failed: No se pudo leer el Inicio ({code}). Prueba a actualizarlo.
+    heading_actions: Próximas acciones
+    heading_agenda: Fechas de presentación
+    heading_declarations: Declaraciones
+    heading_ledger: Estado de los registros
+    heading_messages: Mensajes
+    loading: Cargando el Inicio…
+    messages_attention: '{count} requieren atención'
+    modelo: Modelo {modelo}
+    observed: (última lectura el {date})
+    refresh: Actualizar
+    signed_out: Inicia sesión para ver el Inicio.
+    title: Inicio
+    unworded: Aún no hay descripción en tu idioma.
   host:
     failed: Esta parte no se ha podido cargar.
     unavailable: Esta parte necesita la aplicación de escritorio.
@@ -3013,8 +3035,11 @@ desktop:
       account: Cuenta
       account_choose: Elige la cuenta…
       account_detected: detectada en el archivo
-      account_later: Eliges la cuenta de cada archivo en la vista previa.
+      account_later: La vista previa muestra a qué cuenta pertenece cada archivo.
+      account_names: El archivo indica la cuenta {account}.
       account_no_accounts: no hay cuentas registradas
+      account_register: Registrar {account} como cuenta propia (titular)
+      account_register_note: Podrás cambiarle el nombre más tarde en tus cuentas.
       account_unregistered: el archivo indica una cuenta no registrada
       any_date: Cualquier fecha. Las filas fuera del periodo elegido se omiten.
       apply_book: Importar el libro
@@ -3022,14 +3047,25 @@ desktop:
       apply_files: Importar exactamente estos archivos ({count})
       applying: Importando {done} de {total}
       back: Atrás
+      book_column: Columna del archivo
+      book_columns: Columnas del libro
       book_created: 'Facturas creadas: {count}'
       book_kind: Facturas del libro
-      book_no_preview: Los libros de facturas no tienen vista previa
-      book_no_preview_note: Las filas se comprueban al crearse. Las no aceptadas se
-        listan después con su número de fila y motivo; el resto se conserva. {kind};
-        país {country}.
+      book_missing: Faltan columnas que la importación necesita
+      book_missing_note: 'Elige una columna para: {roles}. El libro no se puede importar
+        hasta que cada uno tenga su columna.'
       book_note: 'Filas: {rows} · ya en el catálogo: {skipped} · no aceptadas: {refused}'
+      book_preview_note: 'Se importará como: {kind}; país {country}. Las filas se
+        comprueban al crearse: las no aceptadas se listan después con su número de
+        fila y motivo, y el resto se conserva. Un significado pertenece a una sola
+        columna: si se lo das a otra, la primera lo pierde.'
+      book_reader_note: Solo se han reconocido las columnas cuyo nombre conoce la
+        importación. Puedes asignar las demás a mano.
+      book_reader_unavailable: La IA local no ha podido proponer las columnas
       book_refused: El libro no se ha importado
+      book_role: Significado
+      book_rows: 'Filas leídas: {rows}'
+      book_source: Decidido por
       bound_note: La importación usa exactamente estos archivos. Si uno cambia tras
         esta vista previa, no se acepta.
       cancel: Cancelar
@@ -3090,9 +3126,18 @@ desktop:
       duplicates_chip: 'Posibles duplicados: {count}'
       duplicates_more: Y {count} más.
       duplicates_note: Se importan y se marcan; compáralos después de importar.
+      failure:
+        file_unavailable: Ya no se puede abrir el archivo. Elígelo de nuevo.
+        invalid: El archivo o las opciones no eran válidos.
+        not_admitted: El libro no ha aceptado esta petición.
+        not_signed_in: Inicia sesión en tu perfil primero.
+        other: Revisa el archivo y vuelve a intentarlo.
+        too_large: El archivo es demasiado grande para leerlo aquí.
+        unavailable: El libro no está disponible ahora mismo.
       file_counts: Filas {rows} · nuevas {fresh} · ya en el libro {skipped}
       file_imported: Importados {fresh} · ya en el libro {skipped}
       file_not_sent: No enviado.
+      file_skipped: Las {skipped} filas ya están en el libro; no se ha enviado nada.
       file_unknown: 'Resultado desconocido: puede haberse importado.'
       files: Archivos
       filter:
@@ -3121,7 +3166,7 @@ desktop:
       pick_failed: No se ha abierto el selector de archivos. Vuelve a intentarlo.
       preview: Vista previa
       preview_again: Volver a previsualizar
-      preview_failed: 'No se ha podido previsualizar:'
+      preview_failed: No se ha podido previsualizar.
       provider:
         auto: Detectar del archivo
         csv: CSV
@@ -3137,6 +3182,8 @@ desktop:
       refusal:
         empty_directory: La carpeta no contiene ningún extracto.
         file_limit: Más de 128 archivos a la vez.
+        format_not_installed: 'No se ha leído: esta instalación no puede leer este
+          formato.'
         other: No importado. Revisa el archivo y vuelve a intentarlo.
         own_account_mismatch: Sus filas indican otra cuenta.
         reader_unavailable: 'No se ha leído: la IA local, que lee este archivo, no
@@ -3145,9 +3192,29 @@ desktop:
           ahora mismo. Revísalo en el selector de modelos del agente.'
         result_limit: 'Más de 4.096 filas: impórtalo por partes.'
         source_changed: El fichero ha cambiado desde la vista previa; vuelve a generarla.
+        statement_account_missing: 'No importado: el archivo no indica ninguna cuenta
+          que registrar.'
         transaction_validation: No se ha podido leer como extracto bancario.
       refused_rows: Filas no aceptadas
       remove: Quitar {name}
+      role:
+        counterparty_name: Nombre de la otra parte
+        counterparty_nif: NIF de la otra parte
+        country_code: País
+        currency: Moneda
+        invoice_date: Fecha de la factura
+        invoice_number: Número de factura
+        iva_rate: Tipo de IVA
+        notes: Notas
+        retencion_amount: Importe de la retención
+        retencion_rate: Tipo de retención
+        taxable_base: Base imponible
+        unmapped: Sin usar
+      role_source:
+        exact: Reconocida
+        model: Propuesta por la IA local
+        operator: Elegida por ti
+        unmapped: Sin asignar
       row: Fila
       show_documents: Revisar en Documentos
       show_failed: No se han podido leer los movimientos importados. Vuelve a intentarlo.
@@ -5285,7 +5352,7 @@ desktop:
       older_revision: Funciona, pero hace falta una versión más reciente.
       program_too_old: Funciona, pero esta versión es demasiado antigua para Cadrumo.
     state:
-      absent: Aún no está configurado.
+      absent: Aún sin configurar.
       blocked: Ahora mismo no se puede configurar.
       failed: La configuración no ha terminado.
       provisioning: Configurándose ahora.
@@ -8659,12 +8726,16 @@ tui:
         empty_directory: la carpeta no contiene ningún extracto que se pueda importar
         file_limit: la importación incluye más ficheros de los que admite una sola
           importación, así que no se leyó ninguno; importa menos a la vez
+        format_not_installed: esta instalación no puede leer el formato del archivo,
+          así que no se importó nada
         own_account_mismatch: el extracto indica otra cuenta distinta de la que elegiste
         reader_unavailable: el modelo que elegiste no está disponible ahora mismo,
           así que no se leyó el fichero; vuelve a intentarlo cuando esté disponible
         result_limit: la importación alcanzó su límite de filas antes de este fichero
         source_changed: El fichero cambió después de la vista previa y no se importó
           nada; vuelve a generarla.
+        statement_account_missing: el extracto no indica ninguna cuenta que registrar,
+          así que no se importó nada
         transaction_validation: el fichero no se pudo leer como extracto
       success: 'Importados: {imported}; omitidos: {skipped}.'
       title: Importar apuntes

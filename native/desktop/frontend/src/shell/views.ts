@@ -3,9 +3,12 @@
 // under the product's names: its type is generated in calendarContract.ts,
 // so nothing in it is computed, renamed or spelled by hand, and a state the
 // product keeps apart stays apart on screen. The notifications are counts
-// only, taken by the host, so that no row of them reaches the window.
+// only, taken by the host, so that no row of them reaches the window. Home is
+// the `home` state of the product's workbench generation, served by the host
+// under the product's names with the rest of the generation left behind.
 
 import type { FilingCalendarServed } from "./calendarContract";
+import type { HomeServed } from "./homeContract";
 
 /** What the last capture of the tax agency's notifications held, as counts.
  * The rows carry names and tax numbers, and the window has no use for them:
@@ -31,4 +34,8 @@ export interface ProfileViews {
     range: { from: string; to: string },
     language: string,
   ): Promise<FilingCalendarServed>;
+  /** Home as the product served it, its sentences in `language`. Reads the
+   * profile's local records only; it never asks the tax agency. Refused when
+   * nobody is signed in. */
+  home(language: string): Promise<HomeServed>;
 }

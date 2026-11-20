@@ -254,6 +254,14 @@ export async function signInHost(
               case "profile_views_calendar":
                 state.viewReads.push({ command, ...args });
                 return calendar;
+              case "profile_views_home":
+                state.viewReads.push({ command, ...args });
+                return {
+                  availability: "unavailable",
+                  observed_at: null,
+                  refusal: "synthetic.home.unavailable",
+                  projection: null,
+                };
               case "sign_out_with_password": {
                 ++state.savedClearCalls;
                 state.savedClearRawPassword =

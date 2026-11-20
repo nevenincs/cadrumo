@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.corpus_search import reference_search
 from cadrumo.application.corpus_search import runtime as corpus_runtime
 from cadrumo.application.corpus_search.citation_lookup import bundled_citation_lookup
 from cadrumo.application.corpus_search.lexical_index import bundled_corpus_html_root
@@ -21,7 +22,6 @@ from cadrumo.domain.calculations.registry import authority as authority_module
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin
 
-from .. import corpus_query as mcp_corpus
 from ..server import build_server
 from .admitted_lease import admitted_adapter
 from .session import connected_server_and_client_session
@@ -107,14 +107,14 @@ async def test_exact_citation_returns_published_verbatim_evidence() -> None:
 @pytest.mark.anyio
 @pytest.mark.usefixtures("sample_corpus")
 async def test_reported_generation_is_the_pin_the_citation_lookup_used(monkeypatch: pytest.MonkeyPatch) -> None:
-    canonical = mcp_corpus.search_corpus
+    canonical = reference_search.search_corpus
     observed: list[AuthorityGenerationPin] = []
 
     def record_pin(query: str, *, operation: PinnedAuthorityOperation, limit: int) -> RetrievalResponse:
         observed.append(operation.pin())
         return canonical(query, operation=operation, limit=limit)
 
-    monkeypatch.setattr(mcp_corpus, "search_corpus", record_pin)
+    monkeypatch.setattr(reference_search, "search_corpus", record_pin)
     adapter = admitted_adapter()
     try:
         result = await adapter.call("corpus_search", {"query": _CITATION_ID})

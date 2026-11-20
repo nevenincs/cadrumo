@@ -15,6 +15,11 @@ export type Choice = {
   description?: string;
 };
 
+/** What the person can do about a lane the catalog holds back: ask again for
+ * a lane whose models could not be read yet, or sign in to one that is signed
+ * out. */
+export type HeldStep = "retry" | "sign_in";
+
 /** One way into a provider, with the models it offers. */
 export type ProviderWay = {
   /** Keys the way's models. Nothing about the way is to be read from it. */
@@ -26,6 +31,9 @@ export type ProviderWay = {
   selectable: boolean;
   /** Why it cannot be chosen, shown beside it when `selectable` is false. */
   unavailableReason?: string;
+  /** The step the person can take about a lane that cannot be chosen, where
+   * the catalog's own reason names one. */
+  heldStep?: HeldStep;
   /** The model chosen with it, where its catalog recommends one. */
   defaultModelId?: string;
   /** What the way has been proven able to do on this computer, already

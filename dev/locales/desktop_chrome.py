@@ -56,6 +56,7 @@ from .desktop_entry_option_keys import (
     ENTRY_TOKEN_WORD_KEYS,
     WITHHOLDING_CERTIFICATE_FIGURE_KEYS,
 )
+from .desktop_home_keys import DESKTOP_HOME_KEYS
 from .desktop_interface_keys import DESKTOP_INTERFACE_KEYS
 from .desktop_ledger_catalogue_keys import DESKTOP_LEDGER_CATALOGUE_KEYS
 from .desktop_ledger_document_keys import DESKTOP_LEDGER_DOCUMENT_KEYS
@@ -358,6 +359,8 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "empty_directory",
             "file_limit",
             "reader_unavailable",
+            "format_not_installed",
+            "statement_account_missing",
         ),
         "desktop.ledger.import.diagnostic.": (
             "no_rows",
@@ -369,6 +372,21 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "verified",
             "unreadable",
         ),
+        "desktop.ledger.import.role.": (
+            "unmapped",
+            "counterparty_nif",
+            "counterparty_name",
+            "invoice_number",
+            "invoice_date",
+            "taxable_base",
+            "iva_rate",
+            "retencion_amount",
+            "retencion_rate",
+            "currency",
+            "country_code",
+            "notes",
+        ),
+        "desktop.ledger.import.role_source.": ("exact", "model", "operator", "unmapped"),
         "desktop.ledger.import.direction.": ("incoming", "outgoing", "internal_transfer"),
         "desktop.ledger.import.filter.": ("bank", "book", "documents"),
         "desktop.ledger.import.kind.": ("bank", "book", "documents"),
@@ -794,6 +812,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = (
     | DESKTOP_LEDGER_WORKFLOW_KEYS
     | DESKTOP_LEDGER_CATALOGUE_KEYS
     | DESKTOP_INTERFACE_KEYS
+    | DESKTOP_HOME_KEYS
     | WORKSPACE_KEYS
     | ASSET_KEYS
     | INVENTORY_KEYS

@@ -7,6 +7,7 @@ from collections.abc import Callable
 from datetime import date
 from pathlib import Path
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -27,10 +28,21 @@ from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_payload, require_operation_profile
 from ..operations.refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
+from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .bulk_import import import_invoices_from_rows, read_bulk_invoice_import_source
+from .bulk_import import (
+    BULK_INVOICE_IMPORT_REQUIRED_COLUMNS,
+    BulkInvoiceImportSource,
+    import_invoices_from_rows,
+    read_bulk_invoice_import_source,
+)
+from .bulk_import_columns import BULK_IMPORT_FIELD_BY_ROLE
 from .catalogue_intake_contracts import (
+    INVOICE_IMPORT_HEADER_MAX_CHARS,
+    INVOICE_IMPORT_MAX_COLUMNS,
     INVOICE_INTAKE_REQUEST_TYPES,
+    InvoiceImportAssignableRole,
+    InvoiceImportColumn,
     InvoiceImportProjection,
     InvoiceImportRequest,
     InvoiceImportRowFailure,
@@ -171,8 +183,14 @@ class _InvoiceIntakeRun:
         if not isinstance(self.payload, InvoiceImportRequest):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         source = read_bulk_invoice_import_source(
-            Path(self.payload.source_path), mapper=ports.mapper, expected_sha256=self.payload.source_sha256
+            Path(self.payload.source_path),
+            mapper=ports.mapper,
+            expected_sha256=self.payload.source_sha256,
+            operator_roles=self.payload.operator_roles,
+            preview=self.payload.preview,
         )
+        if self.payload.preview:
+            return _import_preview(self.payload.profile_id, source, mapping_reasons=ports.mapping_reasons())
         outcome = import_invoices_from_rows(
             source,
             bucket_id=str(self.payload.profile_id),
@@ -244,6 +262,43 @@ class _InvoiceIntakeRun:
             already_existed=outcome.already_existed,
             euro_value_pending=outcome.invoice.euro_value_pending,
         )
+
+
+def _import_preview(
+    profile_id: UUID, source: BulkInvoiceImportSource, *, mapping_reasons: tuple[str, ...]
+) -> InvoiceImportProjection:
+    """Report how the book's columns resolved, with nothing counted as imported."""
+    resolution = source.resolution
+    verdict = resolution.reader_unavailable_verdict
+    return InvoiceImportProjection(
+        profile_id=profile_id,
+        source_sha256=source.source_sha256,
+        rows=0,
+        created=0,
+        skipped_duplicate=0,
+        refused=(),
+        created_invoice_ids=(),
+        unmapped_column_headers=tuple(column.header for column in resolution.unmapped_columns),
+        mapping_reasons=mapping_reasons,
+        preview=True,
+        columns=tuple(
+            InvoiceImportColumn(
+                column_index=column.column_index,
+                header=column.header[:INVOICE_IMPORT_HEADER_MAX_CHARS],
+                role=column.role,
+                source=column.source,
+            )
+            for column in resolution.columns[:INVOICE_IMPORT_MAX_COLUMNS]
+        ),
+        columns_truncated=len(resolution.columns) > INVOICE_IMPORT_MAX_COLUMNS,
+        missing_fields=tuple(sorted(BULK_INVOICE_IMPORT_REQUIRED_COLUMNS - resolution.fields_present)),
+        assignable_roles=tuple(
+            InvoiceImportAssignableRole(role=role, field=field, required=field in BULK_INVOICE_IMPORT_REQUIRED_COLUMNS)
+            for role, field in BULK_IMPORT_FIELD_BY_ROLE.items()
+        ),
+        row_count=len(source.rows),
+        reader_unavailable_verdict=None if verdict is None else PreconditionVerdictSnapshot.from_verdict(verdict),
+    )
 
 
 def _wizard_governing_date(payload: InvoiceWizardRequest) -> date:

@@ -261,6 +261,7 @@ test("an agent column whose service stays busy past the quiet bound records one 
         settingsChanges: 0,
         opened: 0,
         listChanges: 0,
+        pickerOpened: 0,
         chosen: null,
         ranWith: undefined,
         fixedWay: null,

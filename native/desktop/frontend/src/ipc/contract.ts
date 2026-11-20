@@ -526,6 +526,12 @@ export interface HostCommands {
     args: Authorized<{ from: string; to: string; language: string }>;
     result: import("../shell/calendarContract").FilingCalendarServed;
   };
+  /** Home: only the `home` state of the product's workbench generation, its
+   * sentences in `language`. */
+  profile_views_home: {
+    args: Authorized<{ language: string }>;
+    result: import("../shell/homeContract").HomeServed;
+  };
   /** Submits one admitted ledger operation with its request, without the
    * profile, and follows it until it settles or waits on the person. A
    * failure rejects with `LedgerFailure`. */
@@ -566,6 +572,9 @@ export interface HostCommands {
       purpose: Exclude<import("../shell/ledger").FilePurpose, "export">;
       pick: import("../shell/ledger").FilePick;
       filterLabel: string;
+      /** The extensions the dialog is asked to offer, within what the host
+       * allows for the purpose; null leaves the host its full list. */
+      kinds: string[] | null;
     }>;
     result: import("../shell/ledger").FilePicks;
   };
@@ -590,6 +599,8 @@ export interface HostCommands {
   ledger_drop_observe: {
     args: Authorized<{
       purpose: Exclude<import("../shell/ledger").FilePurpose, "export">;
+      /** As for `ledger_files_pick`: what a drop takes. */
+      kinds: string[] | null;
       updates: Channel<import("../shell/ledger").LedgerDropSignal>;
     }>;
     result: number;
