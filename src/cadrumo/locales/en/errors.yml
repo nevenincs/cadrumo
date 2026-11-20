@@ -1731,9 +1731,10 @@ errors:
     refused_ledger_counterparty_provincia_input: The province given is not an INE
       province code.
     refused_ledger_evidence_filer_postcode_missing: Your profile does not state the
-      postcode of your fiscal address. Without it your IVA territory (peninsula and
-      Balearics, Canarias, or Ceuta and Melilla) is unknown, and no invoice can be
-      confirmed. Add it in Your profile or bring it from the census.
+      postcode of your fiscal address. Without it your IVA territory (the mainland
+      and the Balearic Islands, the Canary Islands, or Ceuta and Melilla) is unknown,
+      and no invoice can be confirmed. Add it in Your profile or bring it from the
+      census.
     refused_ledger_evidence_filer_postcode_unreadable: The fiscal-address postcode
       in your profile is not a valid Spanish postcode, so your IVA territory is unknown
       and no invoice can be confirmed. Correct it in Your profile.
