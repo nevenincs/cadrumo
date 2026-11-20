@@ -5082,6 +5082,9 @@ application:
     notices:
       censo_divergences_open: '{count} dada/es del perfil o del certificat encara
         difereixen del Certificat de Situació Censal i resten sense resoldre: {axes}.'
+      entity_type_unstated: Indica la dada «{field}» per veure els apartats que et
+        corresponen. Fins aleshores no es mostren els apartats propis d'un sol tipus
+        de contribuent.
       kdf_at_fallback: La contrasenya d'aquest perfil té la protecció mínima, perquè
         aquest ordinador no va poder confirmar a temps una configuració més forta
         quan es va crear el perfil. Canvia la contrasenya per reforçar-la; pots tornar

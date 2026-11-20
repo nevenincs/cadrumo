@@ -21,8 +21,8 @@ export function profileStated(path: string): string {
 /** The taxpayer's surnames, which the profile page shows once it has read the profile. */
 export const PROFILE_SURNAMES = profileStated("identity.surnames");
 
-/** The taxpayer's full name as the profile page's summary heads it. */
-export const PROFILE_NAME = `${profileStated("identity.name")} ${PROFILE_SURNAMES}`;
+/** The name the product heads the profile with, which the page's summary shows. */
+export const PROFILE_NAME = profile.name;
 
 /** How many required details the served profile reports missing. */
 export const PROFILE_REQUIRED_MISSING = profile.missing_required.length;

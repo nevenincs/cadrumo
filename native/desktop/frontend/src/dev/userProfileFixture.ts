@@ -29,6 +29,9 @@ declare global {
        * declared complete: what the completion action waits for. */
       readyToComplete(): void;
       changeIdentity(): void;
+      /** The profile states no taxpayer name, and the product heads it with
+       * `name`, the name it was created under. */
+      servedName(name: string): void;
       /** The providers whose passphrase or password was saved. */
       credentials(): string[];
       /** How many times a credential save was sent, whatever came of it. */
@@ -105,7 +108,19 @@ export function userProfileFixture(
     data.sections
       .flatMap((section) => section.fields)
       .find((entry) => entry.path === path);
+  // The name the profile was created under, which heads it while it states
+  // no taxpayer name.
+  let created = "";
+  // What the product heads the profile with after a change, as its overview
+  // names it: given name and surnames, else legal name, else `created`.
+  const served = () =>
+    [fieldOf("identity.name")?.value, fieldOf("identity.surnames")?.value]
+      .filter(Boolean)
+      .join(" ") ||
+    fieldOf("identity.legal_name")?.value ||
+    created;
   const changed = () => {
+    data.name = served();
     data.record_revision++;
     data.content_digest = String(data.record_revision).padStart(64, "0");
     data.missing_required = data.sections
@@ -118,6 +133,16 @@ export function userProfileFixture(
     changeIdentity() {
       data.profile_id = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
       listeners.forEach((listener) => listener());
+    },
+    servedName(name: string) {
+      for (const path of [
+        "identity.name",
+        "identity.surnames",
+        "identity.legal_name",
+      ])
+        fieldOf(path)!.value = null;
+      created = name;
+      changed();
     },
     completeWithMissing() {
       data.setup_state = "complete";

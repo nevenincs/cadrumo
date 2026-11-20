@@ -36,6 +36,7 @@ from .family_rows import family_draft_item, family_row_items
 from .overview import ProfileFieldChoice, ProfileOverview, build_profile_overview
 from .password_kdf_notice import profile_kdf_floor_notice
 from .profile_record_repository import ProfileRecordRepository
+from .profile_repository import CommittedProfileRepository
 from .projections import record_to_path_values
 from .question_view import profile_question_items
 from .validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
@@ -43,6 +44,7 @@ from .view_operation import (
     PROFILE_VIEW_MAX_RESULT_BYTES,
     ProfileViewFactItem,
     ProfileViewFieldItem,
+    ProfileViewHeadingItem,
     ProfileViewHealth,
     ProfileViewIssueItem,
     ProfileViewItem,
@@ -264,6 +266,7 @@ def _build_overview_source(
 ) -> tuple[ProfileViewItem, ...] | ProfileViewOperationResult:
     overview = build_profile_overview(
         record,
+        label=CommittedProfileRepository().load(record.profile_id).label,
         schema=schema,
         flow=build_setup_flow(authority_operation),
         code_lists={
@@ -287,7 +290,12 @@ def _build_overview_source(
         *(_overview_notice_item(notice) for notice in notices),
         *(() if custody_notice is None else (custody_notice,)),
     )
-    return (*_overview_section_items(overview), *missing_items, *notice_items)
+    return (
+        ProfileViewHeadingItem(name=overview.heading_name),
+        *_overview_section_items(overview),
+        *missing_items,
+        *notice_items,
+    )
 
 
 def _build_family_source(
