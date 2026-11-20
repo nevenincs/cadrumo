@@ -3,8 +3,11 @@
 Both sides run for real: the command line through the cached Click runner and
 the tool through the adapter's wire boundary, against the same published
 authority. A question is one command line and one set of tool arguments; the
-tool's `report` must equal the command line's `result`, and a refusal must carry
-the same words.
+tool's `report`, with every page it serves joined, must equal the command
+line's `result` as the tool serves it, and a refusal must carry the same words.
+The tool serves a long list a page at a time and a casilla or formula row as a
+summary; what that leaves out is read with the `casilla` question, which is
+compared whole.
 """
 
 from __future__ import annotations
@@ -145,6 +148,55 @@ _QUESTIONS: tuple[tuple[str, list[str], dict[str, Any]], ...] = (
 )
 
 
+_ROWS_MEMBER = {
+    "modelos": "modelos",
+    "support": "entries",
+    "casillas": "rows",
+    "formulas": "rows",
+    "portals": "rows",
+}
+_SUMMARY_MEMBERS = {
+    "casillas": (
+        "casilla_id",
+        "number",
+        "label",
+        "input_kind",
+        "required",
+        "data_type",
+        "binding",
+        "formula",
+        "form_number",
+    ),
+    "formulas": (
+        "formula_id",
+        "target_casilla_id",
+        "input_casilla_ids",
+        "input_bindings",
+        "input_parameters",
+        "input_relations",
+    ),
+}
+
+
+def _as_served(query: str, printed: dict[str, Any]) -> dict[str, Any]:
+    """Return the command line's result as the tool serves its rows: a summary where a row can be long."""
+    if query == "support":
+        return {
+            **printed,
+            "entries": [
+                {
+                    **{member: value for member, value in entry.items() if member != "renames"},
+                    "rename_count": len(entry["renames"]),
+                }
+                for entry in printed["entries"]
+            ],
+        }
+    if query in _SUMMARY_MEMBERS:
+        members = _SUMMARY_MEMBERS[query]
+        return {**printed, "rows": [{member: row[member] for member in members} for row in printed["rows"]]}
+    return printed
+
+
 def _as_printed(value: object) -> object:
     """Trim a portal URL to scheme and host, as the command line's output redaction does.
 
@@ -176,6 +228,23 @@ async def _tool_reply(arguments: dict[str, Any]) -> dict[str, Any]:
         await adapter.close()
 
 
+async def _joined_report(arguments: dict[str, Any]) -> dict[str, Any]:
+    """Follow the tool's pages to the last and return its report with every row joined."""
+    reply = await _tool_reply(arguments)
+    assert reply["outcome"] == "published", reply
+    member = _ROWS_MEMBER.get(arguments["query"])
+    if member is None:
+        assert "paging" not in reply, arguments
+        return reply["report"]
+    report = reply["report"]
+    rows = list(report[member])
+    while reply["paging"]["next_cursor"] is not None:
+        reply = await _tool_reply(reply["paging"]["next_call"]["arguments"])
+        rows.extend(reply["report"][member])
+    assert len(rows) == reply["paging"]["total"]
+    return {**report, member: rows}
+
+
 def _command_line(args: list[str]) -> Any:
     if args[:2] == ["config", "auth"]:
         from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
@@ -191,10 +260,10 @@ async def test_tool_report_equals_the_command_line_result(
 ) -> None:
     invocation = _command_line(command_line)
     assert invocation.exit_code == 0, (label, invocation.output)
-    reply = await _tool_reply(arguments)
+    report = await _joined_report(arguments)
 
-    assert reply["outcome"] == "published", (label, reply)
-    assert _as_printed(reply["report"]) == require_schema_envelope(invocation.output), label
+    printed = require_schema_envelope(invocation.output)
+    assert _as_printed(report) == _as_served(arguments["query"], printed), label
 
 
 def test_every_filter_is_exercised_by_a_question() -> None:
