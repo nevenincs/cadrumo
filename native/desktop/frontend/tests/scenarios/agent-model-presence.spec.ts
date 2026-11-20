@@ -306,3 +306,23 @@ test("the notice follows the provider the person is on: the model notice for the
   await expect(download(model)).toBeVisible();
   await expect(noticeOf(target, "desktop.agent.no_provider")).toHaveCount(0);
 });
+
+// A send the agent refuses because the lane's provider has no key or sign-in
+// yet is said in the served words with the way to give one, never as a bare
+// failure.
+test("a send for a provider without a key is refused in words with the way to its settings", async ({
+  page: target,
+}) => {
+  await open(target);
+  await ask(target, "Hola sin clave");
+  const alert = column(target)
+    .getByRole("alert")
+    .filter({ hasText: label("desktop.agent.service_credential_missing") });
+  await expect(alert).toBeVisible();
+  await expect(alert).not.toContainText(label("desktop.agent.request_failed"));
+  await expect(messageField(target)).toHaveValue("Hola sin clave");
+  await alert
+    .getByRole("button", { name: label("desktop.agent.set_up_providers") })
+    .click();
+  await expect(settings(target)).toBeVisible();
+});

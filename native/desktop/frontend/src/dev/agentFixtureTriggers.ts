@@ -101,3 +101,8 @@ export const BUSY_ELSEWHERE = /ocupado/i;
 /** A message the made-up agent refuses because the chosen model does not fit
  * this computer. */
 export const MODEL_DOES_NOT_FIT = /no cabe/i;
+
+/** A message the agent refuses because the chosen lane's provider has no key
+ * or sign-in yet, as when the picker offered a lane whose credential was
+ * removed behind the window's back. */
+export const PROVIDER_CREDENTIAL_MISSING = /sin clave/i;
