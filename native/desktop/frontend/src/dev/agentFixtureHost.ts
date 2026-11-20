@@ -74,8 +74,7 @@ import {
   AUTHENTICATION_REQUIRED,
   BUSY_ELSEWHERE,
   FAILS_FIRST,
-  LINKS,
-  LINKS_REPLY,
+  LINK_REPLIES,
   LINK_TO,
   MODEL_DOES_NOT_FIT,
   RICH,
@@ -91,7 +90,7 @@ import {
   MODEL_UNAVAILABLE,
   MODEL_UNAVAILABLE_WHY,
   admitted,
-  withStaleReads,
+  withScenarioReads,
 } from "./fixtures/agentLanes";
 import { pieces } from "./fixtures/textPieces";
 import type {
@@ -754,12 +753,9 @@ export function fixtureAgent({
       ]);
       return;
     }
-    if (LINKS.test(text)) {
-      schedule(held, [
-        started(held),
-        ...write(held, LINKS_REPLY),
-        finish(held),
-      ]);
+    const links = LINK_REPLIES.find(([asked]) => asked.test(text));
+    if (links) {
+      schedule(held, [started(held), ...write(held, links[1]), finish(held)]);
       return;
     }
     if (RICH.test(text)) {
@@ -1013,7 +1009,7 @@ export function fixtureAgent({
       const stated = engineHealth
         ? withEngineHealth(served, engineHealth)
         : served;
-      return withStaleReads(models ? models.report(stated) : stated);
+      return withScenarioReads(models ? models.report(stated) : stated);
     },
     async localModels() {
       say("agentLocalModels");

@@ -153,10 +153,12 @@ test("every resolve vector opens where the register's resolution does", () => {
   }
 });
 
-test("the window's table draws only elements the register gives the window", () => {
+test("the window's table draws exactly the elements the register gives the window", () => {
   const gui = idsFor(register, "gui");
   for (const id of Object.keys(WINDOW_VIEWS))
     expect(gui.has(id), id).toBe(true);
+  for (const id of gui) expect(WINDOW_VIEWS[id], id).toBeDefined();
+  expect(Object.keys(WINDOW_VIEWS).sort()).toEqual([...gui].sort());
   for (const [id, entry] of Object.entries(WINDOW_VIEWS)) {
     const element = register.elements.find((each) => each.id === id);
     // The window honours only parameters the element declares.

@@ -964,6 +964,12 @@ application:
   invoices:
     bulk_import:
       errors:
+        column_role_not_accepted: La importació del llibre de factures no té cap camp
+          per al paper {role}.
+        column_role_out_of_range: Els papers de les columnes anomenen la columna {column},
+          però el llibre de factures té {columns} columnes.
+        column_role_repeated: El paper {role} està assignat a més d'una columna del
+          llibre de factures.
         country_unanswerable: 'El fitxer d''importació no té columna de país de la
           contrapart i no s''ha indicat cap país per a la importació. Afegeix una
           columna country_code o indica un país per a tot el fitxer. Columnes no reconegudes:
@@ -5092,6 +5098,9 @@ application:
     notices:
       censo_divergences_open: '{count} dada/es del perfil o del certificat encara
         difereixen del Certificat de Situació Censal i resten sense resoldre: {axes}.'
+      entity_type_unstated: Indica la dada «{field}» per veure els apartats que et
+        corresponen. Fins aleshores no es mostren els apartats propis d'un sol tipus
+        de contribuent.
       kdf_at_fallback: La contrasenya d'aquest perfil té la protecció mínima, perquè
         aquest ordinador no va poder confirmar a temps una configuració més forta
         quan es va crear el perfil. Canvia la contrasenya per reforçar-la; pots tornar

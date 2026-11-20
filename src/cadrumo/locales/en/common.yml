@@ -2939,8 +2939,11 @@ desktop:
       account: Account
       account_choose: Choose the account…
       account_detected: detected from the file
-      account_later: You choose each file's account in the preview.
+      account_later: The preview shows which account each file belongs to.
+      account_names: The file names the account {account}.
       account_no_accounts: no accounts registered
+      account_register: Register {account} as my own account (holder)
+      account_register_note: Rename it later in your accounts.
       account_unregistered: the file names an account that isn't registered
       any_date: Any date. Rows outside a chosen period are left out.
       apply_book: Import the book
@@ -2948,15 +2951,26 @@ desktop:
       apply_files: Import exactly these files ({count})
       applying: Importing {done} of {total}
       back: Back
+      book_column: Column in the file
+      book_columns: Columns of the book
       book_created: 'Invoices created: {count}'
       book_kind: Invoices in the book
-      book_no_preview: Invoice books have no preview
-      book_no_preview_note: Rows are checked as they are created. Rows not accepted
-        are listed afterwards with their row number and reason; the rest are kept.
-        {kind}; country {country}.
+      book_missing: Some columns the import needs have no meaning yet
+      book_missing_note: 'Choose a column for: {roles}. The book can''t be imported
+        until each one has a column.'
       book_note: 'Rows: {rows} · already in the catalogue: {skipped} · not accepted:
         {refused}'
+      book_preview_note: 'Imported as: {kind}; country {country}. Rows are checked
+        as they are created: those not accepted are listed afterwards with their row
+        number and reason, and the rest are kept. A meaning belongs to one column:
+        giving it to another frees the first.'
+      book_reader_note: Only the columns whose names the import knows were recognised.
+        You can assign the rest by hand.
+      book_reader_unavailable: Local AI couldn't propose the columns
       book_refused: The book was not imported
+      book_role: Meaning
+      book_rows: 'Rows read: {rows}'
+      book_source: Settled by
       bound_note: Importing uses exactly these files. A file changed after this preview
         is not accepted.
       cancel: Cancel
@@ -3016,9 +3030,18 @@ desktop:
       duplicates_chip: 'Possible duplicates: {count}'
       duplicates_more: And {count} more.
       duplicates_note: Imported and flagged; compare them after importing.
+      failure:
+        file_unavailable: The file can't be opened any more. Choose it again.
+        invalid: The file or the options weren't valid.
+        not_admitted: The ledger didn't accept this request.
+        not_signed_in: Sign in to your profile first.
+        other: Check the file and try again.
+        too_large: The file is too large to read here.
+        unavailable: The ledger isn't available right now.
       file_counts: Rows {rows} · new {fresh} · already in the ledger {skipped}
       file_imported: Imported {fresh} · already in the ledger {skipped}
       file_not_sent: Not sent.
+      file_skipped: All {skipped} rows are already in the ledger; nothing was sent.
       file_unknown: 'Outcome unknown: it may have been imported.'
       files: Files
       filter:
@@ -3047,7 +3070,7 @@ desktop:
       pick_failed: The file dialog didn't open. Try again.
       preview: Preview
       preview_again: Preview again
-      preview_failed: 'Couldn''t be previewed:'
+      preview_failed: Couldn't be previewed.
       provider:
         auto: Detect from the file
         csv: CSV
@@ -3063,6 +3086,7 @@ desktop:
       refusal:
         empty_directory: The folder holds no statement.
         file_limit: More than 128 files at once.
+        format_not_installed: 'Not read: this installation can''t read this format.'
         other: Not imported. Check the file and try again.
         own_account_mismatch: Its rows name a different account.
         reader_unavailable: 'Not read: Local AI, which reads this file, is not ready.'
@@ -3070,9 +3094,28 @@ desktop:
           right now. Check it in the agent''s model picker.'
         result_limit: 'More than 4,096 rows: import it in parts.'
         source_changed: 'Changed after the preview: preview it again.'
+        statement_account_missing: 'Not imported: the file names no account to register.'
         transaction_validation: Couldn't be read as a bank statement.
       refused_rows: Rows not accepted
       remove: Remove {name}
+      role:
+        counterparty_name: Name of the other party
+        counterparty_nif: Tax ID of the other party
+        country_code: Country
+        currency: Currency
+        invoice_date: Invoice date
+        invoice_number: Invoice number
+        iva_rate: IVA rate
+        notes: Notes
+        retencion_amount: Withholding amount
+        retencion_rate: Withholding rate
+        taxable_base: Taxable base
+        unmapped: Not used
+      role_source:
+        exact: Recognised
+        model: Proposed by local AI
+        operator: Chosen by you
+        unmapped: Not assigned
       row: Row
       show_documents: Review in Documents
       show_failed: Couldn't read the imported movements. Try again.
@@ -8445,6 +8488,8 @@ tui:
         empty_directory: the folder holds no statement file that can be imported
         file_limit: the import names more files than one import takes, so none was
           read; import fewer at a time
+        format_not_installed: this installation cannot read the file's format, so
+          nothing was imported
         own_account_mismatch: the statement names a different account than the one
           you chose
         reader_unavailable: the model you picked is not available right now, so the
@@ -8452,6 +8497,8 @@ tui:
         result_limit: the import reached its row limit before this file
         source_changed: the file changed after its preview, so nothing from it was
           imported; preview it again
+        statement_account_missing: the statement names no account to register, so
+          nothing was imported
         transaction_validation: the file could not be read as a statement
       success: Imported {imported}; skipped {skipped}.
       title: Import entries

@@ -45,6 +45,7 @@ from .....core.tabular import (
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.raw_transaction import SourceFormat
 from .base import (
+    UNREADABLE_TABLE_REFUSAL,
     FinancialProvider,
     FinancialValidationError,
     InvalidFinancialSourceError,
@@ -52,6 +53,7 @@ from .base import (
     ProviderValidation,
     archive_cell_text,
     build_raw_transaction,
+    canonical_valid_iban,
     default_currency,
     describe_dialect,
     infer_day_first,
@@ -345,6 +347,28 @@ class CsvProvider(FinancialProvider):
         )
 
     @override
+    def statement_account(self, path: Path, *, source_sha256: str) -> str | None:
+        """Return the one IBAN a statement prints above its header row, or ``None``.
+
+        Banks print the account the export covers in a preamble before the
+        column header. Only a cell that is a checksum-valid IBAN counts, and a
+        preamble naming two different IBANs names no single account.
+        """
+        try:
+            rows, loaded_sha256, _, _ = self._load_rows(path)
+        except InvalidFinancialSourceError:
+            return None
+        if loaded_sha256 != source_sha256:
+            return None
+        located = self._locate_header(rows)
+        if located is None:
+            return None
+        accounts = {
+            iban for row in rows[: located[0]] for cell in row if (iban := canonical_valid_iban(cell)) is not None
+        }
+        return next(iter(accounts)) if len(accounts) == 1 else None
+
+    @override
     def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:
         """Yield :class:`ParsedLedgerRow` records (magnitude + direction) from the CSV source."""
         _logger.debug("csv_provider ingest: loading source")
@@ -422,9 +446,12 @@ class CsvProvider(FinancialProvider):
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)
         text, encoding = self._decode_bytes(source_bytes)
-        dialect = self._sniff_dialect(text)
-        reader = csv.reader(io.StringIO(text), dialect)
-        rows = [[cell.strip() for cell in row] for row in reader]
+        try:
+            dialect = self._sniff_dialect(text)
+            rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(text), dialect)]
+        except csv.Error:
+            # The reader's message can quote the offending content, so none of it is kept.
+            raise InvalidFinancialSourceError(UNREADABLE_TABLE_REFUSAL) from None
         return rows, source_sha256, encoding, dialect
 
     def _decode_bytes(self, source_bytes: bytes) -> tuple[str, str]:

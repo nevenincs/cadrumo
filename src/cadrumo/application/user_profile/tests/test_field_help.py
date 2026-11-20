@@ -15,7 +15,7 @@ from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.deadlines.profiles import MODELO_IVA_BLOCK_REQUIRED_PATHS
-from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
+from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record, section_field_key
 from ...wizard.catalogue import build_setup_flow
 from ..field_help import profile_field_help
 from ..overview import build_profile_overview, relocalize_profile_field
@@ -156,14 +156,19 @@ def test_the_overview_help_is_the_producer_output_for_the_active_language() -> N
         for locale in SUPPORTED_OUTPUT_LANGUAGES:
             with override_settings(cadrumo_output_language=locale):
                 overview = build_profile_overview(record, schema=schema, flow=flow)
-            expected = profile_field_help(flow, locale=locale)
+            # The record states no taxpayer entity type, so a field that concerns only one type is not offered.
+            expected = {
+                path: lines
+                for path, lines in profile_field_help(flow, locale=locale).items()
+                if not schema.entity_types_of(*section_field_key(path).split("."))
+            }
             served = {
                 field.path: field.help
                 for section in overview.sections
                 for field in section.fields
                 if field.help is not None
             }
-            assert served == dict(expected)
+            assert served == expected
 
 
 def test_relocalizing_a_field_keeps_the_help_the_backend_served() -> None:

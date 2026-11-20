@@ -80,6 +80,7 @@ const sectionIn = (locale: string, fields: ProfileField[]): ProfileSection => ({
 
 const baseIn = (section: ProfileSection): UserProfile => ({
   profile_id: "story",
+  name: "",
   record_revision: 1,
   content_digest: "0".repeat(64),
   setup_state: "complete",

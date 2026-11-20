@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from typing import Final
 
-_PAGE_BY_PREFIX: Final[tuple[tuple[str, str], ...]] = (
-    # Received-invoice withholding is captured for the withholding workbench, not a declaration.
-    ("modelo.aggregate.capture_received_invoice_retencion", "withholding"),
+_PAGE_BY_PREFIX: Final[tuple[tuple[str, str | None], ...]] = (
+    # Received-invoice withholding is captured for a workbench no surface implements yet, and the
+    # entry shadows the declarations page below.
+    ("modelo.aggregate.capture_received_invoice_retencion", None),
     # Filed evidence is compared on the AEAT page, beside what was read from the AEAT.
     ("modelo.reconcile.", "aeat-sync"),
     ("modelo.", "declarations"),
@@ -15,9 +16,13 @@ _PAGE_BY_PREFIX: Final[tuple[tuple[str, str], ...]] = (
     ("live.", "aeat-sync"),
     ("user-profile.", "profile"),
     ("auth.", "profile/aeat-access"),
-    ("overview.", "home"),
+    # The overview has no page of its own in any surface yet.
+    ("overview.", None),
 )
-"""Ordered most specific first; the first matching prefix names the register view."""
+"""Ordered most specific first; the first matching prefix names the register view, or ``None`` for no page.
+
+A page names only a register element some surface implements.
+"""
 
 
 def operation_destination(definition_id: str) -> str | None:

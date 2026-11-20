@@ -630,4 +630,43 @@ test.describe("the household from the Modelo 100", () => {
       .click();
     await expect(target.locator(".user-profile-page")).toBeVisible();
   });
+
+  test("the household folds like the other sections, by its heading, the keys and the page action", async ({
+    page,
+  }) => {
+    const household = await open(page, "rows");
+    const profile = page.locator(".user-profile-page");
+    const head = profile.locator('[data-nav="head:household"]');
+    const body = household.locator("[data-household-group]").first();
+    await expect(head).toHaveAttribute("aria-expanded", "true");
+    await expect(body).toBeVisible();
+    await head.click();
+    await expect(head).toHaveAttribute("aria-expanded", "false");
+    await expect(body).toBeHidden();
+    await head.click();
+    await expect(body).toBeVisible();
+    // The arrow keys fold it as they fold every section.
+    await head.focus();
+    await page.keyboard.press("ArrowLeft");
+    await expect(head).toHaveAttribute("aria-expanded", "false");
+    await page.keyboard.press("ArrowRight");
+    await expect(head).toHaveAttribute("aria-expanded", "true");
+    // The page action folds every section, the household with them.
+    await profile
+      .getByRole("button", {
+        name: label("desktop.profile.action.collapse"),
+        exact: true,
+      })
+      .click();
+    await expect(head).toHaveAttribute("aria-expanded", "false");
+    await expect(body).toBeHidden();
+    await profile
+      .getByRole("button", {
+        name: label("desktop.profile.action.expand"),
+        exact: true,
+      })
+      .click();
+    await expect(head).toHaveAttribute("aria-expanded", "true");
+    await expect(body).toBeVisible();
+  });
 });

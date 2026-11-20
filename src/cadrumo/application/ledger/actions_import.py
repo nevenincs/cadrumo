@@ -12,7 +12,7 @@ records ``LEDGER_TRANSACTION_IMPORTED`` bucket events, and returns
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from dataclasses import field as dataclass_field
 from datetime import datetime
 from decimal import Decimal
@@ -22,11 +22,19 @@ from typing import Final, NamedTuple
 
 from ...core.directory_scan import DirectoryEntryKind, scan_directory
 from ...core.errors.severity import BaseSeverity
-from ...core.external_constants import DEFAULT_CURRENCY, XLS_EXTENSION, XLSX_EXTENSION
+from ...core.external_constants import (
+    CSV_EXTENSIONS,
+    DEFAULT_CURRENCY,
+    OFX_EXTENSION,
+    PDF_EXTENSION,
+    QFX_EXTENSION,
+    XLS_EXTENSION,
+    XLSX_EXTENSION,
+)
 from ...core.hashing import canonical_json_bytes, sha256_file, sha256_hex
 from ...core.i18n.render import tr as render_translation
 from ...core.i18n.translatable import Translatable as tr
-from ...core.iban import normalise_iban
+from ...core.iban import mask_iban, normalise_iban
 from ...core.optional_extras import OFX_EXTRA, OptionalExtra, optional_extra_available
 from ...core.period import Period
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
@@ -107,6 +115,31 @@ _FORMAT_EXTRAS: Final[Mapping[LedgerProviderID, OptionalExtra]] = {
 """The formats whose parser ships in an optional extra; every other format's parser is in the core."""
 
 
+_FORMAT_EXTENSIONS: Final[Mapping[LedgerProviderID, frozenset[str]]] = {
+    LedgerProviderID.CSV: CSV_EXTENSIONS,
+    LedgerProviderID.OFX: frozenset({OFX_EXTENSION}),
+    LedgerProviderID.QFX: frozenset({QFX_EXTENSION}),
+    LedgerProviderID.XLSX: frozenset({XLSX_EXTENSION}),
+    LedgerProviderID.XLS: frozenset({XLS_EXTENSION}),
+    LedgerProviderID.PDF: frozenset({PDF_EXTENSION}),
+}
+"""The file extensions each format token reads, dot-prefixed and lower-case; ``auto`` has none of its own."""
+
+
+def installed_ledger_extensions() -> tuple[tuple[LedgerProviderID, str], ...]:
+    """Return each installed format's file extensions, without the dot, as ``(format, extension)`` pairs.
+
+    The pairs follow :func:`installed_ledger_providers` and, within a format,
+    sort by extension, so a surface that lists them never names a file kind
+    the import would refuse for want of its parser.
+    """
+    return tuple(
+        (provider, extension.removeprefix("."))
+        for provider in installed_ledger_providers()
+        for extension in sorted(_FORMAT_EXTENSIONS.get(provider, ()))
+    )
+
+
 def installed_ledger_providers() -> tuple[LedgerProviderID, ...]:
     """Return the formats this installation parses, in the enum's order.
 
@@ -142,6 +175,8 @@ class _PreparedSourceImport(NamedTuple):
     parsed_rows: tuple[ParsedLedgerRowProtocol, ...]
     validation: ProviderValidationProtocol
     source_verification: LedgerSourceVerificationReport
+    statement_account: str | None = None
+    """The canonical IBAN the whole statement names, held privately; never projected whole."""
 
 
 class _LoadedSourceCatalogue(NamedTuple):
@@ -321,16 +356,32 @@ def _prepare_source_import(
     provider = resolve_financial_provider(command.provider, command.path, ports=ports)
     validation = _validate_import_source(provider, command.path)
     source_verification = _build_source_verification(source=command.source, verify=command.verify)
+    ingested = tuple(provider.ingest(command.path))
+    statement_account = _statement_account(provider, command.path, ingested)
     parsed_rows = _bind_own_accounts(
-        _rows_in_period(tuple(provider.ingest(command.path)), command.period),
+        _rows_in_period(ingested, command.period),
         own_accounts=own_accounts,
         own_account_id=command.own_account_id,
+        statement_account=statement_account,
     )
     return _PreparedSourceImport(
         parsed_rows=parsed_rows,
         validation=validation,
         source_verification=source_verification,
+        statement_account=statement_account,
     )
+
+
+def _statement_account(
+    provider: FinancialProviderProtocol,
+    path: Path,
+    ingested: tuple[ParsedLedgerRowProtocol, ...],
+) -> str | None:
+    """The account the statement names, read from the bytes the rows were parsed from."""
+    digests = {row.raw.provenance.source_sha256 for row in ingested}
+    if len(digests) != 1:
+        return None
+    return provider.statement_account(path, source_sha256=digests.pop())
 
 
 #: Raw field in which a provider records the statement's own account identifier.
@@ -353,12 +404,15 @@ def _bind_own_accounts(
     *,
     own_accounts: OwnAccountRegister,
     own_account_id: str | None,
+    statement_account: str | None = None,
 ) -> tuple[ParsedLedgerRowProtocol, ...]:
     """Bind each row to the operator's chosen own account, or to the one its statement names.
 
-    With a chosen account, a row whose statement carries an account identifier
-    must name that account. Without one, a row binds only when its identifier
-    names exactly one registered account; every other row stays unassigned.
+    A row's identifier is its own ``ACCTID``, else the account its whole
+    statement names. With a chosen account, a row whose statement carries an
+    account identifier must name that account. Without one, a row binds only
+    when its identifier names exactly one registered account; every other row
+    stays unassigned.
 
     Raises:
         TransactionValidationError: When the chosen account is not registered,
@@ -367,7 +421,7 @@ def _bind_own_accounts(
     chosen = None if own_account_id is None else require_registered_own_account(own_accounts, own_account_id)
     bound: list[ParsedLedgerRowProtocol] = []
     for parsed in parsed_rows:
-        identifier = parsed.raw.raw_fields.get(_ACCOUNT_IDENTIFIER_FIELD, "").strip()
+        identifier = parsed.raw.raw_fields.get(_ACCOUNT_IDENTIFIER_FIELD, "").strip() or (statement_account or "")
         if chosen is not None:
             if identifier and not _account_matches(chosen, identifier):
                 raise TransactionValidationError(
@@ -389,6 +443,52 @@ def _bind_own_accounts(
             )
         )
     return tuple(bound)
+
+
+@dataclass(frozen=True, slots=True)
+class StatementAccountFact:
+    """What one statement's named account is to the own-account register, with no full IBAN.
+
+    ``own_account_id`` is the registered account the statement names. A statement
+    naming a valid IBAN that no registered account has is ``registrable``.
+    """
+
+    masked_iban: str
+    own_account_id: str | None
+    registrable: bool
+
+
+def describe_statement_account(
+    prepared: PreparedLedgerSourceImport,
+    own_accounts: OwnAccountRegister,
+) -> StatementAccountFact | None:
+    """Describe the account the prepared statement names, or ``None`` when it names none."""
+    statement_account = prepared.source.statement_account
+    if statement_account is None:
+        return None
+    matches = [account for account in own_accounts.accounts if _account_matches(account, statement_account)]
+    if len(matches) == 1:
+        return StatementAccountFact(
+            masked_iban=matches[0].masked_iban, own_account_id=matches[0].own_account_id, registrable=False
+        )
+    return StatementAccountFact(masked_iban=mask_iban(statement_account), own_account_id=None, registrable=not matches)
+
+
+def bind_prepared_import_to_own_account(
+    prepared: PreparedLedgerSourceImport,
+    own_account_id: str,
+) -> PreparedLedgerSourceImport:
+    """Return ``prepared`` with every row bound to ``own_account_id``, keeping the parsed bytes."""
+    rows = tuple(
+        LedgerParsedRow(
+            raw=parsed.raw,
+            direction=parsed.direction,
+            own_account_id=own_account_id,
+            operation_date=parsed.operation_date,
+        )
+        for parsed in prepared.source.parsed_rows
+    )
+    return replace(prepared, source=prepared.source._replace(parsed_rows=rows))
 
 
 def _rows_in_period(
@@ -973,7 +1073,7 @@ def aggregate_ledger_import_results(
 #: about ingestion capability, not about one surface's argument parsing, so a
 #: second frontend importing a folder selects exactly the same files.
 IMPORTABLE_SOURCE_EXTENSIONS: Final[frozenset[str]] = frozenset(
-    {".csv", XLSX_EXTENSION, XLS_EXTENSION, ".ofx", ".qfx", ".tsv"},
+    {".csv", ".tsv", XLSX_EXTENSION, XLS_EXTENSION, OFX_EXTENSION, QFX_EXTENSION},
 )
 
 
@@ -1023,8 +1123,12 @@ __all__ = [
     "IMPORTABLE_SOURCE_EXTENSIONS",
     "LedgerProviderID",
     "PreparedLedgerSourceImport",
+    "StatementAccountFact",
     "aggregate_ledger_import_results",
+    "bind_prepared_import_to_own_account",
+    "describe_statement_account",
     "import_ledger_transactions",
+    "installed_ledger_extensions",
     "installed_ledger_providers",
     "persist_prepared_ledger_source_import",
     "plan_ledger_import_sources",

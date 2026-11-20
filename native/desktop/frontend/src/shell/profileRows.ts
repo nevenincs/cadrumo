@@ -170,17 +170,6 @@ export const fieldAt = (data: UserProfile, path: string) =>
     .find((field) => field.path === path);
 
 /** The taxpayer's name: given name and surnames, else the legal name. */
-export function nameOf(data: UserProfile) {
-  const value = (path: string) => fieldAt(data, path)?.value;
-  return (
-    [value("identity.name"), value("identity.surnames")]
-      .filter(Boolean)
-      .join(" ") ||
-    value("identity.legal_name") ||
-    ""
-  );
-}
-
 export function initials(name: string) {
   return name
     .split(/\s+/)

@@ -472,6 +472,19 @@ XLSX_EXTENSION: Final[Literal[".xlsx"]] = ".xlsx"
 #: Excel macro-enabled workbook file-extension string (lower-case, dot-prefixed).
 XLSM_EXTENSION: Final[Literal[".xlsm"]] = ".xlsm"
 
+#: Open Financial Exchange statement file-extension string (lower-case, dot-prefixed).
+OFX_EXTENSION: Final[Literal[".ofx"]] = ".ofx"
+
+#: Quicken-flavoured OFX statement file-extension string (lower-case, dot-prefixed).
+QFX_EXTENSION: Final[Literal[".qfx"]] = ".qfx"
+
+#: File extensions the CSV statement provider reads; ``.tsv`` is the tab-separated
+#: spelling of the same table, which the provider's delimiter detection reads.
+CSV_EXTENSIONS: Final[frozenset[str]] = frozenset({".csv", ".tsv", ".txt"})
+
+#: File extensions the OFX statement provider reads.
+OFX_EXTENSIONS: Final[frozenset[str]] = frozenset({OFX_EXTENSION, QFX_EXTENSION})
+
 #: Legacy ISO-8859-1 / Latin-1 encoding used by AEAT sede fixed-width response bodies.
 LATIN_1_ENCODING: Final[str] = "latin-1"
 

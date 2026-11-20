@@ -16,6 +16,9 @@ from typing import Any
 
 import pytest
 
+from cadrumo.tests.module_target_inventory import compile_inventory
+
+from ...dependency_observation.census_admission import PRODUCT_CENSUS
 from ..cli import Workspace, seed
 from ..registry import PYTHON, Command, FixtureFamily, InputGroup
 from ..stamps import CLOSURE_MODE, OBSERVED_MODE, FixtureState, InputDigests, family_inputs, family_status, stamp_path
@@ -89,6 +92,9 @@ def _checkout(root: Path) -> Path:
     (root / "out").mkdir()
     (root / "var" / "tmp").mkdir(parents=True)
     (root / "authority.json").write_text("{}", encoding="utf-8")
+    census = compile_inventory(package="pkg", source_root="src/pkg", subpackages=(), target_set="pkg", repository=root)
+    (root / PRODUCT_CENSUS).parent.mkdir(parents=True)
+    (root / PRODUCT_CENSUS).write_text(json.dumps(census), encoding="utf-8")
     return root
 
 

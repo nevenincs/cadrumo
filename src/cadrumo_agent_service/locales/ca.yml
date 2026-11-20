@@ -60,6 +60,8 @@ desktop:
     choose_another_model: Tria un altre model
     choose_model: Tria un model
     choose_provider: Tria un proveïdor
+    choose_provider_first: Tria primer un proveïdor.
+    choose_to_start: Tria un proveïdor i un model per començar.
     close_documents: Tanca els documents
     condition_budget_exhausted: Pressupost esgotat
     condition_credits_exhausted: Sense crèdits

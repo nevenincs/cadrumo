@@ -26,6 +26,7 @@ import type {
 import { publicPeriod, type LedgerPeriod } from "../../../shell/ledgerGrammar";
 import type { ShowImportBatch } from "../../../shell/ledgerImports";
 import { useStrings } from "../../../shell/strings";
+import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { formatCount } from "../../../shared/numbers";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import {
@@ -36,18 +37,26 @@ import {
   applyBank,
   applyBook,
   applyDocuments,
+  assignRole,
   importLanding,
+  missingRoles,
   previewBankFile,
+  previewBook,
   previewForAccount,
   readBatchSpan,
   readImported,
   readOwnAccounts,
+  startingReview,
   type AccountKey,
+  type BankApplied,
   type BankFilePreview,
   type BankOptions,
+  type BookPreview,
+  type BookReview,
   type ImportKind,
   type OwnAccount,
 } from "./importModel";
+import { ImportBookPreview } from "./ImportBookPreview";
 import {
   ImportBankPreview,
   ImportPlainPreview,
@@ -172,12 +181,27 @@ export function ImportDialog({
   const [choices, setChoices] = useState<Record<string, AccountKey>>({});
   const [reading, setReading] = useState<Set<string>>(new Set());
   const [progress, setProgress] = useState<Progress>(null);
+  // An invoice book's preview, null while it is read, and the roles the
+  // person has given its columns since.
+  const [bookPreview, setBookPreview] = useState<BookPreview | null>(null);
+  const [review, setReview] = useState<BookReview>({
+    roles: {},
+    chosen: new Set(),
+  });
+  const bookReads = useRef(0);
   const [outcome, setOutcome] = useState<ImportOutcome | null>(null);
   const [duplicates, setDuplicates] = useState<LedgerTransactionProjection[]>(
     [],
   );
   const [showing, setShowing] = useState<"idle" | "reading" | "failed">("idle");
   const kindName = useId();
+  // The extensions the statement formats this installation parses come in;
+  // until the ledger serves them the dialog asks the host for none in
+  // particular, and the host offers the most it allows rather than a list
+  // the window made up.
+  const served = useVocabulary().importExtensions;
+  const kinds = kind === "bank" && served.length > 0 ? served : null;
+  const kindsKey = kinds?.join(",") ?? "";
 
   const options: BankOptions = {
     provider,
@@ -238,21 +262,25 @@ export function ImportDialog({
     let stop: (() => void) | null = null;
     let active = true;
     void port
-      .observeDrops(PURPOSE[kind], (signal) => {
-        if (!active) {
-          if (signal.kind === "dropped")
-            void port
-              .forgetFiles(signal.files.map((file) => file.token))
-              .catch(() => {});
-          return;
-        }
-        if (signal.kind === "over") setOver(true);
-        else if (signal.kind === "left") setOver(false);
-        else {
-          setOver(false);
-          latestTake.current(signal.files, signal.refused);
-        }
-      })
+      .observeDrops(
+        PURPOSE[kind],
+        (signal) => {
+          if (!active) {
+            if (signal.kind === "dropped")
+              void port
+                .forgetFiles(signal.files.map((file) => file.token))
+                .catch(() => {});
+            return;
+          }
+          if (signal.kind === "over") setOver(true);
+          else if (signal.kind === "left") setOver(false);
+          else {
+            setOver(false);
+            latestTake.current(signal.files, signal.refused);
+          }
+        },
+        kindsKey === "" ? null : kindsKey.split(","),
+      )
       .then((unobserve) => {
         if (active) stop = unobserve;
         else unobserve();
@@ -262,7 +290,7 @@ export function ImportDialog({
       active = false;
       stop?.();
     };
-  }, [port, step, kind]);
+  }, [port, step, kind, kindsKey]);
 
   const pick = async (how: FilePick) => {
     if (pickingNow.current) return;
@@ -275,6 +303,7 @@ export function ImportDialog({
         PURPOSE[kind],
         how,
         t(`desktop.ledger.import.filter.${kind}`),
+        kinds,
       );
       if (mine !== generation.current) {
         void port
@@ -318,14 +347,30 @@ export function ImportDialog({
     setProgress(null);
     return read;
   };
+  /** Reads the book's columns; an answer to an earlier read is dropped. */
+  const readBook = async () => {
+    const mine = ++bookReads.current;
+    setBookPreview(null);
+    const read = await previewBook(port, files[0]!, bookKind!, country || null);
+    if (mine !== bookReads.current) return;
+    setBookPreview(read);
+    setReview(startingReview(read));
+  };
   const startPreview = async () => {
     if (kind === "bank") {
       setStep("preview");
       setPreviews([]);
       setChoices({});
       setPreviews(await previewBank(files));
+    } else if (kind === "book") {
+      setStep("preview");
+      await readBook();
     } else setStep("preview");
   };
+  const readBookPreview = bookPreview?.kind === "read" ? bookPreview : null;
+  const missingBook = readBookPreview
+    ? missingRoles(readBookPreview, review)
+    : [];
 
   const readPreviews = previews.filter(
     (preview): preview is ReadPreview => preview.kind === "read",
@@ -403,6 +448,7 @@ export function ImportDialog({
         file: preview.file,
         account: accountOf(preview)!,
         digest: preview.digest!,
+        statement: preview.statement,
       }));
       // What each file's preview said it brings in, for a re-read to tell
       // whether an import not seen to settle wrote it.
@@ -419,7 +465,27 @@ export function ImportDialog({
         setProgress({ kind: "applying", done, total: plan.length }),
       );
       setProgress(null);
-      setOutcome({ kind: "bank", applied });
+      // An account the import registered is an own account from now on: the
+      // list is read again, so a file previewed next binds to it.
+      if (
+        applied.some(
+          (item) =>
+            item.kind === "imported" &&
+            item.result.registered_own_account_id !== null,
+        )
+      )
+        void readOwnAccounts(port).then((read) => read && setAccounts(read));
+      // A file whose rows are all in the ledger was not sent; the result
+      // still counts and lists it, as its preview read it.
+      const skipped: BankApplied[] = readPreviews.flatMap((preview) =>
+        preview.digest !== null &&
+        !sendable.includes(preview) &&
+        shown(preview).imported === 0 &&
+        shown(preview).skipped > 0
+          ? [{ kind: "skipped", file: preview.file, result: shown(preview) }]
+          : [],
+      );
+      setOutcome({ kind: "bank", applied: [...applied, ...skipped] });
       setStep("result");
       const unseen = applied.flatMap((item) =>
         item.kind === "unknown" ? [item] : [],
@@ -466,8 +532,15 @@ export function ImportDialog({
       setDuplicates(read);
     } else if (kind === "book") {
       const file = files[0]!;
+      if (!readBookPreview || missingBook.length > 0) return;
       setProgress({ kind: "applying", done: 0, total: 1 });
-      const answer = await applyBook(port, file, bookKind!, country || null);
+      const answer = await applyBook(
+        port,
+        readBookPreview,
+        review,
+        bookKind!,
+        country || null,
+      );
       setProgress(null);
       setOutcome({ kind: "book", file, answer });
       setStep("result");
@@ -520,6 +593,19 @@ export function ImportDialog({
     setPreviews(await previewBank(again));
   };
 
+  /** Reads the book again after a refusal or a failure that wrote nothing. */
+  const previewBookAgain = async () => {
+    setOutcome(null);
+    setStep("preview");
+    await readBook();
+  };
+  const bookStopped =
+    outcome?.kind === "book" &&
+    (outcome.answer.kind === "refused" ||
+      (outcome.answer.kind === "failed" &&
+        outcome.answer.code !== "unknown" &&
+        outcome.answer.code !== "saved_unread"));
+
   const batches =
     outcome?.kind === "bank"
       ? outcome.applied.flatMap((item) =>
@@ -541,7 +627,10 @@ export function ImportDialog({
     onClose();
   };
 
-  const busy = progress !== null || reading.size > 0;
+  const busy =
+    progress !== null ||
+    reading.size > 0 ||
+    (step === "preview" && kind === "book" && bookPreview === null);
   const progressText =
     progress &&
     t(
@@ -618,14 +707,24 @@ export function ImportDialog({
           shown={shown}
           nothingNew={nothingNew}
         />
+      ) : kind === "book" ? (
+        <ImportBookPreview
+          t={t}
+          locale={locale}
+          count={count}
+          preview={bookPreview}
+          review={review}
+          onAssign={(column, role) =>
+            setReview((held) => assignRole(held, column, role))
+          }
+          bookKind={bookKind}
+          country={country}
+        />
       ) : (
         <ImportPlainPreview
           t={t}
           locale={locale}
-          kind={kind}
           files={files}
-          bookKind={bookKind}
-          country={country}
           direction={direction}
         />
       );
@@ -655,8 +754,12 @@ export function ImportDialog({
           <Button
             pending={progress?.kind === "applying"}
             disabled={
-              kind === "bank" &&
-              (previews.length === 0 || sendable.length === 0 || missingAccount)
+              kind === "bank"
+                ? previews.length === 0 ||
+                  sendable.length === 0 ||
+                  missingAccount
+                : kind === "book" &&
+                  (readBookPreview === null || missingBook.length > 0)
             }
             onClick={() => void apply()}
           >
@@ -709,6 +812,11 @@ export function ImportDialog({
               {t("desktop.ledger.import.preview_again")}
             </Button>
           )}
+        {bookStopped && (
+          <Button variant="outline" onClick={() => void previewBookAgain()}>
+            {t("desktop.ledger.import.preview_again")}
+          </Button>
+        )}
         {outcome?.kind === "documents" &&
           outcome.applied.items.some(
             (item) =>

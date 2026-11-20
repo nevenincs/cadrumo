@@ -10,8 +10,9 @@ import { actionWords, itemName, rowSentence } from "./setupWords";
 /** Beside something that could not run for a component: the component by
  * its name and the way into the provisioning panel on it, when its row
  * says setup can act now. A row setup cannot change from here says so
- * instead, as the component's name and the row's own sentence, with nothing
- * to press. Nothing is shown for an action that is not about setup, while
+ * instead, as the component's name and the row's own sentence, with a
+ * button that opens the panel on that row, where its state and reason are
+ * told in full. Nothing is shown for an action that is not about setup, while
  * the setup status is loading or cannot be read, or while the window offers
  * no setup. */
 export function SetupOffer({
@@ -30,10 +31,21 @@ export function SetupOffer({
   if (target !== "general" && !needsSetup(target))
     return (
       <span
-        className={cn("setup-held text-sm text-muted-foreground", className)}
-        data-setup-held={target.item}
+        className={cn("inline-flex flex-wrap items-center gap-2", className)}
       >
-        {labelled(t, itemName(t, target.item), rowSentence(t, target))}
+        <span
+          className="setup-held text-sm text-muted-foreground"
+          data-setup-held={target.item}
+        >
+          {labelled(t, itemName(t, target.item), rowSentence(t, target))}
+        </span>
+        <Button
+          size="xs"
+          variant="outline"
+          onClick={() => recovery.offer(action)}
+        >
+          {t("desktop.setup.open")}
+        </Button>
       </span>
     );
   return (

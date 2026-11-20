@@ -970,6 +970,12 @@ application:
   invoices:
     bulk_import:
       errors:
+        column_role_not_accepted: La importación del libro de facturas no tiene ningún
+          campo para el papel {role}.
+        column_role_out_of_range: Los papeles de las columnas nombran la columna {column},
+          pero el libro de facturas tiene {columns} columnas.
+        column_role_repeated: El papel {role} está asignado a más de una columna del
+          libro de facturas.
         country_unanswerable: 'El fichero de importación no tiene columna de país
           de la contraparte y no se ha indicado ningún país para la importación. Añade
           una columna country_code o indica un país para todo el fichero. Columnas
@@ -5103,6 +5109,9 @@ application:
     notices:
       censo_divergences_open: '{count} dato(s) del perfil o del certificado siguen
         difiriendo del Certificado de Situación Censal y quedan sin resolver: {axes}.'
+      entity_type_unstated: Indica el dato «{field}» para ver los apartados que te
+        corresponden. Hasta entonces no se muestran los apartados propios de un solo
+        tipo de contribuyente.
       kdf_at_fallback: La contraseña de este perfil tiene la protección mínima, porque
         este equipo no pudo confirmar a tiempo un ajuste más fuerte al crear el perfil.
         Cambia la contraseña para reforzarla; puedes volver a introducir la misma.

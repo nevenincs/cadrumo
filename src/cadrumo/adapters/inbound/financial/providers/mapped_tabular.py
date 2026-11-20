@@ -26,6 +26,7 @@ See Also:
 
 from __future__ import annotations
 
+import csv
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import date
@@ -43,6 +44,7 @@ from .....core.parsing.codes import normalise_iso_4217_currency
 from .....core.tabular import NormalizedTable, TabularSourceError, normalize_tabular_bytes
 from .....domain.transactions.raw_transaction import SourceFormat
 from .base import (
+    UNREADABLE_TABLE_REFUSAL,
     FinancialProvider,
     FinancialProviderError,
     FinancialValidationError,
@@ -236,6 +238,8 @@ class MappedTabularProvider(FinancialProvider):
             table = normalize_tabular_bytes(self._read_source_bytes(path))
         except (FinancialProviderError, TabularSourceError) as exc:
             return ProviderValidation(is_valid=False, warnings=(str(exc),))
+        except csv.Error:
+            return ProviderValidation(is_valid=False, warnings=(UNREADABLE_TABLE_REFUSAL,))
         dialect_note = f"delimiter={table.dialect.delimiter!r},decimal={table.dialect.decimal_separator!r}"
         mapping = self._mapping_validation(table, dialect_note=dialect_note)
         if isinstance(mapping, ProviderValidation):
@@ -268,6 +272,8 @@ class MappedTabularProvider(FinancialProvider):
             table = normalize_tabular_bytes(source_bytes)
         except TabularSourceError as exc:
             raise InvalidFinancialSourceError(f"{path.name} does not normalize: {exc}") from exc
+        except csv.Error:
+            raise InvalidFinancialSourceError(f"{path.name} does not normalize: {UNREADABLE_TABLE_REFUSAL}") from None
         if self.mapping_resolver is None:
             raise InvalidFinancialSourceError(
                 "no column-role mapping resolver is installed for the tabular mapping lane",

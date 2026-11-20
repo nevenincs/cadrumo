@@ -66,6 +66,8 @@ pub struct Notice {
 #[derive(Serialize)]
 pub struct Overview {
     pub profile_id: String,
+    /// The name the page is headed with, as the product serves it.
+    name: String,
     record_revision: u64,
     content_digest: String,
     setup_state: String,
@@ -78,6 +80,9 @@ pub struct Overview {
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 enum Item {
+    Heading {
+        name: String,
+    },
     Section {
         key: String,
         title: String,
@@ -262,6 +267,7 @@ pub struct Pages {
     pin: Pin,
     paths: BTreeSet<String>,
     keys: BTreeSet<String>,
+    headed: bool,
     trailing: bool,
 }
 impl Pages {
@@ -269,6 +275,7 @@ impl Pages {
         Self {
             overview: Overview {
                 profile_id: profile_id.clone(),
+                name: String::new(),
                 record_revision: 0,
                 content_digest: String::new(),
                 setup_state: String::new(),
@@ -281,6 +288,7 @@ impl Pages {
             pin: Pin::new("overview", profile_id),
             paths: BTreeSet::new(),
             keys: BTreeSet::new(),
+            headed: false,
             trailing: false,
         }
     }
@@ -293,6 +301,10 @@ impl Pages {
         let last = page.is_last();
         for item in page.items {
             match item {
+                Item::Heading { name } if !self.headed && self.keys.is_empty() => {
+                    self.headed = true;
+                    self.overview.name = name;
+                }
                 Item::Section {
                     key,
                     title,
@@ -348,6 +360,7 @@ impl Pages {
     }
     pub fn finish(mut self) -> Result<Overview> {
         if !self.pin.complete()
+            || !self.headed
             || self.overview.sections.is_empty()
             || self
                 .overview
@@ -427,7 +440,25 @@ mod tests {
         assert_eq!(mutation_failure(&projection), "refused");
     }
     fn page() -> Value {
-        json!({"profile_id":"p","page_kind":"overview","outcome":"page","record_revision":1,"content_digest":"a".repeat(64),"setup_state":"incomplete","schema_version":1,"valid":true,"cursor":0,"next_cursor":null,"total_items":1,"items":[{"kind":"section","key":"identity","title":"Identity","summary":"","repeatable":false}]})
+        json!({"profile_id":"p","page_kind":"overview","outcome":"page","record_revision":1,"content_digest":"a".repeat(64),"setup_state":"incomplete","schema_version":1,"valid":true,"cursor":0,"next_cursor":null,"total_items":2,"items":[{"kind":"heading","name":"Ana Ruiz"},{"kind":"section","key":"identity","title":"Identity","summary":"","repeatable":false}]})
+    }
+    #[test]
+    fn the_overview_is_headed_once_before_its_sections_with_the_served_name() {
+        let mut pages = Pages::new("p".into());
+        assert!(pages.accept(page()).unwrap());
+        assert_eq!(
+            serde_json::to_value(pages.finish().unwrap()).unwrap()["name"],
+            "Ana Ruiz"
+        );
+        let mut unheaded = page();
+        unheaded["items"].as_array_mut().unwrap().remove(0);
+        unheaded["total_items"] = 1.into();
+        let mut pages = Pages::new("p".into());
+        assert!(pages.accept(unheaded).unwrap());
+        assert!(pages.finish().is_err());
+        let mut late = page();
+        late["items"].as_array_mut().unwrap().reverse();
+        assert!(Pages::new("p".into()).accept(late).is_err());
     }
     #[test]
     fn a_field_keeps_the_country_codes_and_the_ejercicio_answer_it_is_served_with() {
@@ -473,15 +504,15 @@ mod tests {
     #[test]
     fn continuation_must_have_the_same_revision_and_exact_cursor() {
         let mut first = page();
-        first["total_items"] = 2.into();
-        first["next_cursor"] = 1.into();
+        first["total_items"] = 3.into();
+        first["next_cursor"] = 2.into();
         for changed in ["record_revision", "cursor"] {
             let mut pages = Pages::new("p".into());
             assert!(!pages.accept(first.clone()).unwrap());
             assert_eq!(pages.request("en")["expected_revision"], 1);
             let mut next = page();
-            next["cursor"] = 1.into();
-            next["total_items"] = 2.into();
+            next["cursor"] = 2.into();
+            next["total_items"] = 3.into();
             next[changed] = 3.into();
             assert!(pages.accept(next).is_err());
         }
