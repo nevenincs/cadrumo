@@ -6,6 +6,7 @@ import secrets
 from collections.abc import Awaitable, Callable, Mapping
 from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Literal
 from uuid import UUID
@@ -37,6 +38,7 @@ from ...core.operations import (
     OperationInteractionKind,
 )
 from ...core.time.clock import now
+from ...core.time.utc import validate_utc_aware
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.user_profile.values import UserProfileRecord
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
@@ -84,7 +86,7 @@ from .censo_sync import (
     censal_facts_from_read,
     reconcile_censal_read,
 )
-from .cotejo_apply import apply_cotejo
+from .cotejo_apply import apply_cotejo, open_censo_divergences
 from .profile_record_repository import ProfileRecordRepository
 from .projections import record_to_effective_facts
 
@@ -230,13 +232,37 @@ class CensalReviewedOperand(BaseModel):
         )
 
 
+class CensalStoredObservationReference(BaseModel):
+    """Names one already stored census observation by its capture instant.
+
+    The reference carries no observation content: the executor resolves the
+    stored read itself, so a request cannot supply values the AEAT never sent.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    captured_at: datetime
+
+    @field_validator("captured_at")
+    @classmethod
+    @pydantic_validation_boundary
+    def _require_utc(cls, value: datetime) -> datetime:
+        return validate_utc_aware(value)
+
+
 class CensalOperationRequest(BaseModel):
-    """Exact preflight baseline and review choices with no bearer material."""
+    """Exact preflight baseline and review choices with no bearer material.
+
+    ``stored_observation`` re-reviews an earlier read, for instance to decide
+    its fields one by one after a whole-proposal rejection, without a second
+    remote read. Absent means a live read.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     baseline: CensalProfileBaseline
     field_intents: tuple[CensalReviewedFieldIntent, ...]
+    stored_observation: CensalStoredObservationReference | None = None
 
     @field_validator("field_intents")
     @classmethod
@@ -256,6 +282,8 @@ def build_censal_operation_request(record: UserProfileRecord) -> CensalOperation
     :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     effective = record_to_effective_facts(record)
+    # An open divergence records an AEAT value the operator already rejected.
+    rejected_paths = frozenset(divergence.axis for divergence in open_censo_divergences(record))
     return CensalOperationRequest(
         baseline=CensalProfileBaseline.from_record(record),
         field_intents=tuple(
@@ -263,7 +291,8 @@ def build_censal_operation_request(record: UserProfileRecord) -> CensalOperation
                 path=path,
                 intent=(
                     CensalFieldIntent.ADOPT
-                    if (current := effective.get(path)) is None or current.source == CENSO_SOURCE_TAG
+                    if path not in rejected_paths
+                    and ((current := effective.get(path)) is None or current.source == CENSO_SOURCE_TAG)
                     else CensalFieldIntent.PRESERVE
                 ),
             )
@@ -483,8 +512,10 @@ class CensalOperationExecutor:
         acquire: Callable[[], Awaitable[CensalObservation | CensalOperationAcquisition]] | None = None,
         apply: Callable[[CensalReviewedOperand], None] | None = None,
         before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
+        observation_reader: Callable[[UUID], Awaitable[CensalObservation | None]] | None = None,
     ) -> None:
         """Initialize the executor with its acquisition, apply, and boundary hooks."""
+        self._observation_reader = observation_reader
         self._provider_preflight = provider_preflight
         self._acquire = acquire
         self._certificate_secret_backend_factory = certificate_secret_backend_factory
@@ -507,25 +538,33 @@ class CensalOperationExecutor:
             request,
             profile_decode_context=context.authority_operation.profile_decode_context(),
         )
-        self._provider_preflight(UUID(request.payload.baseline.profile_id), context.authority_operation)
-        if await _acknowledge_if_cancelled(context):
-            return None
-        await context.events.phase(CENSAL_PHASE_CLAVE_DEVICE_WAIT)
-        await context.events.phase(CENSAL_PHASE_REMOTE_READ)
         session_receipt = LiveSessionWriteReceipt(context.events.effect)
-        acquired = (
-            await self._acquire()
-            if self._acquire is not None
-            else await _pull_censal_datos(
-                certificate_secret_backend_factory=self._certificate_secret_backend_factory,
-                browser_session_factory=self._browser_session_factory,
-                operator_scope_ports=self._operator_scope_ports,
-                censal_fetch_port=self._censal_fetch_port,
-                authority_operation=context.authority_operation,
-                effect_guard=context.cancellation.irreversible_section,
-                on_session_write=session_receipt,
+        stored = request.payload.stored_observation
+        if stored is not None:
+            # A stored re-review makes no provider contact, so it needs no
+            # provider readiness, device wait or remote-read phase.
+            acquired = await self._read_stored_observation(request, stored)
+            if await _acknowledge_if_cancelled(context):
+                return None
+        else:
+            self._provider_preflight(UUID(request.payload.baseline.profile_id), context.authority_operation)
+            if await _acknowledge_if_cancelled(context):
+                return None
+            await context.events.phase(CENSAL_PHASE_CLAVE_DEVICE_WAIT)
+            await context.events.phase(CENSAL_PHASE_REMOTE_READ)
+            acquired = (
+                await self._acquire()
+                if self._acquire is not None
+                else await _pull_censal_datos(
+                    certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+                    browser_session_factory=self._browser_session_factory,
+                    operator_scope_ports=self._operator_scope_ports,
+                    censal_fetch_port=self._censal_fetch_port,
+                    authority_operation=context.authority_operation,
+                    effect_guard=context.cancellation.irreversible_section,
+                    on_session_write=session_receipt,
+                )
             )
-        )
         if isinstance(acquired, CensalOperationAcquisition):
             observation = acquired.observation
             if acquired.resource is not None:
@@ -576,6 +615,21 @@ class CensalOperationExecutor:
             proposed_effect_digest=operand.proposed_effect_digest,
         )
         return None
+
+    async def _read_stored_observation(
+        self,
+        request: OperationRequest[CensalOperationRequest],
+        stored: CensalStoredObservationReference,
+    ) -> CensalObservation:
+        """Resolve the named stored read, refusing before any effect when it is not exactly that capture."""
+        observation = (
+            await self._observation_reader(UUID(request.payload.baseline.profile_id))
+            if self._observation_reader is not None
+            else None
+        )
+        if observation is None or observation.captured_at != stored.captured_at:
+            raise ProfileRecordConflictError("stored censal observation is unavailable or no longer the named capture")
+        return observation
 
     async def resume(
         self,
@@ -735,6 +789,7 @@ def build_censal_operation_definition(
     acquire: Callable[[], Awaitable[CensalObservation | CensalOperationAcquisition]] | None = None,
     apply: Callable[[CensalReviewedOperand], None] | None = None,
     before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
+    observation_reader: Callable[[UUID], Awaitable[CensalObservation | None]] | None = None,
 ) -> OperationDefinition:
     """Build the one CENSO registration with its outer live authorities bound."""
 
@@ -748,6 +803,7 @@ def build_censal_operation_definition(
             acquire=acquire,
             apply=apply,
             before_irreversible_section=before_irreversible_section,
+            observation_reader=observation_reader,
         )
 
     return OperationDefinition(
@@ -797,6 +853,7 @@ __all__ = [
     "CensalReviewResponse",
     "CensalReviewedFieldIntent",
     "CensalReviewedOperand",
+    "CensalStoredObservationReference",
     "build_censal_operation_definition",
     "build_censal_operation_registration",
     "build_censal_operation_request",
