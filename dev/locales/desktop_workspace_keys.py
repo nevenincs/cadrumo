@@ -503,6 +503,7 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "workspace.modelo.filing.saved",
         "workspace.modelo.filing.show_filed_file",
         "workspace.modelo.filing.show_in_folder",
+        "workspace.modelo.filing.show_in_folder_failed",
         "workspace.modelo.filing.title",
         "workspace.modelo.filter.empty",
         "workspace.modelo.filter.only_mine",

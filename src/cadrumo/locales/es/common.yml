@@ -1116,6 +1116,8 @@ desktop:
       browser_title: Navegador no instalado
       browser_why: Hace falta para actualizar desde la AEAT.
       cancel: Cancelar
+      cancel_failed: No se pudo cancelar el inicio de sesión ({code}). Inténtalo de
+        nuevo o cierra esta ventana.
       checking: Comprobando…
       ended_body: Tu acceso a la AEAT ha terminado.
       ended_sign_in: Iniciar sesión de nuevo
@@ -2902,6 +2904,8 @@ desktop:
       too_short: Selecciona primero dos filas o más y rellena hacia abajo
     filters:
       account: Cuenta
+      accounts_unread: No se pudieron leer tus cuentas ({code}), así que no hay ninguna
+        para elegir. Inténtalo de nuevo.
       active: '{count} activos'
       any: Cualquiera
       classification: Clasificación
@@ -3986,6 +3990,8 @@ desktop:
       next: Periodo siguiente
       of_year: Periodos de {year}
       previous: Periodo anterior
+      unread: No se pudieron leer los periodos ({code}), así que no se lista ninguno.
+        Inténtalo de nuevo.
       year_next: Año siguiente
       year_previous: Año anterior
       years_supported: Ejercicios que puedes consultar
@@ -4952,6 +4958,8 @@ desktop:
     actions: Acciones
     close: Cerrar la búsqueda
     copy_link: Copiar el enlace a esta vista
+    declarations_failed: No se pudieron buscar tus declaraciones ({code}). Se muestran
+      los demás resultados. Escribe de nuevo para reintentar.
     documentation: Documentación
     hide_view: Ocultar {view}
     keywords:
@@ -10807,6 +10815,8 @@ workspace:
       saved: Guardado como {name}. No es prueba de presentación.
       show_filed_file: Mostrar el fichero presentado
       show_in_folder: Mostrar en la carpeta
+      show_in_folder_failed: El archivo se guardó, pero no se pudo mostrar en su carpeta
+        ({code}). Abre la carpeta para encontrarlo.
       title: Exportar y registrar
     filter:
       all: todas las casillas

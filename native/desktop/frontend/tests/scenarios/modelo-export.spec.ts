@@ -416,3 +416,34 @@ test("an export that settles after leaving filing releases its output token and 
   await expect(target.locator(".modelo-write-hold")).toHaveCount(0);
   expect(await calls(target, "modelo submit modelo.export")).toHaveLength(1);
 });
+
+test("showing the saved file in its folder that fails says why", async ({
+  page: target,
+}) => {
+  await filing(target, "exported");
+  await target
+    .getByRole("button", {
+      name: label("workspace.modelo.filing.export_again"),
+    })
+    .click();
+  await expect(
+    target.getByText(
+      label("workspace.modelo.filing.saved", { name: FILING_FILE }),
+    ),
+  ).toBeVisible();
+  await target.evaluate(() => {
+    window.__revealFileRefuses = "file_unavailable";
+  });
+  await target
+    .getByRole("button", {
+      name: label("workspace.modelo.filing.show_in_folder"),
+    })
+    .click();
+  await expect(
+    target.getByText(
+      label("workspace.modelo.filing.show_in_folder_failed", {
+        code: "file_unavailable",
+      }),
+    ),
+  ).toBeVisible();
+});

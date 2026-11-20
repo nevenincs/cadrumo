@@ -5,6 +5,7 @@
 // for is not shown.
 
 import { useEffect, useState } from "react";
+import { failureCode } from "../errors";
 import type { JsonObject, LedgerPort } from "./ledger";
 import { periodFilters, type LedgerPeriod } from "./ledgerGrammar";
 import {
@@ -194,6 +195,15 @@ export function servedDraftCurrency(
   return said.size === 1 ? [...said][0]! : null;
 }
 
+/** What the read of the profile's own accounts has come to: the accounts
+ * once read, else null; `failure` is why a read failed, where one did, and
+ * `retry` asks again. */
+export type OwnAccountsRead = {
+  accounts: OwnAccountChoice[] | null;
+  failure: string | null;
+  retry: () => void;
+};
+
 /** The profile's own accounts, read when `wanted` first holds. Null while
  * they are not read, or when they could not be. */
 export function useOwnAccounts(
@@ -201,32 +211,52 @@ export function useOwnAccounts(
   reader: string | null,
   wanted: boolean,
 ): OwnAccountChoice[] | null {
+  return useOwnAccountsRead(port, reader, wanted).accounts;
+}
+
+/** `useOwnAccounts`, with why the read failed and a way to ask again, so a
+ * filter with no accounts to choose can say it could not read them. */
+export function useOwnAccountsRead(
+  port: LedgerPort | undefined,
+  reader: string | null,
+  wanted: boolean,
+): OwnAccountsRead {
   const [state, setState] = useState<{
     reader: string | null;
     accounts: OwnAccountChoice[] | null;
-  }>({ reader: null, accounts: null });
+    failure: string | null;
+  }>({ reader: null, accounts: null, failure: null });
+  const [attempt, setAttempt] = useState(0);
   const held = state.reader === reader ? state.accounts : null;
+  const failure = state.reader === reader ? state.failure : null;
   const ask = wanted && reader !== null && held === null;
   useEffect(() => {
     if (!port || !ask) return;
     let active = true;
     void (async () => {
       let accounts: OwnAccountChoice[] | null = null;
+      let failed: string | null = null;
       try {
         const answer = readAnswer(
           await port.submit("ledger.own_account", { action: "list" }),
         );
         if (answer.kind === "answer") accounts = accountsOf(answer.result);
-      } catch {
-        // Unread, the filter offers no account to choose.
+        else failed = "unavailable";
+      } catch (error) {
+        failed = failureCode(error);
       }
-      if (active && accounts) setState({ reader, accounts });
+      if (active && (accounts || failed))
+        setState({ reader, accounts, failure: failed });
     })();
     return () => {
       active = false;
     };
-  }, [port, ask, reader]);
-  return held;
+  }, [port, ask, reader, attempt]);
+  const retry = () => {
+    setState({ reader, accounts: null, failure: null });
+    setAttempt((count) => count + 1);
+  };
+  return { accounts: held, failure: held === null ? failure : null, retry };
 }
 
 function accountsOf(result: JsonObject): OwnAccountChoice[] {

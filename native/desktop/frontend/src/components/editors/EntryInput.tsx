@@ -5,6 +5,7 @@ import {
   type ChangeEvent,
   type FocusEvent,
 } from "react";
+import { flushSync } from "react-dom";
 import type { EditorProps } from "@/components/editors/editorProps";
 import { Input } from "@/components/ui/input";
 import { useSuggestions } from "@/components/ui/suggestions";
@@ -56,6 +57,7 @@ export function EntryInput({
   ref,
   onKeyDown,
   onInput,
+  onPointerDown,
   ...native
 }: EditorProps & {
   reading: EntryReading;
@@ -69,31 +71,37 @@ export function EntryInput({
   // A value that changes from outside while typing replaces what was typed.
   if (entry && entry.sent !== value) setEntry({ text: typedForm, sent: value });
   const text = entry?.text ?? (lexeme ? value : reading.shown(value));
-  const take = (typed: string) => {
+  // A value set while the box is not being typed in, by assistive technology
+  // or an automation driver, is held at once and the box shows it as any held
+  // value is shown: nothing typed remains to keep.
+  const take = (typed: string, typing = true) => {
     const sent = lexeme ? typed : (reading.read(typed) ?? typed);
-    setEntry({ text: typed, sent });
+    setEntry(typing ? { text: typed, sent } : null);
     onChange(sent);
   };
   // Restyled text puts the caret at the end of the box; it goes back to where
-  // the person was typing.
-  const caret = useRef<{ box: HTMLInputElement; at: number } | null>(null);
+  // the person was typing, and a selection of the whole text stays whole.
+  const caret = useRef<{
+    box: HTMLInputElement;
+    from: number;
+    to: number;
+  } | null>(null);
   useLayoutEffect(() => {
     const held = caret.current;
     caret.current = null;
     if (held && document.activeElement === held.box)
-      held.box.setSelectionRange(held.at, held.at);
+      held.box.setSelectionRange(held.from, held.to);
   });
   const typedIn = (event: ChangeEvent<HTMLInputElement>) => {
     const typed = event.target.value;
+    const typing = document.activeElement === event.target;
     const echoed = lexeme ? typed : (reading.echo?.(typed) ?? typed);
-    if (echoed !== typed) {
+    if (typing && echoed !== typed) {
       const before = event.target.selectionStart ?? typed.length;
-      caret.current = {
-        box: event.target,
-        at: reading.echo!(typed.slice(0, before)).length,
-      };
+      const at = reading.echo!(typed.slice(0, before)).length;
+      caret.current = { box: event.target, from: at, to: at };
     }
-    take(echoed);
+    take(echoed, typing);
   };
   const offered = useSuggestions({
     value: text,
@@ -106,15 +114,28 @@ export function EntryInput({
     opensEmpty,
     commitsOnPick,
   });
+  // Whether the focus under way comes from a press on the box.
+  const pressed = useRef(false);
   const own = {
     ref,
     onKeyDown,
     onInput,
     onFocus: (event: FocusEvent<HTMLInputElement>) => {
-      setEntry({ text: typedForm, sent: value });
+      // Focus swaps the shown text for its typed form, and a new text in the
+      // box drops the selection. Focus that no pointer placed, by the keyboard,
+      // assistive technology or an automation driver's fill, takes the whole
+      // typed form, so that what comes next replaces it; a press places its
+      // own caret after the focus. The swap happens within the focus, so a
+      // selection made just after it applies to the typed form.
+      const box = event.currentTarget;
+      if (!pressed.current && box.value !== typedForm)
+        caret.current = { box, from: 0, to: typedForm.length };
+      pressed.current = false;
+      flushSync(() => setEntry({ text: typedForm, sent: value }));
       onFocus?.(event);
     },
     onBlur: (event: FocusEvent<HTMLInputElement>) => {
+      pressed.current = false;
       setEntry(null);
       onBlur?.(event);
     },
@@ -125,6 +146,11 @@ export function EntryInput({
         autoComplete="off"
         spellCheck={false}
         {...native}
+        onPointerDown={(event) => {
+          if (document.activeElement !== event.currentTarget)
+            pressed.current = true;
+          onPointerDown?.(event);
+        }}
         type={type}
         value={text}
         {...(suggestions === undefined ? own : offered.field(own))}

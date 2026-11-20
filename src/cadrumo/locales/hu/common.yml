@@ -1091,6 +1091,8 @@ desktop:
       browser_title: A böngésző nincs telepítve
       browser_why: Az AEAT-ból való frissítéshez kell.
       cancel: Mégse
+      cancel_failed: Nem sikerült megszakítani a bejelentkezést ({code}). Próbáld
+        újra, vagy zárd be ezt az ablakot.
       checking: Ellenőrzés…
       ended_body: Az AEAT-belépésed lejárt.
       ended_sign_in: Bejelentkezés újra
@@ -2882,6 +2884,8 @@ desktop:
       too_short: Előbb jelölj ki legalább két sort, aztán tölts ki lefelé
     filters:
       account: Bankszámla
+      accounts_unread: A számláid olvasása nem sikerült ({code}), ezért nincs miből
+        választani. Próbáld újra.
       active: '{count} aktív'
       any: Bármelyik
       classification: Besorolás
@@ -3961,6 +3965,8 @@ desktop:
       next: Következő időszak
       of_year: '{year} időszakai'
       previous: Előző időszak
+      unread: Az időszakok olvasása nem sikerült ({code}), ezért egy sincs felsorolva.
+        Próbáld újra.
       year_next: Következő év
       year_previous: Előző év
       years_supported: Évek, amelyeket megnézhetsz
@@ -4923,6 +4929,8 @@ desktop:
     actions: Műveletek
     close: Keresés bezárása
     copy_link: A nézet hivatkozásának másolása
+    declarations_failed: A nyilatkozataid keresése nem sikerült ({code}). A többi
+      találat látható. Írj be újra az ismétléshez.
     documentation: Dokumentáció
     hide_view: 'Elrejtés: {view}'
     keywords:
@@ -10752,6 +10760,8 @@ workspace:
       saved: 'Mentve: {name}. Ez nem igazolja a benyújtást.'
       show_filed_file: A benyújtott fájl megjelenítése
       show_in_folder: Megjelenítés a mappában
+      show_in_folder_failed: A fájl elmentve, de nem sikerült megjeleníteni a mappájában
+        ({code}). Nyisd meg te magad a mappát, hogy megtaláld.
       title: Exportálás és rögzítés
     filter:
       all: minden rovat

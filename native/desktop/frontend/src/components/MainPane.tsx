@@ -724,9 +724,7 @@ export function MainPane({
             }}
             onTheme={setDocsTheme}
             onShortcut={runShortcut}
-            onOpenExternal={(url) =>
-              void host.openExternal(url).catch(() => undefined)
-            }
+            onOpenExternal={openLink}
             onMenu={docsMenu}
           />
         ) : environment.state === "ready" &&
