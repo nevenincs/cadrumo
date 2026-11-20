@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-11-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:3bbd7597ce56cf2cdbc880c04e869269c83e6583f9e937fa16cf398c817167cf'
+body_hash: 'sha256:960934e2b335b1a17e4c97a13b3e3e3c2c8fa9606deb1579f6d35c4c7b53395c'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -475,3 +475,12 @@ Unchanged: admitted work is owned by the runtime and survives the client disconn
 Accepted under the user's explicit CADRUMO-WINDOWMANAGER implementation request. Fixed main/agent/bottom placement becomes a default. Panels support tab groups, directional splits, swaps, expansion and floating presentation. Each existing panel has one mounted owner; moves never duplicate terminals, documentation or private work. Console, Python and Logs are individually dockable. Existing page navigation and unsaved-work guards remain authoritative.
 
 A versioned presentation tree validates identities, active tabs, ratios and floating geometry. Legacy preferences seed its default; no private data is stored. Fullscreen is transient and restores the prior arrangement. F11 is globally reserved; Escape exits fullscreen only when no nearer modal owns dismissal. Floating within the main window adds no host authority; additional native windows require a refinement of the main-window-only boundary. No new dependencies are introduced. This supersedes fixed placement only; localization, theme, profile gating and session lifetime remain binding. Evidence: `2026-11-02-cadrumo-windowmanager-reference`.
+
+## Amendment 2026-11-20: typed background-task cues
+
+Basis: the operator authorised this amendment by demand on 2026-11-20, relayed by PRIME in the LEDGER-CLASSIFY brief. The decision is recorded in `2026-11-20-ledger-classify-queue-adr`, constraint 7. The status of this record is unchanged.
+
+- When a background job's backend record changes, the host sends the window a typed cue `{family, profile_id, job_id?, revision}` on one subscribed background-task channel.
+- `family` is a closed vocabulary, starting with `ledger_classification`. `revision` is the opaque revision the backend serves. The cue carries no private fact and grants nothing.
+- The window re-reads through the typed read operation, gated on revision. It also re-reads on subscribe and on window focus. No periodic polling is added.
+- The shell shows a background-task indicator. The window still holds no domain data: the indicator renders what the read returns.

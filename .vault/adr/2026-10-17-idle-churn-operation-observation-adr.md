@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#idle-churn'
 date: '2026-10-17'
-modified: '2026-10-22'
+modified: '2026-11-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:e8e93b4a693a266455c699f026a6d66e233973e59ec2263e1687ac823f868994'
+body_hash: 'sha256:caedb66e203dad1032447aa405604e3e27808285c29f007b887e4e6b6b0babd1'
 related:
   - "[[2026-10-16-idle-churn-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -73,3 +73,7 @@ Amended 2026-10-17 on the operator's approval in this session ("ok add it"): a d
 Amended 2026-10-17 on the operator's approval in this session ("go with recommendation on both"): a report the runtime does not take is retried, not dropped. The plan-close review found that the operation modal waits with no deadline (`2026-10-17-operation-cues-audit`, finding modal-waits-unbounded-on-a-dropped-report), so a dropped report could leave it showing a settled operation as running. Retrying at the producer covers every waiter and keeps the rule that a client never waits on a fixed interval. Retries run only while delivery fails, so nothing wakes while the worker is idle or once the runtime takes its reports. The Constraints and Consequences bullets are reworded in place, each with a note of what it said before.
 
 Amended on acceptance of `2026-10-22-worker-authorization-channel-adr`: reports travel on a reused verified connection. Their content, coalescing and retry rules are unchanged.
+
+## Amendment 2026-11-20: background jobs
+
+Basis: `2026-11-20-ledger-classify-queue-adr`, constraint 7. `operation_changed` is unchanged. The desktop host turns runtime `records_changed` into a typed background-task cue for the window. That cue names an opaque job identifier and revision, and carries no operation fact. The status of this record is unchanged.

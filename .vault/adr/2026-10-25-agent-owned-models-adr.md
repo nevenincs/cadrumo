@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#agent-owned-models'
 date: '2026-10-25'
-modified: '2026-11-09'
+modified: '2026-11-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:b0f373d94c43028b7412d8d6c69e1621703b06c0d9a5ba6f41b37d9394ce3a77'
+body_hash: 'sha256:123ab08ff0170172da124437c7ef85b1ddeb4a7ed43c94b7b732714447f34a3c'
 related:
   - "[[2026-10-24-rust-component-provisioning-reference]]"
   - "[[2026-10-24-rust-component-provisioning-adr]]"
@@ -155,3 +155,11 @@ Basis: the coordinator's acceptance on 2026-11-08, which applies rulings already
   - At 16384, both the agent turn and the background request passed. The agent turn called `read_attachment` through the production approval route and replied from the file. Free RAM was 70,172 MiB before, 65,949 MiB loaded and 69,585 MiB after, about 4.2 GB in use.
   - The catalogue's `llamacpp_default_context` for `qwen3:4b-instruct` is therefore 16384, and the llama.cpp lane's completed-turn proof is recorded on it. The other local models keep 8192.
 - **Unchanged.** Cadrumo still names no model (constraint 6), and the catalogue schema shape is unchanged. Vision reading is unaffected, because this slot covers text only.
+
+## Amendment 2026-11-20: task-kind defaults
+
+Basis: the operator's binding requirement of 2026-11-20, relayed by PRIME in the LEDGER-CLASSIFY brief. cadrumo-agent is the single provider source, and each classification or extraction task gets its own default provider, model and effort from an agent setting per task kind, falling back to the picker selection. The decision is recorded in `2026-11-20-ledger-classify-queue-adr`, constraints 1 and 2. The status of this record is unchanged.
+
+- **Constraint 6.** "There is no per-task choice" no longer holds for task kinds. cadrumo-agent's catalogue serves the task kinds it accepts. The person may set a lane, model and effort per task kind in the agent's settings. The agent service stores these in `model-role-selections` under a new schema version. A task resolves to its task setting, or else to the picked reading model. Internal roles stay invisible to the person.
+- **Constraint 7.** Background run options gain `effort`, honoured only when the lane's catalogue entry declares it.
+- **Unchanged.** Constraints 1, 3, 4 and 10 stand: Cadrumo names no model, effort or default; every tax call goes through the agent; consent follows `reads_off_host`; and no other model stands in.
