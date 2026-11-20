@@ -33,8 +33,8 @@ export const RICH_REPLY = [
 ].join("\n\n");
 // A reply that links to views of the window and to one it does not draw, a
 // refusal and a link in the retired profile form.
-export const LINKS = /con enlaces/i;
-export const LINKS_REPLY = [
+const LINKS = /con enlaces/i;
+const LINKS_REPLY = [
   "Puedes seguir en:",
   "- [el calendario](cadrumo://view/calendar)",
   "- [los movimientos](cadrumo://view/ledger/movements)",
@@ -44,6 +44,18 @@ export const LINKS_REPLY = [
   "- [una vista que no existe](cadrumo://view/nowhere)",
   "- [un enlace antiguo](cadrumo://profiles/5aa00000-0000-4000-8000-0000000000aa/ledger)",
 ].join("\n");
+// A reply that writes the calendar's link bare and as an autolink, as an
+// agent offering to open it may, without Markdown link syntax.
+const BARE_LINKS = /con enlaces sueltos/i;
+const BARE_LINKS_REPLY = [
+  "Lo tienes en cadrumo://view/calendar.",
+  "También en <cadrumo://view/calendar>",
+].join("\n\n");
+// The link replies by the message that asks for each, the narrower first.
+export const LINK_REPLIES: readonly (readonly [RegExp, string])[] = [
+  [BARE_LINKS, BARE_LINKS_REPLY],
+  [LINKS, LINKS_REPLY],
+];
 // A reply that links to exactly the view the person names, so a scenario
 // can link to a row it read from the page.
 export const LINK_TO = /^enlaza (cadrumo:\S+)$/i;
