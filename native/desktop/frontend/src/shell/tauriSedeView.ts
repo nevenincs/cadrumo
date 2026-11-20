@@ -17,7 +17,7 @@ function isRawFrame(delivery: SedeViewDelivery): delivery is ChannelRawFrame {
 /** The Sede view port over the desktop host's `sede_view_*` commands. */
 export function tauriSedeView(call: HostCall): SedeViewPort {
   return {
-    async open(size, listener) {
+    async open(size, listener, handover) {
       const messages = new Channel<SedeViewDelivery>();
       const reader = sedeViewReader((event) => {
         listener(event);
@@ -39,7 +39,17 @@ export function tauriSedeView(call: HostCall): SedeViewPort {
 
       let opened: { view: number };
       try {
-        opened = await call("sede_view_open", { ...size, messages });
+        // A conflict the panel asks again after is the handover it waits on,
+        // not a refusal of what the person did.
+        opened = await call(
+          "sede_view_open",
+          { ...size, messages },
+          handover && {
+            retryable: (code) => code === "conflict",
+            scheduled: handover.scheduled,
+            expected: handover.expected,
+          },
+        );
       } catch (error) {
         messages.onmessage = () => undefined;
         throw error;
