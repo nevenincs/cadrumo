@@ -78,8 +78,14 @@ export function provenanceText(
   const origin = ORIGINS.includes(found.origin)
     ? t(`desktop.ledger.documents.origin.${found.origin}`)
     : found.origin;
+  // A value read from a record's own data was found in that record, never on
+  // a page, so the page's word for it is not used.
   const grounding = GROUNDINGS.includes(found.grounding)
-    ? t(`desktop.ledger.documents.grounding.${found.grounding}`)
+    ? t(
+        found.origin === "exact_structured" && found.grounding === "anchored"
+          ? "desktop.ledger.documents.grounding.anchored_record"
+          : `desktop.ledger.documents.grounding.${found.grounding}`,
+      )
     : found.grounding;
   return t("desktop.ledger.documents.provenance", { origin, grounding });
 }

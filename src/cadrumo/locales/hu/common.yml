@@ -2249,6 +2249,7 @@ desktop:
       vehiculo_seguro: seguro coche vehiculo
       viajes_alojamiento: hotel alojamiento hostal apartamento
       viajes_transporte: tren avion vuelo taxi autobus
+    cell_empty: Üres
     classification:
       business: Üzleti
       failed_validation: Sikertelen ellenőrzés
@@ -2500,8 +2501,11 @@ desktop:
         mielőtt a dokumentum elmegy. Az elküldöttet nem lehet visszahívni.
       count: 'Dokumentumok: {count}'
       country: Partner országa
+      country_from_vat_prefix: Az áfa-azonosító előtagjából
       currency_not_read: 'Nincs a dokumentumon: add meg'
       derived: Gépen kívüli beolvasásból készült
+      direction_disagrees: 'Importálva mint: {declared}. A dokumentum alapján: {suggested}.
+        Válaszd ki, melyik a helyes.'
       duplicate: 'Már a katalógusban: {number}'
       duplicate_check_failed: A főkönyv nem mondta meg, hogy ez az olvasat már a katalógusban
         van-e, ezért még nem erősítheted meg.
@@ -2535,6 +2539,7 @@ desktop:
       grounding:
         ambiguous: több lehetséges olvasat
         anchored: megtalálva az oldalon
+        anchored_record: megtalálva a dokumentum rekordjában
         contradicted: az oldal ellentmond
         reconciled: az összegek egyeznek
         unanchored: nem található az oldalon
@@ -2547,6 +2552,7 @@ desktop:
         duplicate: Lehet, hogy már a katalógusban van
         findings: Előbb válaszolj minden kérdésre
       in_review: Ellenőrzés alatt
+      iva_by_rate: Áfa kulcsonként
       keep: Megtartás
       left_out: 'Kihagyva, nem dokumentum: {count}'
       link_offer: Összekapcsolod a tételével?
@@ -2608,6 +2614,7 @@ desktop:
         unavailable: Nem elérhető
         version: '{version} verzió'
       reading_changed: Az olvasat megváltozott. Ellenőrizd újra.
+      reading_changed_in: 'Az olvasat megváltozott itt: {fields}. Ellenőrizd újra.'
       readings: Olvasatok
       reads_as: 'A dokumentum alapján: {kind}'
       ready_to_confirm: Megerősíthető
@@ -3089,8 +3096,8 @@ desktop:
       documents_note: '{kind}. Minden dokumentum bizonylatként kerül be, és ezen a
         gépen olvassa be; a képek a Dokumentumokban várnak beolvasásra.'
       documents_refused: A dokumentumok nem lettek hozzáadva
-      documents_result: 'Beolvasásra vár: {waiting} · már hozzáadva: {held} · szüneteltetve:
-        {paused}'
+      documents_result: 'A te ellenőrzésedre vár: {waiting} · már hozzáadva: {held}
+        · szüneteltetve: {paused}'
       done: Kész
       drop:
         bank: Húzd ide a kivonatfájlokat vagy egy mappát
@@ -3604,6 +3611,7 @@ desktop:
       duplicate: Már szerepel a katalógusban.
       empty: Még nincs számla. Adj hozzá egyet, vagy importálj számlakönyvet.
       empty_filtered: Nincs egyező számla.
+      empty_period: '{period}: nincs egyező számla. Más időszakokban: {count}'
       failed: Semmi sem lett mentve. Próbáld újra.
       field:
         counterparty_country: Ország
@@ -3795,7 +3803,7 @@ desktop:
     iva_category:
       domestic_exempt: Adómentes
       domestic_general: Általános kulcs
-      domestic_not_subject: Nem adóköteles
+      domestic_not_subject: Nem adóköteles (LIVA 7. cikk)
       domestic_reduced: Kedvezményes kulcs
       domestic_reverse_charge: Belföldi fordított adózás
       domestic_super_reduced: Különösen kedvezményes kulcs
@@ -3810,7 +3818,7 @@ desktop:
       intra_community_service_supply: Közösségen belüli szolgáltatásnyújtás
       intra_community_supply: Közösségen belüli értékesítés
       intra_community_triangulation: Háromszögügylet
-      operacion_no_sujeta: Nem adóköteles ügylet
+      operacion_no_sujeta: Nem adóköteles a teljesítés helye miatt (LIVA 68–70. cikk)
       reagp_compensation: REAGP-kompenzáció
       recargo_equivalencia: Recargo de equivalencia
       regimen_simplificado: Régimen simplificado
@@ -3955,7 +3963,7 @@ desktop:
       year_next: Következő év
       year_previous: Előző év
       years_supported: Évek, amelyeket megnézhetsz
-      years_with_movements: Évek tételekkel
+      years_with_movements_or_invoices: Évek tételekkel vagy számlákkal
     position: '{row}. sor / {count}'
     prorrata:
       action:
@@ -4281,11 +4289,14 @@ desktop:
       row: 'Jelöld ki: {description}'
       shown: Jelöld ki a látható tételeket · Ctrl+kattintás hozzáadja őket
     selected: '{count} kijelölve'
+    selected_one: 1 kijelölve
     selection:
       actions_count: Műveletek · {count} kijelölve
+      actions_count_one: Műveletek · 1 kijelölve
       all_shown: 'Minden látható ki van jelölve: {count}.'
       clear_category: Kategória törlése
       hidden: 'Rejtett: {hidden} a(z) {selected} kijelöltből'
+      hidden_one: A kijelölt tétel rejtett
       keep_visible: Csak a láthatók maradjanak
       select_all: 'Mind a {count} kijelölése: {period}'
       show: Mutasd őket

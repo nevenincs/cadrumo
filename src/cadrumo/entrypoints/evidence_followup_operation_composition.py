@@ -6,7 +6,9 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ..adapters.outbound.llm.consent import off_host_evidence_read_askable
 from ..adapters.persistence.llm.consent_ledger import EvidenceConsentLedger
+from ..adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
 from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
+from ..application.ledger.confirmation_record_repository import ConfirmationRecordRepositoryProtocol
 from ..application.ledger.consent_withdrawal import ConsentedDispatch
 from ..application.ledger.evidence_followup_contracts import (
     LedgerEvidenceFollowupOperationPorts,
@@ -35,6 +37,10 @@ def _attachment_store(bucket_id: str, /) -> AttachmentStoreProtocol:
 
 def _extraction_drafts(*, bucket_id: str, settings: Settings) -> ExtractionDraftRepositoryProtocol:
     return ExtractionDraftRepository(bucket_id=_require_profile(bucket_id), settings=settings)
+
+
+def _confirmation_records(*, bucket_id: str, settings: Settings | None) -> ConfirmationRecordRepositoryProtocol:
+    return ConfirmationRecordRepository(bucket_id=_require_profile(bucket_id), settings=settings)
 
 
 def _consent_entries(*, bucket_id: str) -> tuple[ConsentedDispatch, ...]:
@@ -69,6 +75,7 @@ def build_ledger_evidence_followup_operation_ports(*, settings: Settings) -> Led
         settings=settings,
         attachment_store_factory=_attachment_store,
         extraction_draft_repository_factory=_extraction_drafts,
+        confirmation_record_repository_factory=_confirmation_records,
         consent_entries_factory=_consent_entries,
         off_host_read_askable=_off_host_read_askable(settings),
     )

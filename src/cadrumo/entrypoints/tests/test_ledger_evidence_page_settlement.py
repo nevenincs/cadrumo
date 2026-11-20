@@ -15,7 +15,7 @@ import base64
 import hashlib
 from collections.abc import Iterator
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from io import BytesIO
 from pathlib import Path
 from uuid import UUID
@@ -37,6 +37,7 @@ from ...application.ledger.evidence_page_contracts import (
     LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID,
     EvidencePageMediaType,
     EvidencePageRenderer,
+    EvidenceStructuredValueKind,
     LedgerEvidencePageProjection,
     LedgerEvidencePageRequest,
 )
@@ -321,6 +322,37 @@ def test_a_facturae_e_invoice_is_shown_as_the_facts_its_record_states(
     released = page.model_dump_json()
     assert "alba-private-folder" not in released
     assert "<" not in released
+
+
+def test_the_e_invoice_facts_are_typed_so_the_frontend_formats_them_for_the_person(
+    tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> None:
+    """A date, an amount, a rate and a quantity each say what they are, and none is served as formatted text."""
+    xml = _FACTURAE.read_bytes()
+    record = translate_parsed_einvoice(parse_einvoice_document(xml))
+    attachment_id = _attachment(profile, xml, mime_type="text/xml", source_reference="factura.xml")
+
+    settled = _settle(
+        tmp_path, profile, operation, LedgerEvidencePageRequest(profile_id=_PROFILE, attachment_id=attachment_id)
+    )
+
+    shown = settled.page.structured_invoice if settled.page is not None else None
+    assert shown is not None
+    facts = {fact.label_key.rsplit(".", 1)[-1]: fact for fact in shown.facts}
+    assert record.invoice_date is not None
+    assert facts["invoice_date"].value_kind is EvidenceStructuredValueKind.DATE
+    assert facts["invoice_date"].iso_date == date.fromisoformat(record.invoice_date)
+    assert facts["invoice_date"].text is None
+    for amount in ("taxable_base", "grand_total"):
+        assert facts[amount].value_kind is EvidenceStructuredValueKind.AMOUNT, amount
+        assert facts[amount].number is not None, amount
+    assert facts["invoice_number"].value_kind is EvidenceStructuredValueKind.TEXT
+    line = {fact.label_key.rsplit(".", 1)[-1]: fact for fact in shown.lines[0].facts}
+    assert line["quantity"].value_kind is EvidenceStructuredValueKind.QUANTITY
+    assert line["unit_price"].value_kind is EvidenceStructuredValueKind.AMOUNT
+    assert line["taxable_base"].value_kind is EvidenceStructuredValueKind.AMOUNT
+    assert line["iva_rate"].value_kind is EvidenceStructuredValueKind.RATE_PERCENT
+    assert line["iva_rate"].number == PublicDecimal(decimal=str(record.lines[0].iva_rate))
 
 
 def test_xml_that_is_no_e_invoice_is_refused_as_a_type_the_read_cannot_show(

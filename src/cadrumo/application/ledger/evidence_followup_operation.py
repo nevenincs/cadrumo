@@ -15,12 +15,15 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.confirmation_gate import ConfirmationBlockReason, ReviewAdvisoryKind
 from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.i18n.render import tr
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.iva.identification import vat_number_issuing_country
 from ...domain.iva.regime_legend import resolve_regime_legends
+from ..operations.error_detail import served_words_language
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.result_size import refuse_oversized_result
@@ -28,6 +31,8 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .attachment_review import get_attachment_review_item, list_attachment_review_queue
 from .confirmation_block_words import served_block_reason_words
 from .confirmation_gate import ConfirmationBlocker, confirmation_blockers
+from .confirmation_record import load_confirmation_records
+from .confirmation_record_repository import bind_confirmation_record_repository_factory
 from .consent_withdrawal import survey_cloud_consent
 from .country_vocabulary_advisory import CountryVocabularyAdvisory, country_vocabulary_advisory
 from .evidence_followup_contracts import (
@@ -38,7 +43,10 @@ from .evidence_followup_contracts import (
     LEDGER_EVIDENCE_REVIEW_SUMMARY_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID,
     MAX_EVIDENCE_FOLLOWUP_READ_ROWS,
+    EvidenceConfirmPreconditionProjection,
+    EvidenceReviewDirectionProjection,
     EvidenceReviewQueueRowProjection,
+    EvidenceReviewVatPrefixCountryProjection,
     LedgerEvidenceAttachmentQueueExecutionResult,
     LedgerEvidenceAttachmentQueueProjection,
     LedgerEvidenceAttachmentQueueRequest,
@@ -67,6 +75,7 @@ from .evidence_review_advisories import (
 from .evidence_review_summaries import LedgerEvidenceReviewSummaryProjection
 from .extraction_draft_repository import bind_extraction_draft_repository_factory
 from .extraction_draft_store import ExtractionDraftDocument, StoredExtractionDraft, load_extraction_drafts
+from .filer_establishment import FILER_POSTCODE_MISSING_LOCALE_KEY, filer_postcode_declared, filer_postcode_step
 from .invoice_draft_records import InvoiceDraft
 from .invoice_evidence_operation_dtos import (
     ConfirmationBlockerProjectionV1,
@@ -75,6 +84,7 @@ from .invoice_evidence_operation_dtos import (
 )
 from .invoice_extraction_authority import default_invoice_extraction_period
 from .party_attribution import PartyAttributionAdvisory, party_attribution_advisory
+from .preconditions import LedgerPreconditionCondition
 from .review_advisories import review_advisory_kinds
 
 
@@ -221,6 +231,24 @@ def _draft_document(ports: LedgerEvidenceFollowupOperationPorts, bucket_id: str)
     return document
 
 
+def _confirmed_references(ports: LedgerEvidenceFollowupOperationPorts, bucket_id: str) -> frozenset[str]:
+    """The evidence references this profile has already confirmed into an invoice.
+
+    A draft stays stored after its confirmation (the consent survey still lists
+    what an off-host read derived), so the queue of drafts awaiting review
+    leaves out the ones a confirmation record names. The record is written by
+    the confirm after the invoice, so a confirm that stopped between the two
+    leaves its draft in the queue, which is the safe side to err on.
+    """
+    if require_active_bucket_id() != bucket_id:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    with bind_confirmation_record_repository_factory(ports.confirmation_record_repository_factory):
+        document = load_confirmation_records(bucket_id, ports.settings)
+    if document.bucket_id != bucket_id:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return frozenset(record.evidence_reference for record in document.records)
+
+
 def _require_bounded_draft_metadata(document: ExtractionDraftDocument) -> None:
     """Refuse old drafts whose reference/extractor metadata exceeds this projection."""
     if any(len(stored.evidence_reference) > 64 or len(stored.extractor) > 2_048 for stored in document.drafts):
@@ -322,6 +350,24 @@ def _review_view_advisories(
     return party_advisory, country_advisory
 
 
+def _review_view_vat_prefix_country(
+    draft: InvoiceDraft,
+    operation: PinnedAuthorityOperation,
+) -> EvidenceReviewVatPrefixCountryProjection | None:
+    """Name the country each party's VAT-number prefix carries, for the person to accept or ignore.
+
+    Served beside the draft and never written into it: the reader refuses to
+    take a tax-id prefix as the party's establishment, and a prefix still says
+    only which Member State issued the number (Directive 2006/112/EC art. 215).
+    """
+    with validating_governed_facts(operation):
+        supplier = vat_number_issuing_country(draft.supplier_tax_id, operation=operation)
+        customer = vat_number_issuing_country(draft.customer_tax_id, operation=operation)
+    if supplier is None and customer is None:
+        return None
+    return EvidenceReviewVatPrefixCountryProjection(supplier=supplier, customer=customer)
+
+
 def _review_view_invoice_draft_projection(draft: InvoiceDraft) -> InvoiceDraftProjectionV1:
     try:
         return InvoiceDraftProjectionV1.from_draft(draft)
@@ -373,6 +419,7 @@ def _review_view_projection(
     party_advisory: PartyAttributionAdvisoryProjection | None,
     country_advisory: CountryVocabularyAdvisoryProjection | None,
     *,
+    vat_prefix_country: EvidenceReviewVatPrefixCountryProjection | None,
     off_host_read_offered: bool,
 ) -> LedgerEvidenceReviewViewProjection:
     return LedgerEvidenceReviewViewProjection(
@@ -389,6 +436,10 @@ def _review_view_projection(
         blockers=tuple(ConfirmationBlockerProjectionV1.from_blocker(row) for row in confirmation_blockers(draft)),
         party_attribution_advisory=party_advisory,
         country_vocabulary_advisory=country_advisory,
+        direction=EvidenceReviewDirectionProjection.of(
+            declared_kind=stored.declared_kind, suggested_kind=draft.suggested_kind
+        ),
+        counterparty_vat_prefix_country=vat_prefix_country,
         off_host_read_offered=off_host_read_offered,
     )
 
@@ -411,6 +462,7 @@ def _read_review_view(
         projected_draft,
         _party_attribution_projection(party_advisory),
         _country_vocabulary_projection(country_advisory),
+        vat_prefix_country=_review_view_vat_prefix_country(draft, operation),
         off_host_read_offered=ports.off_host_read_askable(bucket_id=bucket_id),
     )
     if result.evidence_reference != payload.evidence_reference:
@@ -469,6 +521,27 @@ class LedgerEvidenceConsentListExecutor:
         )
 
 
+def _confirm_precondition() -> EvidenceConfirmPreconditionProjection | None:
+    """The profile fact every confirm reads and the active profile does not state, or ``None``.
+
+    Read from the same profile record and through the same predicate the
+    confirm's own refusal uses, worded with the same sentence and step, so the
+    queue cannot call a draft ready that the confirm will refuse for this.
+    """
+    # Call-time import: the workflow persistence reaches back into this package.
+    from ..workflow.persistence import workflow_state_repository
+
+    if filer_postcode_declared(workflow_state_repository().load().active_profile_record()):
+        return None
+    language = served_words_language()
+    return EvidenceConfirmPreconditionProjection(
+        condition=LedgerPreconditionCondition.FILER_POSTCODE_VALID,
+        words=tr(FILER_POSTCODE_MISSING_LOCALE_KEY, locale=language.value),
+        words_language=language,
+        next_step=filer_postcode_step()(language),
+    )
+
+
 class LedgerEvidenceReviewListExecutor:
     """Build the complete typed blocker/advisory queue for one profile."""
 
@@ -497,11 +570,13 @@ class LedgerEvidenceReviewListExecutor:
             if len(document.drafts) > MAX_EVIDENCE_FOLLOWUP_READ_ROWS:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
             _require_bounded_draft_metadata(document)
+            confirmed = _confirmed_references(self._ports, bucket_id)
             with validating_governed_facts(context.authority_operation):
                 rows = tuple(
                     row
                     for stored in sorted(document.drafts, key=lambda item: item.evidence_reference)
-                    if (row := _review_row(stored, request=payload, operation=context)) is not None
+                    if stored.evidence_reference not in confirmed
+                    and (row := _review_row(stored, request=payload, operation=context)) is not None
                 )
             if len(rows) > MAX_EVIDENCE_FOLLOWUP_READ_ROWS:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
@@ -509,6 +584,7 @@ class LedgerEvidenceReviewListExecutor:
                 profile_id=payload.profile_id,
                 filters=_filters(payload),
                 rows=rows,
+                confirm_precondition=_confirm_precondition() if rows else None,
             )
 
         return await _capture_result(

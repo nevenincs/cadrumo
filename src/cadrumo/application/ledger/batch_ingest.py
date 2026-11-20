@@ -1118,6 +1118,10 @@ def _ingest_one_batch_item(
             extractor=BATCH_DRAFT_EXTRACTOR,
             read_transports=BATCH_READ_TRANSPORTS,
             settings=settings,
+            # The operator's stated direction travels with the draft so the
+            # review opens on it. It is beside the reading's own suggestion,
+            # never written over it.
+            declared_kind=direction,
         )
     except Exception as exc:  # reason: a draft that could not be stored is this item's refusal.
         return refused(

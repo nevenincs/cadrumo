@@ -668,3 +668,85 @@ test("undo history follows a movement's new id after an apply", () => {
     [B]: { notes: { kind: "set", value: "x" } },
   });
 });
+
+test("a staged IVA derivation follows the movement's IVA category field", () => {
+  const derive = (category: string) => ({
+    type: "stage_action" as const,
+    action: {
+      id: `iva_derive:${A}`,
+      kind: "iva_derive" as const,
+      transactionId: A,
+      ivaCategory: category,
+    },
+  });
+  const setCategory = (value: string | null) => ({
+    type: "stage" as const,
+    label: value === null ? ("clear" as const) : ("set" as const),
+    cells: [
+      {
+        id: A,
+        field: "iva_category" as const,
+        value:
+          value === null
+            ? { kind: "clear" as const }
+            : { kind: "set" as const, value },
+        stored: null,
+      },
+    ],
+  });
+  const derivations = (state: typeof EMPTY_STAGE) =>
+    state.content.actions.filter((action) => action.kind === "iva_derive");
+
+  let state = reduceStage(EMPTY_STAGE, setCategory("domestic_general"));
+  state = reduceStage(state, derive("domestic_general"));
+  // Another category in the field moves the derivation with it.
+  state = reduceStage(state, setCategory("domestic_reduced"));
+  expect(derivations(state)).toMatchObject([
+    { transactionId: A, ivaCategory: "domestic_reduced" },
+  ]);
+  // A derivation of another movement is left alone.
+  const other = reduceStage(state, {
+    type: "stage",
+    label: "set",
+    cells: [
+      {
+        id: B,
+        field: "iva_category",
+        value: { kind: "set", value: "domestic_zero" },
+        stored: null,
+      },
+    ],
+  });
+  expect(derivations(other)).toMatchObject([
+    { transactionId: A, ivaCategory: "domestic_reduced" },
+  ]);
+  // Undo takes the field and the derivation back together.
+  expect(derivations(reduceStage(state, { type: "undo" }))).toMatchObject([
+    { ivaCategory: "domestic_general" },
+  ]);
+  // An emptied field leaves nothing to derive from.
+  expect(derivations(reduceStage(state, setCategory(null)))).toEqual([]);
+  // So does taking the staged category back to the stored one.
+  expect(
+    derivations(
+      reduceStage(state, { type: "revert_cell", id: A, field: "iva_category" }),
+    ),
+  ).toEqual([]);
+  // Another field changes nothing about it.
+  expect(
+    derivations(
+      reduceStage(state, {
+        type: "stage",
+        label: "set",
+        cells: [
+          {
+            id: A,
+            field: "notes",
+            value: { kind: "set", value: "x" },
+            stored: null,
+          },
+        ],
+      }),
+    ),
+  ).toMatchObject([{ ivaCategory: "domestic_reduced" }]);
+});

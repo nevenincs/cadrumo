@@ -25,6 +25,9 @@ BLOCKER_WORDS_LOCALE_KEYS: Final[Mapping[StagedBlockerKind, str]] = MappingProxy
         "draft_incomplete": "application.ledger.staged_check.served.blocker.draft_incomplete",
         "amount_signed": "application.ledger.staged_check.served.blocker.amount_signed",
         "needs_withholding_category": "application.ledger.staged_check.served.blocker.needs_withholding_category",
+        "derive_and_figures": "application.ledger.staged_check.served.blocker.derive_and_figures",
+        "derive_category_differs": "application.ledger.staged_check.served.blocker.derive_category_differs",
+        "derive_needs_business": "application.ledger.staged_check.served.blocker.derive_needs_business",
     }
 )
 """The sentence that explains each kind of blocker."""
@@ -39,6 +42,9 @@ BLOCKER_FIX_LOCALE_KEYS: Final[Mapping[StagedBlockerKind, str]] = MappingProxyTy
         "draft_incomplete": "application.ledger.staged_check.served.fix.draft_incomplete",
         "amount_signed": "application.ledger.staged_check.served.fix.amount_signed",
         "needs_withholding_category": "application.ledger.staged_check.served.fix.needs_withholding_category",
+        "derive_and_figures": "application.ledger.staged_check.served.fix.derive_and_figures",
+        "derive_category_differs": "application.ledger.staged_check.served.fix.derive_category_differs",
+        "derive_needs_business": "application.ledger.staged_check.served.fix.derive_needs_business",
     }
 )
 """The sentence that says what puts each kind of blocker right."""

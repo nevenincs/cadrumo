@@ -15,6 +15,7 @@ import {
   type ClassifyAvailability,
   type ClassifyKind,
 } from "../../../shell/ledgerCommands";
+import { counted } from "../../../shell/compose";
 import { useStrings } from "../../../shell/strings";
 import { CLASSIFY_CHORDS } from "./useClassifyChords";
 
@@ -151,7 +152,15 @@ export function SelectionActions({
           size="sm"
           className="ledger-selection-actions"
         >
-          {t("desktop.ledger.selection.actions_count", { count })}
+          {counted(
+            t,
+            count,
+            {
+              one: "desktop.ledger.selection.actions_count_one",
+              many: "desktop.ledger.selection.actions_count",
+            },
+            { count },
+          )}
           <Icon name="chevronDown" size="xs" />
         </Button>
       </DropdownMenuTrigger>

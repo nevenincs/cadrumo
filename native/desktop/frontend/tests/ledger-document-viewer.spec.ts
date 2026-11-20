@@ -6,6 +6,8 @@ import {
   structuredSampleId,
 } from "../src/dev/fixtures/documentPage";
 import type { Translate } from "../src/shell/strings";
+import { formatDay } from "../src/shared/dateFormats";
+import { formatPercent } from "../src/shared/numbers";
 import { markupOf } from "./support/markup";
 import { label } from "./support/strings";
 
@@ -59,6 +61,8 @@ test("a structured e-invoice page draws its served facts and no image", async ()
   for (const fact of STRUCTURED_WITH_LINES.facts) {
     expect(markup).toContain(label(fact.label_key));
     if (fact.text !== null) expect(markup).toContain(fact.text);
+    if (fact.iso_date !== null)
+      expect(markup).toContain(formatDay("en", fact.iso_date));
   }
   expect(markup).toContain("ledger-document-structured-lines");
   expect(markup).toContain("Diseño de cartel");
@@ -83,4 +87,24 @@ test("a drawn page shows the runtime's image", async () => {
   expect(markup).toContain("<img");
   expect(markup).toContain("data:image/png;base64,AAAA");
   expect(markup).not.toContain("ledger-document-structured");
+});
+
+test("a structured e-invoice's figures and dates are drawn in the person's locale by the kind the backend serves", async () => {
+  const es = Object.assign(
+    (key: string, values?: Record<string, string | number>) =>
+      label(key, values, "es"),
+    { locale: "es" },
+  ) as Translate;
+  const markup = await (
+    await drawPage()
+  )({ t: es, shown: xmlPage, scale: 1, fileName: XML_NAME });
+  // An amount keeps its cents and takes the locale's decimal mark.
+  expect(markup).toContain("300,00");
+  expect(markup).toContain("63,00");
+  expect(markup).not.toContain("300.00");
+  // A line's rate is a percentage and its quantity a plain number.
+  expect(markup).toContain(formatPercent("es", "21", { unit: "points" }));
+  // The date is drawn as the locale writes a day, not as the ISO text.
+  expect(markup).toContain(formatDay("es", "2026-10-15"));
+  expect(markup).not.toContain(">2026-10-15<");
 });

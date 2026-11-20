@@ -58,7 +58,7 @@ export function useWindowChromeActions({
         icon: "search",
         hidden: true,
         chords: [
-          { mod: true, code: "KeyK", key: "K", scope: "app" },
+          { mod: true, code: "KeyK", key: "K", scope: "browser" },
           { mod: true, shift: true, code: "KeyK", key: "K", scope: "global" },
         ],
         run: () => {

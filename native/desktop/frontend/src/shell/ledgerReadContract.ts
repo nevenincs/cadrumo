@@ -41,10 +41,11 @@ export type KnownText = {
 };
 
 /**
- * One family of text the ledger, its invoices and its assets already state.
+ * One family of value the ledger, its invoices and its assets already state.
  */
 export type LedgerKnownValueKind =
   | "counterparty"
+  | "ledger_year"
   | "description"
   | "group_label"
   | "m210_payer"
@@ -54,9 +55,13 @@ export type LedgerKnownValueKind =
 /**
  * The values of each requested kind, most recent first, and which kinds were
  * cut short.
+ *
+ * `ledger_years` are the calendar years of the ledger's filing dates that hold
+ * a movement or a catalogue invoice, oldest first. They are not capped.
  */
 export type LedgerKnownValuesProjection = {
   profile_id: string;
+  ledger_years: number[];
   counterparties: KnownCounterparty[];
   descriptions: KnownText[];
   group_labels: KnownText[];

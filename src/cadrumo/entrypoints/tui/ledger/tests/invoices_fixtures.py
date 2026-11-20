@@ -157,6 +157,8 @@ def transaction_projection(
         notes="synthetic note",
         lifecycle_state="ACTIVE",
         classified_by="operator",
+        classification_decided_by="operator",
+        figures_derived=False,
         classified_at=None,
         classification_reason="",
         classification_confidence=None,

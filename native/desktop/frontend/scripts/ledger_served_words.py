@@ -3,7 +3,8 @@
 The prorrata register, capital-goods and inventory operations serve a finished sentence with every
 refusal, the evidence review serves one for each reason a read draft cannot be confirmed and one
 explaining each finding, an off-host evidence read the consent gate refuses settles with the gate's
-own sentence, and a listed row
+own sentence, a confirm that needs a profile fact the profile lacks serves the sentence and the step to
+state it, and a listed row
 whose classification a command wrote serves a word for the command in place of its name. This
 words each through the same functions the operations call, for every reason in every language, so
 the browser fixtures show what the backend serves and hold no text of their own. A sentence the
@@ -217,6 +218,24 @@ def _reading_model() -> dict[str, dict[str, str]]:
     return words
 
 
+def _confirm_precondition() -> dict[str, dict[str, str]]:
+    """The sentence, the step words and the profile path served when the profile states no fiscal postcode."""
+    from cadrumo.application.ledger.filer_establishment import FILER_POSTCODE_MISSING_LOCALE_KEY, filer_postcode_step
+    from cadrumo.application.operations.next_step import OperationOpenProfileFieldStepV1
+    from cadrumo.core.external_constants import OutputLanguage
+    from cadrumo.core.i18n.render import tr
+
+    words: dict[str, dict[str, str]] = {"refusal": {}, "step": {}, "path": {}}
+    for language in LANGUAGES:
+        step = filer_postcode_step()(OutputLanguage(language))
+        if not isinstance(step, OperationOpenProfileFieldStepV1):
+            raise SystemExit(f"the fiscal postcode step is {step.kind}, not a profile field")
+        words["refusal"][language] = tr(FILER_POSTCODE_MISSING_LOCALE_KEY, locale=language)
+        words["step"][language] = step.words
+        words["path"][language] = step.path
+    return words
+
+
 def _classification_reason() -> dict[str, dict[str, str]]:
     """The word a listed row serves in place of the command that wrote its classification, by source."""
     from cadrumo.application.ledger.transaction_projection import classification_reason_words
@@ -245,6 +264,7 @@ def render_fixture() -> str:
         "draft_finding": _draft_finding(),
         "off_host_consent": _off_host_consent(),
         "reading_model": _reading_model(),
+        "confirm_precondition": _confirm_precondition(),
         "classification_reason": _classification_reason(),
     }
     return json.dumps(words, ensure_ascii=False, indent=2) + "\n"

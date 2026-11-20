@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from dataclasses import replace
 from datetime import date
 from pathlib import Path
-from typing import override
+from typing import Any, override
 
 import pytest
 
@@ -51,6 +51,20 @@ _SYNTHETIC_MODELO = "130"
 
 def _a_portal_id() -> str:
     return str(next(iter(PORTAL_REGISTRY)))
+
+
+def _served_support(canonical: dict[str, Any], entries: int) -> dict[str, Any]:
+    """The support matrix as the tool serves it: the first ``entries`` rows, each with its renames counted."""
+    return {
+        **canonical,
+        "entries": [
+            {
+                **{name: value for name, value in entry.items() if name != "renames"},
+                "rename_count": len(entry["renames"]),
+            }
+            for entry in canonical["entries"][:entries]
+        ],
+    }
 
 
 async def _assert_all_advertised_authority_queries_refuse(adapter: RuntimeMcpAdapter, code: str) -> None:
@@ -187,7 +201,8 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
 
         assert support["outcome"] == "published"
         assert canonical_support["entries"], "the published authority supports no modelo; the comparison is empty"
-        assert support["report"] == canonical_support
+        assert support["paging"]["total"] == len(canonical_support["entries"])
+        assert support["report"] == _served_support(canonical_support, support["paging"]["returned"])
         assert support["report"]["modelo_count"] == len(canonical_support["entries"])
         assert adapter.client is held and held is not None
     finally:
@@ -319,7 +334,10 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
             assert result.structured_content["outcome"] == "published"
             assert result.structured_content["logical_generation"] == first_pin.logical_generation
             assert result.structured_content["reader_incarnation"] == first_pin.reader_incarnation
-            assert result.structured_content["report"] == expected_report
+            assert result.structured_content["report"] == _served_support(
+                expected_report, len(expected_report["entries"])
+            )
+            assert result.structured_content["paging"]["next_cursor"] is None
             current = await client.call_tool("authority", {"query": "support"})
             assert current.is_error is False
             assert isinstance(current.structured_content, dict)

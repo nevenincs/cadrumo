@@ -77,6 +77,12 @@ export type ColumnEditing = {
     column: ColumnId,
     stored: () => ReactNode,
   ) => ReactNode;
+  /** Whether `decorate` draws something over the stored cell: a draft, a
+   * refused entry or a staged change. */
+  drawsOver: (
+    row: LedgerTransactionReviewProjection,
+    column: ColumnId,
+  ) => boolean;
   describeCell: (key: string, column: string) => CellDescription | undefined;
   describeRow: (key: string) => string | undefined;
 };
@@ -152,6 +158,28 @@ function movementColumns(
     ) =>
     (row: LedgerTransactionReviewProjection) =>
       isMissing(context, row, column) ? <Missing t={t} /> : draw(row);
+  // The columns whose stored cell can draw nothing, and when it does.
+  // `isMissing` columns draw words instead, so they are not empty.
+  const blank: Partial<
+    Record<ColumnId, (row: LedgerTransactionReviewProjection) => boolean>
+  > = {
+    description: (row) => !row.transaction.description,
+    counterparty: (row) => !row.transaction.counterparty,
+    eur: (row) => row.transaction.currency === "EUR",
+    category: (row) => !row.transaction.category_id,
+    iva_category: (row) => !row.transaction.iva_category,
+    taxable_base: (row) => row.transaction.taxable_base === null,
+    iva_rate: (row) => row.transaction.iva_rate === null,
+    iva_amount: (row) => row.transaction.iva_amount === null,
+    irpf_category: (row) => !row.transaction.irpf_category,
+    retencion: (row) => row.withholding.length === 0,
+    invoice: (row) => row.transaction.invoice_id === null && !needsInvoice(row),
+    documents: (row) =>
+      !row.transaction.purchase_invoice_evidence_id &&
+      row.transaction.attachment_ids.length === 0,
+    group_label: (row) => !row.group_label,
+    notes: (row) => !row.transaction.notes,
+  };
   const draw: Record<
     ColumnId,
     (row: LedgerTransactionReviewProjection, cell?: CellContext) => ReactNode
@@ -285,7 +313,7 @@ function movementColumns(
     ),
     classified_by: (row) => (
       <TextCell
-        text={classifiedByLabel(t, row.transaction.classified_by)}
+        text={classifiedByLabel(t, row.transaction.classification_decided_by)}
         quiet
       />
     ),
@@ -349,6 +377,16 @@ function movementColumns(
       ...(spec.align ? { align: spec.align } : {}),
       sortable: spec.sortable && context.sortable(column),
       resizable: column !== "select",
+      ...(blank[column]
+        ? {
+            emptyName: (row: LedgerTransactionReviewProjection) =>
+              blank[column]!(row) &&
+              !isMissing(context, row, column) &&
+              !editing?.drawsOver(row, column)
+                ? t("desktop.ledger.cell_empty")
+                : undefined,
+          }
+        : {}),
       cell: editing
         ? (row, cell) =>
             editing.decorate(row, column, () => draw[column](row, cell))

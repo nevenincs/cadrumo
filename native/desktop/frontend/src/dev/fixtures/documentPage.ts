@@ -20,24 +20,40 @@ export const STRUCTURED_SAMPLE_NAMES = {
   withoutLines: "factura-facturae-sin-lineas.xml",
 } as const;
 
+type Figure = "amount" | "rate_percent" | "quantity";
 const text = (key: string, value: string) => ({
   label_key: `${FACT}${key}`,
+  value_kind: "text" as const,
   text: value,
+  iso_date: null,
+  number: null,
+});
+const date = (key: string, value: string) => ({
+  label_key: `${FACT}${key}`,
+  value_kind: "date" as const,
+  text: null,
+  iso_date: value,
   number: null,
 });
 const figure = (key: string, value: string) => ({
   label_key: `${FACT}${key}`,
+  value_kind: "amount" as const,
   text: null,
+  iso_date: null,
   number: { decimal: value },
 });
 const lineText = (key: string, value: string) => ({
   label_key: `${LINE}${key}`,
+  value_kind: "text" as const,
   text: value,
+  iso_date: null,
   number: null,
 });
-const lineFigure = (key: string, value: string) => ({
+const lineFigure = (key: string, kind: Figure, value: string) => ({
   label_key: `${LINE}${key}`,
+  value_kind: kind,
   text: null,
+  iso_date: null,
   number: { decimal: value },
 });
 const lineFacts = (
@@ -50,11 +66,11 @@ const lineFacts = (
 ) => ({
   facts: [
     lineText("description", description),
-    lineFigure("quantity", quantity),
-    lineFigure("unit_price", price),
-    lineFigure("taxable_base", base),
-    lineFigure("iva_rate", rate),
-    lineFigure("iva_amount", iva),
+    lineFigure("quantity", "quantity", quantity),
+    lineFigure("unit_price", "amount", price),
+    lineFigure("taxable_base", "amount", base),
+    lineFigure("iva_rate", "rate_percent", rate),
+    lineFigure("iva_amount", "amount", iva),
   ],
 });
 
@@ -65,7 +81,7 @@ const PARTIES = [
   text("customer_tax_id", "A00000000"),
   text("invoice_series", "F"),
   text("invoice_number", "2026-0001"),
-  text("invoice_date", "2026-10-15"),
+  date("invoice_date", "2026-10-15"),
   text("currency", "EUR"),
 ];
 

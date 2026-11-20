@@ -2266,6 +2266,7 @@ desktop:
       vehiculo_seguro: seguro coche vehiculo
       viajes_alojamiento: hotel alojamiento hostal apartamento
       viajes_transporte: tren avion vuelo taxi autobus
+    cell_empty: Buit
     classification:
       business: Empresarial
       failed_validation: Validació fallida
@@ -2517,8 +2518,11 @@ desktop:
         i es registra abans que surti el document. El que s'ha enviat no es pot recuperar.
       count: 'Documents: {count}'
       country: País de la contrapart
+      country_from_vat_prefix: Del prefix del NIF-IVA
       currency_not_read: 'No consta al document: indica quina'
       derived: Generat a partir d'una lectura externa
+      direction_disagrees: 'Importat com a: {declared}. El document sembla: {suggested}.
+        Tria quin és correcte.'
       duplicate: 'Ja és al catàleg: {number}'
       duplicate_check_failed: El llibre no ha dit si aquesta lectura ja és al catàleg,
         així que encara no pots confirmar-la.
@@ -2552,6 +2556,7 @@ desktop:
       grounding:
         ambiguous: diverses lectures possibles
         anchored: trobat a la pàgina
+        anchored_record: trobat al registre del document
         contradicted: la pàgina no hi coincideix
         reconciled: els totals quadren
         unanchored: no trobat a la pàgina
@@ -2564,6 +2569,7 @@ desktop:
         duplicate: Pot ser que ja sigui al catàleg
         findings: Respon abans totes les preguntes
       in_review: En revisió
+      iva_by_rate: IVA per tipus
       keep: Conserva'l
       left_out: 'Omesos per no ser documents: {count}'
       link_offer: La vincules al seu moviment?
@@ -2623,6 +2629,7 @@ desktop:
         unavailable: No disponible
         version: Versió {version}
       reading_changed: La lectura ha canviat. Torna-la a revisar.
+      reading_changed_in: 'La lectura ha canviat en: {fields}. Torna-la a revisar.'
       readings: Lectures
       reads_as: 'El document sembla: {kind}'
       ready_to_confirm: A punt per confirmar
@@ -3105,8 +3112,8 @@ desktop:
       documents_note: '{kind}. Cada document s''afegeix com a justificant i es llegeix
         en aquest ordinador; les imatges esperen a Documents per llegir-se.'
       documents_refused: Els documents no s'han afegit
-      documents_result: 'Esperant lectura: {waiting} · ja afegits: {held} · en pausa:
-        {paused}'
+      documents_result: 'Pendents de la teva revisió: {waiting} · ja afegits: {held}
+        · en pausa: {paused}'
       done: Fet
       drop:
         bank: Deixa anar aquí fitxers d'extracte o una carpeta
@@ -3619,6 +3626,7 @@ desktop:
       duplicate: Ja és al catàleg.
       empty: Encara no hi ha factures. Afegeix-ne una o importa un llibre de factures.
       empty_filtered: Cap factura no coincideix.
+      empty_period: 'Cap factura no coincideix a {period}. En altres períodes: {count}'
       failed: No s'ha desat res. Torna-ho a provar.
       field:
         counterparty_country: País
@@ -3813,7 +3821,7 @@ desktop:
     iva_category:
       domestic_exempt: Exempta
       domestic_general: Tipus general
-      domestic_not_subject: No subjecta
+      domestic_not_subject: No subjecta (art. 7 LIVA)
       domestic_reduced: Tipus reduït
       domestic_reverse_charge: Inversió del subjecte passiu
       domestic_super_reduced: Tipus superreduït
@@ -3828,7 +3836,7 @@ desktop:
       intra_community_service_supply: Prestació intracomunitària de serveis
       intra_community_supply: Lliurament intracomunitari
       intra_community_triangulation: Operació triangular
-      operacion_no_sujeta: Operació no subjecta
+      operacion_no_sujeta: No subjecta per localització (arts. 68 a 70 LIVA)
       reagp_compensation: Compensació REAGP
       recargo_equivalencia: Recàrrec d'equivalència
       regimen_simplificado: Règim simplificat
@@ -3974,7 +3982,7 @@ desktop:
       year_next: Any següent
       year_previous: Any anterior
       years_supported: Exercicis que pots consultar
-      years_with_movements: Anys amb moviments
+      years_with_movements_or_invoices: Anys amb moviments o factures
     position: Fila {row} de {count}
     prorrata:
       action:
@@ -4307,11 +4315,14 @@ desktop:
       row: Selecciona {description}
       shown: Selecciona els moviments mostrats · Ctrl+clic els afegeix
     selected: '{count} seleccionats'
+    selected_one: 1 seleccionat
     selection:
       actions_count: Accions · {count} seleccionats
+      actions_count_one: Accions · 1 seleccionat
       all_shown: 'Tots els mostrats estan seleccionats: {count}.'
       clear_category: Treu la categoria
       hidden: 'Amagats: {hidden} de {selected} seleccionats'
+      hidden_one: El moviment seleccionat està amagat
       keep_visible: Deixa només els visibles
       select_all: Selecciona els {count} de {period}
       show: Mostra'ls

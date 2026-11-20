@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#sede-browser'
 date: '2026-10-27'
-modified: '2026-10-28'
+modified: '2026-11-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:7ed47dc77fa5f4aa4e63eb576f8899f3e631ef0a2e87c2faee6ebe839c2784c6'
+body_hash: 'sha256:175a55856060851fac884ecc76b5b59e98f4543b7c7c7f90b8b69145e1bce37f'
 related:
   - "[[2026-10-04-desktop-shell-adr]]"
   - "[[2026-10-04-application-sign-in-adr]]"
@@ -124,3 +124,7 @@ The view is a browser the person uses, so it carries no usage limits: a person's
 - Cost: what the person submits, signs or presents in the panel is the person's own act through Cadrumo's session. Cadrumo does not record it as local filing state or a captured observation; a later live read or receipt capture is the path into Cadrumo's records.
 - Cost: a new runtime protocol lane, a new frame kind and a long-lived interactive operation class to maintain and test on every platform. Python and WebView copies of frames cannot be wiped.
 - Reconsider if CDP screencast proves too slow at panel sizes, or if any Cadrumo-initiated request would need to run in the view's context.
+
+## Amendment 2026-11-20: browser-chrome keys reach the shell from the canvas
+
+Authorized by PRIME's PROFILE-REREAD brief (2026-11-20), which requires Ctrl+K to open the palette while the embedded browser has focus. The canvas still receives keys as a page does, but it is no longer treated as a terminal: a real browser keeps a few keys for its own chrome, and its page never receives them. The keymap gains the scope "browser" (everywhere except a focused terminal, the browser page included), and Mod+K, which a browser keeps for its own search, moves to it. Every other chord keeps its scope: "app" chords such as Alt+Left / Alt+Right and Mod+, still go to the page, and a terminal still keeps Mod+K. Implementation: `native/desktop/frontend/src/shell/actions.ts`, `src/shell/useShellShortcuts.ts`, `src/shell/windowActions.ts`; evidence `tests/shell-actions.spec.ts` and `tests/scenarios/browser-palette-chord.spec.ts`. This refines the Keys bullet of the desktop-shell record's 2026-10-27 amendment and its keymap row for Mod+K, which now reads "Not in a terminal" with the browser page included.

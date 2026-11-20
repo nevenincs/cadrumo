@@ -115,6 +115,22 @@ export type PlanBlocker =
   | ({
       kind: "needs_withholding_category";
       fields: (PlanField | DraftFieldName)[];
+    } & ServedBlockerWords)
+  /** The IVA derivation writes base, rate and IVA, which the movement also
+   * has staged. */
+  | ({
+      kind: "derive_and_figures";
+      fields: (PlanField | DraftFieldName)[];
+    } & ServedBlockerWords)
+  /** The derivation names another category than the movement will have. */
+  | ({
+      kind: "derive_category_differs";
+      fields: (PlanField | DraftFieldName)[];
+    } & ServedBlockerWords)
+  /** The derivation needs a business classification the movement lacks. */
+  | ({
+      kind: "derive_needs_business";
+      fields: (PlanField | DraftFieldName)[];
     } & ServedBlockerWords);
 
 /** What the review says about a row's work without holding it back. */
@@ -564,9 +580,11 @@ function checkRow(
         : { kind: "action_and_edits", action: first.id },
     );
   }
-  const derivation = classifying[0];
-  if (derivation && (classifyingEdits || m210))
-    entry.blockers.push({ kind: "action_and_edits", action: derivation.id });
+  // A derivation is judged by the backend (see the served blockers); an
+  // allocation still cannot share a movement with other classifying edits.
+  const allocation = classifying.find((action) => action.kind === "allocate");
+  if (allocation && (classifyingEdits || m210))
+    entry.blockers.push({ kind: "action_and_edits", action: allocation.id });
   // A model approval commits against the movement exactly as it was when
   // the model was asked, so nothing else may change it first.
   const suggestion = suggestions[0];

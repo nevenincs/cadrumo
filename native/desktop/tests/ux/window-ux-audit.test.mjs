@@ -522,6 +522,56 @@ ux(
   },
 );
 
+ux(
+  "UX-08a movements grid cells are never named by their generated id",
+  async (t) => {
+    await atSizes(t, "ledger/movements", async (size) => {
+      const got = await openRailPage("ledger", "section.ledger-page");
+      const opened = got.reached
+        ? await openLedgerSection("movements", null)
+        : got;
+      if (!opened.reached) {
+        report(t, {
+          page: "ledger/movements",
+          size,
+          reached: false,
+          reason: opened.reason,
+        });
+        return;
+      }
+      await sleep(700);
+      // A cell that draws nothing has no text to name it, and the platform's
+      // accessibility tree then falls back to its element id.
+      const cells = await win.browser.$$(
+        'section.ledger-page [role="grid"] [role="gridcell"]',
+      );
+      if (cells.length === 0) {
+        report(t, {
+          page: "ledger/movements",
+          size,
+          reached: false,
+          reason: "the movements grid drew no cells",
+        });
+        return;
+      }
+      const named = [];
+      for (const cell of cells) {
+        const id = await cell.getAttribute("id");
+        const name = await cell.getComputedLabel();
+        named.push({ id, name });
+      }
+      const bad = named.filter(
+        ({ id, name }) => name === id || /^_r_/.test(name ?? ""),
+      );
+      assert.deepEqual(
+        bad,
+        [],
+        `${bad.length} of ${named.length} movements cells are named by their generated id at ${size.join("x")}`,
+      );
+    });
+  },
+);
+
 ux("UX-09 profile keeps its header and scroller at each size", async (t) => {
   await pageProbe(t, "profile", "profile", "section.user-profile-page");
 });
