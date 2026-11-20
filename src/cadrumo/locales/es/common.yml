@@ -4898,6 +4898,56 @@ desktop:
       unknown_view: Este enlace lleva a una vista que esta versión de Cadrumo no tiene.
       uppercase: Este enlace no es válido.
     sign_in: Inicia sesión para abrir {view}.
+  operations:
+    cancellation_requested: Cancelación solicitada
+    count: Mostrando {shown} de {total} ejecuciones
+    effect:
+      none: Ninguno
+      partial: Parcial
+      unknown: Desconocido
+      updated: Actualizado
+    empty: Este perfil no tiene ejecuciones registradas.
+    error_code: Código de error {code}
+    failed: El historial no está disponible ({code}).
+    field_effect: Efecto
+    field_outcome: Resultado
+    lifecycle:
+      cancellation_requested: Cancelación solicitada
+      created: Creada
+      queued: En cola
+      running: En ejecución
+      settling: Cerrándose
+      terminal: Terminada
+      waiting_for_external: Esperando a un tercero
+      waiting_for_interaction: Esperando tu respuesta
+    loading: Leyendo el historial…
+    loading_more: Leyendo más ejecuciones…
+    more_failed: No hay más ejecuciones disponibles ({code}).
+    orientation: 'Las ejecuciones registradas para este perfil, de la más reciente
+      a la más antigua. Esta página solo las lista: nunca ejecuta, reintenta ni cancela
+      nada.'
+    outcome:
+      cancelled: Cancelada
+      failed: Fallida
+      interrupted: Interrumpida
+      refused: Rechazada
+      succeeded: Correcta
+      timed_out: Tiempo agotado
+    phase: Fase {phase}
+    read_again: Leer de nuevo
+    refresh: Actualizar
+    refusal_ref: Referencia del rechazo {ref}
+    result_not_stored: Sin resultado guardado
+    result_stored: Resultado guardado
+    settled: Cerrada {time}
+    show_more: Mostrar más
+    shown_on: Se muestra en
+    signed_out: Inicia sesión para ver el historial de operaciones.
+    started: Iniciada {time}
+    title: Operaciones
+    unreadable: 'Registros que no se pudieron leer: {count}.'
+    unverifiable: 'Registros que no se pudieron confirmar como de este perfil: {count}.'
+    updated: Actualizada {time}
   palette:
     actions: Acciones
     close: Cerrar la búsqueda

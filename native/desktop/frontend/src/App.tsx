@@ -158,6 +158,7 @@ export function App({ host }: { host: Host }) {
     ledgerVisible,
     withholdingVisible,
     referenceVisible,
+    operationsVisible,
     declarationsVisible,
     browserVisible,
     tuiVisible,
@@ -192,6 +193,7 @@ export function App({ host }: { host: Host }) {
     host,
     reader,
     homeVisible,
+    operationsVisible,
     calendarVisible,
     recheckAccount: signIn.recheckAccount,
     locale,
@@ -323,6 +325,7 @@ export function App({ host }: { host: Host }) {
     homePage: navigation.homePage,
     withholdingPage: navigation.withholdingPage,
     referencePage: navigation.referencePage,
+    operationsPage: navigation.operationsPage,
     calendarPage: navigation.calendarPage,
     aeatSyncPage: navigation.aeatSyncPage,
     docs,
@@ -471,6 +474,7 @@ export function App({ host }: { host: Host }) {
     homePage: navigation.homePage,
     withholdingPage: navigation.withholdingPage,
     referencePage: navigation.referencePage,
+    operationsPage: navigation.operationsPage,
     calendarPage: navigation.calendarPage,
     aeatSyncPage: navigation.aeatSyncPage,
     docs,
@@ -514,6 +518,7 @@ export function App({ host }: { host: Host }) {
     ledgerVisible,
     withholdingVisible,
     referenceVisible,
+    operationsVisible,
     declarationsVisible,
     calendarVisible,
     browserVisible,
@@ -549,6 +554,7 @@ export function App({ host }: { host: Host }) {
       homeOn={visibility.homeOn}
       withholdingOn={visibility.withholdingOn}
       referenceOn={visibility.referenceOn}
+      operationsOn={visibility.operationsOn}
       calendarOn={visibility.calendarOn}
       openDeclaration={memories.openDeclaration}
       openWorkUnit={memories.openWorkUnit}
@@ -574,6 +580,7 @@ export function App({ host }: { host: Host }) {
       homePage={navigation.homePage}
       withholdingPage={navigation.withholdingPage}
       referencePage={navigation.referencePage}
+      operationsPage={navigation.operationsPage}
       calendarPage={navigation.calendarPage}
       toggleMaximize={toggleMaximize}
       maximizeControl={maximizeControl}
@@ -602,6 +609,7 @@ export function App({ host }: { host: Host }) {
       profileStepHandled={pageAsks.profileStepHandled}
       home={reads.home}
       reference={reads.reference}
+      operations={reads.operations}
       calendar={reads.calendar}
       calendarProfile={reads.calendarProfile}
       calendarMemory={memories.calendarMemory}
@@ -758,6 +766,7 @@ export function App({ host }: { host: Host }) {
               homeOn={visibility.homeOn}
               withholdingOn={visibility.withholdingOn}
               referenceOn={visibility.referenceOn}
+              operationsOn={visibility.operationsOn}
               calendarOn={visibility.calendarOn}
               ledgerOn={visibility.ledgerOn}
               declarationsOn={visibility.declarationsOn}

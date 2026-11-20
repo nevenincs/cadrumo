@@ -4795,6 +4795,55 @@ desktop:
       unknown_view: This link points to a view this version of Cadrumo doesn't have.
       uppercase: This link isn't valid.
     sign_in: Sign in to open {view}.
+  operations:
+    cancellation_requested: Cancellation requested
+    count: Showing {shown} of {total} runs
+    effect:
+      none: None
+      partial: Partial
+      unknown: Unknown
+      updated: Updated
+    empty: This profile has no recorded runs.
+    error_code: Error code {code}
+    failed: The history is unavailable ({code}).
+    field_effect: Effect
+    field_outcome: Outcome
+    lifecycle:
+      cancellation_requested: Cancellation requested
+      created: Created
+      queued: Queued
+      running: Running
+      settling: Settling
+      terminal: Finished
+      waiting_for_external: Waiting on an outside party
+      waiting_for_interaction: Waiting for a reply
+    loading: Reading the history…
+    loading_more: Reading more runs…
+    more_failed: More runs are unavailable ({code}).
+    orientation: 'The runs recorded for this profile, newest first. This page only
+      lists them: it never runs, retries or cancels anything.'
+    outcome:
+      cancelled: Cancelled
+      failed: Failed
+      interrupted: Interrupted
+      refused: Refused
+      succeeded: Succeeded
+      timed_out: Timed out
+    phase: Phase {phase}
+    read_again: Read again
+    refresh: Refresh
+    refusal_ref: Refusal reference {ref}
+    result_not_stored: No result stored
+    result_stored: Result stored
+    settled: Settled {time}
+    show_more: Show more
+    shown_on: Shown on
+    signed_out: Sign in to see the operation history.
+    started: Started {time}
+    title: Operations
+    unreadable: 'Records that could not be read: {count}.'
+    unverifiable: 'Records that could not be confirmed as this profile''s: {count}.'
+    updated: Updated {time}
   palette:
     actions: Actions
     close: Close search
