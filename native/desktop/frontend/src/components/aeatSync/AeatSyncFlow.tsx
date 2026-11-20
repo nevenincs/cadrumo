@@ -6,6 +6,7 @@ import {
   aeatSignInFailure,
   type AeatSyncPreparePort,
 } from "../../shell/aeatSyncPrepare";
+import { failureCode } from "../../errors";
 import { useProvisioning } from "../../shell/provisioning";
 import { useStrings } from "../../shell/strings";
 import { AccessCheck, BrowserCheck, PreflightCard } from "./Preflight";
@@ -52,7 +53,10 @@ export function AeatSyncFlow({
   );
   // Each attempt that checks and signs in; a new number starts it again.
   const [attempt, setAttempt] = useState(reason === "session_ended" ? 0 : 1);
+  // Why the last press of Cancel did not stop the sign-in, while it did not.
+  const [cancelFailure, setCancelFailure] = useState<string | null>(null);
   const again = useCallback(() => {
+    setCancelFailure(null);
     setStep({ kind: "checking" });
     setAttempt((held) => held + 1);
   }, []);
@@ -133,12 +137,26 @@ export function AeatSyncFlow({
           actions={
             <Button
               variant="outline"
-              onClick={() => void port.cancelSignIn().catch(() => undefined)}
+              onClick={() => {
+                setCancelFailure(null);
+                port
+                  .cancelSignIn()
+                  .catch((error: unknown) =>
+                    setCancelFailure(failureCode(error)),
+                  );
+              }}
             >
               {t("desktop.aeat_sync.before.cancel")}
             </Button>
           }
         >
+          {cancelFailure !== null && (
+            <p role="alert" className="text-sm text-destructive">
+              {t("desktop.aeat_sync.before.cancel_failed", {
+                code: cancelFailure,
+              })}
+            </p>
+          )}
           <p
             role="status"
             className="flex items-start gap-2 text-sm text-muted-foreground"

@@ -16,6 +16,7 @@
 // no read has served them yet.
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
+import { failureCode } from "../errors";
 import type { LedgerPort } from "./ledger";
 import type { PublicPeriod } from "./ledgerInvoiceContract";
 import { parseIsoDate, type LedgerPeriod } from "./ledgerGrammar";
@@ -80,6 +81,8 @@ let reader: { language: OutputLanguage; ask: Ask } | null = null;
 let todayFailed = false;
 // What was asked since the reader was registered, answered or not.
 let asked = new Set<string>();
+// Why each read that was asked and not answered failed, by what it asked.
+let unreadReads = new Map<string, string>();
 let epoch = 0;
 const listeners = new Set<() => void>();
 
@@ -131,12 +134,14 @@ export function holdLedgerPeriods(
 ): void {
   if (served === null || language === null) {
     asked = new Set();
+    unreadReads = new Map();
     epoch += 1;
     if (held !== EMPTY) changed(EMPTY);
     return;
   }
   if (held.language !== null && held.language !== language) {
     asked = new Set();
+    unreadReads = new Map();
     epoch += 1;
     changed(EMPTY);
   }
@@ -162,6 +167,7 @@ export function registerPeriodsReader(
   if (reader === next) return;
   reader = next;
   asked = new Set();
+  unreadReads = new Map();
   epoch += 1;
   todayFailed = false;
   holdEntryYears(null);
@@ -175,10 +181,17 @@ function read(query: Query, key: string): void {
   const mine = epoch;
   void current
     .ask(query)
-    .catch(() => null)
+    .catch((error: unknown) => {
+      if (mine === epoch) noteUnread(key, failureCode(error));
+      return null;
+    })
     .then((answer) => {
       if (mine !== epoch) return;
-      if (answer === null) return;
+      if (answer === null) {
+        if (!unreadReads.has(key)) noteUnread(key, "unavailable");
+        return;
+      }
+      unreadReads.delete(key);
       take(current.language, answer);
       const served = answer.periods;
       // A day names periods whose own years are wanted to say their words.
@@ -191,6 +204,29 @@ function read(query: Query, key: string): void {
           ]),
         });
     });
+}
+
+function noteUnread(key: string, code: string): void {
+  unreadReads.set(key, code);
+  changed(held);
+}
+
+/** Why a read of periods failed, or null while none has: the periods it
+ * asked for stay unknown, and the caller says so. */
+export const periodsReadFailure = (): string | null =>
+  unreadReads.values().next().value ?? null;
+
+/** Asks again for every read that failed. */
+export function retryPeriodReads(): void {
+  const failed = [...unreadReads.keys()];
+  unreadReads = new Map();
+  for (const key of failed) {
+    asked.delete(key);
+    if (key.startsWith("days:"))
+      for (const day of key.slice("days:".length).split(","))
+        asked.delete(`day:${day}`);
+  }
+  changed(held);
 }
 
 /** Asks for whatever of `wants` is not held or already asked. */

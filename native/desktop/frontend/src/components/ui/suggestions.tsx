@@ -154,7 +154,12 @@ export function useSuggestions({
       own.onBlur?.(event);
     },
     onInput: (event: React.InputEvent<HTMLInputElement>) => {
-      setOpen(opensEmpty || event.currentTarget.value !== "");
+      // A value set from outside, with the field not being typed in, is
+      // offered nothing: the list belongs to the field a person is in.
+      setOpen(
+        document.activeElement === event.currentTarget &&
+          (opensEmpty || event.currentTarget.value !== ""),
+      );
       setHighlight(-1);
       own.onInput?.(event);
     },

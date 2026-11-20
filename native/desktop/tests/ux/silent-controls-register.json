@@ -1,0 +1,45 @@
+{
+  "about": "Controls the silent-controls audit must not activate as an ordinary press. Each entry matches a shown control by its chrome-string label key (resolved in the window's language; a {placeholder} matches any filling) or, when the control has no catalogue label, by a pattern over its accessible name. kind destructive or remote: the press must open a confirmation (a dialog or alertdialog), which the audit then cancels with Escape. kind external: the control hands off to the system (browser, folder) and is not pressed. kind window: native window chrome (minimise, maximise, restore), whose failures the title bar already reports; not pressed. kind session: the control ends the session the audit runs in and is not pressed; teardown signs out through it and requires the sign-in form. A Button with data-variant=destructive is treated as destructive without an entry.",
+  "entries": [
+    {
+      "key": "desktop.account.sign_out",
+      "kind": "session",
+      "reason": "ends the audited session; teardown presses it and requires the sign-in form"
+    },
+    {
+      "key": "desktop.aeat_sync.bring_all",
+      "kind": "remote",
+      "reason": "starts live AEAT reads"
+    },
+    {
+      "key": "desktop.aeat_sync.update_area",
+      "kind": "remote",
+      "reason": "starts a live AEAT read of one area"
+    },
+    {
+      "key": "desktop.profile.remove",
+      "kind": "destructive",
+      "reason": "deletes a profile"
+    },
+    {
+      "key": "desktop.titlebar.close",
+      "kind": "session",
+      "reason": "closes the audited window"
+    },
+    {
+      "key": "desktop.titlebar.minimize",
+      "kind": "window",
+      "reason": "native window chrome"
+    },
+    {
+      "key": "desktop.titlebar.maximize",
+      "kind": "window",
+      "reason": "native window chrome"
+    },
+    {
+      "key": "desktop.titlebar.restore",
+      "kind": "window",
+      "reason": "native window chrome"
+    }
+  ]
+}

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#idle-churn'
 date: '2026-10-16'
-modified: '2026-10-28'
+modified: '2026-11-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:200fa7f9e01c359dab345385a96645e97a81d73f0ed9caa0ab4f60cb5f4b7052'
+body_hash: 'sha256:3141bcc17189463dbe4e4a8fcfa0c6e2f1eea14b0c5efa4c97d403517f90fe01'
 related:
   - "[[2026-10-04-application-sign-in-adr]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -75,3 +75,7 @@ Extended 2026-10-17 by `2026-10-17-idle-churn-operation-observation-adr`, which 
 ## Amendment 2026-10-28: startup and admission use completion signals
 
 Accepted under the user's explicit signal/slot-only orchestration ruling, recorded in2026-10-28-debug-startup-reliability-adr. GUI startup, human login, installed-service admission and hosted-agent readiness/retirement now wait on identity-bound readiness, terminal completion, cancellation and exit signals. Shared person/request slots are released while long work remains pending. The earlier allowance for one-shot known-deadline timers in these flows means only an explicitly identified owner timeout; ordinary phase duration is not readiness failure. Exact authority, deduplicated cue semantics and session/operation lifetimes remain unchanged.
+
+## Amendment 2026-11-20: background-task cues name an opaque job
+
+Basis: `2026-11-20-ledger-classify-queue-adr`, constraint 7, on the operator's requirement of 2026-11-20. A window cue for a background job may name an opaque job identifier and the backend's opaque revision, so the window knows which job to re-read. It still carries no authority, no private fact and no deadline, and one typed re-read follows it. The status of this record is unchanged.

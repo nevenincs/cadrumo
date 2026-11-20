@@ -210,9 +210,9 @@ test("a view the window does not draw is not offered", async ({
   page: target,
 }) => {
   await open(target);
-  const operations = label("navigation.view.operations.label");
-  await search(target, operations);
-  await expect(optionTitled(target, operations)).toHaveCount(0);
+  const installation = label("navigation.view.installation.label");
+  await search(target, installation);
+  await expect(optionTitled(target, installation)).toHaveCount(0);
 });
 
 test("the views keep their action ids, and their chords still toggle", async ({
@@ -481,4 +481,28 @@ test("a pasted link to a movement opens the Ledger on that row", async ({
   const shown = grid.locator(`[data-key="${id}"]`);
   await expect(shown).toHaveAttribute("aria-selected", "true");
   await expect(shown.locator(":focus")).toHaveCount(1);
+});
+
+test("a declarations search that fails says why instead of reading as no matches", async ({
+  page: target,
+}) => {
+  await target.goto("/scenarios.html?scenario=ledger&latency=0&bar=off");
+  // The fixture port names itself when the declarations are first read.
+  await target.locator("[data-rail=declarations]").click();
+  await target.waitForFunction(() => Boolean(window.__fixtureModelo));
+  await target.locator("[data-rail=ledger]").click();
+  await target.evaluate(() => {
+    window.__fixtureModelo!.search = () =>
+      Promise.reject({ code: "host_unavailable" });
+  });
+  await search(target, "130");
+  await expect(
+    palette(target)
+      .getByRole("alert")
+      .filter({
+        hasText: label("desktop.palette.declarations_failed", {
+          code: "host_unavailable",
+        }),
+      }),
+  ).toBeVisible();
 });
