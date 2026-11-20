@@ -2227,6 +2227,7 @@ desktop:
       vehiculo_seguro: seguro coche vehiculo
       viajes_alojamiento: hotel alojamiento hostal apartamento
       viajes_transporte: tren avion vuelo taxi autobus
+    cell_empty: Üres
     classification:
       business: Üzleti
       failed_validation: Sikertelen ellenőrzés
@@ -4213,11 +4214,14 @@ desktop:
       row: 'Jelöld ki: {description}'
       shown: Jelöld ki a látható tételeket · Ctrl+kattintás hozzáadja őket
     selected: '{count} kijelölve'
+    selected_one: 1 kijelölve
     selection:
       actions_count: Műveletek · {count} kijelölve
+      actions_count_one: Műveletek · 1 kijelölve
       all_shown: 'Minden látható ki van jelölve: {count}.'
       clear_category: Kategória törlése
       hidden: 'Rejtett: {hidden} a(z) {selected} kijelöltből'
+      hidden_one: A kijelölt tétel rejtett
       keep_visible: Csak a láthatók maradjanak
       select_all: 'Mind a {count} kijelölése: {period}'
       show: Mutasd őket

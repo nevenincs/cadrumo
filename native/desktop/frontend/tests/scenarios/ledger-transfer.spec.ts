@@ -425,6 +425,92 @@ test("likely duplicates are imported and compared with the movement already in t
   await noPathShown(target);
 });
 
+test("showing the imported movements never flashes an empty or hidden state and selects nothing", async ({
+  page: target,
+}) => {
+  // Reads take time here, so the scope read the import filter makes is
+  // pending long enough for a false state to be drawn.
+  await target.goto("/scenarios.html?scenario=ledger&latency=300&bar=off");
+  await target.locator("[data-rail=ledger]").click();
+  await expect(target.locator(".ledger-movements")).toBeVisible();
+  const dialog = await previewStatements(target);
+  await fileRow(dialog, STUDIO)
+    .getByRole("combobox", { name: label("desktop.ledger.import.account") })
+    .selectOption({ label: label("desktop.ledger.import.no_account") });
+  await button(dialog, "desktop.ledger.import.apply_files", {
+    count: 2,
+  }).click();
+  await expect(
+    dialog.getByRole("region", {
+      name: label("desktop.ledger.import.duplicates"),
+    }),
+  ).toBeVisible();
+
+  // The count's wording with its numbers left open, as patterns the page
+  // tests: a selection of any size and a count of none shown are both false
+  // while the import's movements are still being asked for.
+  const NUMBER = "888888";
+  const pattern = (text: string) =>
+    text
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      .replace(new RegExp(NUMBER, "g"), "\\d+");
+  const falseCounts = [
+    label("desktop.ledger.selected_one"),
+    label("desktop.ledger.selected", { count: NUMBER }),
+    label("desktop.ledger.shown_of", { shown: 0, total: NUMBER }),
+  ].map(pattern);
+  await target.evaluate((countWords) => {
+    const seen: string[] = [];
+    const words = new RegExp(countWords.join("|"));
+    const look = () => {
+      if (document.querySelector(".ledger-filtered-empty"))
+        seen.push("empty state");
+      if (document.querySelector(".ledger-hidden-selection"))
+        seen.push("hidden selection");
+      if (document.querySelector("[role=grid] [aria-selected=true]"))
+        seen.push("selected row");
+      const note = document.querySelector(".ledger-count");
+      if (note && words.test(note.textContent ?? ""))
+        seen.push(`count ${note.textContent}`);
+    };
+    new MutationObserver(look).observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      characterData: true,
+    });
+    (window as unknown as { __flashed: string[] }).__flashed = seen;
+  }, falseCounts);
+
+  await button(dialog, "desktop.ledger.import.show_imported").click();
+  await expect(dialog).toBeHidden();
+  await expect(target.locator(".ledger-shown-import")).toBeVisible();
+  const rows = target.locator(".ledger-page [role=grid] [data-kind=data]");
+  await expect(rows.first()).toBeVisible();
+  // The scope read has answered once the settling note is gone.
+  await expect(
+    target.getByText(label("desktop.ledger.filters.reading")),
+  ).toHaveCount(0);
+  await expect(rows.first()).toBeVisible();
+  await expect(
+    target.locator(".ledger-page [role=grid] [aria-selected=true]"),
+  ).toHaveCount(0);
+  await expect(target.locator(".ledger-count")).not.toContainText(
+    label("desktop.ledger.selected_one"),
+  );
+  expect(
+    await target.evaluate(
+      () => (window as unknown as { __flashed: string[] }).__flashed,
+    ),
+  ).toEqual([]);
+  // The keyboard is on the first imported movement's description, which is
+  // focused, not selected.
+  await expect(target.locator("[role=gridcell]:focus")).toHaveAttribute(
+    "data-column",
+    "description",
+  );
+});
+
 test("an invoice book has no preview and lists the rows it refused", async ({
   page: target,
 }) => {

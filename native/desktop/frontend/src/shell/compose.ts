@@ -15,6 +15,18 @@ const present = (pieces: readonly Piece[]): string[] =>
       : [String(piece)],
   );
 
+/** Text that counts: the key for one where `count` is one, the key for
+ * several otherwise, since a count of one agrees differently in some
+ * languages and the strings carry no plural rules. */
+export function counted(
+  t: Translate,
+  count: number,
+  keys: { one: string; many: string },
+  values?: Record<string, string | number>,
+): string {
+  return t(count === 1 ? keys.one : keys.many, values);
+}
+
 /** A name and what it is: "Label: value". */
 export function labelled(
   t: Translate,
