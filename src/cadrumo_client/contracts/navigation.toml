@@ -127,7 +127,7 @@ surfaces = []
 id = "reference"
 label = "navigation.view.reference.label"
 keywords = "navigation.view.reference.keywords"
-surfaces = []
+surfaces = ["gui"]
 
 [[element]]
 id = "profile"

@@ -5188,6 +5188,29 @@ desktop:
     search: Buscar
     settings: Ajustes
     tui: Espacio de trabajo
+  reference:
+    article: Artículo {article}
+    citation: Cita exacta
+    empty: Nada en las fuentes incluidas coincide con «{query}».
+    failed: La búsqueda no está disponible ({code}).
+    idle: Todavía no has buscado nada. Escribe una palabra, un tema o un identificador
+      de cita y elige Buscar.
+    matched_on: Coincide con {term}
+    orientation: 'Los resultados proceden de las fuentes incluidas. Son una orientación,
+      no derecho vigente verificado: comprueba el texto oficial antes de apoyarte
+      en uno.'
+    passages: Pasajes
+    query_label: Buscar en la referencia
+    query_placeholder: Una palabra, un tema o un identificador de cita
+    results: Resultados para «{query}»
+    search: Buscar
+    search_again: Buscar de nuevo
+    searching: Buscando…
+    section: Sección {section}
+    signed_out: Inicia sesión para buscar en la referencia.
+    source: 'Fuente: {source}'
+    terminology: Terminología
+    title: Referencia
   refusal:
     action_unroutable: No está disponible aquí.
   session:

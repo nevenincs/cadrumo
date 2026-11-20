@@ -1118,6 +1118,17 @@ async fn profile_views_home(
 ) -> Result<views::HomeState> {
     host.home(language).await
 }
+/// Reference: the bundled corpus searched for the typed `query`, at most
+/// `limit` passages, its words in `language`. Nothing is kept or logged.
+#[tauri::command]
+async fn profile_views_reference(
+    host: State<'_, Arc<ProfileHost>>,
+    query: String,
+    limit: u32,
+    language: String,
+) -> Result<views::ReferenceAnswer> {
+    host.reference_search(query, limit, language).await
+}
 #[tauri::command]
 async fn profile_views_record_groups(
     host: State<'_, Arc<ProfileHost>>,
@@ -1164,6 +1175,7 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         profile_views_notifications,
         profile_views_calendar,
         profile_views_home,
+        profile_views_reference,
         profile_views_record_groups
     ]
 }

@@ -157,6 +157,7 @@ export function App({ host }: { host: Host }) {
     calendarVisible,
     ledgerVisible,
     withholdingVisible,
+    referenceVisible,
     declarationsVisible,
     browserVisible,
     tuiVisible,
@@ -321,6 +322,7 @@ export function App({ host }: { host: Host }) {
     declarationsPage: navigation.declarationsPage,
     homePage: navigation.homePage,
     withholdingPage: navigation.withholdingPage,
+    referencePage: navigation.referencePage,
     calendarPage: navigation.calendarPage,
     aeatSyncPage: navigation.aeatSyncPage,
     docs,
@@ -468,6 +470,7 @@ export function App({ host }: { host: Host }) {
     declarationsPage: navigation.declarationsPage,
     homePage: navigation.homePage,
     withholdingPage: navigation.withholdingPage,
+    referencePage: navigation.referencePage,
     calendarPage: navigation.calendarPage,
     aeatSyncPage: navigation.aeatSyncPage,
     docs,
@@ -510,6 +513,7 @@ export function App({ host }: { host: Host }) {
     homeVisible,
     ledgerVisible,
     withholdingVisible,
+    referenceVisible,
     declarationsVisible,
     calendarVisible,
     browserVisible,
@@ -544,6 +548,7 @@ export function App({ host }: { host: Host }) {
       aeatSyncOn={visibility.aeatSyncOn}
       homeOn={visibility.homeOn}
       withholdingOn={visibility.withholdingOn}
+      referenceOn={visibility.referenceOn}
       calendarOn={visibility.calendarOn}
       openDeclaration={memories.openDeclaration}
       openWorkUnit={memories.openWorkUnit}
@@ -568,6 +573,7 @@ export function App({ host }: { host: Host }) {
       aeatSyncPage={navigation.aeatSyncPage}
       homePage={navigation.homePage}
       withholdingPage={navigation.withholdingPage}
+      referencePage={navigation.referencePage}
       calendarPage={navigation.calendarPage}
       toggleMaximize={toggleMaximize}
       maximizeControl={maximizeControl}
@@ -595,6 +601,7 @@ export function App({ host }: { host: Host }) {
       profileStep={pageAsks.profileStep}
       profileStepHandled={pageAsks.profileStepHandled}
       home={reads.home}
+      reference={reads.reference}
       calendar={reads.calendar}
       calendarProfile={reads.calendarProfile}
       calendarMemory={memories.calendarMemory}
@@ -750,6 +757,7 @@ export function App({ host }: { host: Host }) {
               profileOn={visibility.profileOn}
               homeOn={visibility.homeOn}
               withholdingOn={visibility.withholdingOn}
+              referenceOn={visibility.referenceOn}
               calendarOn={visibility.calendarOn}
               ledgerOn={visibility.ledgerOn}
               declarationsOn={visibility.declarationsOn}

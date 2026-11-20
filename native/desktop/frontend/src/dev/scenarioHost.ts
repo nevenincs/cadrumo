@@ -44,6 +44,7 @@ import {
   HOME_SHAPES,
   type HomeShape,
 } from "./fixtures/home";
+import { referenceFixture } from "./fixtures/reference";
 import { fixtureAgent } from "./agentFixtureHost";
 import type {
   FixtureAsks,
@@ -262,6 +263,10 @@ declare global {
     __scenarioCalendarRefused?: boolean;
     /** The Home read is refused while this is true. */
     __scenarioHomeRefused?: boolean;
+    /** The Reference search is refused while this is true. */
+    __scenarioReferenceRefused?: boolean;
+    /** The Reference search stays in flight while this is true. */
+    __scenarioReferenceHeld?: boolean;
     /** The signed-in profile's runtime stops answering, or answers again. */
     __scenarioRuntime?: { lose(): void; restore(): void };
     /** Plays the host's console environment event with this payload, as
@@ -645,6 +650,14 @@ export function scenarioHost(
         throw failure("timed_out", "cli");
       if (options.home) return HOME_SHAPES[options.home];
       return scenario.views === "empty" ? EMPTY_HOME : FIXTURE_HOME;
+    },
+    async reference(query, limit, language) {
+      say(`reference ${language} ${limit} ${query}`);
+      await wait(options.latencyMs);
+      while (window.__scenarioReferenceHeld) await wait(20);
+      if (!readable() || window.__scenarioReferenceRefused)
+        throw failure("timed_out", "cli");
+      return referenceFixture(query);
     },
   };
 

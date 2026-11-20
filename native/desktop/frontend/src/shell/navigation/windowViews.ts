@@ -15,6 +15,7 @@ export type WindowPage =
   | "calendar"
   | "ledger"
   | "withholding"
+  | "reference"
   | "declarations"
   | "docs"
   | "browser"
@@ -102,6 +103,7 @@ export const WINDOW_VIEWS: Readonly<Record<string, WindowViewEntry>> = {
   "ledger/registers": page("ledger", "registers", "ledger"),
   "ledger/health": page("ledger", "health", "ledger"),
   withholding: page("withholding", null, "ledger"),
+  reference: page("reference", null, "views"),
   declarations: page("declarations", null, "modelo"),
   browser: page("browser", null, "sedeView"),
   "aeat-sync": page("aeat-sync", null, "aeatSync"),

@@ -5181,6 +5181,28 @@ desktop:
     search: Cerca
     settings: Configuració
     tui: Espai de treball
+  reference:
+    article: Article {article}
+    citation: Cita exacta
+    empty: Res a les fonts incloses coincideix amb «{query}».
+    failed: La cerca no està disponible ({code}).
+    idle: Encara no has cercat res. Escriu una paraula, un tema o un identificador
+      de cita i tria Cerca.
+    matched_on: Coincideix amb {term}
+    orientation: 'Els resultats provenen de les fonts incloses. Són una orientació,
+      no dret vigent verificat: comprova el text oficial abans de recolzar-te en un.'
+    passages: Passatges
+    query_label: Cerca a la referència
+    query_placeholder: Una paraula, un tema o un identificador de cita
+    results: Resultats per a «{query}»
+    search: Cerca
+    search_again: Cerca de nou
+    searching: Cercant…
+    section: Secció {section}
+    signed_out: Inicia la sessió per cercar a la referència.
+    source: 'Font: {source}'
+    terminology: Terminologia
+    title: Referència
   refusal:
     action_unroutable: No està disponible aquí.
   session:

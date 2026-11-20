@@ -125,6 +125,7 @@ export function useWindowNavigation({
   );
   const homePage = useRef<HTMLElement>(null);
   const withholdingPage = useRef<HTMLElement>(null);
+  const referencePage = useRef<HTMLElement>(null);
   const calendarPage = useRef<HTMLElement>(null);
   const aeatSyncPage = useRef<HTMLElement>(null);
   const profilePage = useRef<HTMLElement>(null);
@@ -150,6 +151,7 @@ export function useWindowNavigation({
       ["profile", profilePage],
       ["home", homePage],
       ["withholding", withholdingPage],
+      ["reference", referencePage],
       ["calendar", calendarPage],
       ["aeat-sync", aeatSyncPage],
       ["ledger", ledgerPage],
@@ -218,6 +220,7 @@ export function useWindowNavigation({
     closePage,
     homePage,
     withholdingPage,
+    referencePage,
     calendarPage,
     aeatSyncPage,
     profilePage,

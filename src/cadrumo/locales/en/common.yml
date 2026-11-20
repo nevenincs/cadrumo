@@ -5083,6 +5083,28 @@ desktop:
     search: Search
     settings: Settings
     tui: Workspace
+  reference:
+    article: Article {article}
+    citation: Exact citation
+    empty: Nothing in the bundled sources matches “{query}”.
+    failed: The search is unavailable ({code}).
+    idle: Nothing has been searched yet. Type a word, a topic or a citation id and
+      choose Search.
+    matched_on: Matched on {term}
+    orientation: 'Results come from the bundled sources. They are orientation, not
+      verified current law: check the official text before you rely on one.'
+    passages: Passages
+    query_label: Search the reference
+    query_placeholder: A word, a topic or a citation id
+    results: Results for “{query}”
+    search: Search
+    search_again: Search again
+    searching: Searching…
+    section: Section {section}
+    signed_out: Sign in to search the reference.
+    source: 'Source: {source}'
+    terminology: Terminology
+    title: Reference
   refusal:
     action_unroutable: Not available here.
   session:
