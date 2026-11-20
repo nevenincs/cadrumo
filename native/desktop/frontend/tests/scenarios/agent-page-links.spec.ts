@@ -1,13 +1,25 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { buildPath } from "../../../scripts/build-paths.mjs";
+import {
+  idsFor,
+  type NavigationRegister,
+} from "../../src/shell/navigation/register";
+import {
+  WINDOW_VIEWS,
+  type WindowPage,
+} from "../../src/shell/navigation/windowViews";
 import {
   agentColumn,
   agentTurns,
   ask,
   personTurns,
   settled,
+  worded,
 } from "../support/agent";
 import { showLedgerColumn } from "../support/ledgerPage";
-import { label } from "../support/strings";
+import { catalogue, label } from "../support/strings";
 import { windowToast } from "../support/toast";
 
 // `cadrumo://view/{id}` links in an agent's reply, opened by the window's
@@ -184,4 +196,93 @@ test("a link that only shows a pane asks nothing and keeps the page", async ({
   await expect(page.locator(".ledger-leave")).toHaveCount(0);
   await expect(ledger(page)).toBeVisible();
   expect(await trayCount(page)).toBe(1);
+});
+
+// Every element the register gives the window opens from an agent's link.
+const register = JSON.parse(
+  readFileSync(
+    resolve(buildPath("desktop_frontend_generated"), "navigation.json"),
+    "utf8",
+  ),
+) as NavigationRegister;
+
+/** What shows a page of the first pane, by the page alone. */
+const PAGE_ROOT: Record<WindowPage, string> = {
+  profile: ".user-profile-page",
+  calendar: ".calendar-page",
+  ledger: ".ledger-page",
+  declarations: ".declarations-page",
+  docs: ".docs-frame",
+  browser: "[data-browser-surface]",
+  "aeat-sync": ".aeat-sync-page",
+};
+
+const REFUSAL_PREFIX = "desktop.navigation.refused.";
+
+function shownBy(page: Page, id: string): Locator {
+  const entry = WINDOW_VIEWS[id];
+  if (!entry) throw new Error(`The window draws no ${id}`);
+  const view = entry.view;
+  switch (view.kind) {
+    case "page":
+      return page.locator(PAGE_ROOT[view.page]);
+    case "agent":
+      return page.locator(".pane-agent");
+    case "terminal":
+      return page.locator('[data-terminal="tui"]');
+    case "panel":
+      return view.tab === null
+        ? page
+            .locator("#panel-console, #panel-python, #panel-logs")
+            .locator("visible=true")
+        : page.locator(`#panel-${view.tab}`);
+  }
+}
+
+test("the register gives the window at least one element to open", () => {
+  expect(idsFor(register, "gui").size).toBeGreaterThan(0);
+});
+
+for (const id of [...idsFor(register, "gui")]) {
+  test(`an agent's link to ${id} opens it with no refusal`, async ({
+    page,
+  }) => {
+    await page.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off");
+    await ask(page, `enlaza cadrumo://view/${id}`);
+    await settled(page);
+    await link(page, "el enlace").click();
+    await expect(shownBy(page, id).first()).toBeVisible();
+    const refusals = Object.keys(catalogue.en ?? {})
+      .filter((key) => key.startsWith(REFUSAL_PREFIX))
+      .map((key) => worded(key));
+    for (const text of await windowToast(page).allTextContents())
+      for (const refusal of refusals) expect(text).not.toMatch(refusal);
+    if (id === "profile/aeat-access")
+      await expect(
+        page.getByRole("dialog", {
+          name: label("desktop.profile.action.aeat_access"),
+          exact: true,
+        }),
+      ).toBeVisible();
+    await noLinkLeftTheWindow(page);
+  });
+}
+
+test("a bare cadrumo link and an autolink in a reply open the calendar", async ({
+  page,
+}) => {
+  await page.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off");
+  await ask(page, "Respóndeme con enlaces sueltos");
+  await settled(page);
+  const bare = link(page, "cadrumo://view/calendar");
+  await expect(bare).toHaveCount(2);
+  await bare.first().click();
+  await expect(page.locator(".calendar-page")).toBeVisible();
+  await expect(windowToast(page)).toHaveText("");
+  await page.locator("[data-rail=ledger]").click();
+  await expect(page.locator(".calendar-page")).toHaveCount(0);
+  await bare.last().click();
+  await expect(page.locator(".calendar-page")).toBeVisible();
+  await expect(windowToast(page)).toHaveText("");
+  await noLinkLeftTheWindow(page);
 });

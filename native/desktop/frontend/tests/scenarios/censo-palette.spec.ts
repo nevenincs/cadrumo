@@ -49,7 +49,7 @@ test("the palette starts the one Censo flow from a page that is not the profile"
   );
   await expect(
     band(page).getByRole("button", {
-      name: label("desktop.profile.censo.review_count", { count: 3 }),
+      name: label("desktop.profile.censo.review_count", { count: 10 }),
     }),
   ).toBeVisible();
   expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(1);
@@ -61,7 +61,7 @@ test("choosing it again while a pull awaits review reattaches and does not pull 
   await openApp(page);
   await chooseFromPalette(page);
   const review = band(page).getByRole("button", {
-    name: label("desktop.profile.censo.review_count", { count: 3 }),
+    name: label("desktop.profile.censo.review_count", { count: 10 }),
   });
   await expect(review).toBeVisible();
   await chooseFromPalette(page);
@@ -89,7 +89,7 @@ test("the palette lists the Censo pull once on the profile page and starts it th
   await pullOption(page).click();
   await expect(
     band(page).getByRole("button", {
-      name: label("desktop.profile.censo.review_count", { count: 3 }),
+      name: label("desktop.profile.censo.review_count", { count: 10 }),
     }),
   ).toBeVisible();
   expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(1);
@@ -118,7 +118,7 @@ test("a pull the AEAT data run began is the one the palette reattaches to", asyn
   await page.evaluate(() => window.__scenarioCenso!.reachReview());
   await expect(
     band(page).getByRole("button", {
-      name: label("desktop.profile.censo.review_count", { count: 3 }),
+      name: label("desktop.profile.censo.review_count", { count: 10 }),
     }),
   ).toBeVisible();
   expect(await page.evaluate(() => window.__scenarioCenso!.pulls())).toBe(1);
@@ -130,7 +130,7 @@ test("choosing it after leaving a review reads that pull first and starts no sec
   await openApp(page);
   await chooseFromPalette(page);
   const review = band(page).getByRole("button", {
-    name: label("desktop.profile.censo.review_count", { count: 3 }),
+    name: label("desktop.profile.censo.review_count", { count: 10 }),
   });
   await expect(review).toBeVisible();
   // Leaving the profile page loses sight of the pull, not the pull.

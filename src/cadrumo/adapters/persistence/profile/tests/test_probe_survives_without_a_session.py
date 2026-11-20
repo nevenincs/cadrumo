@@ -117,7 +117,7 @@ def _profile_on_disk_but_nothing_unlocked(tmp_path: Path) -> Iterator[None]:
             register_minimal_profile(
                 profile_id=_BUCKET_ID,
                 display_name="locked-operator",
-                overrides={"identity.tax_id": _TAX_ID, "auth.dni_nie": _TAX_ID},
+                overrides={"identity.tax_id": _TAX_ID},
             )
         with override_settings(cadrumo_active_profile=_BUCKET_ID):
             yield

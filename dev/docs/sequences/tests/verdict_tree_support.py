@@ -12,8 +12,9 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from dev.dependency_observation.observation import Observation
+
 from ..checks import DiscoveredSequence, discover_sequences
-from ..dependency_observation import Observation
 from ..verdict_cache import OBSERVATION_SENTINEL, SequenceVerdicts
 
 PROFILE_PREREQUISITE = "Create a profile first with `aeat config profile create`.\n"

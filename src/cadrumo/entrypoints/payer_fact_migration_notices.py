@@ -28,6 +28,7 @@ from ..core.json_contract import Notice, NoticeSeverity
 from ..domain.user_profile.schema_migration import (
     RETIRED_ASCENDANT_DISABILITY_KEY_GROUP,
     RETIRED_ASCENDANT_DISABILITY_KEY_LEAF,
+    RETIRED_CLAVE_IDENTITY_PATH,
     RETIRED_RENTAL_TIER_PATH,
 )
 
@@ -118,6 +119,10 @@ def payer_fact_cleared_notices(
     for path in sorted(set(paths)):
         if path == RETIRED_RENTAL_TIER_PATH:
             notices.append(rental_tier_cleared_notice())
+            continue
+        if path == RETIRED_CLAVE_IDENTITY_PATH:
+            # The Cl@ve identity is the profile's tax identifier, so there is
+            # nothing to answer again.
             continue
         row = _cleared_ascendant_key_row(path)
         if row is not None:

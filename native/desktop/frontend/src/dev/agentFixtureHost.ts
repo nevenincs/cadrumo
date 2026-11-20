@@ -74,8 +74,7 @@ import {
   AUTHENTICATION_REQUIRED,
   BUSY_ELSEWHERE,
   FAILS_FIRST,
-  LINKS,
-  LINKS_REPLY,
+  LINK_REPLIES,
   LINK_TO,
   MODEL_DOES_NOT_FIT,
   RICH,
@@ -754,12 +753,9 @@ export function fixtureAgent({
       ]);
       return;
     }
-    if (LINKS.test(text)) {
-      schedule(held, [
-        started(held),
-        ...write(held, LINKS_REPLY),
-        finish(held),
-      ]);
+    const links = LINK_REPLIES.find(([asked]) => asked.test(text));
+    if (links) {
+      schedule(held, [started(held), ...write(held, links[1]), finish(held)]);
       return;
     }
     if (RICH.test(text)) {

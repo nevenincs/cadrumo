@@ -177,4 +177,14 @@ def test_schema_field_coverage_is_complete_in_the_projection() -> None:
         overview = build_profile_overview(record, schema=schema)
     projected = {field.path for section in overview.sections for field in section.fields}
 
-    assert projected == (set(schema.field_paths) - namespaces) | {instance_path}
+    # The record states no taxpayer entity type, so a field that concerns only
+    # one type is not offered; that rule has its own test.
+    restricted = {
+        f"{section.key}.{field.key}"
+        for section in schema.sections
+        for field in section.fields
+        if schema.entity_types_of(section.key, field.key)
+    }
+    assert restricted, "no field is restricted to an entity type, which would make the carve-out vacuous"
+
+    assert projected == (set(schema.field_paths) - namespaces - restricted) | {instance_path}

@@ -69,6 +69,7 @@ from .view_session_support import (
     certificate_profile,
     clave_permanente_profile,
     lock_state,
+    session_path,
     stored_cookie_names,
     stored_digest,
 )
@@ -427,6 +428,108 @@ async def test_the_persons_input_interrupts_an_assisted_login_and_the_view_stays
                 assert stored_digest() is None
                 assert lock_state() is AuthAcquisitionLockState.ABSENT
                 assert panel.browsing is not None and not panel.browsing.done()
+
+
+def _stored_state() -> object:
+    persisted = session_store.load(session_path())
+    assert persisted is not None
+    return persisted.storage_state
+
+
+async def _stored_session_the_probe_refuses(
+    boundary: LocalHttpBoundary, operation: PinnedAuthorityOperation, *, name: str
+) -> tuple[object, str]:
+    """Store a valid session by a sync, then make AEAT refuse it so a view opens signed out over it."""
+    await _reuses_the_published_session(real_browser_factory(boundary=boundary, profile_name=f"{name}-sync"), operation)
+    stored_bytes = _stored_state()
+    digest = stored_digest()
+    assert digest is not None
+    return stored_bytes, digest
+
+
+@pytest.mark.asyncio
+async def test_an_assisted_login_the_person_interrupts_keeps_the_stored_session(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with certificate_profile(tmp_path, operation):
+        async with opened_http_boundary() as boundary:
+            stored_bytes, digest = await _stored_session_the_probe_refuses(boundary, operation, name="view-keep-cancel")
+            boundary.configure("failure")
+            host = OperationHost()
+            async with _panel(boundary, host, operation, name="view-keep-cancel") as panel:
+                assert not panel.sign_in.signed_in
+                assert panel.sign_in.baseline.storage_state_sha256 == digest
+                await panel.view.context.pages[0].wait_for_load_state("load")
+                boundary.configure("blocking")
+                panel.start()
+                await boundary.wait_until_blocked()
+                panel.sink.put(ViewInput(event=KeyInput(action=KeyAction.DOWN, key="a", code="KeyA", modifiers=0)))
+                await until(lambda: not panel.sign_in.interruptible)
+                boundary.configure("success")
+                await until(lambda: panel.phases()[-1] is ViewPhase.BROWSING)
+
+                assert not panel.sign_in.signed_in
+                assert host.effects == []
+                assert stored_digest() == digest
+                assert _stored_state() == stored_bytes
+                assert lock_state() is AuthAcquisitionLockState.ABSENT
+
+            assert await _reuses_the_published_session(panel.factory, operation)
+
+
+@pytest.mark.asyncio
+async def test_an_assisted_login_that_fails_keeps_the_stored_session(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with certificate_profile(tmp_path, operation):
+        async with opened_http_boundary() as boundary:
+            stored_bytes, digest = await _stored_session_the_probe_refuses(boundary, operation, name="view-keep-fail")
+            boundary.configure("failure")
+            host = OperationHost()
+            async with _panel(boundary, host, operation, name="view-keep-fail") as panel:
+                assert not panel.sign_in.signed_in
+                panel.start()
+                await until(lambda: ViewPhase.ACQUIRING in panel.phases(), timeout=_SIGN_IN_SECONDS)
+                await until(lambda: panel.phases()[-1] is ViewPhase.BROWSING, timeout=_SIGN_IN_SECONDS)
+
+                assert not panel.sign_in.signed_in
+                assert host.effects == []
+                assert stored_digest() == digest
+                assert _stored_state() == stored_bytes
+                assert lock_state() is AuthAcquisitionLockState.ABSENT
+
+            boundary.configure("success")
+            assert await _reuses_the_published_session(panel.factory, operation)
+
+
+@pytest.mark.asyncio
+async def test_a_second_view_opens_from_the_session_the_first_published(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with certificate_profile(tmp_path, operation):
+        async with opened_http_boundary() as boundary:
+            first_host = OperationHost()
+            async with _panel(boundary, first_host, operation, name="view-handover-first") as first:
+                assert not first.sign_in.signed_in
+                first.start()
+                await until(lambda: first.sign_in.signed_in, timeout=_SIGN_IN_SECONDS)
+                await until(lambda: first.phases()[-1] is ViewPhase.BROWSING)
+                handed_over = first.sign_in.baseline.storage_state_sha256
+                assert handed_over is not None
+                assert handed_over == stored_digest()
+                first.sink.put(ViewClose())
+                assert first.browsing is not None
+                assert await asyncio.wait_for(first.browsing, timeout=_SIGN_IN_SECONDS) is SedeViewEnd.CLOSED
+                await first.sign_in.close()
+            handed_over = stored_digest()
+            assert handed_over is not None
+
+            async with _panel(boundary, OperationHost(), operation, name="view-handover-second") as second:
+                assert second.sign_in.signed_in
+                assert second.sign_in.baseline.storage_state_sha256 == handed_over
+
+            assert stored_digest() is not None
+            assert lock_state() is AuthAcquisitionLockState.ABSENT
 
 
 @pytest.mark.parametrize(

@@ -22,18 +22,17 @@ import pytest
 
 from dev.packaging.command_execution import run_command
 
-from ..dependency_observation import (
-    CHECKOUT_ROOT_FILE,
-    CHILD_SCRIPT_NAME,
-    JOURNAL_DIRECTORY_NAME,
-    WORKER_SCRIPT_NAME,
-    Observation,
-)
+from ..census_admission import PRODUCT_CENSUS, SUPPORT_CENSUSES
+from ..observation import CHECKOUT_ROOT_FILE, CHILD_SCRIPT_NAME, Observation
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_WORKTREE = Path(__file__).resolve().parents[4]
-_SEQUENCES = "dev/docs/sequences"
+_WORKTREE = Path(__file__).resolve().parents[3]
+_PACKAGE = "dev/dependency_observation"
+#: A second script copy whose launches the observation under test registers as journalling itself.
+WORKER_SCRIPT_NAME = "registered_worker.py"
+_JOURNALS_UNDER_TEST = "journals-under-test"
+_CENSUS_LOADER = "src/cadrumo/tests/module_target_inventory.py"
 _PAYLOAD = b"\x00child payload\xff"
 
 
@@ -68,7 +67,7 @@ def observation(root: Path) -> Observation:
 
 @pytest.fixture
 def adopting(observation: Observation, journals: Path) -> Observation:
-    observation.adopt_journal_directory(journals)
+    observation.adopt_journal_directory(journals, (WORKER_SCRIPT_NAME, CHILD_SCRIPT_NAME))
     return observation
 
 
@@ -352,13 +351,16 @@ from pathlib import Path
 
 root, storage, scenario = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3]
 sys.path.insert(0, str(root))
-from dev.docs.sequences import dependency_observation as observing
+from dev.dependency_observation import observation as observing
 
 observation = observing.observe_process(root)
-journals = observing.prepare_worker_journals(storage)
+journals = storage.parent / "journals-under-test"
+child_script = Path(observing.__file__).with_name(observing.CHILD_SCRIPT_NAME)
+observing.populate_journal_directory(observation, journals, {observing.CHILD_SCRIPT_NAME: child_script})
 launch_start = {
     "module": [sys.executable, "-S", "-m", "tiny_child", "one"],
     "pointer-missing": [sys.executable, "-S", "-m", "tiny_child", "one"],
+    "undeclared-module": [sys.executable, "-S", "-m", "undeclared_child"],
     "dash-c": [sys.executable, "-c", "print('plain')"],
     "foreign-module": [sys.executable, "-m", "json.tool", "--help"],
 }[scenario]
@@ -380,14 +382,31 @@ print(json.dumps({
 """
 
 
+def _census(*targets: str) -> str:
+    source = {
+        "package": "tiny_child",
+        "source_root": ".",
+        "subpackages": [],
+        "exclude_test_packages": True,
+        "exclude_test_module_prefixes": ["test_", "_test_", "conftest"],
+    }
+    target_set = {"kind": "python-module-names", "source": source, "targets": sorted(targets)}
+    return json.dumps({"schema_version": 1, "target_sets": {"checkout": target_set}})
+
+
 @pytest.fixture
 def checkout(tmp_path: Path) -> Path:
-    """A synthetic checkout holding its own copy of the stdlib-only observer and a tiny module to run."""
+    """A synthetic checkout holding its own copy of the observer, its census loader, a census and a tiny module."""
     directory = tmp_path / "real-checkout"
-    for package in ("dev", "dev/docs", _SEQUENCES):
+    for package in ("dev", _PACKAGE, "src/cadrumo/tests"):
         _write(directory / package / "__init__.py")
-    for name in ("dependency_observation.py", CHILD_SCRIPT_NAME, WORKER_SCRIPT_NAME):
-        shutil.copyfile(_WORKTREE / _SEQUENCES / name, directory / _SEQUENCES / name)
+    for name in ("observation.py", "census_admission.py", CHILD_SCRIPT_NAME):
+        shutil.copyfile(_WORKTREE / _PACKAGE / name, directory / _PACKAGE / name)
+    shutil.copyfile(_WORKTREE / _CENSUS_LOADER, directory / _CENSUS_LOADER)
+    _write(directory / PRODUCT_CENSUS, _census("tiny_child"))
+    for partition in SUPPORT_CENSUSES:
+        _write(directory / partition, _census("support_only"))
+    _write(directory / "undeclared_child.py", "print('ran')\n")
     _write(directory / "src" / "cadrumo" / "__init__.py", "# package\n")
     _write(directory / "data" / "payload.bin", _PAYLOAD)
     _write(
@@ -426,7 +445,7 @@ def test_a_real_python_dash_m_child_runs_through_the_bootstrap_and_its_reads_rea
 
     args = summary["args"]
     journals = Path(str(summary["journals"]))
-    assert journals == checkout / "storage" / JOURNAL_DIRECTORY_NAME
+    assert journals == checkout / "storage" / _JOURNALS_UNDER_TEST
     assert isinstance(args, list)
     assert args[:2] == [sys.executable, "-S"]
     assert Path(args[2]) == journals / CHILD_SCRIPT_NAME
@@ -448,6 +467,15 @@ def test_a_real_child_that_dies_before_its_bootstrap_journals_adds_nothing(check
     summary = _observed_parent(checkout, "pointer-missing", CHECKOUT_ROOT_FILE)
     assert summary["returncode"] != 0
     assert summary["incomplete"] == []
+
+
+def test_a_real_child_whose_module_the_census_does_not_declare_is_refused_and_journalled(checkout: Path) -> None:
+    summary = _observed_parent(checkout, "undeclared-module")
+    assert summary["returncode"] != 0
+    assert summary["output"] == ""
+    incomplete = summary["incomplete"]
+    assert isinstance(incomplete, list)
+    assert any("does not declare 'undeclared_child'" in str(reason) for reason in incomplete), incomplete
 
 
 @pytest.mark.parametrize("scenario", ["dash-c", "foreign-module"])
@@ -483,7 +511,7 @@ from pathlib import Path
 
 root = Path(sys.argv[1])
 sys.path.insert(0, str(root))
-from dev.docs.sequences import dependency_observation as observing
+from dev.dependency_observation import observation as observing
 
 
 def posix_like_constructor(self, args, *arguments, **keywords):
@@ -495,8 +523,8 @@ subprocess.Popen.__init__ = posix_like_constructor
 observation = observing.observe_process(root)
 journals = root / "journals"
 journals.mkdir()
-observation.adopt_journal_directory(journals)
-script = journals / observing.WORKER_SCRIPT_NAME
+observation.adopt_journal_directory(journals, ["registered_worker.py"])
+script = journals / "registered_worker.py"
 subprocess.Popen([sys.executable, str(script)])
 print("after popen", observation.incomplete)
 sys.audit("os.posix_spawn", "python", ["python"], {})
@@ -520,13 +548,13 @@ from pathlib import Path
 
 root = Path(sys.argv[1])
 sys.path.insert(0, str(root))
-from dev.docs.sequences import dependency_observation as observing
+from dev.dependency_observation import observation as observing
 
 observation = observing.observe_process(root)
 journals = root / "journals"
 journals.mkdir()
-observation.adopt_journal_directory(journals)
-script = journals / observing.WORKER_SCRIPT_NAME
+observation.adopt_journal_directory(journals, ["registered_worker.py"])
+script = journals / "registered_worker.py"
 script.write_text("pass\\n", encoding="utf-8")
 # The real Popen constructor, wrapped by the observer: on POSIX it forks and
 # execs without a native audit event, on Windows it raises _winapi.CreateProcess.

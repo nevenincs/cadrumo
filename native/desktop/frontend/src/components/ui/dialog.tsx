@@ -68,6 +68,7 @@ function DialogContent({
   placement = "center",
   modalLayer = true,
   onFocusCapture,
+  ref,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   closeLabel?: string;
@@ -77,10 +78,58 @@ function DialogContent({
   modalLayer?: boolean;
 }) {
   const { ref: layer } = useEscapeLayer();
+  const [surface, setSurface] = React.useState<HTMLDivElement | null>(null);
+  const holdSurface = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      setSurface(node);
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
+  // A dialog's own footer often offers the same way out under the same name
+  // ("Cancel"). The corner button then stays for the pointer but leaves the
+  // accessibility tree and the tab order, so the name is offered once. It is
+  // marked on the element, and again whenever the content changes, because
+  // the footer is the caller's own and the surface mounts after this renders.
+  React.useLayoutEffect(() => {
+    if (!surface || !closeLabel) return;
+    const mark = () => {
+      const corner = surface.querySelector<HTMLElement>(
+        '[data-slot="dialog-corner-close"]',
+      );
+      if (!corner) return;
+      const twin = [...surface.querySelectorAll("button")].some(
+        (button) =>
+          button !== corner &&
+          !button.hidden &&
+          (button.getAttribute("aria-label") ?? button.textContent)?.trim() ===
+            closeLabel,
+      );
+      if (twin) {
+        corner.setAttribute("aria-hidden", "true");
+        corner.tabIndex = -1;
+      } else {
+        corner.removeAttribute("aria-hidden");
+        corner.removeAttribute("tabindex");
+      }
+    };
+    mark();
+    const watch = new MutationObserver(mark);
+    watch.observe(surface, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ["aria-label", "hidden"],
+    });
+    return () => watch.disconnect();
+  }, [surface, closeLabel]);
   return (
     <DialogPrimitive.Portal>
       <DialogOverlay />
       <DialogPrimitive.Content
+        ref={holdSurface}
         data-slot="dialog-content"
         data-modal-layer={modalLayer ? "" : undefined}
         // Tall content scrolls inside: what takes focus is brought into view.
@@ -107,6 +156,7 @@ function DialogContent({
             <IconButton
               label={closeLabel}
               size="sm"
+              data-slot="dialog-corner-close"
               className="absolute top-3 right-3"
             >
               <Icon name="close" />

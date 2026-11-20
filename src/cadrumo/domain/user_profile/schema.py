@@ -70,6 +70,10 @@ _Description = Annotated[
     StringConstraints(strip_whitespace=True, min_length=1, max_length=512),
 ]
 
+#: Where the profile states the taxpayer entity type, whose tokens name each declaration's applicability.
+ENTITY_TYPE_SECTION_KEY: Final = "taxpayer_type"
+ENTITY_TYPE_FIELD_KEY: Final = "entity_type"
+
 
 class ProfileFieldType(StrEnum):
     """Closed catalogue of field types allowed by the profile schema TOML."""
@@ -192,6 +196,12 @@ class ProfileFieldDefinition(BaseModel):
     #: the rows of that section to pick from, and lets a grouped read join the
     #: rows, without either keeping a list of which fields are references.
     references_section: _SectionKey | None = None
+    #: The taxpayer entity types this field concerns; empty when it concerns every one.
+    #:
+    #: The tokens are the ``taxpayer_type.entity_type`` vocabulary. A field an
+    #: AEAT design asks only of an Impuesto sobre Sociedades declarant names
+    #: ``legal_entity`` here, so the profile page does not offer it to a person.
+    entity_types: tuple[str, ...] = Field(default=())
 
     @field_validator("type", mode="before")
     @classmethod
@@ -339,6 +349,11 @@ class ProfileSectionDefinition(BaseModel):
     sensitivity: SensitivityClass
     effective_dated: bool = False
     repeatable: bool = False
+    #: The taxpayer entity types this section concerns; empty when it concerns every one.
+    #:
+    #: Read with :attr:`ProfileFieldDefinition.entity_types`: a field of a
+    #: section that names entity types concerns only those.
+    entity_types: tuple[str, ...] = Field(default=())
     fields: tuple[ProfileFieldDefinition, ...] = Field(min_length=1)
 
     @field_validator("sensitivity", mode="before")
@@ -521,6 +536,36 @@ class ProfileSchemaDefinition(BaseModel):
                         f"field {section.key}.{field.key}: only a repeatable section's row names another row"
                     )
         return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _entity_types_name_the_declared_vocabulary(self) -> Self:
+        """Refuse an applicability token the ``taxpayer_type.entity_type`` field does not declare."""
+        declared = next(
+            (
+                frozenset(field.enum_values)
+                for section in self.sections
+                if section.key == ENTITY_TYPE_SECTION_KEY
+                for field in section.fields
+                if field.key == ENTITY_TYPE_FIELD_KEY
+            ),
+            frozenset[str](),
+        )
+        for section in self.sections:
+            for owner, tokens in (
+                (section.key, section.entity_types),
+                *((f"{section.key}.{field.key}", field.entity_types) for field in section.fields),
+            ):
+                unknown = sorted(set(tokens) - declared)
+                if unknown:
+                    raise UserProfileValidationError(f"{owner}: entity_types {unknown!r} are not declared entity types")
+        return self
+
+    def entity_types_of(self, section_key: str, field_key: str) -> frozenset[str]:
+        """Return the entity types a field concerns, empty when it concerns every one."""
+        return frozenset(
+            self.field(f"{section_key}.{field_key}").entity_types or self.section(section_key).entity_types
+        )
 
     def row_references(self) -> tuple[tuple[str, str, str], ...]:
         """Return each declared row reference as ``(section, field, referenced section)``, in schema order."""

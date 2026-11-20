@@ -31,7 +31,6 @@ import {
   fieldAt,
   marked,
   matches,
-  nameOf,
   rowsOf,
   sorted,
   type Row,
@@ -48,7 +47,8 @@ import {
 } from "../../shell/userProfile";
 import type { MenuEntry, OpenMenu } from "../ContextMenu";
 import { AeatAccessEditor } from "./AeatAccessEditor";
-import { Household } from "./Household";
+import { CensoReview } from "./CensoReview";
+import { Household, HOUSEHOLD_KEY } from "./Household";
 import { PasswordChange, ProfileShortcuts } from "./ProfileDialogs";
 import { ProfileDetails, STATUS_GROUPS } from "./ProfileDetails";
 import { ProfileEditor, type ProfileDraft } from "./ProfileEditor";
@@ -135,6 +135,7 @@ export const UserProfilePage = memo(function UserProfilePage({
   const [aeat, setAeat] = useState<UserProfile | null>(null);
   const [password, setPassword] = useState(false);
   const [shortcuts, setShortcuts] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
   const [fromAeat, setFromAeat] = useState<ReadonlySet<string>>(new Set());
   const pageId = useId();
   const scroller = useRef<HTMLDivElement>(null);
@@ -622,6 +623,7 @@ export const UserProfilePage = memo(function UserProfilePage({
       ...(data?.sections.map((section) => section.key) ?? []),
       ...STATUS_GROUPS.map((state) => `status-${state}`),
       "all",
+      HOUSEHOLD_KEY,
     ];
   }
 
@@ -813,7 +815,7 @@ export const UserProfilePage = memo(function UserProfilePage({
   const total = data ? counts(data) : null;
   const header = data && total && (
     <ProfileSummaryHeader
-      name={nameOf(data)}
+      name={data.name}
       full={maximized}
       facts={[
         ["idCard", fieldAt(data, "identity.tax_id")],
@@ -919,19 +921,10 @@ export const UserProfilePage = memo(function UserProfilePage({
         <ProfileSync
           sync={sync}
           compact={!maximized}
-          onTaxId={() => {
-            const row = rowById("identity.tax_id");
-            if (row && writable) editRow(row);
-          }}
           onSetup={() => {
             if (writable) setAeat(data);
           }}
-          onReview={() => {
-            const first = review?.fields.find((field) =>
-              allRows.some((row) => row.id === field.path),
-            );
-            if (first) showDetail(first.path);
-          }}
+          onReview={() => setReviewing(true)}
         />
       )}
       {error && (
@@ -1013,6 +1006,10 @@ export const UserProfilePage = memo(function UserProfilePage({
                   language={language}
                   writable={writable}
                   sessionEnded={sessionEnded}
+                  collapsed={collapsed.has(HOUSEHOLD_KEY)}
+                  onToggle={() => toggle(HOUSEHOLD_KEY)}
+                  active={active}
+                  onActive={setActive}
                 />
               )}
               {nothing && (
@@ -1053,10 +1050,27 @@ export const UserProfilePage = memo(function UserProfilePage({
           onRefresh={profile.refresh}
           onSave={profile.save}
           onSettled={sync.retry}
+          onSaved={() => {
+            setAeat(null);
+            onNotice(t("desktop.profile.aeat.saved_notice"));
+          }}
           onClose={() => setAeat(null)}
         />
       )}
       <ProfileShortcuts open={shortcuts} onClose={() => setShortcuts(false)} />
+      {review && (
+        <CensoReview
+          open={reviewing}
+          onOpenChange={setReviewing}
+          fields={review.fields.filter((field) => rowById(field.path))}
+          label={(path) => rowById(path)?.field.label ?? ""}
+          busy={sync.busy}
+          onAnswer={(decision) => {
+            setReviewing(false);
+            void sync.answer(decision);
+          }}
+        />
+      )}
       {changePassword && (
         <PasswordChange
           change={changePassword}

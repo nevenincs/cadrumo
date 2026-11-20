@@ -21,17 +21,11 @@ import pytest
 
 from dev.packaging.command_execution import run_command
 
-from ..dependency_observation import (
-    CHECKOUT_ROOT_FILE,
-    JOURNAL_DIRECTORY_NAME,
-    WORKER_SCRIPT_NAME,
-    Observation,
-    file_digest,
-)
+from ..observation import CHECKOUT_ROOT_FILE, CHILD_SCRIPT_NAME, Observation, file_digest
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_WORKTREE = Path(__file__).resolve().parents[4]
+_WORKTREE = Path(__file__).resolve().parents[3]
 
 
 def _sha(data: bytes) -> str:
@@ -387,72 +381,36 @@ def _child(code: str, *arguments: str, cwd: Path) -> tuple[int, str, str]:
     return result.returncode, result.stdout, result.stderr
 
 
-_OBSERVE_WORKER_CHILD = (
-    "import sys\n"
-    "from pathlib import Path\n"
-    "sys.path.insert(0, sys.argv[1])\n"
-    "from dev.docs.sequences.dependency_observation import observe_worker\n"
-    "observe_worker(Path(sys.argv[2]), Path(sys.argv[3]))\n"
-    "Path(sys.argv[4]).read_bytes()\n"
-)
-
-
-def test_an_observed_worker_writes_a_begin_line_first_and_journals_what_it_then_reads(
-    root: Path, tmp_path: Path
-) -> None:
-    journals = tmp_path / "journals"
-    journals.mkdir()
-    target = _write(root / "worker-data" / "input.bin", b"\x00worker input\xff")
-    code, _out, err = _child(_OBSERVE_WORKER_CHILD, str(_WORKTREE), str(root), str(journals), str(target), cwd=tmp_path)
-    assert code == 0, err
-    (journal,) = journals.glob("*.journal")
-    lines = _journal_lines(journal)
-    assert lines[0][0] == "B"
-    assert ["F", _sha(b"\x00worker input\xff"), str(target)] in lines
-    assert ["D", _names_digest("input.bin"), str(target.parent)] in lines
-    assert not any(line[0] == "X" for line in lines)
-
-    parent = Observation(root, started_ns=0)
-    parent.harvest(journals)
-    assert parent.files[target] == _sha(b"\x00worker input\xff")
-    assert parent.incomplete == []
-
-
-def test_the_worker_script_refuses_to_run_when_the_checkout_pointer_is_missing(tmp_path: Path) -> None:
-    journals = tmp_path / "journals"
-    script = _write(journals / WORKER_SCRIPT_NAME, (_WORKTREE / "dev/docs/sequences" / WORKER_SCRIPT_NAME).read_bytes())
-    result = run_command([sys.executable, "-I", "-B", str(script)], cwd=tmp_path, environment=None)
-    assert result.returncode != 0
-    assert CHECKOUT_ROOT_FILE in result.stderr
-    assert list(journals.glob("*.journal")) == [], "a refused worker must not leave an unobserved run behind"
-
-
-_PREPARE_CHILD = (
+_POPULATE_CHILD = (
     "import json, sys\n"
     "from pathlib import Path\n"
     "sys.path.insert(0, sys.argv[1])\n"
-    "from dev.docs.sequences.dependency_observation import observe_process, prepare_worker_journals\n"
-    "if sys.argv[3] == 'observed':\n"
-    "    observe_process(Path(sys.argv[2]))\n"
-    "storage = Path(sys.argv[4])\n"
-    "prepared = prepare_worker_journals(storage)\n"
-    "print(json.dumps(None if prepared is None else str(prepared)))\n"
+    "from dev.dependency_observation.observation import observe_process, populate_journal_directory\n"
+    "observation = observe_process(Path(sys.argv[2]))\n"
+    "source = Path(sys.argv[3])\n"
+    "populate_journal_directory(observation, Path(sys.argv[4]), {'copy.py': source})\n"
+    "print(json.dumps(sorted(observation.worker_scripts)))\n"
 )
 
 
-def test_worker_journals_are_prepared_only_by_an_observed_process(root: Path, tmp_path: Path) -> None:
-    storage = tmp_path / "sandbox" / "storage"
-    storage.mkdir(parents=True)
-    code, out, err = _child(_PREPARE_CHILD, str(_WORKTREE), str(root), "plain", str(storage), cwd=tmp_path)
+def test_populating_a_journal_directory_copies_the_scripts_points_at_the_checkout_and_registers_the_copies(
+    root: Path, tmp_path: Path
+) -> None:
+    source = _write(tmp_path / "source.py", b"print('script')\n")
+    directory = tmp_path / "journals"
+    code, out, err = _child(_POPULATE_CHILD, str(_WORKTREE), str(root), str(source), str(directory), cwd=tmp_path)
     assert code == 0, err
-    assert json.loads(out.strip().splitlines()[-1]) is None
-    assert not (storage.parent / JOURNAL_DIRECTORY_NAME).exists()
+    assert (directory / "copy.py").read_bytes() == source.read_bytes()
+    assert (directory / CHECKOUT_ROOT_FILE).read_text(encoding="utf-8") == str(root)
+    registered = json.loads(out.strip().splitlines()[-1])
+    assert str(directory / "copy.py") in registered
 
-    code, out, err = _child(_PREPARE_CHILD, str(_WORKTREE), str(root), "observed", str(storage), cwd=tmp_path)
-    assert code == 0, err
-    prepared = Path(json.loads(out.strip().splitlines()[-1]))
-    assert prepared == storage.parent / JOURNAL_DIRECTORY_NAME
-    assert (prepared / WORKER_SCRIPT_NAME).read_bytes() == (
-        _WORKTREE / "dev/docs/sequences" / WORKER_SCRIPT_NAME
-    ).read_bytes()
-    assert (prepared / CHECKOUT_ROOT_FILE).read_text(encoding="utf-8") == str(root)
+
+def test_adopting_a_journal_directory_registers_only_the_named_scripts(root: Path, tmp_path: Path) -> None:
+    directory = tmp_path / "journals"
+    default = Observation(root, started_ns=0)
+    default.adopt_journal_directory(directory)
+    assert {Path(script).name for script in default.worker_scripts} == {CHILD_SCRIPT_NAME}
+    named = Observation(root, started_ns=0)
+    named.adopt_journal_directory(directory, ("one.py", "two.py"))
+    assert {Path(script).name for script in named.worker_scripts} == {"one.py", "two.py"}

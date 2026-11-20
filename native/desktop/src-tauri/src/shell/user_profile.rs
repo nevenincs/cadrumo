@@ -35,7 +35,7 @@ const PROFILE_CHANGE_ADMISSION_LIMIT: Duration = Duration::from_secs(15);
 /// The authentication facts a field edit may name. They are plain profile
 /// facts, validated like any other; the sign-in method has its own edit and a
 /// secret its own command.
-const AUTH_FACT_PATHS: [&str; 3] = ["auth.dni_nie", "auth.numero_soporte", "auth.fecha_validez"];
+const AUTH_FACT_PATHS: [&str; 2] = ["auth.numero_soporte", "auth.fecha_validez"];
 const AUTH_METHOD: &str = "auth.provider.configure";
 const CREDENTIAL_SAVE: &str = "auth.credential.save";
 /// One window cue a command family holds: a later subscription replaces the
@@ -1261,8 +1261,9 @@ mod tests {
             "auth.clave_movil_route",
             "auth.clave.password",
             "auth.password",
-            "auth.dni_nie.extra",
-            "auth.dni_nie ",
+            "auth.dni_nie",
+            "auth.numero_soporte.extra",
+            "auth.numero_soporte ",
             "auth.",
         ] {
             assert_eq!(
@@ -1271,7 +1272,7 @@ mod tests {
                 "{path}"
             );
         }
-        for path in ["auth.dni_nie", "identity.name"] {
+        for path in ["auth.numero_soporte", "identity.name"] {
             assert_eq!(
                 refusal(json!({"kind":"field","path":path,"value":"a".repeat(4097)})),
                 "refused"

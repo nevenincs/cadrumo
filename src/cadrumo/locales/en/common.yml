@@ -4805,12 +4805,11 @@ desktop:
         needed.
       document_hint: For an app request, enter the DNI validity date or the NIE support
         number, according to your identity document.
-      done: Done
       failed: Could not save {item}. Check it and try again.
       passphrase: Certificate passphrase
       password: '{method} password'
       readiness: Requirements
-      saved: Saved. The requirements below reflect what is stored.
+      saved_notice: AEAT access saved.
       saved_value: A value is saved but not shown. Type a new one to replace it, or
         leave this empty to keep it.
       secret_help: Saved apart from your profile and never shown again. Leave empty
@@ -4829,7 +4828,6 @@ desktop:
       done: Synchronization complete. Review any remaining gaps in your profile.
       failed: The sync failed without changing your profile. Check AEAT access and
         try again.
-      identity: Add tax ID
       incoming: AEAT
       preserve: Keep your saved answer.
       profile_mismatch: This Censo data doesn't match the signed-in profile. Refresh
@@ -4842,9 +4840,17 @@ desktop:
         then try again.
       reject: Discard changes
       review_count: 'AEAT values to review: {count}'
+      review_current: Your profile
+      review_description: What the AEAT Censo holds about you, beside what your profile
+        holds. Nothing is saved until you confirm.
+      review_field: Detail
       review_hint: Changes are shown in place below. Nothing is saved until you confirm.
-      scope: Import your fiscal address, postcode and cadastral reference from Censo.
-        Other profile details still need your answers.
+      review_outcome: On save
+      review_title: Review AEAT data
+      scope: Import from Censo your fiscal address with its postcode, cadastral reference
+        and province and municipality codes, your AEAT office and your activity start
+        and end dates. Your name, your email and the other profile details need your
+        answers.
       session: Your session has ended. Sign in again to continue.
       setup: Set up AEAT sign-in
       source: Saved from AEAT Censo

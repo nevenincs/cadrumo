@@ -116,12 +116,12 @@ async def test_runtime_setup_serializes_cas_writes_keeps_secrets_off_profile_and
     saved, result = await door.save(
         AuthProviderKind.CLAVE_PERMANENTE,
         ClaveMovilRoute.APP_REQUEST,
-        {"identity.tax_id": "12345678Z", "auth.dni_nie": "12345678Z"},
+        {"identity.tax_id": "12345678Z"},
         "",
         secret,
     )
-    assert calls == [("identity.tax_id", 1), ("auth.dni_nie", 2)]
-    assert saved.record_revision == 3 and result.ready
+    assert calls == [("identity.tax_id", 1)]
+    assert saved.record_revision == 2 and result.ready
     assert json.loads(secrets[0]) == {"password": "private-password"}
     assert secret == bytes(len(secret))
     assert all("password" not in key for key in values)

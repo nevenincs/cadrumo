@@ -1375,6 +1375,70 @@ fn a_second_view_waits_for_the_first_to_end_and_is_cancelled_if_it_cannot() {
 }
 
 #[test]
+fn a_new_open_supersedes_an_open_view_and_is_admitted_once_it_ends() {
+    let rig = rig();
+    rig.host.supersede_current();
+    rig.wait_for_call("end_view");
+    assert!(rig.window.kinds().contains(&"closing".to_owned()));
+    // Asking again while it closes is harmless.
+    rig.host.supersede_current();
+    wait_until("the place is free", || lock(&rig.host.current).is_none());
+    assert_eq!(
+        rig.calls()
+            .iter()
+            .filter(|call| *call == "end_view")
+            .count(),
+        1
+    );
+    rig.host.admit_open().unwrap();
+}
+
+#[test]
+fn a_new_open_cancels_a_view_that_is_still_attaching() {
+    let (host, _) = host();
+    let runtime = FakeRuntime::new(u32::MAX);
+    let window = Arc::new(Window::default());
+    host.open_with(started(&runtime), window.sink()).unwrap();
+    assert_eq!(code(host.admit_open()), "conflict");
+    host.supersede_current();
+    assert_eq!(
+        runtime.cancelled().first().map(String::as_str),
+        Some(OPERATION)
+    );
+    wait_until("the view ended", || window.last("ended").is_some());
+    assert_eq!(window.last("ended").unwrap()["reason"], "closed");
+    wait_until("the place is free", || lock(&host.current).is_none());
+    host.admit_open().unwrap();
+}
+
+#[test]
+fn a_view_whose_browser_never_opens_ends_unavailable_and_frees_the_place() {
+    let host = Arc::new(SedeViewHost::with_attach_limit(
+        Box::new(Browser::default()),
+        Arc::new(Diagnostics::default()),
+        Duration::from_millis(100),
+    ));
+    let runtime = FakeRuntime::new(u32::MAX);
+    let window = Arc::new(Window::default());
+    host.open_with(started(&runtime), window.sink()).unwrap();
+    wait_until("the view ended", || window.last("ended").is_some());
+    assert_eq!(window.last("ended").unwrap()["reason"], "unavailable");
+    assert_eq!(runtime.cancelled(), [OPERATION]);
+    assert_eq!(runtime.settles.load(Ordering::Acquire), 1);
+    wait_until("the place is free", || lock(&host.current).is_none());
+    host.admit_open().unwrap();
+}
+
+#[test]
+fn a_closed_host_still_refuses_unavailable_and_supersedes_nothing() {
+    let rig = rig();
+    rig.host.closed.store(true, Ordering::Release);
+    rig.host.supersede_current();
+    assert!(!rig.calls().iter().any(|call| call == "end_view"));
+    assert_eq!(code(rig.host.admit_open()), "unavailable");
+}
+
+#[test]
 fn a_download_is_written_where_the_person_chose_and_nowhere_else() {
     let rig = rig();
     let root = scratch("download");

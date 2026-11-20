@@ -14,9 +14,13 @@ import {
 import { FIRST_STATE, reduceBrowser } from "./browserModel";
 
 /** How long to wait before asking again for a view while the previous one is
- * still publishing its session, and how many times to ask before giving up. */
+ * still publishing its session. */
 const RETRY_MS = 750;
-const RETRY_LIMIT = 80;
+/** How long a superseded view can hold the place: the host settles it within
+ * SETTLE_LIMIT (90 s), plus its close bound and the attach cancel, about
+ * 92 s. The budget lies past that, so giving up means the host is stuck. */
+const HANDOVER_BUDGET_MS = 120_000;
+const RETRY_LIMIT = Math.ceil(HANDOVER_BUDGET_MS / RETRY_MS);
 /** How long a panel size must hold before the page is told of it. */
 const RESIZE_SETTLE_MS = 120;
 const RESIZE_RETRY_MS = 350;

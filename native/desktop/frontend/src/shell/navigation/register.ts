@@ -21,6 +21,8 @@ export type NavigationElement = {
   readonly label: string;
   /** The locale key of its search words, in the person's language. */
   readonly keywords: string;
+  /** The surfaces that implement it now; empty for an element declared but
+   * not built, which every link to it is refused as not implemented. */
   readonly surfaces: readonly Surface[];
   /** Parameter name to value kind name. */
   readonly params: Readonly<Record<string, string>>;

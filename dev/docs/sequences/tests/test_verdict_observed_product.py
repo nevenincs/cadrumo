@@ -20,8 +20,8 @@ import pytest
 
 from cadrumo.tests.env_scope import scoped_env_var
 from dev.cache_root import DEV_CACHE_ROOT_ENV, dev_cache_dir
+from dev.dependency_observation.observation import Observation
 
-from ..dependency_observation import Observation
 from ..errors import SequenceEngineError
 from ..verdict_cache import _CACHE_NAME, FORCE_ENV, OBSERVATION_SENTINEL, SequenceVerdicts
 from .verdict_tree_support import SyntheticTree, build_tree, write

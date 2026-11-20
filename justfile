@@ -60,6 +60,13 @@ dev: (_native-selection "Debug")
 
 # ── Bootstrap / Install ──────────────────────────────────────────────────────
 
+# The locked vaultspec-rag CLI imports `typer.models.TyperPath`, which Typer 0.29
+# removed, although the package declares `typer>=0.26.7`. The product needs Typer
+# 0.29, so the CLI runs the locked package with an ephemeral Typer overlay that
+# leaves the project environment untouched. Library imports and the MCP server
+# do not load the CLI and run in the project environment unchanged.
+vaultspec_rag_cli := 'uv run --no-sync --with "typer<0.29" vaultspec-rag'
+
 # Complete new-worktree provisioning. The first command owns the locked Python
 # sync and default Vaultspec enrollment. Browser provisioning reuses installed
 # channels or installs missing resources. RAG then provisions its managed models,
@@ -71,7 +78,7 @@ dev: (_native-selection "Debug")
 init:
     just setup-checkout
     just setup-browser
-    uv run --no-sync vaultspec-rag install --upgrade --yes
+    {{vaultspec_rag_cli}} install --upgrade --yes
     just _fixture-projections
 
 # Checkout setup for a developer: the minimal checkout setup, then the

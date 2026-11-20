@@ -2,8 +2,8 @@
 
 The register is neutral data in ``navigation.toml``, packaged beside this
 module: each element has an id that is also its link path, an optional parent,
-one label locale key, one search-keywords locale key and the surfaces that implement it
-(``gui``, the window, is the only one). An element may
+one label locale key, one search-keywords locale key and the surfaces that implement it now
+(``gui``, the window, is the only one; none for an element declared but not built). An element may
 also declare link parameters, each taking values of one register-declared
 value kind, such as ``select`` taking an invoice id. The register never says
 how a surface implements an element; each surface keeps its own id table.
@@ -121,7 +121,8 @@ class NavigationElement(BaseModel):
     label: str
     keywords: str
     """The locale key of the element's space-separated search words, never the words themselves."""
-    surfaces: tuple[NavigationSurface, ...] = Field(min_length=1)
+    surfaces: tuple[NavigationSurface, ...]
+    """The surfaces that implement the element now; empty when none does, so no link to it opens."""
     params: Mapping[str, str] = Field(default_factory=lambda: MappingProxyType({}))
 
     @field_validator("id")

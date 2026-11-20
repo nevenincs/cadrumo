@@ -31,6 +31,9 @@ export type ProfileSection = {
 };
 export type UserProfile = {
   profile_id: string;
+  /** The name the page is headed with, as the product chose it: the
+   * taxpayer's, else the profile's own; empty when it has neither. */
+  name: string;
   record_revision: number;
   content_digest: string;
   setup_state: "complete" | "incomplete";

@@ -37,11 +37,11 @@ from cadrumo.application.user_profile.censal_operation import (
     CensalOperationExecutor,
     CensalOperationRequest,
     CensalProfileBaseline,
-    CensalReviewedFieldIntent,
     CensalReviewedOperand,
     build_censal_operation_definition,
 )
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
+from cadrumo.application.user_profile.tests.censal_intent_support import censal_field_intents
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition_ports import build_censal_fetch_port
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
@@ -58,6 +58,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.u
 _YEAR = filing_year_envelope().horizon
 
 _NOW = datetime(_YEAR, 8, 24, 12, tzinfo=UTC)
+#: The three paths a version 2 operand decided before the read learned more.
+_VERSION_2_PATHS = (
+    "contact.fiscal_address",
+    "contact.postcode",
+    "contact.fiscal_address_cadastral_reference",
+)
 
 
 def _test_censal_operation_definition():
@@ -132,19 +138,11 @@ def censal_operation_operand() -> CensalReviewedOperand:
     return CensalReviewedOperand(
         observation=observation,
         baseline=CensalProfileBaseline.from_record(record),
-        field_intents=(
-            CensalReviewedFieldIntent(
-                path="contact.fiscal_address",
-                intent=CensalFieldIntent.ADOPT,
-            ),
-            CensalReviewedFieldIntent(
-                path="contact.postcode",
-                intent=CensalFieldIntent.PRESERVE,
-            ),
-            CensalReviewedFieldIntent(
-                path="contact.fiscal_address_cadastral_reference",
-                intent=CensalFieldIntent.ADOPT,
-            ),
+        field_intents=censal_field_intents(
+            {
+                "contact.fiscal_address": CensalFieldIntent.ADOPT,
+                "contact.fiscal_address_cadastral_reference": CensalFieldIntent.ADOPT,
+            }
         ),
     )
 
@@ -157,8 +155,7 @@ def test_reviewed_operand_strict_serialization_round_trip_and_tamper_refusal() -
         update={
             "field_intents": (
                 operand.field_intents[0].model_copy(update={"intent": CensalFieldIntent.PRESERVE}),
-                operand.field_intents[1],
-                operand.field_intents[2],
+                *operand.field_intents[1:],
             )
         }
     )
@@ -169,7 +166,7 @@ def test_reviewed_operand_strict_serialization_round_trip_and_tamper_refusal() -
     invalid_intent_sets = (
         [],
         complete[:-1],
-        [complete[0], complete[0], complete[2]],
+        [complete[0], complete[0], *complete[2:]],
         list(reversed(complete)),
         [*complete, {"path": "contact.unknown", "intent": "preserve"}],
     )
@@ -187,11 +184,36 @@ def test_historical_review_preimage_without_consultations_keeps_its_digest() -> 
 
     payload = censal_operation_operand().model_dump(mode="json", exclude={"proposed_effect_digest"})
     del payload["observation"]["consultations"]
+    payload["schema_version"] = 2
+    payload["field_intents"] = [
+        item.model_dump(mode="json")
+        for item in censal_field_intents(
+            {"contact.fiscal_address": CensalFieldIntent.ADOPT},
+            paths=_VERSION_2_PATHS,
+        )
+    ]
     historical_digest = content_hash_hex(payload)
     payload["proposed_effect_digest"] = historical_digest
     restored = CensalReviewedOperand.model_validate_json(json.dumps(payload), strict=True)
+    assert restored.schema_version == 2
     assert restored.proposed_effect_digest == historical_digest
     assert restored.observation.consultations == ()
+    assert tuple(item.path for item in restored.field_intents) == _VERSION_2_PATHS
+
+
+def test_each_operand_version_refuses_the_other_versions_intent_paths() -> None:
+    operand = censal_operation_operand()
+    payload = operand.model_dump(mode="json", exclude={"proposed_effect_digest"})
+
+    version_2_with_every_path = {**payload, "schema_version": 2}
+    version_3_with_legacy_paths = {
+        **payload,
+        "schema_version": 3,
+        "field_intents": [item.model_dump(mode="json") for item in censal_field_intents(paths=_VERSION_2_PATHS)],
+    }
+    for invalid in (version_2_with_every_path, version_3_with_legacy_paths):
+        with pytest.raises(ValidationError, match="canonical adoptable"):
+            CensalReviewedOperand.model_validate_json(json.dumps(invalid), strict=True)
 
 
 def test_consultation_tampering_changes_the_existing_review_digest() -> None:

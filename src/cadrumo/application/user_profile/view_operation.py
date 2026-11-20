@@ -295,6 +295,15 @@ class ProfileViewIssueItem(BaseModel):
     message: str = Field(max_length=512)
 
 
+class ProfileViewHeadingItem(BaseModel):
+    """The name an overview is headed with, leading its stream."""
+
+    model_config = STRICT_FROZEN_CONFIG
+    kind: Literal["heading"] = "heading"
+    name: str = Field(max_length=512)
+    """The taxpayer's name the profile states, else the profile's own name; empty when it has neither."""
+
+
 class ProfileViewSectionItem(BaseModel):
     """One overview section header in schema order."""
 
@@ -355,6 +364,7 @@ type ProfileViewItem = Annotated[
     ProfileViewFactItem
     | ProfileViewStatusItem
     | ProfileViewIssueItem
+    | ProfileViewHeadingItem
     | ProfileViewSectionItem
     | ProfileViewFieldItem
     | ProfileViewMissingItem
@@ -389,7 +399,7 @@ def _validate_page_item_kinds(result: ProfileViewOperationResult) -> None:
         ProfileViewPageKind.QUESTIONS: {"question"},
         ProfileViewPageKind.ISSUES: {"issue"},
         ProfileViewPageKind.READINESS_ISSUES: {"issue"},
-        ProfileViewPageKind.OVERVIEW: {"section", "field", "missing", "notice"},
+        ProfileViewPageKind.OVERVIEW: {"heading", "section", "field", "missing", "notice"},
         ProfileViewPageKind.STATUS: {"status"},
         ProfileViewPageKind.FAMILY_ROWS: {"family_group", "family_row", "family_question", "family_draft"},
     }[result.page_kind]
