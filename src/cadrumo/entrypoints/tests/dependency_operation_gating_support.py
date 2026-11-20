@@ -327,14 +327,16 @@ def agent_refusing(
     *,
     at_run: bool = False,
     lane: ModelRunLane = ON_HOST_LANE,
+    answer: Callable[[ModelRunBody], str] | None = None,
 ) -> Generator[RecordingModelRuns]:
     """Bind an agent service on ``lane`` that refuses with ``code`` and records every run it is sent.
 
     The refusal answers every lookup, or with ``at_run`` every run after a
-    lookup that resolved ``lane``. ``None`` refuses nothing.
+    lookup that resolved ``lane``. ``None`` refuses nothing. ``answer``, when
+    given, authors the reply to each run that is not refused.
     """
     lookup_refusal, run_refusal = (None, code) if at_run else (code, None)
-    with serving_agent(lane=lane, lookup_refusal=lookup_refusal, run_refusal=run_refusal) as service:
+    with serving_agent(lane=lane, lookup_refusal=lookup_refusal, run_refusal=run_refusal, answer=answer) as service:
         yield service
 
 
@@ -345,10 +347,11 @@ def operation_runtime(
     *,
     at_run: bool = False,
     lane: ModelRunLane = ON_HOST_LANE,
+    answer: Callable[[ModelRunBody], str] | None = None,
 ) -> Generator[OperationRuntime]:
     """Enrol a profile under the production registry, with the readers its adapter composition binds."""
     with (
-        agent_refusing(code, at_run=at_run, lane=lane) as service,
+        agent_refusing(code, at_run=at_run, lane=lane, answer=answer) as service,
         pytest.MonkeyPatch.context() as patch,
     ):
         patch.setattr(

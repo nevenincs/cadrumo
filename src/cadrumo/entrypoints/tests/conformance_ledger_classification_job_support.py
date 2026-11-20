@@ -3,7 +3,9 @@
 Each job read or change runs against a job stored through the production
 encrypted repository. The enqueue meets a runtime with no model-run authority,
 so its lane lookup is refused as an unreachable reader before anything is
-stored.
+stored. The run meets the same unreachable reader at its first movement, fails
+every movement as unavailable, settles the job and refuses with the reader's
+refusal; no ledger fact is written.
 """
 
 from __future__ import annotations
@@ -20,6 +22,7 @@ from ...application.ledger.classification_job_contracts import (
     LEDGER_CLASSIFY_JOB_LIST_DEFINITION_ID,
     LEDGER_CLASSIFY_JOB_READ_DEFINITION_ID,
     LEDGER_CLASSIFY_JOB_RETRY_DEFINITION_ID,
+    LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID,
     LedgerClassifyJobCancelRequest,
     LedgerClassifyJobChangeResult,
     LedgerClassifyJobDismissRequest,
@@ -30,6 +33,7 @@ from ...application.ledger.classification_job_contracts import (
     LedgerClassifyJobReadRequest,
     LedgerClassifyJobReadResult,
     LedgerClassifyJobRetryRequest,
+    LedgerClassifyJobRunRequest,
 )
 from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderError
 from ...core.errors.error_codes import get_registered_error_code
@@ -196,6 +200,23 @@ def _prepare_change(context: ConformanceFamilyContext) -> ConformancePreparation
     )
 
 
+def _prepare_run(context: ConformanceFamilyContext) -> ConformancePreparation:
+    job = _stored_job(context, failed=False)
+    ledger_unchanged = ledger_unchanged_verifier(context)
+
+    def verify(outcome: ConformanceOutcome) -> None:
+        ledger_unchanged(outcome)
+        stored = _jobs(context).get(job.job_id)
+        assert stored.status is ClassificationJobStatus.SETTLED
+        assert {item.failure_cause for item in stored.items} == {ClassificationItemFailureCause.MODEL_UNAVAILABLE}
+
+    return ConformancePreparation(
+        profile_operation_subject(str(context.profile_id)),
+        LedgerClassifyJobRunRequest(profile_id=context.profile_id, job_id=job.job_id),
+        verify=verify,
+    )
+
+
 _PREPARE = {
     LEDGER_CLASSIFY_JOB_ENQUEUE_DEFINITION_ID: _prepare_enqueue,
     LEDGER_CLASSIFY_JOB_READ_DEFINITION_ID: _prepare_read,
@@ -203,6 +224,7 @@ _PREPARE = {
     LEDGER_CLASSIFY_JOB_CANCEL_DEFINITION_ID: _prepare_change,
     LEDGER_CLASSIFY_JOB_RETRY_DEFINITION_ID: _prepare_change,
     LEDGER_CLASSIFY_JOB_DISMISS_DEFINITION_ID: _prepare_change,
+    LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID: _prepare_run,
 }
 
 
@@ -239,6 +261,13 @@ LEDGER_CLASSIFICATION_JOB_CONFORMANCE_FAMILY = ConformanceFamily(
         _succeeded(LEDGER_CLASSIFY_JOB_CANCEL_DEFINITION_ID, OperationEffect.UPDATED),
         _succeeded(LEDGER_CLASSIFY_JOB_RETRY_DEFINITION_ID, OperationEffect.UPDATED),
         _succeeded(LEDGER_CLASSIFY_JOB_DISMISS_DEFINITION_ID, OperationEffect.UPDATED),
+        RegisteredExecutorConformanceCase(
+            LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID,
+            OperationTerminalCondition.REFUSED,
+            OperationEffect.UPDATED,
+            (LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID,),
+            expected_refusal_ref=_READER_UNAVAILABLE_REFUSAL,
+        ),
     ),
     prepare=_prepare,
 )

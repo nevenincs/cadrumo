@@ -83,6 +83,7 @@ const ADMITTED: [(&str, Kind); 141] = [
     ("ledger.classify.job.list", Read),
     ("ledger.classify.job.read", Read),
     ("ledger.classify.job.retry", Write),
+    ("ledger.classify.job.run", Write),
     ("ledger.classify.review", Review),
     ("ledger.classify.single", Write),
     ("ledger.counterparty", Write),
