@@ -1022,6 +1022,8 @@ export function draftRow(draft: Draft): LedgerTransactionReviewProjection {
       notes: fields.notes ?? "",
       lifecycle_state: "ACTIVE",
       classified_by: "",
+      classification_decided_by: "",
+      figures_derived: false,
       classified_at: null,
       classification_reason: "",
       classification_confidence: null,

@@ -58,6 +58,8 @@ export function movement(
     notes: "",
     lifecycle_state: "ACTIVE",
     classified_by: "",
+    classification_decided_by: "",
+    figures_derived: false,
     classified_at: null,
     classification_reason: "",
     classification_confidence: null,

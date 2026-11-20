@@ -311,6 +311,26 @@ function withoutField(
   return next;
 }
 
+/** The actions with the derivation staged for a movement made from
+ * `category`, or without it where the movement has none. */
+function ivaDerivationFollowing(
+  actions: StagedAction[],
+  id: string,
+  category: string | null,
+): StagedAction[] {
+  const at = actions.findIndex(
+    (action) => action.kind === "iva_derive" && action.transactionId === id,
+  );
+  if (at < 0) return actions;
+  const derivation = actions[at];
+  if (derivation?.kind !== "iva_derive") return actions;
+  if (category === null) return actions.filter((_, index) => index !== at);
+  if (derivation.ivaCategory === category) return actions;
+  return actions.map((action, index) =>
+    index === at ? { ...derivation, ivaCategory: category } : action,
+  );
+}
+
 export function reduceStage(state: StageState, event: StageEvent): StageState {
   const content = state.content;
   switch (event.type) {
@@ -334,15 +354,37 @@ export function reduceStage(state: StageState, event: StageEvent): StageState {
           [cell.id]: { ...rows[cell.id], [cell.field]: cell.value },
         };
       }
-      return rows === content.rows
+      // A staged derivation works from the movement's one IVA category, so
+      // it follows the field and goes when the field is emptied.
+      let actions = content.actions;
+      for (const cell of event.cells)
+        if (cell.field === "iva_category")
+          actions = ivaDerivationFollowing(
+            actions,
+            cell.id,
+            cell.value.kind === "set" ? cell.value.value : null,
+          );
+      return rows === content.rows && actions === content.actions
         ? state
-        : committed(state, { ...content, rows }, event.label);
+        : committed(state, { ...content, rows, actions }, event.label);
     }
     case "revert_cell": {
       const rows = withoutField(content.rows, event.id, event.field);
-      return rows === content.rows
+      // The category is the stored one again; a derivation staged from the
+      // staged one no longer stands.
+      const actions =
+        event.field === "iva_category"
+          ? content.actions.filter(
+              (action) =>
+                !(
+                  action.kind === "iva_derive" &&
+                  action.transactionId === event.id
+                ),
+            )
+          : content.actions;
+      return rows === content.rows && actions === content.actions
         ? state
-        : committed(state, { ...content, rows }, "revert_cell");
+        : committed(state, { ...content, rows, actions }, "revert_cell");
     }
     case "revert_movement": {
       const actions = event.keepActions

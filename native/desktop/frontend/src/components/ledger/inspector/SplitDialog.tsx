@@ -229,7 +229,7 @@ export function SplitDialog({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className="ledger-split w-dialog-lg"
-        closeLabel={t("desktop.ledger.inspector.cancel")}
+        closeLabel={t("desktop.ledger.form.close")}
       >
         <form
           className="grid gap-4"

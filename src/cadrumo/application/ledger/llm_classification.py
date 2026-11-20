@@ -46,6 +46,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.config import Settings
+from ...core.external_constants import CLASSIFIED_BY_IVA_CATEGORY_DERIVATION
 from ...core.logging import get_logger
 from ...core.provenance_stamp import provenance_stamp_transport
 from ...core.time.clock import now
@@ -813,7 +814,7 @@ def derive_operator_iva_substrate(
         patch=patch,
         actor=actor,
         source_command=source_command,
-        classified_by_override="derived:iva-category",
+        classified_by_override=CLASSIFIED_BY_IVA_CATEGORY_DERIVATION,
         ports=ports,
         occurred_at=occurred_at,
         expected_current=expected_current,

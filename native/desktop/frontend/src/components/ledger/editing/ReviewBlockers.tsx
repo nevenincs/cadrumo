@@ -265,6 +265,27 @@ function BlockerFixes({
           )}
         </>
       );
+    case "derive_and_figures":
+    case "derive_category_differs":
+    case "derive_needs_business":
+      return (
+        <>
+          {button(
+            t("desktop.ledger.inspector.drop"),
+            () => {
+              for (const entry of held)
+                for (const action of content.actions)
+                  if (
+                    action.kind === "iva_derive" &&
+                    action.transactionId === entry.id
+                  )
+                    onStage({ type: "drop_action", id: action.id });
+            },
+            "drop-derivation",
+          )}
+          {showFields()}
+        </>
+      );
     case "share_needs_mixed":
       return button(
         t("desktop.ledger.apply.fix.drop_share"),

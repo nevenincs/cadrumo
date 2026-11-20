@@ -525,6 +525,11 @@ class LedgerTransactionPayload(_LedgerCountryCodeModel):
     notes: str = ""
     lifecycle_state: str = Field(min_length=1)
     classified_by: str = Field(min_length=1)
+    # Whose decision the classification is, as opposed to ``classified_by``, the last write's stamp: a
+    # derivation of the IVA figures restamps the row without deciding anything.
+    classification_decided_by: str = Field(min_length=1)
+    # True when Cadrumo's derivation last wrote the row's base, rate and IVA.
+    figures_derived: bool
     # Decision-provenance fields: the "why" behind the active
     # classification decision, surfaced alongside `classified_by` so an
     # operator can answer "why was this classified as X" from one read.

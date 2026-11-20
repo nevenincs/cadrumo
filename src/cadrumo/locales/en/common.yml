@@ -3746,7 +3746,7 @@ desktop:
     iva_category:
       domestic_exempt: Exempt
       domestic_general: General rate
-      domestic_not_subject: Not subject
+      domestic_not_subject: Not subject (art. 7 LIVA)
       domestic_reduced: Reduced rate
       domestic_reverse_charge: Reverse charge in Spain
       domestic_super_reduced: Super-reduced rate
@@ -3761,7 +3761,7 @@ desktop:
       intra_community_service_supply: Intra-community service supplied
       intra_community_supply: Intra-community supply
       intra_community_triangulation: Triangular operation
-      operacion_no_sujeta: Operation not subject
+      operacion_no_sujeta: Not subject by place of supply (arts. 68 to 70 LIVA)
       reagp_compensation: REAGP compensation
       recargo_equivalencia: Equivalence surcharge
       regimen_simplificado: Régimen simplificado
