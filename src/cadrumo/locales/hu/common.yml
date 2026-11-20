@@ -1511,6 +1511,7 @@ desktop:
     fullscreen: Teljes képernyő
     left: Felosztás balra
     move: Lebegő panel mozgatása
+    move_hint: Húzd ezt a fogantyút a lebegő panel mozgatásához, vagy használd a nyílbillentyűket.
     reset_layout: Alapértelmezett elrendezés visszaállítása
     reset_layout_description: Csak a munkaterület elrendezése változik. Az aktuális
       oldalad, a piszkozataid és a terminálmunkameneteid megmaradnak.

@@ -1474,6 +1474,7 @@ desktop:
     fullscreen: Full screen
     left: Split left
     move: Move floating panel
+    move_hint: Drag this handle to move the floating panel, or use the arrow keys.
     reset_layout: Revert to default layout
     reset_layout_description: Only the workspace layout will change. Your current
       page, drafts, and terminal sessions will be preserved.
