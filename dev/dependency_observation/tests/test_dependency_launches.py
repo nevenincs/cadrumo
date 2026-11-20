@@ -22,6 +22,7 @@ import pytest
 
 from dev.packaging.command_execution import run_command
 
+from ..census_admission import PRODUCT_CENSUS, SUPPORT_CENSUSES
 from ..observation import CHECKOUT_ROOT_FILE, CHILD_SCRIPT_NAME, Observation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -31,6 +32,7 @@ _PACKAGE = "dev/dependency_observation"
 #: A second script copy whose launches the observation under test registers as journalling itself.
 WORKER_SCRIPT_NAME = "registered_worker.py"
 _JOURNALS_UNDER_TEST = "journals-under-test"
+_CENSUS_LOADER = "src/cadrumo/tests/module_target_inventory.py"
 _PAYLOAD = b"\x00child payload\xff"
 
 
@@ -358,6 +360,7 @@ observing.populate_journal_directory(observation, journals, {observing.CHILD_SCR
 launch_start = {
     "module": [sys.executable, "-S", "-m", "tiny_child", "one"],
     "pointer-missing": [sys.executable, "-S", "-m", "tiny_child", "one"],
+    "undeclared-module": [sys.executable, "-S", "-m", "undeclared_child"],
     "dash-c": [sys.executable, "-c", "print('plain')"],
     "foreign-module": [sys.executable, "-m", "json.tool", "--help"],
 }[scenario]
@@ -379,14 +382,31 @@ print(json.dumps({
 """
 
 
+def _census(*targets: str) -> str:
+    source = {
+        "package": "tiny_child",
+        "source_root": ".",
+        "subpackages": [],
+        "exclude_test_packages": True,
+        "exclude_test_module_prefixes": ["test_", "_test_", "conftest"],
+    }
+    target_set = {"kind": "python-module-names", "source": source, "targets": sorted(targets)}
+    return json.dumps({"schema_version": 1, "target_sets": {"checkout": target_set}})
+
+
 @pytest.fixture
 def checkout(tmp_path: Path) -> Path:
-    """A synthetic checkout holding its own copy of the stdlib-only observer and a tiny module to run."""
+    """A synthetic checkout holding its own copy of the observer, its census loader, a census and a tiny module."""
     directory = tmp_path / "real-checkout"
-    for package in ("dev", _PACKAGE):
+    for package in ("dev", _PACKAGE, "src/cadrumo/tests"):
         _write(directory / package / "__init__.py")
-    for name in ("observation.py", CHILD_SCRIPT_NAME):
+    for name in ("observation.py", "census_admission.py", CHILD_SCRIPT_NAME):
         shutil.copyfile(_WORKTREE / _PACKAGE / name, directory / _PACKAGE / name)
+    shutil.copyfile(_WORKTREE / _CENSUS_LOADER, directory / _CENSUS_LOADER)
+    _write(directory / PRODUCT_CENSUS, _census("tiny_child"))
+    for partition in SUPPORT_CENSUSES:
+        _write(directory / partition, _census("support_only"))
+    _write(directory / "undeclared_child.py", "print('ran')\n")
     _write(directory / "src" / "cadrumo" / "__init__.py", "# package\n")
     _write(directory / "data" / "payload.bin", _PAYLOAD)
     _write(
@@ -447,6 +467,15 @@ def test_a_real_child_that_dies_before_its_bootstrap_journals_adds_nothing(check
     summary = _observed_parent(checkout, "pointer-missing", CHECKOUT_ROOT_FILE)
     assert summary["returncode"] != 0
     assert summary["incomplete"] == []
+
+
+def test_a_real_child_whose_module_the_census_does_not_declare_is_refused_and_journalled(checkout: Path) -> None:
+    summary = _observed_parent(checkout, "undeclared-module")
+    assert summary["returncode"] != 0
+    assert summary["output"] == ""
+    incomplete = summary["incomplete"]
+    assert isinstance(incomplete, list)
+    assert any("does not declare 'undeclared_child'" in str(reason) for reason in incomplete), incomplete
 
 
 @pytest.mark.parametrize("scenario", ["dash-c", "foreign-module"])
