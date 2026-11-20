@@ -391,6 +391,10 @@ errors:
     ledger_gross_above_cash_needs_withholding_category: A megadott alap és áfa többet
       ad ki, mint a tényleges pénzmozgás; ez a különbség IRPF-levonás, és nincs megadva
       IRPF-kategória.
+    ledger_gross_does_not_reconstitute: Az alap, az áfa összege és az esetleges recargo
+      de equivalencia együtt {reconstituted}, az összeg viszont {expected}. Javítsd
+      az alapot és az áfa összegét, vagy az összeget, hogy egyezzenek, majd mentsd
+      újra.
     m145_communication_record_not_found: Nincs olyan Modelo 145 helyi kommunikációs
       rekord, amely megfelelne a kért azonosítónak.
     m145_communication_service: A Modelo 145 helyi kommunikációs szolgáltatás egyik

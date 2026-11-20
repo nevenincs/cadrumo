@@ -847,8 +847,7 @@ export function ProviderSettings({
                 currentIdentity.current === selectedIdentity
                   ? freshRevision
                   : undefined,
-              )
-              .catch(() => undefined);
+              );
           }}
         />
       )}

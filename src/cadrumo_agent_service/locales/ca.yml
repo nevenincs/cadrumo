@@ -36,6 +36,9 @@ desktop:
       profile_not_eligible: El teu perfil no permet que els documents surtin d'aquest
         ordinador. Ho controla l'ajust «Lectura de documents fora de l'equip» del
         teu perfil.
+      profile_unreadable: No s'ha pogut llegir l'ajust «Lectura de documents fora
+        de l'equip» del teu perfil, així que no s'ha enviat res. Torna-ho a provar
+        d'aquí a un moment.
       reference_unknown: L'agent ja no espera aquest fitxer.
       service_failed: No s'ha pogut registrar el permís, així que no s'ha enviat res.
     attachment_refused: Aquest fitxer no s'ha enviat. {reason}
@@ -51,8 +54,12 @@ desktop:
     can_write: escriure fitxers
     cancel: Cancel·la
     capabilities: 'Pot: {list}'
-    carried_turns: Aquesta conversa va començar amb {carried} torns de l'anterior;
-      es van ometre {omitted} torns més antics.
+    carried_from: Portat de {title}
+    carried_from_unknown: Portat d'una conversa anterior
+    carried_omitted: Es van ometre {omitted} torns més antics.
+    carried_omitted_one: Es va ometre {omitted} torn més antic.
+    carried_turns: Aquesta conversa va començar amb {carried} torns de l'anterior.
+    carried_turns_one: Aquesta conversa va començar amb {carried} torn de l'anterior.
     carry_back: Torna a aquella conversa
     carry_pending: El teu proper missatge comença una conversa nova que porta els
       torns més recents de «{title}».
@@ -244,11 +251,15 @@ desktop:
     search_placeholder: Cerca
     selection_change_asked: Aquest missatge canvia el model de {previous} a {requested}.
     selection_change_confirm: Canvia i envia
-    selection_change_history: El model nou rep {retained} missatges d'aquesta conversa
-      (uns {tokens} tokens); s'ometen {omitted} missatges anteriors.
     selection_change_keep: Mantén el model
+    selection_change_omitted: S'ometen {omitted} missatges anteriors.
+    selection_change_omitted_one: S'omet {omitted} missatge anterior.
     selection_change_refused: Canviar el model necessita la teva confirmació. Torna
       a enviar el missatge.
+    selection_change_retained: El model nou rep {retained} missatges d'aquesta conversa
+      (uns {tokens} tokens).
+    selection_change_retained_one: El model nou rep {retained} missatge d'aquesta
+      conversa (uns {tokens} tokens).
     send: Envia
     send_nothing: Primer escriu un missatge o afegeix un fitxer
     send_too_long: Aquest missatge té {count} caràcters; el màxim és {max}
@@ -310,9 +321,95 @@ desktop:
     stopped: Aturat
     thinking: Raonament
     thoughts: El que va pensar l'agent
+    tool:
+      cadrumo:
+        authority:
+          description: 'Consulta dades fiscals de referència publicades: models, caselles,
+            fórmules i portals.'
+          label: Consultar dades fiscals
+        control:
+          description: Inicia, reprèn, cancel·la o deixa anar una operació.
+          label: Controlar una operació
+        corpus_search:
+          description: Cerca als textos legals del BOE i l'AEAT inclosos i a la terminologia
+            fiscal.
+          label: Cercar a la legislació
+        describe:
+          description: Llegeix què fa una operació i què necessita.
+          label: Descriure una operació
+        execute:
+          description: Envia una operació al teu perfil. Pot canviar les
+            teves dades.
+          label: Executar una operació
+        observe:
+          description: Comprova com va una operació enviada.
+          label: Seguir una operació
+        respond:
+          description: Aplica o rebutja una revisió que espera una resposta.
+          label: Respondre a una revisió
+        result:
+          description: Llegeix el resultat d'una operació acabada.
+          label: Llegir un resultat
+        result_page:
+          description: Llegeix una pàgina del resultat d'una operació acabada.
+          label: Llegir una pàgina de resultat
+        review:
+          description: Llegeix una revisió que espera la teva resposta.
+          label: Llegir una revisió
+        search:
+          description: Cerca les operacions que l'agent pot executar al
+            teu perfil.
+          label: Cercar operacions
+        status:
+          description: Comprova en quin perfil has autoritzat que treballi l'agent
+            i si l'aplicació està disponible.
+          label: Comprovar la sessió
+        views:
+          description: Cerca les vistes d'aquesta finestra que pot obrir un enllaç
+            i comprova enllaços.
+          label: Cercar vistes
+      cadrumo_agent_tools:
+        list_attachments:
+          description: Llista els documents adjunts a la conversa.
+          label: Llistar els adjunts
+        load_skill:
+          description: Carrega les instruccions d'una habilitat perquè l'agent les
+            segueixi.
+          label: Carregar una habilitat
+        read_attachment:
+          description: Llegeix un document que vas adjuntar a la conversa.
+          label: Llegir un adjunt
+        read_conversation_history:
+          description: Llegeix parts anteriors d'aquesta conversa.
+          label: Llegir aquesta conversa
+        read_file:
+          description: Llegeix un fitxer de l'espai de treball de l'agent.
+          label: Llegir un fitxer
+        read_web_source:
+          description: Obre una pàgina web i la llegeix.
+          label: Llegir una pàgina web
+        resolve_output_path:
+          description: Determina on es desarà un fitxer que generi l'agent.
+          label: Triar on desar
+        run_program:
+          description: Executa un programa en aquest ordinador.
+          label: Executar un programa
+        run_subagent:
+          description: Encarrega una part de la tasca a un agent auxiliar.
+          label: Iniciar un agent auxiliar
+        search_previous_conversations:
+          description: Cerca a les teves converses anteriors amb l'agent.
+          label: Cercar converses anteriors
+        web_search:
+          description: Cerca a internet.
+          label: Cercar a internet
+        write_file:
+          description: Crea o modifica un fitxer a l'espai de treball de l'agent.
+          label: Escriure un fitxer
     tool_details: Detalls de la crida
     tool_done: Fet
     tool_failed: Amb error
+    tool_generic: Eina {name}
     tool_kind_delete: Elimina
     tool_kind_edit: Edita
     tool_kind_execute: Executa
@@ -324,7 +421,12 @@ desktop:
     tool_kind_switch_mode: Canvia de mode
     tool_kind_think: Pensa
     tool_pending: Pendent
+    tool_reach:
+      local_read: Llegeix dades d'aquest ordinador
+      local_write: Canvia dades d'aquest ordinador
+      online: Fa servir internet
     tool_running: En curs
+    tool_unnamed: Una eina
     transcript: Conversa
     transcript_empty: Encara no hi ha missatges
     unavailable: Encara no està disponible
@@ -333,6 +435,7 @@ desktop:
     upload_name_refused: El seu nom no es pot desar; canvia'l i torna-ho a provar
     upload_quota_exceeded: L'emmagatzematge d'aquesta conversa és ple
     upload_too_large: Massa gran per a aquesta conversa
+    upload_too_large_limit: 'Massa gran: el màxim és {limit}'
     upload_unreadable: No s'ha pogut llegir
     uploading: S'està pujant
     uploading_name: S'està pujant {name}

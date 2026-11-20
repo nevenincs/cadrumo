@@ -418,6 +418,9 @@ errors:
     ledger_gross_above_cash_needs_withholding_category: La base i l'IVA declarats
       sumen més que el diner que s'ha mogut; aquesta diferència és una retenció d'IRPF
       i no s'ha declarat cap categoria d'IRPF.
+    ledger_gross_does_not_reconstitute: La base, la quota d'IVA i el recàrrec d'equivalència,
+      si n'hi ha, sumen {reconstituted}, però l'import és {expected}. Corregeix la
+      base i la quota, o l'import, perquè coincideixin i torna a desar.
     m145_communication_record_not_found: Cap registre local de comunicació del Model
       145 coincideix amb l'id sol·licitat.
     m145_communication_service: Ha fallat una operació del servei local de comunicació

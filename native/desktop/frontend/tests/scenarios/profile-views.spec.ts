@@ -29,6 +29,7 @@ test("profile reads hide previous snapshots on the first commit and ignore late 
         }),
       home: () => new Promise(() => undefined),
       reference: () => new Promise(() => undefined),
+      operations: () => new Promise(() => undefined),
     };
     const range = { from_date: "2026-01-01", to_date: "2026-12-31" };
     const year = Number(range.from_date.slice(0, 4));

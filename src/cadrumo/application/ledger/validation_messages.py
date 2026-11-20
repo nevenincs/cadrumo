@@ -5,10 +5,12 @@ from __future__ import annotations
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
-from ...core.errors.error_codes import resolve_error_message
+from ...core.errors.error_codes import get_registered_error_code, resolve_error_message
 from ...core.errors.hierarchy import CadrumoError
 
 _MAX_MESSAGE_LENGTH = 2048
+_MAX_DIAGNOSTIC_ENTRIES = 8
+_MAX_DIAGNOSTIC_LENGTH = 768
 
 
 def bounded_validation_messages(error: Exception, *, limit: int, fallback: str) -> tuple[str, ...]:
@@ -77,8 +79,13 @@ def _located(item: ErrorDetails) -> str:
     return f"{field_path}: {message}" if field_path and message else message
 
 
-def ledger_refusal_messages(error: Exception, *, limit: int, fallback: str) -> tuple[str, ...]:
+def ledger_refusal_messages(
+    error: Exception, *, limit: int, fallback: str, locale: str | None = None
+) -> tuple[str, ...]:
     """Return at most ``limit`` refusals said in the operator's language.
+
+    ``locale`` names the language a registered refusal is said in; without it the
+    process language speaks, as for a caller that has no request to answer.
 
     A registered refusal is rendered through its own translation, whichever
     layer raised it and whether or not Pydantic wrapped it on the way out. Only
@@ -87,12 +94,12 @@ def ledger_refusal_messages(error: Exception, *, limit: int, fallback: str) -> t
     reads.
     """
     if isinstance(error, CadrumoError):
-        return (resolve_error_message(error)[:_MAX_MESSAGE_LENGTH],)
+        return (resolve_error_message(error, locale=locale)[:_MAX_MESSAGE_LENGTH],)
     if isinstance(error, ValidationError):
         messages: list[str] = []
         for item in error.errors(include_input=False, include_url=False):
             registered = _registered_cause(item)
-            said = resolve_error_message(registered) if registered is not None else _located(item)
+            said = resolve_error_message(registered, locale=locale) if registered is not None else _located(item)
             if said:
                 messages.append(said[:_MAX_MESSAGE_LENGTH])
             if len(messages) >= limit:
@@ -102,6 +109,31 @@ def ledger_refusal_messages(error: Exception, *, limit: int, fallback: str) -> t
     return bounded_validation_messages(error, limit=limit, fallback=fallback)
 
 
+def ledger_refusal_diagnostic(error: Exception) -> str:
+    """Name which rule refused, for a log line, without any figure or person's text.
+
+    The line carries only closed tokens: the exception type, each registered
+    refusal's error code and catalogue key, and the model field locations
+    Pydantic reports. It never carries a message, an input value or a context.
+    """
+    tokens = [f"type={type(error).__name__}"]
+    causes = [
+        f"{get_registered_error_code(cause).code}:{getattr(cause, 'translated_message', None) or '-'}"
+        for cause in registered_refusal_causes(error)[:_MAX_DIAGNOSTIC_ENTRIES]
+    ]
+    if causes:
+        tokens.append(f"causes={','.join(causes)}")
+    if isinstance(error, ValidationError):
+        locations = [
+            ".".join(str(part) for part in item["loc"] if part != "__root__") or "-"
+            for item in error.errors(include_input=False, include_context=False, include_url=False)[
+                :_MAX_DIAGNOSTIC_ENTRIES
+            ]
+        ]
+        tokens.append(f"fields={','.join(locations)}")
+    return " ".join(tokens)[:_MAX_DIAGNOSTIC_LENGTH]
+
+
 def ledger_refusal_sentence(error: Exception, *, fallback: str) -> str:
     """Return the one sentence a per-row refusal carries, in the operator's language."""
     return ledger_refusal_messages(error, limit=1, fallback=fallback)[0]
@@ -109,6 +141,7 @@ def ledger_refusal_sentence(error: Exception, *, fallback: str) -> str:
 
 __all__ = [
     "bounded_validation_messages",
+    "ledger_refusal_diagnostic",
     "ledger_refusal_messages",
     "ledger_refusal_sentence",
     "registered_refusal_causes",

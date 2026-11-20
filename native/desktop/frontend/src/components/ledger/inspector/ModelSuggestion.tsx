@@ -30,7 +30,13 @@ import { useStrings } from "../../../shell/strings";
 import { useWritePause, WriteHold } from "../WritePause";
 import { fieldName, refusalText, valueText } from "../editing/editingWords";
 import { needsShare, suggestionWrites } from "./inspectorModel";
+import { ConsentRemedies } from "./ConsentRemedies";
 import { modelFailureText } from "./inspectorWords";
+import {
+  consentStepOf,
+  modelRefusalOfOutcome,
+  type ModelRefusal,
+} from "./modelRefusal";
 import { formatPercent } from "../../../shared/numbers";
 import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
@@ -46,8 +52,9 @@ type State =
   | { kind: "idle" }
   | { kind: "asking"; ask: Ask }
   | { kind: "shown"; shown: Shown }
-  /** The runtime's code, or `no_review` or `refused` where it gave none. */
-  | { kind: "failed"; code: string };
+  /** The runtime's code, or `no_review` or `refused` where it gave none, and
+   * the sentence and step the backend served for the refusal, where it did. */
+  | { kind: "failed"; code: string; refusal?: ModelRefusal | null };
 
 const ORIGINS: Record<
   LedgerLlmReviewMode,
@@ -159,7 +166,11 @@ export function ModelSuggestion({
         return;
       }
       if (outcome.kind === "refused") {
-        setState({ kind: "failed", code: outcome.reason ?? "refused" });
+        setState({
+          kind: "failed",
+          code: outcome.reason ?? "refused",
+          refusal: modelRefusalOfOutcome(outcome),
+        });
         return;
       }
       if (outcome.kind !== "review") {
@@ -313,7 +324,8 @@ export function ModelSuggestion({
 
   let body = askButtons;
   if (state.kind === "failed") {
-    const failure = modelFailureText(t, state.code);
+    const failure = state.refusal?.words ?? modelFailureText(t, state.code);
+    const consent = consentStepOf(state.refusal);
     body = (
       <div className="grid gap-2">
         <Alert
@@ -326,6 +338,7 @@ export function ModelSuggestion({
         >
           {failure}
         </Alert>
+        {consent !== null && <ConsentRemedies step={consent} />}
         {askButtons}
       </div>
     );

@@ -143,9 +143,7 @@ test("the country of a reading offers the codes in use", async ({
   // The reading states the supplier's country in full, which offers nothing
   // over it; cleared, the field offers the codes in use.
   await expect(country).toHaveValue(/^ES/);
-  await country.click();
-  await target.keyboard.press("ControlOrMeta+a");
-  await target.keyboard.press("Backspace");
+  await country.fill("");
   await expect(country).toHaveValue("");
   await target.keyboard.press("ArrowDown");
   const spain = options(target).filter({ hasText: /^ES/ });

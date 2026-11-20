@@ -67,11 +67,12 @@ test("nothing refused is no group", () => {
   expect(groupBarredReads([])).toEqual([]);
 });
 
-test("only the three bars on every off-host read are grouped, and each has its own words", () => {
+test("only the four bars on every off-host read are grouped, and each has its own words", () => {
   for (const code of [
     "gestor_mode",
     "cloud_upload_not_permitted",
     "profile_not_eligible",
+    "profile_unreadable",
   ]) {
     expect(isBarCode(code)).toBe(true);
     expect(refusalKey(code)).toBe(`desktop.agent.attachment_refusal.${code}`);

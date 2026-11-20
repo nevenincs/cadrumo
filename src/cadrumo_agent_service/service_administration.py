@@ -26,6 +26,7 @@ from .adapters.agent_programs import (
 from .adapters.agent_provider_auth_status import AgentProviderAuthStatusProbe
 from .adapters.agent_provider_catalog import AgentProviderCatalogSource
 from .adapters.local_ai_demand import LocalAiDemandingRuns, manager_demand_from_environment
+from .adapters.profile_cloud_eligibility import ProfileCloudEligibilityRead, disclosure_bar
 from .adapters.provider_catalog_metadata import declared_provider_catalog_response
 from .adapters.served_catalog_models import ServedCatalogModels
 from .contracts import HostedCertificationStatus
@@ -68,23 +69,9 @@ from .service_support import (
     ADMIN_READ_FRESH_SECONDS,
     ADMIN_READ_SECONDS,
     LIFECYCLE_ADMISSION_SECONDS,
+    PROFILE_READ_SECONDS,
     HeldLaneLog,
 )
-
-
-def _disclosure_bar() -> DisclosureRefusalCode | None:
-    """Name the first bar to an off-host attachment release.
-
-    The service holds no door to the exact profile's cloud eligibility, which only
-    the runtime can read, so a deployment that opted in is still refused here
-    rather than assumed eligible.
-    """
-    settings = load_settings()
-    if settings.cadrumo_evidence_gestor_mode:
-        return DisclosureRefusalCode.GESTOR_MODE
-    if not settings.cadrumo_evidence_cloud_upload_permitted:
-        return DisclosureRefusalCode.CLOUD_UPLOAD_NOT_PERMITTED
-    return DisclosureRefusalCode.PROFILE_NOT_ELIGIBLE
 
 
 class AgentServiceAdministration(ABC):
@@ -154,13 +141,14 @@ class AgentServiceAdministration(ABC):
                 demand=manager_demand_from_environment(os.environ),
             ),
         )
+        self._profile_cloud = ProfileCloudEligibilityRead.over(client, timeout_seconds=PROFILE_READ_SECONDS)
         self._attachment_releases = AttachmentReleases(
             gateway=GatewayAttachments(
                 endpoint=self._background_endpoint, bearer=gateway_bearer, host_token=self._host_token
             ),
             store=SecureAttachmentDisclosureStore(client=client),
             off_host=self._lane_reads_off_host,
-            eligibility=_disclosure_bar,
+            eligibility=self._disclosure_bar,
             session=self._disclosure_session,
         )
         self._login_status = AgentProviderAuthStatusProbe(
@@ -206,6 +194,10 @@ class AgentServiceAdministration(ABC):
         }
         self._owned = False
         self._emit = emit
+
+    def _disclosure_bar(self) -> DisclosureRefusalCode | None:
+        """Name the first bar to an off-host release as it stands now: gestor, deployment, then profile."""
+        return disclosure_bar(self._profile_cloud, load_settings())
 
     def _login_context(self) -> tuple[Path, str] | None:
         """Bind a login observation to current profile, settings and completed attempt."""

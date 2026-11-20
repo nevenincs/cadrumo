@@ -12,6 +12,8 @@ import { stepYear, type LedgerPeriod } from "../../shell/ledgerGrammar";
 import {
   ledgerPeriod,
   neighbourPeriod,
+  periodsReadFailure,
+  retryPeriodReads,
   servedYear,
   useEntryYears,
   usePeriods,
@@ -275,7 +277,16 @@ export function PeriodSelector(
             </IconButton>
           </div>
           {!yearMode &&
-            (table === null ? (
+            (table === null && periodsReadFailure() !== null ? (
+              <div role="alert" className="grid gap-1 text-sm">
+                {t("desktop.ledger.period.unread", {
+                  code: periodsReadFailure() ?? "",
+                })}
+                <Button variant="outline" size="xs" onClick={retryPeriodReads}>
+                  {t("desktop.ledger.retry")}
+                </Button>
+              </div>
+            ) : table === null ? (
               // The row keeps its height while the year is read.
               <div
                 className="ledger-period-reading h-control-xs"

@@ -21,7 +21,11 @@ completely observed keys them whole, on digests taken before it ran.
 The window projections belong to the selected CMake build tree
 (``location.py``). A seed that leaves every window family fresh records their
 outputs in the window index, which the frontend's type check verifies; one that
-does not removes it. ``seed --window --depfile FILE`` also writes a Makefile
+does not removes it, naming why. A family whose inputs changed while the seed
+ran (a merge into the checkout mid-build) still has outputs consistent with the
+inputs its stamp records, so the index is written from that snapshot, the
+changed inputs are reported, and a drift record written after the index makes
+the next build seed again. ``seed --window --depfile FILE`` also writes a Makefile
 dependency file naming the index as its target and every input, output and stamp
 file the window families' freshness reads, so CMake reruns the seed only when one
 of them changes. It names files only: a generator that meets a directory there
@@ -41,10 +45,11 @@ import shutil
 import sys
 import time
 import uuid
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TextIO
 
 from ..packaging.command_execution import run_command
 from ..paths import REPO_ROOT, TEMP_ROOT
@@ -80,11 +85,17 @@ from .stamps import (
     observed_files,
     output_digests,
     output_paths,
+    stamp_mismatch,
     stamp_path,
     write_stamp,
 )
 
 SEED_RECIPE = "just fixtures-seed"
+#: Beside the window index when an input changed while the seed ran: the inputs that changed. Written after the
+#: index and named in its dependency file, it is newer than the index, so the next build runs the seed again.
+WINDOW_DRIFT = ".window-projections.drift"
+#: How many of a family's reasons a report names.
+_REASONS_SHOWN = 12
 DETERMINISM_UNDECLARED = "determinism undeclared"
 
 
@@ -217,6 +228,13 @@ def _inputs(family: FixtureFamily, digests: InputDigests, authority: Mapping[str
         raise FixtureProjectionError(f"{family.name}: {exc}") from exc
 
 
+def _print_reasons(reasons: Sequence[str], *, file: TextIO = sys.stdout, indent: str = "  ") -> None:
+    for reason in reasons[:_REASONS_SHOWN]:
+        print(f"{indent}{reason}", file=file)
+    if len(reasons) > _REASONS_SHOWN:
+        print(f"{indent}... and {len(reasons) - _REASONS_SHOWN} more", file=file)
+
+
 def status(names: Sequence[str], workspace: Workspace | None = None) -> int:
     """Report each family's state; reporting never fails, ``check`` is the gate."""
     workspace = workspace or Workspace()
@@ -229,10 +247,7 @@ def status(names: Sequence[str], workspace: Workspace | None = None) -> int:
             family, workspace.root, inputs, digests=digests, cache_directory=workspace.cache_directory
         )
         print(f"{family.name}: {result.state}")
-        for reason in result.reasons[:12]:
-            print(f"  {reason}")
-        if len(result.reasons) > 12:
-            print(f"  ... and {len(result.reasons) - 12} more")
+        _print_reasons(result.reasons)
         unfresh = unfresh or result.state in {FixtureState.STALE, FixtureState.UNSTAMPED, FixtureState.MISSING}
     if unfresh:
         print(f"Run `{SEED_RECIPE}` to regenerate the families that are not fresh.")
@@ -291,27 +306,71 @@ def _write_replacing(path: Path, text: str) -> None:
     staged.replace(path)
 
 
-def record_window_index(workspace: Workspace, digests: InputDigests, authority: Mapping[str, str]) -> Path | None:
-    """Record every window family's outputs in the window index when all are fresh, else remove the index.
+@dataclass(frozen=True, slots=True)
+class WindowIndex:
+    """The window index a seed wrote, or ``None`` when a window family is not consistent; and the inputs that moved.
 
-    Returns:
-        The index written, or ``None`` when a window family is not fresh and no index stands.
+    ``drift`` names each input that changed while the seed ran, by family. The outputs were then produced from
+    the inputs the stamps record, a consistent snapshot, and the next build runs the seed again.
     """
+
+    path: Path | None
+    drift: tuple[str, ...] = ()
+
+
+def record_window_index(
+    workspace: Workspace, authority: Mapping[str, str], *, failed: Collection[str] = ()
+) -> WindowIndex:
+    """Record every window family's outputs in the window index when each stamp records its outputs, else remove it.
+
+    Each family is judged against the checkout as it stands now. One whose stamp records its outputs but whose
+    inputs have changed since was produced, or found fresh, from the inputs the stamp records before they changed:
+    its outputs are consistent with that snapshot, and the change is reported as drift rather than failing a build
+    that may have run for minutes. A family named in ``failed``, whose producer failed this seed, or any other
+    family that is not fresh removes the index, naming why: an earlier stamp is no snapshot of inputs it was asked
+    to catch up with.
+    """
+    digests = InputDigests(workspace.root)
     index = window_projections(workspace.root) / WINDOW_INDEX
     families: dict[str, dict[str, str]] = {}
+    drift: list[str] = []
     for family in window_families(workspace.families):
         inputs = _inputs(family, digests, authority)
         current = family_status(
             family, workspace.root, inputs, digests=digests, cache_directory=workspace.cache_directory
         )
         if current.state is not FixtureState.FRESH:
-            index.unlink(missing_ok=True)
-            print(f"The window projections are incomplete: {family.name} is {current.state}", file=sys.stderr)
-            return None
+            mismatch = stamp_mismatch(family, workspace.root, cache_directory=workspace.cache_directory)
+            if family.name in failed:
+                mismatch = ("its producer failed", *mismatch)
+            if mismatch or current.state is not FixtureState.STALE:
+                index.unlink(missing_ok=True)
+                print(f"The window projections are incomplete: {family.name} is {current.state}", file=sys.stderr)
+                _print_reasons(mismatch or current.reasons, file=sys.stderr)
+                return WindowIndex(None)
+            drift += [f"{family.name}: {reason}" for reason in current.reasons]
         families[family.name] = output_digests(family, workspace.root)
     document = {"format": WINDOW_INDEX_FORMAT, "families": families}
     _write_replacing(index, json.dumps(document, sort_keys=True, indent=2) + "\n")
-    return index
+    return WindowIndex(index, tuple(drift))
+
+
+def _record_drift(workspace: Workspace, drift: Sequence[str]) -> None:
+    """Write the drift record after the index when an input moved during the seed, else remove any earlier one.
+
+    A seed that removed the index records no drift: the next build runs the seed again without it.
+    """
+    record = window_projections(workspace.root) / WINDOW_DRIFT
+    if not drift:
+        record.unlink(missing_ok=True)
+        return
+    print(
+        "The window projections were produced from inputs that changed while the seed ran; "
+        "the next build produces them again:",
+        file=sys.stderr,
+    )
+    _print_reasons(drift, file=sys.stderr)
+    _write_replacing(record, "".join(f"{reason}\n" for reason in drift))
 
 
 def _make_word(path: Path) -> str:
@@ -324,7 +383,7 @@ def window_dependencies(workspace: Workspace, digests: InputDigests) -> tuple[Pa
     Outputs and stamps are listed so a removed one reruns the seed. A file added beside the inputs is the window
     listing's to notice (see ``write_window_listing``).
     """
-    paths: set[Path] = {workspace.authority_source()}
+    paths: set[Path] = {workspace.authority_source(), window_projections(workspace.root) / WINDOW_DRIFT}
     for family in window_families(workspace.families):
         for group in family.inputs:
             paths.update(workspace.root / member for member in digests.group(group.paths))
@@ -431,6 +490,7 @@ def _seed_family(
     ):
         return True
     print(f"{family.name}: producing ({current.state})", flush=True)
+    _print_reasons(current.reasons)
     # A failed producer leaves its earlier stamp, which no longer matches the outputs it may have half written.
     return _observed_commands(workspace, family, (producer,), inputs, digests)
 
@@ -462,7 +522,9 @@ def seed(
     ]
     index = None
     if any(family.output_root == WINDOW_ROOT for family in selected):
-        index = record_window_index(workspace, digests, authority)
+        recorded = record_window_index(workspace, authority, failed=frozenset(failed))
+        index = recorded.path
+        _record_drift(workspace, recorded.drift)
     if failed:
         print(f"Producers failed: {', '.join(failed)}", file=sys.stderr)
         return 1

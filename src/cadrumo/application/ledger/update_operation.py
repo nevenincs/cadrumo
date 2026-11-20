@@ -15,6 +15,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
+from ...core.logging import get_logger
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.time.clock import now
@@ -58,7 +59,9 @@ from .update_contracts import (
     LedgerUpdateRequest,
     LedgerUpdateValidationMessages,
 )
-from .validation_messages import ledger_refusal_messages
+from .validation_messages import ledger_refusal_diagnostic, ledger_refusal_messages
+
+_log = get_logger(__name__)
 
 # Input refusals the canonical action raises while it still holds nothing to write: the
 # replacement is validated in full before its atomic catalogue and event commit.
@@ -254,8 +257,10 @@ async def _refuse_invalid_update(
     detail = LedgerUpdateExecutionResult(
         outcome="validation_error",
         profile_id=payload.profile_id,
-        validation_messages=_validation_messages(error),
+        validation_messages=_validation_messages(error, language=payload.output_language),
     )
+    # The settlement line names the refusal code only; this says which rule refused.
+    _log.info("ledger update refused %s", ledger_refusal_diagnostic(error))
     detail_ref = await context.operands.put(detail, written_at=now())
     return OperationRefusalEvidence(refusal_code=LEDGER_UPDATE_VALIDATION_REFUSAL_CODE, detail_ref=detail_ref)
 
@@ -299,12 +304,17 @@ def _operation_result(
     )
 
 
-def _validation_messages(error: Exception) -> LedgerUpdateValidationMessages:
-    """Retain only bounded locations and messages from an input refusal."""
+def _validation_messages(error: Exception, *, language: OutputLanguage) -> LedgerUpdateValidationMessages:
+    """Retain only bounded locations and messages from an input refusal.
+
+    The sentences cross the worker boundary already rendered, so they are said in
+    this request's language rather than the one the worker started with.
+    """
     return ledger_refusal_messages(
         error,
         limit=LEDGER_UPDATE_MAX_VALIDATION_MESSAGES,
         fallback="ledger update values did not satisfy transaction validation",
+        locale=language.value,
     )
 
 

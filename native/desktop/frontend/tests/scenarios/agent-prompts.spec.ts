@@ -736,10 +736,16 @@ for (const locale of ["en", "es", "ca", "hu"]) {
       await input.fill("permission status");
       await input.press("Enter");
       await expect(prompt).toBeVisible();
-      await expect(prompt.getByRole("heading")).toHaveText("status");
-      await expect(prompt.locator("[data-slot=badge]")).toHaveText(["cadrumo"]);
+      // The tool is named and described in words, and says how far it reaches.
+      await expect(prompt.getByRole("heading")).toHaveText(
+        label("desktop.agent.tool.cadrumo.status.label", {}, locale),
+      );
+      await expect(prompt.locator("[data-slot=badge]")).toHaveText([
+        label("desktop.agent.tool_reach.local_read", {}, locale),
+      ]);
       await expect(prompt.locator("p")).toHaveText([
         label("desktop.agent.approval_tool_title", {}, locale),
+        label("desktop.agent.tool.cadrumo.status.description", {}, locale),
       ]);
       const names = choices.map((id) =>
         label(`desktop.agent.approval_${id}`, {}, locale),

@@ -1,9 +1,15 @@
 import type { StageFieldName } from "../../../shell/ledgerMovementCheckContract";
+import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import type { Suggestion } from "@/components/ui/suggestions";
 import { facts } from "@/shell/compose";
 import type { LedgerTrackProjection } from "../../../shell/ledgerMovementCheckContract";
-import { usePeriods } from "../../../shell/ledgerPeriods";
+import {
+  periodsHolding,
+  periodsReadFailure,
+  retryPeriodReads,
+  usePeriods,
+} from "../../../shell/ledgerPeriods";
 import { effectiveFacts } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { rowCells } from "../editing/editingModel";
@@ -65,6 +71,13 @@ export function DetailsSection({
   const effectiveOn = effectiveDay(effective);
   usePeriods({ days: effectiveOn === tx.date ? [] : [tx.date, effectiveOn] });
   const moved = quarterMove(tx, effective);
+  // A changed day whose periods could not be read cannot say whether it moves
+  // the quarter; that is said, not left as no move.
+  const unreadMove =
+    effectiveOn !== tx.date &&
+    (periodsHolding(tx.date) === null || periodsHolding(effectiveOn) === null)
+      ? periodsReadFailure()
+      : null;
   const tracked = track?.kind === "ready" ? track.result : null;
   const uses = tracked?.participated_in ?? [];
   const moveNote = moved
@@ -104,6 +117,14 @@ export function DetailsSection({
 
   return (
     <div className="grid gap-3">
+      {unreadMove !== null && (
+        <div role="alert" className="grid gap-1 text-sm">
+          {t("desktop.ledger.inspector.period_unread", { code: unreadMove })}
+          <Button variant="outline" size="xs" onClick={retryPeriodReads}>
+            {t("desktop.ledger.retry")}
+          </Button>
+        </div>
+      )}
       <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5">
         <dt className="pt-1 text-sm text-muted-foreground">
           {t("desktop.ledger.inspector.effective_date")}

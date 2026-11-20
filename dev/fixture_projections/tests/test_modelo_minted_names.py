@@ -134,3 +134,20 @@ def test_one_export_event_stated_differently_in_two_profiles_is_refused(producer
 
     with pytest.raises(SystemExit, match="is stated differently by two rows"):
         producer._name_minted_ids(tmp_path, ["first.json", "second.json"])
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "",
+        '{"id":"plain"}',
+        f'{{"note":"x{_FIRST_ID}"}}',
+        f'{{"note":"{_SECOND_ID[:63]}-"}}',
+        f'{{"path":"exports/{"9" * 3}-{_SECOND_ID}.txt"}}',
+        f'{{"near":"{_FIRST_ID[:-1]}","other":"{"c" * 63}"}}',
+        "1234-5678-abcd",
+    ],
+)
+def test_the_minted_id_finder_answers_as_a_search_for_every_id_would(producer: ModuleType, text: str) -> None:
+    raws = (_FIRST_ID, _SECOND_ID, "1234-5678", "c" * 64)
+    assert producer._minted_id_finder(raws)(text) is any(raw in text for raw in raws)

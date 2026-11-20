@@ -1602,6 +1602,19 @@ test-runtime-auth:
 desktop-agent-live *ARGS:
     uv run --no-sync python -m dev.desktop_agent_live {{ARGS}}
 
+# The silent-controls audit presses every enabled control on every view of the
+# packaged window (a synthetic persona world on a disposable root under
+# %LOCALAPPDATA%\Temp) and fails on each press that shows nothing: no page
+# change, dialog, notice or file chooser. Controls its register marks
+# destructive or remote must open a confirmation instead. It uses the automation
+# host `just build-native Release desktop-packaged-host` builds. Exit 0 passed,
+# 1 failed, 3 unavailable. ARGS: --build <CMake binary dir> (required),
+# --persona, --report <file.md>, --only <rail ids>.
+[doc('Press every control of the packaged desktop window and fail on any that shows nothing (signed-in Windows desktop).')]
+[group('test')]
+desktop-silent-controls *ARGS:
+    node native/desktop/tests/ux/run-silent-controls.mjs {{ARGS}}
+
 [doc('List the planned AEAT read flows, or capture them live under an explicit flag (phone in hand).')]
 [group('test')]
 aeat-request-capture *ARGS:

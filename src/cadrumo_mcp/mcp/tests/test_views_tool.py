@@ -199,7 +199,7 @@ async def test_the_one_unbuilt_window_view_the_desktop_draws_opens() -> None:
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("view_id", ["operations", "installation"])
+@pytest.mark.parametrize("view_id", ["installation"])
 async def test_a_view_no_surface_implements_is_not_advertised_and_its_link_is_refused(view_id: str) -> None:
     assert await _call({"id": view_id}, language="en") == {"outcome": "not_found", "id": view_id, "language": "en"}
     assert await _call({"link": f"cadrumo://view/{view_id}"}) == {"outcome": "invalid", "reason": "not_implemented"}

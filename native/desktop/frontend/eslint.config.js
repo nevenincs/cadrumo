@@ -117,6 +117,18 @@ export default tseslint.config(
           message:
             "Import from the defining module instead of adding re-exports.",
         },
+        {
+          // A press whose failure is dropped shows nothing: the person cannot
+          // tell it failed, or why, or what to do next.
+          selector: [
+            "JSXAttribute[name.name=/^on[A-Z]/] CallExpression[callee.property.name='catch'] > ArrowFunctionExpression[body.type='Identifier'][body.name='undefined']",
+            "JSXAttribute[name.name=/^on[A-Z]/] CallExpression[callee.property.name='catch'] > ArrowFunctionExpression[body.type='Literal'][body.value=null]",
+            "JSXAttribute[name.name=/^on[A-Z]/] CallExpression[callee.property.name='catch'] > ArrowFunctionExpression > BlockStatement.body[body.length=0]",
+            "JSXAttribute[name.name=/^on[A-Z]/] CatchClause > BlockStatement.body[body.length=0]",
+          ].join(", "),
+          message:
+            "An event handler must not drop a failure: show its cause and next step in the view.",
+        },
       ],
     },
   },

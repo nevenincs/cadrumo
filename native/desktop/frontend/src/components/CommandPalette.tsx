@@ -24,6 +24,7 @@ import type {
   ModeloDeclarationsSearchResultV1,
 } from "../shell/modeloContract/modeloDeclarations";
 import { primaryChord, scoreAction, type Action } from "../shell/actions";
+import { failureCode } from "../errors";
 import { useStrings } from "../shell/strings";
 
 /** Docs search provider; null until the documentation can answer queries. */
@@ -151,6 +152,8 @@ export function CommandPalette({
     query: string;
     source: DeclarationsSearch;
     hits: ModeloDeclarationsSearchHitV1[];
+    /** Why the search failed, where it did; its hits are then empty. */
+    failure: string | null;
   } | null>(null);
   const trimmed = query.trim();
   // A pasted link is the whole answer: neither actions nor the
@@ -185,8 +188,9 @@ export function CommandPalette({
       window.clearTimeout(timer);
     };
   }, [trimmed, searching, searchDocs]);
-  // The declarations search runs beside the documentation's. A failure or an
-  // unavailable provider hides its section and says nothing.
+  // The declarations search runs beside the documentation's. An unavailable
+  // provider hides its section; a failed search says why beside the list,
+  // apart from "no matches".
   const searchingDeclarations =
     pasted === null &&
     trimmed.length >= MIN_QUERY &&
@@ -200,9 +204,18 @@ export function CommandPalette({
       searchDeclarations(trimmed)
         .then(
           (result) =>
-            current && setDeclarations({ ...identity, hits: result.hits }),
+            current &&
+            setDeclarations({ ...identity, hits: result.hits, failure: null }),
         )
-        .catch(() => current && setDeclarations({ ...identity, hits: [] }));
+        .catch(
+          (error: unknown) =>
+            current &&
+            setDeclarations({
+              ...identity,
+              hits: [],
+              failure: failureCode(error),
+            }),
+        );
     }, SEARCH_DEBOUNCE_MS);
     return () => {
       current = false;
@@ -215,6 +228,12 @@ export function CommandPalette({
     declarations.source === searchDeclarations
       ? declarations.hits
       : [];
+  const declarationsFailure =
+    searchingDeclarations &&
+    declarations?.query === trimmed &&
+    declarations.source === searchDeclarations
+      ? declarations.failure
+      : null;
 
   // A completed answer belongs to the query and provider that produced it,
   // including the debounce interval before the next request starts.
@@ -348,6 +367,16 @@ export function CommandPalette({
               </Button>
             </DialogClose>
           </CommandInput>
+          {declarationsFailure !== null && (
+            <p
+              className="palette-note flex shrink-0 items-center gap-2 px-4 py-2.5 text-muted-foreground"
+              role="alert"
+            >
+              {t("desktop.palette.declarations_failed", {
+                code: declarationsFailure,
+              })}
+            </p>
+          )}
           {note && (
             <p
               className="palette-note flex shrink-0 items-center gap-2 px-4 py-2.5 text-muted-foreground"

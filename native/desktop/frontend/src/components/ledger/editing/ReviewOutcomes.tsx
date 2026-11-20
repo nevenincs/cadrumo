@@ -298,7 +298,7 @@ export function Outcomes({ items }: { items: readonly OutcomeItem[] }) {
         <div
           data-outcome={item.outcome.kind}
           data-part={item.head}
-          className="flex h-14 items-center gap-2 border-b border-border px-3"
+          className="flex h-18 items-center gap-2 border-b border-border px-3"
         >
           <Icon
             name={OUTCOME_ICONS[item.outcome.kind]}
@@ -307,7 +307,12 @@ export function Outcomes({ items }: { items: readonly OutcomeItem[] }) {
           />
           <span className="grid min-w-0 flex-1">
             <span className="truncate">{item.title}</span>
-            <span className="truncate text-sm text-muted-foreground">
+            {/* A refusal's reason is a sentence with its remedy: two lines
+                hold it, and the whole of it stays in the title. */}
+            <span
+              className="line-clamp-2 text-sm text-muted-foreground"
+              title={item.note}
+            >
               {item.note}
             </span>
           </span>

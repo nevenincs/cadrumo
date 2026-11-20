@@ -34,6 +34,9 @@ desktop:
       not_signed_in: A válaszhoz jelentkezz be.
       profile_not_eligible: A profilod nem engedi, hogy a dokumentumok elhagyják ezt
         a számítógépet. A profil „Dokumentumolvasás a gépen kívül” beállítása szabályozza.
+      profile_unreadable: A profil „Dokumentumolvasás a gépen kívül” beállítását most
+        nem sikerült elolvasni, ezért semmi sem lett elküldve. Próbáld újra egy pillanat
+        múlva.
       reference_unknown: Az ügynök már nem vár erre a fájlra.
       service_failed: Az engedélyt nem sikerült rögzíteni, ezért semmi sem lett elküldve.
     attachment_refused: Ez a fájl nem lett elküldve. {reason}
@@ -49,8 +52,12 @@ desktop:
     can_write: fájlokat írni
     cancel: Mégse
     capabilities: 'Képes: {list}'
-    carried_turns: Ez a beszélgetés az előző {carried} körével indult; {omitted} régebbi
-      kör kimaradt.
+    carried_from: 'Átvéve innen: {title}'
+    carried_from_unknown: Átvéve egy korábbi beszélgetésből
+    carried_omitted: '{omitted} régebbi kör kimaradt.'
+    carried_omitted_one: '{omitted} régebbi kör kimaradt.'
+    carried_turns: Ez a beszélgetés az előző {carried} körével indult.
+    carried_turns_one: Ez a beszélgetés az előző {carried} körével indult.
     carry_back: Vissza abba a beszélgetésbe
     carry_pending: A következő üzeneted új beszélgetést indít, amely átveszi a(z)
       „{title}” legutóbbi köreit.
@@ -242,11 +249,15 @@ desktop:
     selection_change_asked: 'Ez az üzenet a modellt erről: {previous} erre váltja:
       {requested}.'
     selection_change_confirm: Váltás és küldés
-    selection_change_history: Az új modell {retained} üzenetet kap ebből a beszélgetésből
-      (kb. {tokens} token); {omitted} korábbi üzenet kimarad.
     selection_change_keep: Maradjon a modell
+    selection_change_omitted: '{omitted} korábbi üzenet kimarad.'
+    selection_change_omitted_one: '{omitted} korábbi üzenet kimarad.'
     selection_change_refused: A modell váltásához a megerősítésed kell. Küldd el újra
       az üzenetet.
+    selection_change_retained: Az új modell {retained} üzenetet kap ebből a beszélgetésből
+      (kb. {tokens} token).
+    selection_change_retained_one: Az új modell {retained} üzenetet kap ebből a beszélgetésből
+      (kb. {tokens} token).
     send: Küldés
     send_nothing: Előbb írj üzenetet, vagy adj hozzá fájlt
     send_too_long: Ez az üzenet {count} karakter hosszú; legfeljebb {max} lehet
@@ -307,9 +318,95 @@ desktop:
     stopped: Leállítva
     thinking: Gondolatmenet
     thoughts: Az ügynök gondolatai
+    tool:
+      cadrumo:
+        authority:
+          description: 'Lekérdezi a közzétett adózási referenciaadatokat: modelleket,
+            rovatokat, képleteket és portálokat.'
+          label: Adózási adatok lekérdezése
+        control:
+          description: Elindít, folytat, megszakít vagy leválaszt egy műveletet.
+          label: Művelet vezérlése
+        corpus_search:
+          description: Keres a mellékelt BOE- és AEAT-jogszabályszövegekben és az
+            adózási terminológiában.
+          label: Keresés a jogszabályokban
+        describe:
+          description: Elolvassa, mit csinál egy művelet, és mire van szüksége.
+          label: Művelet leírása
+        execute:
+          description: Elküld egy műveletet a profilodban. Módosíthatja az
+            adataidat.
+          label: Művelet futtatása
+        observe:
+          description: Ellenőrzi, hogyan halad egy elküldött művelet.
+          label: Művelet követése
+        respond:
+          description: Elfogad vagy elutasít egy válaszra váró felülvizsgálatot.
+          label: Válasz egy felülvizsgálatra
+        result:
+          description: Elolvassa egy befejezett művelet eredményét.
+          label: Eredmény olvasása
+        result_page:
+          description: Elolvassa egy befejezett művelet eredményének egy oldalát.
+          label: Eredményoldal olvasása
+        review:
+          description: Elolvas egy olyan felülvizsgálatot, amely a válaszodra vár.
+          label: Felülvizsgálat olvasása
+        search:
+          description: Megkeresi azokat a műveleteket, amelyeket az ügynök
+            a profilodban futtathat.
+          label: Műveletek keresése
+        status:
+          description: Ellenőrzi, melyik profilban engedélyezted az ügynök munkáját,
+            és hogy az alkalmazás elérhető-e.
+          label: Munkamenet ellenőrzése
+        views:
+          description: Megkeresi az ablak azon nézeteit, amelyeket egy hivatkozás
+            megnyithat, és ellenőrzi a hivatkozásokat.
+          label: Nézetek keresése
+      cadrumo_agent_tools:
+        list_attachments:
+          description: Felsorolja a beszélgetéshez csatolt dokumentumokat.
+          label: Mellékletek listázása
+        load_skill:
+          description: Betölti egy képesség utasításait, hogy az ügynök követhesse
+            őket.
+          label: Képesség betöltése
+        read_attachment:
+          description: Elolvas egy dokumentumot, amelyet a beszélgetéshez csatoltál.
+          label: Melléklet olvasása
+        read_conversation_history:
+          description: Elolvassa a beszélgetés korábbi részeit.
+          label: A beszélgetés olvasása
+        read_file:
+          description: Elolvas egy fájlt az ügynök munkaterületén.
+          label: Fájl olvasása
+        read_web_source:
+          description: Megnyit egy weboldalt, és elolvassa.
+          label: Weboldal olvasása
+        resolve_output_path:
+          description: Meghatározza, hová kerül az ügynök által készített fájl.
+          label: Mentési hely kiválasztása
+        run_program:
+          description: Futtat egy programot ezen a számítógépen.
+          label: Program futtatása
+        run_subagent:
+          description: A feladat egy részét átadja egy segédügynöknek.
+          label: Segédügynök indítása
+        search_previous_conversations:
+          description: Keres az ügynökkel folytatott korábbi beszélgetéseidben.
+          label: Korábbi beszélgetések keresése
+        web_search:
+          description: Keres az interneten.
+          label: Keresés az interneten
+        write_file:
+          description: Létrehoz vagy módosít egy fájlt az ügynök munkaterületén.
+          label: Fájl írása
     tool_details: A hívás részletei
     tool_done: Kész
     tool_failed: Sikertelen
+    tool_generic: '{name} eszköz'
     tool_kind_delete: Töröl
     tool_kind_edit: Szerkeszt
     tool_kind_execute: Futtat
@@ -321,7 +418,12 @@ desktop:
     tool_kind_switch_mode: Módot vált
     tool_kind_think: Gondolkodik
     tool_pending: Függőben
+    tool_reach:
+      local_read: Adatokat olvas ezen a számítógépen
+      local_write: Adatokat módosít ezen a számítógépen
+      online: Az internetet használja
     tool_running: Fut
+    tool_unnamed: Egy eszköz
     transcript: Beszélgetés
     transcript_empty: Még nincsenek üzenetek
     unavailable: Még nem érhető el
@@ -330,6 +432,7 @@ desktop:
     upload_name_refused: A neve nem tárolható; nevezd át, és próbáld újra
     upload_quota_exceeded: Ennek a beszélgetésnek a tárhelye megtelt
     upload_too_large: Túl nagy ehhez a beszélgetéshez
+    upload_too_large_limit: 'Túl nagy: a legnagyobb méret {limit}'
     upload_unreadable: Nem sikerült beolvasni
     uploading: Feltöltés
     uploading_name: 'Feltöltés: {name}'

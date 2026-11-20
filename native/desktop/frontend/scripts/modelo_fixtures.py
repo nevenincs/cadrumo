@@ -37,14 +37,18 @@ import ast
 import asyncio
 import hashlib
 import json
+import os
 import re
+import shutil
 import sys
-from collections.abc import AsyncGenerator, Generator, Iterable, Mapping
+import time
+from collections.abc import AsyncGenerator, Callable, Generator, Iterable, Mapping
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from functools import cache
+from functools import cache, partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
@@ -57,6 +61,7 @@ from dev.fixture_projections.typescript_wire_types import (
     reach,
     ts_name,
 )
+from dev.packaging.command_execution import run_command
 from dev.quality.typescript_module_size import MAX_PHYSICAL_LINES
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
@@ -1070,6 +1075,32 @@ def _derived_names(value: Any, found: dict[str, str]) -> None:
             raise SystemExit(f"{key} {raw} is stated differently by two rows, so it cannot be named stably")
 
 
+def _minted_id_finder(raws: Iterable[str]) -> Callable[[str], bool]:
+    """Whether a text holds any of ``raws`` anywhere, in one pass over the text rather than one per id.
+
+    An id can only stand inside a run of the characters ids are made of, so each such run at least as long as the
+    shortest id is searched for every id length it can hold.
+    """
+    wanted = frozenset(raw for raw in raws if raw)
+    if not wanted:
+        return lambda _text: False
+    lengths = sorted({len(raw) for raw in wanted})
+    alphabet = "".join(sorted({character for raw in wanted for character in raw}))
+    runs = re.compile(f"[{re.escape(alphabet)}]{{{lengths[0]},}}")
+
+    def holds(text: str) -> bool:
+        for match in runs.finditer(text):
+            run = match.group()
+            for length in lengths:
+                if length > len(run):
+                    break
+                if any(run[start : start + length] in wanted for start in range(len(run) - length + 1)):
+                    return True
+        return False
+
+    return holds
+
+
 def _name_minted_ids(directory: Path, names: Iterable[str]) -> None:
     """Name every id the envelopes ``names`` in ``directory`` hold that a run mints afresh, the same on every run.
 
@@ -1106,9 +1137,10 @@ def _name_minted_ids(directory: Path, names: Iterable[str]) -> None:
                         f"{_STATED.get(token)}"
                     )
     _MINTED_IDS.update(derived)
+    holds_minted = _minted_id_finder(_MINTED_IDS)
     for name, envelope in envelopes.items():
         text = json.dumps(_with_minted_names(envelope), ensure_ascii=False, separators=(",", ":"))
-        if any(raw in text for raw in _MINTED_IDS):
+        if holds_minted(text):
             raise SystemExit(f"{name} still holds a minted id inside a longer text")
         (directory / name).write_text(text, "utf-8", newline="\n")
 
@@ -1158,7 +1190,7 @@ def _write_form(directory: Path, work: Any, name: str, *, with_help: bool = Fals
     from cadrumo.core.casilla_id import validated_casilla_id
     from cadrumo.core.external_constants import OutputLanguage
 
-    contracts = build_production_operation_registry().public_contract_set
+    contracts = _registry().public_contract_set
     bucket_id = work.work_unit.bucket_id
     profile_id = UUID(bucket_id)
     modelo = str(work.work_unit.modelo)
@@ -2379,25 +2411,6 @@ def _write_borrador_comparisons(directory: Path) -> None:
     box, off = BORRADOR_PRINTED_OFF
     printed = {key: value + (off if key == box else Decimal(0)) for key, value in calculated.items()}
     _borrador_chain(directory, printed)
-
-
-def _write_renta(directory: Path) -> None:
-    """Read every filer's Modelo 100 in every language, and the declarations list of the first filer.
-
-    The married couple is also read for each other supported year, whose own design and registry edition, or the
-    edition it is projected from, decide what the form offers.
-
-    A filer with a calculated first quarter is also read for its projection of the annual return. The profile that
-    holds the Borrador drafts is read for its comparison of each draft with the calculation.
-    """
-    for number, filer in enumerate(RENTA_FILERS):
-        _write_renta_filer(directory, filer, first=number == 0)
-    for year in renta_years():
-        if year != RENTA_YEAR:
-            _write_renta_filer(directory, renta_year_filer(year), first=False)
-    _write_projection_steps(directory)
-    _write_unreached_comparison_refusals(directory)
-    _write_borrador_comparisons(directory)
 
 
 #: The settlement states a result can be in that the filers above do not reach, by name: the result's amount and
@@ -3631,22 +3644,128 @@ def _write_iva_wallet(directory: Path) -> None:
             balance(name)
 
 
-def write_envelopes(directory: Path) -> None:
-    """Read every envelope the scenario host answers through the application's read path, as of one instant."""
-    from cadrumo.core.time.clock import frozen_clock
+#: The scenario parts run at once by an ``envelopes`` step, at most this many, each a process of its own.
+ENVELOPE_WORKERS = max(1, min(12, (os.cpu_count() or 2) - 2))
+#: Where an envelope part writes, below the directory a step writes into, before its envelopes join the others.
+_PART_DIRECTORY = ".parts"
+#: What a part's process records beside its envelopes: the ids it named, its envelopes' profiles and their statements.
+_PART_STATE = "state.json"
 
-    with frozen_clock(scenario_as_of()):
-        _write_scenarios(directory)
+
+def write_envelopes(directory: Path, *, workers: int = ENVELOPE_WORKERS) -> None:
+    """Read every envelope the scenario host answers through the application's read path, as of one instant.
+
+    Each part reads its own profiles, so the parts run as processes of their own, ``workers`` at a time; one worker
+    runs them in this process. The ids every part minted are then named across all the envelopes at once.
+    """
+    directory.mkdir(parents=True, exist_ok=True)
+    parts = envelope_parts()
+    if workers <= 1:
+        for _, part in parts:
+            _write_part(directory, part)
+    else:
+        _write_parts_at_once(directory, tuple(name for name, _ in parts), workers)
     _name_minted_ids(directory, sorted(path.name for path in directory.glob("*.json")))
     pack_envelopes(directory)
 
 
-def _write_scenarios(directory: Path) -> None:
-    from cadrumo.core.time.clock import frozen_clock, now
+def _write_part(directory: Path, part: Callable[[Path], None]) -> None:
+    from cadrumo.core.time.clock import frozen_clock
 
-    directory.mkdir(parents=True, exist_ok=True)
-    write_refusals(directory)
-    _write_iva_wallet(directory)
+    with frozen_clock(scenario_as_of()):
+        part(directory)
+
+
+def _write_parts_at_once(directory: Path, names: tuple[str, ...], workers: int) -> None:
+    """Run each named part in a process of its own, then move its envelopes in and adopt what it named.
+
+    The processes are started with this interpreter and environment, so an observed run observes them too.
+
+    Raises:
+        SystemExit: When a part fails, or two parts write an envelope of the same name.
+    """
+    staging = directory / _PART_DIRECTORY
+    shutil.rmtree(staging, ignore_errors=True)
+
+    def run(name: str) -> int:
+        (staging / name).mkdir(parents=True)
+        started = time.monotonic()
+        script = str(Path(__file__).resolve())
+        result = run_command(
+            [sys.executable, "-B", script, "envelopes", str(staging), "--part", name],
+            cwd=Path.cwd(),
+            inherit_output=True,
+        )
+        sys.stderr.write(f"envelope part {name}: {time.monotonic() - started:.1f}s\n")
+        return result.returncode
+
+    try:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            codes = dict(zip(names, pool.map(run, names), strict=True))
+        failed = [name for name, code in codes.items() if code != 0]
+        if failed:
+            raise SystemExit(f"envelope parts failed: {', '.join(failed)}")
+        for name in names:
+            _adopt_part(directory, staging / name)
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
+
+
+def write_envelope_part(name: str, staging: Path) -> None:
+    """Run the part ``name`` into its own folder in ``staging`` and record what it named beside its envelopes."""
+    part = dict(envelope_parts())[name]
+    _write_part(staging / name, part)
+    state = {"minted": _MINTED_IDS, "profiles": _ENVELOPE_PROFILES, "stated": _STATED}
+    (staging / f"{name}.{_PART_STATE}").write_text(json.dumps(state, ensure_ascii=False), "utf-8", newline="\n")
+
+
+def _adopt_part(directory: Path, own: Path) -> None:
+    """Move a finished part's envelopes into ``directory`` and adopt its named ids and its envelopes' profiles.
+
+    Raises:
+        SystemExit: When an envelope of the part's is already there, or an id it named is named otherwise.
+    """
+    state = json.loads(own.with_name(f"{own.name}.{_PART_STATE}").read_text("utf-8"))
+    for raw, token in state["minted"].items():
+        if _MINTED_IDS.setdefault(raw, token) != token:
+            raise SystemExit(f"{raw} is stated differently by two parts, so it cannot be named stably")
+    _STATED.update(state["stated"])
+    for path in sorted(own.iterdir()):
+        target = directory / path.name
+        if target.exists():
+            raise SystemExit(f"{path.name} is written by two envelope parts")
+        path.replace(target)
+    _ENVELOPE_PROFILES.update(state["profiles"])
+
+
+def envelope_parts() -> tuple[tuple[str, Callable[[Path], None]], ...]:
+    """Every part of the envelopes by name: each reads its own profiles and writes envelopes no other part writes."""
+    renta: list[tuple[str, Callable[[Path], None]]] = [
+        (f"renta-{filer.envelope or 'first'}", partial(_write_renta_filer, filer=filer, first=number == 0))
+        for number, filer in enumerate(RENTA_FILERS)
+    ]
+    renta += [
+        (f"renta-y{year}", partial(_write_renta_filer, filer=renta_year_filer(year), first=False))
+        for year in renta_years()
+        if year != RENTA_YEAR
+    ]
+    return (
+        ("refusals", write_refusals),
+        ("iva-wallet", _write_iva_wallet),
+        ("declarations", _write_declarations_part),
+        ("filed", _write_filed_part),
+        ("income", _write_income_part),
+        ("renewal", _write_renewal_part),
+        ("stale", _write_stale_part),
+        *renta,
+        ("projection-steps", _write_projection_steps),
+        ("comparison-refusals", _write_unreached_comparison_refusals),
+        ("borrador", _write_borrador_comparisons),
+    )
+
+
+def _write_declarations_part(directory: Path) -> None:
+    """The activity persona's declarations read, checked and edited in one profile."""
     with (
         scratch_tree() as tmp,
         _seeded(Path(tmp)) as first,
@@ -3677,7 +3796,10 @@ def _write_scenarios(directory: Path) -> None:
         _write_prerequisite(directory, first)
         _write_303_edits(directory, works["303"])
         _write_unverified_export(directory, first, Path(tmp) / "modelo-165.txt")
-    # Its own profile: recording needs the earlier Renta filed under the persona's tax id.
+
+
+def _write_filed_part(directory: Path) -> None:
+    """Its own profile: recording needs the earlier Renta filed under the persona's tax id."""
     with (
         scratch_tree() as tmp,
         _seeded(Path(tmp)) as filed,
@@ -3691,16 +3813,28 @@ def _write_scenarios(directory: Path) -> None:
         _write_form(directory, filed, "modelo-130-1T-receipt")
         unit = _write_filing_reads(directory, filed, "130-receipt")
         _write_correction_chain(directory, filed, unit.current_filing_record_id)
-    # Its own profile: the persona's ledger carries the quarter's income and the declaration is calculated, never
-    # checked or filed. It records no estimation regime, so its form shows what that leaves it waiting on.
+
+
+def _write_income_part(directory: Path) -> None:
+    """Its own profile, whose ledger carries the quarter's income and whose declaration is calculated only.
+
+    It records no estimation regime, so its form shows what that leaves it waiting on.
+    """
     with (
         scratch_tree() as tmp,
         _seeded(Path(tmp), stated=UNREGIMED) as booked,
     ):
         booked.recalculate()
         _write_form(directory, booked, "modelo-130-1T-income")
-    # Its own profile, on a frozen timeline: calculated now, a review half an hour after the form was read, and its
-    # renewal, forty minutes on.
+
+
+def _write_renewal_part(directory: Path) -> None:
+    """Its own profile, on a frozen timeline: calculated, reviewed half an hour after the form was read, renewed.
+
+    The renewal is forty minutes on.
+    """
+    from cadrumo.core.time.clock import frozen_clock, now
+
     with (
         scratch_tree() as tmp,
         _seeded(Path(tmp)) as renewing,
@@ -3709,7 +3843,10 @@ def _write_scenarios(directory: Path) -> None:
         with frozen_clock(started - timedelta(minutes=40)):
             renewing.recalculate()
         _write_renewal_flow(directory, renewing, started)
-    # Its own profile: the file is written, then a conflicting edit makes it stale and blocks verification.
+
+
+def _write_stale_part(directory: Path) -> None:
+    """Its own profile: the file is written, then a conflicting edit makes it stale and blocks verification."""
     with (
         scratch_tree() as tmp,
         _seeded(Path(tmp)) as stale,
@@ -3723,7 +3860,6 @@ def _write_scenarios(directory: Path) -> None:
         _check_refused_on_divergence(stale)
         _write_form(directory, stale, "modelo-130-1T-stale")
         _write_rebase(directory, stale)
-    _write_renta(directory)
 
 
 # -- stored envelopes -----------------------------------------------------------
@@ -3955,6 +4091,15 @@ def main() -> int:
     parser.add_argument(
         "--definitions", action="store_true", help="With `validate`, check the host's admitted list and no envelope."
     )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=ENVELOPE_WORKERS,
+        help="With `envelopes`, how many parts run at once, each in its own process; 1 runs them in this one.",
+    )
+    parser.add_argument(
+        "--part", help="With `envelopes`, run only this part into its own folder of the directory, as a worker."
+    )
     args = parser.parse_args()
     if args.step == "contract":
         sys.stdout.write(json.dumps({"bound": MAX_PHYSICAL_LINES, "modules": render_contract()}, ensure_ascii=False))
@@ -3965,8 +4110,11 @@ def main() -> int:
     if args.step == "validate":
         return validate(None if args.definitions else args.directory, envelopes=not args.definitions)
     directory = args.directory if args.directory is not None else family_directory(ENVELOPE_FAMILY)
+    if args.step == "envelopes" and args.part is not None:
+        write_envelope_part(args.part, directory)
+        return 0
     if args.step == "envelopes":
-        write_envelopes(directory)
+        write_envelopes(directory, workers=args.workers)
         return 0
     pack_envelopes(directory)
     return 0

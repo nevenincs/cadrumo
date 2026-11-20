@@ -39,6 +39,7 @@ RELAYED: Final[Mapping[str, tuple[str, Callable[[], Mapping[str, Any]]]]] = {
     "ThreadStatus": ("./agentGatewayContract", agent_definitions),
     "ToolCallStatus": ("./agentGatewayContract", agent_definitions),
     "ToolKind": ("./agentGatewayContract", agent_definitions),
+    "ToolReach": ("./agentGatewayContract", agent_definitions),
 }
 """The agent definitions a host field relays unchanged: the generated module that defines each, and the
 schema it is read from there."""

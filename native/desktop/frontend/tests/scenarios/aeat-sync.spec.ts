@@ -939,3 +939,21 @@ for (const [scenario, days, state, key, icon] of [
       );
     }
   });
+
+test("a cancel of the wait for the phone that fails says why and keeps the wait", async ({
+  page: target,
+}) => {
+  const page = await open(target, "aeat-sync-phone");
+  await update(page).click();
+  const phone = page.getByTestId("aeat-sync-phone");
+  await target.evaluate(() =>
+    window.__scenarioAeatPhone!.failNextCancel("host_unavailable"),
+  );
+  await button(phone, "desktop.aeat_sync.before.cancel").click();
+  await expect(phone.getByRole("alert")).toHaveText(
+    label("desktop.aeat_sync.before.cancel_failed", {
+      code: "host_unavailable",
+    }),
+  );
+  await expect(phone).toBeVisible();
+});

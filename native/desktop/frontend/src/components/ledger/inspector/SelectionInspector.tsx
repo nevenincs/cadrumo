@@ -84,6 +84,12 @@ import {
   modelFailureText,
   skipName,
 } from "./inspectorWords";
+import { ConsentRemedies } from "./ConsentRemedies";
+import {
+  consentStepOf,
+  modelRefusalOfOutcome,
+  type ModelRefusal,
+} from "./modelRefusal";
 import { useLedgerRead } from "./useInspectorReads";
 import {
   useFieldSuggestions,
@@ -134,6 +140,8 @@ type Asked = {
   review: LedgerReview<LedgerLlmReviewProjection> | null;
   /** The runtime's code, or `no_review` or `refused` where it gave none. */
   failed: string | null;
+  /** The sentence and step the backend served for the refusal, where it did. */
+  refusal?: ModelRefusal | null;
 };
 
 /**
@@ -498,6 +506,7 @@ export function SelectionInspector({
               outcome.kind === "refused"
                 ? (outcome.reason ?? "refused")
                 : "no_review",
+            refusal: modelRefusalOfOutcome(outcome),
           };
         else
           entry = {
@@ -949,7 +958,10 @@ export function SelectionInspector({
                         </span>
                       ) : (
                         entry.failed !== null && (
-                          <AskedFailure code={entry.failed} />
+                          <AskedFailure
+                            code={entry.failed}
+                            refusal={entry.refusal}
+                          />
                         )
                       )}
                       <span className="flex flex-wrap gap-2">
@@ -1015,11 +1027,19 @@ export function SelectionInspector({
 }
 
 /** Why the model gave nothing to read for one movement, in words. */
-function AskedFailure({ code }: { code: string }) {
+function AskedFailure({
+  code,
+  refusal,
+}: {
+  code: string;
+  refusal?: ModelRefusal | null;
+}) {
   const t = useStrings();
+  const consent = consentStepOf(refusal);
   return (
     <span className="grid gap-0.5" data-code={code}>
-      {modelFailureText(t, code)}
+      {refusal?.words ?? modelFailureText(t, code)}
+      {consent !== null && <ConsentRemedies step={consent} />}
     </span>
   );
 }

@@ -146,9 +146,7 @@ test("a clean reading is confirmed only with a kind and a country, then offers i
   // A country the person clears is theirs to give again, and holds the
   // confirmation until they do.
   const country = draft(target).locator(".ledger-draft-country");
-  await country.click();
-  await target.keyboard.press("ControlOrMeta+a");
-  await target.keyboard.press("Backspace");
+  await country.fill("");
   await expect(country).toHaveValue("");
   await expect(holds).toContainText(
     label("desktop.ledger.documents.hold.country"),
@@ -808,7 +806,7 @@ const paused = (target: Page) =>
   target.locator(".ledger-page .ledger-paused [role=alert]");
 const pauseFindings = (target: Page) =>
   target.locator(".ledger-page .ledger-findings");
-const nextWrites = (target: Page, outcomes: "unknown"[]) =>
+const nextWrites = (target: Page, outcomes: ("unknown" | "lost")[]) =>
   target.evaluate(
     (next) =>
       (
@@ -971,4 +969,81 @@ test("readers say the local AI as setup reports it, and offer nothing when it is
     label("desktop.ledger.documents.reader.unavailable"),
   );
   await expect(readers.locator(".setup-offer")).toHaveCount(0);
+});
+
+/** Makes the page's reads of `definition` reject with `code` from now on. */
+const rejectReads = (target: Page, definition: string, code: string) =>
+  target.evaluate(
+    ([wanted, why]) => {
+      const port = window.__fixtureLedger!;
+      const submit = port.submit.bind(port);
+      port.submit = (asked, ...rest) =>
+        asked === wanted
+          ? Promise.reject({ code: why })
+          : submit(asked, ...rest);
+    },
+    [definition, code] as const,
+  );
+
+test("a check of a confirmation that cannot read the queue says so instead of leaving the same notice", async ({
+  page: target,
+}) => {
+  await openDocuments(target);
+  await choose(target, DOMESTIKA);
+  await kind(target, "received");
+  await draft(target).locator(".ledger-draft-reread").click();
+  await expect(draft(target).locator(".ledger-draft-reread")).toBeEnabled();
+  // Sent and never run: the reading still waits in the queue, so the draft
+  // stays open once the queue is read again.
+  await nextWrites(target, ["lost"]);
+  await draft(target).locator(".ledger-draft-confirm").click();
+  await expect(draft(target).locator(".ledger-draft-check")).toBeVisible();
+  // The check reads the queue, then the pause's re-read does; neither is
+  // answered. The queue's own read after that re-read is.
+  await target.evaluate(() =>
+    window.__scenarioLedger!.nextReads("ledger.evidence.review.list", 2),
+  );
+  await draft(target).locator(".ledger-draft-check").click();
+  await expect(draft(target).locator(".ledger-draft-check-failed")).toHaveText(
+    label("desktop.ledger.documents.check_failed", { code: "unavailable" }),
+  );
+  await expect(paused(target)).toBeVisible();
+  await expect(
+    draft(target).getByRole("heading", { name: DOMESTIKA }),
+  ).toBeVisible();
+});
+
+test("a check of a record correction that cannot read the record says so", async ({
+  page: target,
+}) => {
+  await openDocuments(target);
+  await tab(target, "records").click();
+  await section(target)
+    .locator(".ledger-record-item")
+    .filter({ hasText: ARROYO })
+    .click();
+  const detail = section(target).locator(".ledger-record");
+  await detail
+    .getByLabel(label("desktop.ledger.documents.record.supplier"))
+    .fill("Arroyo Asesores SL");
+  await nextWrites(target, ["unknown"]);
+  await detail.locator(".ledger-record-save").click();
+  await expect(
+    detail.getByRole("button", {
+      name: label("desktop.ledger.documents.check"),
+      exact: true,
+    }),
+  ).toBeVisible();
+  await rejectReads(target, "ledger.evidence.view", "host_unavailable");
+  await detail
+    .getByRole("button", {
+      name: label("desktop.ledger.documents.check"),
+      exact: true,
+    })
+    .click();
+  await expect(detail.locator(".ledger-record-check-failed")).toHaveText(
+    label("desktop.ledger.documents.check_failed", {
+      code: "host_unavailable",
+    }),
+  );
 });

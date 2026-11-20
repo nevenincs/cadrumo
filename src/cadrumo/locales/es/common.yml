@@ -1116,6 +1116,8 @@ desktop:
       browser_title: Navegador no instalado
       browser_why: Hace falta para actualizar desde la AEAT.
       cancel: Cancelar
+      cancel_failed: No se pudo cancelar el inicio de sesión ({code}). Inténtalo de
+        nuevo o cierra esta ventana.
       checking: Comprobando…
       ended_body: Tu acceso a la AEAT ha terminado.
       ended_sign_in: Iniciar sesión de nuevo
@@ -2486,6 +2488,8 @@ desktop:
         refused: No aceptado
       cancel: Cancelar
       check: Comprobar
+      check_failed: No se pudo comprobar el resultado ({code}). Sigue sin saberse.
+        Pulsa Comprobar de nuevo.
       checked_not_saved: No se guardó.
       checked_saved: Se guardó.
       choose_files: Elegir archivos…
@@ -2904,6 +2908,8 @@ desktop:
       too_short: Selecciona primero dos filas o más y rellena hacia abajo
     filters:
       account: Cuenta
+      accounts_unread: No se pudieron leer tus cuentas ({code}), así que no hay ninguna
+        para elegir. Inténtalo de nuevo.
       active: '{count} activos'
       any: Cualquiera
       classification: Clasificación
@@ -3341,8 +3347,14 @@ desktop:
         updated: Actualizado
       file_row: '{file}, fila {row}'
       fix:
-        derive: Calcular importes
+        derive_already: El cálculo ya está entre tus cambios sin guardar.
+        derive_from_category: Calcular con la categoría de IVA
+        derive_needs_category: 'Elige primero la categoría de IVA: los importes se
+          calculan a partir de ella.'
         go: Corregir
+        locked: 'No se puede cambiar {field}: {reason}'
+        unreachable: No se puede abrir {field} desde aquí. Búscalo entre los campos
+          de más abajo y selecciónalo.
       from_booked_date: la fecha contable
       from_value_date: la fecha valor
       fx_rate: Tipo {rate}
@@ -3409,6 +3421,9 @@ desktop:
         description: Todas las partes vuelven al movimiento del que se dividieron.
         title: Unir {count} partes
       missing: Lo que aún falta
+      missing_why: Sin estos datos, este movimiento no entra en el cálculo del IVA.
+        Puedes escribir cada dato o calcularlo; nada se guarda hasta que revises los
+        cambios.
       mode: Panel
       mode_match: Por vincular
       mode_movement: Movimiento
@@ -3454,6 +3469,8 @@ desktop:
       nothing: Selecciona un movimiento para verlo aquí.
       panel: Detalle del movimiento
       panel_match: Movimientos por vincular
+      period_unread: No se pudo leer el trimestre de la nueva fecha ({code}), así
+        que no se muestra si cambia de trimestre. Inténtalo de nuevo.
       ratio_missing: 'Ninguna: Mixto necesita una antes de calcular'
       ratio_not_needed: No hace falta
       read_as: Leído como
@@ -3995,6 +4012,8 @@ desktop:
       next: Periodo siguiente
       of_year: Periodos de {year}
       previous: Periodo anterior
+      unread: No se pudieron leer los periodos ({code}), así que no se lista ninguno.
+        Inténtalo de nuevo.
       year_next: Año siguiente
       year_previous: Año anterior
       years_supported: Ejercicios que puedes consultar
@@ -4907,10 +4926,62 @@ desktop:
       unknown_view: Este enlace lleva a una vista que esta versión de Cadrumo no tiene.
       uppercase: Este enlace no es válido.
     sign_in: Inicia sesión para abrir {view}.
+  operations:
+    cancellation_requested: Cancelación solicitada
+    count: Mostrando {shown} de {total} ejecuciones
+    effect:
+      none: Ninguno
+      partial: Parcial
+      unknown: Desconocido
+      updated: Actualizado
+    empty: Este perfil no tiene ejecuciones registradas.
+    error_code: Código de error {code}
+    failed: El historial no está disponible ({code}).
+    field_effect: Efecto
+    field_outcome: Resultado
+    lifecycle:
+      cancellation_requested: Cancelación solicitada
+      created: Creada
+      queued: En cola
+      running: En ejecución
+      settling: Cerrándose
+      terminal: Terminada
+      waiting_for_external: Esperando a un tercero
+      waiting_for_interaction: Esperando tu respuesta
+    loading: Leyendo el historial…
+    loading_more: Leyendo más ejecuciones…
+    more_failed: No hay más ejecuciones disponibles ({code}).
+    orientation: 'Las ejecuciones registradas para este perfil, de la más reciente
+      a la más antigua. Esta página solo las lista: nunca ejecuta, reintenta ni cancela
+      nada.'
+    outcome:
+      cancelled: Cancelada
+      failed: Fallida
+      interrupted: Interrumpida
+      refused: Rechazada
+      succeeded: Correcta
+      timed_out: Tiempo agotado
+    phase: Fase {phase}
+    read_again: Leer de nuevo
+    refresh: Actualizar
+    refusal_ref: Referencia del rechazo {ref}
+    result_not_stored: Sin resultado guardado
+    result_stored: Resultado guardado
+    settled: Cerrada {time}
+    show_more: Mostrar más
+    shown_on: Se muestra en
+    signed_out: Inicia sesión para ver el historial de operaciones.
+    started: Iniciada {time}
+    title: Operaciones
+    unreadable: 'Registros que no se pudieron leer: {count}.'
+    unverifiable: 'Registros que no se pudieron confirmar como de este perfil: {count}.'
+    updated: Actualizada {time}
   palette:
     actions: Acciones
     close: Cerrar la búsqueda
     copy_link: Copiar el enlace a esta vista
+    declarations_failed: No se pudieron buscar tus declaraciones ({code}). Se muestran
+      los demás resultados. Escribe de nuevo para reintentar.
     documentation: Documentación
     hide_view: Ocultar {view}
     keywords:
@@ -10766,6 +10837,8 @@ workspace:
       saved: Guardado como {name}. No es prueba de presentación.
       show_filed_file: Mostrar el fichero presentado
       show_in_folder: Mostrar en la carpeta
+      show_in_folder_failed: El archivo se guardó, pero no se pudo mostrar en su carpeta
+        ({code}). Abre la carpeta para encontrarlo.
       title: Exportar y registrar
     filter:
       all: todas las casillas

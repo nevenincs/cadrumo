@@ -145,11 +145,13 @@ test("choosing another lane leaves the conversation, and the next message carrie
   // What the agent counted of the source's turns is shown, and the pending
   // notice is gone.
   const carried = 1;
+  // One turn carried and one left out: both are said in the singular.
+  expect(TURNS - carried).toBe(1);
   await expect(notice(target, "carried")).toContainText(
-    label("desktop.agent.carried_turns", {
-      carried,
-      omitted: TURNS - carried,
-    }),
+    label("desktop.agent.carried_turns_one", { carried }),
+  );
+  await expect(notice(target, "carried")).toContainText(
+    label("desktop.agent.carried_omitted_one", { omitted: TURNS - carried }),
   );
   await expect(notice(target, "carry-pending")).toHaveCount(0);
 
@@ -264,17 +266,26 @@ test("a change of model within the lane waits on the person, and is acknowledged
   // The message is given back, and the agent's facts are said.
   const asked = notice(target, "selection-change");
   await expect(asked).toBeVisible();
-  await expect(asked).toContainText("fixture-deep");
-  await expect(asked).toContainText("fixture-quick");
+  // Both models are named as the picker names them, not by their ids.
+  const names = (id: string) =>
+    laneOf(RAN).catalog.models?.find((held) => held.model === id)
+      ?.display_name ?? id;
+  expect(names("fixture-deep")).not.toBe("fixture-deep");
+  await expect(asked).toContainText(names("fixture-deep"));
+  await expect(asked).toContainText(names("fixture-quick"));
+  await expect(asked).not.toContainText("fixture-deep");
+  await expect(asked).not.toContainText("fixture-quick");
   const tokens = Math.ceil(
     MESSAGES.reduce((sum, message) => sum + message.text.length, 0) / 4,
   );
   await expect(asked).toContainText(
-    label("desktop.agent.selection_change_history", {
+    label("desktop.agent.selection_change_retained", {
       retained: MESSAGES.length,
       tokens: THOUSANDS.format(tokens),
-      omitted: 0,
     }),
+  );
+  await expect(asked).toContainText(
+    label("desktop.agent.selection_change_omitted", { omitted: 0 }),
   );
   await expect(messageField(target)).toHaveValue(text);
   await expect(personTurns(target)).toHaveCount(2);

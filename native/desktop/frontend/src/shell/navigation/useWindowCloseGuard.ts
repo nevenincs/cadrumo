@@ -31,7 +31,9 @@ export function useWindowCloseGuard(
         if (current) release = stop;
         else stop();
       })
-      .catch(() => undefined);
+      // Unregistered, a close would not wait for unsaved work: said as the
+      // window's one internal failure.
+      .catch(notifyInternalFailure);
     return () => {
       current = false;
       release?.();

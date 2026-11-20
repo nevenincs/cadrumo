@@ -1299,3 +1299,56 @@ test("a cell that draws nothing is named empty and no cell is named by its gener
   for (const cell of named.filter((found) => found.drawn))
     expect(cell.name).toBeNull();
 });
+
+test("an own-accounts read that fails says so in the filters instead of offering no accounts", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await target.evaluate(() => {
+    const port = window.__fixtureLedger!;
+    const submit = port.submit.bind(port);
+    port.submit = (definition, ...rest) =>
+      definition === "ledger.own_account"
+        ? Promise.reject({ code: "host_unavailable" })
+        : submit(definition, ...rest);
+  });
+  await page(target)
+    .getByRole("button", { name: label("desktop.ledger.filters.title") })
+    .click();
+  await expect(
+    target.locator(".ledger-filters").getByRole("alert"),
+  ).toContainText(
+    label("desktop.ledger.filters.accounts_unread", {
+      code: "host_unavailable",
+    }),
+  );
+});
+
+test("a read of a year's periods that fails says so in the period menu instead of staying blank", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await target.evaluate(() => {
+    const port = window.__fixtureLedger!;
+    const submit = port.submit.bind(port);
+    port.submit = (definition, ...rest) =>
+      definition === "ledger.entry-options"
+        ? Promise.reject({ code: "host_unavailable" })
+        : submit(definition, ...rest);
+  });
+  await head(target).locator(".ledger-period").click();
+  const periods = target.getByRole("dialog", {
+    name: label("desktop.ledger.period.choose"),
+  });
+  const years = 12;
+  for (let step = 0; step < years; step += 1)
+    await periods
+      .getByRole("button", {
+        name: label("desktop.ledger.period.year_previous"),
+        exact: true,
+      })
+      .click();
+  await expect(periods.getByRole("alert")).toContainText(
+    label("desktop.ledger.period.unread", { code: "host_unavailable" }),
+  );
+});
