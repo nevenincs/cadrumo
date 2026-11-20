@@ -566,7 +566,10 @@ pub fn pending_of(run: &str, status: &Value, history: &Value) -> Pending {
                 .frame(&frame.to_string())
                 .into_iter()
                 .find_map(|step| match step {
-                    Step::Emit(StreamEvent::Approval { approval, .. }) => Some(approval),
+                    Step::Emit(event) => match *event {
+                        StreamEvent::Approval { approval, .. } => Some(approval),
+                        _ => None,
+                    },
                     _ => None,
                 })
         })
@@ -1533,7 +1536,7 @@ fn pump(
                 for step in steps {
                     match step {
                         Step::Emit(event) => {
-                            let _ = channel.send(event);
+                            let _ = channel.send(*event);
                         }
                         Step::ReadQuestionnaire(request) => {
                             let event = client
@@ -1571,7 +1574,7 @@ fn pump(
 fn emit(channel: &Channel<StreamEvent>, steps: Vec<Step>) {
     for step in steps {
         if let Step::Emit(event) = step {
-            let _ = channel.send(event);
+            let _ = channel.send(*event);
         }
     }
 }
