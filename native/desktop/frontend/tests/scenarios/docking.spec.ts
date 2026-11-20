@@ -87,6 +87,60 @@ test("tabs, splits and floating keep one mounted terminal", async ({
   await expect(page.locator('[data-terminal="console"]')).toHaveCount(1);
 });
 
+test("the floating panel's move handle says how it moves on a press and announces a keyboard move", async ({
+  page,
+}) => {
+  await arrange(page, "console", "desktop.dock.float");
+  const move = header(page, "console").getByRole("button", {
+    name: label("desktop.dock.move"),
+  });
+  const before = (await content(page, "console").boundingBox())!;
+  const hint = page
+    .locator('[data-slot="toast"]')
+    .filter({ hasText: label("desktop.dock.move_hint") });
+  await expect(hint).toHaveCount(0);
+  // A press that drags nothing leaves the panel where it is and says how the
+  // handle moves it.
+  await move.click();
+  await expect(hint).toBeVisible();
+  expect(await content(page, "console").boundingBox()).toEqual(before);
+  // A drag moves the panel and is no press.
+  await page.reload();
+  await expect(move).toBeVisible();
+  await expect(hint).toHaveCount(0);
+  const handle = (await move.boundingBox())!;
+  await page.mouse.move(
+    handle.x + handle.width / 2,
+    handle.y + handle.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    handle.x + handle.width / 2 + 60,
+    handle.y + handle.height / 2 + 40,
+    { steps: 4 },
+  );
+  await page.mouse.up();
+  const dragged = (await content(page, "console").boundingBox())!;
+  expect(dragged.x).toBeGreaterThan(before.x);
+  await expect(hint).toHaveCount(0);
+  // Enter, a keyboard press, says it too; an arrow moves the panel and the
+  // move is announced.
+  await move.focus();
+  await page.keyboard.press("Enter");
+  await expect(hint).toBeVisible();
+  await page.keyboard.press("ArrowDown");
+  expect((await content(page, "console").boundingBox())!.y).toBeGreaterThan(
+    dragged.y,
+  );
+  await expect(
+    page.getByRole("status").filter({
+      hasText: label("desktop.dock.drag_moved", {
+        pane: label("desktop.rail.console"),
+      }),
+    }),
+  ).toHaveCount(1);
+});
+
 test("dragging a tab into another group moves it without duplication", async ({
   page,
 }) => {

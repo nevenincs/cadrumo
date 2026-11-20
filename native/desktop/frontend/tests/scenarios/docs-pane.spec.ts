@@ -80,6 +80,62 @@ test("the documentation pane offers visible Back and Forward controls", async ({
   await expect(forward).toHaveCount(0);
 });
 
+test("Back and Forward follow a move the documentation page made on its own", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await target
+    .getByRole("navigation", { name: label("desktop.rail.label") })
+    .getByRole("button", { name: label("desktop.rail.docs"), exact: true })
+    .click();
+  const frame = target.frameLocator(".docs-frame");
+  // The frame's own window, which keeps its identity across the page's
+  // navigations.
+  const docs = async () =>
+    (await (await target
+      .locator(".docs-frame")
+      .elementHandle())!.contentFrame())!;
+  const head = target.locator('[data-dock-header="docs"]');
+  const back = head.getByRole("button", {
+    name: label("desktop.action.docs_back"),
+    exact: true,
+  });
+  const forward = head.getByRole("button", {
+    name: label("desktop.action.docs_forward"),
+    exact: true,
+  });
+  await expect(frame.locator("h1")).toHaveText("Stand-in documentation");
+  await frame.getByRole("link", { name: "Second page" }).click();
+  await expect(frame.locator("h1")).toHaveText("Second page");
+  await expect(back).toBeEnabled();
+  // The page goes back by itself, as its own script or the mouse's back
+  // button does, without the window asking: on the first page again there is
+  // nothing behind it, and the second page lies ahead.
+  await (await docs()).evaluate(() => window.history.back());
+  await expect(frame.locator("h1")).toHaveText("Stand-in documentation");
+  await expect(back).toBeDisabled();
+  await expect(forward).toBeEnabled();
+  await (await docs()).evaluate(() => window.history.forward());
+  await expect(frame.locator("h1")).toHaveText("Second page");
+  await expect(back).toBeEnabled();
+  await expect(forward).toBeDisabled();
+  // A link to the page already visited is a new page, not a move back: Back
+  // still has two pages behind it.
+  await frame
+    .getByRole("link", { name: "Stand-in documentation", exact: true })
+    .last()
+    .click();
+  await expect(frame.locator("h1")).toHaveText("Stand-in documentation");
+  await expect(back).toBeEnabled();
+  await expect(forward).toBeDisabled();
+  await back.click();
+  await expect(frame.locator("h1")).toHaveText("Second page");
+  await back.click();
+  await expect(frame.locator("h1")).toHaveText("Stand-in documentation");
+  await expect(back).toBeDisabled();
+  await expect(forward).toBeEnabled();
+});
+
 test("documentation search and navigation do not depend on URL.origin", async ({
   page: target,
 }) => {

@@ -68,22 +68,36 @@ export type DocsSearchResult = {
 
 // Documentation page to shell.
 
-export type DocsReady = BridgeEnvelope<"ready"> & {
-  url: string;
-  title: string;
-  lang: string;
-  theme: DocsTheme;
-  /**
-   * Absent on pages that predate the optional capabilities; enable a
-   * feature only when listed.
-   */
-  features?: BridgeFeature[];
+/**
+ * Where the page's history entry stands, sent with `ready` and `location` by
+ * pages that report it: `entry` is its place in the frame's own history from
+ * 0, and `traversed` is true when the page came back to an entry it already
+ * had (Back, Forward or a reload) and false for a new entry, which drops the
+ * entries that lay ahead. Absent on pages that predate it.
+ */
+export type DocsEntryPlace = {
+  entry?: number;
+  traversed?: boolean;
 };
 
-export type DocsLocation = BridgeEnvelope<"location"> & {
-  url: string;
-  title: string;
-};
+export type DocsReady = BridgeEnvelope<"ready"> &
+  DocsEntryPlace & {
+    url: string;
+    title: string;
+    lang: string;
+    theme: DocsTheme;
+    /**
+     * Absent on pages that predate the optional capabilities; enable a
+     * feature only when listed.
+     */
+    features?: BridgeFeature[];
+  };
+
+export type DocsLocation = BridgeEnvelope<"location"> &
+  DocsEntryPlace & {
+    url: string;
+    title: string;
+  };
 
 export type DocsThemeReport = BridgeEnvelope<"theme"> & { theme: DocsTheme };
 

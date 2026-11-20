@@ -85,6 +85,7 @@ export function DockWorkspace({
   onFullscreen,
   onNarrowed,
   onResetLayout,
+  onNotice,
   cancelDrag = false,
   empty,
 }: {
@@ -112,6 +113,8 @@ export function DockWorkspace({
    * draw, so it is drawn stacked; an arrangement choice there does nothing. */
   onNarrowed?: (panes: readonly DockPane[]) => void;
   onResetLayout?: () => void;
+  /** Shows a brief message to the person, as the window's toast. */
+  onNotice: (text: string) => void;
   cancelDrag?: boolean;
   empty: ReactNode;
 }) {
@@ -293,7 +296,10 @@ export function DockWorkspace({
     y: number;
     rect: DockRect;
     resize: boolean;
+    moved: boolean;
   } | null>(null);
+  /** Whether the last pointer press on a move handle dragged the panel. */
+  const pressMoved = useRef(false);
   const floating = layout.floating.filter((item) =>
     visible.includes(item.pane),
   );
@@ -657,6 +663,7 @@ export function DockWorkspace({
                     y: event.clientY,
                     rect: item.rect,
                     resize: false,
+                    moved: false,
                   };
                   onChange((current) => activateDockPane(current, item.active));
                 }}
@@ -669,6 +676,13 @@ export function DockWorkspace({
                     !event.currentTarget.hasPointerCapture(event.pointerId)
                   )
                     return;
+                  // A hand's tremor is still a press, not a drag.
+                  if (
+                    Math.abs(event.clientX - held.x) +
+                      Math.abs(event.clientY - held.y) >
+                    3
+                  )
+                    held.moved = true;
                   const rect = clampDockRect({
                     ...held.rect,
                     x: held.rect.x + (event.clientX - held.x) / bounds.width,
@@ -682,10 +696,17 @@ export function DockWorkspace({
                   }));
                 }}
                 onPointerUp={() => {
+                  pressMoved.current = gesture.current?.moved ?? false;
                   gesture.current = null;
                 }}
                 onLostPointerCapture={() => {
                   gesture.current = null;
+                }}
+                // A press that moved nothing, by pointer or by Enter or
+                // Space, says how the handle moves the panel.
+                onClick={(event) => {
+                  if (event.detail > 0 && pressMoved.current) return;
+                  onNotice(t("desktop.dock.move_hint"));
                 }}
                 onKeyDown={(event) => {
                   const x =
@@ -702,6 +723,9 @@ export function DockWorkspace({
                         : 0;
                   if (!x && !y) return;
                   event.preventDefault();
+                  setAnnouncement(
+                    t("desktop.dock.drag_moved", { pane: title(item.active) }),
+                  );
                   onChange((current) => ({
                     ...current,
                     floating: current.floating.map((entry) =>
