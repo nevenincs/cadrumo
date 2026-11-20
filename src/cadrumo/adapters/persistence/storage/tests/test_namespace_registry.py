@@ -110,6 +110,7 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "ledger_confirmation_record",
     "ledger_confirmed_counterparty_facts",
     "ledger_classification_rules",
+    "ledger_classification_jobs",
     "ledger_own_accounts",
     "live_borrador_100_snapshot",
     "live_m036_declaration",
@@ -226,6 +227,22 @@ def test_secure_object_registry_names_the_credit_resolution_namespace() -> None:
     assert resolution.object_key_grammar == "credit-resolution:{modelo}:{filing_year}:{period}:{finding_key}"
     assert resolution.scope is StorageNamespaceScope.PROFILE_LOCAL
     assert resolution.custody_disposition is StorageCustodyDisposition.STRUCTURED_CUSTODY
+
+
+def test_secure_object_registry_names_the_classification_job_namespace() -> None:
+    """A classification job names movements and holds typed proposals: FINANCIAL, bucket-local, full custody only."""
+    from ..secure_object_namespaces import LEDGER_CLASSIFICATION_JOBS_NAMESPACE
+
+    jobs = lookup_namespace_definition("ledger_classification_jobs")
+
+    assert jobs == LEDGER_CLASSIFICATION_JOBS_NAMESPACE
+    assert jobs.namespace == "cadrumo.application.ledger.classification_jobs"
+    assert jobs.owner == "cadrumo.application.ledger"
+    assert jobs.sensitivity is SensitivityClass.FINANCIAL
+    assert jobs.schema_version == 1
+    assert jobs.object_key_grammar == "classification-job:{bucket_id}:{job_id}"
+    assert jobs.scope is StorageNamespaceScope.BUCKET_LOCAL
+    assert jobs.custody_disposition is StorageCustodyDisposition.FULL_CUSTODY_ONLY
 
 
 def test_secure_object_registry_names_m145_communication_record_namespace() -> None:

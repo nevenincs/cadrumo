@@ -151,3 +151,11 @@ class ClassificationRuleError(TransactionError):
     Pydantic field validators translate this registered failure to
     ``ValueError`` at their narrow protocol boundary.
     """
+
+
+class ClassificationJobError(TransactionError):
+    """Raised when a ledger classification job record or one of its transitions is invalid.
+
+    Pydantic validators translate this registered failure to ``ValueError`` at
+    their narrow protocol boundary; a transition method raises it directly.
+    """

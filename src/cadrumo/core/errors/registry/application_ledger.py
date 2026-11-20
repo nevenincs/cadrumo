@@ -309,6 +309,36 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.ledger.classification_job_repository.ClassificationJobPersistenceError",
+        ErrorCode(
+            code="FAIL_CLASSIFICATION_JOB_PERSISTENCE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_storage_persistence",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.classification_job_repository.ClassificationJobRevisionConflictError",
+        ErrorCode(
+            code="FAIL_CLASSIFICATION_JOB_REVISION_CONFLICT",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_storage_secure_object_revision_conflict",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.classification_job_repository.ClassificationJobNotFoundError",
+        ErrorCode(
+            code="ERROR_CLASSIFICATION_JOB_NOT_FOUND",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_cadrumo_core_not_found",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.credit_resolution_repository.CreditResolutionPersistenceError",
         ErrorCode(
             code="FAIL_CREDIT_RESOLUTION_PERSISTENCE",
