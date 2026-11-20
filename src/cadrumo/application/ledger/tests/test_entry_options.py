@@ -117,6 +117,7 @@ def test_every_family_is_served_once(served: dict[str, tuple[tuple[str, str | No
         "capital_good_kind",
         "capital_good_disposal",
         "import_format",
+        "import_extension",
         "export_format",
         "gasto_capital_inmobiliario",
         "rental_lease",
@@ -343,6 +344,45 @@ def test_a_format_whose_extra_is_absent_is_not_offered(monkeypatch: pytest.Monke
 
     assert with_all == tuple(LedgerProviderID)
     assert without == tuple(p for p in LedgerProviderID if p not in {LedgerProviderID.OFX, LedgerProviderID.QFX})
+
+
+def _served_extensions(
+    monkeypatch: pytest.MonkeyPatch, operation: PinnedAuthorityOperation, *, ofx_installed: bool
+) -> list[tuple[str, str | None]]:
+    monkeypatch.setattr(actions_import, "optional_extra_available", lambda extra: ofx_installed or extra.extra != "ofx")
+    options = next(
+        family.options
+        for family in ledger_entry_options(_PROFILE, operation=operation).families
+        if family.family == "import_extension"
+    )
+    return [(option.value, option.group) for option in options]
+
+
+def test_import_extensions_are_each_installed_formats_files_filed_under_the_format(
+    monkeypatch: pytest.MonkeyPatch, operation: PinnedAuthorityOperation
+) -> None:
+    served_extensions = _served_extensions(monkeypatch, operation, ofx_installed=True)
+
+    assert served_extensions == [
+        ("csv", "csv"),
+        ("tsv", "csv"),
+        ("txt", "csv"),
+        ("ofx", "ofx"),
+        ("qfx", "qfx"),
+        ("xlsx", "xlsx"),
+        ("xls", "xls"),
+        ("pdf", "pdf"),
+    ]
+    assert {group for _, group in served_extensions} == {str(p) for p in LedgerProviderID} - {"auto"}
+
+
+def test_import_extensions_of_a_format_whose_extra_is_absent_are_not_offered(
+    monkeypatch: pytest.MonkeyPatch, operation: PinnedAuthorityOperation
+) -> None:
+    served_extensions = _served_extensions(monkeypatch, operation, ofx_installed=False)
+
+    assert [value for value, _ in served_extensions] == ["csv", "tsv", "txt", "xlsx", "xls", "pdf"]
+    assert {group for _, group in served_extensions} <= {str(p) for p in installed_ledger_providers()}
 
 
 def test_a_dated_catalogue_is_read_on_the_day_asked_and_the_undated_ones_ignore_it(

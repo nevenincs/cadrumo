@@ -37,8 +37,13 @@ export function tauriLedger(
       bound("ledger_answer", { operation, reviewDigest, decision }),
     cancel: (operation, revision) =>
       bound("ledger_cancel", { operation, revision }),
-    pickFiles: (purpose, pick, filterLabel) =>
-      bound("ledger_files_pick", { purpose, pick, filterLabel }),
+    pickFiles: (purpose, pick, filterLabel, kinds) =>
+      bound("ledger_files_pick", {
+        purpose,
+        pick,
+        filterLabel,
+        kinds: kinds ? [...kinds] : null,
+      }),
     saveFile: (format, filterLabel, suggestedName) =>
       bound("ledger_files_save", {
         format,
@@ -49,7 +54,7 @@ export function tauriLedger(
       bound("ledger_files_reveal", { token }).then(() => undefined),
     forgetFiles: (tokens) =>
       call("ledger_files_forget", { tokens }).then(() => undefined),
-    async observeDrops(purpose, listener) {
+    async observeDrops(purpose, listener, kinds) {
       let active = true;
       const updates = new Channel<LedgerDropSignal>();
       updates.onmessage = (signal) => {
@@ -57,6 +62,7 @@ export function tauriLedger(
       };
       const subscription = await call("ledger_drop_observe", {
         purpose,
+        kinds: kinds ? [...kinds] : null,
         updates,
       });
       return () => {

@@ -59,6 +59,8 @@ desktop:
     choose_another_model: Choose another model
     choose_model: Choose a model
     choose_provider: Choose a provider
+    choose_provider_first: Choose a provider first.
+    choose_to_start: Choose a provider and a model to start.
     close_documents: Close the documents
     condition_budget_exhausted: Budget used up
     condition_credits_exhausted: Out of credits

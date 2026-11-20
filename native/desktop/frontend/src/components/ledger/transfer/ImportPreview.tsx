@@ -19,13 +19,13 @@ import { SetupOffer } from "../../setup/SetupOffer";
 import { FileRow } from "./ImportFileRow";
 import {
   NO_ACCOUNT,
+  REGISTER_ACCOUNT,
   accountFact,
   type AccountKey,
   type BankFilePreview,
-  type ImportKind,
   type OwnAccount,
 } from "./importModel";
-import { diagnosticText, importRefusal } from "./transferWords";
+import { diagnosticText, importRefusal, previewFailure } from "./transferWords";
 
 export type ReadPreview = Extract<BankFilePreview, { kind: "read" }>;
 
@@ -180,7 +180,8 @@ export function ImportBankPreview({
                 refused
               >
                 <span className="text-sm">
-                  {t("desktop.ledger.import.preview_failed")}
+                  {t("desktop.ledger.import.preview_failed")}{" "}
+                  {previewFailure(t, preview.code)}
                 </span>
               </FileRow>
             );
@@ -202,13 +203,19 @@ export function ImportBankPreview({
                 <label htmlFor={select} className="text-muted-foreground">
                   {t("desktop.ledger.import.account")}
                 </label>
-                {fact.kind === "choose" || fact.kind === "detected" ? (
+                {fact.kind === "choose" ||
+                fact.kind === "detected" ||
+                fact.kind === "register" ? (
                   <NativeSelect
                     id={select}
                     controlSize="sm"
                     required
                     aria-describedby={
-                      fact.kind === "detected" ? `${select}-hint` : undefined
+                      fact.kind === "detected"
+                        ? `${select}-hint`
+                        : fact.kind === "register"
+                          ? `${select}-names`
+                          : undefined
                     }
                     aria-invalid={
                       (fact.kind === "choose" &&
@@ -216,17 +223,29 @@ export function ImportBankPreview({
                         result.imported > 0) ||
                       undefined
                     }
-                    // A detected account is the choice already made, and
-                    // stays changeable.
+                    // A detected account, and the registration of the one the
+                    // statement names, are the choice already made, and stay
+                    // changeable.
                     value={
                       choices[preview.file.token] ??
-                      (fact.kind === "detected" ? fact.account : "")
+                      (fact.kind === "detected"
+                        ? fact.account
+                        : fact.kind === "register"
+                          ? REGISTER_ACCOUNT
+                          : "")
                     }
                     onChange={(event) => onChoose(preview, event.target.value)}
                   >
                     <option value="" disabled>
                       {t("desktop.ledger.import.account_choose")}
                     </option>
+                    {fact.kind === "register" && preview.statement && (
+                      <option value={REGISTER_ACCOUNT}>
+                        {t("desktop.ledger.import.account_register", {
+                          account: preview.statement.masked,
+                        })}
+                      </option>
+                    )}
                     {accounts
                       .filter(
                         (account) => !preview.mismatched.includes(account.id),
@@ -256,6 +275,21 @@ export function ImportBankPreview({
                     {t("desktop.ledger.import.account_detected")}
                   </span>
                 )}
+                {preview.statement && (
+                  <span
+                    id={`${select}-names`}
+                    className="text-xs text-muted-foreground"
+                  >
+                    {t("desktop.ledger.import.account_names", {
+                      account: preview.statement.masked,
+                    })}
+                    {fact.kind === "register" &&
+                      (choices[preview.file.token] ?? REGISTER_ACCOUNT) ===
+                        REGISTER_ACCOUNT && (
+                        <> {t("desktop.ledger.import.account_register_note")}</>
+                      )}
+                  </span>
+                )}
               </div>
               {result.likely_duplicates > 0 && (
                 <DuplicatesChip
@@ -283,23 +317,17 @@ export function ImportBankPreview({
   );
 }
 
-/** An invoice book's or documents' preview, which reads nothing before the
- * import: the files and what they will be imported as. */
+/** The documents' preview, which reads nothing before the import: the files
+ * and what they will be added as. */
 export function ImportPlainPreview({
   t,
   locale,
-  kind,
   files,
-  bookKind,
-  country,
   direction,
 }: {
   t: Translate;
   locale: string;
-  kind: ImportKind;
   files: PickedFile[];
-  bookKind: InvoiceKind | null;
-  country: string;
   direction: InvoiceKind | null;
 }) {
   return (
@@ -318,23 +346,11 @@ export function ImportPlainPreview({
           </FileRow>
         ))}
       </ul>
-      {kind === "book" ? (
-        <Alert tone="warning" icon={<Icon name="alert" />}>
-          <AlertTitle>{t("desktop.ledger.import.book_no_preview")}</AlertTitle>
-          <AlertDescription>
-            {t("desktop.ledger.import.book_no_preview_note", {
-              kind: t(`desktop.ledger.import.kind_${bookKind}`),
-              country: country || t("desktop.ledger.import.country_none"),
-            })}
-          </AlertDescription>
-        </Alert>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          {t("desktop.ledger.import.documents_note", {
-            kind: t(`desktop.ledger.import.kind_${direction}`),
-          })}
-        </p>
-      )}
+      <p className="text-sm text-muted-foreground">
+        {t("desktop.ledger.import.documents_note", {
+          kind: t(`desktop.ledger.import.kind_${direction}`),
+        })}
+      </p>
     </>
   );
 }

@@ -964,6 +964,12 @@ application:
   invoices:
     bulk_import:
       errors:
+        column_role_not_accepted: La importació del llibre de factures no té cap camp
+          per al paper {role}.
+        column_role_out_of_range: Els papers de les columnes anomenen la columna {column},
+          però el llibre de factures té {columns} columnes.
+        column_role_repeated: El paper {role} està assignat a més d'una columna del
+          llibre de factures.
         country_unanswerable: 'El fitxer d''importació no té columna de país de la
           contrapart i no s''ha indicat cap país per a la importació. Afegeix una
           columna country_code o indica un país per a tot el fitxer. Columnes no reconegudes:

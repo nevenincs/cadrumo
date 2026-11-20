@@ -85,6 +85,5 @@ Synthesis should trace the registry authority and profile definitions that decla
 - financial/__init__.py (`src/cadrumo/adapters/inbound/financial/__init__.py`) — all 22 lines.
 - financial/ledger_import.py (`src/cadrumo/adapters/inbound/financial/ledger_import.py`) — all 130 lines.
 - financial/providers/__init__.py (`src/cadrumo/adapters/inbound/financial/providers/__init__.py`) — all 46 lines.
-- financial/providers/_constants.py (`src/cadrumo/adapters/inbound/financial/providers/constants.py`) — all 26 lines.
 - financial/providers/_mapped_tabular.py (`src/cadrumo/adapters/inbound/financial/providers/mapped_tabular.py`) — all 326 lines.
 <!-- /preserved:article -->

@@ -970,6 +970,12 @@ application:
   invoices:
     bulk_import:
       errors:
+        column_role_not_accepted: La importación del libro de facturas no tiene ningún
+          campo para el papel {role}.
+        column_role_out_of_range: Los papeles de las columnas nombran la columna {column},
+          pero el libro de facturas tiene {columns} columnas.
+        column_role_repeated: El papel {role} está asignado a más de una columna del
+          libro de facturas.
         country_unanswerable: 'El fichero de importación no tiene columna de país
           de la contraparte y no se ha indicado ningún país para la importación. Añade
           una columna country_code o indica un país para todo el fichero. Columnas

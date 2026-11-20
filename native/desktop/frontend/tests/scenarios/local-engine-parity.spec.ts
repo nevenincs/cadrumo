@@ -413,7 +413,9 @@ for (const engine of ENGINES) {
         label("desktop.agent.lane_no_installed_model"),
       );
       await target.keyboard.press("Escape");
-      await expect(picker).toContainText(
+      // The way shown is a hosted one, whose models are not downloaded: the
+      // local download hint belongs to the local lane alone.
+      await expect(picker).not.toContainText(
         label("desktop.agent.models_to_download"),
       );
       await target.keyboard.press("Escape");

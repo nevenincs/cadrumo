@@ -52,9 +52,13 @@ def _validate_import_provider(provider: str) -> LedgerProviderID:
 
 
 def _refusal_message(refusal: LedgerImportFileRefusal) -> str:
-    """Explain one refused statement; an own-account mismatch and a missing reader name their cause."""
+    """Explain one refused statement, naming the cause where the refusal has one of its own."""
     if refusal.reason_code == "own_account_mismatch":
         return tr("cli.ledger.import.file_refused_account_mismatch", file=refusal.file_name)
+    if refusal.reason_code == "format_not_installed":
+        return tr("cli.ledger.import.file_refused_format_not_installed", file=refusal.file_name)
+    if refusal.reason_code == "statement_account_missing":
+        return tr("cli.ledger.import.file_refused_statement_account_missing", file=refusal.file_name)
     verdict = _reader_verdict(refusal)
     if verdict is not None:
         return tr("cli.ledger.import.file_reader_unavailable", file=refusal.file_name)

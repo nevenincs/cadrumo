@@ -106,6 +106,16 @@ class FinancialProviderProtocol(Protocol):
         """Validate ``path`` and return a structured validation result."""
         ...
 
+    def statement_account(self, path: Path, *, source_sha256: str) -> str | None:
+        """Return the one account the statement as a whole names, as a canonical IBAN.
+
+        ``None`` when the format prints no account, prints several, carries it
+        per row, or the file no longer holds the bytes digested as
+        ``source_sha256``.
+        """
+        del path, source_sha256
+        return None
+
 
 class TransactionCatalogueCoCommitWriterProtocol(TransactionCatalogueRepositoryProtocol, Protocol):
     """Transaction-catalogue port for an atomic multi-object ledger write."""

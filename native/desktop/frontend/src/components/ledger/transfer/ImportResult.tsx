@@ -25,7 +25,7 @@ import {
   type BankApplied,
   type DocumentsApplied,
 } from "./importModel";
-import { importRefusal } from "./transferWords";
+import { bookRefusalWords, failureWords, importRefusal } from "./transferWords";
 import type { LedgerTransactionProjection } from "../../../shell/ledgerInvoiceContract";
 
 /** What an import's apply answered, by the kind of import. */
@@ -226,6 +226,11 @@ export function ImportResultStep({
     const sum = (pick: (result: LedgerImportResultProjection) => number) =>
       imported.reduce((total, item) => total + pick(item.result), 0);
     const flagged = sum((result) => result.likely_duplicates);
+    const left = outcome.applied.reduce(
+      (total, item) =>
+        total + (item.kind === "skipped" ? item.result.skipped : 0),
+      0,
+    );
     const unknownFiles = outcome.applied.filter(
       (item) => item.kind === "unknown",
     );
@@ -240,7 +245,7 @@ export function ImportResultStep({
             </AlertTitle>
             <AlertDescription>
               {t("desktop.ledger.import.imported_note", {
-                skipped: sum((result) => result.skipped),
+                skipped: sum((result) => result.skipped) + left,
                 flagged,
               })}
             </AlertDescription>
@@ -267,7 +272,7 @@ export function ImportResultStep({
                   ? "unknown"
                   : item.kind === "not_sent"
                     ? "pending"
-                    : item.kind === "imported"
+                    : item.kind === "imported" || item.kind === "skipped"
                       ? "check"
                       : undefined
               }
@@ -278,13 +283,17 @@ export function ImportResultStep({
                       fresh: count(item.result.imported),
                       skipped: count(item.result.skipped),
                     })
-                  : item.kind === "changed"
-                    ? importRefusal(t, "source_changed")
-                    : item.kind === "refused"
-                      ? importRefusal(t, item.reason, item.setup ?? null)
-                      : item.kind === "unknown"
-                        ? t("desktop.ledger.import.file_unknown")
-                        : t("desktop.ledger.import.file_not_sent")}
+                  : item.kind === "skipped"
+                    ? t("desktop.ledger.import.file_skipped", {
+                        skipped: count(item.result.skipped),
+                      })
+                    : item.kind === "changed"
+                      ? importRefusal(t, "source_changed")
+                      : item.kind === "refused"
+                        ? importRefusal(t, item.reason, item.setup ?? null)
+                        : item.kind === "unknown"
+                          ? t("desktop.ledger.import.file_unknown")
+                          : t("desktop.ledger.import.file_not_sent")}
               </span>
               {item.kind === "refused" && (
                 <SetupOffer action={item.setup ?? null} className="mt-1" />
@@ -347,12 +356,22 @@ export function ImportResultStep({
     const { answer } = outcome;
     if (answer.kind === "failed" && answer.code === "unknown")
       return unknown([outcome.file.name]);
-    if (answer.kind !== "settled")
+    if (answer.kind !== "settled") {
+      const refused = answer.kind === "refused";
       return (
-        <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
-          <AlertTitle>{t("desktop.ledger.import.book_refused")}</AlertTitle>
-        </Alert>
+        <>
+          <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
+            <AlertTitle>{t("desktop.ledger.import.book_refused")}</AlertTitle>
+            <AlertDescription>
+              {refused
+                ? bookRefusalWords(t, answer)
+                : failureWords(t, answer.code, answer.reason)}
+            </AlertDescription>
+          </Alert>
+          {refused && <SetupOffer action={answer.setup} />}
+        </>
       );
+    }
     const result = answer.result;
     return (
       <>

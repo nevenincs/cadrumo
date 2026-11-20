@@ -957,6 +957,12 @@ application:
   invoices:
     bulk_import:
       errors:
+        column_role_not_accepted: A számlakönyv importálásában nincs mező a(z) {role}
+          szerephez.
+        column_role_out_of_range: Az oszlopszerepek a(z) {column}. oszlopot nevezik
+          meg, de a számlakönyvnek {columns} oszlopa van.
+        column_role_repeated: A(z) {role} szerep a számlakönyv több oszlopához is
+          hozzá van rendelve.
         country_unanswerable: 'Az importfájlban nincs partnerország oszlop, és az
           importáláshoz sem adtak meg országot. Vegyél fel egy country_code oszlopot,
           vagy adj meg egy országot az egész fájlhoz. Fel nem ismert oszlopok: {unmapped_columns}'
