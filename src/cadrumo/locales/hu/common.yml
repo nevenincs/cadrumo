@@ -1555,6 +1555,28 @@ desktop:
     title: Google-fiók
     unknown: A Google-bejelentkezést most nem sikerült beolvasni.
     waiting: Fejezd be a bejelentkezést a Google-be a böngésződben.
+  home:
+    aeat_evidence: 'AEAT-adatok: {state}'
+    availability_locked: Zárolva - oldd fel ezt a profilt, hogy lásd
+    availability_never_captured: Még nincs beolvasva
+    availability_stale: Elavult
+    availability_stale_observed: 'Elavult - utolsó beolvasás: {date}'
+    availability_unavailable: Nem érhető el
+    empty: Itt nincs mit mutatni.
+    failed: A Kezdőlapot nem sikerült beolvasni ({code}). Próbáld meg frissíteni.
+    heading_actions: Következő teendők
+    heading_agenda: Benyújtási határidők
+    heading_declarations: Bevallások
+    heading_ledger: Nyilvántartás állapota
+    heading_messages: Üzenetek
+    loading: Kezdőlap betöltése…
+    messages_attention: '{count} igényel figyelmet'
+    modelo: Modelo {modelo}
+    observed: '(utolsó beolvasás: {date})'
+    refresh: Frissítés
+    signed_out: Jelentkezz be a Kezdőlap megtekintéséhez.
+    title: Kezdőlap
+    unworded: Még nincs leírás a te nyelveden.
   host:
     failed: Ezt a részt nem sikerült betölteni.
     unavailable: Ehhez a részhez az asztali alkalmazás kell.
@@ -3000,14 +3022,25 @@ desktop:
       apply_files: Pontosan ezek importálása ({count})
       applying: 'Importálás: {done}/{total}'
       back: Vissza
+      book_column: Oszlop a fájlban
+      book_columns: A könyv oszlopai
       book_created: 'Létrehozott számlák: {count}'
       book_kind: A könyv számlái
-      book_no_preview: A számlakönyveknek nincs előnézete
-      book_no_preview_note: 'A sorokat létrehozáskor ellenőrzi. A nem elfogadott sorok
-        utána sorszámmal és okkal jelennek meg; a többi megmarad. {kind}; ország:
-        {country}.'
+      book_missing: Az importáláshoz szükséges oszlopok még nincsenek hozzárendelve
+      book_missing_note: 'Válassz oszlopot ehhez: {roles}. A könyv addig nem importálható,
+        amíg mindegyikhez nincs oszlop.'
       book_note: 'Sorok: {rows} · már a katalógusban: {skipped} · nem elfogadva: {refused}'
+      book_preview_note: 'Importálás ide: {kind}; ország: {country}. A sorokat létrehozásukkor
+        ellenőrizzük: az el nem fogadottak utólag, sorszámmal és indoklással kerülnek
+        felsorolásra, a többi megmarad. Egy jelentés egyetlen oszlopé: ha másiknak
+        adod, az első elveszíti.'
+      book_reader_note: Csak azok az oszlopok lettek felismerve, amelyek nevét az
+        importálás ismeri. A többit kézzel rendelheted hozzá.
+      book_reader_unavailable: A helyi MI nem tudta javasolni az oszlopokat
       book_refused: A könyv nem lett importálva
+      book_role: Jelentés
+      book_rows: 'Beolvasott sorok: {rows}'
+      book_source: Ki döntötte el
       bound_note: Az importálás pontosan ezeket a fájlokat használja. Az előnézet
         után módosult fájlt nem fogadja el.
       cancel: Mégse
@@ -3140,6 +3173,24 @@ desktop:
         transaction_validation: Nem olvasható be bankszámlakivonatként.
       refused_rows: Nem elfogadott sorok
       remove: '{name} eltávolítása'
+      role:
+        counterparty_name: A másik fél neve
+        counterparty_nif: A másik fél adószáma
+        country_code: Ország
+        currency: Pénznem
+        invoice_date: Számla kelte
+        invoice_number: Számlaszám
+        iva_rate: IVA-kulcs
+        notes: Megjegyzések
+        retencion_amount: Retención összege
+        retencion_rate: Retención kulcsa
+        taxable_base: Adóalap
+        unmapped: Nincs használatban
+      role_source:
+        exact: Felismerve
+        model: A helyi MI javasolta
+        operator: Te választottad
+        unmapped: Nincs hozzárendelve
       row: Sor
       show_documents: Áttekintés a Dokumentumokban
       show_failed: Az importált tételeket nem sikerült beolvasni. Próbáld újra.
@@ -3744,7 +3795,7 @@ desktop:
     iva_category:
       domestic_exempt: Adómentes
       domestic_general: Általános kulcs
-      domestic_not_subject: Nem adóköteles
+      domestic_not_subject: Nem adóköteles (LIVA 7. cikk)
       domestic_reduced: Kedvezményes kulcs
       domestic_reverse_charge: Belföldi fordított adózás
       domestic_super_reduced: Különösen kedvezményes kulcs
@@ -3759,7 +3810,7 @@ desktop:
       intra_community_service_supply: Közösségen belüli szolgáltatásnyújtás
       intra_community_supply: Közösségen belüli értékesítés
       intra_community_triangulation: Háromszögügylet
-      operacion_no_sujeta: Nem adóköteles ügylet
+      operacion_no_sujeta: Nem adóköteles a teljesítés helye miatt (LIVA 68–70. cikk)
       reagp_compensation: REAGP-kompenzáció
       recargo_equivalencia: Recargo de equivalencia
       regimen_simplificado: Régimen simplificado

@@ -250,6 +250,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       t.business_classification = rule.classification;
       t.category_id = rule.category_id;
       t.classified_by = `rule:${rule.rule_id}`;
+      t.classification_decided_by = t.classified_by;
       t.classified_at = stamp;
       t.modified_at = stamp;
     }

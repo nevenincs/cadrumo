@@ -3,8 +3,11 @@
 // `node scripts/ledger-operation-contract.mjs`; `--check` fails when it is stale.
 import type { FileToken } from "./ledger";
 import type { TransactionId } from "./ledgerClassificationContract";
-import type { PreconditionVerdictSnapshot } from "./ledgerDocumentContract";
-import type { ContentDigest, PublicPeriod } from "./ledgerInvoiceContract";
+import type {
+  ContentDigest,
+  PreconditionVerdictSnapshot,
+  PublicPeriod,
+} from "./ledgerInvoiceContract";
 import type { OwnAccountHolding } from "./ledgerOwnAccountContract";
 
 /**

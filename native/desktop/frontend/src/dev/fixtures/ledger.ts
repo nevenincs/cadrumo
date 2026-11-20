@@ -603,6 +603,12 @@ export function fixtureLedger(
         : kind.classification === "PERSONAL"
           ? "rule"
           : "operator",
+      classification_decided_by: unprocessed
+        ? ""
+        : kind.classification === "PERSONAL"
+          ? "rule"
+          : "manual",
+      figures_derived: false,
       classified_at: unprocessed ? null : created,
       // A mixed-use row carries the reason its person typed; the others were
       // written by a command, which names itself where no reason was given.

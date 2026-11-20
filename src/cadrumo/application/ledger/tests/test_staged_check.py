@@ -18,7 +18,7 @@ from ..actions_manual import transaction_from_command
 from ..classify_requests import LedgerClassifyPatch, LedgerClassifyRequest
 from ..manual_update import command_from_patch
 from ..models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
-from ..staged_check import check_draft, check_staged_work, check_stored_row, route_for_cell
+from ..staged_check import check_draft, check_staged_work, check_stored_row, request_digest, route_for_cell
 from ..staged_check_contracts import (
     LedgerStagedCell,
     LedgerStagedCheckRequest,
@@ -61,12 +61,15 @@ def _stored(
     return built if evidence is None else built.model_copy(update={"purchase_invoice_evidence_id": evidence})
 
 
-def _row(*cells: tuple[str, str | None], evidence_staged: bool = False, m210: bool = False) -> LedgerStagedRow:
+def _row(
+    *cells: tuple[str, str | None], evidence_staged: bool = False, m210: bool = False, derive: str | None = None
+) -> LedgerStagedRow:
     return LedgerStagedRow(
         transaction_id="a" * 64,
         cells=tuple(LedgerStagedCell.model_validate({"field": field, "value": value}) for field, value in cells),
         evidence_staged=evidence_staged,
         m210_staged=m210,
+        iva_derive_staged=derive,
     )
 
 
@@ -400,3 +403,69 @@ def test_an_unknown_movement_takes_nothing_until_the_ledger_finds_it() -> None:
     absent = LedgerStagedRowAnswer(transaction_id="a" * 64, found=False)
     assert (absent.takes_changes, absent.takes_invoice, absent.evidence_advised) == (False, False, False)
     assert absent.lifecycle_actions == ()
+
+
+def _derive_blocker_kinds(row: LedgerStagedRow, transaction: Transaction) -> list[tuple[str, tuple[str, ...]]]:
+    answer = check_stored_row(row, transaction)
+    return [(blocker.kind, blocker.fields) for blocker in answer.blockers]
+
+
+def test_a_classification_and_a_derivation_staged_together_compose_without_a_blocker() -> None:
+    row = _row(("business_classification", "BUSINESS"), ("iva_category", "domestic_general"), derive="domestic_general")
+
+    assert _derive_blocker_kinds(row, _stored()) == []
+
+
+def test_a_derivation_alone_on_a_business_row_has_no_blocker() -> None:
+    row = _row(derive="domestic_general")
+
+    assert _derive_blocker_kinds(row, _stored(classification=BusinessClassification.BUSINESS)) == []
+
+
+def test_figures_typed_by_hand_and_a_derivation_refuse_naming_the_figures() -> None:
+    row = _row(
+        ("business_classification", "BUSINESS"),
+        ("taxable_base", "30.00"),
+        ("iva_rate", None),
+        derive="domestic_general",
+    )
+
+    answer = check_stored_row(row, _stored())
+
+    (blocker,) = answer.blockers
+    assert (blocker.kind, blocker.fields) == ("derive_and_figures", ("taxable_base", "iva_rate"))
+    assert blocker.words and blocker.fix_words
+
+
+def test_a_derivation_with_another_category_than_the_rows_refuses() -> None:
+    row = _row(("business_classification", "BUSINESS"), ("iva_category", "domestic_reduced"), derive="domestic_general")
+
+    assert _derive_blocker_kinds(row, _stored()) == [("derive_category_differs", ("iva_category",))]
+
+
+def test_a_derivation_on_a_row_with_the_same_stored_category_has_no_blocker_and_a_cleared_one_defers_to_it() -> None:
+    stored = _stored(classification=BusinessClassification.BUSINESS).model_copy(
+        update={"iva_category": "domestic_general"}
+    )
+
+    assert _derive_blocker_kinds(_row(derive="domestic_general"), stored) == []
+    assert _derive_blocker_kinds(_row(derive="domestic_reduced"), stored) == [
+        ("derive_category_differs", ("iva_category",))
+    ]
+    assert _derive_blocker_kinds(_row(("iva_category", None), derive="domestic_reduced"), stored) == []
+
+
+@pytest.mark.parametrize("cells", [(), (("business_classification", "PERSONAL"),)])
+def test_a_derivation_on_a_row_that_is_not_business_refuses(cells: tuple[tuple[str, str | None], ...]) -> None:
+    stored = _stored(classification=BusinessClassification.BUSINESS) if cells else _stored()
+
+    assert _derive_blocker_kinds(_row(*cells, derive="domestic_general"), stored) == [
+        ("derive_needs_business", ("business_classification",))
+    ]
+
+
+def test_the_derivation_takes_part_in_the_request_digest() -> None:
+    plain = LedgerStagedCheckRequest(profile_id=uuid4(), rows=(_row(),))
+    derived = plain.model_copy(update={"rows": (_row(derive="domestic_general"),)})
+
+    assert request_digest(plain) != request_digest(derived)

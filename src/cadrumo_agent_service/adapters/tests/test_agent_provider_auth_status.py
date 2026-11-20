@@ -258,3 +258,15 @@ def test_a_logout_names_why_it_did_not_sign_the_provider_out(
     _Runner.script = [step]
     assert probe.log_out("claude", root=tmp_path) == cause
     assert _Runner.calls == [("-m", "cadrumo_agent.cli.main", "auth", "logout", "--provider", "claude")]
+
+
+def test_a_logout_is_given_the_agents_own_logout_and_confirmation_time(
+    probe: AgentProviderAuthStatusProbe, tmp_path: Path
+) -> None:
+    _Runner.script = [AgentInvocationResult(status=0, standard_output=b"")]
+    assert probe.log_out("claude", root=tmp_path) is None
+    assert _Runner.calls == [("-m", "cadrumo_agent.cli.main", "auth", "logout", "--provider", "claude")]
+    # The agent waits up to 10 s for the provider's logout and up to 20 s for
+    # the status probe that confirms it, after its own start.
+    assert _Runner.timeouts == [status_module.LOGOUT_SECONDS]
+    assert status_module.LOGOUT_SECONDS > 30

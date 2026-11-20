@@ -490,6 +490,8 @@ export function movementActionOperations(ledger: FixtureLedger, tools: Tools) {
         invoice_id: null,
         attachment_ids: [],
         classified_by: "",
+        classification_decided_by: "",
+        figures_derived: false,
         classified_at: null,
         classification_reason: "",
         classification_confidence: null,
@@ -632,6 +634,8 @@ export function movementActionOperations(ledger: FixtureLedger, tools: Tools) {
       iva_rate: rate,
       taxable_base: money(base),
       iva_amount: money(gross - base),
+      figures_derived: true,
+      classified_by: "derived:iva-category",
       modified_at: now(),
     };
     movement.transaction = next;
@@ -700,6 +704,7 @@ export function movementActionOperations(ledger: FixtureLedger, tools: Tools) {
       ...(ratio ? { usage_ratio_id: ratio } : {}),
       ...(prorrata ? { prorrata_reference: prorrata } : {}),
       classified_by: "operator",
+      classification_decided_by: "manual",
       classified_at: stamp,
       modified_at: stamp,
     };

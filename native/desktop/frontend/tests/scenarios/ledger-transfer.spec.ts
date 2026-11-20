@@ -603,14 +603,50 @@ test("likely duplicates are imported and compared with the movement already in t
   await noPathShown(target);
 });
 
-test("an invoice book has no preview and lists the rows it refused", async ({
+const RECEIVED = "libro-facturas-recibidas-2026.xlsx";
+const ISSUED = "libro-facturas-emitidas-2026.csv";
+const EMPTY = "libro-facturas-vacio-2026.csv";
+/** The headers of the received book, each with the role it is given by
+ * hand; the last column is left unused. */
+const RECEIVED_ROLES: [string, string][] = [
+  ["Nº registro", "invoice_number"],
+  ["Fecha asiento", "invoice_date"],
+  ["Proveedor", "counterparty_name"],
+  ["CIF proveedor", "counterparty_nif"],
+  ["Base", "taxable_base"],
+  ["Tipo", "iva_rate"],
+];
+const role = (key: string) => label(`desktop.ledger.import.role.${key}`);
+const columnSelect = (dialog: Locator, header: string) =>
+  dialog.getByRole("combobox", { name: header, exact: true });
+
+/** Previews the book `name` as invoices received. */
+async function previewBook(target: Page, name: string) {
+  const dialog = await openImport(target);
+  await chooseKind(dialog, "book");
+  if (name === RECEIVED)
+    await button(dialog, "desktop.ledger.import.choose_file").click();
+  else
+    await target.evaluate(
+      (dropped) => window.__scenarioLedger!.drop([dropped]),
+      name,
+    );
+  await expect(dialog).toContainText(name);
+  await dialog
+    .getByRole("radio", { name: label("desktop.ledger.import.kind_received") })
+    .click();
+  await button(dialog, "desktop.ledger.import.preview").click();
+  return dialog;
+}
+
+test("an invoice book is read by column, and what is missing is assigned by hand", async ({
   page: target,
 }) => {
   await openLedger(target);
   const dialog = await openImport(target);
   await chooseKind(dialog, "book");
   await button(dialog, "desktop.ledger.import.choose_file").click();
-  await expect(dialog).toContainText("libro-facturas-recibidas-2026.xlsx");
+  await expect(dialog).toContainText(RECEIVED);
   const preview = button(dialog, "desktop.ledger.import.preview");
   // The book's kind has no default.
   await expect(preview).toBeDisabled();
@@ -629,10 +665,47 @@ test("an invoice book has no preview and lists the rows it refused", async ({
   await country.blur();
   await expect(country).toHaveValue("ES · Spain");
   await preview.click();
+
+  // Headers that match nothing and a local AI that cannot be asked: every
+  // column is listed with its meaning unassigned, and the import waits.
+  const columns = dialog.getByRole("table", {
+    name: label("desktop.ledger.import.book_columns"),
+  });
+  await expect(columns.getByRole("row")).toHaveCount(8);
   await expect(dialog).toContainText(
-    label("desktop.ledger.import.book_no_preview"),
+    label("desktop.ledger.import.book_rows", { rows: 6 }),
   );
-  await button(dialog, "desktop.ledger.import.apply_book").click();
+  await expect(dialog).toContainText(
+    label("desktop.ledger.import.book_reader_unavailable"),
+  );
+  const missing = dialog.locator(".ledger-import-book-missing");
+  await expect(missing).toContainText(role("invoice_number"));
+  await expect(missing).toContainText(role("iva_rate"));
+  const apply = button(dialog, "desktop.ledger.import.apply_book");
+  await expect(apply).toBeDisabled();
+  await expect(columnSelect(dialog, "Base")).toHaveValue("unmapped");
+  await expect(columns).toContainText(
+    label("desktop.ledger.import.role_source.unmapped"),
+  );
+
+  // Giving a meaning to a column is the person's choice, and a meaning
+  // belongs to one column: giving it to another frees the first.
+  await columnSelect(dialog, "Base").selectOption("taxable_base");
+  await expect(columns.getByRole("row").nth(5)).toContainText(
+    label("desktop.ledger.import.role_source.operator"),
+  );
+  await columnSelect(dialog, "Tipo").selectOption("taxable_base");
+  await expect(columnSelect(dialog, "Base")).toHaveValue("unmapped");
+  await expect(columnSelect(dialog, "Tipo")).toHaveValue("taxable_base");
+  for (const [header, assigned] of RECEIVED_ROLES)
+    await columnSelect(dialog, header).selectOption(assigned);
+  await expect(missing).toHaveCount(0);
+  await expect(apply).toBeEnabled();
+
+  // The import sends each column's meaning and the digest it read: the
+  // unused column is the only one reported, and the rows the ledger does
+  // not accept are listed with their reasons.
+  await apply.click();
   await expect(
     dialog.getByText(label("desktop.ledger.import.book_created", { count: 4 })),
   ).toBeVisible();
@@ -648,6 +721,88 @@ test("an invoice book has no preview and lists the rows it refused", async ({
     label("desktop.ledger.import.unmapped", { columns: "Observaciones" }),
   );
   await noPathShown(target);
+});
+
+test("a book whose columns are named as the import expects previews with nothing to assign", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const dialog = await previewBook(target, ISSUED);
+  const columns = dialog.getByRole("table", {
+    name: label("desktop.ledger.import.book_columns"),
+  });
+  await expect(columns.getByRole("row")).toHaveCount(8);
+  await expect(columns).toContainText(
+    label("desktop.ledger.import.role_source.exact"),
+  );
+  // The local AI placed the one column the import has no name for.
+  await expect(columnSelect(dialog, "Observaciones")).toHaveValue("notes");
+  await expect(columns.getByRole("row").nth(7)).toContainText(
+    label("desktop.ledger.import.role_source.model"),
+  );
+  await expect(dialog.locator(".ledger-import-book-missing")).toHaveCount(0);
+  await expect(dialog.locator(".ledger-import-book-reader")).toHaveCount(0);
+  await button(dialog, "desktop.ledger.import.apply_book").click();
+  await expect(
+    dialog.getByText(label("desktop.ledger.import.book_created", { count: 5 })),
+  ).toBeVisible();
+});
+
+test("a book the ledger refuses says why, once, and can be read again", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const dialog = await previewBook(target, EMPTY);
+  await button(dialog, "desktop.ledger.import.apply_book").click();
+  const alert = dialog.getByRole("alert");
+  await expect(alert).toHaveCount(1);
+  await expect(alert).toContainText(
+    label("desktop.ledger.import.book_refused"),
+  );
+  await expect(alert).toContainText(
+    "The book holds no invoice rows under its columns: invoice_number, invoice_date, counterparty_name, counterparty_nif, taxable_base, iva_rate.",
+  );
+  await expect(
+    dialog.getByText(label("desktop.ledger.import.book_refused")),
+  ).toHaveCount(1);
+  await expect(
+    button(dialog, "desktop.ledger.import.preview_again"),
+  ).toBeVisible();
+});
+
+test("a book that changed after its preview is refused in words, and read again on request", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const dialog = await previewBook(target, ISSUED);
+  await target.evaluate(
+    (name) => window.__scenarioLedger!.changeFile(name),
+    ISSUED,
+  );
+  await button(dialog, "desktop.ledger.import.apply_book").click();
+  await expect(dialog.getByRole("alert")).toContainText(
+    "The file changed after the preview. Preview it again.",
+  );
+  await button(dialog, "desktop.ledger.import.preview_again").click();
+  await expect(
+    button(dialog, "desktop.ledger.import.apply_book"),
+  ).toBeEnabled();
+});
+
+test("a book import stopped without words of its own still says something", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const dialog = await previewBook(target, ISSUED);
+  await target.evaluate(() => window.__scenarioLedger!.nextWrites(["refused"]));
+  await button(dialog, "desktop.ledger.import.apply_book").click();
+  const alert = dialog.getByRole("alert");
+  await expect(alert).toContainText(
+    label("desktop.ledger.import.book_refused"),
+  );
+  await expect(alert).toContainText(
+    label("desktop.ledger.import.failure.other"),
+  );
 });
 
 test("documents are added as evidence and a drop on the window adds files", async ({

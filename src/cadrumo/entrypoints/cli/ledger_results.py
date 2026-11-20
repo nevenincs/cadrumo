@@ -514,6 +514,8 @@ class TransactionPayload(OutputSchema):
     notes: str = ""
     lifecycle_state: NonEmptyStr
     classified_by: NonEmptyStr
+    classification_decided_by: NonEmptyStr
+    figures_derived: bool
     # Decision-provenance fields: the "why" behind the active
     # classification decision. Declared here so the strict single-transaction
     # read surface (ledger view/classify/update/archive/stash) accepts the
@@ -865,6 +867,8 @@ class LedgerListRowPayload(OutputSchema):
     lifecycle_state: str
     review_status: str
     classified_by: str
+    classification_decided_by: str
+    figures_derived: bool
     # Decision-provenance fields: present so the row validates from
     # the shared `LedgerTransactionReviewPayload` dump without rejecting
     # extra keys; not rendered in the tab-delimited list line (view/history

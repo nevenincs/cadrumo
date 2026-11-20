@@ -303,6 +303,60 @@ test("a PDF statement only the local AI reads names it and offers its setup", as
   await promptSaysOnce(target);
 });
 
+test("an invoice book whose columns only the local AI could place offers its setup and the way to assign them by hand", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=ledger&latency=0&bar=off&ledger=reader_missing&setup=fresh",
+  );
+  await setupDialog(target)
+    .getByRole("button", { name: label("desktop.setup.not_now") })
+    .click();
+  await expect(setupDialog(target)).toBeHidden();
+  await target.locator("[data-rail=ledger]").click();
+  await expect(target.locator(".ledger-movements")).toBeVisible();
+  await target
+    .locator(".pane-docs .pane-head")
+    .getByRole("button", {
+      name: label("desktop.ledger.action.import"),
+      exact: true,
+    })
+    .click();
+  const dialog = target.getByRole("dialog", {
+    name: label("desktop.ledger.import.title"),
+  });
+  await dialog
+    .getByRole("radio", { name: label("desktop.ledger.import.kind.book") })
+    .click();
+  await dialog
+    .getByRole("button", {
+      name: label("desktop.ledger.import.choose_file"),
+      exact: true,
+    })
+    .click();
+  await dialog
+    .getByRole("radio", { name: label("desktop.ledger.import.kind_received") })
+    .click();
+  await dialog
+    .getByRole("button", {
+      name: label("desktop.ledger.import.preview"),
+      exact: true,
+    })
+    .click();
+  const note = dialog.locator(".ledger-import-book-reader");
+  await expect(note).toContainText(
+    label("desktop.ledger.import.book_reader_unavailable"),
+  );
+  await expect(note).toContainText(
+    label("desktop.ledger.import.book_reader_note"),
+  );
+  await expect(note).toContainText(LOCAL_AI);
+  // A preview opens nothing by itself.
+  await expect(setupDialog(target)).toHaveCount(0);
+  await note.getByRole("button", { name: "Set up", exact: true }).click();
+  await promptSaysOnce(target);
+});
+
 test("a PDF statement for a local AI this computer cannot set up says why and offers no setup", async ({
   page: target,
 }) => {

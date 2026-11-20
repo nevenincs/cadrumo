@@ -483,7 +483,10 @@ export type LedgerStagedBlocker = {
     | "transfer_with_tax"
     | "draft_incomplete"
     | "amount_signed"
-    | "needs_withholding_category";
+    | "needs_withholding_category"
+    | "derive_and_figures"
+    | "derive_category_differs"
+    | "derive_needs_business";
   fields: string[];
   words: string;
   fix_words: string;
@@ -659,6 +662,7 @@ export type LedgerStagedRow = {
   cells?: LedgerStagedCell[];
   evidence_staged?: boolean;
   m210_staged?: boolean;
+  iva_derive_staged?: string | null;
 };
 
 /**

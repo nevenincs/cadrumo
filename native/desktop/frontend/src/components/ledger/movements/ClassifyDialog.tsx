@@ -138,7 +138,7 @@ export function ClassifyDialog({
     <Dialog open onOpenChange={(open) => !open && onCancel()}>
       <DialogContent
         className="ledger-classify"
-        closeLabel={t("desktop.ledger.classify.cancel")}
+        closeLabel={t("desktop.ledger.form.close")}
         onCloseAutoFocus={(event) => {
           if (!onClosed) return;
           event.preventDefault();
