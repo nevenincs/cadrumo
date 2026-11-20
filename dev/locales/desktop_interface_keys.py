@@ -429,6 +429,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.agent.attachment_refusal.document_removed",
         "desktop.agent.attachment_refusal.cloud_upload_not_permitted",
         "desktop.agent.attachment_refusal.profile_not_eligible",
+        "desktop.agent.attachment_refusal.profile_unreadable",
         "desktop.agent.attachment_refusal.gestor_mode",
         "desktop.agent.attachment_refusal.file_changed_during_read",
         "desktop.agent.attachment_refusal.not_signed_in",

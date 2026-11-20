@@ -263,7 +263,7 @@ export function requested(request: AgentApproval): AgentApproval {
 // by the bar it names (the profile's when it names none): one parked read per
 // file, as the agent parks them when it reads each attached file.
 const BARRED_READS =
-  /adjuntos sin enviar(?: \((gestor_mode|cloud_upload_not_permitted|profile_not_eligible)\))?/i;
+  /adjuntos sin enviar(?: \((gestor_mode|cloud_upload_not_permitted|profile_not_eligible|profile_unreadable)\))?/i;
 const BARRED_FILES = ["escaneo.pdf", "foto.jpg", "factura.xml", "gastos.xlsx"];
 
 /** The reads `text` asks for, as the agent requests permission for each, and

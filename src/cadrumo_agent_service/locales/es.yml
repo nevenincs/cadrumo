@@ -36,6 +36,9 @@ desktop:
       profile_not_eligible: Tu perfil no permite que los documentos salgan de este
         ordenador. Lo controla el ajuste «Lectura de documentos fuera del equipo»
         de tu perfil.
+      profile_unreadable: No se ha podido leer el ajuste «Lectura de documentos fuera
+        del equipo» de tu perfil, así que no se ha enviado nada. Inténtalo de nuevo
+        en un momento.
       reference_unknown: El agente ya no está esperando este archivo.
       service_failed: No se ha podido registrar el permiso, así que no se ha enviado
         nada.
