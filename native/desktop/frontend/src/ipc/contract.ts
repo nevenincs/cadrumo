@@ -539,6 +539,17 @@ export interface HostCommands {
     args: Authorized<{ query: string; limit: number; language: string }>;
     result: import("../shell/referenceContract").ReferenceServed;
   };
+  /** Operations: one page of the signed-in profile's operation history, at
+   * most `limit` runs, after the continuation the previous page served. The
+   * host runs, retries and cancels nothing and keeps nothing. */
+  profile_views_operations: {
+    args: Authorized<{
+      limit: number;
+      after:
+        import("../shell/operationsContract").OperationHistoryCursorV1 | null;
+    }>;
+    result: import("../shell/operationsContract").OperationsServed;
+  };
   /** Submits one admitted ledger operation with its request, without the
    * profile, and follows it until it settles or waits on the person. A
    * failure rejects with `LedgerFailure`. */

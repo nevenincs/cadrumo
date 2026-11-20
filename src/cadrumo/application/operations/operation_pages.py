@@ -23,6 +23,8 @@ _PAGE_BY_PREFIX: Final[tuple[tuple[str, str | None], ...]] = (
     ("overview.", "home"),
     # The bundled corpus is searched on the reference page.
     ("reference.", "reference"),
+    # The operation journal's history is listed on the operations page.
+    ("operations.", "operations"),
 )
 """Ordered most specific first; the first matching prefix names the register view, or ``None`` for no page.
 

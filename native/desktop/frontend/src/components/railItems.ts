@@ -38,6 +38,7 @@ export function railItems({
   ledgerVisible,
   withholdingVisible,
   referenceVisible,
+  operationsVisible,
   declarationsVisible,
   calendarVisible,
   browserVisible,
@@ -74,6 +75,7 @@ export function railItems({
   ledgerVisible: boolean;
   withholdingVisible: boolean;
   referenceVisible: boolean;
+  operationsVisible: boolean;
   declarationsVisible: boolean;
   calendarVisible: boolean;
   browserVisible: boolean;
@@ -189,6 +191,17 @@ export function railItems({
             label: t("desktop.reference.title"),
             pressed: referenceVisible,
             onClick: () => runAction("view.reference"),
+          } satisfies RailItem,
+        ]
+      : []),
+    ...(views
+      ? [
+          {
+            id: "operations",
+            icon: "clock",
+            label: t("desktop.operations.title"),
+            pressed: operationsVisible,
+            onClick: () => runAction("view.operations"),
           } satisfies RailItem,
         ]
       : []),

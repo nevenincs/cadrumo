@@ -5142,6 +5142,7 @@
         "dev.locales.desktop_ledger_document_keys",
         "dev.locales.desktop_ledger_workflow_keys",
         "dev.locales.desktop_modelo_choice_keys",
+        "dev.locales.desktop_operations_keys",
         "dev.locales.desktop_profile_interface_keys",
         "dev.locales.desktop_reference_keys",
         "dev.locales.desktop_withholding_keys",

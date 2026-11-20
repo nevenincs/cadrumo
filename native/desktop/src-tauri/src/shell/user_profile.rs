@@ -1078,6 +1078,17 @@ async fn profile_views_reference(
 ) -> Result<views::ReferenceAnswer> {
     host.reference_search(query, limit, language).await
 }
+/// Operations: one page of the signed-in profile's operation history, at most
+/// `limit` runs, after the continuation the previous page served. It runs,
+/// retries and cancels nothing, and nothing is kept or logged.
+#[tauri::command]
+async fn profile_views_operations(
+    host: State<'_, Arc<ProfileHost>>,
+    limit: u32,
+    after: Option<serde_json::Value>,
+) -> Result<views::OperationsPage> {
+    host.operations_history(limit, after).await
+}
 #[tauri::command]
 async fn profile_views_record_groups(
     host: State<'_, Arc<ProfileHost>>,
@@ -1125,6 +1136,7 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         profile_views_calendar,
         profile_views_home,
         profile_views_reference,
+        profile_views_operations,
         profile_views_record_groups
     ]
 }

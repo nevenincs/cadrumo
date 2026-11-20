@@ -42,6 +42,7 @@ const LINKS_REPLY = [
   "- [las retenciones](cadrumo://view/withholding)",
   "- [la referencia](cadrumo://view/reference)",
   "- [las operaciones](cadrumo://view/operations)",
+  "- [la instalación](cadrumo://view/installation)",
   "- [los datos de la AEAT](cadrumo://view/aeat-sync)",
   "- [el espacio de trabajo](cadrumo://view/terminal)",
   "- [una vista que no existe](cadrumo://view/nowhere)",

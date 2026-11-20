@@ -197,6 +197,15 @@ def test_the_nearest_ancestor_opens_when_the_element_is_not_implemented(tmp_path
     )
 
 
+def test_installation_is_declared_and_intentionally_drawn_by_no_surface() -> None:
+    # Its acts are the runtime's sessionless installation administration, which the window keeps out.
+    register = load_navigation_register()
+    element = register.element("installation")
+    assert element is not None
+    assert element.surfaces == ()
+    assert "installation" not in register.ids_for(NavigationSurface.GUI)
+
+
 def test_the_shipped_register_declares_the_initial_elements() -> None:
     register = load_navigation_register()
     gui = NavigationSurface.GUI
@@ -212,7 +221,7 @@ def test_the_shipped_register_declares_the_initial_elements() -> None:
         "withholding": {gui},
         "declarations": {gui},
         "aeat-sync": {gui},
-        "operations": set(),
+        "operations": {gui},
         "installation": set(),
         "reference": {gui},
         "profile": {gui},
