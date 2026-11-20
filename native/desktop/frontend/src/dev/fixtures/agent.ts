@@ -43,6 +43,8 @@ export type FixtureMessage = {
   attachments?: AgentDocumentReference[];
   /** The skills a person's message loaded. */
   skills?: string[];
+  /** The run whose conversation the message was carried from. */
+  carried_from_run_id?: string;
 };
 
 /** A tool call of a run as the agent keeps it: as its stream reports it, with
@@ -95,6 +97,9 @@ export function seeded(
   ];
 }
 
+const carried = ({ carried_from_run_id }: FixtureMessage) =>
+  carried_from_run_id ? { carried_from_run_id } : {};
+
 /**
  * A conversation's records as the desktop host composes them from its runs:
  * each message once, the reply's tool calls just before its first agent
@@ -133,8 +138,15 @@ export function conversationRecords(
               sent_at: message.sent_at ?? null,
               attachments: message.attachments ?? [],
               skills: message.skills ?? [],
+              ...carried(message),
             }
-          : { kind: "agent", id, reply_id: run.id, text: message.text },
+          : {
+              kind: "agent",
+              id,
+              reply_id: run.id,
+              text: message.text,
+              ...carried(message),
+            },
       );
     });
     if (firstAgent < 0) records.push(...tools());
@@ -199,6 +211,12 @@ export const FIXTURE_CONVERSATIONS: AgentConversationRecord[] = [
     id: "c-sin-titulo",
     title: "",
     last_active_at: ago(30 * DAY),
+    archived: false,
+  },
+  {
+    id: "c-trasladada",
+    title: "Turnos trasladados",
+    last_active_at: ago(40 * DAY),
     archived: false,
   },
   {
@@ -392,6 +410,43 @@ export const FIXTURE_RUNS: Record<string, FixtureRun[]> = {
       tools: [],
     },
   ],
+  // Turns carried from two earlier conversations, one the window lists and one
+  // it does not, each keeping the time it was first said; and a tool that
+  // failed and said why.
+  "c-trasladada": [
+    {
+      id: "c-trasladada",
+      status: "completed",
+      messages: [
+        {
+          ...user("Pregunta de antes del traslado.", ago(60 * DAY)),
+          carried_from_run_id: "c-iva-t3",
+        },
+        {
+          ...agent("Respuesta de antes del traslado."),
+          carried_from_run_id: "c-iva-t3",
+        },
+        {
+          ...user("Otra pregunta de otra conversación.", ago(59 * DAY)),
+          carried_from_run_id: "r-desaparecida",
+        },
+        user("Y ahora, en esta conversación.", ago(40 * DAY)),
+        agent("Seguimos aquí."),
+      ],
+      tools: [
+        {
+          id: "t-trasladada-1",
+          title: "mcp__cadrumo__status",
+          tool_kind: "read",
+          status: "failed",
+          tool_server: "cadrumo",
+          tool_name: "status",
+          tool_reach: "local_read",
+          failure: { message: "The session is not signed in to a profile." },
+        },
+      ],
+    },
+  ],
   "c-por-reparar": [
     {
       id: "c-por-reparar",
@@ -479,3 +534,20 @@ export const FIXTURE_ATTACHMENT_POLICY: AttachmentPolicyResponse = {
     { media_type: "text/plain", extensions: [".txt"] },
   ],
 };
+
+declare global {
+  interface Window {
+    /** The file the picker's second pick is, and why the host refuses it
+     * before sending anything, in place of the archive it refuses for its
+     * format. */
+    __fixtureAttachRefusal?: { name: string; size_bytes: number; code: string };
+  }
+}
+
+/** What the host refuses of the picker's second pick, before sending it. */
+export const pickedRefusal = () =>
+  window.__fixtureAttachRefusal ?? {
+    name: "copias.zip",
+    size_bytes: 9_000,
+    code: "agent_attachment_format_refused",
+  };

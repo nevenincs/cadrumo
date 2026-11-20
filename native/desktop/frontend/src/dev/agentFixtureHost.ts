@@ -48,6 +48,7 @@ import {
 import {
   FIXTURE_CONVERSATIONS,
   FIXTURE_ATTACHMENT_POLICY,
+  pickedRefusal,
   FIXTURE_DOCUMENTS,
   FIXTURE_RUNS,
   conversationRecords,
@@ -70,6 +71,8 @@ import {
   refusedWith,
   requested,
 } from "./agentFixtureAsks";
+import { atState, toolCall, toolTitle } from "./agentFixtureTools";
+import { readAnswers, readWaits } from "./agentFixtureReads";
 import {
   AUTHENTICATION_REQUIRED,
   BUSY_ELSEWHERE,
@@ -122,9 +125,9 @@ import type {
  * pending again and watching anew. */
 export type FixtureStream = "steady" | "gap";
 
-/** What every fixture reply stops to wait on, if anything: questions, or a
- * tool the agent wants to use. */
-export type FixtureAsks = "questions" | "approval";
+/** What every fixture reply stops to wait on, if anything: questions, a tool
+ * to use, or three reads of files the installation keeps on this computer. */
+export type FixtureAsks = "questions" | "approval" | "attachments";
 
 /** What the conversations have stored: the fixture documents, nothing at
  * all, storage the host does not serve, or storage that cannot be read. */
@@ -518,14 +521,9 @@ export function fixtureAgent({
     refusal?: AgentToolRefusal,
     details?: string[],
   ) => {
-    const call: AgentStreamToolCall = {
-      id: id("t"),
-      title,
-      tool_kind,
-      status: "pending",
-    };
+    const call = toolCall(id("t"), title, tool_kind);
     return states.map((state) => () => {
-      const now: AgentStreamToolCall = { ...call, status: state };
+      const now = atState(call, state);
       const at = held.run.tools.findIndex((held) => held.id === call.id);
       const recorded = details ? { ...now, details } : now;
       if (at < 0) held.run.tools.push(recorded);
@@ -656,6 +654,15 @@ export function fixtureAgent({
       ]);
       return;
     }
+    if (asks === "attachments") {
+      const reads = readWaits(held.run.id, id, () => goOn([finish(held)]));
+      schedule(held, [
+        started(held),
+        ...write(held, "Voy a leer los archivos."),
+        ...reads.map((read) => park(held, read)),
+      ]);
+      return;
+    }
     if (asks === "approval") {
       const title = "Leer los apuntes del libro";
       // A message asks for the permission the agent gives least to go on,
@@ -664,9 +671,8 @@ export function fixtureAgent({
       const most = /extremos/i.test(text);
       // The agent says a tool's name and a line that repeats it, and serves
       // nothing of the call's input.
-      const canonical = /permission (status|file|attachment|operation)/.exec(
-        text,
-      );
+      const canonical =
+        /permission (status|file|attachment|operation|web)/.exec(text);
       const target = canonical ? PERMISSION_TARGETS[canonical[1]!] : undefined;
       const toolName = target?.tool ?? "ledger_list";
       schedule(held, [
@@ -680,12 +686,7 @@ export function fixtureAgent({
             source: "agent_tool",
             tool_call: unnamed ? null : most ? MOST_TOOL_CALL : toolName,
             tool_kind: unnamed ? null : target ? "other" : "read",
-            tool_server:
-              unnamed ||
-              target?.tool === "write_file" ||
-              target?.tool === "read_attachment"
-                ? null
-                : "cadrumo",
+            tool_server: unnamed ? null : target ? target.server : "cadrumo",
             description: unnamed
               ? null
               : most
@@ -782,7 +783,7 @@ export function fixtureAgent({
       ...write(held, "Lo miro en tus apuntes."),
       ...tool(
         held,
-        "ledger_list",
+        toolTitle(text),
         "read",
         TOOL_FAILS.test(text)
           ? ["pending", "in_progress", "failed"]
@@ -1222,10 +1223,8 @@ export function fixtureAgent({
               },
               {
                 id: ids[1],
-                name: "copias.zip",
-                size_bytes: 9_000,
+                ...pickedRefusal(),
                 state: "refused",
-                code: "agent_attachment_format_refused",
               },
               {
                 id: ids[2],
@@ -1427,12 +1426,7 @@ export function fixtureAgent({
       return {};
     },
     // The fixture's lanes stay on this computer, so its reads need no grant.
-    attachmentCard: () => Promise.resolve({ kind: "not_required" as const }),
-    attachmentRelease: () => Promise.resolve({ kind: "not_required" as const }),
-    attachmentGrants: () =>
-      Promise.resolve({ kind: "grants" as const, grants: [] }),
-    attachmentGrantRevoke: () =>
-      Promise.resolve({ kind: "refused" as const, code: "grant_revoked" }),
+    ...readAnswers(say, asks === "attachments", waiting),
     async decideApproval(approval, optionId) {
       say(`agentDecideApproval ${approval.request_id} ${optionId}`);
       await check();

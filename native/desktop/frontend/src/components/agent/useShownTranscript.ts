@@ -19,6 +19,7 @@ export function useShownTranscript(
   pending: PendingSend | null,
   locale: string,
   t: Translate,
+  titles?: ReadonlyMap<string, string>,
 ): AgentRead<ReturnType<typeof transcriptItems>> {
   const projectTranscript = useMemo(() => createTranscriptProjection(), []);
   return useMemo((): AgentRead<ReturnType<typeof transcriptItems>> => {
@@ -52,7 +53,7 @@ export function useShownTranscript(
         skills: pending.skills,
       });
     }
-    const items = projectTranscript(records, locale, t);
+    const items = projectTranscript(records, locale, t, undefined, titles);
     return {
       kind: "ready",
       value: items.map((item) =>
@@ -64,5 +65,5 @@ export function useShownTranscript(
           : item,
       ),
     };
-  }, [read, pending, locale, t, projectTranscript]);
+  }, [read, pending, locale, t, titles, projectTranscript]);
 }

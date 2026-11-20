@@ -42,6 +42,26 @@ export function useStrings(): Translate {
   return useContext(StringsContext);
 }
 
+/**
+ * The words for `count` of something, where a locale words one of it apart
+ * from several: `one` where the locale's plural rules call `count` singular
+ * and its catalogue carries that key, else `other`. Both are named by their
+ * whole keys so each stays a key the catalogue declares. A language that keeps
+ * its noun singular after a number states the same words under both.
+ */
+export function countWords(
+  t: Translate,
+  count: number,
+  keys: { one: string; other: string },
+  values?: Record<string, string | number>,
+): string {
+  const locale = t.locale ?? SOURCE_LOCALE;
+  const singular =
+    new Intl.PluralRules(locale).select(count) === "one" &&
+    Object.hasOwn(catalogue[locale] ?? {}, keys.one);
+  return t(singular ? keys.one : keys.other, values);
+}
+
 /** The tokens a key family carries in the generated strings: the part of each
  * key after `prefix`, in order. A family generated from a backend enum lists
  * that enum's members, so a view that offers them lists none of its own. */

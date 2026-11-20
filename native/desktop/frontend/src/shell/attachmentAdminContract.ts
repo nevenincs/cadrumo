@@ -30,6 +30,14 @@ export type AttachmentCardAnswer =
   AttachmentCard | AttachmentNotRequired | AttachmentRefusal;
 
 /**
+ * The person's refusal of the read was recorded with the agent, which tells
+ * the model.
+ */
+export type AttachmentDeclined = {
+  kind: "declined";
+};
+
+/**
  * One remembered grant as the settings list shows it; never the bytes' digest
  * or conversation.
  */
@@ -71,15 +79,23 @@ export type AttachmentNotRequired = {
 };
 
 /**
- * A refused attachment request, by its closed code; nothing else is said.
+ * A refused attachment request, by its closed code.
+ *
+ * Once the service has resolved the read it also names the file and the lane
+ * the read would have gone to, so the window can say which file was not sent.
  */
 export type AttachmentRefusal = {
   kind: "refused";
   code: DisclosureRefusalCode | AttachmentAdminRefusalCode;
+  name: string | null;
+  provider: string | null;
 };
 
 export type AttachmentReleaseAnswer =
-  AttachmentReleased | AttachmentNotRequired | AttachmentRefusal;
+  | AttachmentReleased
+  | AttachmentDeclined
+  | AttachmentNotRequired
+  | AttachmentRefusal;
 
 /**
  * The read was recorded and released to the agent.

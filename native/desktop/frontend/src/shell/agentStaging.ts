@@ -13,6 +13,7 @@ import type {
   AgentUploadPick,
 } from "./agentSession";
 import type { AgentDocumentRecord } from "./agentViews";
+import { formatSize } from "../shared/numbers";
 import type { Translate } from "./strings";
 
 // What the next message of a conversation names of its stored documents: the
@@ -24,12 +25,24 @@ import type { Translate } from "./strings";
 /** The id a stored document is staged under; never an upload's. */
 const storedId = (name: string) => `stored:${name}`;
 
-/** Why a file was not stored, in words. */
-export function uploadRefusalWords(t: Translate, code: string): string {
+/** Why a file was not stored, in words. A file too large for the storage
+ * says the largest it takes (`maxFileBytes`, as the agent's attachment policy
+ * serves it) where that is known. */
+export function uploadRefusalWords(
+  t: Translate,
+  code: string,
+  maxFileBytes: number | null = null,
+): string {
   switch (code) {
     case "agent_attachment_too_large":
     case "agent_gateway_attachment_too_large":
-      return t("desktop.agent.upload_too_large");
+      // A size is written in a language: a translator that carries none
+      // cannot say it, so it says the plain words.
+      return maxFileBytes === null || t.locale === undefined
+        ? t("desktop.agent.upload_too_large")
+        : t("desktop.agent.upload_too_large_limit", {
+            limit: formatSize(t.locale, maxFileBytes),
+          });
     case "agent_attachment_format_refused":
     case "agent_gateway_attachment_format_refused":
       return t("desktop.agent.upload_format_refused");
@@ -102,6 +115,7 @@ export function useStagedDocuments({
   session,
   filterLabel,
   t,
+  maxFileBytes = null,
   onStored,
 }: {
   reader: string | null;
@@ -109,6 +123,8 @@ export function useStagedDocuments({
   session: AgentSession | undefined;
   filterLabel: string;
   t: Translate;
+  /** The largest file the storage takes, once the agent has served it. */
+  maxFileBytes?: number | null;
   onStored?: () => void;
 }): StagedDocuments {
   const stored = useRef(onStored);
@@ -236,7 +252,10 @@ export function useStagedDocuments({
     (): StagedAttachment[] => [
       ...(uploads ?? []).map(({ code, ...upload }) =>
         code
-          ? { ...upload, refusalReason: uploadRefusalWords(t, code) }
+          ? {
+              ...upload,
+              refusalReason: uploadRefusalWords(t, code, maxFileBytes),
+            }
           : upload,
       ),
       ...(documents ?? []).map((document) => ({
@@ -244,7 +263,7 @@ export function useStagedDocuments({
         id: storedId(document.name),
       })),
     ],
-    [documents, uploads, t],
+    [documents, uploads, t, maxFileBytes],
   );
 
   return {

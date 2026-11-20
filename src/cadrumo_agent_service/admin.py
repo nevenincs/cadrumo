@@ -93,7 +93,7 @@ class AdminTarget(Protocol):
         secret: bytearray | None = None,
         run_id: str | None = None,
         permission_request_id: str | None = None,
-        scope: Literal["once", "session", "remember"] | None = None,
+        scope: Literal["once", "session", "remember", "decline"] | None = None,
         grant_id: str | None = None,
         conversation_id: str | None = None,
         engine: LocalEngine | None = None,
@@ -120,7 +120,7 @@ class AdminRequest(BaseModel):
     secret_bytes: Annotated[int, Field(ge=1, le=ADMIN_SECRET_MAX_BYTES)] | None = None
     run_id: Annotated[str, Field(pattern=_AGENT_IDENTIFIER_PATTERN)] | None = None
     permission_request_id: Annotated[str, Field(pattern=_AGENT_IDENTIFIER_PATTERN)] | None = None
-    scope: Literal["once", "session", "remember"] | None = None
+    scope: Literal["once", "session", "remember", "decline"] | None = None
     grant_id: Annotated[str, Field(pattern=r"^[0-9a-f]{32}$")] | None = None
     conversation_id: Annotated[str, Field(pattern=_AGENT_IDENTIFIER_PATTERN)] | None = None
     engine: LocalEngine | None = None

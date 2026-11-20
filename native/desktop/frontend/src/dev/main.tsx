@@ -102,7 +102,7 @@ function readParams() {
     // column recovers it.
     agentStream: params.get("stream") === "gap" ? ("gap" as const) : undefined,
     // What every agent reply stops to ask: questions or a tool's approval.
-    agentAsks: (["questions", "approval"] as const).find(
+    agentAsks: (["questions", "approval", "attachments"] as const).find(
       (asks) => asks === params.get("asks"),
     ),
     // What the conversations have stored for `@` to name.

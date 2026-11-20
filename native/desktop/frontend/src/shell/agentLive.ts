@@ -366,6 +366,10 @@ export function applyStreamEvent(
         title: event.tool.title,
         tool_kind: event.tool.tool_kind,
         status: event.tool.status,
+        tool_server: event.tool.tool_server ?? null,
+        tool_name: event.tool.tool_name ?? null,
+        tool_reach: event.tool.tool_reach ?? null,
+        failure: event.tool.failure ?? null,
         details: [],
       };
       const at = turns.findIndex(

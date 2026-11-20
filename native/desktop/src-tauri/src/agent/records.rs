@@ -7,7 +7,7 @@
 //! schema the window's generated types are written from, and a test here
 //! keeps it equal to these types.
 
-use super::stream::{Approval, Questionnaire};
+use super::stream::{Approval, Questionnaire, ToolFailure};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -83,6 +83,11 @@ pub struct PersonRecord {
     pub attachments: Vec<DocumentReference>,
     /// The skills the message loaded, by name.
     pub skills: Vec<String>,
+    /// The run whose conversation this message was carried from; null for a
+    /// message said in this conversation. `sent_at` is then when it was first
+    /// said.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub carried_from_run_id: Option<String>,
 }
 
 /// A stored document a message names, as the history echoes it.
@@ -116,6 +121,19 @@ pub struct ToolRecord {
     pub tool_kind: Option<String>,
     #[cfg_attr(test, schemars(schema_with = "relayed::tool_call_status"))]
     pub status: Option<String>,
+    /// The tool server that owns the tool, e.g. `cadrumo`; null where unnamed.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_server: Option<String>,
+    /// The tool's own name within its server; null where unnamed.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_name: Option<String>,
+    /// How far the tool reaches; null where the agent did not say.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, schemars(schema_with = "relayed::tool_reach"))]
+    pub tool_reach: Option<String>,
+    /// Why the call failed, where it failed and stated why.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub failure: Option<ToolFailure>,
     /// What the history says of the call, as the agent worded it and the
     /// host cut it: its text, its diffs' paths and the places it touched.
     pub details: Vec<String>,
@@ -134,6 +152,10 @@ pub struct AgentRecord {
     pub id: Option<String>,
     pub reply_id: String,
     pub text: String,
+    /// The run whose conversation this message was carried from; null for a
+    /// message said in this conversation.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub carried_from_run_id: Option<String>,
 }
 
 /// The record of a reply (a run) itself.
@@ -217,6 +239,10 @@ pub(super) mod relayed {
 
     pub fn tool_kind(_: &mut SchemaGenerator) -> Schema {
         nullable("ToolKind")
+    }
+
+    pub fn tool_reach(_: &mut SchemaGenerator) -> Schema {
+        nullable("ToolReach")
     }
 
     pub fn tool_call_status(_: &mut SchemaGenerator) -> Schema {

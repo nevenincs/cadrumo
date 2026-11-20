@@ -16,6 +16,8 @@ import type {
 // words why a file was not stored. Words are left as their keys.
 
 const words = (key: string) => key;
+/** The space a size is written with between its figure and its unit. */
+const NBSP = String.fromCharCode(0xa0);
 
 const record = (name: string): AgentDocumentRecord => ({
   name,
@@ -110,4 +112,36 @@ test("every refusal of an upload has words of its own", () => {
   ];
   for (const [code, key] of refusals)
     expect(uploadRefusalWords(words, code), code).toBe(key);
+});
+
+test("a file too large says the largest the storage takes, in the window's language", () => {
+  const said = (locale: string) =>
+    Object.assign(
+      (key: string, values?: Record<string, string | number>) =>
+        `${key} ${JSON.stringify(values ?? {})}`,
+      { locale },
+    );
+  for (const code of [
+    "agent_attachment_too_large",
+    "agent_gateway_attachment_too_large",
+  ]) {
+    expect(uploadRefusalWords(said("en"), code, 100_000_000)).toBe(
+      `desktop.agent.upload_too_large_limit {"limit":"95${NBSP}MB"}`,
+    );
+    expect(uploadRefusalWords(said("es"), code, 25 * 1024 * 1024)).toBe(
+      `desktop.agent.upload_too_large_limit {"limit":"25${NBSP}MB"}`,
+    );
+    // The limit is the agent's to serve: until it has, the plain words stand.
+    expect(uploadRefusalWords(said("en"), code, null)).toBe(
+      "desktop.agent.upload_too_large {}",
+    );
+    // So are they for a translator that names no language to write it in.
+    expect(uploadRefusalWords(words, code, 100_000_000)).toBe(
+      "desktop.agent.upload_too_large",
+    );
+  }
+  // No other refusal takes the limit.
+  expect(
+    uploadRefusalWords(said("en"), "agent_attachment_format_refused", 1),
+  ).toBe("desktop.agent.upload_format_refused {}");
 });

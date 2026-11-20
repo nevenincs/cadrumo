@@ -22,19 +22,24 @@ desktop:
     attachment_grant_images: Page images to {model}
     attachment_grant_revoke: Revoke
     attachment_grants_title: Remembered permissions
+    attachment_kept_here: 'These {count} files weren''t sent to {provider}:'
+    attachment_kept_here_models: Choose a model
+    attachment_kept_here_one: 'This file wasn''t sent to {provider}:'
+    attachment_kept_here_way: A local model can read them on this computer.
+    attachment_kept_here_way_one: A local model can read it on this computer.
     attachment_refusal:
       acknowledgement_missing: You haven't allowed this read.
       cloud_upload_not_permitted: This installation doesn't allow documents to leave
         this computer.
       document_removed: The file has been removed.
       file_changed_during_read: The file changed. Add it again to read the new version.
-      gestor_mode: Gestor mode never sends documents off this computer.
       grant_revoked: That permission has already been revoked.
       not_signed_in: Sign in to answer this.
       profile_not_eligible: This profile can't send documents off this computer.
       reference_unknown: The agent isn't waiting on this file any more.
       service_failed: The permission couldn't be recorded, so nothing was sent.
     attachment_refused: This file wasn't sent. {reason}
+    attachment_refused_named: '{name} wasn''t sent. {reason}'
     attachments: Files for the next message
     attachments_refused: 'Not accepted: {count}'
     attachments_uploading: 'Uploading: {count}'
@@ -44,8 +49,13 @@ desktop:
     can_write: write files
     cancel: Cancel
     capabilities: 'Can: {list}'
-    carried_turns: This conversation began with {carried} turns of the earlier one;
-      {omitted} older turns were left out.
+    carried_from: Carried from {title}
+    carried_from_unknown: Carried from an earlier conversation
+    carried_omitted: '{omitted} older turns were left out.'
+    carried_omitted_one: '{omitted} older turn was left out.'
+    carried_turns: This conversation began with {carried} turns of the earlier one.
+    carried_turns_one: This conversation began with {carried} turn of the earlier
+      one.
     carry_back: Back to that conversation
     carry_pending: Your next message starts a new conversation that carries the newest
       turns of “{title}”.
@@ -234,11 +244,15 @@ desktop:
     search_placeholder: Search
     selection_change_asked: This message changes the model from {previous} to {requested}.
     selection_change_confirm: Change and send
-    selection_change_history: The new model gets {retained} messages of this conversation
-      (about {tokens} tokens); {omitted} older messages are left out.
     selection_change_keep: Keep the model
+    selection_change_omitted: '{omitted} older messages are left out.'
+    selection_change_omitted_one: '{omitted} older message is left out.'
     selection_change_refused: Changing the model needs your confirmation. Send the
       message again.
+    selection_change_retained: The new model gets {retained} messages of this conversation
+      (about {tokens} tokens).
+    selection_change_retained_one: The new model gets {retained} message of this conversation
+      (about {tokens} tokens).
     send: Send
     send_nothing: Write a message or add a file first
     send_too_long: This message has {count} characters; {max} is the most
@@ -298,9 +312,93 @@ desktop:
     stopped: Stopped
     thinking: Thinking
     thoughts: What the agent thought
+    tool:
+      cadrumo:
+        authority:
+          description: 'Reads published tax reference data: modelos, casillas, formulas
+            and portals.'
+          label: Read tax reference data
+        control:
+          description: Starts, resumes, cancels or detaches an operation.
+          label: Control an operation
+        corpus_search:
+          description: Searches the bundled BOE and AEAT legal texts and the tax terminology.
+          label: Search the legal corpus
+        describe:
+          description: Reads what one operation does and what it needs.
+          label: Describe an operation
+        execute:
+          description: Submits an operation in your profile. It can change
+            your data.
+          label: Run an operation
+        observe:
+          description: Checks how a submitted operation is going.
+          label: Check an operation
+        respond:
+          description: Applies or rejects a review that is waiting for an answer.
+          label: Answer a review
+        result:
+          description: Reads the result of an operation that has finished.
+          label: Read a result
+        result_page:
+          description: Reads one page of a finished operation's result.
+          label: Read a result page
+        review:
+          description: Reads a review that is waiting for your answer.
+          label: Read a review
+        search:
+          description: Looks for the operations the agent may run in your
+            profile.
+          label: Find operations
+        status:
+          description: Checks which profile you've authorized the agent to work in
+            and whether the app is available.
+          label: Check session
+        views:
+          description: Finds the views of this window that a link can open and checks
+            links.
+          label: Find views
+      cadrumo_agent_tools:
+        list_attachments:
+          description: Lists the documents attached to the conversation.
+          label: List attachments
+        load_skill:
+          description: Loads a skill's instructions so the agent can follow them.
+          label: Load a skill
+        read_attachment:
+          description: Reads a document you attached to the conversation.
+          label: Read an attachment
+        read_conversation_history:
+          description: Reads earlier parts of this conversation.
+          label: Read this conversation
+        read_file:
+          description: Reads a file in the agent's workspace.
+          label: Read a file
+        read_web_source:
+          description: Opens a web page and reads it.
+          label: Read a web page
+        resolve_output_path:
+          description: Works out where a file the agent produces will be saved.
+          label: Choose where to save
+        run_program:
+          description: Runs a program on this computer.
+          label: Run a program
+        run_subagent:
+          description: Hands part of the task to a helper agent.
+          label: Start a helper agent
+        search_previous_conversations:
+          description: Searches your earlier conversations with the agent.
+          label: Search earlier conversations
+        web_search:
+          description: Searches the internet.
+          label: Search the web
+        write_file:
+          description: Creates or changes a file in the agent's workspace.
+          label: Write a file
     tool_details: Call details
     tool_done: Done
     tool_failed: Failed
+    tool_generic: Tool {name}
     tool_kind_delete: Deletes
     tool_kind_edit: Edits
     tool_kind_execute: Runs
@@ -312,7 +410,12 @@ desktop:
     tool_kind_switch_mode: Switches mode
     tool_kind_think: Thinks
     tool_pending: Pending
+    tool_reach:
+      local_read: Reads data on this computer
+      local_write: Changes data on this computer
+      online: Uses the internet
     tool_running: Running
+    tool_unnamed: A tool
     transcript: Conversation
     transcript_empty: No messages yet
     unavailable: Not available yet
@@ -321,6 +424,7 @@ desktop:
     upload_name_refused: Its name can't be stored; rename it and try again
     upload_quota_exceeded: This conversation's storage is full
     upload_too_large: Too large for this conversation
+    upload_too_large_limit: 'Too large: the maximum is {limit}'
     upload_unreadable: Couldn't be read
     uploading: Uploading
     uploading_name: Uploading {name}

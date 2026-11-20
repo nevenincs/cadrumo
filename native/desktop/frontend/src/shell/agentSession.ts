@@ -273,12 +273,20 @@ export type AgentToolRefusal = {
 };
 
 /** History can omit these values. Every stream tool call supplies them as
- * strings, with the kind and status still constrained by the contract. */
+ * strings, with the kind and status still constrained by the contract. The
+ * tool's identity, its reach and why it failed come with the call only where
+ * the agent stated them. */
 export type AgentStreamToolCall = Pick<
   AgentToolRecord,
   "id" | "title" | "tool_kind" | "status"
 > &
-  Record<"id" | "title" | "tool_kind" | "status", string>;
+  Record<"id" | "title" | "tool_kind" | "status", string> &
+  Partial<
+    Pick<
+      AgentToolRecord,
+      "tool_server" | "tool_name" | "tool_reach" | "failure"
+    >
+  >;
 
 export type AgentStreamEvent =
   /** The host's, before the first frame it maps of a run. */
@@ -482,11 +490,13 @@ export interface AgentSession {
     approval: Pick<AgentApproval, "reply_id" | "request_id">,
   ): Promise<AttachmentCardAnswer>;
   /** Puts the person's answer to the service; `null` asks it to release under a
-   * grant it already holds. The request is answered only once released. */
+   * grant it already holds, and `"decline"` only records that the person
+   * declined, so the model is told. A release answers the request once
+   * released; a decline leaves it to the caller's own decision. */
   attachmentRelease(
     approval: Pick<AgentApproval, "reply_id" | "request_id">,
     optionId: string,
-    scope: ReleaseScope | null,
+    scope: ReleaseScope | "decline" | null,
   ): Promise<AttachmentReleaseAnswer>;
   attachmentGrants(): Promise<AttachmentGrantsAnswer>;
   attachmentGrantRevoke(grantId: string): Promise<AttachmentGrantRevokeAnswer>;

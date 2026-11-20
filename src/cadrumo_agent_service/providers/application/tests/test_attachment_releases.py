@@ -51,6 +51,7 @@ class _Agent:
     tool_call: str = "read_attachment"
     provider: str = "claude"
     releases: list[dict[str, Any]] = field(default_factory=list)
+    refusals: list[dict[str, Any]] = field(default_factory=list)
     withdrawn: list[str] = field(default_factory=list)
     release_status: int = 204
 
@@ -92,7 +93,7 @@ def _handler(agent: _Agent) -> type[BaseHTTPRequestHandler]:
             if self.headers.get(HOST_ADMISSION_HEADER) != _HOST:
                 self._send(403)
                 return
-            agent.releases.append(body)
+            (agent.refusals if "refusal" in body else agent.releases).append(body)
             self._send(agent.release_status)
 
         def do_DELETE(self) -> None:
@@ -293,6 +294,61 @@ def test_each_eligibility_bar_refuses_even_a_stored_grant(world: _World, code: D
     assert _code(world.release(ReleaseScope.ONCE)) == code.value
     assert _code(world.card()) == code.value
     assert len(world.agent.releases) == 1
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        DisclosureRefusalCode.GESTOR_MODE,
+        DisclosureRefusalCode.CLOUD_UPLOAD_NOT_PERMITTED,
+        DisclosureRefusalCode.PROFILE_NOT_ELIGIBLE,
+    ],
+)
+def test_a_deployment_bar_is_recorded_with_the_agent_and_still_answered(
+    world: _World, code: DisclosureRefusalCode
+) -> None:
+    world.bar[0] = code
+
+    card = world.card()
+
+    assert card == {"kind": "refused", "code": code.value, "name": "nota.txt", "provider": "claude"}
+    assert world.agent.refusals == [
+        {
+            "sha256": world.agent.digest,
+            "provider": "claude/api",
+            "model": "model-a",
+            "action": "document_text",
+            "expires_in_seconds": 300,
+            "refusal": "host_policy",
+        }
+    ]
+    assert world.agent.releases == []
+    assert world.store.ledger == []
+
+
+def test_a_bar_is_answered_when_the_agent_cannot_record_it(world: _World) -> None:
+    world.bar[0] = DisclosureRefusalCode.CLOUD_UPLOAD_NOT_PERMITTED
+    world.agent.release_status = 500
+
+    assert _code(world.card()) == "cloud_upload_not_permitted"
+    assert len(world.agent.refusals) == 1
+
+
+def test_the_persons_decline_is_recorded_with_the_agent(world: _World) -> None:
+    answer = world.releases.decline(_RUN, _REQUEST).model_dump(mode="json")
+
+    assert answer == {"kind": "declined"}
+    assert [body["refusal"] for body in world.agent.refusals] == ["person_declined"]
+    assert world.agent.refusals[0]["sha256"] == world.agent.digest
+    assert world.agent.releases == []
+    assert world.store.ledger == []
+
+
+def test_a_decline_on_a_lane_that_stays_here_records_nothing(world: _World) -> None:
+    world.off_host[0] = False
+
+    assert world.releases.decline(_RUN, _REQUEST).model_dump(mode="json") == {"kind": "not_required"}
+    assert world.agent.refusals == []
 
 
 def test_a_lane_that_stays_here_needs_no_grant_and_records_nothing(world: _World) -> None:

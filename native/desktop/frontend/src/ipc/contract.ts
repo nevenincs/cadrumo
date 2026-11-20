@@ -1179,7 +1179,7 @@ export interface HostCommands {
     args: Authorized<{
       approval: Pick<AgentApproval, "reply_id" | "request_id">;
       optionId: string;
-      scope: ReleaseScope | null;
+      scope: ReleaseScope | "decline" | null;
     }>;
     result: AttachmentReleaseAnswer;
   };

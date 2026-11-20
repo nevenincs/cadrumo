@@ -174,6 +174,9 @@ export type TranscriptMessage =
       sentAtLabel?: string;
       /** The person's submission is still awaiting acknowledgement. */
       sending?: boolean;
+      /** Where the message was carried from, already worded, when it entered
+       * this conversation as text of an earlier one. */
+      carriedLabel?: string;
     }
   | {
       kind: "agent";
@@ -193,6 +196,9 @@ export type TranscriptMessage =
       /** What the agent thought on the way to the reply, so far, where the
        * agent shared it. Shown only when the person asks. */
       thinking?: string;
+      /** Where the message was carried from, already worded, when it entered
+       * this conversation as text of an earlier one. */
+      carriedLabel?: string;
     };
 
 /** A tool the agent called, such as reading ledger entries. */
@@ -206,6 +212,10 @@ export type TranscriptToolActivity = {
   state: ToolCallStatus | null;
   /** More about the call, such as what kind of tool it is, already worded. */
   detail?: string;
+  /** What the tool does, in one sentence, where the catalogue words it. */
+  description?: string;
+  /** Why the call failed, as the tool said it, when it failed and said. */
+  failureMessage?: string;
   /** What the call took and gave, as the agent recorded it: shown, as it
    * is, only when the person opens the call. */
   internals?: readonly string[];

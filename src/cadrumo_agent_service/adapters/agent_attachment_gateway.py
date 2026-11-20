@@ -14,6 +14,7 @@ from ..providers.application.attachment_releases import (
     GatewayAnswer,
     PendingRead,
     ReleaseAction,
+    ReleaseRefusal,
     StoredDocument,
 )
 from .agent_background_runs import HOST_ADMISSION_HEADER, BackgroundRunEndpoint
@@ -88,6 +89,14 @@ class GatewayAttachments(AttachmentGateway):
     @override
     def release(self, read: PendingRead, sha256: str, *, seconds: int) -> GatewayAnswer:
         """Ask the agent to admit this read; its answer is checked against the bytes it holds."""
+        return self._decide(read, sha256, seconds, refusal=None)
+
+    @override
+    def refuse(self, read: PendingRead, sha256: str, refusal: ReleaseRefusal, *, seconds: int) -> GatewayAnswer:
+        """Tell the agent this read will not be released; it words the reason to the model."""
+        return self._decide(read, sha256, seconds, refusal=refusal)
+
+    def _decide(self, read: PendingRead, sha256: str, seconds: int, *, refusal: ReleaseRefusal | None) -> GatewayAnswer:
         path = (
             f"/v1/conversations/{quote(read.conversation_id, safe='')}/attachments/{quote(read.name, safe='')}/release"
         )
@@ -98,6 +107,8 @@ class GatewayAttachments(AttachmentGateway):
             "action": read.action,
             "expires_in_seconds": seconds,
         }
+        if refusal is not None:
+            body["refusal"] = refusal.value
         status, _ = self._exchange("PUT", path, body=body, host=True)
         if status == 204:
             return GatewayAnswer.RELEASED

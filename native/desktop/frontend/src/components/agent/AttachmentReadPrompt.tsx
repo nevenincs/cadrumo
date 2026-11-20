@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -9,11 +10,13 @@ import { failureCode } from "../../errors";
 import type { AgentSession } from "../../shell/agentSession";
 import type {
   AttachmentCardAnswer,
+  AttachmentReleaseAnswer,
   ReleaseScope,
 } from "../../shell/attachmentAdminContract";
 import { useStrings } from "../../shell/strings";
 import { AgentTextAction } from "./AgentAction";
 import { ConsentPrompt } from "./ConsentPrompt";
+import { barKey, isBar, type BarredRead } from "./AttachmentBarNotice";
 import type { AgentApproval } from "../../shell/agentSnapshotContract";
 
 type Sent = "idle" | "sending" | "done";
@@ -29,11 +32,9 @@ const refusalKey = (code: string) => {
     case "document_removed":
       return "desktop.agent.attachment_refusal.document_removed";
     case "gestor_mode":
-      return "desktop.agent.attachment_refusal.gestor_mode";
     case "cloud_upload_not_permitted":
-      return "desktop.agent.attachment_refusal.cloud_upload_not_permitted";
     case "profile_not_eligible":
-      return "desktop.agent.attachment_refusal.profile_not_eligible";
+      return barKey(code);
     case "file_changed_during_read":
       return "desktop.agent.attachment_refusal.file_changed_during_read";
     case "not_signed_in":
@@ -57,6 +58,8 @@ export function AttachmentReadPrompt({
   disabled,
   onSettled,
   onDecline,
+  onBarred,
+  quiet,
   plain,
 }: {
   session: Pick<AgentSession, "attachmentCard" | "attachmentRelease">;
@@ -65,16 +68,40 @@ export function AttachmentReadPrompt({
   /** The agent's request has been answered. */
   onSettled: () => void;
   onDecline: (() => void) | undefined;
+  /** The service refused the read because the installation or profile keeps
+   * documents on this computer: the caller words it once for the run. */
+  onBarred: (read: BarredRead) => void;
+  /** Draws nothing: the caller is answering this read for the person. */
+  quiet: boolean;
   plain: ReactNode;
 }) {
   const t = useStrings();
   const [card, setCard] = useState<AttachmentCardAnswer | null>(null);
   const [refusal, setRefusal] = useState<string | null>(null);
+  const [refusedFile, setRefusedFile] = useState<string | null>(null);
   const [sent, setSent] = useState<Sent>("idle");
   const allowOnce = approval.options.find(
     (option) => option.kind === "allow_once",
   )?.option_id;
   const asked = useRef(false);
+
+  // A refusal that names the file and the lane it was bound for, when it is a
+  // bar of the installation or profile.
+  const noteBar = useCallback(
+    (refused: AttachmentCardAnswer | AttachmentReleaseAnswer) => {
+      if (refused.kind !== "refused") return;
+      setRefusedFile(refused.name);
+      if (isBar(refused.code) && refused.name && refused.provider)
+        onBarred({
+          requestId: approval.request_id,
+          replyId: approval.reply_id,
+          code: refused.code,
+          name: refused.name,
+          provider: refused.provider,
+        });
+    },
+    [approval, onBarred],
+  );
 
   const answer = useCallback(
     async (scope: ReleaseScope | null) => {
@@ -88,6 +115,7 @@ export function AttachmentReadPrompt({
           scope,
         );
         if (answered.kind === "refused") {
+          noteBar(answered);
           setRefusal(answered.code);
           setSent("idle");
           return;
@@ -99,8 +127,21 @@ export function AttachmentReadPrompt({
         setSent("idle");
       }
     },
-    [session, approval, allowOnce, onSettled],
+    [session, approval, allowOnce, onSettled, noteBar],
   );
+
+  // The person's refusal is told to the agent first, so the model hears that
+  // they declined; the request is declined whether or not that was recorded.
+  const decline = useMemo(() => {
+    if (!onDecline) return undefined;
+    return () => {
+      if (!allowOnce) return onDecline();
+      session
+        .attachmentRelease(approval, allowOnce, "decline")
+        .catch(() => undefined)
+        .finally(onDecline);
+    };
+  }, [session, approval, allowOnce, onDecline]);
 
   useEffect(() => {
     if (asked.current) return;
@@ -108,20 +149,28 @@ export function AttachmentReadPrompt({
     void session.attachmentCard(approval).then(
       (read) => {
         setCard(read);
+        noteBar(read);
         if (read.kind === "card" && read.existing_grant) void answer(null);
       },
       (error: unknown) => setRefusal(failureCode(error)),
     );
     // One read is one question: the ref keeps a later render from asking again.
-  }, [session, approval, answer]);
+  }, [session, approval, answer, noteBar]);
 
   if (card?.kind === "not_required") return <>{plain}</>;
+  if (quiet) return null;
   const refused = refusal ?? (card?.kind === "refused" ? card.code : null);
+  const file = refusedFile ?? (card?.kind === "refused" ? card.name : null);
   const reason =
     refused &&
-    t("desktop.agent.attachment_refused", {
-      reason: t(refusalKey(refused)),
-    });
+    (file
+      ? t("desktop.agent.attachment_refused_named", {
+          name: file,
+          reason: t(refusalKey(refused)),
+        })
+      : t("desktop.agent.attachment_refused", {
+          reason: t(refusalKey(refused)),
+        }));
   if (card?.kind !== "card" || (card.existing_grant && !refused)) {
     return reason ? (
       <section className="grid gap-2 rounded-xl bg-card p-3.5 text-sm shadow-raised">
@@ -161,7 +210,7 @@ export function AttachmentReadPrompt({
         onAllow={active ? () => void answer("once") : undefined}
         onAllowSession={active ? () => void answer("session") : undefined}
         onAllowRemember={active ? () => void answer("remember") : undefined}
-        onDecline={onDecline}
+        onDecline={decline}
       />
     </div>
   );

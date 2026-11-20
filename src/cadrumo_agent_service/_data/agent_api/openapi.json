@@ -715,6 +715,39 @@
                             }
                           ]
                         },
+                        "tool_server": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 128
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "tool_name": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 128
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "tool_reach": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 64
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "locations": {
                           "anyOf": [
                             {
@@ -863,6 +896,39 @@
                             }
                           ]
                         },
+                        "tool_server": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 128
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "tool_name": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 128
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "tool_reach": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 64
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "locations": {
                           "anyOf": [
                             {
@@ -920,6 +986,28 @@
                           ],
                           "additionalProperties": false,
                           "description": "Present only on a call that ended failed whose tool's typed result carried a refusal code; never any result text."
+                        },
+                        "failure": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "maxLength": 128,
+                              "pattern": "^[a-z0-9_.]+$"
+                            },
+                            "recovery_action_id": {
+                              "type": "string",
+                              "maxLength": 128,
+                              "pattern": "^operator\\.[a-z0-9_.]+$"
+                            },
+                            "message": {
+                              "type": "string",
+                              "maxLength": 300
+                            }
+                          },
+                          "required": [],
+                          "additionalProperties": false,
+                          "description": "Present only on a call that ended failed: the refusal tokens its tool's typed result carried, and 'message', the first line of the result's error text, at most 300 characters. No other part of the result is carried."
                         }
                       },
                       "additionalProperties": false,
@@ -1707,6 +1795,28 @@
                         "tool_server": {
                           "type": "string",
                           "maxLength": 128
+                        },
+                        "tool_name": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 128
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "tool_reach": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 64
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         },
                         "tool_kind": {
                           "anyOf": [
@@ -3859,7 +3969,7 @@
     "/v1/conversations/{conversation_id}/attachments/{name}/release": {
       "put": {
         "summary": "Attachment Release Endpoint",
-        "description": "Record the host's release of exactly these bytes to one lane.\n\nA file whose digest is no longer the one released is refused, so a release\ncan never be recorded for bytes the host did not decide on.",
+        "description": "Record the host's release, or refusal, of exactly these bytes to one lane.\n\nA file whose digest is no longer the one decided on is refused, so a\ndecision can never be recorded for bytes the host did not decide on.",
         "operationId": "attachment_release_endpoint_v1_conversations__conversation_id__attachments__name__release_put",
         "security": [
           {
@@ -5174,6 +5284,19 @@
             "maxLength": 128,
             "title": "Media Type",
             "description": "The type the file's bytes were detected as."
+          },
+          "text_encoding": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text Encoding",
+            "description": "The encoding a plain, Markdown, CSV, tab-separated or JSON file's text is in, 'utf-8' or 'cp1252', decided when it was admitted. Null for another type and for a file admitted before it was recorded, which is read as UTF-8."
           }
         },
         "type": "object",
@@ -5253,6 +5376,17 @@
             "maximum": 86400.0,
             "minimum": 1.0,
             "title": "Expires In Seconds"
+          },
+          "refusal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReleaseRefusal"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null releases the bytes. 'host_policy' records that the host's settings keep this file on this computer and only the person can change that setting, so no approval request will be shown; 'person_declined' records that the person declined this read."
           }
         },
         "additionalProperties": false,
@@ -5265,7 +5399,7 @@
           "expires_in_seconds"
         ],
         "title": "AttachmentReleaseRequest",
-        "description": "The host's decision to let one lane read exactly these bytes, for a while."
+        "description": "The host's decision about one lane reading exactly these bytes, for a while.\n\nWith no ``refusal`` it is a release: the lane may read the bytes. With a\n``refusal`` it records that the host will not release them, and why, so the\nagent tells the model the truth instead of waiting for an approval."
       },
       "AuthKind": {
         "type": "string",
@@ -5670,6 +5804,19 @@
             "maxLength": 128,
             "title": "Media Type",
             "description": "The type the file's bytes were detected as."
+          },
+          "text_encoding": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text Encoding",
+            "description": "The encoding a plain, Markdown, CSV, tab-separated or JSON file's text is in, 'utf-8' or 'cp1252', decided when it was admitted. Null for another type and for a file admitted before it was recorded, which is read as UTF-8."
           },
           "conversation_id": {
             "type": "string",
@@ -7572,6 +7719,18 @@
             },
             "type": "array",
             "title": "Attachments"
+          },
+          "carried_from_run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Carried From Run Id",
+            "description": "The run whose conversation this message was carried from, when it entered this conversation as carried text of an earlier one; null for a message said in this conversation. Its timestamp is then when it was first said, not when it was carried."
           }
         },
         "type": "object",
@@ -8025,6 +8184,29 @@
               }
             ],
             "title": "Parent Tool Call Id"
+          },
+          "tool_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Name",
+            "description": "The bare name of the tool the request is about within its server, e.g. 'authority'. Null when the request names no tool."
+          },
+          "tool_reach": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ToolReach"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How far the tool reaches: 'local_read' reads this machine, 'local_write' may change it, 'online' may reach beyond it. Null when it is not known."
           }
         },
         "type": "object",
@@ -8960,6 +9142,15 @@
         ],
         "title": "RegistryArtefact",
         "description": "A model the Ollama model registry serves.\n\nAttributes:\n    source: ``registry``.\n    name: The name the registry serves the model under,\n        ``[[host/]namespace/]model[:tag]``."
+      },
+      "ReleaseRefusal": {
+        "type": "string",
+        "enum": [
+          "host_policy",
+          "person_declined"
+        ],
+        "title": "ReleaseRefusal",
+        "description": "Why the host records a refusal of a read where it would release one.\n\nThe window can only allow or decline; a host whose installation or profile\npolicy keeps a file on this computer decides without asking. A refusal\ntells the model what is true, so it does not wait for a request that will\nnot come."
       },
       "RepairStatus": {
         "type": "string",
@@ -12054,6 +12245,52 @@
               }
             ],
             "title": "Parent Tool Call Id"
+          },
+          "tool_server": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Server",
+            "description": "The tool server that owns the tool, read from the identity its provider named the call by, e.g. 'cadrumo' or 'cadrumo_agent_tools'. Null for a tool the provider carries in itself."
+          },
+          "tool_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Name",
+            "description": "The tool's own name within its server, e.g. 'authority' or 'load_skill'; for a tool the provider carries in itself, the provider's name for it."
+          },
+          "tool_reach": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ToolReach"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How far the tool reaches: 'local_read' reads this machine, 'local_write' may change it, 'online' may reach beyond it. Null when it is not known."
+          },
+          "failure": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ToolFailure"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why the call failed; null on a call that did not fail, and on a failed call that stated no reason."
           }
         },
         "type": "object",
@@ -12077,6 +12314,54 @@
         "title": "ToolCallStatus",
         "description": "Lifecycle states for a single tool invocation."
       },
+      "ToolFailure": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "pattern": "^[a-z0-9_.]+$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code",
+            "description": "The closed refusal code the tool's typed result stated, lowercase letters, digits, '_' and '.'. Absent when it stated none."
+          },
+          "recovery_action_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "pattern": "^operator\\.[a-z0-9_.]+$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovery Action Id",
+            "description": "The operator action that recovers from the refusal, when the tool's result named one. Present only with a code."
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "The first line of the tool result's error text, trimmed to at most 300 characters, so a person can read why the call failed. Absent when the result gave no readable line."
+          }
+        },
+        "type": "object",
+        "title": "ToolFailure",
+        "description": "Why a tool call failed: the refusal it stated and the reason it gave.\n\nEvery field is ``None`` when the call stated nothing of it. The result's\nother content is never part of it."
+      },
       "ToolKind": {
         "type": "string",
         "enum": [
@@ -12093,6 +12378,16 @@
         ],
         "title": "ToolKind",
         "description": "ACP tool categories (mirrors agentclientprotocol.com schema)."
+      },
+      "ToolReach": {
+        "type": "string",
+        "enum": [
+          "local_read",
+          "local_write",
+          "online"
+        ],
+        "title": "ToolReach",
+        "description": "How far a tool reaches when it is called.\n\n``local_read`` tools read what is on this machine and change nothing,\n``local_write`` tools may change it, and ``online`` tools may reach beyond\nit. A call whose reach is not known is served without one rather than as any\nof these."
       },
       "TranscriptAvailability": {
         "type": "string",
