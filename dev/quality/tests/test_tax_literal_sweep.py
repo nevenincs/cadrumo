@@ -31,7 +31,10 @@ sample, a freshness window), a calendar number stands under the unit it counts, 
 its module only cuts a sequence short and it counts no part of a form. A limit word alone speaks for
 no capacity, and the units ``S``, ``POINTS`` and ``VERSION`` do not speak for a limit word. A capacity
 is a power of two, or a round thousand whose every read is the ``max_length`` of a text, or a round ten
-thousand on a collection. A name can lie, so review keeps reading what a new name holds.
+thousand on a collection. A name can lie, so review keeps reading what a new name holds. A mapping
+bound to a name that says it is keyed by a stored schema's version or by the transition that leaves one,
+as in ``_PATHS_BY_VERSION = MappingProxyType({15: ...})``, counts that schema's history in its integer
+keys, unless a tax word in the name says otherwise; a mapping nested inside it is read as any other.
 
 A modelo or period code is an address only when the literal itself stands under such a name, read on
 its own side and by the name's last word: ``period.casilla == '0208'`` and ``box_token = '0208'`` are
@@ -142,6 +145,10 @@ _FAKE_PERIODS: Final = frozenset({"0A", "1T", "01"})
         ("class OtherCodes(StrEnum):\n    JAN = '01'\n", "code"),
         ("class StandardPeriodCode(StrEnum):\n    def f(self):\n        box = '01'\n", "code"),
         ("PATH = ('ledger', '100', 'import')\n", "code"),
+        ("_SURCHARGE_BY_BRACKET: Final = MappingProxyType({15: 'x'})\n", "dict_key"),
+        ("_RATE_BY_VERSION: Final = MappingProxyType({15: 'x'})\n", "dict_key"),
+        ("_PATHS_BY_VERSION = MappingProxyType({15: {21: 'x'}})\n", "dict_key"),
+        ("_PATHS = f(by_version={15: 'x'})\n", "dict_key"),
     ],
 )
 def test_the_sweep_rejects_a_representative_tax_literal(line: str, kind: str) -> None:
@@ -197,6 +204,8 @@ def test_the_sweep_rejects_a_representative_tax_literal(line: str, kind: str) ->
         "widths = (3, 12, 12, 7)\n",
         "parts = {(4, 2, 2)}\n",
         "parts = {(1, 8, 2)}\n",
+        "_PATHS_INTRODUCED_BY_VERSION: Final[Mapping[int, str]] = MappingProxyType({14: 'a', 15: 'b'})\n",
+        "_RETIRED_PATHS_BY_TRANSITION = {15: frozenset({'auth.x'})}\n",
     ],
 )
 def test_the_sweep_admits_what_stands_where_no_tax_fact_can(line: str) -> None:
