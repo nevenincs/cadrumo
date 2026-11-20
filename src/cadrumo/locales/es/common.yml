@@ -3819,7 +3819,7 @@ desktop:
     iva_category:
       domestic_exempt: Exenta
       domestic_general: Tipo general
-      domestic_not_subject: No sujeta
+      domestic_not_subject: No sujeta (art. 7 LIVA)
       domestic_reduced: Tipo reducido
       domestic_reverse_charge: Inversión del sujeto pasivo
       domestic_super_reduced: Tipo superreducido
@@ -3834,7 +3834,7 @@ desktop:
       intra_community_service_supply: Prestación intracomunitaria de servicios
       intra_community_supply: Entrega intracomunitaria
       intra_community_triangulation: Operación triangular
-      operacion_no_sujeta: Operación no sujeta
+      operacion_no_sujeta: No sujeta por localización (arts. 68 a 70 LIVA)
       reagp_compensation: Compensación REAGP
       recargo_equivalencia: Recargo de equivalencia
       regimen_simplificado: Régimen simplificado

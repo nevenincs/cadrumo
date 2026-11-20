@@ -1512,6 +1512,11 @@ application:
           amount_signed: 'Az összeg mennyiség, nem előjeles szám: az irány mondja
             meg, hogy a pénz bejött-e vagy kiment.'
           cannot_clear: 'Ez az érték nem törölhető: a mezőnek értéket kell tartalmaznia.'
+          derive_and_figures: Az összegek kiszámítása felülírná az általad beírt alapot,
+            kulcsot vagy áfát.
+          derive_category_differs: A számítás más áfakategóriát használ, mint a mozgás.
+          derive_needs_business: Az áfát csak vállalkozási vagy vegyes mozgásra számoljuk
+            ki.
           draft_incomplete: Az új tételhez mentés előtt kell könyvelési dátum, összeg,
             pénznem, irány és leírás.
           mixed_needs_share: A Vegyes tételnek üzleti arány kell.
@@ -1525,6 +1530,10 @@ application:
           amount_signed: Írd be az összeget előjel nélkül, és az iránnyal add meg,
             hogy bejött vagy kiment.
           cannot_clear: Tartsd meg a tárolt értéket.
+          derive_and_figures: Told ki a beírt összegeket, hogy a Cadrumo számolja
+            ki őket, vagy told ki a számítást.
+          derive_category_differs: Számolj a mozgás kategóriájával.
+          derive_needs_business: Sorold vállalkozási vagy vegyes mozgásnak.
           draft_incomplete: Egészítsd ki, ami az új tételből hiányzik.
           mixed_needs_share: Add meg az üzleti arányt százalékként, például 50-et
             az 50%-hoz.

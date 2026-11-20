@@ -136,6 +136,13 @@ class LedgerTransactionProjection(BaseModel):
     notes: str
     lifecycle_state: str
     classified_by: str
+    classification_decided_by: str
+    """The stamp of whoever decided the classification.
+
+    The person's own after a derivation worked figures out, which ``classified_by`` then names.
+    """
+    figures_derived: bool
+    """Whether Cadrumo's derivation last wrote the base, rate and IVA, so they are calculated and not typed."""
     classified_at: str | None
     classification_reason: str
     classification_confidence: str | None

@@ -187,11 +187,17 @@ export function InspectorField({
   const value = (
     <span className="grid min-w-0 text-left">
       {changed && (
-        <span className="text-sm text-muted-foreground line-through">
+        <span
+          id={`${id}-was`}
+          className="text-sm text-muted-foreground line-through"
+        >
           {was ?? t("desktop.ledger.inspector.empty")}
         </span>
       )}
-      <span className={changed ? "font-medium break-words" : "break-words"}>
+      <span
+        id={`${id}-shown`}
+        className={changed ? "font-medium break-words" : "break-words"}
+      >
         {shown}
       </span>
     </span>
@@ -202,8 +208,16 @@ export function InspectorField({
       variant="ghost"
       size="sm"
       data-field={field}
-      aria-labelledby={`${id}-label ${id}-value`}
-      aria-describedby={lock ? `${id}-lock` : undefined}
+      // The name is the label and the value as it will be, which is the text
+      // the button shows; the value it replaces is only described.
+      aria-labelledby={`${id}-label ${id}-shown`}
+      aria-describedby={[
+        changed ? `${id}-was` : null,
+        lock ? `${id}-lock` : null,
+        note ? `${id}-note` : null,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       aria-disabled={editable ? undefined : true}
       aria-haspopup={
         editable && editor?.kind === "choice" ? "listbox" : undefined
@@ -232,9 +246,7 @@ export function InspectorField({
         }
       }}
     >
-      <span id={`${id}-value`} className="contents">
-        {value}
-      </span>
+      <span className="contents">{value}</span>
       {lock && (
         <Icon name="lock" size="xs" className="ml-auto text-muted-foreground" />
       )}
@@ -361,7 +373,12 @@ export function InspectorField({
           </span>
         )}
         {note && (
-          <div className="px-1.5 text-xs text-muted-foreground">{note}</div>
+          <div
+            id={`${id}-note`}
+            className="px-1.5 text-xs text-muted-foreground"
+          >
+            {note}
+          </div>
         )}
       </dd>
     </>

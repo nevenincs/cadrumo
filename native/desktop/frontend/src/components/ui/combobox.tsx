@@ -254,6 +254,7 @@ function Combobox({
         align="start"
         sideOffset={4}
         data-slot="combobox"
+        aria-label={label}
         // Never narrower than the field that opened it.
         className={cn(
           "flex w-field min-w-(--radix-popover-trigger-width) flex-col overflow-hidden p-0",

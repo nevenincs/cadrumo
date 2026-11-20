@@ -70,11 +70,12 @@ def _stored(
     return built.model_copy(update=facts)
 
 
-def _row(*cells: tuple[str, str | None], **flags: bool) -> LedgerStagedRow:
+def _row(*cells: tuple[str, str | None], evidence_staged: bool = False, m210_staged: bool = False) -> LedgerStagedRow:
     return LedgerStagedRow(
         transaction_id="a" * 64,
         cells=tuple(LedgerStagedCell.model_validate({"field": field, "value": value}) for field, value in cells),
-        **flags,
+        evidence_staged=evidence_staged,
+        m210_staged=m210_staged,
     )
 
 
