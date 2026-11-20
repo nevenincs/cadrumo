@@ -5,7 +5,7 @@ tags:
 date: '2026-11-20'
 modified: '2026-11-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:8c6a2f5c1db7ff126b5e57292efdc27e28a472c976e3d996e8ea67fdd6b88ff2'
+body_hash: 'sha256:d119cb2b9e5dbd48c1f73da79c317671b46389498dfe74fda371e10e6327c0fa'
 related:
   - "[[2026-11-20-ledger-classify-queue-plan]]"
 ---
@@ -78,9 +78,16 @@ related:
 - `S09` `A` `native/desktop/frontend/src/shell/taskModels.ts`
 - `S09` `A` `native/desktop/frontend/tests/scenarios/task-models.spec.ts`
 - `S09` `verify:` `playwright task-models, agent-readers, local-models, agent-settings-sections, ledger-reading-model (36)` -> `pass`
+- `S05` `A` `src/cadrumo/application/ledger/classification_job_run.py`
+- `S05` `A` `src/cadrumo/entrypoints/tests/test_ledger_classification_job_run.py`
+- `S05` `M` `src/cadrumo/entrypoints/ledger_llm_composition.py`
+- `S05` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S05` `verify:` `pytest job run+operations (46)` -> `pass`
+- `S05` `verify:` `desktop-host-unit-test (1048)` -> `pass`
 
 ## Notes
 
 - `S07` Landed on cadrumo-agent main 5b8bdea; Cadrumo pin moved in ec5b6375ee with the consumer (catalog v8, effort in agent.effort); no task-kind setting caller yet (S08)
 - `S04` Broad sweep stopped as hung on PRIME order; focused tests only, broad sweeps left to QUALITY
 - `S08` No cadrumo-agent change needed; no re-pin
+- `S05` Tests written after code; defect-injection check done instead of fail-first. Off-host jobs refuse until S06.

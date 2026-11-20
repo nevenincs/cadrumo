@@ -8,7 +8,7 @@ related:
   - '[[2026-11-20-ledger-classify-queue-adr]]'
 modified: '2026-11-20'
 body_schema: body-v2
-body_hash: 'sha256:7bcb099757c368a66b5f80fd5285204f022382cf62e997ae5d143d3610299571'
+body_hash: 'sha256:54c103a8fe962e8cb320fe6a2b127b57ff97a210b627519460281551080b59d7'
 ---
 
 # `ledger-classify-queue` plan
@@ -63,7 +63,7 @@ Persist classification jobs with per-item proposals, worked by a cooperative res
 
 - [x] `P02.S03` - Declare the classification job record, its secure namespace and repository with revision-guarded writes; `src/cadrumo/domain/transactions/classification_job.py, adapters/persistence/storage/secure_object_namespaces.py, namespace_registry.py, adapters/persistence/profile/classification_jobs.py`.
 - [x] `P02.S04` - Register enqueue, read, cancel, retry and dismiss operations with generated contracts and the manifest regenerated; `src/cadrumo/application/ledger/classification_job_*.py, operation_composition_ledger.py, operation contract manifest`.
-- [ ] `P02.S05` - Register the cooperative resumable run operation that classifies pending items, commits proposals per batch and reconciles interrupted items as UNKNOWN; `src/cadrumo/application/ledger/classification_job_run.py, ledger_llm_composition.py`.
+- [x] `P02.S05` - Register the cooperative resumable run operation that classifies pending items, commits proposals per batch and reconciles interrupted items as UNKNOWN; `src/cadrumo/application/ledger/classification_job_run.py, ledger_llm_composition.py`.
 - [ ] `P02.S06` - Bind consent per job with once, session and remembered scopes for off-host lanes and apply proposals through the existing review and apply path; `src/cadrumo/adapters/outbound/llm/consent.py, application/ledger/classification_job_*.py, llm_review_execution.py`.
 
 ### Phase `P03` - Task-kind models and effort
