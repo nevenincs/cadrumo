@@ -10,6 +10,7 @@ import {
   catalogStillReading,
   intendedProvider,
   laneSelection,
+  modelDisplayName,
   offeredSelection,
   providerModelsToDownload,
   restoredSelection,
@@ -715,4 +716,29 @@ test("the pauses before a catalog still being read is asked again double up to a
   expect(pauses).toEqual([...pauses].sort((a, b) => a - b));
   expect(Math.max(...pauses)).toBe(ACCOUNT_LIST_PAUSE_CEILING_MS);
   expect(accountListPause(1_000)).toBe(ACCOUNT_LIST_PAUSE_CEILING_MS);
+});
+
+test("a model is named as the picker names it in its lane, and by its id only where the catalog lists none", () => {
+  const lane = FIXTURE_CATALOG.providers?.find(
+    (held) => `${held.provider_id}/${held.transport}` === "kimi/api",
+  );
+  const listed = lane?.catalog.models?.find(
+    (held) => held.model === "fixture-deep",
+  );
+  expect(listed?.display_name).toBeTruthy();
+  expect(modelDisplayName(FIXTURE_CATALOG, "kimi/api", "fixture-deep")).toBe(
+    listed?.display_name,
+  );
+  // The same id on a lane that does not list it, a lane the catalog does not
+  // serve, and no lane at all each give the id back.
+  expect(modelDisplayName(FIXTURE_CATALOG, "qwen/api", "fixture-deep")).toBe(
+    "fixture-deep",
+  );
+  expect(modelDisplayName(FIXTURE_CATALOG, "none/api", "fixture-deep")).toBe(
+    "fixture-deep",
+  );
+  expect(modelDisplayName(FIXTURE_CATALOG, null, "fixture-deep")).toBe(
+    "fixture-deep",
+  );
+  expect(modelDisplayName(FIXTURE_DECLARED_CATALOG, "kimi/api", "x")).toBe("x");
 });

@@ -1,4 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { FIXTURE_ATTACHMENT_POLICY } from "../../src/dev/fixtures/agent";
+import { formatSize } from "../../src/shared/numbers";
 import type { AgentDropSignal } from "../../src/shell/agentSession";
 import {
   agentColumn,
@@ -8,8 +10,10 @@ import {
 } from "../support/agent";
 import { label } from "../support/strings";
 
-const open = async (page: Page) => {
-  await page.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off");
+const open = async (page: Page, query = "") => {
+  await page.goto(
+    `/scenarios.html?scenario=signed-in&latency=0&bar=off${query}`,
+  );
   await expect
     .poll(() => page.evaluate(() => typeof window.__fixtureAgentDrop))
     .toBe("function");
@@ -202,4 +206,42 @@ test("history stops observing drops and ignores a late native event", async ({
   expect(
     (await calls(page)).filter((call) => call.startsWith("agentAttach")),
   ).toEqual([]);
+});
+
+test("a file too large says the largest the agent takes, and the summary counts only what is accepted", async ({
+  page,
+}) => {
+  const refused = {
+    name: "informe-anual.pdf",
+    size_bytes: FIXTURE_ATTACHMENT_POLICY.max_file_bytes + 1,
+    code: "agent_attachment_too_large",
+  };
+  await page.addInitScript((held) => {
+    window.__fixtureAttachRefusal = held;
+  }, refused);
+  await open(page, "&lang=es");
+  await signal(page, "over", true);
+  await signal(page, "dropped", true);
+  const well = agentColumn(page).getByRole("region", {
+    name: label("desktop.agent.attachments", {}, "es"),
+  });
+  const files = well.getByRole("listitem");
+  await expect(files).toHaveCount(3);
+  const limit = formatSize("es", FIXTURE_ATTACHMENT_POLICY.max_file_bytes);
+  await expect(files.filter({ hasText: refused.name })).toContainText(
+    label("desktop.agent.upload_too_large_limit", { limit }, "es"),
+  );
+  // The stored file is the one the next message carries: the file too large
+  // and the one the storage refuses once it is sent are told apart, and
+  // counted in neither the files nor their size.
+  await expect(well).toContainText(
+    label("desktop.agent.attachments_refused", { count: 2 }, "es"),
+  );
+  await expect(well).toContainText(
+    label(
+      "desktop.agent.files_summary",
+      { count: 1, size: formatSize("es", 120_000) },
+      "es",
+    ),
+  );
 });

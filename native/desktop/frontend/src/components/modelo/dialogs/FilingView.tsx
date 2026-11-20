@@ -24,6 +24,7 @@ import type {
   FileToken,
   LedgerOutcome,
 } from "../../../shell/ledger";
+import { failureCode } from "../../../errors";
 import {
   MODELO_ACTOR,
   type ModeloPort,
@@ -102,7 +103,9 @@ type Notice =
       words: string | null;
       detail: LedgerErrorDetail | null;
     }
-  | { kind: "not_sent"; write: Write };
+  | { kind: "not_sent"; write: Write }
+  /** The saved file could not be shown in its folder; `code` is why. */
+  | { kind: "reveal_failed"; code: string };
 
 type Stage = {
   word: string;
@@ -501,8 +504,9 @@ export function FilingView({
         variant="ghost"
         size="sm"
         onClick={() => {
-          void port.revealFile(saved.token).catch(() => {
+          void port.revealFile(saved.token).catch((error: unknown) => {
             setSaved(null);
+            setNotice({ kind: "reveal_failed", code: failureCode(error) });
           });
         }}
       >
@@ -971,6 +975,14 @@ function FilingNotice({
       return (
         <Alert tone="warning" icon={<Icon name="alert" />}>
           {t("workspace.modelo.outcome.not_done")}
+        </Alert>
+      );
+    case "reveal_failed":
+      return (
+        <Alert tone="warning" icon={<Icon name="alert" />}>
+          {t("workspace.modelo.filing.show_in_folder_failed", {
+            code: notice.code,
+          })}
         </Alert>
       );
   }

@@ -26,6 +26,8 @@ _DRIVERS = {
     "profile-contract.mjs": ("if (values.check)", "writeFileSync(contract"),
     "calendar-contract.mjs": ("if (values.check)", "writeFileSync(contract"),
     "home-contract.mjs": ("if (values.check)", "writeFileSync(contract"),
+    "reference-contract.mjs": ("if (values.check)", "writeFileSync(contract"),
+    "operations-contract.mjs": ("if (values.check)", "writeFileSync(contract"),
     "borrador-contract.mjs": ("if (values.check)", "writeFileSync(contract"),
     "ledger-operation-contract.mjs": ("if (values.check)", "writeFileSync(resolve(frontend"),
 }

@@ -1066,6 +1066,8 @@ desktop:
       browser_title: Browser not installed
       browser_why: Needed to update from AEAT.
       cancel: Cancel
+      cancel_failed: Couldn't cancel the sign-in ({code}). Try again, or close this
+        window.
       checking: Checking…
       ended_body: Your AEAT sign-in ended.
       ended_sign_in: Sign in again
@@ -2834,6 +2836,8 @@ desktop:
       too_short: Select two or more rows first, then fill down
     filters:
       account: Account
+      accounts_unread: Your accounts couldn't be read ({code}), so there are none
+        to choose from. Try again.
       active: '{count} active'
       any: Any
       classification: Classification
@@ -3913,6 +3917,7 @@ desktop:
       next: Next period
       of_year: Periods of {year}
       previous: Previous period
+      unread: The periods couldn't be read ({code}), so none are listed. Try again.
       year_next: Next year
       year_previous: Previous year
       years_supported: Years you can read
@@ -4803,10 +4808,61 @@ desktop:
       unknown_view: This link points to a view this version of Cadrumo doesn't have.
       uppercase: This link isn't valid.
     sign_in: Sign in to open {view}.
+  operations:
+    cancellation_requested: Cancellation requested
+    count: Showing {shown} of {total} runs
+    effect:
+      none: None
+      partial: Partial
+      unknown: Unknown
+      updated: Updated
+    empty: This profile has no recorded runs.
+    error_code: Error code {code}
+    failed: The history is unavailable ({code}).
+    field_effect: Effect
+    field_outcome: Outcome
+    lifecycle:
+      cancellation_requested: Cancellation requested
+      created: Created
+      queued: Queued
+      running: Running
+      settling: Settling
+      terminal: Finished
+      waiting_for_external: Waiting on an outside party
+      waiting_for_interaction: Waiting for a reply
+    loading: Reading the history…
+    loading_more: Reading more runs…
+    more_failed: More runs are unavailable ({code}).
+    orientation: 'The runs recorded for this profile, newest first. This page only
+      lists them: it never runs, retries or cancels anything.'
+    outcome:
+      cancelled: Cancelled
+      failed: Failed
+      interrupted: Interrupted
+      refused: Refused
+      succeeded: Succeeded
+      timed_out: Timed out
+    phase: Phase {phase}
+    read_again: Read again
+    refresh: Refresh
+    refusal_ref: Refusal reference {ref}
+    result_not_stored: No result stored
+    result_stored: Result stored
+    settled: Settled {time}
+    show_more: Show more
+    shown_on: Shown on
+    signed_out: Sign in to see the operation history.
+    started: Started {time}
+    title: Operations
+    unreadable: 'Records that could not be read: {count}.'
+    unverifiable: 'Records that could not be confirmed as this profile''s: {count}.'
+    updated: Updated {time}
   palette:
     actions: Actions
     close: Close search
     copy_link: Copy the link to this view
+    declarations_failed: Your declarations couldn't be searched ({code}). The other
+      results are shown. Type again to retry.
     documentation: Documentation
     hide_view: Hide {view}
     keywords:
@@ -5091,6 +5147,28 @@ desktop:
     search: Search
     settings: Settings
     tui: Workspace
+  reference:
+    article: Article {article}
+    citation: Exact citation
+    empty: Nothing in the bundled sources matches “{query}”.
+    failed: The search is unavailable ({code}).
+    idle: Nothing has been searched yet. Type a word, a topic or a citation id and
+      choose Search.
+    matched_on: Matched on {term}
+    orientation: 'Results come from the bundled sources. They are orientation, not
+      verified current law: check the official text before you rely on one.'
+    passages: Passages
+    query_label: Search the reference
+    query_placeholder: A word, a topic or a citation id
+    results: Results for “{query}”
+    search: Search
+    search_again: Search again
+    searching: Searching…
+    section: Section {section}
+    signed_out: Sign in to search the reference.
+    source: 'Source: {source}'
+    terminology: Terminology
+    title: Reference
   refusal:
     action_unroutable: Not available here.
   session:
@@ -10508,6 +10586,8 @@ workspace:
       saved: Saved as {name}. It is not proof of filing.
       show_filed_file: Show the filed file
       show_in_folder: Show in folder
+      show_in_folder_failed: The file was saved, but it couldn't be shown in its folder
+        ({code}). Open the folder yourself to find it.
       title: Export and record
     filter:
       all: all boxes

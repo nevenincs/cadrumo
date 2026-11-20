@@ -3,15 +3,18 @@ import { useFilingCalendar } from "./calendar";
 import { useHome } from "./home";
 import type { Host } from "./host";
 import { useMessages } from "./messages";
+import { useOperations } from "./operations";
+import { useReference } from "./reference";
 import { useUserProfile } from "./userProfile";
 
 /** What the window itself reads of the reader's profile: Home while it
- * shows, the filing calendar and the profile beside it while the calendar
+ * shows, the Reference search, made only when the person asks, the operation history while it shows, the filing calendar and the profile beside it while the calendar
  * shows, and the notification count, withheld while nobody is signed in. */
 export function useWindowReads({
   host,
   reader,
   homeVisible,
+  operationsVisible,
   calendarVisible,
   recheckAccount,
   locale,
@@ -19,12 +22,20 @@ export function useWindowReads({
   host: Host;
   reader: string | null;
   homeVisible: boolean;
+  operationsVisible: boolean;
   calendarVisible: boolean;
   recheckAccount: () => void;
   locale: string;
 }) {
   const views = host.views;
   const home = useHome(views, reader, homeVisible, recheckAccount, locale);
+  const reference = useReference(views, reader, recheckAccount, locale);
+  const operations = useOperations(
+    views,
+    reader,
+    operationsVisible,
+    recheckAccount,
+  );
   const calendar = useFilingCalendar(
     views,
     reader,
@@ -45,5 +56,5 @@ export function useWindowReads({
     () => (reader === null ? { kind: "unknown" as const } : observedMessages),
     [reader, observedMessages],
   );
-  return { home, calendar, calendarProfile, messages };
+  return { home, reference, operations, calendar, calendarProfile, messages };
 }

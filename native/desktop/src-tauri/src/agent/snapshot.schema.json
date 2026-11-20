@@ -44,6 +44,24 @@
           ],
           "description": "One of the agent's ten tool kinds."
         },
+        "tool_name": {
+          "description": "The tool's own name within its server, when the request names a tool.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tool_reach": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ToolReach"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "How far the tool reaches, when the agent says."
+        },
         "tool_server": {
           "description": "The host-declared server that owns this tool, when supplied.",
           "type": [
@@ -120,6 +138,13 @@
     "AgentMessageRecord": {
       "description": "A message the agent wrote.",
       "properties": {
+        "carried_from_run_id": {
+          "description": "The run whose conversation this message was carried from; null for a\nmessage said in this conversation.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "id": {
           "description": "cadrumo-agent's `message_id`; null where it served none.",
           "type": [
@@ -180,6 +205,13 @@
             "$ref": "#/$defs/AgentDocumentReference"
           },
           "type": "array"
+        },
+        "carried_from_run_id": {
+          "description": "The run whose conversation this message was carried from; null for a\nmessage said in this conversation. `sent_at` is then when it was first\nsaid.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "id": {
           "description": "cadrumo-agent's `message_id`; null where it served none.",
@@ -443,6 +475,30 @@
       ],
       "type": "object"
     },
+    "AgentToolFailure": {
+      "description": "Why a tool call failed, as the agent states it: the closed refusal code and\nrecovery action when the tool's result named them, and the first line of its\nerror text. Each is left out when the agent stated none.",
+      "properties": {
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recovery_action_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
     "AgentToolRecord": {
       "description": "A tool call of a reply, as its history lists it.",
       "properties": {
@@ -452,6 +508,17 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "failure": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentToolFailure"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Why the call failed, where it failed and stated why."
         },
         "id": {
           "description": "cadrumo-agent's `tool_call_id`.",
@@ -495,6 +562,31 @@
             {
               "type": "null"
             }
+          ]
+        },
+        "tool_name": {
+          "description": "The tool's own name within its server; null where unnamed.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tool_reach": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ToolReach"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "How far the tool reaches; null where the agent did not say."
+        },
+        "tool_server": {
+          "description": "The tool server that owns the tool, e.g. `cadrumo`; null where unnamed.",
+          "type": [
+            "string",
+            "null"
           ]
         }
       },

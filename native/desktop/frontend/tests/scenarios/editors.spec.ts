@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 // Each typed editor alone on the primitives page, in a real browser. The
 // expected values are written out from the languages' own conventions.
@@ -383,3 +383,120 @@ test("a host's attributes reach the text box", async ({ page }) => {
   await elsewhere(page);
   await expect(page.getByTestId("blurs")).toHaveText("1");
 });
+
+// Assistive technology and automation set a field's value rather than type
+// it: a fill selects the whole text and replaces it, and a value pattern sets
+// the text and fires the platform's input and change events with the focus
+// elsewhere. Each family holds a value shown otherwise than it is typed, so
+// the text in the box changes as the field takes focus.
+const setFromOutside = (entry: Locator, text: string) =>
+  entry.evaluate((element: HTMLInputElement, text) => {
+    const value = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )!.set!;
+    value.call(element, text);
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+    element.dispatchEvent(new Event("change", { bubbles: true }));
+  }, text);
+
+for (const family of [
+  {
+    name: "an amount",
+    field: { kind: "money" },
+    value: "19800.00",
+    text: "98.76",
+    held: "98.76",
+    shown: "98.76",
+  },
+  {
+    name: "a decimal",
+    field: { kind: "decimal", decimals: 6 },
+    value: "1234.5",
+    text: "7.25",
+    held: "7.25",
+    shown: "7.25",
+  },
+  {
+    name: "a percentage",
+    field: { kind: "percent", unit: "fraction" },
+    value: "0.21",
+    text: "10",
+    held: "0.1",
+    shown: "10",
+  },
+  {
+    name: "a day",
+    field: { kind: "date" },
+    value: "2026-06-15",
+    text: "2026-03-05",
+    held: "2026-03-05",
+    shown: "Mar 5, 2026",
+  },
+  {
+    name: "a country",
+    field: { kind: "country" },
+    value: "ES",
+    text: "fr",
+    held: "FR",
+    shown: "FR · France",
+  },
+  {
+    name: "a currency",
+    field: { kind: "currency" },
+    value: "EUR",
+    text: "usd",
+    held: "USD",
+    shown: "USD · US Dollar",
+  },
+  {
+    name: "an IBAN",
+    field: { kind: "iban" },
+    value: "ES9121000418450200051332",
+    text: "de89 3704 0044 0532 0130 00",
+    held: "DE89370400440532013000",
+    shown: "DE89 3704 0044 0532 0130 00",
+  },
+  {
+    name: "a tax id",
+    field: { kind: "taxId" },
+    value: "B12345678",
+    text: "x1234567l",
+    held: "X1234567L",
+    shown: "X1234567L",
+  },
+] as const) {
+  test(`${family.name} filled over a held value replaces it`, async ({
+    page,
+  }) => {
+    const entry = await open(page, {
+      field: family.field,
+      value: family.value,
+    });
+    await entry.fill(family.text);
+    await expect(held(page)).toHaveText(family.held);
+    await elsewhere(page);
+    await expect(entry).toHaveValue(family.shown);
+    await entry.fill("");
+    await expect(held(page)).toHaveText("");
+    await expect(entry).toHaveValue("");
+  });
+
+  test(`${family.name} set with the focus elsewhere is held`, async ({
+    page,
+  }) => {
+    const entry = await open(page, {
+      field: family.field,
+      value: family.value,
+    });
+    await elsewhere(page);
+    await setFromOutside(entry, family.text);
+    await expect(entry).not.toBeFocused();
+    await expect(held(page)).toHaveText(family.held);
+    await expect(entry).toHaveValue(family.shown);
+    await expect(page.getByRole("listbox")).toHaveCount(0);
+    await setFromOutside(entry, "");
+    await expect(held(page)).toHaveText("");
+    await expect(entry).toHaveValue("");
+  });
+}

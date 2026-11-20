@@ -52,8 +52,12 @@ desktop:
     can_write: escribir archivos
     cancel: Cancelar
     capabilities: 'Puede: {list}'
-    carried_turns: Esta conversación empezó con {carried} turnos de la anterior; se
-      omitieron {omitted} turnos más antiguos.
+    carried_from: Traído de {title}
+    carried_from_unknown: Traído de una conversación anterior
+    carried_omitted: Se omitieron {omitted} turnos más antiguos.
+    carried_omitted_one: Se omitió {omitted} turno más antiguo.
+    carried_turns: Esta conversación empezó con {carried} turnos de la anterior.
+    carried_turns_one: Esta conversación empezó con {carried} turno de la anterior.
     carry_back: Vuelve a esa conversación
     carry_pending: Tu próximo mensaje empieza una conversación nueva que lleva los
       turnos más recientes de «{title}».
@@ -246,11 +250,15 @@ desktop:
     search_placeholder: Buscar
     selection_change_asked: Este mensaje cambia el modelo de {previous} a {requested}.
     selection_change_confirm: Cambia y envía
-    selection_change_history: El modelo nuevo recibe {retained} mensajes de esta conversación
-      (unos {tokens} tokens); se omiten {omitted} mensajes anteriores.
     selection_change_keep: Mantén el modelo
+    selection_change_omitted: Se omiten {omitted} mensajes anteriores.
+    selection_change_omitted_one: Se omite {omitted} mensaje anterior.
     selection_change_refused: Cambiar el modelo necesita tu confirmación. Vuelve a
       enviar el mensaje.
+    selection_change_retained: El modelo nuevo recibe {retained} mensajes de esta
+      conversación (unos {tokens} tokens).
+    selection_change_retained_one: El modelo nuevo recibe {retained} mensaje de esta
+      conversación (unos {tokens} tokens).
     send: Enviar
     send_nothing: Escribe un mensaje o añade un archivo primero
     send_too_long: Este mensaje tiene {count} caracteres; el máximo es {max}
@@ -312,9 +320,95 @@ desktop:
     stopped: Detenido
     thinking: Razonamiento
     thoughts: Lo que pensó el agente
+    tool:
+      cadrumo:
+        authority:
+          description: 'Consulta datos fiscales de referencia publicados: modelos,
+            casillas, fórmulas y portales.'
+          label: Consultar datos fiscales
+        control:
+          description: Inicia, reanuda, cancela o suelta una operación.
+          label: Controlar una operación
+        corpus_search:
+          description: Busca en los textos legales del BOE y la AEAT incluidos y en
+            la terminología fiscal.
+          label: Buscar en la legislación
+        describe:
+          description: Lee qué hace una operación y qué necesita.
+          label: Describir una operación
+        execute:
+          description: Envía una operación en tu perfil. Puede cambiar
+            tus datos.
+          label: Ejecutar una operación
+        observe:
+          description: Comprueba cómo va una operación enviada.
+          label: Seguir una operación
+        respond:
+          description: Aplica o rechaza una revisión que espera una respuesta.
+          label: Responder a una revisión
+        result:
+          description: Lee el resultado de una operación terminada.
+          label: Leer un resultado
+        result_page:
+          description: Lee una página del resultado de una operación terminada.
+          label: Leer una página de resultado
+        review:
+          description: Lee una revisión que espera tu respuesta.
+          label: Leer una revisión
+        search:
+          description: Busca las operaciones que el agente puede ejecutar
+            en tu perfil.
+          label: Buscar operaciones
+        status:
+          description: Comprueba en qué perfil has autorizado trabajar al agente y
+            si la aplicación está disponible.
+          label: Comprobar la sesión
+        views:
+          description: Busca las vistas de esta ventana que puede abrir un enlace
+            y comprueba enlaces.
+          label: Buscar vistas
+      cadrumo_agent_tools:
+        list_attachments:
+          description: Lista los documentos adjuntos a la conversación.
+          label: Listar los adjuntos
+        load_skill:
+          description: Carga las instrucciones de una habilidad para que el agente
+            las siga.
+          label: Cargar una habilidad
+        read_attachment:
+          description: Lee un documento que adjuntaste a la conversación.
+          label: Leer un adjunto
+        read_conversation_history:
+          description: Lee partes anteriores de esta conversación.
+          label: Leer esta conversación
+        read_file:
+          description: Lee un archivo del espacio de trabajo del agente.
+          label: Leer un archivo
+        read_web_source:
+          description: Abre una página web y la lee.
+          label: Leer una página web
+        resolve_output_path:
+          description: Determina dónde se guardará un archivo que genere el agente.
+          label: Elegir dónde guardar
+        run_program:
+          description: Ejecuta un programa en este ordenador.
+          label: Ejecutar un programa
+        run_subagent:
+          description: Encarga una parte de la tarea a un agente auxiliar.
+          label: Iniciar un agente auxiliar
+        search_previous_conversations:
+          description: Busca en tus conversaciones anteriores con el agente.
+          label: Buscar conversaciones anteriores
+        web_search:
+          description: Busca en internet.
+          label: Buscar en internet
+        write_file:
+          description: Crea o modifica un archivo en el espacio de trabajo del agente.
+          label: Escribir un archivo
     tool_details: Detalles de la llamada
     tool_done: Hecho
     tool_failed: Con error
+    tool_generic: Herramienta {name}
     tool_kind_delete: Elimina
     tool_kind_edit: Edita
     tool_kind_execute: Ejecuta
@@ -326,7 +420,12 @@ desktop:
     tool_kind_switch_mode: Cambia de modo
     tool_kind_think: Piensa
     tool_pending: Pendiente
+    tool_reach:
+      local_read: Lee datos de este ordenador
+      local_write: Cambia datos de este ordenador
+      online: Usa internet
     tool_running: En curso
+    tool_unnamed: Una herramienta
     transcript: Conversación
     transcript_empty: Aún no hay mensajes
     unavailable: Aún no está disponible
@@ -335,6 +434,7 @@ desktop:
     upload_name_refused: Su nombre no se puede guardar; cámbialo y vuelve a intentarlo
     upload_quota_exceeded: El almacenamiento de esta conversación está lleno
     upload_too_large: Demasiado grande para esta conversación
+    upload_too_large_limit: 'Demasiado grande: el máximo es {limit}'
     upload_unreadable: No se ha podido leer
     uploading: Subiendo
     uploading_name: Subiendo {name}

@@ -238,6 +238,10 @@ export function tauriHost(): Host {
           language,
         }),
       home: (language) => bound("profile_views_home", { language }),
+      reference: (query, limit, language) =>
+        bound("profile_views_reference", { query, limit, language }),
+      operations: (limit, after) =>
+        bound("profile_views_operations", { limit, after }),
     },
     ledger: tauriLedger(token, call),
     modelo: tauriModelo(token, call),

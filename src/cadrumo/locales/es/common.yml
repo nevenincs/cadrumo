@@ -1116,6 +1116,8 @@ desktop:
       browser_title: Navegador no instalado
       browser_why: Hace falta para actualizar desde la AEAT.
       cancel: Cancelar
+      cancel_failed: No se pudo cancelar el inicio de sesión ({code}). Inténtalo de
+        nuevo o cierra esta ventana.
       checking: Comprobando…
       ended_body: Tu acceso a la AEAT ha terminado.
       ended_sign_in: Iniciar sesión de nuevo
@@ -2902,6 +2904,8 @@ desktop:
       too_short: Selecciona primero dos filas o más y rellena hacia abajo
     filters:
       account: Cuenta
+      accounts_unread: No se pudieron leer tus cuentas ({code}), así que no hay ninguna
+        para elegir. Inténtalo de nuevo.
       active: '{count} activos'
       any: Cualquiera
       classification: Clasificación
@@ -3995,6 +3999,8 @@ desktop:
       next: Periodo siguiente
       of_year: Periodos de {year}
       previous: Periodo anterior
+      unread: No se pudieron leer los periodos ({code}), así que no se lista ninguno.
+        Inténtalo de nuevo.
       year_next: Año siguiente
       year_previous: Año anterior
       years_supported: Ejercicios que puedes consultar
@@ -4907,10 +4913,62 @@ desktop:
       unknown_view: Este enlace lleva a una vista que esta versión de Cadrumo no tiene.
       uppercase: Este enlace no es válido.
     sign_in: Inicia sesión para abrir {view}.
+  operations:
+    cancellation_requested: Cancelación solicitada
+    count: Mostrando {shown} de {total} ejecuciones
+    effect:
+      none: Ninguno
+      partial: Parcial
+      unknown: Desconocido
+      updated: Actualizado
+    empty: Este perfil no tiene ejecuciones registradas.
+    error_code: Código de error {code}
+    failed: El historial no está disponible ({code}).
+    field_effect: Efecto
+    field_outcome: Resultado
+    lifecycle:
+      cancellation_requested: Cancelación solicitada
+      created: Creada
+      queued: En cola
+      running: En ejecución
+      settling: Cerrándose
+      terminal: Terminada
+      waiting_for_external: Esperando a un tercero
+      waiting_for_interaction: Esperando tu respuesta
+    loading: Leyendo el historial…
+    loading_more: Leyendo más ejecuciones…
+    more_failed: No hay más ejecuciones disponibles ({code}).
+    orientation: 'Las ejecuciones registradas para este perfil, de la más reciente
+      a la más antigua. Esta página solo las lista: nunca ejecuta, reintenta ni cancela
+      nada.'
+    outcome:
+      cancelled: Cancelada
+      failed: Fallida
+      interrupted: Interrumpida
+      refused: Rechazada
+      succeeded: Correcta
+      timed_out: Tiempo agotado
+    phase: Fase {phase}
+    read_again: Leer de nuevo
+    refresh: Actualizar
+    refusal_ref: Referencia del rechazo {ref}
+    result_not_stored: Sin resultado guardado
+    result_stored: Resultado guardado
+    settled: Cerrada {time}
+    show_more: Mostrar más
+    shown_on: Se muestra en
+    signed_out: Inicia sesión para ver el historial de operaciones.
+    started: Iniciada {time}
+    title: Operaciones
+    unreadable: 'Registros que no se pudieron leer: {count}.'
+    unverifiable: 'Registros que no se pudieron confirmar como de este perfil: {count}.'
+    updated: Actualizada {time}
   palette:
     actions: Acciones
     close: Cerrar la búsqueda
     copy_link: Copiar el enlace a esta vista
+    declarations_failed: No se pudieron buscar tus declaraciones ({code}). Se muestran
+      los demás resultados. Escribe de nuevo para reintentar.
     documentation: Documentación
     hide_view: Ocultar {view}
     keywords:
@@ -5197,6 +5255,29 @@ desktop:
     search: Buscar
     settings: Ajustes
     tui: Espacio de trabajo
+  reference:
+    article: Artículo {article}
+    citation: Cita exacta
+    empty: Nada en las fuentes incluidas coincide con «{query}».
+    failed: La búsqueda no está disponible ({code}).
+    idle: Todavía no has buscado nada. Escribe una palabra, un tema o un identificador
+      de cita y elige Buscar.
+    matched_on: Coincide con {term}
+    orientation: 'Los resultados proceden de las fuentes incluidas. Son una orientación,
+      no derecho vigente verificado: comprueba el texto oficial antes de apoyarte
+      en uno.'
+    passages: Pasajes
+    query_label: Buscar en la referencia
+    query_placeholder: Una palabra, un tema o un identificador de cita
+    results: Resultados para «{query}»
+    search: Buscar
+    search_again: Buscar de nuevo
+    searching: Buscando…
+    section: Sección {section}
+    signed_out: Inicia sesión para buscar en la referencia.
+    source: 'Fuente: {source}'
+    terminology: Terminología
+    title: Referencia
   refusal:
     action_unroutable: No está disponible aquí.
   session:
@@ -10743,6 +10824,8 @@ workspace:
       saved: Guardado como {name}. No es prueba de presentación.
       show_filed_file: Mostrar el fichero presentado
       show_in_folder: Mostrar en la carpeta
+      show_in_folder_failed: El archivo se guardó, pero no se pudo mostrar en su carpeta
+        ({code}). Abre la carpeta para encontrarlo.
       title: Exportar y registrar
     filter:
       all: todas las casillas

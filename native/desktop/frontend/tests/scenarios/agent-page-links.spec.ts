@@ -91,10 +91,10 @@ test("a window link opens its page and gives it the keyboard", async ({
 
 test("a view only the TUI had says why and opens nothing", async ({ page }) => {
   await linksReply(page, "signed-in");
-  await link(page, "las operaciones").click();
+  await link(page, "la instalación").click();
   await expect(windowToast(page)).toHaveText(
     label("desktop.navigation.refused.not_implemented", {
-      view: label("navigation.view.operations.label"),
+      view: label("navigation.view.installation.label"),
     }),
   );
   await noLinkLeftTheWindow(page);
@@ -213,6 +213,8 @@ const PAGE_ROOT: Record<WindowPage, string> = {
   calendar: ".calendar-page",
   ledger: ".ledger-page",
   withholding: ".withholding-page",
+  reference: ".reference-page",
+  operations: ".operations-page",
   declarations: ".declarations-page",
   docs: ".docs-frame",
   browser: "[data-browser-surface]",

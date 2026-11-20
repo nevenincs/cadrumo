@@ -13,6 +13,23 @@ const field = (target: Page, key: string) =>
     .and(editor(target).locator("input, select, textarea"));
 const list = (target: Page) => target.getByRole("listbox");
 
+/** How often the page asked the ledger for its movements' known values. The
+ * period selector's read of the ledger's years asks the same operation for
+ * another kind, and is not one of them. */
+const movementHistoryReads = (target: Page) =>
+  target.evaluate(
+    () =>
+      (
+        window as unknown as {
+          __scenarioLedger: {
+            requests(definition: string): { kinds?: string[] }[];
+          };
+        }
+      ).__scenarioLedger
+        .requests("ledger.known-values")
+        .filter((request) => request.kinds?.includes("counterparty")).length,
+  );
+
 async function newIssued(target: Page) {
   await target.goto("/scenarios.html?scenario=ledger&latency=0&bar=off");
   await target.locator("[data-rail=ledger]").click();
@@ -222,14 +239,7 @@ test("in a grid cell, Enter keeps what was typed and Escape closes only the list
 test("the history is asked for once, however many fields want it", async ({
   page: target,
 }) => {
-  const knownReads = () =>
-    target.evaluate(
-      () =>
-        (
-          (window as unknown as { __scenarioHostCalls?: string[] })
-            .__scenarioHostCalls ?? []
-        ).filter((call) => call === "ledger ledger.known-values").length,
-    );
+  const knownReads = () => movementHistoryReads(target);
   await openGrid(target);
   expect(await knownReads()).toBe(0);
   await typeInCell(target, "counterparty", "Ase");
@@ -253,14 +263,7 @@ test("the history is asked for once, however many fields want it", async ({
 test("signing in to another profile holds nothing from the last one", async ({
   page: target,
 }) => {
-  const knownReads = () =>
-    target.evaluate(
-      () =>
-        (
-          (window as unknown as { __scenarioHostCalls?: string[] })
-            .__scenarioHostCalls ?? []
-        ).filter((call) => call === "ledger ledger.known-values").length,
-    );
+  const knownReads = () => movementHistoryReads(target);
   await openGrid(target);
   const other = await grid(target)
     .locator("[data-kind=data]")

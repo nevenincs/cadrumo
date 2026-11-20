@@ -1,7 +1,7 @@
 //! Named read-only views of the signed-in profile: the filing calendar, the
-//! counts of the last notifications capture and Home. Each runs fixed
-//! registered reads over the held person's relay; the window names no
-//! operation. Nothing
+//! counts of the last notifications capture, Home, the bundled reference
+//! corpus and the profile's operation history. Each runs fixed registered reads over the held person's relay; the
+//! window names no operation. Nothing
 //! read here is kept, logged or written: it is passed on and dropped. The
 //! calendar is passed on as the product served it, under the product's names,
 //! so the window's types are generated from the product's schema alone; the
@@ -80,6 +80,44 @@ struct HomeGeneration {
 #[derive(Debug, Serialize)]
 #[serde(transparent)]
 pub struct HomeState(Value);
+
+// Only what the host checks before passing a corpus answer on: whose it is,
+// in which language it was written, and that it holds a retrieval and the
+// terminology hits. The answer itself stays the product's value.
+#[derive(Deserialize)]
+struct CorpusAnswer {
+    profile_id: String,
+    output_language: String,
+    retrieval: Retrieval,
+    terminology: Vec<Value>,
+}
+#[derive(Deserialize)]
+struct Retrieval {
+    hits: Vec<Value>,
+}
+
+/// What the bundled corpus answered, as the product served it: ranked
+/// passages or one resolved citation, and the terminology the query names.
+#[derive(Debug, Serialize)]
+#[serde(transparent)]
+pub struct ReferenceAnswer(Value);
+
+// Only what the host checks before passing the history page on: whose it is,
+// that its runs are a list no longer than was asked for, and that the
+// continuation is absent or an object. The page itself stays the product's
+// value.
+#[derive(Deserialize)]
+struct HistoryPage {
+    profile_id: String,
+    runs: Vec<Value>,
+    next_cursor: Option<Value>,
+}
+
+/// One page of the operation history, as the product served it: the runs
+/// newest first, what the scan could not account for and the continuation.
+#[derive(Debug, Serialize)]
+#[serde(transparent)]
+pub struct OperationsPage(Value);
 
 /// A calendar day as the product writes it, `YYYY-MM-DD`, as its year.
 fn iso_year(day: &str) -> Option<u32> {
@@ -200,6 +238,122 @@ fn home_state(projection: Value, profile: &str) -> Result<HomeState> {
         return Err(protocol());
     }
     Ok(HomeState(read.generation.home))
+}
+
+/// The registered read the bundled reference corpus is searched through.
+pub(super) const REFERENCE_DEFINITION: &str = "reference.corpus.search";
+
+/// The longest query and the most results the product's read accepts. The
+/// host refuses what it would refuse, before submitting anything.
+const REFERENCE_QUERY_MAX_CHARS: usize = 200;
+const REFERENCE_LIMIT_MAX: u32 = 25;
+
+/// The text the person typed, as the product reads it: without the white
+/// space around it, between one and 200 characters. Nothing else of it is
+/// changed.
+fn admit_reference_query(query: &str) -> Result<&str> {
+    let query = query.trim();
+    match query.chars().count() {
+        1..=REFERENCE_QUERY_MAX_CHARS => Ok(query),
+        _ => Err(Failure::new("refused")),
+    }
+}
+
+fn admit_reference_limit(limit: u32) -> Result<u32> {
+    if (1..=REFERENCE_LIMIT_MAX).contains(&limit) {
+        Ok(limit)
+    } else {
+        Err(Failure::new("refused"))
+    }
+}
+
+/// The search for the held profile, the typed query and limit and the
+/// language the window shows its words in: nothing else is asked.
+fn reference_request(profile: &str, query: &str, language: &str, limit: u32) -> Value {
+    json!({"profile_id":profile, "query":query, "output_language":language, "limit":limit})
+}
+
+/// Passes on a corpus answer only if it is the held profile's, in the language
+/// asked for, and holds no more passages than were asked for.
+fn reference_answer(
+    answer: Value,
+    profile: &str,
+    language: &str,
+    limit: u32,
+) -> Result<ReferenceAnswer> {
+    let read: CorpusAnswer = serde_json::from_value(answer.clone()).map_err(|_| protocol())?;
+    if read.profile_id != profile
+        || read.output_language != language
+        || read.retrieval.hits.len() as u64 > u64::from(limit)
+        || read.terminology.len() as u64 > u64::from(limit)
+    {
+        return Err(protocol());
+    }
+    Ok(ReferenceAnswer(answer))
+}
+
+/// The registered read the profile's operation history is listed through.
+pub(super) const OPERATIONS_DEFINITION: &str = "operations.history.list";
+
+/// The most runs a page of the product's history read holds.
+const OPERATIONS_LIMIT_MAX: u32 = 100;
+/// The longest a cursor field can be: a timestamp and a UUID are far shorter.
+const OPERATIONS_CURSOR_FIELD_MAX_CHARS: usize = 64;
+
+fn admit_operations_limit(limit: u32) -> Result<u32> {
+    if (1..=OPERATIONS_LIMIT_MAX).contains(&limit) {
+        Ok(limit)
+    } else {
+        Err(Failure::new("refused"))
+    }
+}
+
+/// The continuation the window passes back is the one the product served and
+/// is not read further here: it must be absent or an object of exactly the
+/// two bounded text fields the product writes, and goes on unchanged.
+fn admit_operations_cursor(after: Option<Value>) -> Result<Option<Value>> {
+    let Some(cursor) = after else {
+        return Ok(None);
+    };
+    let fields = cursor.as_object().ok_or_else(|| Failure::new("refused"))?;
+    let bounded = |name: &str| {
+        fields
+            .get(name)
+            .and_then(Value::as_str)
+            .is_some_and(|text| {
+                !text.is_empty() && text.chars().count() <= OPERATIONS_CURSOR_FIELD_MAX_CHARS
+            })
+    };
+    if fields.len() == 2 && bounded("started_at") && bounded("operation_id") {
+        Ok(Some(cursor))
+    } else {
+        Err(Failure::new("refused"))
+    }
+}
+
+/// The history read for the held profile, the validated limit and the
+/// continuation, when there is one: nothing else is asked.
+fn operations_request(profile: &str, limit: u32, after: Option<&Value>) -> Value {
+    match after {
+        Some(cursor) => json!({"profile_id":profile, "limit":limit, "after":cursor}),
+        None => json!({"profile_id":profile, "limit":limit}),
+    }
+}
+
+/// Passes on a history page only if it is the held profile's, lists runs, and
+/// holds no more of them than were asked for.
+fn operations_page(page: Value, profile: &str, limit: u32) -> Result<OperationsPage> {
+    let read: HistoryPage = serde_json::from_value(page.clone()).map_err(|_| protocol())?;
+    if read.profile_id != profile
+        || read.runs.len() as u64 > u64::from(limit)
+        || read
+            .next_cursor
+            .as_ref()
+            .is_some_and(|cursor| !cursor.is_object())
+    {
+        return Err(protocol());
+    }
+    Ok(OperationsPage(page))
 }
 
 /// The registered read the record groups come from.
@@ -338,6 +492,70 @@ impl ProfileHost {
                 .await?;
             self.still_held(&person, &profile).await?;
             home_state(projection, &profile)
+        })
+        .await
+        .unwrap_or_else(|_| Err(protocol()))
+    }
+    /// Searches the bundled reference corpus for the signed-in profile: one
+    /// `reference.corpus.search` read of the typed query. It reads no profile
+    /// data and never reaches the network, and the host keeps nothing of it:
+    /// the query and the answer are passed on and dropped, and neither is
+    /// logged.
+    pub(super) async fn reference_search(
+        &self,
+        query: String,
+        limit: u32,
+        language: String,
+    ) -> Result<ReferenceAnswer> {
+        if !super::super::language::supported(&language) {
+            return Err(protocol());
+        }
+        let query = admit_reference_query(&query)?;
+        let limit = admit_reference_limit(limit)?;
+        tokio::time::timeout(PROFILE_READ_LIMIT, async {
+            let _serial = self.operation.lock().await;
+            let person = self.person(None).await?;
+            let profile = Self::profile_of(&person).await?;
+            let answer = self
+                .run(
+                    &person,
+                    REFERENCE_DEFINITION,
+                    reference_request(&profile, query, &language, limit),
+                    false,
+                )
+                .await?;
+            self.still_held(&person, &profile).await?;
+            reference_answer(answer, &profile, &language, limit)
+        })
+        .await
+        .unwrap_or_else(|_| Err(protocol()))
+    }
+    /// Lists the signed-in profile's operation history: one
+    /// `operations.history.list` read of the validated limit and the opaque
+    /// continuation. The read is ephemeral and never enters the journal, and
+    /// the host runs, retries and cancels nothing: the page is passed on and
+    /// dropped, and none of it is logged.
+    pub(super) async fn operations_history(
+        &self,
+        limit: u32,
+        after: Option<Value>,
+    ) -> Result<OperationsPage> {
+        let limit = admit_operations_limit(limit)?;
+        let after = admit_operations_cursor(after)?;
+        tokio::time::timeout(PROFILE_READ_LIMIT, async {
+            let _serial = self.operation.lock().await;
+            let person = self.person(None).await?;
+            let profile = Self::profile_of(&person).await?;
+            let page = self
+                .run(
+                    &person,
+                    OPERATIONS_DEFINITION,
+                    operations_request(&profile, limit, after.as_ref()),
+                    false,
+                )
+                .await?;
+            self.still_held(&person, &profile).await?;
+            operations_page(page, &profile, limit)
         })
         .await
         .unwrap_or_else(|_| Err(protocol()))
@@ -493,6 +711,154 @@ mod tests {
             .remove("home");
         assert!(home_state(homeless, PROFILE).is_err());
         assert!(home_state(json!(null), PROFILE).is_err());
+    }
+
+    fn corpus_answer(profile: &str, language: &str, hits: usize) -> Value {
+        json!({"result_version":1, "profile_id":profile, "output_language":language,
+            "authority_generation":"sha256:00",
+            "retrieval":{"query":"synthetic", "mode":"lexical_only",
+                "hits":vec![json!({"chunk_id":"c", "corpus_ref":"r", "doc_title":"Synthetic",
+                    "text":"Synthetic passage", "score":1.0, "rank":0, "lexical_rank":0}); hits],
+                "citation":null},
+            "terminology":[]})
+    }
+
+    #[test]
+    fn reference_asks_for_the_held_profile_the_typed_query_and_nothing_else() {
+        assert_eq!(REFERENCE_DEFINITION, "reference.corpus.search");
+        assert_eq!(
+            reference_request(PROFILE, "synthetic query", "hu", 8),
+            json!({"profile_id":PROFILE, "query":"synthetic query",
+                "output_language":"hu", "limit":8})
+        );
+    }
+
+    #[test]
+    fn only_a_query_of_one_to_two_hundred_characters_and_a_bounded_limit_are_read() {
+        assert_eq!(admit_reference_query("  a  ").unwrap(), "a");
+        assert_eq!(
+            admit_reference_query(&"ñ".repeat(200))
+                .unwrap()
+                .chars()
+                .count(),
+            200
+        );
+        for refused in ["", "   ", "\t\n"] {
+            assert_eq!(admit_reference_query(refused).unwrap_err().code, "refused");
+        }
+        assert_eq!(
+            admit_reference_query(&"a".repeat(201)).unwrap_err().code,
+            "refused"
+        );
+        assert_eq!(admit_reference_limit(1).unwrap(), 1);
+        assert_eq!(admit_reference_limit(25).unwrap(), 25);
+        for refused in [0, 26, u32::MAX] {
+            assert_eq!(admit_reference_limit(refused).unwrap_err().code, "refused");
+        }
+    }
+
+    #[test]
+    fn a_corpus_answer_is_passed_on_as_the_product_served_it() {
+        let served = corpus_answer(PROFILE, "es", 2);
+        let sent =
+            serde_json::to_value(reference_answer(served.clone(), PROFILE, "es", 8).unwrap())
+                .unwrap();
+        assert_eq!(sent, served);
+    }
+
+    #[test]
+    fn a_corpus_answer_of_another_profile_or_language_or_of_too_many_passages_is_refused() {
+        assert!(reference_answer(corpus_answer("another", "es", 1), PROFILE, "es", 8).is_err());
+        assert!(reference_answer(corpus_answer(PROFILE, "en", 1), PROFILE, "es", 8).is_err());
+        assert!(reference_answer(corpus_answer(PROFILE, "es", 3), PROFILE, "es", 2).is_err());
+        let mut headless = corpus_answer(PROFILE, "es", 1);
+        headless.as_object_mut().unwrap().remove("profile_id");
+        assert!(reference_answer(headless, PROFILE, "es", 8).is_err());
+        let mut unranked = corpus_answer(PROFILE, "es", 1);
+        unranked.as_object_mut().unwrap().remove("retrieval");
+        assert!(reference_answer(unranked, PROFILE, "es", 8).is_err());
+        assert!(reference_answer(json!(null), PROFILE, "es", 8).is_err());
+    }
+
+    fn history_page(profile: &str, runs: usize, next: Value) -> Value {
+        json!({"result_version":1, "profile_id":profile, "observed_at":"2026-11-20T09:00:00Z",
+            "runs":vec![json!({"operation_id":"synthetic-run", "definition_id":"synthetic.read",
+                "register_page":null, "lifecycle":"settling", "effect":"unknown",
+                "cancellation_requested":false, "receipt":null}); runs],
+            "run_count":runs, "next_cursor":next,
+            "unreadable_records":0, "unverifiable_records":0})
+    }
+
+    #[test]
+    fn the_history_asks_for_the_held_profile_the_limit_and_the_continuation_and_nothing_else() {
+        assert_eq!(OPERATIONS_DEFINITION, "operations.history.list");
+        assert_eq!(
+            operations_request(PROFILE, 25, None),
+            json!({"profile_id":PROFILE, "limit":25})
+        );
+        let cursor = json!({"started_at":"2026-11-20T09:00:00Z", "operation_id":"synthetic-run"});
+        assert_eq!(
+            operations_request(PROFILE, 10, Some(&cursor)),
+            json!({"profile_id":PROFILE, "limit":10, "after":cursor})
+        );
+    }
+
+    #[test]
+    fn only_a_bounded_limit_and_a_continuation_of_the_two_served_fields_are_read() {
+        assert_eq!(admit_operations_limit(1).unwrap(), 1);
+        assert_eq!(admit_operations_limit(100).unwrap(), 100);
+        for refused in [0, 101, u32::MAX] {
+            assert_eq!(admit_operations_limit(refused).unwrap_err().code, "refused");
+        }
+        assert_eq!(admit_operations_cursor(None).unwrap(), None);
+        let cursor = json!({"started_at":"2026-11-20T09:00:00Z", "operation_id":"synthetic-run"});
+        assert_eq!(
+            admit_operations_cursor(Some(cursor.clone())).unwrap(),
+            Some(cursor)
+        );
+        for refused in [
+            json!(null),
+            json!("text"),
+            json!([]),
+            json!({}),
+            json!({"started_at":"2026-11-20T09:00:00Z"}),
+            json!({"started_at":"2026-11-20T09:00:00Z", "operation_id":""}),
+            json!({"started_at":"2026-11-20T09:00:00Z", "operation_id":7}),
+            json!({"started_at":"x", "operation_id":"y", "extra":"z"}),
+            json!({"started_at":"x".repeat(65), "operation_id":"y"}),
+        ] {
+            assert_eq!(
+                admit_operations_cursor(Some(refused)).unwrap_err().code,
+                "refused"
+            );
+        }
+    }
+
+    #[test]
+    fn a_history_page_is_passed_on_as_the_product_served_it() {
+        let cursor = json!({"started_at":"2026-11-20T09:00:00Z", "operation_id":"synthetic-run"});
+        for served in [
+            history_page(PROFILE, 2, cursor),
+            history_page(PROFILE, 0, json!(null)),
+        ] {
+            let sent =
+                serde_json::to_value(operations_page(served.clone(), PROFILE, 2).unwrap()).unwrap();
+            assert_eq!(sent, served);
+        }
+    }
+
+    #[test]
+    fn a_history_page_of_another_profile_or_of_too_many_runs_or_malformed_is_refused() {
+        assert!(operations_page(history_page("another", 1, json!(null)), PROFILE, 5).is_err());
+        assert!(operations_page(history_page(PROFILE, 3, json!(null)), PROFILE, 2).is_err());
+        assert!(operations_page(history_page(PROFILE, 1, json!("later")), PROFILE, 5).is_err());
+        let mut headless = history_page(PROFILE, 1, json!(null));
+        headless.as_object_mut().unwrap().remove("profile_id");
+        assert!(operations_page(headless, PROFILE, 5).is_err());
+        let mut unlisted = history_page(PROFILE, 1, json!(null));
+        unlisted.as_object_mut().unwrap().remove("runs");
+        assert!(operations_page(unlisted, PROFILE, 5).is_err());
+        assert!(operations_page(json!(null), PROFILE, 5).is_err());
     }
 
     #[test]

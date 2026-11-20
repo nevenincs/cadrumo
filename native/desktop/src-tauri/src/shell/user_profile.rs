@@ -81,9 +81,60 @@ impl Cue {
             task.abort();
         }
     }
+}
+
+/// The most subscriptions a [`Cues`] holds; a later one drops the oldest, so a
+/// webview that reloads without unsubscribing cannot leak tasks.
+const CUES_HELD: usize = 8;
+/// The window cues of a command family that several readers watch at once:
+/// every subscription is held until it is ended, oldest first.
+#[derive(Default)]
+pub(crate) struct Cues(Mutex<Vec<(u32, tauri::async_runtime::JoinHandle<()>)>>);
+impl Cues {
+    /// Holds `updates` beside the cues held before, sent to by the task
+    /// `follow` makes; once the host closed nothing is followed.
+    pub(crate) fn observe<F>(
+        &self,
+        closed: bool,
+        updates: Channel<()>,
+        follow: impl FnOnce(Channel<()>) -> F,
+    ) -> u32
+    where
+        F: std::future::Future<Output = ()> + Send + 'static,
+    {
+        let subscription = updates.id();
+        if closed {
+            return subscription;
+        }
+        let mut held = lock(&self.0);
+        // A subscription id held again is replaced by its newer task.
+        if let Some(at) = held.iter().position(|(id, _)| *id == subscription) {
+            held.remove(at).1.abort();
+        }
+        while held.len() >= CUES_HELD {
+            held.remove(0).1.abort();
+        }
+        // Synchronous commands run on the webview thread, outside Tokio.
+        // Spawn through the application's runtime rather than a
+        // thread-local handle.
+        held.push((subscription, tauri::async_runtime::spawn(follow(updates))));
+        subscription
+    }
+    /// Ends the cue `subscription` alone.
+    pub(crate) fn unobserve(&self, subscription: u32) {
+        let mut held = lock(&self.0);
+        if let Some(at) = held.iter().position(|(id, _)| *id == subscription) {
+            held.remove(at).1.abort();
+        }
+    }
+    pub(crate) fn end(&self) {
+        for (_, task) in lock(&self.0).drain(..) {
+            task.abort();
+        }
+    }
     #[cfg(test)]
-    pub(crate) fn held(&self) -> Option<u32> {
-        lock(&self.0).as_ref().map(|(id, _)| *id)
+    pub(crate) fn held(&self) -> Vec<u32> {
+        lock(&self.0).iter().map(|(id, _)| *id).collect()
     }
 }
 
@@ -113,7 +164,7 @@ const FAMILY_VALUE_LIMIT: usize = 4096;
 pub struct ProfileHost {
     sign_in: Arc<SignIn>,
     operation: tokio::sync::Mutex<()>,
-    observer: Cue,
+    observer: Cues,
     censo_observer: Cue,
     held: Mutex<Option<HeldPerson>>,
     closed: AtomicBool,
@@ -128,7 +179,7 @@ impl ProfileHost {
         Self {
             sign_in,
             operation: tokio::sync::Mutex::new(()),
-            observer: Cue::default(),
+            observer: Cues::default(),
             censo_observer: Cue::default(),
             held: Mutex::new(None),
             closed: AtomicBool::new(false),
@@ -1067,6 +1118,28 @@ async fn profile_views_home(
 ) -> Result<views::HomeState> {
     host.home(language).await
 }
+/// Reference: the bundled corpus searched for the typed `query`, at most
+/// `limit` passages, its words in `language`. Nothing is kept or logged.
+#[tauri::command]
+async fn profile_views_reference(
+    host: State<'_, Arc<ProfileHost>>,
+    query: String,
+    limit: u32,
+    language: String,
+) -> Result<views::ReferenceAnswer> {
+    host.reference_search(query, limit, language).await
+}
+/// Operations: one page of the signed-in profile's operation history, at most
+/// `limit` runs, after the continuation the previous page served. It runs,
+/// retries and cancels nothing, and nothing is kept or logged.
+#[tauri::command]
+async fn profile_views_operations(
+    host: State<'_, Arc<ProfileHost>>,
+    limit: u32,
+    after: Option<serde_json::Value>,
+) -> Result<views::OperationsPage> {
+    host.operations_history(limit, after).await
+}
 #[tauri::command]
 async fn profile_views_record_groups(
     host: State<'_, Arc<ProfileHost>>,
@@ -1113,6 +1186,8 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         profile_views_notifications,
         profile_views_calendar,
         profile_views_home,
+        profile_views_reference,
+        profile_views_operations,
         profile_views_record_groups
     ]
 }
@@ -1168,8 +1243,112 @@ mod tests {
         host.close();
     }
 
+    /// A subscription as the observe command makes one: a task that sends the
+    /// channel a cue each time `source` fires. Answers its channel's cue count.
+    fn subscribed(
+        cues: &Cues,
+        source: &tokio::sync::broadcast::Sender<()>,
+    ) -> (u32, Arc<std::sync::atomic::AtomicUsize>) {
+        let received = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let counted = received.clone();
+        let updates = Channel::<()>::new(move |_| {
+            counted.fetch_add(1, Ordering::SeqCst);
+            Ok(())
+        });
+        let mut cued = source.subscribe();
+        let id = cues.observe(false, updates, |updates| async move {
+            while cued.recv().await.is_ok() {
+                if updates.send(()).is_err() {
+                    break;
+                }
+            }
+        });
+        (id, received)
+    }
+    fn count(received: &Arc<std::sync::atomic::AtomicUsize>) -> usize {
+        received.load(Ordering::SeqCst)
+    }
+    /// Waits until `received` reaches `at_least`; a cue travels through a task.
+    fn reached(received: &Arc<std::sync::atomic::AtomicUsize>, at_least: usize) -> bool {
+        for _ in 0..200 {
+            if count(received) >= at_least {
+                return true;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        false
+    }
+    /// Lets a task that was aborted, or never cued, show that it sends nothing.
+    fn quiet() {
+        std::thread::sleep(Duration::from_millis(150));
+    }
+
     #[test]
-    fn profile_observation_from_the_webview_thread_owns_and_replaces_its_task() {
+    fn two_profile_subscriptions_both_receive_a_cue() {
+        let cues = Cues::default();
+        let (source, _keep) = tokio::sync::broadcast::channel(8);
+        let (first, first_cues) = subscribed(&cues, &source);
+        let (second, second_cues) = subscribed(&cues, &source);
+        assert_eq!(cues.held(), vec![first, second]);
+        source.send(()).unwrap();
+        assert!(reached(&first_cues, 1) && reached(&second_cues, 1));
+        cues.end();
+    }
+
+    #[test]
+    fn ending_one_profile_subscription_keeps_the_other() {
+        let cues = Cues::default();
+        let (source, _keep) = tokio::sync::broadcast::channel(8);
+        let (first, first_cues) = subscribed(&cues, &source);
+        let (second, second_cues) = subscribed(&cues, &source);
+        cues.unobserve(first);
+        assert_eq!(cues.held(), vec![second]);
+        // An id that is not held, or was ended, ends nothing.
+        cues.unobserve(first);
+        cues.unobserve(u32::MAX);
+        assert_eq!(cues.held(), vec![second]);
+        source.send(()).unwrap();
+        assert!(reached(&second_cues, 1));
+        quiet();
+        assert_eq!(count(&first_cues), 0);
+        cues.end();
+    }
+
+    #[test]
+    fn ending_the_profile_cues_ends_every_subscription() {
+        let cues = Cues::default();
+        let (source, _keep) = tokio::sync::broadcast::channel(8);
+        let (_, first_cues) = subscribed(&cues, &source);
+        let (_, second_cues) = subscribed(&cues, &source);
+        cues.end();
+        assert!(cues.held().is_empty());
+        source.send(()).unwrap();
+        quiet();
+        assert_eq!(count(&first_cues) + count(&second_cues), 0);
+    }
+
+    #[test]
+    fn profile_subscriptions_beyond_the_cap_drop_the_oldest() {
+        let cues = Cues::default();
+        let (source, _keep) = tokio::sync::broadcast::channel(8);
+        let made: Vec<_> = (0..CUES_HELD + 2)
+            .map(|_| subscribed(&cues, &source))
+            .collect();
+        let held: Vec<u32> = made.iter().skip(2).map(|(id, _)| *id).collect();
+        assert_eq!(cues.held(), held);
+        source.send(()).unwrap();
+        for (_, received) in made.iter().skip(2) {
+            assert!(reached(received, 1));
+        }
+        quiet();
+        for (_, received) in made.iter().take(2) {
+            assert_eq!(count(received), 0);
+        }
+        cues.end();
+    }
+
+    #[test]
+    fn profile_observation_from_the_webview_thread_owns_each_subscription_until_it_ends() {
         use tauri::{
             WebviewWindowBuilder,
             ipc::{CallbackFn, InvokeBody},
@@ -1220,15 +1399,16 @@ mod tests {
         assert_eq!(first, 7);
         let second = invoke("user_profile_observe", json!({"updates":"__CHANNEL__:8"}));
         assert_eq!(second, 8);
+        assert_eq!(host.observer.held(), vec![7, 8]);
         invoke("user_profile_unobserve", json!({"subscription":first}));
-        assert_eq!(host.observer.held(), Some(8));
+        assert_eq!(host.observer.held(), vec![8]);
         invoke("user_profile_unobserve", json!({"subscription":second}));
-        assert_eq!(host.observer.held(), None);
+        assert!(host.observer.held().is_empty());
         invoke("user_profile_observe", json!({"updates":"__CHANNEL__:9"}));
         host.close();
-        assert_eq!(host.observer.held(), None);
+        assert!(host.observer.held().is_empty());
         invoke("user_profile_observe", json!({"updates":"__CHANNEL__:10"}));
-        assert_eq!(host.observer.held(), None);
+        assert!(host.observer.held().is_empty());
     }
 
     const PROFILE_ID: &str = "11111111-1111-4111-8111-111111111111";

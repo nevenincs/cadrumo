@@ -1091,6 +1091,8 @@ desktop:
       browser_title: A böngésző nincs telepítve
       browser_why: Az AEAT-ból való frissítéshez kell.
       cancel: Mégse
+      cancel_failed: Nem sikerült megszakítani a bejelentkezést ({code}). Próbáld
+        újra, vagy zárd be ezt az ablakot.
       checking: Ellenőrzés…
       ended_body: Az AEAT-belépésed lejárt.
       ended_sign_in: Bejelentkezés újra
@@ -2882,6 +2884,8 @@ desktop:
       too_short: Előbb jelölj ki legalább két sort, aztán tölts ki lefelé
     filters:
       account: Bankszámla
+      accounts_unread: A számláid olvasása nem sikerült ({code}), ezért nincs miből
+        választani. Próbáld újra.
       active: '{count} aktív'
       any: Bármelyik
       classification: Besorolás
@@ -3969,6 +3973,8 @@ desktop:
       next: Következő időszak
       of_year: '{year} időszakai'
       previous: Előző időszak
+      unread: Az időszakok olvasása nem sikerült ({code}), ezért egy sincs felsorolva.
+        Próbáld újra.
       year_next: Következő év
       year_previous: Előző év
       years_supported: Évek, amelyeket megnézhetsz
@@ -4877,10 +4883,62 @@ desktop:
         nincs meg.
       uppercase: Ez a hivatkozás nem érvényes.
     sign_in: 'Jelentkezz be a megnyitáshoz: {view}.'
+  operations:
+    cancellation_requested: Megszakítás kérve
+    count: '{shown} / {total} futtatás látható'
+    effect:
+      none: Nincs
+      partial: Részleges
+      unknown: Ismeretlen
+      updated: Frissítve
+    empty: Ehhez a profilhoz nincs rögzített futtatás.
+    error_code: 'Hibakód: {code}'
+    failed: Az előzmények nem érhetők el ({code}).
+    field_effect: Hatás
+    field_outcome: Eredmény
+    lifecycle:
+      cancellation_requested: Megszakítás kérve
+      created: Létrehozva
+      queued: Sorban áll
+      running: Fut
+      settling: Lezárás alatt
+      terminal: Befejezve
+      waiting_for_external: Külső félre vár
+      waiting_for_interaction: A te válaszodra vár
+    loading: Az előzmények beolvasása…
+    loading_more: További futtatások beolvasása…
+    more_failed: További futtatások nem érhetők el ({code}).
+    orientation: 'Az ehhez a profilhoz rögzített futtatások, a legújabbal kezdve.
+      Ez az oldal csak felsorolja őket: soha nem futtat, nem próbál újra és nem szakít
+      meg semmit.'
+    outcome:
+      cancelled: Megszakítva
+      failed: Sikertelen
+      interrupted: Megszakadt
+      refused: Elutasítva
+      succeeded: Sikeres
+      timed_out: Időtúllépés
+    phase: 'Fázis: {phase}'
+    read_again: Olvasd be újra
+    refresh: Frissítés
+    refusal_ref: 'Az elutasítás hivatkozása: {ref}'
+    result_not_stored: Nincs mentett eredmény
+    result_stored: Az eredmény mentve
+    settled: 'Lezárva: {time}'
+    show_more: Továbbiak
+    shown_on: Itt jelenik meg
+    signed_out: Jelentkezz be a műveleti előzmények megtekintéséhez.
+    started: 'Indítva: {time}'
+    title: Műveletek
+    unreadable: 'Nem olvasható rekordok: {count}.'
+    unverifiable: 'Nem igazolható, hogy ehhez a profilhoz tartoznak: {count}.'
+    updated: 'Frissítve: {time}'
   palette:
     actions: Műveletek
     close: Keresés bezárása
     copy_link: A nézet hivatkozásának másolása
+    declarations_failed: A nyilatkozataid keresése nem sikerült ({code}). A többi
+      találat látható. Írj be újra az ismétléshez.
     documentation: Dokumentáció
     hide_view: 'Elrejtés: {view}'
     keywords:
@@ -5170,6 +5228,29 @@ desktop:
     search: Keresés
     settings: Beállítások
     tui: Munkaterület
+  reference:
+    article: '{article}. cikk'
+    citation: Pontos hivatkozás
+    empty: 'A csomagolt forrásokban nincs találat erre: „{query}”.'
+    failed: A keresés nem érhető el ({code}).
+    idle: Még nem kerestél semmit. Írj be egy szót, egy témát vagy egy hivatkozási
+      azonosítót, és válaszd a Keresés gombot.
+    matched_on: 'Egyezés: {term}'
+    orientation: 'Az eredmények a mellékelt forrásokból származnak. Tájékozódásra
+      szolgálnak, nem ellenőrzött hatályos jogszabályok: támaszkodás előtt ellenőrizd
+      a hivatalos szöveget.'
+    passages: Szövegrészek
+    query_label: Keresés a kézikönyvben
+    query_placeholder: Egy szó, egy téma vagy egy hivatkozási azonosító
+    results: 'Találatok erre: „{query}”'
+    search: Keresés
+    search_again: Keresés újra
+    searching: Keresés…
+    section: '{section}. szakasz'
+    signed_out: Jelentkezz be, hogy keress a kézikönyvben.
+    source: 'Forrás: {source}'
+    terminology: Szakkifejezések
+    title: Kézikönyv
   refusal:
     action_unroutable: Itt nem érhető el.
   session:
@@ -10687,6 +10768,8 @@ workspace:
       saved: 'Mentve: {name}. Ez nem igazolja a benyújtást.'
       show_filed_file: A benyújtott fájl megjelenítése
       show_in_folder: Megjelenítés a mappában
+      show_in_folder_failed: A fájl elmentve, de nem sikerült megjeleníteni a mappájában
+        ({code}). Nyisd meg te magad a mappát, hogy megtaláld.
       title: Exportálás és rögzítés
     filter:
       all: minden rovat

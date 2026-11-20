@@ -11,6 +11,7 @@ import type {
   ThreadStatus,
   ToolCallStatus,
   ToolKind,
+  ToolReach,
 } from "./agentGatewayContract";
 
 export type AgentApproval = {
@@ -27,6 +28,14 @@ export type AgentApproval = {
    * One of the agent's ten tool kinds.
    */
   tool_kind: ToolKind | null;
+  /**
+   * The tool's own name within its server, when the request names a tool.
+   */
+  tool_name?: string | null;
+  /**
+   * How far the tool reaches, when the agent says.
+   */
+  tool_reach?: ToolReach | null;
   /**
    * The host-declared server that owns this tool, when supplied.
    */
@@ -57,6 +66,11 @@ export type AgentDocumentReference = {
  */
 export type AgentMessageRecord = {
   /**
+   * The run whose conversation this message was carried from; null for a
+   * message said in this conversation.
+   */
+  carried_from_run_id?: string | null;
+  /**
    * cadrumo-agent's `message_id`; null where it served none.
    */
   id: string | null;
@@ -85,6 +99,12 @@ export type AgentPersonRecord = {
    * The stored documents the message named, in the order it named them.
    */
   attachments: AgentDocumentReference[];
+  /**
+   * The run whose conversation this message was carried from; null for a
+   * message said in this conversation. `sent_at` is then when it was first
+   * said.
+   */
+  carried_from_run_id?: string | null;
   /**
    * cadrumo-agent's `message_id`; null where it served none.
    */
@@ -177,6 +197,17 @@ export type AgentSnapshot = {
 };
 
 /**
+ * Why a tool call failed, as the agent states it: the closed refusal code and
+ * recovery action when the tool's result named them, and the first line of its
+ * error text. Each is left out when the agent stated none.
+ */
+export type AgentToolFailure = {
+  code?: string | null;
+  message?: string | null;
+  recovery_action_id?: string | null;
+};
+
+/**
  * A tool call of a reply, as its history lists it.
  */
 export type AgentToolRecord = {
@@ -185,6 +216,10 @@ export type AgentToolRecord = {
    * it: its text, its diffs' paths and the places it touched.
    */
   details: string[];
+  /**
+   * Why the call failed, where it failed and stated why.
+   */
+  failure?: AgentToolFailure | null;
   /**
    * cadrumo-agent's `tool_call_id`.
    */
@@ -200,6 +235,18 @@ export type AgentToolRecord = {
    */
   title: string | null;
   tool_kind: ToolKind | null;
+  /**
+   * The tool's own name within its server; null where unnamed.
+   */
+  tool_name?: string | null;
+  /**
+   * How far the tool reaches; null where the agent did not say.
+   */
+  tool_reach?: ToolReach | null;
+  /**
+   * The tool server that owns the tool, e.g. `cadrumo`; null where unnamed.
+   */
+  tool_server?: string | null;
 };
 
 /**

@@ -140,7 +140,11 @@ test("the country of a reading offers the codes in use", async ({
 }) => {
   await reading(target, DOMESTIKA);
   const country = draft(target).locator(".ledger-draft-country");
-  await country.focus();
+  // The reading states the supplier's country in full, which offers nothing
+  // over it; cleared, the field offers the codes in use.
+  await expect(country).toHaveValue(/^ES/);
+  await country.fill("");
+  await expect(country).toHaveValue("");
   await target.keyboard.press("ArrowDown");
   const spain = options(target).filter({ hasText: /^ES/ });
   await expect(spain).toHaveCount(1);

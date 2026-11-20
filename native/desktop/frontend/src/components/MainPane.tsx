@@ -11,6 +11,8 @@ import { ModelListContext, type ModelList } from "../shell/agentModelList";
 import { ProfileStepContext } from "../shell/profileStepDoor";
 import type { useFilingCalendar } from "../shell/calendar";
 import type { useHome } from "../shell/home";
+import type { useOperations } from "../shell/operations";
+import type { useReference } from "../shell/reference";
 import type { Host } from "../shell/host";
 import type { LedgerProfileStep } from "../shell/ledger";
 import type {
@@ -36,6 +38,8 @@ import type { OpenMenu } from "./ContextMenu";
 import { DocsFrame, type DocsFrameApi } from "./DocsFrame";
 import { FilingCalendarView, type CalendarMemory } from "./FilingCalendar";
 import { HomePage } from "./home/HomePage";
+import { OperationsPage } from "./operations/OperationsPage";
+import { ReferencePage } from "./reference/ReferencePage";
 import { WithholdingPage } from "./withholding/WithholdingPage";
 import type { LeaveGuard } from "./ledger/editing/LedgerEditing";
 import { LedgerPage, type LedgerMemory } from "./ledger/LedgerPage";
@@ -73,6 +77,8 @@ export function MainPane({
   aeatSyncOn,
   homeOn,
   withholdingOn,
+  referenceOn,
+  operationsOn,
   calendarOn,
   openDeclaration,
   openWorkUnit,
@@ -97,6 +103,8 @@ export function MainPane({
   aeatSyncPage,
   homePage,
   withholdingPage,
+  referencePage,
+  operationsPage,
   calendarPage,
   toggleMaximize,
   maximizeControl,
@@ -124,6 +132,8 @@ export function MainPane({
   profileStep,
   profileStepHandled,
   home,
+  reference,
+  operations,
   calendar,
   calendarProfile,
   calendarMemory,
@@ -161,6 +171,8 @@ export function MainPane({
   aeatSyncOn: boolean;
   homeOn: boolean;
   withholdingOn: boolean;
+  referenceOn: boolean;
+  operationsOn: boolean;
   calendarOn: boolean;
   openDeclaration: {
     workUnitId: string | null;
@@ -190,6 +202,8 @@ export function MainPane({
   aeatSyncPage: PageRef;
   homePage: PageRef;
   withholdingPage: PageRef;
+  referencePage: PageRef;
+  operationsPage: PageRef;
   calendarPage: PageRef;
   toggleMaximize: (area: Area) => void;
   maximizeControl: (area: Area, labelKey: string) => PaneControl;
@@ -217,6 +231,8 @@ export function MainPane({
   profileStep: LedgerProfileStep | null;
   profileStepHandled: () => void;
   home: ReturnType<typeof useHome>;
+  reference: ReturnType<typeof useReference>;
+  operations: ReturnType<typeof useOperations>;
   calendar: ReturnType<typeof useFilingCalendar>;
   calendarProfile: ReturnType<typeof useUserProfile>;
   calendarMemory: { current: CalendarMemory };
@@ -593,6 +609,65 @@ export function MainPane({
           }
         />
       )}
+      {referenceOn && (
+        <ReferencePage
+          key={reader ?? ""}
+          page={referencePage}
+          state={reference.state}
+          attempt={reference.attempt}
+          pane={{
+            onToggleMaximize: () => toggleMaximize("docs"),
+            controls: [
+              maximizeControl("docs", "desktop.pane.maximize_docs"),
+              ...splitControls.map((control) => ({
+                ...control,
+                yields: true,
+              })),
+            ],
+          }}
+          withheld={
+            <SignedOut
+              account={account}
+              lead={t("desktop.reference.signed_out")}
+              quiet
+              onSignIn={askSignIn}
+            />
+          }
+          onSearch={reference.search}
+        />
+      )}
+      {operationsOn && (
+        <OperationsPage
+          key={reader ?? ""}
+          page={operationsPage}
+          state={operations.state}
+          attempt={operations.attempt}
+          refreshing={operations.refreshing}
+          locale={locale}
+          pane={{
+            onToggleMaximize: () => toggleMaximize("docs"),
+            controls: [
+              maximizeControl("docs", "desktop.pane.maximize_docs"),
+              ...splitControls.map((control) => ({
+                ...control,
+                yields: true,
+              })),
+            ],
+          }}
+          withheld={
+            <SignedOut
+              account={account}
+              lead={t("desktop.operations.signed_out")}
+              quiet
+              onSignIn={askSignIn}
+            />
+          }
+          onRefresh={operations.refresh}
+          onMore={operations.more}
+          // A run's page is a view of the window and opens as a link does.
+          onOpen={(destination) => openView(destination)}
+        />
+      )}
       {calendarOn && (
         <FilingCalendarView
           page={calendarPage}
@@ -649,9 +724,7 @@ export function MainPane({
             }}
             onTheme={setDocsTheme}
             onShortcut={runShortcut}
-            onOpenExternal={(url) =>
-              void host.openExternal(url).catch(() => undefined)
-            }
+            onOpenExternal={openLink}
             onMenu={docsMenu}
           />
         ) : environment.state === "ready" &&

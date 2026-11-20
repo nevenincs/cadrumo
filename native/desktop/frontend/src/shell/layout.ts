@@ -89,6 +89,8 @@ export type Layout = {
     | "profile"
     | "ledger"
     | "withholding"
+    | "reference"
+    | "operations"
     | "declarations"
     | "browser"
     | "aeat-sync";
@@ -314,6 +316,8 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
           "profile",
           "ledger",
           "withholding",
+          "reference",
+          "operations",
           "declarations",
           "aeat-sync",
         ] as const,

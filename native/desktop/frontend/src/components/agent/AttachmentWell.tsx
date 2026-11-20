@@ -67,7 +67,10 @@ export function AttachmentWell({
   const folds = !expanded && attachments.length > capacity;
   const shown = folds ? attachments.slice(0, capacity - 1) : attachments;
   const hidden = attachments.length - shown.length;
-  const total = attachments.reduce((sum, file) => sum + file.sizeBytes, 0);
+  // What the next message would carry: a refused file is counted on its own
+  // line and adds to neither the count nor the size.
+  const accepted = attachments.filter((file) => file.state !== "refused");
+  const total = accepted.reduce((sum, file) => sum + file.sizeBytes, 0);
   const uploading = attachments.filter(
     (file) => file.state === "uploading" || file.state === "queued",
   ).length;
@@ -106,7 +109,7 @@ export function AttachmentWell({
       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
         <span>
           {t("desktop.agent.files_summary", {
-            count: attachments.length,
+            count: accepted.length,
             size: formatSize(locale, total),
           })}
         </span>

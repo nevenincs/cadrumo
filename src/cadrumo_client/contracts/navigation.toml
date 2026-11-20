@@ -115,8 +115,10 @@ surfaces = ["gui"]
 id = "operations"
 label = "navigation.view.operations.label"
 keywords = "navigation.view.operations.keywords"
-surfaces = []
+surfaces = ["gui"]
 
+# Intentionally not drawn by the window: its acts are the runtime's sessionless installation
+# administration, which the desktop shell keeps out of the window (no runtime control).
 [[element]]
 id = "installation"
 label = "navigation.view.installation.label"
@@ -127,7 +129,7 @@ surfaces = []
 id = "reference"
 label = "navigation.view.reference.label"
 keywords = "navigation.view.reference.keywords"
-surfaces = []
+surfaces = ["gui"]
 
 [[element]]
 id = "profile"

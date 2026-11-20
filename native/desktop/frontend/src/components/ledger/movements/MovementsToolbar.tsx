@@ -206,6 +206,8 @@ export function MovementsToolbar({
   density,
   onDensity,
   accounts,
+  accountsFailure = null,
+  onRetryAccounts,
   onWantAccounts,
   groupLabels,
   reasons,
@@ -233,6 +235,9 @@ export function MovementsToolbar({
   density: "compact" | "comfortable";
   onDensity: (density: "compact" | "comfortable") => void;
   accounts: readonly OwnAccountChoice[] | null;
+  /** Why the accounts could not be read, where they could not. */
+  accountsFailure?: string | null;
+  onRetryAccounts?: () => void;
   onWantAccounts: () => void;
   /** The group labels the window's movements carry. */
   groupLabels: readonly string[];
@@ -368,6 +373,18 @@ export function MovementsToolbar({
                 lifecycleLabel(t, state),
               )}
             </Section>
+            {accountsFailure !== null && (
+              <span role="alert" className="grid gap-1 text-sm">
+                {t("desktop.ledger.filters.accounts_unread", {
+                  code: accountsFailure,
+                })}
+                {onRetryAccounts && (
+                  <Button variant="outline" size="xs" onClick={onRetryAccounts}>
+                    {t("desktop.ledger.retry")}
+                  </Button>
+                )}
+              </span>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <label className="grid gap-1 text-sm">
                 {t("desktop.ledger.filters.account")}

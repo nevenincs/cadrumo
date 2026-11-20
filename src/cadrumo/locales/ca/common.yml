@@ -1108,6 +1108,8 @@ desktop:
       browser_title: Navegador no instal·lat
       browser_why: Cal per actualitzar des de l'AEAT.
       cancel: Cancel·la
+      cancel_failed: No s'ha pogut cancel·lar l'inici de sessió ({code}). Torna-ho
+        a provar o tanca aquesta finestra.
       checking: Comprovant…
       ended_body: El teu accés a l'AEAT ha acabat.
       ended_sign_in: Inicia la sessió de nou
@@ -2898,6 +2900,8 @@ desktop:
       too_short: Selecciona primer dues files o més i emplena avall
     filters:
       account: Compte
+      accounts_unread: No s'han pogut llegir els teus comptes ({code}), així que no
+        n'hi ha cap per triar. Torna-ho a provar.
       active: '{count} actius'
       any: Qualsevol
       classification: Classificació
@@ -3988,6 +3992,8 @@ desktop:
       next: Període següent
       of_year: Períodes de {year}
       previous: Període anterior
+      unread: No s'han pogut llegir els períodes ({code}), així que no se'n llista
+        cap. Torna-ho a provar.
       year_next: Any següent
       year_previous: Any anterior
       years_supported: Exercicis que pots consultar
@@ -4897,10 +4903,62 @@ desktop:
         no té.
       uppercase: Aquest enllaç no és vàlid.
     sign_in: Inicia la sessió per obrir {view}.
+  operations:
+    cancellation_requested: Cancel·lació sol·licitada
+    count: Es mostren {shown} de {total} execucions
+    effect:
+      none: Cap
+      partial: Parcial
+      unknown: Desconegut
+      updated: Actualitzat
+    empty: Aquest perfil no té execucions registrades.
+    error_code: Codi d'error {code}
+    failed: L'historial no està disponible ({code}).
+    field_effect: Efecte
+    field_outcome: Resultat
+    lifecycle:
+      cancellation_requested: Cancel·lació sol·licitada
+      created: Creada
+      queued: En cua
+      running: En execució
+      settling: Tancant-se
+      terminal: Acabada
+      waiting_for_external: Esperant un tercer
+      waiting_for_interaction: Esperant la teva resposta
+    loading: Llegint l'historial…
+    loading_more: Llegint més execucions…
+    more_failed: No hi ha més execucions disponibles ({code}).
+    orientation: 'Les execucions registrades per a aquest perfil, de la més recent
+      a la més antiga. Aquesta pàgina només les llista: mai executa, reintenta ni
+      cancel·la res.'
+    outcome:
+      cancelled: Cancel·lada
+      failed: Fallida
+      interrupted: Interrompuda
+      refused: Rebutjada
+      succeeded: Correcta
+      timed_out: Temps esgotat
+    phase: Fase {phase}
+    read_again: Torna a llegir
+    refresh: Actualitza
+    refusal_ref: Referència del rebuig {ref}
+    result_not_stored: Sense resultat desat
+    result_stored: Resultat desat
+    settled: Tancada {time}
+    show_more: Mostra'n més
+    shown_on: Es mostra a
+    signed_out: Inicia la sessió per veure l'historial d'operacions.
+    started: Iniciada {time}
+    title: Operacions
+    unreadable: 'Registres que no s''han pogut llegir: {count}.'
+    unverifiable: 'Registres que no s''han pogut confirmar com d''aquest perfil: {count}.'
+    updated: Actualitzada {time}
   palette:
     actions: Accions
     close: Tanca la cerca
     copy_link: Copia l'enllaç a aquesta vista
+    declarations_failed: No s'han pogut cercar les teves declaracions ({code}). Es
+      mostren els altres resultats. Escriu de nou per tornar-ho a provar.
     documentation: Documentació
     hide_view: Amaga {view}
     keywords:
@@ -5189,6 +5247,28 @@ desktop:
     search: Cerca
     settings: Configuració
     tui: Espai de treball
+  reference:
+    article: Article {article}
+    citation: Cita exacta
+    empty: Res a les fonts incloses coincideix amb «{query}».
+    failed: La cerca no està disponible ({code}).
+    idle: Encara no has cercat res. Escriu una paraula, un tema o un identificador
+      de cita i tria Cerca.
+    matched_on: Coincideix amb {term}
+    orientation: 'Els resultats provenen de les fonts incloses. Són una orientació,
+      no dret vigent verificat: comprova el text oficial abans de recolzar-te en un.'
+    passages: Passatges
+    query_label: Cerca a la referència
+    query_placeholder: Una paraula, un tema o un identificador de cita
+    results: Resultats per a «{query}»
+    search: Cerca
+    search_again: Cerca de nou
+    searching: Cercant…
+    section: Secció {section}
+    signed_out: Inicia la sessió per cercar a la referència.
+    source: 'Font: {source}'
+    terminology: Terminologia
+    title: Referència
   refusal:
     action_unroutable: No està disponible aquí.
   session:
@@ -10722,6 +10802,8 @@ workspace:
       saved: Desat com a {name}. No és prova de presentació.
       show_filed_file: Mostrar el fitxer presentat
       show_in_folder: Mostrar a la carpeta
+      show_in_folder_failed: L'arxiu s'ha desat, però no s'ha pogut mostrar a la seva
+        carpeta ({code}). Obre la carpeta per trobar-lo.
       title: Exportar i registrar
     filter:
       all: totes les caselles

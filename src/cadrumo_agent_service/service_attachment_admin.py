@@ -52,6 +52,8 @@ def _answer_request_action(
         return AttachmentRefusal(code=AttachmentAdminRefusalCode.INVALID_REQUEST)
     if action == "attachment_card":
         return releases.card(run_id, request_id)
+    if action == "attachment_release" and scope == "decline":
+        return releases.decline(run_id, request_id)
     if action == "attachment_release":
         return releases.release(run_id, request_id, None if scope is None else ReleaseScope(scope))
     return AttachmentRefusal(code=AttachmentAdminRefusalCode.INVALID_REQUEST)
