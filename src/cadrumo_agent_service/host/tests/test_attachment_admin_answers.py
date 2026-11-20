@@ -20,6 +20,7 @@ from ...admin import AdminServer
 from ...providers.application.attachment_releases import (
     AttachmentCard,
     AttachmentCardAnswer,
+    AttachmentDeclined,
     AttachmentGateway,
     AttachmentGrantList,
     AttachmentGrantRevokeAnswer,
@@ -35,6 +36,7 @@ from ...providers.application.attachment_releases import (
     DisclosureStore,
     GatewayAnswer,
     PendingRead,
+    ReleaseRefusal,
     StoredDocument,
     StoredGrants,
 )
@@ -62,6 +64,7 @@ class _Gateway(AttachmentGateway):
     """One synthetic run parked on one read of one stored document."""
 
     released: list[str] = field(default_factory=list)
+    refused: list[ReleaseRefusal] = field(default_factory=list)
 
     @override
     def pending_read(self, run_id: str, request_id: str) -> PendingRead | None:
@@ -74,6 +77,11 @@ class _Gateway(AttachmentGateway):
     @override
     def release(self, read: PendingRead, sha256: str, *, seconds: int) -> GatewayAnswer:
         self.released.append(sha256)
+        return GatewayAnswer.RELEASED
+
+    @override
+    def refuse(self, read: PendingRead, sha256: str, refusal: ReleaseRefusal, *, seconds: int) -> GatewayAnswer:
+        self.refused.append(refusal)
         return GatewayAnswer.RELEASED
 
     @override
@@ -137,6 +145,7 @@ class _Admin:
     target: _Target
     server: AdminServer
     off_host: list[bool]
+    gateway: _Gateway
 
     def ask(self, action: str, **metadata: str) -> object:
         request = {"version": 1, "request_id": str(uuid4()), "action": action, **metadata}
@@ -152,8 +161,9 @@ class _Admin:
 @pytest.fixture
 def admin() -> Iterator[_Admin]:
     off_host = [True]
+    gateway = _Gateway()
     releases = AttachmentReleases(
-        gateway=_Gateway(),
+        gateway=gateway,
         store=_Store(),
         off_host=lambda _provider, _transport: off_host[0],
         eligibility=lambda: None,
@@ -162,7 +172,7 @@ def admin() -> Iterator[_Admin]:
     target = _Target(releases)
     server = AdminServer(target, bearer=bytearray(_BEARER))
     try:
-        yield _Admin(target, server, off_host)
+        yield _Admin(target, server, off_host, gateway)
     finally:
         server.close()
 
@@ -241,10 +251,20 @@ def test_a_refusal_keeps_its_code(
     admin: _Admin, ask: Callable[[_Admin], object], answer_type: object, code: str, name: str | None
 ) -> None:
     document = ask(admin)
+    assert isinstance(document, dict)
+    assert document["kind"] == "refused"
     assert document == {"kind": "refused", "code": code, "name": name}
     refusal = _typed(answer_type, document)
     assert isinstance(refusal, AttachmentRefusal)
     assert refusal.code == code
+    assert refusal.name == name
+
+
+def test_a_decline_is_an_answer_of_its_own_and_tells_the_agent(admin: _Admin) -> None:
+    answer = _typed(AttachmentReleaseAnswer, admin.read("attachment_release", scope="decline"))
+    assert isinstance(answer, AttachmentDeclined)
+    assert admin.gateway.refused == [ReleaseRefusal.PERSON_DECLINED]
+    assert admin.gateway.released == []
 
 
 def test_a_stopping_service_refuses_every_action_with_its_code(admin: _Admin) -> None:

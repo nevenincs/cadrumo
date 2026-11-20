@@ -319,3 +319,13 @@ export type ToolKind =
   | "fetch"
   | "switch_mode"
   | "other";
+
+/**
+ * How far a tool reaches when it is called.
+ *
+ * `local_read` tools read what is on this machine and change nothing,
+ * `local_write` tools may change it, and `online` tools may reach beyond it. A
+ * call whose reach is not known is served without one rather than as any of
+ * these.
+ */
+export type ToolReach = "local_read" | "local_write" | "online";

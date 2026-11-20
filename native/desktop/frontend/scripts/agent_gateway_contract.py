@@ -45,11 +45,12 @@ RELAYED_ANSWERS: Final = (
     "ThreadStatus",
     "ToolCallStatus",
     "ToolKind",
+    "ToolReach",
 )
 """The agent definitions the host relays unchanged: the attachment policy's, the licence route's, the
 skill list's, one skill's and its checks' answers, a failed run's provider condition, a run start's lane
 and model-change refusal facts and its carry, a run's status, a
-tool call's status and kind, and a pending clarification's questions, which the host passes through as
+tool call's status, kind and reach, and a pending clarification's questions, which the host passes through as
 the agent states them."""
 
 _HEADER = """\

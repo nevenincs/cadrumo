@@ -20,6 +20,10 @@ import type {
  * What a reply waits on: each approval it asks for, a request to read an
  * attachment drawn with what it would read, and its questions. Each is
  * answerable only while nothing else is on its way.
+ *
+ * A read the installation or profile keeps on this computer has no answer of
+ * the person's to wait for: the service says so on its card, the request is
+ * declined here one at a time, and one notice names every file of the run.
  */
 export function RunPrompts({
   session,
@@ -89,6 +93,8 @@ export function RunPrompts({
             source={approval.source}
             toolCall={approval.tool_call}
             toolServer={approval.tool_server}
+            toolName={approval.tool_name}
+            toolReach={approval.tool_reach}
             toolKind={approval.tool_kind}
             description={approval.description}
             options={approval.options}

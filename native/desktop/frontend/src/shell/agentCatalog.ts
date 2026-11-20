@@ -585,6 +585,26 @@ export function selectionRecord(
   return { ...base, model: entry.model, ...(effort ? { effort } : {}) };
 }
 
+/** The name the picker gives the model `model` (the id a run names) in the
+ * lane `way`: the catalog's own `display_name`, and the id itself only where
+ * the catalog does not list it, as for a model the person writes. */
+export function modelDisplayName(
+  catalog: ServedCatalogAnswer,
+  way: string | null,
+  model: string,
+): string {
+  const lane =
+    way === null
+      ? undefined
+      : servedLanes(catalog).find(
+          (held) => understood(held) && wayId(held) === way,
+        );
+  return (
+    lane?.catalog.models?.find((held) => held.model === model)?.display_name ??
+    model
+  );
+}
+
 /** The model the service reads documents with, as the column holds a choice:
  * null where the catalog does not serve its lane or no longer lists it. */
 export function readingSelection(
