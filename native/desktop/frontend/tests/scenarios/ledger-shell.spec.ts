@@ -266,7 +266,7 @@ test("the years with movements come from the ledger and jump the dropdown", asyn
   await openLedger(target);
   const periods = await openPeriods(target);
   const years = periods.getByRole("group", {
-    name: label("desktop.ledger.period.years_with_movements"),
+    name: label("desktop.ledger.period.years_with_movements_or_invoices"),
   });
   await expect(years.getByRole("button")).toHaveText(MOVEMENT_YEARS);
   await years

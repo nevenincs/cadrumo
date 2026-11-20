@@ -91,7 +91,7 @@ DESKTOP_LEDGER_CATALOGUE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.period.year_next",
         "desktop.ledger.period.year_previous",
         "desktop.ledger.period.years_supported",
-        "desktop.ledger.period.years_with_movements",
+        "desktop.ledger.period.years_with_movements_or_invoices",
         "desktop.ledger.readiness.checking",
         "desktop.ledger.readiness.failed",
         "desktop.ledger.readiness.no_rate",

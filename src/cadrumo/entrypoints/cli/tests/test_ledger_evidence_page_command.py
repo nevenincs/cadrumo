@@ -33,6 +33,7 @@ from ....application.ledger.evidence_page_contracts import (
     EvidencePageMediaType,
     EvidenceStructuredFactV1,
     EvidenceStructuredInvoiceV1,
+    EvidenceStructuredValueKind,
     LedgerEvidencePageProjection,
     LedgerEvidencePageRequest,
 )
@@ -177,7 +178,9 @@ def test_a_structured_e_invoice_is_refused_and_writes_nothing(monkeypatch: pytes
             title_key=EVIDENCE_STRUCTURED_TITLE_KEYS[record.shape],
             facts=(
                 EvidenceStructuredFactV1(
-                    label_key="application.ledger.evidence.structured.fact.invoice_number", text=record.invoice_number
+                    label_key="application.ledger.evidence.structured.fact.invoice_number",
+                    value_kind=EvidenceStructuredValueKind.TEXT,
+                    text=record.invoice_number,
                 ),
             ),
             lines=(),

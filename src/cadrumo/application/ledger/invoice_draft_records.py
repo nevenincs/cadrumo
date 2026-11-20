@@ -607,9 +607,11 @@ class InvoiceDraft(InvoiceDraftIdentityDocumentFields):
         invoice_date: Day-first invoice date recovered from the text, or
             ``None``.
         taxable_base: Labelled "base imponible" amount, or ``None``.
-        iva_rate: IVA percentage recovered from a "IVA NN%" label, expressed
-            as a whole-number :class:`~decimal.Decimal` (e.g. ``21``), or
-            ``None``.
+        iva_rate: IVA percentage recovered from a "IVA NN%" label, or from a
+            structured record whose per-rate breakdown states exactly one rate,
+            expressed as a whole-number :class:`~decimal.Decimal` (e.g. ``21``),
+            or ``None``. A structured record stating several rates leaves it
+            ``None`` and carries them in ``iva_breakdown``.
         iva_amount: Labelled IVA cuota amount, or ``None``.
         grand_total: Labelled invoice total amount, or ``None``.
         regime_legend: The statutory mention the document prints to state that

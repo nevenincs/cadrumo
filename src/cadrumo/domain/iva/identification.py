@@ -56,13 +56,17 @@ from ...core.identity.tax_id import validate_spanish_tax_id
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..calculations.registry.tax_id_format import runtime_tax_id_format, tax_id_format_value
-from .establishment import country_code_for_printed_tax_identifier
+from .establishment import (
+    country_code_for_printed_tax_identifier,
+    country_code_for_stated_country_code,
+    is_iso_3166_user_assigned_alpha2,
+)
 from .schema import EUMemberState
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
 
-__all__ = ["identification_state_for_printed_tax_identifier"]
+__all__ = ["identification_state_for_printed_tax_identifier", "vat_number_issuing_country"]
 
 
 def identification_state_for_printed_tax_identifier(
@@ -149,3 +153,43 @@ def _spanish_identification(
         # number wearing the wrong prefix. Silence is the honest answer.
         return None
     return require_eu_member_state("ES", authority=operation)
+
+
+def vat_number_issuing_country(
+    printed_identifier: str | None,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> str | None:
+    """Return the ISO 3166-1 alpha-2 country whose IVA prefix a printed number carries, or ``None``.
+
+    A VAT identification number leads with the prefix of the Member State that
+    issued it: "an individual VAT identification number ... shall have a prefix
+    in accordance with the ISO 3166 alpha 2 code to identify the Member State by
+    which it was issued", Greece using ``EL`` (Directive 2006/112/EC art. 215).
+    This is the issuing State and nothing more: a registration is not an
+    establishment (see the module note), so the answer is a suggestion for a
+    person to accept as the counterparty's country, never an establishment fact.
+
+    A composition over :func:`identification_state_for_printed_tax_identifier`,
+    which already owns prefix recognition, the Greek ``EL``/``GR`` divergence,
+    the structure check on the number's body and the Spanish ``ES`` prefix. This
+    adds only the step from the registry's member-state token to the country
+    code the closed country vocabulary carries.
+
+    Returns:
+        The upper-case alpha-2 code, or ``None`` when the number carries no
+        recognised prefix, its body does not match the shape its prefix claims,
+        the prefix names a jurisdiction that has no ISO 3166 country code
+        (Northern Ireland's ``XI``, a private-use pair), or the number is a bare Spanish identifier
+        that prints no prefix at all.
+    """
+    state = identification_state_for_printed_tax_identifier(printed_identifier, operation=operation)
+    if state is None:
+        return None
+    code = country_code_for_stated_country_code(str(state).upper(), operation=operation)
+    # The member-state catalogue carries Northern Ireland's VAT jurisdiction
+    # ``XI`` for the goods rules; it is inside ISO 3166's private-use range, so
+    # it names no country a person could accept as the counterparty's.
+    if code is None or is_iso_3166_user_assigned_alpha2(code):
+        return None
+    return code

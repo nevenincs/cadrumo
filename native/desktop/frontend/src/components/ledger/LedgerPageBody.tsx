@@ -96,6 +96,7 @@ export function LedgerPageBody({
         copy={copy}
         onPeriod={setPeriod}
         linked={linkedInvoice}
+        onCatalogueChange={refreshYears}
       />
     );
   else if (section === "rules")

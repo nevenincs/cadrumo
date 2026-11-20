@@ -6,9 +6,10 @@ from enum import StrEnum
 
 
 class LedgerKnownValueKind(StrEnum):
-    """One family of text the ledger, its invoices and its assets already state."""
+    """One family of value the ledger, its invoices and its assets already state."""
 
     COUNTERPARTY = "counterparty"
+    LEDGER_YEAR = "ledger_year"
     DESCRIPTION = "description"
     GROUP_LABEL = "group_label"
     M210_PAYER = "m210_payer"

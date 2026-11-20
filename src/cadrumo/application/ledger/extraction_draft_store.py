@@ -24,14 +24,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
+from ...domain.iva.schema import InvoiceKind
 from . import extraction_draft_repository
 from .invoice_draft_records import InvoiceDraft, LabelReadingFallback
+from .structured_invoice_ports import StructuredInvoiceClassification, StructuredInvoiceClassificationKind
 
 if TYPE_CHECKING:
     from ...core.config import Settings
@@ -39,11 +42,21 @@ if TYPE_CHECKING:
 __all__ = [
     "ExtractionDraftDocument",
     "StoredExtractionDraft",
+    "StoredStructuredInvoiceClass",
     "extraction_draft_object_key",
     "load_extraction_drafts",
     "read_extraction_draft",
     "write_extraction_draft",
 ]
+
+
+class StoredStructuredInvoiceClass(BaseModel):
+    """The document class a structured reader stated, as the stored record keeps it."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_code: str = Field(min_length=1)
+    kind: StructuredInvoiceClassificationKind
 
 
 class StoredExtractionDraft(BaseModel):
@@ -82,6 +95,25 @@ class StoredExtractionDraft(BaseModel):
             ``None`` means no degradation is recorded: the fill ran, was never
             needed, or the draft was stored before this fact was kept. It never
             claims the read was complete.
+        structured_invoice_class: The document class a structured reader stated
+            (a Facturae corrective or rectified invoice, for one), when it
+            stated one. The draft keeps that fact in a private attribute that its
+            own serialisation does not carry, so without this record it would be
+            lost on the way through storage and a review of the stored draft
+            would differ from a fresh read of the same bytes. It is put back on
+            the draft when the record is loaded; ``None`` means none was stated,
+            or the draft was stored before this fact was kept.
+        declared_kind: The direction the operator stated when they imported the
+            document, or ``None`` when none was stated (the draft was read
+            outside a directed import, or stored before this fact was kept).
+
+            Kept on the record rather than inside ``draft`` for the same reason
+            the label-reading fallback is: it is a fact about how the document
+            reached the queue, not about what the document says, and the
+            draft's own ``suggested_kind`` stays what the reading proposed. The
+            two are served side by side so a disagreement between what the
+            operator said and what the layout suggests is visible, never
+            resolved by overwriting either.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -92,6 +124,19 @@ class StoredExtractionDraft(BaseModel):
     read_transports: tuple[str, ...] = ()
     drafted_at: UtcInstant
     label_reading_fallback: LabelReadingFallback | None = None
+    structured_invoice_class: StoredStructuredInvoiceClass | None = None
+    declared_kind: InvoiceKind | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _the_draft_carries_the_class_its_record_keeps(self) -> StoredExtractionDraft:
+        """Put the structured reader's class fact back on the draft that serialisation left it off."""
+        stated = self.structured_invoice_class
+        if stated is not None and self.draft.facturae_invoice_class is None:
+            self.draft.set_facturae_invoice_class(
+                StructuredInvoiceClassification(source_code=stated.source_code, kind=stated.kind)
+            )
+        return self
 
 
 class ExtractionDraftDocument(BaseModel):
@@ -133,6 +178,7 @@ def write_extraction_draft(
     extractor: str,
     settings: Settings,
     read_transports: tuple[str, ...] = (),
+    declared_kind: InvoiceKind | None = None,
 ) -> ExtractionDraftDocument:
     """Persist a draft through the core's encrypted repository.
 
@@ -146,8 +192,17 @@ def write_extraction_draft(
     remember to carry it. The record is then its only home: the stored draft
     keeps describing only what the document says, and a reload returns exactly
     what was written.
+
+    The structured reader's document class, which the draft keeps in a private
+    attribute its serialisation drops, is recorded beside it for the same
+    reason and restored when the record loads.
+
+    ``declared_kind`` is the direction the operator stated for the import that
+    produced the draft, stored beside the draft and never merged into its
+    ``suggested_kind``.
     """
     fallback = draft.label_reading_fallback
+    structured_class = draft.facturae_invoice_class
     document = load_extraction_drafts(bucket_id, settings)
     retained = tuple(row for row in document.drafts if row.evidence_reference != evidence_reference)
     updated = ExtractionDraftDocument(
@@ -161,6 +216,14 @@ def write_extraction_draft(
                 read_transports=read_transports,
                 drafted_at=now(),
                 label_reading_fallback=fallback,
+                structured_invoice_class=(
+                    None
+                    if structured_class is None
+                    else StoredStructuredInvoiceClass(
+                        source_code=structured_class.source_code, kind=structured_class.kind
+                    )
+                ),
+                declared_kind=declared_kind,
             ),
         ),
     )

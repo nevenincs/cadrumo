@@ -12,9 +12,11 @@ from ....core.i18n.render import tr
 
 
 def _fact_value(fact: EvidenceStructuredFactV1) -> str:
-    """The value as served: the record's text as it stands, or its figure as the backend wrote it."""
+    """The value as served: the record's text, its date in ISO form, or its figure as the backend wrote it."""
     if fact.text is not None:
         return fact.text
+    if fact.iso_date is not None:
+        return fact.iso_date.isoformat()
     return "" if fact.number is None else fact.number.decimal
 
 

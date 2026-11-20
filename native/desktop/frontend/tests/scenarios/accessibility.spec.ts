@@ -555,7 +555,9 @@ const SURFACES: {
               name: label("desktop.ledger.period.choose"),
             })
             .getByRole("group", {
-              name: label("desktop.ledger.period.years_with_movements"),
+              name: label(
+                "desktop.ledger.period.years_with_movements_or_invoices",
+              ),
             }),
         ).toBeVisible();
       }

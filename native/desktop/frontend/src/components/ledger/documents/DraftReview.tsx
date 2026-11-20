@@ -78,10 +78,13 @@ import {
   readValue,
   readingFieldOf,
   readingRows,
+  readCountryOf,
   referenceFields,
   resolutionOf,
   seeded,
+  vatPrefixCountryOf,
   sameAsRead,
+  changedReadingFields,
   sameReading,
   type CorrectionField,
   type Corrections,
@@ -90,7 +93,7 @@ import {
   type ReadingBinding,
   type ReadingField,
 } from "./documentsModel";
-import { fieldLabel, holdText } from "./documentWords";
+import { FIELD_NAMES, fieldLabel, holdText } from "./documentWords";
 import { confirmationLanding, extractionLanding } from "./documentLanding";
 import { DocumentViewer } from "./DocumentViewer";
 import { OffHostDialog } from "./OffHostDialog";
@@ -100,6 +103,7 @@ import { DuplicateNotice } from "./DuplicateNotice";
 import { Provenance, type Question } from "./ReadingProvenance";
 import { ReadingTable, shownReadingValue } from "./ReadingTable";
 import { ReviewColumns } from "./ReviewColumns";
+import { IvaBreakdown } from "./IvaBreakdown";
 import { Finding } from "./ReviewFinding";
 import { ReviewNotices, type ReviewNotice } from "./ReviewNotices";
 import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
@@ -168,8 +172,10 @@ export function DraftReview({
   const [binding, setBinding] = useState<
     (ReadingBinding & { draft: InvoiceDraftProjectionV1 }) | null
   >(null);
-  const [kind, setKind] = useState<InvoiceKind | null>(null);
-  const [country, setCountry] = useState("");
+  // What the person chose, apart from what the reading suggests: the choice
+  // is theirs, and the suggestion stands only until they make one.
+  const [chosenKind, setChosenKind] = useState<InvoiceKind | null>(null);
+  const [typedCountry, setTypedCountry] = useState<string | null>(null);
   const [corrections, setCorrections] = useState<Corrections>({});
   const [answers, setAnswers] = useState<Record<string, FindingAnswer>>({});
   const [anyway, setAnyway] = useState(false);
@@ -235,6 +241,27 @@ export function DraftReview({
   const view = read.value;
   const draft = view?.draft ?? null;
   const blockers = view?.blockers ?? [];
+  // The side of the invoice the reading puts the filer on, until the person
+  // says otherwise; the country the document states for the counterparty of
+  // that side, until the person types one.
+  const suggested = draft?.suggested_kind ?? null;
+  // The side every statement present agrees on: what the person said when
+  // they imported the document and what the layout suggests. Where the two
+  // disagree the backend preselects none and the person decides.
+  const preselected = view?.direction
+    ? view.direction.preselected_kind
+    : suggested;
+  const kind = chosenKind ?? preselected;
+  const readCountry = draft ? readCountryOf(draft, kind) : null;
+  // Only when the document states no country: the State that issued the
+  // counterparty's VAT number, offered as a suggestion and said to be one.
+  const prefixCountry = vatPrefixCountryOf(
+    view?.counterparty_vat_prefix_country ?? null,
+    kind,
+  );
+  const fromPrefix =
+    typedCountry === null && readCountry === null && prefixCountry !== null;
+  const country = typedCountry ?? readCountry ?? prefixCountry ?? "";
   const actions = stage.content.actions;
   const duplicateAsked = useMemo(
     () => (draft ? duplicateQuestion(draft, kind, corrections) : null),
@@ -325,7 +352,12 @@ export function DraftReview({
     };
     setBinding(fresh);
     if (!sameReading(result.draft, draft)) {
-      setNotice({ kind: "changed" });
+      setNotice({
+        kind: "changed",
+        fields: draft
+          ? changedReadingFields(result.draft, draft, FIELD_NAMES)
+          : [],
+      });
       reread();
       return null;
     }
@@ -567,13 +599,6 @@ export function DraftReview({
         return {};
     }
   };
-  const suggested = draft.suggested_kind ?? null;
-  const readCountry =
-    kind === "issued"
-      ? (draft.customer_country_code ?? null)
-      : kind === "received"
-        ? (draft.supplier_country_code ?? null)
-        : null;
   const currencyRead = readValue(draft, "currency");
   const open = blockers.filter(
     (blocker) => resolutionOf(blocker, answers[blocker.blocker_id]) === null,
@@ -661,8 +686,27 @@ export function DraftReview({
           {t("desktop.ledger.documents.what_was_read")}
         </h4>
         <ReadingTable
-          rows={readingRows(kind)}
+          rows={readingRows(kind, draft.iva_breakdown.length > 1)}
           renderRow={(row) => {
+            if (row.kind === "breakdown")
+              return (
+                <tr data-field={row.field}>
+                  <th
+                    scope="row"
+                    className="w-1/4 py-1 pr-2 text-left align-top font-normal text-muted-foreground"
+                  >
+                    {t("desktop.ledger.documents.iva_by_rate")}
+                  </th>
+                  <td className="w-6 py-1 pr-2" />
+                  <td className="py-1 pr-2">
+                    <IvaBreakdown
+                      t={t}
+                      locale={locale}
+                      rows={draft.iva_breakdown}
+                    />
+                  </td>
+                </tr>
+              );
             if (row.kind === "read") {
               const value = readValue(draft, row.field);
               return (
@@ -808,7 +852,7 @@ export function DraftReview({
           <SegmentedControl
             aria-labelledby={`${countryId}-kind`}
             value={kind ?? ""}
-            onValueChange={(value) => setKind(value as InvoiceKind)}
+            onValueChange={(value) => setChosenKind(value as InvoiceKind)}
             className="ledger-draft-kind w-fit"
           >
             {KINDS.map((choice) => (
@@ -821,13 +865,31 @@ export function DraftReview({
               </SegmentedControlItem>
             ))}
           </SegmentedControl>
-          <FieldDescription>
-            {suggested
-              ? t("desktop.ledger.documents.reads_as", {
-                  kind: kindChoice(t, suggested),
-                })
-              : t("desktop.ledger.documents.no_default")}
-          </FieldDescription>
+          {/* Said while there is something to name: the disagreement between
+              what was said at import and what the layout suggests, else the
+              suggestion; with neither, and nothing chosen, that there is no
+              default. A person's own choice leaves nothing to say about a
+              missing default. */}
+          {view?.direction?.disagree &&
+          view.direction.declared_kind &&
+          view.direction.suggested_kind ? (
+            <FieldDescription className="ledger-draft-direction-disagrees">
+              {t("desktop.ledger.documents.direction_disagrees", {
+                declared: kindChoice(t, view.direction.declared_kind),
+                suggested: kindChoice(t, view.direction.suggested_kind),
+              })}
+            </FieldDescription>
+          ) : (
+            (suggested || (preselected === null && chosenKind === null)) && (
+              <FieldDescription>
+                {suggested
+                  ? t("desktop.ledger.documents.reads_as", {
+                      kind: kindChoice(t, suggested),
+                    })
+                  : t("desktop.ledger.documents.no_default")}
+              </FieldDescription>
+            )
+          )}
         </Field>
         <div className="flex flex-wrap gap-3">
           <Field className="w-40">
@@ -843,16 +905,21 @@ export function DraftReview({
                 country !== "" && !countryAdmitted(country) ? true : undefined
               }
               value={country}
-              onChange={setCountry}
+              onChange={setTypedCountry}
               {...countries}
             />
+            {fromPrefix && (
+              <FieldDescription className="ledger-draft-country-prefix">
+                {t("desktop.ledger.documents.country_from_vat_prefix")}
+              </FieldDescription>
+            )}
             {readCountry && country !== readCountry && (
               <Button
                 size="xs"
                 variant="link"
                 className="ledger-draft-country-read w-fit"
                 onClick={() => {
-                  setCountry(readCountry);
+                  setTypedCountry(readCountry);
                   // The country was the last thing asked: confirming is next.
                   root.current
                     ?.querySelector<HTMLElement>(".ledger-draft-confirm")

@@ -231,6 +231,17 @@ export function knownValues(
       : [];
   return {
     profile_id: LEDGER_FIXTURE_PROFILE_ID,
+    // The years of the movements' dates and of the invoices' issue dates.
+    ledger_years: kinds.includes("ledger_year")
+      ? [
+          ...new Set(
+            [
+              ...ledger.movements.map((found) => found.transaction.date),
+              ...ledger.invoices.map((found) => found.issued_at),
+            ].map((day) => Number(day.slice(0, 4))),
+          ),
+        ].sort((a, b) => a - b)
+      : [],
     counterparties: kinds.includes("counterparty")
       ? distinct([
           ...newest.map((found) => found.transaction.counterparty),
