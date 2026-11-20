@@ -9,7 +9,10 @@
 //   2. stages the recorded native automation host of --build with
 //      `python -m dev.desktop_automation_stage`;
 //   3. runs the spec on that world and host, writing the table to --report;
-//   4. removes the disposable root (the spec signs out and removes any
+//   4. on a failed audit, copies the run's host and runtime logs (*.log,
+//      *.jsonl of the synthetic world's run) to <report>.logs/ beside the
+//      report, since they are the only record of why a session ended;
+//   5. removes the disposable root (the spec signs out and removes any
 //      profile-session key the run left in the credential store).
 //
 // Usage:
@@ -23,15 +26,25 @@
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import {
+  copyFileSync,
   existsSync,
   lstatSync,
   mkdirSync,
+  readdirSync,
   realpathSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, delimiter, dirname, join, resolve, sep } from "node:path";
+import {
+  basename,
+  delimiter,
+  dirname,
+  join,
+  relative,
+  resolve,
+  sep,
+} from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
@@ -113,6 +126,35 @@ function removeRoot(root, parent) {
     retryDelay: 500,
   });
   if (existsSync(resolved)) throw new Error(`${resolved} was not removed`);
+}
+
+const LOG_FILE = /\.(log|jsonl)$/i;
+const LOG_LIMIT = 64 << 20;
+
+/** Copy the log files under `from` (no links followed, none over LOG_LIMIT)
+ * into `to`, keeping their relative paths; returns how many were copied. */
+function keepLogs(from, to) {
+  let kept = 0;
+  const walk = (dir, depth) => {
+    if (depth > 8) return;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isSymbolicLink()) continue;
+      if (entry.isDirectory()) walk(path, depth + 1);
+      else if (
+        entry.isFile() &&
+        LOG_FILE.test(entry.name) &&
+        lstatSync(path).size <= LOG_LIMIT
+      ) {
+        const target = join(to, relative(from, path));
+        mkdirSync(dirname(target), { recursive: true });
+        copyFileSync(path, target);
+        kept += 1;
+      }
+    }
+  };
+  if (existsSync(from) && !lstatSync(from).isSymbolicLink()) walk(from, 0);
+  return kept;
 }
 
 function fail(code, message) {
@@ -219,6 +261,12 @@ try {
   );
   code = run.status === 0 ? 0 : 1;
   console.log(`silent-controls: table at ${report}`);
+  if (code !== 0) {
+    const logs = `${report.replace(/\.md$/i, "")}.logs`;
+    const kept = keepLogs(join(root, "run"), logs);
+    if (kept)
+      console.log(`silent-controls: ${kept} run log(s) kept at ${logs}`);
+  }
 } catch (error) {
   console.error(`silent-controls: ${error.message}`);
 } finally {

@@ -587,6 +587,18 @@ test("the census review takes over the pull that is going on and starts no secon
     exact: true,
   });
   await expect(target.locator(".user-profile-page")).toBeVisible();
+  // The window learns of the run's pull only by asking the host to start
+  // one, which reaches the AEAT, so the person is asked first.
+  await target
+    .getByRole("dialog", {
+      name: label("desktop.profile.censo.title"),
+      exact: true,
+    })
+    .getByRole("button", {
+      name: label("desktop.profile.censo.pull"),
+      exact: true,
+    })
+    .click();
   await expect(
     band.getByText(label("desktop.profile.censo.reading")),
   ).toBeVisible();

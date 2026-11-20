@@ -49,7 +49,11 @@ import type { MenuEntry, OpenMenu } from "../ContextMenu";
 import { AeatAccessEditor } from "./AeatAccessEditor";
 import { CensoReview } from "./CensoReview";
 import { Household, HOUSEHOLD_KEY } from "./Household";
-import { PasswordChange, ProfileShortcuts } from "./ProfileDialogs";
+import {
+  CensoConfirm,
+  PasswordChange,
+  ProfileShortcuts,
+} from "./ProfileDialogs";
 import { ProfileDetails, STATUS_GROUPS } from "./ProfileDetails";
 import { ProfileEditor, type ProfileDraft } from "./ProfileEditor";
 import { PROFILE_KEYS } from "./profileKeys";
@@ -136,6 +140,9 @@ export const UserProfilePage = memo(function UserProfilePage({
   const [password, setPassword] = useState(false);
   const [shortcuts, setShortcuts] = useState(false);
   const [reviewing, setReviewing] = useState(false);
+  // A pull asked for from outside the band waits here for the person's
+  // word, since starting it signs in to the AEAT.
+  const [confirmingCenso, setConfirmingCenso] = useState(false);
   const [fromAeat, setFromAeat] = useState<ReadonlySet<string>>(new Set());
   const pageId = useId();
   const scroller = useRef<HTMLDivElement>(null);
@@ -460,8 +467,9 @@ export const UserProfilePage = memo(function UserProfilePage({
   };
   // Asked for from outside the page (the global palette action): a pull
   // already running or awaiting review is left to its band, and otherwise the
-  // check of what a pull needs is awaited and the pull starts if it passes.
-  // A refused check is shown by the band.
+  // check of what a pull needs is awaited and, if it passes, the person is
+  // asked before the pull reaches the AEAT. A refused check is shown by the
+  // band.
   const censoWaiting =
     !!sync.snapshot &&
     sync.snapshot.state !== "done" &&
@@ -474,7 +482,7 @@ export const UserProfilePage = memo(function UserProfilePage({
     if (censoWaiting || sync.busy || sync.uncertain) return onCensoHandled();
     if (sync.snapshot && !sync.readiness) return sync.dismiss();
     if (!sync.readiness && !sync.error) return;
-    if (syncReady) void sync.start();
+    if (syncReady) setConfirmingCenso(true);
     onCensoHandled();
   }, [
     censoAsked,
@@ -541,7 +549,7 @@ export const UserProfilePage = memo(function UserProfilePage({
             "sync",
             t("desktop.profile.censo.title"),
             "sync",
-            pullCenso,
+            () => setConfirmingCenso(true),
             // The global palette entry runs the same flow from any page.
             { enabled: () => syncReady, hidden: true },
           ),
@@ -1068,6 +1076,14 @@ export const UserProfilePage = memo(function UserProfilePage({
         />
       )}
       <ProfileShortcuts open={shortcuts} onClose={() => setShortcuts(false)} />
+      <CensoConfirm
+        open={confirmingCenso}
+        onCancel={() => setConfirmingCenso(false)}
+        onConfirm={() => {
+          setConfirmingCenso(false);
+          if (syncReady) pullCenso();
+        }}
+      />
       {review && (
         <CensoReview
           open={reviewing}
