@@ -25,6 +25,8 @@ _CLI_DETAIL: Final = re.compile(
 # A traceback's frames are short lines and Python elides repeated ones, so a
 # block this long is not one; it is abandoned rather than read without end.
 _TRACEBACK_BLOCK_LINES: Final = 4096
+_UNRAISABLE_PREFIX: Final = "Exception ignored "
+"""How Python begins the report of an exception it could not raise, before its traceback."""
 _LEVELS: Final = {
     "DEBUG": logging.DEBUG,
     "INFO": logging.INFO,
@@ -93,7 +95,8 @@ class AgentDiagnosticSink:
                 try:
                     parsed = _schema_diagnostic(text)
                 except json.JSONDecodeError:
-                    self._unstructured(text)
+                    if self._unstructured(text):
+                        return
                     raise
                 if parsed is None:
                     return
@@ -107,14 +110,20 @@ class AgentDiagnosticSink:
         except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
             self.problem("agent_diagnostic_record_rejected")
 
-    def _unstructured(self, text: str) -> None:
+    def _unstructured(self, text: str) -> bool:
         """Follow a traceback block among the lines that are no diagnostic record.
 
         Only the block's exception type and admitted frame locations are
         logged. Its message, source lines and every other line are dropped as
         read, and the block holds no more than its innermost frames.
+
+        Return whether a block accounts for the line: its header, the line
+        Python writes before an exception it could not raise, or a line of a
+        block being read. Such a line is reported with its block, never also as
+        a rejected record.
         """
         abandoned = False
+        taken = True
         summary: TracebackSummary | None = None
         with self._lock:
             if text.rstrip() == TRACEBACK_HEADER:
@@ -128,10 +137,13 @@ class AgentDiagnosticSink:
                     summary = self._traceback.read(text)
                     if summary is not None:
                         self._traceback = None
+            else:
+                taken = text.startswith(_UNRAISABLE_PREFIX)
         if abandoned:
             self.problem("agent_diagnostic_traceback_abandoned")
         if summary is not None:
             self._report_traceback(summary)
+        return taken
 
     def _report_traceback(self, summary: TracebackSummary) -> None:
         if summary.error_type is None and not summary.frames:

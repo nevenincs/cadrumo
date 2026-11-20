@@ -258,6 +258,37 @@ def test_a_gateway_traceback_is_recorded_as_its_type_and_frames_without_its_mess
         assert canary not in record.getMessage()
 
 
+_UNRAISABLE_BLOCK = (
+    "Exception ignored in: <function _ProactorBasePipeTransport.__del__ at 0x000001F0A1B2C3D4>\n"
+    "Traceback (most recent call last):\n"
+    '  File "C:\\Python313\\Lib\\asyncio\\proactor_events.py", line 116, in __del__\n'
+    '    _warn(f"unclosed transport {self!r}", ResourceWarning, source=self)\n'
+    '  File "C:\\Python313\\Lib\\asyncio\\proactor_events.py", line 80, in __repr__\n'
+    "    info.append(f'fd={self._sock.fileno()}')\n"
+    '  File "C:\\Python313\\Lib\\asyncio\\windows_utils.py", line 102, in fileno\n'
+    '    raise ValueError("I/O operation on closed pipe")\n'
+    "ValueError: I/O operation on closed pipe\n"
+)
+
+
+def test_an_exception_python_could_not_raise_is_one_summary_and_no_rejected_record(
+    log_file: Path, sink_records: _Records
+) -> None:
+    """Every line of the block, and the line Python writes before it, belongs to its one summary."""
+    framing = AgentDiagnosticLines(AgentDiagnosticSink(), pid=77)
+    framing.feed(_UNRAISABLE_BLOCK.encode())
+    framing.feed(b"a stray line no block accounts for\n")
+    framing.finish()
+    written = _read(log_file)
+    (record,) = _summaries(sink_records)
+    assert record.levelno == logging.ERROR
+    assert record.__dict__["traceback_type"] == "ValueError"
+    assert str(record.__dict__["traceback_origin"]).startswith("windows_utils.py:102")
+    rejected = [r for r in sink_records.records if r.getMessage() == "agent_diagnostic_record_rejected"]
+    assert [r.__dict__["diagnostic_rejected_count"] for r in rejected] == [1]
+    assert "closed pipe" not in written
+
+
 def test_a_traceback_names_only_its_innermost_frames(log_file: Path, sink_records: _Records) -> None:
     frames = "".join(f'  File "deep.py", line {line}, in step_{line}\n    step()\n' for line in range(1, 400))
     framing = AgentDiagnosticLines(AgentDiagnosticSink(), pid=77)
