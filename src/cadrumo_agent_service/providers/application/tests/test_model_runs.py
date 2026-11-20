@@ -24,7 +24,7 @@ from cadrumo_client.contracts.model_runs import (
 )
 
 from ....adapters.agent_background_runs import HostedBackgroundRuns
-from ...domain.catalog import BackgroundOption, parse_provider_catalog
+from ...domain.catalog import BackgroundOption, EffortLevel, parse_provider_catalog
 from ...domain.record import (
     LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
     ListedModel,
@@ -89,12 +89,20 @@ class _RecordingGateway:
     def __init__(self) -> None:
         self.runs: list[tuple[ModelRunLane, ModelRunBody, int]] = []
         self.options: list[tuple[BackgroundOption, ...]] = []
+        self.efforts: list[EffortLevel | None] = []
 
     def run(
-        self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int, options: tuple[BackgroundOption, ...]
+        self,
+        *,
+        lane: ModelRunLane,
+        body: ModelRunBody,
+        deadline_seconds: int,
+        options: tuple[BackgroundOption, ...],
+        effort: EffortLevel | None,
     ) -> ModelRunOutput | ModelRunRefusal:
         self.runs.append((lane, body, deadline_seconds))
         self.options.append(options)
+        self.efforts.append(effort)
         return ModelRunOutput(
             text="{}", provider_id=lane.provider_id, transport=lane.transport, model=lane.model, agent_version="t"
         )
@@ -174,8 +182,14 @@ def _consent(provider_id: str, model: str = KEYLESS_TEXT_MODEL, *, transport: st
 _BODY = ModelRunBody(prompt="Read this invoice.", max_output_tokens=64)
 
 
-def _background(media: tuple[ModelRunMediaKind, ...] | None, *options: BackgroundOption) -> LiveLaneBackground:
-    return LiveLaneBackground(accepted_media=media, options=options)
+def _background(
+    media: tuple[ModelRunMediaKind, ...] | None,
+    *options: BackgroundOption,
+    model_efforts: dict[str, tuple[EffortLevel, ...]] | None = None,
+) -> LiveLaneBackground:
+    return LiveLaneBackground(
+        accepted_media=media, options=options, model_efforts={} if model_efforts is None else model_efforts
+    )
 
 
 def _hosted(model: str) -> ModelRunLane:
@@ -510,3 +524,48 @@ def test_a_run_on_a_lane_the_live_catalogue_does_not_describe_sends_no_option() 
 
     assert gateway.options == [()]
     assert gateway.runs[0][0].accepted_media is None
+
+
+@pytest.mark.parametrize(
+    ("model_efforts", "honoured"),
+    [
+        pytest.param(
+            {KEYLESS_TEXT_MODEL: ("low", "high")},
+            (BackgroundOption.TEMPERATURE, BackgroundOption.EFFORT),
+            id="model-offers-levels",
+        ),
+        pytest.param({}, (BackgroundOption.TEMPERATURE,), id="model-states-no-level"),
+        pytest.param({KEYLESS_VISION_MODEL: ("high",)}, (BackgroundOption.TEMPERATURE,), id="another-model-offers"),
+    ],
+)
+def test_effort_is_honoured_only_where_the_lane_states_it_and_the_run_s_model_offers_a_level(
+    model_efforts: dict[str, tuple[str, ...]], honoured: tuple[BackgroundOption, ...]
+) -> None:
+    live = StaticLiveModels(
+        backgrounds={
+            ("local", "api"): _background(
+                None, BackgroundOption.TEMPERATURE, BackgroundOption.EFFORT, model_efforts=model_efforts
+            )
+        }
+    )
+    runs, _, gateway = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL), live)
+
+    assert isinstance(runs.run(_header(), _BODY), ModelRunOutput)
+
+    assert gateway.options == [honoured]
+
+
+def test_a_tax_run_names_no_effort_even_where_the_lane_and_model_take_one() -> None:
+    live = StaticLiveModels(
+        backgrounds={
+            ("local", "api"): _background(
+                None, BackgroundOption.EFFORT, model_efforts={KEYLESS_TEXT_MODEL: ("low", "high")}
+            )
+        }
+    )
+    runs, _, gateway = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL), live)
+
+    assert isinstance(runs.run(_header(), _BODY), ModelRunOutput)
+
+    assert gateway.options == [(BackgroundOption.EFFORT,)]
+    assert gateway.efforts == [None]

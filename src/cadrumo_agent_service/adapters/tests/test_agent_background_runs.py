@@ -18,10 +18,12 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunAttachment,
     ModelRunBody,
     ModelRunLane,
+    ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
 )
 
+from ...providers.domain.catalog import BackgroundOption, EffortLevel
 from ..agent_background_runs import (
     RUN_START_SECONDS,
     BackgroundRunEndpoint,
@@ -56,7 +58,7 @@ def test_a_format_no_background_request_carries_is_refused_as_unsupported(tmp_pa
     )
     text = ModelRunAttachment(media_type="text/plain", base64_data=base64.b64encode(b"x").decode())
 
-    assert runs.run(lane=_LANE, body=_body(text), deadline_seconds=30, options=()) == ModelRunRefusal(
+    assert runs.run(lane=_LANE, body=_body(text), deadline_seconds=30, options=(), effort=None) == ModelRunRefusal(
         code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED
     )
 
@@ -71,7 +73,7 @@ def test_a_wiped_host_token_or_no_ready_agent_refuses_as_unavailable(tmp_path: P
     )
 
     for runs in (wiped, absent):
-        assert runs.run(lane=_LANE, body=_body(), deadline_seconds=30, options=()) == ModelRunRefusal(
+        assert runs.run(lane=_LANE, body=_body(), deadline_seconds=30, options=(), effort=None) == ModelRunRefusal(
             code=ModelRunRefusalCode.SERVICE_UNAVAILABLE
         )
 
@@ -143,6 +145,18 @@ def _selection_refusal(code: str) -> bytes:
             503, b"service unavailable", ModelRunRefusalCode.SERVICE_UNAVAILABLE, id="busy-agent-without-json"
         ),
         pytest.param(
+            422,
+            _selection_refusal("effort_unsupported"),
+            ModelRunRefusalCode.OPTION_NOT_SUPPORTED,
+            id="effort-on-a-lane-without-one",
+        ),
+        pytest.param(
+            422,
+            _selection_refusal("effort_value_unsupported"),
+            ModelRunRefusalCode.OPTION_NOT_SUPPORTED,
+            id="effort-the-model-does-not-offer",
+        ),
+        pytest.param(
             422, _selection_refusal("model_without_tools"), ModelRunRefusalCode.RUN_FAILED, id="unmapped-code"
         ),
         pytest.param(
@@ -202,28 +216,82 @@ def _run_start_recorded(tmp_path: Path) -> Generator[tuple[BackgroundRunEndpoint
         thread.join()
 
 
-def _start_one(endpoint: BackgroundRunEndpoint, body: ModelRunBody) -> None:
+def _start_one(
+    endpoint: BackgroundRunEndpoint,
+    body: ModelRunBody,
+    *,
+    options: tuple[BackgroundOption, ...] = (),
+    effort: EffortLevel | None = None,
+) -> ModelRunRefusal | ModelRunOutput:
     runs = HostedBackgroundRuns(
         endpoint=lambda: endpoint, bearer=bytearray(b"synthetic-bearer"), host_token=bytearray(b"synthetic-host")
     )
-    outcome = runs.run(lane=_LANE, body=body, deadline_seconds=30, options=())
-    assert outcome == ModelRunRefusal(code=ModelRunRefusalCode.MODEL_NOT_INSTALLED)
+    return runs.run(lane=_LANE, body=body, deadline_seconds=30, options=options, effort=effort)
 
 
 def test_a_run_that_states_no_reply_bound_sends_none_to_the_agent(tmp_path: Path) -> None:
     with _run_start_recorded(tmp_path) as (endpoint, received):
-        _start_one(endpoint, ModelRunBody(prompt="Read this."))
+        outcome = _start_one(endpoint, ModelRunBody(prompt="Read this."))
 
+    assert outcome == ModelRunRefusal(code=ModelRunRefusalCode.MODEL_NOT_INSTALLED)
     assert len(received) == 1
     assert received[0]["background"] == {"system": "", "deadline_seconds": 30}
 
 
 def test_a_stated_reply_bound_reaches_the_agent_unchanged(tmp_path: Path) -> None:
     with _run_start_recorded(tmp_path) as (endpoint, received):
-        _start_one(endpoint, ModelRunBody(prompt="Read this.", max_output_tokens=16))
+        outcome = _start_one(endpoint, ModelRunBody(prompt="Read this.", max_output_tokens=16))
 
+    assert outcome == ModelRunRefusal(code=ModelRunRefusalCode.MODEL_NOT_INSTALLED)
     assert len(received) == 1
     assert received[0]["background"] == {"system": "", "max_output_tokens": 16, "deadline_seconds": 30}
+
+
+def test_an_effort_on_a_lane_that_honours_it_goes_in_the_agent_member_and_never_in_background(
+    tmp_path: Path,
+) -> None:
+    body = ModelRunBody(prompt="Read this.", temperature=0.5)
+
+    with _run_start_recorded(tmp_path) as (endpoint, received):
+        outcome = _start_one(
+            endpoint, body, options=(BackgroundOption.TEMPERATURE, BackgroundOption.EFFORT), effort="high"
+        )
+
+    assert outcome == ModelRunRefusal(code=ModelRunRefusalCode.MODEL_NOT_INSTALLED)
+    assert len(received) == 1
+    assert received[0]["agent"] == {
+        "provider": _LANE.provider_id,
+        "transport": _LANE.transport,
+        "model": _LANE.model,
+        "effort": "high",
+        "workspace_root": str(tmp_path),
+    }
+    assert received[0]["background"] == {"system": "", "deadline_seconds": 30, "temperature": 0.5}
+
+
+def test_a_lane_that_honours_effort_takes_no_effort_when_the_run_names_none(tmp_path: Path) -> None:
+    with _run_start_recorded(tmp_path) as (endpoint, received):
+        _start_one(endpoint, ModelRunBody(prompt="Read this."), options=(BackgroundOption.EFFORT,))
+
+    assert len(received) == 1
+    assert "effort" not in json.dumps(received[0])
+
+
+@pytest.mark.parametrize(
+    "options",
+    [(), (BackgroundOption.TEMPERATURE, BackgroundOption.CONTEXT_TOKENS, BackgroundOption.RESPONSE_SCHEMA)],
+    ids=["no-option", "reply-options-only"],
+)
+def test_an_effort_on_a_lane_that_does_not_honour_it_is_refused_before_anything_is_sent(
+    tmp_path: Path, options: tuple[BackgroundOption, ...]
+) -> None:
+    attachment = ModelRunAttachment(media_type="image/png", base64_data=base64.b64encode(b"x").decode())
+
+    with _run_start_recorded(tmp_path) as (endpoint, received):
+        outcome = _start_one(endpoint, _body(attachment), options=options, effort="high")
+
+    assert outcome == ModelRunRefusal(code=ModelRunRefusalCode.OPTION_NOT_SUPPORTED)
+    assert received == []
 
 
 def _reply(**fields: object) -> bytes:

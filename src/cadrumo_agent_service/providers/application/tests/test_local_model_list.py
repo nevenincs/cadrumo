@@ -15,7 +15,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRefusalCode,
 )
 
-from ...domain.catalog import BackgroundOption
+from ...domain.catalog import BackgroundOption, EffortLevel
 from ...domain.record import (
     LOCAL_MODEL_LIST_MAX_MODELS,
     LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
@@ -269,9 +269,15 @@ def test_a_profile_that_is_not_signed_in_refuses_reads_and_changes() -> None:
 
 class _NoGateway:
     def run(
-        self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int, options: tuple[BackgroundOption, ...]
+        self,
+        *,
+        lane: ModelRunLane,
+        body: ModelRunBody,
+        deadline_seconds: int,
+        options: tuple[BackgroundOption, ...],
+        effort: EffortLevel | None,
     ) -> ModelRunOutput | ModelRunRefusal:
-        del lane, body, deadline_seconds, options
+        del lane, body, deadline_seconds, options, effort
         return ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
 
 

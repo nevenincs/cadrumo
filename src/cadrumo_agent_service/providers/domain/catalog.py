@@ -6,8 +6,9 @@ Which exist, how each authenticates, its default gateway URL, whether it sends
 material off this computer, the id the agent keys its credential by, the models
 it declares with their stated facts, its recommended models and what a
 background run on it takes are the agent's own declarations, parsed here from
-the document the agent serves at run time. Every Cadrumo name for a lane is
-constructed from the ids the agent reports.
+the document the agent serves at run time. So are the kinds of background task
+a host keys a model setting by: Cadrumo keeps no list of them either. Every
+Cadrumo name for a lane is constructed from the ids the agent reports.
 """
 
 from __future__ import annotations
@@ -77,6 +78,17 @@ _ARTEFACT_ALPHANUMERIC: Final[frozenset[str]] = frozenset(
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 _HOST_LABEL_CHARACTERS: Final[frozenset[str]] = frozenset("abcdefghijklmnopqrstuvwxyz0123456789-")
+
+MAX_TASK_KINDS: Final[int] = 64
+"""The most task kinds a catalogue may state: a bound on the document, not a count of the agent's vocabulary."""
+TASK_KIND_DESCRIPTION_MAX_LENGTH: Final[int] = 1024
+"""The longest task kind sentence: the agent serves the same sentence capped at 1024 characters."""
+
+EffortLevel = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,31}$")]
+"""One effort level as the agent spells it for a model on a lane; the agent owns the vocabulary."""
+
+TaskKindId = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,63}$")]
+"""A task kind as the agent names it: a lowercase slug of up to 64 characters, from the agent's vocabulary."""
 
 LicenceDigest = Annotated[str, StringConstraints(pattern=r"^sha256:[0-9a-f]{64}$")]
 """The digest of a licence text the agent ships: ``sha256:`` and 64 lowercase hex digits."""
@@ -386,11 +398,17 @@ class BackgroundInput(StrEnum):
 
 
 class BackgroundOption(StrEnum):
-    """A run option a background request on a lane may set, in the agent's declared order."""
+    """A run option a background request on a lane may set, in the agent's declared order.
+
+    The reply options travel in the request's ``background`` member. ``EFFORT``
+    is the run's agent effort and travels in its ``agent`` member, as a
+    foreground run names it.
+    """
 
     TEMPERATURE = "temperature"
     CONTEXT_TOKENS = "context_tokens"
     RESPONSE_SCHEMA = "response_schema"
+    EFFORT = "effort"
 
 
 class LaneBackground(BaseModel):
@@ -503,14 +521,30 @@ class ProviderCatalogEntry(BaseModel):
         return consumer in self.consumers
 
 
+class TaskKind(BaseModel):
+    """One kind of background task the agent names, and how it is shown to a person.
+
+    A host keys a lane, model and effort setting by the kind; a background
+    request itself names no kind.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    id: TaskKindId
+    display_name: str = Field(min_length=1, max_length=DISPLAY_NAME_MAX_LENGTH)
+    description: str = Field(min_length=1, max_length=TASK_KIND_DESCRIPTION_MAX_LENGTH)
+
+
 class ProviderCatalog(BaseModel):
     """The validated lane catalog the agent reported."""
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[6, 7]
+    schema_version: Literal[8]
     providers: tuple[ProviderCatalogEntry, ...] = Field(min_length=1, max_length=MAX_CATALOG_LANES)
     icon_attribution: dict[str, JsonValue]
+    task_kinds: tuple[TaskKind, ...] = Field(max_length=MAX_TASK_KINDS)
+    """The kinds of background task, in the agent's served order."""
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -523,6 +557,9 @@ class ProviderCatalog(BaseModel):
         ]
         if len(credential_ids) != len(set(credential_ids)):
             raise ValueError("agent credential ids must be unique")
+        kinds = [kind.id for kind in self.task_kinds]
+        if len(kinds) != len(set(kinds)):
+            raise ValueError("task kind ids must be unique")
         names: dict[str, str] = {}
         for entry in self.providers:
             if names.setdefault(entry.provider, entry.display_name) != entry.display_name:
@@ -544,8 +581,8 @@ class ProviderCatalog(BaseModel):
 def parse_provider_catalog(text: str) -> ProviderCatalog:
     """Parse and strictly validate the document the agent serves.
 
-    Unknown fields, an unknown schema version, duplicate lanes and malformed
-    values are refused.
+    Unknown fields, an unknown schema version, duplicate lanes or task kinds
+    and malformed values are refused.
 
     Raises:
         CoreValidationError: When the document is not valid JSON or does not
@@ -569,14 +606,17 @@ __all__ = [
     "CLI_PROGRAM_MAX_LENGTH",
     "DISPLAY_NAME_MAX_LENGTH",
     "MAX_CATALOG_LANES",
+    "MAX_TASK_KINDS",
     "MODEL_ID_MAX_LENGTH",
     "RECOMMENDED_KEY_MAX_LENGTH",
     "RECOMMENDED_VALUE_MAX_LENGTH",
+    "TASK_KIND_DESCRIPTION_MAX_LENGTH",
     "ArtefactFile",
     "BackgroundInput",
     "BackgroundOption",
     "CatalogModelFacts",
     "CliProgram",
+    "EffortLevel",
     "EngineArtefact",
     "HuggingFaceArtefact",
     "LaneBackground",
@@ -594,6 +634,8 @@ __all__ = [
     "ProviderId",
     "ProviderTransport",
     "RegistryArtefact",
+    "TaskKind",
+    "TaskKindId",
     "parse_provider_catalog",
     "validate_https_base_url",
     "validate_loopback_http_base_url",

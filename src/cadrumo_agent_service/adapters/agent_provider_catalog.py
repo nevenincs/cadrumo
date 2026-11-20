@@ -44,7 +44,7 @@ from .agent_programs import AGENT_COMMAND_LINE, AgentProgramRefusalError, agent_
 _LOGGER = get_logger(__name__)
 
 CATALOG_VERB: Final = ("providers", "--declared", "--json")
-"""The agent's offline provider declaration, including per-lane logout in version 7."""
+"""The agent's offline provider declaration, version 8: per-lane logout and the background task kinds."""
 CATALOG_ARGUMENTS: Final = (*AGENT_COMMAND_LINE, *CATALOG_VERB)
 AUTH_CAPABILITIES_ARGUMENTS: Final = (*AGENT_COMMAND_LINE, "auth", "providers", "--json")
 GUI_AUTH_CAPABILITIES_ARGUMENTS: Final = (*AGENT_COMMAND_LINE, "auth", "providers", "--interface", "gui", "--json")

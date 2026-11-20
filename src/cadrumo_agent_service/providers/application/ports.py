@@ -19,7 +19,7 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT
 from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from cadrumo_client.contracts.model_runs import ModelRunMediaKind
 
-from ..domain.catalog import BackgroundOption, LaneId, LiveCatalogModel, ProviderCatalog
+from ..domain.catalog import BackgroundOption, EffortLevel, LaneId, LiveCatalogModel, ProviderCatalog
 from ..domain.record import LocalModelListRecord, ProviderSettingsRecord
 
 
@@ -160,7 +160,9 @@ class LiveLaneBackground(BaseModel):
     accepted_media: tuple[ModelRunMediaKind, ...] | None
     """The attachment families the lane takes; ``None`` when the catalogue does not say."""
     options: tuple[BackgroundOption, ...]
-    """The reply options the lane honours; empty when it honours none or does not say."""
+    """The run options the lane honours; empty when it honours none or does not say."""
+    model_efforts: dict[str, tuple[EffortLevel, ...]]
+    """The effort levels each of the lane's live models offers, by model value; a model that states none is absent."""
 
 
 class LiveCatalogModels(Protocol):

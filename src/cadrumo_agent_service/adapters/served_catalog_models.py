@@ -5,7 +5,8 @@ takes two things. From each of its ``catalog.models[]`` it takes the model
 value, the facts a selection is checked against: vision, size, context window
 and licence, and whether the lane's local server holds the model. From its
 ``background_requests`` record it takes whether a background run may carry
-images and PDFs, and the reply options it honours. From its ``health`` it
+images and PDFs, and the run options it honours, effort among them; with each
+model's ``efforts``, the effort levels a run on that model may name. From its ``health`` it
 takes only whether the agent states the lane's local engine not running: then
 the agent did not read the server, and what it says the server holds is
 unknown, as for a server that sleeps until a document is read.
@@ -20,6 +21,7 @@ asked, and answers every later question from that one read.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Mapping, Sequence
 from enum import Enum
 from typing import Final, Literal, override
@@ -29,7 +31,7 @@ from pydantic import ValidationError
 from cadrumo_client.contracts.model_runs import ModelRunMediaKind
 
 from ..providers.application.ports import LiveCatalogModels, LiveLaneBackground
-from ..providers.domain.catalog import BackgroundOption, LiveCatalogModel
+from ..providers.domain.catalog import BackgroundOption, EffortLevel, LiveCatalogModel
 from ..providers.domain.record import LocalEngine
 
 _FACT_FIELDS: Final = ("vision", "size_bytes", "context_length", "licence")
@@ -43,6 +45,9 @@ _ENGINE_LANES: Final = frozenset(engine.value for engine in LocalEngine)
 
 _ENGINE_NOT_RUNNING: Final = "not_running"
 """The engine state with which the agent says it could not read the lane's local server."""
+
+_EFFORT_LEVEL: Final = re.compile(r"[a-z][a-z0-9_]{0,31}")
+"""An effort level as the agent spells one; a model whose levels are not all spelled so offers none here."""
 
 _MEDIA_FIELDS: Final = ((ModelRunMediaKind.IMAGE, "accepts_images"), (ModelRunMediaKind.PDF, "accepts_pdfs"))
 """Each attachment family a background run may carry, and the served field that says whether the lane takes it."""
@@ -89,7 +94,9 @@ class ServedCatalogModels(LiveCatalogModels):
         listed = support.get("options")
         named = {name for name in listed if isinstance(name, str)} if isinstance(listed, list) else set()
         return LiveLaneBackground(
-            accepted_media=media, options=tuple(option for option in BackgroundOption if option.value in named)
+            accepted_media=media,
+            options=tuple(option for option in BackgroundOption if option.value in named),
+            model_efforts=_model_efforts(record),
         )
 
     def _lane_record(self, provider: str, transport: str) -> Mapping[str, object] | Literal[_Unread.UNREAD] | None:
@@ -107,6 +114,23 @@ class ServedCatalogModels(LiveCatalogModels):
             ):
                 return {key: value for key, value in record.items() if isinstance(key, str)}
         return None
+
+
+def _model_efforts(record: Mapping[str, object]) -> dict[str, tuple[EffortLevel, ...]]:
+    """Return each served model's effort levels, leaving out a model that states none or misspells one."""
+    catalog = record.get("catalog")
+    models = catalog.get("models") if isinstance(catalog, Mapping) else None
+    efforts: dict[str, tuple[EffortLevel, ...]] = {}
+    for model in models if isinstance(models, list) else ():
+        if not isinstance(model, Mapping):
+            continue
+        value, levels = model.get("model"), model.get("efforts")
+        if not isinstance(value, str) or not isinstance(levels, list) or not levels:
+            continue
+        spelled = tuple(level for level in levels if isinstance(level, str) and _EFFORT_LEVEL.fullmatch(level))
+        if len(spelled) == len(levels):
+            efforts[value] = spelled
+    return efforts
 
 
 def _accepted_background_media(taken: Sequence[object]) -> tuple[ModelRunMediaKind, ...] | None:

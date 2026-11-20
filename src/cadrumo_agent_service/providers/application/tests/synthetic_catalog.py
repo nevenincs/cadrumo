@@ -13,6 +13,7 @@ from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 
 from ...domain.catalog import LiveCatalogModel, ProviderCatalog, parse_provider_catalog
 from ...domain.record import LocalEngine
+from ...domain.tests.synthetic_task_kinds import synthetic_task_kinds
 from ..ports import (
     LiveCatalogModels,
     LiveLaneBackground,
@@ -111,7 +112,7 @@ def synthetic_model(model_id: str, *, vision: bool | None) -> dict[str, Any]:
 
 
 def synthetic_document() -> str:
-    """Return the schema-version-6 document the synthetic agent serves."""
+    """Return the schema-version-8 document the synthetic agent serves."""
     lanes = [
         _lane("bare", "cli", "api_key_with_base_url", credential_id="bare", cli_programs=("example",)),
         _lane(
@@ -152,7 +153,9 @@ def synthetic_document() -> str:
         _lane("other", "api", "api_key", credential_id="other"),
         _lane("third", "cli", "api_key", credential_id="third", cli_programs=("third",)),
     ]
-    return json.dumps({"schema_version": 6, "providers": lanes, "icon_attribution": {}})
+    return json.dumps(
+        {"schema_version": 8, "providers": lanes, "icon_attribution": {}, "task_kinds": synthetic_task_kinds()}
+    )
 
 
 def engine_document() -> str:

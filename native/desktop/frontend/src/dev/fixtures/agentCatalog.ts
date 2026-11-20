@@ -3,6 +3,7 @@ import type {
   BackgroundRequestSupportResponse,
   DeclaredLicence,
   DeclaredModel,
+  DeclaredTaskKind,
   Effort,
   EffortCapability,
   EngineHealthResponse,
@@ -450,9 +451,25 @@ function lane(declared: DeclaredLane): ServedProviderLane {
   };
 }
 
+/** The kinds of background task both catalogs serve, with made-up names
+ * and sentences: the frontend keeps no list of its own. */
+const TASK_KINDS: DeclaredTaskKind[] = [
+  {
+    id: "classification",
+    display_name: "Made-up classification",
+    description: "A made-up sentence about labelling a record.",
+  },
+  {
+    id: "extraction",
+    display_name: "Made-up extraction",
+    description: "A made-up sentence about reading fields out of a document.",
+  },
+];
+
 export const FIXTURE_CATALOG: ServedProviderCatalog = {
   api_version: "v1",
   providers: DECLARED_LANES.map(lane),
+  task_kinds: TASK_KINDS,
 };
 
 /** How the service answers the catalog: served, busy starting the agent
@@ -629,7 +646,7 @@ const declaredModel = (entry: ServedCatalogModel): DeclaredModel => ({
 export const FIXTURE_DECLARED_CATALOG: ServedDeclaredProviderCatalog = {
   kind: "declared",
   catalog: {
-    schema_version: 7,
+    schema_version: 8,
     providers: (FIXTURE_CATALOG.providers ?? []).map((served) => {
       const id = `${served.provider_id}_${served.transport}`;
       const models = (served.catalog.models ?? []).map(declaredModel);
@@ -670,6 +687,7 @@ export const FIXTURE_DECLARED_CATALOG: ServedDeclaredProviderCatalog = {
       notice: "Made-up artwork notice for the scenario host.",
       trademarks: "Every mark shown is its holder's.",
     },
+    task_kinds: TASK_KINDS,
   },
 };
 

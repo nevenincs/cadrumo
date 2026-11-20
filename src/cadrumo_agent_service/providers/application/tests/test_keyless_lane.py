@@ -85,9 +85,9 @@ class _UnreachableGateway:
     """A gateway with no running agent: the lookup needs none, and a run is refused."""
 
     def run(
-        self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int, options: object
+        self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int, options: object, effort: object
     ) -> ModelRunOutput | ModelRunRefusal:
-        del lane, body, deadline_seconds, options
+        del lane, body, deadline_seconds, options, effort
         return ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
 
 

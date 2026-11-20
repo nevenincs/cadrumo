@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from cadrumo.core.errors.hierarchy import CoreValidationError
 
 from ..catalog import (
+    TASK_KIND_DESCRIPTION_MAX_LENGTH,
     BackgroundInput,
     BackgroundOption,
     ProviderAuthKind,
@@ -20,12 +21,24 @@ from ..catalog import (
     validate_https_base_url,
     validate_loopback_http_base_url,
 )
+from .synthetic_task_kinds import synthetic_task_kinds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _document(*lanes: dict[str, Any], schema_version: int = 7) -> str:
-    return json.dumps({"schema_version": schema_version, "providers": list(lanes), "icon_attribution": {}})
+_UNSTATED: Any = object()
+
+
+def _document(*lanes: dict[str, Any], schema_version: int = 8, task_kinds: Any = _UNSTATED) -> str:
+    document: dict[str, Any] = {"schema_version": schema_version, "providers": list(lanes), "icon_attribution": {}}
+    if task_kinds is not ...:
+        document["task_kinds"] = synthetic_task_kinds() if task_kinds is _UNSTATED else task_kinds
+    return json.dumps(document)
+
+
+def _with_task_kind(**overrides: Any) -> str:
+    first, *rest = synthetic_task_kinds()
+    return _document(_key_lane(), task_kinds=[{**first, **overrides}, *rest])
 
 
 _HOSTED_BACKGROUND: dict[str, Any] = {"runnable": True, "inputs": ["text", "image", "pdf"], "options": []}
@@ -153,11 +166,57 @@ def _key_lane(**overrides: Any) -> dict[str, Any]:
     return lane
 
 
-def test_v7_can_offer_cli_logout_and_a_v6_lane_without_the_capability_stays_unavailable() -> None:
-    current = parse_provider_catalog(_document(_cli_lane(logout=True)))
-    previous = parse_provider_catalog(_document(_cli_lane(), schema_version=6))
-    assert current.providers[0].logout
-    assert not previous.providers[0].logout
+def test_a_cli_lane_may_offer_logout_and_one_that_declares_none_offers_none() -> None:
+    offered = parse_provider_catalog(_document(_cli_lane(logout=True)))
+    unstated = parse_provider_catalog(_document(_cli_lane()))
+    assert offered.providers[0].logout
+    assert not unstated.providers[0].logout
+
+
+def test_a_version_eight_document_carries_its_task_kinds_in_served_order() -> None:
+    catalog = parse_provider_catalog(_document(_key_lane()))
+
+    assert catalog.schema_version == 8
+    assert [(kind.id, kind.display_name, kind.description) for kind in catalog.task_kinds] == [
+        (kind["id"], kind["display_name"], kind["description"]) for kind in synthetic_task_kinds()
+    ]
+
+
+def test_a_task_kind_id_outside_the_agents_present_vocabulary_parses_as_stated() -> None:
+    kinds = [{"id": "summary", "display_name": "Summary", "description": "A synthetic sentence."}]
+
+    catalog = parse_provider_catalog(_document(_key_lane(), task_kinds=kinds))
+
+    assert [kind.id for kind in catalog.task_kinds] == ["summary"]
+
+
+def test_a_task_kind_description_as_long_as_the_agent_allows_parses_and_one_longer_is_refused() -> None:
+    longest = "d" * TASK_KIND_DESCRIPTION_MAX_LENGTH
+
+    catalog = parse_provider_catalog(_with_task_kind(description=longest))
+
+    assert catalog.task_kinds[0].description == longest
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_with_task_kind(description=longest + "d"))
+
+
+def test_a_lane_whose_executor_sends_an_effort_declares_effort_after_the_reply_options() -> None:
+    effort_only = parse_provider_catalog(
+        _with_background(_key_lane(), {"runnable": True, "inputs": ["text"], "options": ["effort"]})
+    )
+    every_option = parse_provider_catalog(
+        _with_background(
+            _key_lane(),
+            {
+                "runnable": True,
+                "inputs": ["text"],
+                "options": ["temperature", "context_tokens", "response_schema", "effort"],
+            },
+        )
+    )
+
+    assert effort_only.providers[0].background.options == (BackgroundOption.EFFORT,)
+    assert every_option.providers[0].background.options[-1] is BackgroundOption.EFFORT
 
 
 def _cli_lane(**overrides: Any) -> dict[str, Any]:
@@ -564,7 +623,28 @@ def test_acceptable_base_url_passes() -> None:
 @pytest.mark.parametrize(
     "document",
     [
-        pytest.param(_document(_key_lane(), schema_version=8), id="unknown-schema-version"),
+        pytest.param(_document(_key_lane(), schema_version=9), id="unknown-schema-version"),
+        pytest.param(_document(_key_lane(), schema_version=7), id="retired-schema-version-seven"),
+        pytest.param(_document(_key_lane(), schema_version=7, task_kinds=...), id="version-seven-without-task-kinds"),
+        pytest.param(_document(_key_lane(), schema_version=6), id="retired-schema-version-six"),
+        pytest.param(_document(_key_lane(), task_kinds=...), id="missing-task-kinds"),
+        pytest.param(_document(_key_lane(), task_kinds=None), id="task-kinds-null"),
+        pytest.param(
+            _document(_key_lane(), task_kinds=[synthetic_task_kinds()[0], synthetic_task_kinds()[0]]),
+            id="duplicate-task-kind",
+        ),
+        pytest.param(_with_task_kind(id="Classification"), id="task-kind-id-outside-grammar"),
+        pytest.param(_with_task_kind(display_name=""), id="task-kind-display-name-empty"),
+        pytest.param(_with_task_kind(description=""), id="task-kind-description-empty"),
+        pytest.param(_with_task_kind(unexpected="x"), id="task-kind-unknown-field"),
+        pytest.param(
+            _document(_key_lane(), task_kinds=[{"id": "classification", "display_name": "Synthetic"}]),
+            id="task-kind-missing-description",
+        ),
+        pytest.param(
+            _with_background(_key_lane(), {"runnable": True, "inputs": ["text"], "options": ["effort", "temperature"]}),
+            id="effort-before-a-reply-option",
+        ),
         pytest.param(_document(_key_lane(), schema_version=5), id="retired-schema-version-five"),
         pytest.param(_document(_key_lane(), schema_version=4), id="retired-schema-version-four"),
         pytest.param(_document(_key_lane(), schema_version=3), id="retired-schema-version-three"),

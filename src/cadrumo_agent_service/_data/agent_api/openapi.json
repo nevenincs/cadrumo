@@ -5447,10 +5447,11 @@
         "enum": [
           "temperature",
           "context_tokens",
-          "response_schema"
+          "response_schema",
+          "effort"
         ],
         "title": "BackgroundOption",
-        "description": "One reply option of a background request, named as its request member is."
+        "description": "One run option of a background request.\n\nThe reply options are named as their background request members are;\n``effort`` is the run's agent effort, the member a foreground run names it by."
       },
       "BackgroundRequest": {
         "properties": {
@@ -5527,7 +5528,7 @@
         "additionalProperties": false,
         "type": "object",
         "title": "BackgroundRequest",
-        "description": "What a host asks of a background request beyond the run's message.\n\nAdmitted only on the host's own token (``X-Host-Token``). ``system`` follows\nthe service's neutral instruction as the run's persona. ``max_output_tokens``\nbounds the reply: a reply over it fails the run. ``deadline_seconds`` bounds\nthe run; omitted, the service's run limits apply.\n\n``temperature`` (0 to 2) sets the sampling temperature, ``context_tokens``\n(512 to 1,048,576) the size of the model's context window, and\n``response_schema`` is a JSON Schema object (at most 32,768 bytes as compact\nJSON) the model's reply is constrained to. The reply is still text: the\ncaller extracts and validates the JSON. A lane honours these options only\nwhere its transport sends them to the model; a request that names an option\nits lane does not honour is refused with ``background_option_unsupported``\ninstead of running with the option ignored. Omitted, the lane's own\nbehaviour applies."
+        "description": "What a host asks of a background request beyond the run's message.\n\nAdmitted only on the host's own token (``X-Host-Token``). ``system`` follows\nthe service's neutral instruction as the run's persona. ``max_output_tokens``\nbounds the reply: a reply over it fails the run. ``deadline_seconds`` bounds\nthe run; omitted, the service's run limits apply.\n\n``temperature`` (0 to 2) sets the sampling temperature, ``context_tokens``\n(512 to 1,048,576) the size of the model's context window, and\n``response_schema`` is a JSON Schema object (at most 32,768 bytes as compact\nJSON) the model's reply is constrained to. The reply is still text: the\ncaller extracts and validates the JSON. A lane honours these options only\nwhere its transport sends them to the model; a request that names an option\nits lane does not honour is refused with ``background_option_unsupported``\ninstead of running with the option ignored. Omitted, the lane's own\nbehaviour applies.\n\nThe run's agent ``effort`` is a fourth such option: a background request\nnames one only on a lane whose served ``background_requests.options`` lists\n``effort``, and only at a level its model offers. Named on any other lane,\nit is refused with ``background_option_unsupported``."
       },
       "BackgroundRequestSupportResponse": {
         "properties": {
@@ -5545,7 +5546,7 @@
               "$ref": "#/components/schemas/BackgroundOption"
             },
             "type": "array",
-            "maxItems": 3,
+            "maxItems": 4,
             "title": "Options"
           },
           "accepts_images": {
@@ -5573,6 +5574,15 @@
         ],
         "title": "BackgroundRequestSupportResponse",
         "description": "How a lane takes each input a host's background request carries.\n\n``unsupported``: the lane cannot run a background request, or its transport\ncarries no such input, and a request carrying one is refused with\n``input_not_supported``. Otherwise how far a live background request has\nproven it on this host: ``proven``, ``unproven_version`` or ``unproven``."
+      },
+      "BackgroundTaskKind": {
+        "type": "string",
+        "enum": [
+          "classification",
+          "extraction"
+        ],
+        "title": "BackgroundTaskKind",
+        "description": "One kind of background task, in served order."
       },
       "CapabilityProof": {
         "properties": {
@@ -6276,7 +6286,7 @@
               "$ref": "#/components/schemas/BackgroundOption"
             },
             "type": "array",
-            "maxItems": 3,
+            "maxItems": 4,
             "title": "Options"
           }
         },
@@ -6288,7 +6298,7 @@
           "options"
         ],
         "title": "DeclaredBackground",
-        "description": "What a host's background request on a lane may carry, by the lane's design.\n\nHow far each is proven on a host is the served catalog's answer, not this\none's.\n\nAttributes:\n    runnable: Whether the lane runs a background request at all.\n    inputs: The inputs the lane's transport carries in a background\n        request's turn (``text``, ``image``, ``pdf``), in that order. Empty\n        where the lane is not runnable. On a lane whose models differ, a\n        model must also read the input: see each model's ``vision``.\n    options: The reply options the lane honours (``temperature``,\n        ``context_tokens``, ``response_schema``), in that order. A request\n        naming any other is refused."
+        "description": "What a host's background request on a lane may carry, by the lane's design.\n\nHow far each is proven on a host is the served catalog's answer, not this\none's.\n\nAttributes:\n    runnable: Whether the lane runs a background request at all.\n    inputs: The inputs the lane's transport carries in a background\n        request's turn (``text``, ``image``, ``pdf``), in that order. Empty\n        where the lane is not runnable. On a lane whose models differ, a\n        model must also read the input: see each model's ``vision``.\n    options: The run options the lane honours (``temperature``,\n        ``context_tokens``, ``response_schema``, ``effort``), in that\n        order. A request naming any other is refused. ``effort`` is named\n        by the run's agent effort, at one of the levels the model's\n        ``effort`` states."
       },
       "DeclaredIcon": {
         "properties": {
@@ -6661,9 +6671,9 @@
         "properties": {
           "schema_version": {
             "type": "integer",
-            "const": 7,
+            "const": 8,
             "title": "Schema Version",
-            "default": 7
+            "default": 8
           },
           "providers": {
             "items": {
@@ -6675,16 +6685,53 @@
           },
           "icon_attribution": {
             "$ref": "#/components/schemas/DeclaredIconAttribution"
+          },
+          "task_kinds": {
+            "items": {
+              "$ref": "#/components/schemas/DeclaredTaskKind"
+            },
+            "type": "array",
+            "maxItems": 2,
+            "title": "Task Kinds"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
           "providers",
-          "icon_attribution"
+          "icon_attribution",
+          "task_kinds"
         ],
         "title": "DeclaredProviderCatalog",
-        "description": "The declared document: its version and one entry per registered lane.\n\nAttributes:\n    schema_version: The version of the document's shape.\n    providers: One entry per registered lane.\n    icon_attribution: The terms the icon artwork the lanes name is used\n        under."
+        "description": "The declared document: its version and one entry per registered lane.\n\nAttributes:\n    schema_version: The version of the document's shape.\n    providers: One entry per registered lane.\n    icon_attribution: The terms the icon artwork the lanes name is used\n        under.\n    task_kinds: The kinds of task a host keys its background settings\n        by, in a closed vocabulary."
+      },
+      "DeclaredTaskKind": {
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/BackgroundTaskKind"
+          },
+          "display_name": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Display Name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "Description"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "display_name",
+          "description"
+        ],
+        "title": "DeclaredTaskKind",
+        "description": "One kind of task a host runs background requests for.\n\nA background request does not name its kind: the host resolves the kind to\na lane, a model and an effort, and the request carries those.\n\nAttributes:\n    id: The value the kind is keyed by.\n    display_name: The kind's name as shown to a person.\n    description: One sentence saying what a task of the kind does."
       },
       "DegradedReason": {
         "type": "string",
@@ -8583,11 +8630,23 @@
             "type": "array",
             "maxItems": 128,
             "title": "Providers"
+          },
+          "task_kinds": {
+            "items": {
+              "$ref": "#/components/schemas/DeclaredTaskKind"
+            },
+            "type": "array",
+            "maxItems": 2,
+            "title": "Task Kinds"
           }
         },
         "additionalProperties": false,
         "type": "object",
-        "title": "ProviderCatalogResponse"
+        "required": [
+          "task_kinds"
+        ],
+        "title": "ProviderCatalogResponse",
+        "description": "The served provider catalog: one record per lane, and the task kinds.\n\n``task_kinds`` is the closed vocabulary of kinds of background task, each\nwith a name and a sentence to show a person, so a host can key a setting\nper kind without keeping a list of its own. A background request does not\nname a kind: the host resolves its kind to a lane, a model and an effort,\nand the request carries those."
       },
       "ProviderCatalogStateResponse": {
         "properties": {

@@ -1,6 +1,6 @@
 {
   "source": "cadrumo-agent",
   "path": "openapi.json",
-  "commit": "759f2babc76d6cbc427c7610fc562a1f2c4458bd",
-  "sha256": "fb37b7bd0326e7271e3b0837aca21fdab4dbb151a1826aa35bb2619593f02968"
+  "commit": "46c093bb31ba504fb08cd70ed32b9c31100fa33b",
+  "sha256": "789a2fbbb97ee1da0ab47a9acc97ab31844e8d2f03f7b3b8b79393b805765cca"
 }
