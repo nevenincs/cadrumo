@@ -3003,8 +3003,11 @@ desktop:
       account: Compte
       account_choose: Tria el compte…
       account_detected: detectat al fitxer
-      account_later: Tries el compte de cada fitxer a la previsualització.
+      account_later: La previsualització mostra a quin compte pertany cada fitxer.
+      account_names: El fitxer indica el compte {account}.
       account_no_accounts: no hi ha comptes registrats
+      account_register: Registrar {account} com a compte propi (titular)
+      account_register_note: Podràs canviar-ne el nom més endavant als teus comptes.
       account_unregistered: el fitxer indica un compte no registrat
       any_date: Qualsevol data. Les files fora del període triat s'ometen.
       apply_book: Importa el llibre
@@ -3080,9 +3083,18 @@ desktop:
       duplicates_chip: 'Possibles duplicats: {count}'
       duplicates_more: I {count} més.
       duplicates_note: S'importen i es marquen; compara'ls després d'importar.
+      failure:
+        file_unavailable: Ja no es pot obrir el fitxer. Torna'l a triar.
+        invalid: El fitxer o les opcions no eren vàlids.
+        not_admitted: El llibre no ha acceptat aquesta petició.
+        not_signed_in: Inicia la sessió al teu perfil primer.
+        other: Revisa el fitxer i torna-ho a provar.
+        too_large: El fitxer és massa gran per llegir-lo aquí.
+        unavailable: El llibre no està disponible ara mateix.
       file_counts: Files {rows} · noves {fresh} · ja al llibre {skipped}
       file_imported: Importats {fresh} · ja al llibre {skipped}
       file_not_sent: No enviat.
+      file_skipped: Les {skipped} files ja són al llibre; no s'ha enviat res.
       file_unknown: 'Resultat desconegut: pot haver-se importat.'
       files: Fitxers
       filter:
@@ -3111,7 +3123,7 @@ desktop:
       pick_failed: No s'ha obert el selector de fitxers. Torna-ho a provar.
       preview: Previsualitza
       preview_again: Torna a previsualitzar
-      preview_failed: 'No s''ha pogut previsualitzar:'
+      preview_failed: No s'ha pogut previsualitzar.
       provider:
         auto: Detecta-ho del fitxer
         csv: CSV
@@ -3127,6 +3139,8 @@ desktop:
       refusal:
         empty_directory: La carpeta no conté cap extracte.
         file_limit: Més de 128 fitxers alhora.
+        format_not_installed: 'No s''ha llegit: aquesta instal·lació no pot llegir
+          aquest format.'
         other: No importat. Revisa el fitxer i torna-ho a provar.
         own_account_mismatch: Les seves files indiquen un altre compte.
         reader_unavailable: 'No s''ha llegit: la IA local, que llegeix aquest fitxer,
@@ -3135,6 +3149,8 @@ desktop:
           disponible ara mateix. Revisa''l al selector de models de l''agent.'
         result_limit: 'Més de 4.096 files: importa''l per parts.'
         source_changed: 'Ha canviat després de la previsualització: torna a previsualitzar-lo.'
+        statement_account_missing: 'No importat: el fitxer no indica cap compte per
+          registrar.'
         transaction_validation: No s'ha pogut llegir com a extracte bancari.
       refused_rows: Files no acceptades
       remove: Treu {name}
@@ -5270,7 +5286,7 @@ desktop:
       older_revision: Funciona, però cal una versió més recent.
       program_too_old: Funciona, però aquesta versió és massa antiga per a Cadrumo.
     state:
-      absent: Encara no està configurat.
+      absent: Encara sense configurar.
       blocked: Ara mateix no es pot configurar.
       failed: La configuració no ha acabat.
       provisioning: S'està configurant ara.
@@ -8632,12 +8648,16 @@ tui:
         empty_directory: la carpeta no conté cap extracte que es pugui importar
         file_limit: la importació inclou més fitxers dels que admet una sola importació,
           així que no se n'ha llegit cap; importa'n menys alhora
+        format_not_installed: aquesta instal·lació no pot llegir el format del fitxer,
+          així que no s'ha importat res
         own_account_mismatch: l'extracte indica un compte diferent del que has triat
         reader_unavailable: el model que has triat no està disponible ara mateix,
           així que no s'ha llegit el fitxer; torna-ho a provar quan estigui disponible
         result_limit: la importació ha arribat al límit de files abans d'aquest fitxer
         source_changed: el fitxer ha canviat després de la previsualització i no se
           n'ha importat res; torna a previsualitzar-lo
+        statement_account_missing: l'extracte no indica cap compte per registrar,
+          així que no s'ha importat res
         transaction_validation: el fitxer no s'ha pogut llegir com a extracte
       success: 'Importats: {imported}; omesos: {skipped}.'
       title: Importar apunts

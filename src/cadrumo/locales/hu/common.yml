@@ -2988,8 +2988,11 @@ desktop:
       account: Számla
       account_choose: Válaszd ki a számlát…
       account_detected: a fájlból felismerve
-      account_later: Az egyes fájlok számláját az előnézetben választod ki.
+      account_later: Az előnézetben látod, melyik számlához tartozik az egyes fájl.
+      account_names: 'A fájl ezt a számlát nevezi meg: {account}.'
       account_no_accounts: nincs nyilvántartott számla
+      account_register: '{account} felvétele saját számlaként (számlatulajdonos)'
+      account_register_note: A nevét később módosíthatod a számláid között.
       account_unregistered: a fájl nem nyilvántartott számlát nevez meg
       any_date: Bármilyen dátum. A választott időszakon kívüli sorok kimaradnak.
       apply_book: Könyv importálása
@@ -3065,9 +3068,19 @@ desktop:
       duplicates_more: És még {count}.
       duplicates_note: Importálódnak és megjelölődnek; importálás után hasonlítsd
         össze őket.
+      failure:
+        file_unavailable: A fájl már nem nyitható meg. Válaszd ki újra.
+        invalid: A fájl vagy a beállítások nem voltak érvényesek.
+        not_admitted: A napló nem fogadta el a kérést.
+        not_signed_in: Először jelentkezz be a profilodba.
+        other: Ellenőrizd a fájlt, és próbáld újra.
+        too_large: A fájl túl nagy ahhoz, hogy itt beolvasható legyen.
+        unavailable: A napló jelenleg nem érhető el.
       file_counts: Sorok {rows} · új {fresh} · már a naplóban {skipped}
       file_imported: Importálva {fresh} · már a naplóban {skipped}
       file_not_sent: Nincs elküldve.
+      file_skipped: A(z) {skipped} sor mind szerepel a naplóban; nem lett elküldve
+        semmi.
       file_unknown: 'Ismeretlen eredmény: lehet, hogy importálódott.'
       files: Fájlok
       filter:
@@ -3096,7 +3109,7 @@ desktop:
       pick_failed: A fájlválasztó nem nyílt meg. Próbáld újra.
       preview: Előnézet
       preview_again: Új előnézet
-      preview_failed: 'Nem sikerült az előnézet:'
+      preview_failed: Nem sikerült az előnézet.
       provider:
         auto: Felismerés a fájlból
         csv: CSV
@@ -3112,6 +3125,8 @@ desktop:
       refusal:
         empty_directory: A mappában nincs kivonat.
         file_limit: Egyszerre több mint 128 fájl.
+        format_not_installed: 'Nincs beolvasva: ez a telepítés nem tudja beolvasni
+          ezt a formátumot.'
         other: Nincs importálva. Ellenőrizd a fájlt, és próbáld újra.
         own_account_mismatch: A sorai másik számlát neveznek meg.
         reader_unavailable: 'Nincs beolvasva: a helyi MI, amely ezt a fájlt olvassa,
@@ -3120,6 +3135,8 @@ desktop:
           nem érhető el. Ellenőrizd az ügynök modellválasztójában.'
         result_limit: 'Több mint 4096 sor: importáld részletekben.'
         source_changed: 'Az előnézet óta megváltozott: nézd meg újra.'
+        statement_account_missing: 'Nincs importálva: a fájl nem nevez meg felvehető
+          számlát.'
         transaction_validation: Nem olvasható be bankszámlakivonatként.
       refused_rows: Nem elfogadott sorok
       remove: '{name} eltávolítása'
@@ -8604,12 +8621,16 @@ tui:
         empty_directory: a mappában nincs importálható kivonatfájl
         file_limit: az importálás több fájlt tartalmaz, mint amennyit egy importálás
           elfogad, ezért egyiket sem olvastuk be; importálj egyszerre kevesebbet
+        format_not_installed: ez a telepítés nem tudja beolvasni a fájl formátumát,
+          ezért semmi nem lett importálva
         own_account_mismatch: a kivonat más számlát nevez meg, mint amit választottál
         reader_unavailable: a kiválasztott modell jelenleg nem érhető el, ezért a
           fájl nem lett beolvasva; próbáld újra, amint elérhető
         result_limit: az importálás e fájl előtt elérte a sorkorlátot
         source_changed: a fájl az előnézet után megváltozott, ezért semmi sem került
           importálásra belőle; nézd meg újra az előnézetet
+        statement_account_missing: a kivonat nem nevez meg felvehető számlát, ezért
+          semmi nem lett importálva
         transaction_validation: a fájl nem olvasható kivonatként
       success: 'Importálva: {imported}; kihagyva: {skipped}.'
       title: Tételek importálása

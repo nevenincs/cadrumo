@@ -358,6 +358,8 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "empty_directory",
             "file_limit",
             "reader_unavailable",
+            "format_not_installed",
+            "statement_account_missing",
         ),
         "desktop.ledger.import.diagnostic.": (
             "no_rows",

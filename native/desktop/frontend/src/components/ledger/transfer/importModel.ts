@@ -2,8 +2,11 @@
 // per file in a dry run that writes nothing, and once more for each own
 // account where the person has any: the account a file's rows name binds
 // them the same way as choosing it, so a file whose rows come out the same
-// either way names that account. The apply then sends each file alone with
-// the account chosen for it and the digest its preview read, so a file that
+// either way names that account. A statement also says which account it
+// names, by its mask: a registered one binds the file without any probe, and
+// one that is not registered can be registered by the import itself, from the
+// statement's own number. The apply then sends each file alone with the
+// account chosen for it and the digest its preview read, so a file that
 // changed since is refused rather than imported. Invoice books have no dry
 // run; documents are added in parts the host can carry. Nothing here keeps
 // a value beyond the dialog's memory, and no write is ever sent twice.
@@ -50,8 +53,17 @@ export const DOCUMENTS_PER_PART = 16;
 
 /** No own account: the rows stay unbound unless they name one. */
 export const NO_ACCOUNT = "none";
-/** An own account's id, or `NO_ACCOUNT`. */
+/** The account the statement names is registered by the import. */
+export const REGISTER_ACCOUNT = "register";
+/** An own account's id, `NO_ACCOUNT` or `REGISTER_ACCOUNT`. */
 export type AccountKey = string;
+
+/** How the registered account is held when the import registers it. */
+const REGISTERED_HOLDING = "titular" as const;
+
+/** The account a statement names, by its mask alone, and whether the import
+ * can register it. */
+export type StatementAccount = { masked: string; registrable: boolean };
 
 /** An own account as a choice: its label and masked number. */
 export type OwnAccount = { id: string; label: string; masked: string };
@@ -144,6 +156,8 @@ export type BankFilePreview =
       detected: string | null;
       /** Whether every registered account was read against it. */
       probed: boolean;
+      /** The account the statement names, where it names one. */
+      statement: StatementAccount | null;
     }
   | {
       kind: "refused";
@@ -164,8 +178,13 @@ const dryRun = (
   dry_run: true,
   verify: options.verify,
   period: options.period,
-  own_account_id: account === NO_ACCOUNT ? null : account,
+  own_account_id: ownAccountOf(account),
 });
+
+/** The own account a request names for a choice: none for no account and for
+ * the statement's own account, which the import registers. */
+const ownAccountOf = (account: AccountKey) =>
+  account === NO_ACCOUNT || account === REGISTER_ACCOUNT ? null : account;
 
 /** The movements a dry run would write or skip, as one sorted list. */
 const rowIds = (result: LedgerImportResultProjection) =>
@@ -206,6 +225,9 @@ export async function previewBankFile(
     return { kind: "failed", file, code: base.reason ?? "refused" };
   const { refusal, setup, digest } = readOf(base.result);
   if (refusal) return { kind: "refused", file, reason: refusal, setup };
+  const named =
+    base.result.statement_accounts.find((item) => item.file_index === 0) ??
+    null;
   const preview: Extract<BankFilePreview, { kind: "read" }> = {
     kind: "read",
     file,
@@ -214,7 +236,28 @@ export async function previewBankFile(
     mismatched: [],
     detected: null,
     probed: false,
+    statement: named && {
+      masked: named.masked_iban,
+      registrable: named.registrable,
+    },
   };
+  // The statement says which account it names: a registered one is the file's
+  // and refuses every other; one not registered can be registered, and
+  // every registered account is another's.
+  if (named?.own_account_id) {
+    preview.detected = named.own_account_id;
+    preview.mismatched = accounts
+      .map((account) => account.id)
+      .filter((id) => id !== named.own_account_id);
+    preview.probed = true;
+    return preview;
+  }
+  if (named?.registrable) {
+    preview.byAccount[REGISTER_ACCOUNT] = base.result;
+    preview.mismatched = accounts.map((account) => account.id);
+    preview.probed = true;
+    return preview;
+  }
   if (!probe || accounts.length === 0) return preview;
   for (const account of accounts) {
     const read = await previewForAccount(port, file, options, account.id);
@@ -280,6 +323,9 @@ export type AccountFact =
   /** The rows name an account that is not registered: only no account
    * takes them. */
   | { kind: "unregistered" }
+  /** The statement names an account that is not registered, which the
+   * import can register. */
+  | { kind: "register" }
   | { kind: "no_accounts" }
   | { kind: "choose" };
 export function accountFact(
@@ -287,6 +333,7 @@ export function accountFact(
   accounts: readonly OwnAccount[],
 ): AccountFact {
   if (preview.detected) return { kind: "detected", account: preview.detected };
+  if (preview.statement?.registrable) return { kind: "register" };
   if (accounts.length === 0) return { kind: "no_accounts" };
   if (preview.probed && preview.mismatched.length === accounts.length)
     return { kind: "unregistered" };
@@ -301,6 +348,7 @@ export function accountFor(
   choice: AccountKey | undefined,
 ): AccountKey | undefined {
   if (fact.kind === "detected") return choice ?? fact.account;
+  if (fact.kind === "register") return choice ?? REGISTER_ACCOUNT;
   if (fact.kind === "choose") return choice;
   return NO_ACCOUNT;
 }
@@ -320,7 +368,14 @@ export type BankApplied =
   /** Sent, and not seen to settle: it may have been imported. */
   | { kind: "unknown"; file: PickedFile; code: string }
   /** Left unsent after a write whose outcome is not known. */
-  | { kind: "not_sent"; file: PickedFile };
+  | { kind: "not_sent"; file: PickedFile }
+  /** Every row of it is already in the ledger, so nothing was sent: the
+   * counts are its preview's. */
+  | {
+      kind: "skipped";
+      file: PickedFile;
+      result: LedgerImportResultProjection;
+    };
 
 /** Failures that stop the files after them: the outcome is not known, or
  * no further write can be sent now. */
@@ -335,7 +390,19 @@ export type BankApplyFile = {
   file: PickedFile;
   account: AccountKey;
   digest: string;
+  /** The account the file's statement names, where it names one. */
+  statement: StatementAccount | null;
 };
+
+/** The registration an apply sends for `account`: the statement's own
+ * account, labelled by its mask, which the person can rename in Accounts. */
+const registrationOf = (
+  account: AccountKey,
+  statement: StatementAccount | null,
+) =>
+  account === REGISTER_ACCOUNT && statement
+    ? { label: statement.masked, holding: REGISTERED_HOLDING }
+    : null;
 
 /** Imports each file alone, exactly as previewed, one after another. */
 export async function applyBank(
@@ -346,7 +413,7 @@ export async function applyBank(
 ): Promise<BankApplied[]> {
   const applied: BankApplied[] = [];
   let stopped = false;
-  for (const { file, account, digest } of files) {
+  for (const { file, account, digest, statement } of files) {
     if (stopped) {
       applied.push({ kind: "not_sent", file });
       continue;
@@ -360,7 +427,8 @@ export async function applyBank(
         dry_run: false,
         verify: options.verify,
         period: options.period,
-        own_account_id: account === NO_ACCOUNT ? null : account,
+        own_account_id: ownAccountOf(account),
+        register_statement_account: registrationOf(account, statement),
         expected_source_sha256: [digest],
       },
       true,

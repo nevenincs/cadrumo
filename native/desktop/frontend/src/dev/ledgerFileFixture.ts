@@ -40,14 +40,27 @@ export const PICKABLE: Record<Exclude<FilePurpose, "export">, string[]> = {
 /** What each made-up statement holds: the own account its rows name, if
  * any, how many rows it has, how many fall on the day and amount of a
  * movement already in the ledger, and whether its dates leave a gap. A name
- * not listed reads as a short statement that names no account. */
+ * not listed reads as a short statement that names no account.
+ * `mask` is the masked number of an account the statement names that no own
+ * account has until the import registers it; `installed` is whether this
+ * installation carries the reader of the file's format; `stops` is the
+ * refusal code that stops the whole read. */
 type Statement = {
   names: string | null;
   rows: number;
   duplicates: number;
   gap: boolean;
   readable: boolean;
+  mask?: string;
+  installed?: boolean;
+  stops?: string;
 };
+/** A statement that names an account no own account has yet. */
+export const UNREGISTERED_STATEMENT = "extracto-bbva-2026-10.csv";
+/** A statement of a format whose reader this installation does not carry. */
+export const UNINSTALLED_STATEMENT = "extracto-antiguo-2026-10.xls";
+/** A statement whose read the ledger stops with a refusal. */
+export const STOPPED_STATEMENT = "extracto-roto-2026-10.csv";
 export const STATEMENTS: Record<string, Statement> = {
   "extracto-cuenta-estudio-2026-10.csv": {
     names: null,
@@ -69,6 +82,30 @@ export const STATEMENTS: Record<string, Statement> = {
     duplicates: 0,
     gap: false,
     readable: false,
+  },
+  [UNREGISTERED_STATEMENT]: {
+    names: null,
+    mask: "ES**1332",
+    rows: 7,
+    duplicates: 0,
+    gap: false,
+    readable: true,
+  },
+  [UNINSTALLED_STATEMENT]: {
+    names: null,
+    rows: 5,
+    duplicates: 0,
+    gap: false,
+    readable: true,
+    installed: false,
+  },
+  [STOPPED_STATEMENT]: {
+    names: null,
+    rows: 0,
+    duplicates: 0,
+    gap: false,
+    readable: true,
+    stops: "ERROR_TRANSACTION_VALIDATION",
   },
 };
 export const STATEMENT: Statement = {

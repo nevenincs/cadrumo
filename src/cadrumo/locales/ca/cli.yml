@@ -3945,6 +3945,10 @@ cli:
         importat.'
       file_refused_account_mismatch: 'Extracte rebutjat i omès: {file} indica un compte
         propi diferent del que has triat.'
+      file_refused_format_not_installed: 'Extracte no llegit: {file} és en un format
+        el lector del qual no forma part d''aquesta instal·lació.'
+      file_refused_statement_account_missing: 'Extracte rebutjat i omès: {file} no
+        indica cap compte vàlid per registrar com a teu.'
       help: Importar extractes bancaris o altres fitxers comptables als teus registres
       likely_duplicates: '{count} fila(es) importada(es) coincideixen en data i import
         amb un altre moviment ja present als teus registres o anterior en aquest fitxer,

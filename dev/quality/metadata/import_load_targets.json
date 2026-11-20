@@ -49,7 +49,6 @@
         "cadrumo.adapters.inbound.financial.ledger_import",
         "cadrumo.adapters.inbound.financial.providers",
         "cadrumo.adapters.inbound.financial.providers.base",
-        "cadrumo.adapters.inbound.financial.providers.constants",
         "cadrumo.adapters.inbound.financial.providers.csv",
         "cadrumo.adapters.inbound.financial.providers.detection",
         "cadrumo.adapters.inbound.financial.providers.mapped_tabular",
