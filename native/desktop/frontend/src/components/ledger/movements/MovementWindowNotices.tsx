@@ -1,6 +1,7 @@
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { counted } from "../../../shell/compose";
 import { useStrings } from "../../../shell/strings";
 
 /**
@@ -70,10 +71,15 @@ export function MovementWindowNotices({
             icon={<Icon name="alert" />}
             className="flex-1"
           >
-            {t("desktop.ledger.selection.hidden", {
-              hidden: hiddenSelected,
+            {counted(
+              t,
               selected,
-            })}
+              {
+                one: "desktop.ledger.selection.hidden_one",
+                many: "desktop.ledger.selection.hidden",
+              },
+              { hidden: hiddenSelected, selected },
+            )}
           </Alert>
           <Button variant="outline" size="sm" onClick={onShowHidden}>
             {t("desktop.ledger.selection.show")}

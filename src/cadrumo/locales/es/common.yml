@@ -2266,6 +2266,7 @@ desktop:
       vehiculo_seguro: seguro coche vehiculo
       viajes_alojamiento: hotel alojamiento hostal apartamento
       viajes_transporte: tren avion vuelo taxi autobus
+    cell_empty: Vacío
     classification:
       business: Empresarial
       failed_validation: Validación fallida
@@ -4320,11 +4321,14 @@ desktop:
       row: Selecciona {description}
       shown: Selecciona los movimientos mostrados · Ctrl+clic los añade
     selected: '{count} seleccionados'
+    selected_one: 1 seleccionado
     selection:
       actions_count: Acciones · {count} seleccionados
+      actions_count_one: Acciones · 1 seleccionado
       all_shown: 'Todos los mostrados están seleccionados: {count}.'
       clear_category: Quitar la categoría
       hidden: 'Ocultos: {hidden} de {selected} seleccionados'
+      hidden_one: El movimiento seleccionado está oculto
       keep_visible: Deja solo los visibles
       select_all: Selecciona los {count} de {period}
       show: Muéstralos
