@@ -20,7 +20,7 @@ import type {
   AgentSnapshot,
   AgentTurnRecord,
 } from "./agentSnapshotContract";
-import { conditionWords, toolKindWords } from "./agentWords";
+import { conditionWords, toolKindWords, toolIdentityWords } from "./agentWords";
 import { listed } from "./compose";
 import { logRef } from "./providerSignInWords";
 import type { Translate } from "./strings";
@@ -343,6 +343,21 @@ function failureAction(reply: AgentReplyRecord) {
   }
 }
 
+/** Where a carried message came from, in words: the conversation it is
+ * known by where the window lists it, else only that it is an earlier one.
+ * Null for a message said in this conversation. */
+function carriedWords(
+  t: Translate,
+  run: string | null | undefined,
+  titles: ReadonlyMap<string, string> | undefined,
+): string | undefined {
+  if (!run) return undefined;
+  const title = titles?.get(run);
+  return title
+    ? t("desktop.agent.carried_from", { title })
+    : t("desktop.agent.carried_from_unknown");
+}
+
 /** When a message was sent, in words: the time today, else the day too. */
 function sentLabel(locale: string, at: Date, now: Date): string | undefined {
   if (!Number.isFinite(at.getTime())) return undefined;
@@ -360,6 +375,7 @@ type TranscriptProjectionCache = {
   locale?: string;
   t?: Translate;
   day?: number;
+  titles?: ReadonlyMap<string, string>;
   entries: Map<AgentColumnRecord, TranscriptProjectionEntry>;
 };
 
@@ -371,7 +387,8 @@ export function createTranscriptProjection() {
     locale: string,
     t: Translate,
     now = new Date(),
-  ) => transcriptItems(records, locale, t, now, cache);
+    titles?: ReadonlyMap<string, string>,
+  ) => transcriptItems(records, locale, t, now, cache, titles);
 }
 
 /**
@@ -388,6 +405,7 @@ export function transcriptItems(
   t: Translate,
   now: Date = new Date(),
   cache?: TranscriptProjectionCache,
+  titles?: ReadonlyMap<string, string>,
 ): TranscriptItem[] {
   const replies = new Map<string, AgentReplyRecord>();
   const lastAgent = new Map<string, number>();
@@ -427,7 +445,10 @@ export function transcriptItems(
   };
   const items: TranscriptItem[] = [];
   const previous =
-    cache?.locale === locale && cache.t === t && cache.day === dayStart(now)
+    cache?.locale === locale &&
+    cache.t === t &&
+    cache.day === dayStart(now) &&
+    cache.titles === titles
       ? cache.entries
       : undefined;
   const entries = new Map<AgentColumnRecord, TranscriptProjectionEntry>();
@@ -466,6 +487,7 @@ export function transcriptItems(
     let item: TranscriptItem | undefined;
     switch (record.kind) {
       case "person": {
+        const carried = carriedWords(t, record.carried_from_run_id, titles);
         const sentAtLabel = record.sent_at
           ? sentLabel(locale, new Date(record.sent_at), now)
           : undefined;
@@ -478,6 +500,7 @@ export function transcriptItems(
             : {}),
           ...(record.skills.length ? { skills: record.skills } : {}),
           ...(sentAtLabel ? { sentAtLabel } : {}),
+          ...(carried ? { carriedLabel: carried } : {}),
         };
         break;
       }
@@ -486,25 +509,38 @@ export function transcriptItems(
         const kind = record.tool_kind
           ? toolKindWords(t, record.tool_kind)
           : undefined;
+        const words = toolIdentityWords(t, {
+          server: record.tool_server,
+          name: record.tool_name,
+          title: record.title,
+          kind: record.tool_kind,
+        });
+        const failureMessage =
+          record.status === "failed" ? record.failure?.message : undefined;
         item = {
           kind: "tool",
           id,
-          label: record.title ?? kind ?? "",
+          label: words.label,
           state: record.status,
-          ...(record.title !== null && kind ? { detail: kind } : {}),
+          ...(kind && words.label !== kind ? { detail: kind } : {}),
+          ...(words.description ? { description: words.description } : {}),
+          ...(failureMessage ? { failureMessage } : {}),
           ...(record.details.length ? { internals: record.details } : {}),
         };
         break;
       }
-      case "agent":
+      case "agent": {
+        const carried = carriedWords(t, record.carried_from_run_id, titles);
         item = {
           kind: "agent",
           id,
           text: record.text,
           ...(last && reply ? drawn(reply) : { state: "complete" as const }),
           ...(thought ? { thinking: thought } : {}),
+          ...(carried ? { carriedLabel: carried } : {}),
         };
         break;
+      }
       case "reply": {
         const state = drawn(record);
         if (state.state === "complete") break;
@@ -522,7 +558,8 @@ export function transcriptItems(
       entries.set(record, { item, reply, last, thinking: thought });
     }
   });
-  if (cache) Object.assign(cache, { locale, t, day: dayStart(now), entries });
+  if (cache)
+    Object.assign(cache, { locale, t, day: dayStart(now), titles, entries });
   return items;
 }
 

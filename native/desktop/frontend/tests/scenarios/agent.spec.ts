@@ -467,21 +467,21 @@ test("a conversation of several runs shows each message once, the tools before t
   ]);
 });
 
-test("a conversation the agent was given no title for says it is not available yet", async ({
+test("a conversation the agent was given no title for keeps the new-conversation heading", async ({
   page: target,
 }) => {
   scenarioOnly("the conversations are the scenario host's");
   await open(target);
   const body = await openHistory(target);
   await expect(
-    body.getByText(label("desktop.agent.unavailable"), { exact: true }),
+    body.getByText(label("desktop.agent.new_conversation"), { exact: true }),
   ).toHaveCount(1);
   await body
-    .getByText(label("desktop.agent.unavailable"), { exact: true })
+    .getByText(label("desktop.agent.new_conversation"), { exact: true })
     .click();
   await expect(
     column(target).getByRole("heading", {
-      name: label("desktop.agent.unavailable"),
+      name: label("desktop.agent.new_conversation"),
     }),
   ).toBeVisible();
   await expect(personTurns(target)).toContainText("¿Cuándo vence el 303?");

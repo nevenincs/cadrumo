@@ -1312,7 +1312,9 @@ async fn agent_attachment_card(
 
 /// Puts the person's answer to the service, which records the release before the
 /// agent hears of it. The agent's request is answered only once the service has
-/// released the read: anything else leaves the read parked and nothing sent.
+/// released the read: anything else leaves the read parked and nothing sent. The
+/// scope `decline` only records the person's refusal; the window then declines
+/// the request itself.
 #[tauri::command]
 async fn agent_attachment_release(
     host: State<'_, Arc<AgentHost>>,
@@ -1378,7 +1380,10 @@ fn attachment_read_request(
     };
     if !plain(&approval.reply_id)
         || !plain(&approval.request_id)
-        || !matches!(scope, None | Some("once" | "session" | "remember"))
+        || !matches!(
+            scope,
+            None | Some("once" | "session" | "remember" | "decline")
+        )
     {
         return refused("agent_invalid_request");
     }

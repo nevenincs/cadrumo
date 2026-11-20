@@ -48,6 +48,7 @@ import {
 import {
   FIXTURE_CONVERSATIONS,
   FIXTURE_ATTACHMENT_POLICY,
+  pickedRefusal,
   FIXTURE_DOCUMENTS,
   FIXTURE_RUNS,
   conversationRecords,
@@ -81,6 +82,7 @@ import {
   refusedWith,
   requested,
 } from "./agentFixtureAsks";
+import { atState, toolCall, toolTitle } from "./agentFixtureTools";
 import {
   AUTHENTICATION_REQUIRED,
   BUSY_ELSEWHERE,
@@ -477,14 +479,9 @@ export function fixtureAgent({
     refusal?: AgentToolRefusal,
     details?: string[],
   ) => {
-    const call: AgentStreamToolCall = {
-      id: id("t"),
-      title,
-      tool_kind,
-      status: "pending",
-    };
+    const call = toolCall(id("t"), title, tool_kind);
     return states.map((state) => () => {
-      const now: AgentStreamToolCall = { ...call, status: state };
+      const now = atState(call, state);
       const at = held.run.tools.findIndex((held) => held.id === call.id);
       const recorded = details ? { ...now, details } : now;
       if (at < 0) held.run.tools.push(recorded);
@@ -652,9 +649,8 @@ export function fixtureAgent({
       const most = /extremos/i.test(text);
       // The agent says a tool's name and a line that repeats it, and serves
       // nothing of the call's input.
-      const canonical = /permission (status|file|attachment|operation)/.exec(
-        text,
-      );
+      const canonical =
+        /permission (status|file|attachment|operation|web)/.exec(text);
       const target = canonical ? PERMISSION_TARGETS[canonical[1]!] : undefined;
       const toolName = target?.tool ?? "ledger_list";
       schedule(held, [
@@ -668,12 +664,7 @@ export function fixtureAgent({
             source: "agent_tool",
             tool_call: unnamed ? null : most ? MOST_TOOL_CALL : toolName,
             tool_kind: unnamed ? null : target ? "other" : "read",
-            tool_server:
-              unnamed ||
-              target?.tool === "write_file" ||
-              target?.tool === "read_attachment"
-                ? null
-                : "cadrumo",
+            tool_server: unnamed ? null : target ? target.server : "cadrumo",
             description: unnamed
               ? null
               : most
@@ -770,7 +761,7 @@ export function fixtureAgent({
       ...write(held, "Lo miro en tus apuntes."),
       ...tool(
         held,
-        "ledger_list",
+        toolTitle(text),
         "read",
         TOOL_FAILS.test(text)
           ? ["pending", "in_progress", "failed"]
@@ -1210,10 +1201,8 @@ export function fixtureAgent({
               },
               {
                 id: ids[1],
-                name: "copias.zip",
-                size_bytes: 9_000,
+                ...pickedRefusal(),
                 state: "refused",
-                code: "agent_attachment_format_refused",
               },
               {
                 id: ids[2],
