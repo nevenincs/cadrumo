@@ -3,7 +3,8 @@
 // the spending categories with their families, the categories a usage ratio
 // applies to, the invoice classes, the premises situations, the prorrata
 // provenances and sector letters, the capital goods kinds and disposals, and
-// the statement formats this installation parses.
+// the statement formats this installation parses and the extensions of their
+// files.
 // The window keeps no list of its own, so until they are served, or where the
 // read failed, each is empty and `state` says which. Nothing here decides
 // whether a value is allowed; the ledger does.
@@ -47,6 +48,9 @@ export type ServedVocabulary = {
   /** The statement formats an import offers: those whose parser this
    * installation carries. */
   importFormats: readonly string[];
+  /** The file extensions, with no dot, a statement import offers to pick:
+   * those of the formats this installation parses, in the order served. */
+  importExtensions: readonly string[];
   /** The serialisations an export writes, in the order the ledger serves
    * them. */
   exportFormats: readonly string[];
@@ -79,6 +83,7 @@ export const NO_VOCABULARY: ServedVocabulary = {
   capitalKinds: NONE,
   capitalDisposals: NONE,
   importFormats: NONE,
+  importExtensions: NONE,
   exportFormats: NONE,
   certificateFigures: [],
   defaultCurrency: null,
@@ -126,6 +131,7 @@ export function servedVocabulary(
     capitalKinds: values("capital_good_kind"),
     capitalDisposals: values("capital_good_disposal"),
     importFormats: values("import_format"),
+    importExtensions: values("import_extension"),
     exportFormats: values("export_format"),
     certificateFigures: (
       result.families.find(

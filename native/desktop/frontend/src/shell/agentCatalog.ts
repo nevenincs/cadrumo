@@ -1,6 +1,7 @@
 import type {
   AgentSelection,
   Choice,
+  HeldStep,
   ModelOption,
   ProviderOption,
   ProviderWay,
@@ -141,14 +142,20 @@ function provenCapabilities(t: Translate, lane: ServedProviderLane): string[] {
   return [...new Set(words)];
 }
 
-/** Why a lane cannot be chosen, from the first of its health axes that
- * says so. */
-function laneHeldBy(t: Translate, lane: ServedProviderLane): string {
+/** Why a lane cannot be chosen, from the first of its health axes that says
+ * so, and the step the person can take where one exists: signing in to a lane
+ * that is signed out, and asking again for a lane whose models could not be
+ * read. A lane held by a configuration, an engine or an admission the person
+ * cannot repair from the picker has no step. */
+function laneHeld(
+  t: Translate,
+  lane: ServedProviderLane,
+): { words: string; step?: HeldStep } {
   const { health } = lane;
   if (health.configured === "unavailable")
-    return t("desktop.agent.lane_not_configured");
+    return { words: t("desktop.agent.lane_not_configured") };
   if (health.authentication === "unauthenticated")
-    return t("desktop.agent.lane_signed_out");
+    return { words: t("desktop.agent.lane_signed_out"), step: "sign_in" };
   // A local engine that does not run is the cause behind an unreachable
   // transport, so it is said before the transport.
   const engine = parseEngineHealth(lane);
@@ -156,14 +163,14 @@ function laneHeldBy(t: Translate, lane: ServedProviderLane): string {
     engine !== null && engine !== "malformed"
       ? engineNotRunningWords(t, engine)
       : null;
-  if (engineWords !== null) return engineWords;
+  if (engineWords !== null) return { words: engineWords };
   if (health.transport === "unavailable" || !lane.executable)
-    return t("desktop.agent.lane_unreachable");
+    return { words: t("desktop.agent.lane_unreachable") };
   if (health.admission === "not_admitted")
-    return t("desktop.agent.lane_not_admitted");
+    return { words: t("desktop.agent.lane_not_admitted") };
   if (health.catalog === "unavailable" || health.catalog === "unknown")
-    return t("desktop.agent.lane_no_catalog");
-  return t("desktop.agent.unavailable");
+    return { words: t("desktop.agent.lane_no_catalog"), step: "retry" };
+  return { words: t("desktop.agent.unavailable"), step: "retry" };
 }
 
 /** That a lane's engine does not run, in words, with the door the service
@@ -270,6 +277,7 @@ function declaredChoices(
           authKind: lane.auth_kind,
           selectable: false,
           unavailableReason: t("desktop.agent.lane_not_observed"),
+          heldStep: "retry",
         };
       });
     return {
@@ -372,6 +380,7 @@ export function catalogChoices(
         const usable =
           runs && (writesModel(lane) || (listed.length > 0 && !noneHeld));
         const toDownload = laneModelsToDownload(lane, listed);
+        const held = usable || (runs && noneHeld) ? null : laneHeld(t, lane);
         const engine = parseEngineHealth(lane);
         const notRunning =
           engine !== null && engine !== "malformed"
@@ -387,9 +396,8 @@ export function catalogChoices(
               ? {}
               : {
                   unavailableReason:
-                    runs && noneHeld
-                      ? t("desktop.agent.lane_no_installed_model")
-                      : laneHeldBy(t, lane),
+                    held?.words ?? t("desktop.agent.lane_no_installed_model"),
+                  ...(held?.step ? { heldStep: held.step } : {}),
                 }),
             ...(toDownload ? { modelsToDownload: true } : {}),
             ...(notRunning ? { engineNotRunning: notRunning } : {}),
@@ -641,16 +649,47 @@ export function laneSelection(
   );
 }
 
+/** Whether the service is still reading `lane`: its packaged model list is
+ * shown in place of the account's, or the lane cannot be chosen only because
+ * a health axis is not yet known. A lane held by something the service has
+ * settled (not configured, signed out, an engine that does not run, an
+ * unreachable transport, not admitted) is not being read. */
+function laneStillReading(lane: ServedProviderLane): boolean {
+  if (
+    lane.catalog.model_list_source === "packaged" &&
+    lane.catalog.state.status === "stale"
+  )
+    return true;
+  const { health } = lane;
+  if (health.selectable) return false;
+  const engine = parseEngineHealth(lane);
+  if (
+    engine !== null &&
+    engine !== "malformed" &&
+    engine.state === "not_running"
+  )
+    return false;
+  if (
+    health.configured === "unavailable" ||
+    health.transport === "unavailable" ||
+    !lane.executable ||
+    health.authentication === "unauthenticated" ||
+    health.admission === "not_admitted"
+  )
+    return false;
+  // Anything else that holds it (a login, catalog or launcher measurement not
+  // yet known, a catalog not observed again in time) the service settles on a
+  // later read.
+  return true;
+}
+
 /**
- * Whether the catalog shows some lane's packaged model list in place of the
- * account's own while the account's is still being read: the service
- * answers a cold read with the packaged list as stale and serves the
- * account's on a later read.
+ * Whether the service still reads some lane of the catalog, which it answers
+ * as a packaged model list or an axis not yet known and settles on a later
+ * read, so the catalog is asked again until none is.
  */
 export function catalogStillReading(catalog: ServedCatalogAnswer): boolean {
   return servedLanes(catalog).some(
-    (lane) =>
-      lane.catalog.model_list_source === "packaged" &&
-      lane.catalog.state.status === "stale",
+    (lane) => understood(lane) && laneStillReading(lane),
   );
 }

@@ -60,7 +60,8 @@ from cadrumo_runtime.host.worker import run
 if __name__ == "__main__":
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from dev.docs.sequences.dependency_observation import WORKER_SCRIPT_NAME, active_observation, prepare_worker_journals
+from dev.dependency_observation.observation import active_observation
+from dev.docs.sequences.observed_journals import WORKER_SCRIPT_NAME, prepare_worker_journals
 from dev.docs.sequences.receipt_fixture import RECEIPT_FIXTURE_DIRECTORY, SequenceReceiptKeyring
 
 

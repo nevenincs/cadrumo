@@ -36,6 +36,7 @@ from cadrumo.application.user_profile.view_operation import (
     PROFILE_VIEW_MAX_RESULT_BYTES,
     PROFILE_VIEW_OPERATION_DEFINITION_ID,
     ProfileViewFactItem,
+    ProfileViewHeadingItem,
     ProfileViewHouseholdDraft,
     ProfileViewHouseholdDraftFact,
     ProfileViewIssueItem,
@@ -192,6 +193,35 @@ def test_registered_view_reads_real_encrypted_profile_and_pins_continuations(
                 assert stale.outcome == "refused"
                 assert stale.refusal_code is ProfileViewRefusalCode.STALE_REVISION
                 assert not stale.items and stale.next_cursor is None
+
+
+@pytest.mark.parametrize(
+    ("facts", "heading"),
+    [
+        ((), "Profile view operation"),
+        (
+            (
+                UserProfileFact(path="identity.name", value="Ana"),
+                UserProfileFact(path="identity.surnames", value="Ruiz Gil"),
+            ),
+            "Ana Ruiz Gil",
+        ),
+        ((UserProfileFact(path="identity.legal_name", value="Talleres Ruiz SL"),), "Talleres Ruiz SL"),
+    ],
+)
+def test_the_overview_is_headed_with_the_taxpayer_name_else_the_profile_name(
+    tmp_path: Path, facts: tuple[UserProfileFact, ...], heading: str
+) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        profile_id = _register_profile(facts=facts)
+        with bundled_indexed_authority().operation() as authority:
+            page = read_profile_view_page(
+                ProfileViewOperationRequest(profile_id=profile_id, page_kind=ProfileViewPageKind.OVERVIEW, limit=2),
+                authority_operation=authority,
+            )
+    assert page.outcome == "page"
+    assert page.items[0] == ProfileViewHeadingItem(name=heading)
+    assert not any(isinstance(item, ProfileViewHeadingItem) for item in page.items[1:])
 
 
 def test_registered_view_resolves_a_household_draft_without_changing_the_profile(tmp_path: Path) -> None:

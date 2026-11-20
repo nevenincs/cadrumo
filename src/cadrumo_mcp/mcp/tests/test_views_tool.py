@@ -145,12 +145,12 @@ async def test_a_search_matches_labels_keywords_and_ids_best_first() -> None:
 
 @pytest.mark.anyio
 async def test_listing_answers_every_view_once_in_register_order_within_the_limit() -> None:
-    register = load_navigation_register()
+    implemented = [element for element in load_navigation_register().elements if element.surfaces]
     everything = await _call({"limit": 50})
-    assert [row["id"] for row in everything["views"]] == [element.id for element in register.elements]
-    assert everything["total"] == len(register.elements)
+    assert [row["id"] for row in everything["views"]] == [element.id for element in implemented]
+    assert everything["total"] == len(implemented)
     page = await _call({"limit": 2})
-    assert len(page["views"]) == 2 and page["total"] == len(register.elements)
+    assert len(page["views"]) == 2 and page["total"] == len(implemented)
 
 
 @pytest.mark.anyio
@@ -183,20 +183,30 @@ async def test_a_link_naming_a_surface_the_register_does_not_declare_is_invalid(
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("view_id", ["home", "withholding", "aeat-sync", "operations", "installation", "reference"])
-async def test_a_window_view_the_desktop_has_not_built_is_still_declared_for_the_window(view_id: str) -> None:
-    found = await _call({"id": view_id}, language="en")
+async def test_the_one_unbuilt_window_view_the_desktop_draws_opens() -> None:
+    found = await _call({"id": "aeat-sync"}, language="en")
     assert found["outcome"] == "found"
     assert found["views"][0]["surfaces"] == ["gui"]
-    checked = await _call({"link": f"cadrumo://view/{view_id}"})
+    checked = await _call({"link": "cadrumo://view/aeat-sync"})
     assert checked["outcome"] == "valid"
     assert checked["opens"] == {
         "surface": "gui",
-        "view": view_id,
+        "view": "aeat-sync",
         "fallback": "none",
         "params_kept": True,
         "notice_due": False,
     }
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("view_id", ["home", "withholding", "operations", "installation", "reference"])
+async def test_a_view_no_surface_implements_is_not_advertised_and_its_link_is_refused(view_id: str) -> None:
+    assert await _call({"id": view_id}, language="en") == {"outcome": "not_found", "id": view_id, "language": "en"}
+    assert await _call({"link": f"cadrumo://view/{view_id}"}) == {"outcome": "invalid", "reason": "not_implemented"}
+    listed = await _call({"limit": 50})
+    searched = await _call({"query": view_id, "limit": 50})
+    for answer in (listed, searched):
+        assert view_id not in [row["id"] for row in answer["views"]]
 
 
 @pytest.mark.anyio

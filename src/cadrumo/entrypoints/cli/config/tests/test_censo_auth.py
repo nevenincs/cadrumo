@@ -27,7 +27,7 @@ def _readiness(*, ready: bool = False) -> AuthSyncReadiness:
         ready=ready,
         requirements=(
             AuthSyncRequirement(field="identity.tax_id", satisfied=ready, reason="profile_tax_id_required"),
-            AuthSyncRequirement(field="auth.dni_nie", satisfied=ready, reason="clave_identity_required"),
+            AuthSyncRequirement(field="auth.provider", satisfied=ready, reason="auth_method_required"),
         ),
     )
 
@@ -60,7 +60,7 @@ def test_unattended_pull_reports_all_missing_fields_without_prompting(
         censo_authentication.require_censo_auth(context)
     detail = caught.value.context or {}
     assert "identity.tax_id" in str(detail["requirements"])
-    assert "auth.dni_nie" in str(detail["requirements"])
+    assert "auth.provider" in str(detail["requirements"])
     assert detail["command"] == "aeat config profile censo pull --configure-auth"
 
 

@@ -256,8 +256,6 @@ profile:
       auth:
         clave_movil_route:
           label: Cl@ve Móvil útvonal
-        dni_nie:
-          label: DNI vagy NIE a Cl@ve-hoz
         fecha_validez:
           label: Érvényességi dátum
         numero_soporte:

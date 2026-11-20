@@ -131,7 +131,7 @@ def test_a_profile_that_never_chose_a_route_signs_in_with_the_app_request(
     on the profile so the default route can complete.
     """
     monkeypatch.delenv("CADRUMO_CLAVE_PREFER_NON_QR", raising=False)
-    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.fecha_validez": _FECHA_VALIDEZ})
+    _register_profile(**{"auth.fecha_validez": _FECHA_VALIDEZ})
     settings = Settings(cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID), cadrumo_clave_movil_dni_fecha=None)
     assert "cadrumo_clave_prefer_non_qr" not in settings.model_fields_set
 
@@ -156,7 +156,7 @@ def test_an_unchosen_route_without_a_contraste_names_the_missing_contraste(
     are told which document fact the default route still needs.
     """
     monkeypatch.delenv("CADRUMO_CLAVE_PREFER_NON_QR", raising=False)
-    _register_profile(**{"auth.dni_nie": _TAX_ID})
+    _register_profile()
     settings = Settings(
         cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
         cadrumo_clave_movil_nie_soporte=None,
@@ -188,7 +188,6 @@ def test_profile_numero_soporte_reaches_the_non_qr_contraste_setting() -> None:
 
     _register_profile(
         **{
-            "auth.dni_nie": _TAX_ID,
             "auth.numero_soporte": _SOPORTE,
             "auth.clave_movil_route": ClaveMovilRoute.APP_REQUEST.value,
         },
@@ -217,7 +216,7 @@ def test_rebinding_the_settings_preserves_every_other_secret() -> None:
     failure would surface only as an opaque AEAT login rejection.
     """
 
-    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
+    _register_profile(**{"auth.clave_movil_route": ClaveMovilRoute.QR.value})
     with override_settings(
         cadrumo_clave_movil_dni_nie=SecretStr(_OTHER_TAX_ID),
         cadrumo_clave_permanente_password=SecretStr("permanente-password"),
@@ -268,7 +267,7 @@ def test_clave_mode_without_any_dni_nie_refuses_naming_the_absent_credential() -
 
 def _assert_non_qr_route_refused_for_missing_contraste() -> None:
     _register_profile(
-        **{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.APP_REQUEST.value},
+        **{"auth.clave_movil_route": ClaveMovilRoute.APP_REQUEST.value},
     )
     with (
         override_settings(
@@ -308,7 +307,7 @@ def test_qr_route_is_not_refused_for_a_missing_contraste() -> None:
     proceed.
     """
 
-    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
+    _register_profile(**{"auth.clave_movil_route": ClaveMovilRoute.QR.value})
     with override_settings(
         cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
         cadrumo_clave_movil_nie_soporte=None,
@@ -329,7 +328,6 @@ def test_profile_qr_route_overrides_an_environment_app_request() -> None:
     """The encrypted profile owns the route once the operator chooses it."""
     _register_profile(
         **{
-            "auth.dni_nie": _TAX_ID,
             "auth.clave_movil_route": ClaveMovilRoute.QR.value,
         },
     )
@@ -352,7 +350,6 @@ def test_profile_app_request_route_requires_contraste_and_reaches_provider_setti
     """The non-QR choice is both validated and bound onto the live provider."""
     _register_profile(
         **{
-            "auth.dni_nie": _TAX_ID,
             "auth.numero_soporte": _SOPORTE,
             "auth.clave_movil_route": ClaveMovilRoute.APP_REQUEST.value,
         },
@@ -381,7 +378,7 @@ def test_dni_validity_date_from_settings_satisfies_the_contraste() -> None:
     """
 
     _register_profile(
-        **{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.APP_REQUEST.value},
+        **{"auth.clave_movil_route": ClaveMovilRoute.APP_REQUEST.value},
     )
     with override_settings(
         cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
@@ -411,7 +408,6 @@ def test_profile_fecha_validez_carries_a_dni_holder_through_the_non_qr_route() -
 
     _register_profile(
         **{
-            "auth.dni_nie": _TAX_ID,
             "auth.fecha_validez": _FECHA_VALIDEZ,
             "auth.clave_movil_route": ClaveMovilRoute.APP_REQUEST.value,
         },
@@ -440,7 +436,7 @@ def test_clave_permanente_resolves_its_identity_from_the_profile() -> None:
     field for it - so only the identity half is bound here.
     """
 
-    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
+    _register_profile(**{"auth.clave_movil_route": ClaveMovilRoute.QR.value})
     with override_settings(cadrumo_clave_permanente_dni_nie=None) as settings:
         bound, expected_identity = prepare_clave_auth(
             settings,
@@ -499,7 +495,7 @@ def test_every_provider_carries_an_expectation_for_the_session_check() -> None:
     missing.
     """
 
-    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
+    _register_profile(**{"auth.clave_movil_route": ClaveMovilRoute.QR.value})
     missing: list[str] = []
     for kind in AuthProviderKind:
         with override_settings(
@@ -528,17 +524,10 @@ def test_every_provider_carries_an_expectation_for_the_session_check() -> None:
         (AuthProviderKind.CLAVE_PERMANENTE, "cadrumo_clave_permanente_dni_nie"),
     ],
 )
-def test_a_stale_stored_clave_identity_neither_wins_nor_blocks(provider: AuthProviderKind, setting: str) -> None:
-    """A DNI/NIE an earlier flow stored apart from the tax identifier is not an input.
+def test_the_profile_tax_id_wins_over_a_differing_setting(provider: AuthProviderKind, setting: str) -> None:
+    """The profile's ``identity.tax_id`` is the Cl@ve identity; a setting naming another person is not read."""
 
-    The operator corrected ``identity.tax_id`` after the old setup flow wrote a
-    different value under ``auth.dni_nie``, which no surface asks for any more.
-    Were the stored copy read, every session would refuse with an identity
-    mismatch the operator has no field to repair; the tax identifier is the one
-    source, so the session proceeds as the corrected taxpayer.
-    """
-
-    _register_profile(**{"auth.dni_nie": _OTHER_TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
+    _register_profile(**{"auth.clave_movil_route": ClaveMovilRoute.QR.value})
     with override_settings(**{setting: SecretStr(_OTHER_TAX_ID)}) as settings:
         bound, expected_identity = prepare_clave_auth(
             settings,

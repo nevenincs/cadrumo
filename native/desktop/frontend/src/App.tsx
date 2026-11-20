@@ -163,6 +163,8 @@ export function App({ host }: { host: Host }) {
   } = visibility;
   const memories = usePageMemories({
     reader,
+    phase,
+    activeProfile: account.status?.active_profile ?? null,
     browserOn: visibility.browserOn,
     wantsDeclarations: navigation.wantsDeclarations,
   });
@@ -528,6 +530,7 @@ export function App({ host }: { host: Host }) {
       ledgerOn={visibility.ledgerOn}
       browserOn={visibility.browserOn}
       browserMounted={memories.browserMounted}
+      browserReader={memories.browserReader}
       profileOn={visibility.profileOn}
       aeatSyncOn={visibility.aeatSyncOn}
       calendarOn={visibility.calendarOn}

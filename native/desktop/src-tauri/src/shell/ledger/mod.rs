@@ -12,7 +12,7 @@
 //! once sent.
 mod admitted;
 
-use super::picked_files::{self, Files, Pick, Picks, Purpose};
+use super::picked_files::{self, Files, Kinds, Pick, Picks, Purpose};
 use super::relay::{self, Failure, Result, Wiped, lock, protocol};
 use super::settle::{self, Decision, Operations, Outcome, ReviewDocument, Tracked};
 use super::user_profile::ProfileHost;
@@ -304,6 +304,7 @@ async fn submit_on(
 struct Dropping {
     subscription: u32,
     purpose: Purpose,
+    kinds: Kinds,
     updates: Channel<DropSignal>,
 }
 
@@ -418,9 +419,9 @@ impl LedgerHost {
     }
     /// Tokens for what the person dropped on the page that takes drops.
     fn dropped(self: &Arc<Self>, event: &tauri::DragDropEvent) {
-        let Some((purpose, updates)) = lock(&self.dropping)
+        let Some((purpose, kinds, updates)) = lock(&self.dropping)
             .as_ref()
-            .map(|target| (target.purpose, target.updates.clone()))
+            .map(|target| (target.purpose, target.kinds.clone(), target.updates.clone()))
         else {
             return;
         };
@@ -439,7 +440,7 @@ impl LedgerHost {
                     let picks = match host.identity().await {
                         Ok(identity) => host
                             .files
-                            .issue_all(&identity, purpose, paths)
+                            .issue_kinds(&identity, purpose, &kinds, paths)
                             .unwrap_or_else(|_| Picks::none(count)),
                         Err(_) => Picks::none(count),
                     };
@@ -532,6 +533,7 @@ async fn ledger_files_pick<R: tauri::Runtime>(
     purpose: Purpose,
     pick: Pick,
     filter_label: String,
+    kinds: Option<Vec<String>>,
 ) -> Result<Picks> {
     // An export is saved, not picked, and a certificate is the profile
     // page's, with its own tokens.
@@ -540,13 +542,14 @@ async fn ledger_files_pick<R: tauri::Runtime>(
     {
         return Err(failure("invalid"));
     }
+    let kinds = Kinds::narrowed(purpose, kinds)?;
     let identity = host.identity().await?;
-    let paths = picked_files::choose(window, pick, purpose, filter_label).await?;
+    let paths = picked_files::choose_kinds(window, pick, kinds.clone(), filter_label).await?;
     // The person may have signed out while the dialog was open.
     if host.identity().await? != identity {
         return Err(failure("not_signed_in"));
     }
-    host.files.issue_all(&identity, purpose, paths)
+    host.files.issue_kinds(&identity, purpose, &kinds, paths)
 }
 /// Opens the native save dialog for an export in `format` and answers a
 /// token for where to write it. The dialog asks before replacing a file.
@@ -602,15 +605,18 @@ fn ledger_drop_observe<R: tauri::Runtime>(
     host: State<'_, Arc<LedgerHost>>,
     window: tauri::WebviewWindow<R>,
     purpose: Purpose,
+    kinds: Option<Vec<String>>,
     updates: Channel<DropSignal>,
-) -> u32 {
+) -> Result<u32> {
+    let kinds = Kinds::narrowed(purpose, kinds)?;
     let subscription = updates.id();
     if host.profile.is_closed() {
-        return subscription;
+        return Ok(subscription);
     }
     *lock(&host.dropping) = Some(Dropping {
         subscription,
         purpose,
+        kinds,
         updates,
     });
     if !host.listening.swap(true, Ordering::AcqRel) {
@@ -621,7 +627,7 @@ fn ledger_drop_observe<R: tauri::Runtime>(
             }
         });
     }
-    subscription
+    Ok(subscription)
 }
 #[tauri::command]
 fn ledger_drop_unobserve(host: State<'_, Arc<LedgerHost>>, subscription: u32) {

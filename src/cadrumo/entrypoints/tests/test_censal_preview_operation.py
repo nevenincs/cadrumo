@@ -105,10 +105,18 @@ def _assert_preview_result(preview, profile_id, observation):
     assert preview.observation == observation
     assert preview.applied is False
     assert preview.source_url == observation.source_url
+    # The observation names municipio "079 - MADRID" (not a five-digit INE code, so no
+    # municipality or province code), office "28600 - MADRID", and one open activity
+    # starting 2024-01-01 (so a start date and no end date).
     assert tuple(item.path for item in preview.adopted) == (
         "contact.fiscal_address",
         "contact.postcode",
         "contact.fiscal_address_cadastral_reference",
+        "contact.fiscal_address_municipality_name",
+        "censo.aeat_delegacion_code",
+        "censo.aeat_administracion_code",
+        "censo.aeat_administracion_name",
+        "censo.activity_start_date",
     )
     assert all(item.source == CENSO_SOURCE_TAG for item in preview.adopted)
     assert not preview.unchanged

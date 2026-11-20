@@ -17,6 +17,8 @@ const IMPORT_REFUSALS = new Set([
   "empty_directory",
   "file_limit",
   "reader_unavailable",
+  "format_not_installed",
+  "statement_account_missing",
 ]);
 
 /** Why a file was not imported, in plain words; a code the page does not
@@ -33,6 +35,47 @@ export function importRefusal(
   return IMPORT_REFUSALS.has(reason)
     ? t(`desktop.ledger.import.refusal.${reason}`)
     : t("desktop.ledger.import.refusal.other");
+}
+
+/** Why a preview could not be read at all, by the code the call failed with. */
+const PREVIEW_FAILURES: Readonly<Record<string, string>> = {
+  unavailable: "desktop.ledger.import.failure.unavailable",
+  not_signed_in: "desktop.ledger.import.failure.not_signed_in",
+  too_large: "desktop.ledger.import.failure.too_large",
+  not_admitted: "desktop.ledger.import.failure.not_admitted",
+  invalid: "desktop.ledger.import.failure.invalid",
+  file_unavailable: "desktop.ledger.import.failure.file_unavailable",
+};
+
+/** The reason a file could not be previewed, in plain words: a file refusal
+ * in its own words, a failed call by its code, and any other code by a
+ * general sentence, so the reason is never empty. */
+export function previewFailure(t: Translate, code: string): string {
+  if (IMPORT_REFUSALS.has(code)) return importRefusal(t, code);
+  return Object.hasOwn(PREVIEW_FAILURES, code)
+    ? t(PREVIEW_FAILURES[code]!)
+    : t("desktop.ledger.import.failure.other");
+}
+
+/** Why a call failed, in plain words: the file refusal the runtime named,
+ * else the code the call failed with. The sentence is never empty. */
+export function failureWords(
+  t: Translate,
+  code: string,
+  reason: string | null,
+): string {
+  return reason !== null && IMPORT_REFUSALS.has(reason)
+    ? importRefusal(t, reason)
+    : previewFailure(t, code);
+}
+
+/** Why a book was not imported: the sentence the backend served for the
+ * refusal, else its code in plain words, else a general sentence. */
+export function bookRefusalWords(
+  t: Translate,
+  refusal: { words: string | null; reason: string | null },
+): string {
+  return refusal.words ?? failureWords(t, "refused", refusal.reason);
 }
 
 const DIAGNOSTICS: Record<LedgerImportDiagnosticMessage, string> = {

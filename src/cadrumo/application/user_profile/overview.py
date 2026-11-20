@@ -46,7 +46,7 @@ from ...core.auth_provider import ClaveMovilRoute
 from ...core.classification.policies import SensitivityClass
 from ...core.i18n.render import lookup_translation, output_language, tr
 from ...core.identity.profile import ProfileId
-from ...core.json_contract import Notice
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.redaction.rules import ALWAYS_REDACT_KEY_TERMS
 from ...domain.user_profile.labels import (
@@ -60,7 +60,13 @@ from ...domain.user_profile.labels import (
 # ``ProfileSetupState`` is a pydantic FIELD type below, so it must resolve at
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
 # construction raises. The rest of the domain surface is annotation-only.
-from ...domain.user_profile.schema import ProfileFieldCodeList, ProfileFieldType, derived_selector_for_path
+from ...domain.user_profile.schema import (
+    ENTITY_TYPE_FIELD_KEY,
+    ENTITY_TYPE_SECTION_KEY,
+    ProfileFieldCodeList,
+    ProfileFieldType,
+    derived_selector_for_path,
+)
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.values import ProfileSetupState, section_field_key
 from ..wizard.models import WizardWidget
@@ -78,7 +84,7 @@ from .projections import profile_schema_for_record, record_to_path_values
 from .row_parts import ProfileFieldPart, ProfileFieldPartsSpec, field_parts
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
+    from collections.abc import Callable, Iterable, Mapping
 
     from ...domain.user_profile.schema import (
         ProfileDerivedSelectorDefinition,
@@ -433,6 +439,10 @@ class ProfileSectionView(BaseModel):
         return len(self.fields)
 
 
+_PERSON_NAME_PATHS: Final = ("identity.name", "identity.surnames")
+_LEGAL_NAME_PATH: Final = "identity.legal_name"
+
+
 class ProfileOverview(BaseModel):
     """Everything the manager's landing page renders for one profile."""
 
@@ -447,6 +457,20 @@ class ProfileOverview(BaseModel):
     missing_required: tuple[str, ...] = Field(default=())
     notices: tuple[Notice, ...] = Field(default=())
     """Typed envelope advisories that apply to this profile projection."""
+
+    @property
+    def heading_name(self) -> str:
+        """The name the profile is headed with: the taxpayer's, else the profile's own.
+
+        A person is named by given name and surnames, an entity by its legal
+        name; a profile that states neither is headed with the name it was
+        created under, and only one with no name at all is left unnamed.
+        """
+        values = {
+            field.path: field.value for section in self.sections for field in section.fields if not field.masked
+        }
+        person = " ".join(value for path in _PERSON_NAME_PATHS if (value := (values.get(path) or "").strip()))
+        return person or (values.get(_LEGAL_NAME_PATH) or "").strip() or self.label.strip()
 
     @property
     def present_count(self) -> int:
@@ -504,7 +528,7 @@ def mask_profile_field(*, path: str, label: str, sensitivity: SensitivityClass |
     overridden by wording.
 
     Args:
-        path: Dotted schema path of the field, e.g. ``auth.dni_nie``.
+        path: Dotted schema path of the field, e.g. ``auth.numero_soporte``.
         label: Operator-facing description, or the path when none exists.
             Read only when ``sensitivity`` is ``None``.
         sensitivity: Declared :class:`SensitivityClass`, or ``None`` for a
@@ -903,6 +927,52 @@ def _required_field_paths(
     return missing_required, conditionally_required
 
 
+#: The notice served while the profile does not state the taxpayer entity type.
+ENTITY_TYPE_UNSTATED_NOTICE_CODE: Final = "profile.taxpayer_type.unstated"
+
+
+def _entity_type_applicability(
+    schema: ProfileSchemaDefinition, values: Mapping[str, str]
+) -> tuple[Callable[[ProfileFieldView], bool], bool]:
+    """Decide which rows concern the stated taxpayer entity type.
+
+    Returns the predicate a row passes when it concerns that type, and whether
+    the type is stated at all. A declaration naming no entity types concerns
+    every taxpayer. While the type is unstated nothing restricted to a type is
+    offered: offering every entity's declarations to a person is how a natural
+    person was asked for a Modelo 200 board secretary. A stored value is always
+    shown, whatever it is declared for, so no fact the profile holds is hidden.
+    """
+    path = f"{ENTITY_TYPE_SECTION_KEY}.{ENTITY_TYPE_FIELD_KEY}"
+    declared = frozenset(schema.field(path).enum_values) if path in schema.field_paths else frozenset[str]()
+    stated = values.get(path, "").strip()
+    entity_type = stated if stated in declared else None
+    concerns = {
+        f"{section.key}.{field.key}": frozenset(field.entity_types or section.entity_types)
+        for section in schema.sections
+        for field in section.fields
+    }
+
+    def applies(view: ProfileFieldView) -> bool:
+        types = concerns.get(section_field_key(view.path), frozenset[str]())
+        return not types or view.present or entity_type in types
+
+    return applies, entity_type is not None
+
+
+def _entity_type_unstated_notice(schema: ProfileSchemaDefinition) -> Notice:
+    """The prompt to state the taxpayer entity type, served while it is unstated."""
+    field = schema.field(f"{ENTITY_TYPE_SECTION_KEY}.{ENTITY_TYPE_FIELD_KEY}")
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code=ENTITY_TYPE_UNSTATED_NOTICE_CODE,
+        message=tr(
+            "application.user_profile.notices.entity_type_unstated",
+            field=profile_field_label(ENTITY_TYPE_SECTION_KEY, field),
+        ),
+    )
+
+
 def build_profile_overview(
     record: UserProfileRecord,
     *,
@@ -963,33 +1033,51 @@ def build_profile_overview(
     # The same presence rule the completeness check reads, so the rows this
     # renders and the rows it reports missing fields for are one set.
     present = frozenset(path for path, value in values.items() if profile_value_is_present(value))
-    sections = [
-        ProfileSectionView(
-            key=section.key,
-            title=profile_section_title(section),
-            summary=profile_section_summary(section),
-            repeatable=section.repeatable,
-            fields=tuple(
-                view.model_copy(update={"ejercicio_answer": ejercicio_answers.get(view.path)})
-                for view in _section_field_views(
-                    section,
-                    values,
-                    present,
-                    resolved_schema,
-                    field_help,
-                    resolved_schema.derived_selectors,
-                    conditionally_required,
-                    code_lists,
-                    wizard_choices,
-                )
-            ),
+    applies, entity_type_stated = _entity_type_applicability(resolved_schema, values)
+    held_back = False
+    sections: list[ProfileSectionView] = []
+    for section in resolved_schema.sections:
+        views = _section_field_views(
+            section,
+            values,
+            present,
+            resolved_schema,
+            field_help,
+            resolved_schema.derived_selectors,
+            conditionally_required,
+            code_lists,
+            wizard_choices,
         )
-        for section in resolved_schema.sections
-    ]
+        fields = tuple(
+            view.model_copy(update={"ejercicio_answer": ejercicio_answers.get(view.path)})
+            for view in views
+            if applies(view)
+        )
+        held_back = held_back or len(fields) < len(views)
+        if not fields:
+            continue
+        sections.append(
+            ProfileSectionView(
+                key=section.key,
+                title=profile_section_title(section),
+                summary=profile_section_summary(section),
+                repeatable=section.repeatable,
+                fields=fields,
+            )
+        )
+    # A requirement of a declaration the taxpayer's type is not concerned by is
+    # no requirement of this profile, and every reader refuses a missing path
+    # that names no row the overview carries.
+    shown = {view.path for section in sections for view in section.fields}
+    missing_required = [path for path in missing_required if path in shown]
 
     from .cotejo_apply import censo_divergence_notice
 
     divergence_notice = censo_divergence_notice(record)
+    notices = (
+        *(() if divergence_notice is None else (divergence_notice,)),
+        *((_entity_type_unstated_notice(resolved_schema),) if held_back and not entity_type_stated else ()),
+    )
     return ProfileOverview(
         profile_id=record.profile_id,
         record_revision=record.record_revision,
@@ -998,11 +1086,12 @@ def build_profile_overview(
         setup_state=record.setup_state,
         sections=tuple(sections),
         missing_required=tuple(missing_required),
-        notices=() if divergence_notice is None else (divergence_notice,),
+        notices=notices,
     )
 
 
 __all__ = [
+    "ENTITY_TYPE_UNSTATED_NOTICE_CODE",
     "MASKED_PLACEHOLDER",
     "ProfileFieldChoice",
     "ProfileFieldView",

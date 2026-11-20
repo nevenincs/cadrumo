@@ -20,6 +20,7 @@ from ..navigation import (
     SurfaceImplementation,
     ViewLink,
     ViewOpened,
+    ViewRefused,
     load_navigation_register,
     parse_view_link,
     resolve_view,
@@ -107,7 +108,6 @@ def test_the_fixture_baseline_loads(tmp_path: Path) -> None:
             "must name its enclosing path 'ledger'",
             id="parent-not-enclosing",
         ),
-        pytest.param(_VALID + _element("docs", surfaces="[]"), "surfaces", id="no-surface"),
         pytest.param(_VALID + _element("docs", surfaces='["web"]'), "surfaces", id="unknown-surface"),
         pytest.param(_VALID + _element("docs", surfaces='["gui", "gui"]'), "at most once", id="repeated-surface"),
         pytest.param(
@@ -164,6 +164,16 @@ def test_a_register_breaking_a_rule_is_refused(tmp_path: Path, text: str, messag
     assert message in str(refusal.value)
 
 
+def test_an_element_with_no_surface_loads_and_no_link_to_it_opens(tmp_path: Path) -> None:
+    register = _load(tmp_path, _VALID + _element("docs", surfaces="[]"))
+    docs = register.element("docs")
+    assert docs is not None
+    assert docs.surfaces == ()
+    assert "docs" not in register.ids_for(NavigationSurface.GUI)
+    request = ViewLink(view_id="docs")
+    assert resolve_view(request, register=register) == ViewRefused(request, "not_implemented")
+
+
 def test_the_nearest_ancestor_opens_when_the_element_is_not_implemented(tmp_path: Path) -> None:
     register = _load(
         tmp_path,
@@ -191,7 +201,7 @@ def test_the_shipped_register_declares_the_initial_elements() -> None:
     register = load_navigation_register()
     gui = NavigationSurface.GUI
     assert {element.id: set(element.surfaces) for element in register.elements} == {
-        "home": {gui},
+        "home": set(),
         "ledger": {gui},
         "ledger/movements": {gui},
         "ledger/invoices": {gui},
@@ -199,12 +209,12 @@ def test_the_shipped_register_declares_the_initial_elements() -> None:
         "ledger/rules": {gui},
         "ledger/registers": {gui},
         "ledger/health": {gui},
-        "withholding": {gui},
+        "withholding": set(),
         "declarations": {gui},
         "aeat-sync": {gui},
-        "operations": {gui},
-        "installation": {gui},
-        "reference": {gui},
+        "operations": set(),
+        "installation": set(),
+        "reference": set(),
         "profile": {gui},
         "profile/aeat-access": {gui},
         "calendar": {gui},

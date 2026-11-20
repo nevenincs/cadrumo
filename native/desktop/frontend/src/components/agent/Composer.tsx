@@ -107,7 +107,10 @@ export function Composer({
   fixedWayId,
   pickerRequests,
   onPickerClosed,
+  onPickerOpened,
   onDownloadModels,
+  onRetryCatalog,
+  onSignIn,
   onRemoveAttachment,
   onRemoveAllAttachments,
   onShowAllAttachments,
@@ -136,8 +139,15 @@ export function Composer({
   pickerRequests?: number;
   /** Called when the person closes the model picker. */
   onPickerClosed?: () => void;
+  /** Called when the model picker opens, however it was asked to. */
+  onPickerOpened?: () => void;
   /** Opens the settings where a model this computer lacks is downloaded. */
   onDownloadModels?: () => void;
+  /** Reads the catalog again, for a lane held back because its models could
+   * not be read. */
+  onRetryCatalog?: () => void;
+  /** Opens the settings where a lane that is signed out is signed in. */
+  onSignIn?: () => void;
   onRemoveAttachment?: (id: string) => void;
   onRemoveAllAttachments?: () => void;
   onShowAllAttachments?: () => void;
@@ -316,7 +326,10 @@ export function Composer({
               fixedWayId={fixedWayId}
               openRequests={pickerRequests}
               onClosed={onPickerClosed}
+              onOpened={onPickerOpened}
               onDownloadModels={onDownloadModels}
+              onRetryCatalog={onRetryCatalog}
+              onSignIn={onSignIn}
             >
               {settingsButton}
             </AgentSettingsPopover>

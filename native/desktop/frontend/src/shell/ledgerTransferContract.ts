@@ -3,8 +3,12 @@
 // `node scripts/ledger-operation-contract.mjs`; `--check` fails when it is stale.
 import type { FileToken } from "./ledger";
 import type { TransactionId } from "./ledgerClassificationContract";
-import type { PreconditionVerdictSnapshot } from "./ledgerDocumentContract";
-import type { ContentDigest, PublicPeriod } from "./ledgerInvoiceContract";
+import type {
+  ContentDigest,
+  PreconditionVerdictSnapshot,
+  PublicPeriod,
+} from "./ledgerInvoiceContract";
+import type { OwnAccountHolding } from "./ledgerOwnAccountContract";
 
 /**
  * Shared severity primitive: INFO < WARNING < ERROR.
@@ -96,6 +100,17 @@ export type LedgerExportRowProjection = {
 };
 
 /**
+ * The operator's own words for the account a statement names, when the import
+ * registers it.
+ *
+ * The account number is never asked again: it is the one the statement names.
+ */
+export type LedgerImportAccountRegistration = {
+  label: string;
+  holding: OwnAccountHolding;
+};
+
+/**
  * Closed catalogue of ledger-import diagnostic categories.
  */
 export type LedgerImportDiagnosticKind =
@@ -133,7 +148,9 @@ export type LedgerImportFileRefusal = {
     | "source_changed"
     | "empty_directory"
     | "file_limit"
-    | "reader_unavailable";
+    | "reader_unavailable"
+    | "format_not_installed"
+    | "statement_account_missing";
   precondition_verdict: PreconditionVerdictSnapshot | null;
 };
 
@@ -156,6 +173,7 @@ export type LedgerImportRequest = {
   period?: PublicPeriod | null;
   own_account_id?: string | null;
   expected_source_sha256?: ContentDigest[] | null;
+  register_statement_account?: LedgerImportAccountRegistration | null;
 };
 
 /**
@@ -181,6 +199,8 @@ export type LedgerImportResultProjection = {
   diagnostics: LedgerImportDiagnosticProjection[];
   refused_files: LedgerImportFileRefusal[];
   source_digests: LedgerImportSourceDigest[];
+  statement_accounts: LedgerImportStatementAccount[];
+  registered_own_account_id: string | null;
 };
 
 /**
@@ -201,6 +221,20 @@ export type LedgerImportSourceDigest = {
 export type LedgerImportSourceProjection = {
   requested: boolean;
   sha256: ContentDigest | null;
+};
+
+/**
+ * The account one planned file's statement names, by mask only.
+ *
+ * `own_account_id` is the registered own account the statement names;
+ * `registrable` says the statement names a valid account that no registered
+ * account has. The full account number never leaves the secure request.
+ */
+export type LedgerImportStatementAccount = {
+  file_index: number;
+  masked_iban: string;
+  own_account_id: string | null;
+  registrable: boolean;
 };
 
 /**

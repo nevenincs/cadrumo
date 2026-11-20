@@ -165,6 +165,9 @@ declare global {
     __fixtureLedgerFiles?: {
       picked?: (picks: FilePicks) => Promise<FilePicks>;
       forgotten?: (tokens: FileToken[]) => void;
+      /** The extensions a dialog or a drop was asked to offer, null where
+       * the page left the host its full list. */
+      asked?: (purpose: FilePurpose, kinds: readonly string[] | null) => void;
     };
     /** Controls for what the scenario's ledger cannot get from a person. */
     __scenarioLedger?: {
@@ -283,6 +286,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     hex64(`bytes:${name}:${edits.get(name) ?? 0}`);
   const drops = new Set<(signal: LedgerDropSignal) => void>();
   let dropPurpose: Exclude<FilePurpose, "export"> = "bank_statements";
+  let dropKinds: readonly string[] | null = null;
 
   const answer = async () => {
     await options.wait();
@@ -313,11 +317,21 @@ export function ledgerFixture(options: Options): LedgerPort {
     files.set(token, { name, purpose });
     return token;
   };
-  const take = (names: string[], purpose: FilePurpose): FilePicks => {
+  /** The files of `names` the made-up computer's dialog or drop takes: of
+   * the purpose's own kinds, and of `asked` where the page narrowed them,
+   * as the host intersects the two. */
+  const take = (
+    names: string[],
+    purpose: FilePurpose,
+    asked: readonly string[] | null = null,
+  ): FilePicks => {
     const picks: FilePicks = { files: [], refused: 0 };
     for (const name of names) {
       const kind = name.split(".").pop()?.toLowerCase() ?? "";
-      if (PURPOSE_KINDS[purpose].includes(kind))
+      if (
+        PURPOSE_KINDS[purpose].includes(kind) &&
+        (asked === null || asked.includes(kind))
+      )
         picks.files.push({
           token: issue(name, purpose),
           name,
@@ -338,7 +352,7 @@ export function ledgerFixture(options: Options): LedgerPort {
   ledgers.add({
     drop(names) {
       if (drops.size === 0) return;
-      const picks = take(names, dropPurpose);
+      const picks = take(names, dropPurpose, dropKinds);
       drops.forEach((listener) => {
         listener({ kind: "over" });
         listener({ kind: "dropped", ...picks });
@@ -1169,13 +1183,15 @@ export function ledgerFixture(options: Options): LedgerPort {
       }, CANCEL_SETTLE_MS);
       return settling;
     },
-    async pickFiles(purpose, pick) {
+    async pickFiles(purpose, pick, _filterLabel, kinds = null) {
       say(`ledger pickFiles ${purpose} ${pick}`);
+      window.__fixtureLedgerFiles?.asked?.(purpose, kinds);
       await answer();
       const offered = PICKABLE[purpose];
       const picks = take(
         pick === "file" ? offered.slice(0, 1) : offered,
         purpose,
+        kinds,
       );
       return window.__fixtureLedgerFiles?.picked?.(picks) ?? picks;
     },
@@ -1205,9 +1221,11 @@ export function ledgerFixture(options: Options): LedgerPort {
         written.delete(token);
       });
     },
-    async observeDrops(purpose, listener) {
+    async observeDrops(purpose, listener, kinds = null) {
       say(`ledger observeDrops ${purpose}`);
+      window.__fixtureLedgerFiles?.asked?.(purpose, kinds);
       dropPurpose = purpose;
+      dropKinds = kinds;
       drops.add(listener);
       return () => {
         drops.delete(listener);

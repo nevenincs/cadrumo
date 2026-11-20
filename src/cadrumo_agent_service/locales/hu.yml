@@ -59,6 +59,8 @@ desktop:
     choose_another_model: Válassz másik modellt
     choose_model: Válassz modellt
     choose_provider: Válassz szolgáltatót
+    choose_provider_first: Először válassz szolgáltatót.
+    choose_to_start: Válassz szolgáltatót és modellt a kezdéshez.
     close_documents: Dokumentumok bezárása
     condition_budget_exhausted: A költségkeret elfogyott
     condition_credits_exhausted: Elfogytak a kreditek

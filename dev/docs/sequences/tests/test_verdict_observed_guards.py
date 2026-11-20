@@ -22,8 +22,9 @@ import pytest
 
 from cadrumo.tests.env_scope import scoped_env_var
 from dev.cache_root import DEV_CACHE_ROOT_ENV, dev_cache_dir
+from dev.dependency_observation.observation import CHILD_SCRIPT_NAME, Observation
 
-from ..dependency_observation import CHILD_SCRIPT_NAME, WORKER_SCRIPT_NAME, Observation
+from ..observed_journals import WORKER_SCRIPT_NAME
 from ..verdict_cache import (
     _CACHE_NAME,
     _TOOLING_ENVIRONMENT,
@@ -117,7 +118,7 @@ def test_a_covered_child_launch_leaves_the_record_observed_and_an_unread_edit_ha
 ) -> None:
     journals = tmp_path / "journals"
     observation = tree.observe(_CLI)
-    observation.adopt_journal_directory(journals)
+    observation.adopt_journal_directory(journals, (WORKER_SCRIPT_NAME, CHILD_SCRIPT_NAME))
     for script in (WORKER_SCRIPT_NAME, CHILD_SCRIPT_NAME):
         observation.audit("subprocess.Popen", (None, [sys.executable, str(journals / script)], None, None))
 

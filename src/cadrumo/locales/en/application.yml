@@ -913,6 +913,12 @@ application:
   invoices:
     bulk_import:
       errors:
+        column_role_not_accepted: The invoice book import has no field for the role
+          {role}.
+        column_role_out_of_range: The column roles name column {column}, but the invoice
+          book has {columns} columns.
+        column_role_repeated: The role {role} is assigned to more than one column
+          of the invoice book.
         country_unanswerable: 'The import file has no counterparty country column
           and no country was declared for the import. Add a country_code column, or
           declare one country for the whole file. Unmapped columns: {unmapped_columns}'
@@ -4845,6 +4851,8 @@ application:
     notices:
       censo_divergences_open: '{count} profile or certificate field(s) still diverge
         from the Certificado de Situación Censal and remain unresolved: {axes}.'
+      entity_type_unstated: Fill in “{field}” to see the sections that concern you.
+        Until then, sections that concern only one type of taxpayer are not shown.
       kdf_at_fallback: This profile's password has the minimum protection, because
         this computer could not confirm a stronger setting in time when the profile
         was created. Change the password to strengthen it; you can enter the same

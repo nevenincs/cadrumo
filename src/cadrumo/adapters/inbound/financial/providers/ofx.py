@@ -40,6 +40,7 @@ from typing import Protocol, override, runtime_checkable
 
 from .....core.decimal.grammar import DecimalSeparator
 from .....core.errors.hierarchy import CoreValidationError
+from .....core.external_constants import OFX_EXTENSIONS
 from .....core.logging import get_logger
 from .....core.optional_extras import (
     OFX_EXTRA,
@@ -61,7 +62,6 @@ from .base import (
     parse_date_value,
     synthesize_transaction_id,
 )
-from .constants import OFX_EXTENSIONS
 
 _logger = get_logger(__name__)
 _INPUT_OFX_SOURCE_LABEL = "<input-ofx>"

@@ -144,7 +144,7 @@ def clave_permanente_profile(tmp_path: Path, operation: PinnedAuthorityOperation
         tmp_path,
         operation,
         provider="clave_permanente",
-        facts=(("identity.tax_id", CERTIFICATE_NIF), ("auth.dni_nie", CERTIFICATE_NIF)),
+        facts=(("identity.tax_id", CERTIFICATE_NIF),),
     )
 
 

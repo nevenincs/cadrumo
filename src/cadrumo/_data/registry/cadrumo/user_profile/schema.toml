@@ -1,6 +1,6 @@
 [schema]
 id = "cadrumo.user_profile"
-version = 15
+version = 16
 title = "Cadrumo user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -233,7 +233,7 @@ key = "provider"
 type = "enum"
 required = false
 sensitivity = "identity"
-description = "How this taxpayer identifies to AEAT. Cl@ve Movil and Cl@ve Permanente authenticate the person directly and need their DNI/NIE; the certificate provider authenticates with an installed electronic certificate instead. The choice decides which of the fields below are required."
+description = "How this taxpayer identifies to AEAT. Cl@ve Movil and Cl@ve Permanente authenticate the person directly and sign in with the profile NIF/NIE; the certificate provider authenticates with an installed electronic certificate instead. The choice decides which of the fields below are required."
 enum_values = ["certificate", "clave_movil", "clave_permanente"]
 
 [[sections.fields]]
@@ -244,38 +244,16 @@ sensitivity = "identity"
 description = "How Cl@ve Movil should ask for confirmation: show a QR code in a visible browser, or identify with DNI/NIE plus contraste and send a request to the Cl@ve app."
 enum_values = ["qr", "app_request"]
 
-# THE THREE FIELDS BELOW SPLIT ACROSS TWO SENSITIVITY CLASSES, and the split is
-# the point rather than an oversight. dni_nie NAMES the taxpayer; the contraste
-# pair PROVES possession of their physical document. Only the second is
-# authentication material, so only the second is secret.
-#
-# dni_nie carries the same identifier as identity.tax_id, which renders in the
-# clear one section above, so masking this copy concealed nothing an operator
-# reading that screen could not already see. It confers no capability on its
-# own either: reaching a session also needs the contraste plus a Cl@ve PIN or
-# app that is never stored here. The classes themselves say so - SECRET is
-# declared for long-lived authentication material while IDENTITY names the NIF
-# explicitly - and classing this field secret would drop nif-hash, the one
-# redaction rule that hashes a NIF, from the policy resolved for it.
-#
-# The agreement between dni_nie and identity.tax_id is enforced ONCE, at the
-# entry to a live session. No validator refuses the divergent write, so a
-# profile holding two different identifiers can be created and read back; it
-# simply cannot authenticate. Anything upstream of a session reads whichever
-# field it names and will not notice the disagreement.
+# Cl@ve signs in as the taxpayer this profile describes, so the identity it is
+# given is identity.tax_id and the section stores no copy of it (schema 16
+# retired auth.dni_nie). The contraste pair below PROVES possession of the
+# taxpayer's physical document; it is authentication material, so it is secret.
 #
 # Rationale belongs in comments like this one rather than in a description.
 # No surface renders a description as a row label -- the status page
 # and the manager both read the locale catalogue -- but a description is still
 # the string the masking heuristic scans for an unclassified field, and it is
 # what a field renders when no catalogue carries its label yet.
-[[sections.fields]]
-key = "dni_nie"
-type = "string"
-required = false
-sensitivity = "identity"
-description = "DNI or NIE presented to Cl@ve. Holds the same identifier as identity.tax_id; live authentication refuses when the two diverge."
-
 [[sections.fields]]
 key = "numero_soporte"
 type = "string"
@@ -541,6 +519,7 @@ legal_refs = ["ley-35-2006:art-8", "ley-27-2014:art-7", "ley-35-2006:art-86", "l
 
 [[sections.fields]]
 key = "legal_entity_form"
+entity_types = ["legal_entity"]
 type = "enum"
 required = false
 sensitivity = "identity"
@@ -552,6 +531,7 @@ legal_refs = ["ley-27-2014:art-29", "ley-44-2015:art-1"]
 
 [[sections.fields]]
 key = "incn_prior_12_months"
+entity_types = ["legal_entity"]
 type = "decimal"
 required = false
 sensitivity = "financial"
@@ -562,6 +542,7 @@ legal_refs = ["ley-27-2014:art-40-3"]
 
 [[sections.fields]]
 key = "new_entity_first_two_profit_periods"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -572,6 +553,7 @@ legal_refs = ["ley-27-2014:art-29"]
 
 [[sections.fields]]
 key = "pago_fraccionado_art_40_3_elected"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -582,6 +564,7 @@ legal_refs = ["ley-27-2014:art-40-3"]
 
 [[sections.fields]]
 key = "fecha_constitucion"
+entity_types = ["legal_entity"]
 type = "date"
 required = false
 sensitivity = "identity"
@@ -593,6 +576,7 @@ source_refs = ["aeat-dr-036-2025", "aeat-modelo-202-instructions"]
 
 [[sections.fields]]
 key = "cierre_ejercicio_dia"
+entity_types = ["legal_entity"]
 type = "integer"
 required = false
 sensitivity = "identity"
@@ -606,6 +590,7 @@ source_refs = ["aeat-dr-036-2025", "aeat-modelo-202-instructions"]
 
 [[sections.fields]]
 key = "cierre_ejercicio_mes"
+entity_types = ["legal_entity"]
 type = "integer"
 required = false
 sensitivity = "identity"
@@ -619,6 +604,7 @@ source_refs = ["aeat-dr-036-2025", "aeat-modelo-202-instructions"]
 
 [[sections.fields]]
 key = "principal_cnae"
+entity_types = ["legal_entity"]
 type = "string"
 required = false
 sensitivity = "identity"
@@ -630,6 +616,7 @@ source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "principal_cnae_classification"
+entity_types = ["legal_entity"]
 type = "string"
 required = false
 sensitivity = "identity"
@@ -641,6 +628,7 @@ source_refs = ["aeat-dr-202-2025"]
 
 [[sections.fields]]
 key = "regimen_ley_49_2002"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -652,6 +640,7 @@ source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "regimen_socimi"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -663,6 +652,7 @@ source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "regimen_entidad_capital_riesgo"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -674,6 +664,7 @@ source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "regimen_entidades_navieras_tonelaje"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -685,6 +676,7 @@ source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "erd_tipo_gravamen_especifico"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -696,6 +688,7 @@ source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "cooperativa_fiscalmente_protegida"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -707,6 +700,7 @@ source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "marca_instrumental"
+entity_types = ["legal_entity"]
 type = "boolean"
 required = false
 sensitivity = "identity"
@@ -718,6 +712,7 @@ source_refs = ["aeat-dr-202-2025", "aeat-dr-202-2023", "aeat-dr-202-2019"]
 
 [[sections.fields]]
 key = "tributacion_estado_porcentaje"
+entity_types = ["legal_entity"]
 type = "decimal"
 required = false
 sensitivity = "financial"
@@ -796,6 +791,7 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-10"]
 
 [[sections]]
 key = "attribution_entity_socios"
+entity_types = ["attribution_entity"]
 title = "Attribution entity socios"
 sensitivity = "identity"
 effective_dated = true
@@ -1135,6 +1131,7 @@ legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-89"]
 # stored fact rules out, is the registry's rule (fact m200-page-002-profile-rules).
 [[sections]]
 key = "m200_administrador"
+entity_types = ["legal_entity"]
 title = "Modelo 200 administradores"
 sensitivity = "identity"
 effective_dated = true
@@ -1203,6 +1200,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[sections]]
 key = "m200_participacion_socio"
+entity_types = ["legal_entity"]
 title = "Modelo 200 participaciones en la declarante"
 sensitivity = "identity"
 effective_dated = true
@@ -1284,6 +1282,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[sections]]
 key = "m200_representante_legal"
+entity_types = ["legal_entity"]
 title = "Modelo 200 representantes legales"
 sensitivity = "identity"
 effective_dated = true
@@ -1331,6 +1330,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[sections]]
 key = "m200_secretario_consejo"
+entity_types = ["legal_entity"]
 title = "Modelo 200 secretario del consejo"
 sensitivity = "identity"
 effective_dated = true
@@ -1358,6 +1358,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[sections]]
 key = "m200_participacion_directa"
+entity_types = ["legal_entity"]
 title = "Modelo 200 participaciones de la declarante"
 sensitivity = "identity"
 effective_dated = true
@@ -1551,6 +1552,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[sections]]
 key = "m200_entidad_menor_dependiente"
+entity_types = ["legal_entity"]
 title = "Modelo 200 entidades menores dependientes"
 sensitivity = "identity"
 effective_dated = true
@@ -1578,6 +1580,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[sections]]
 key = "m200_establecimiento_permanente"
+entity_types = ["legal_entity"]
 title = "Modelo 200 establecimientos permanentes en el extranjero"
 sensitivity = "identity"
 effective_dated = true
@@ -1647,6 +1650,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[sections]]
 key = "m200_socio_sicav_disolucion"
+entity_types = ["legal_entity"]
 title = "Modelo 200 socio de SICAV en disolución"
 sensitivity = "identity"
 effective_dated = true
@@ -1677,6 +1681,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 # refused. A stated no is the entity's answer that it has none; a stated yes needs rows.
 [[sections]]
 key = "m200_relaciones"
+entity_types = ["legal_entity"]
 title = "Modelo 200 relaciones declaradas"
 sensitivity = "identity"
 effective_dated = true

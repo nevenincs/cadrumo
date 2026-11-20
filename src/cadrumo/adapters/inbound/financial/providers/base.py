@@ -67,6 +67,7 @@ from .....core.decimal.grammar import (
 )
 from .....core.errors.hierarchy import CadrumoError, CoreValidationError
 from .....core.hashing import sha256_hex
+from .....core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.parsing.codes import normalise_iso_4217_currency
 from .....core.tabular import coerce_cell_text
@@ -80,6 +81,9 @@ from .....domain.transactions.raw_transaction import RawProvenance, RawTransacti
 # cap rejects oversized inputs (including XLSX zip-bomb payloads) before
 # they reach openpyxl / pdfplumber / the csv reader.
 MAX_SOURCE_BYTES = 64 * 1024 * 1024
+
+#: Refusal of a source the delimited-table reader cannot read; it names no content.
+UNREADABLE_TABLE_REFUSAL = "the file is not a readable delimited table"
 
 #: Allowed values for :attr:`FinancialProvider.verification_source`.
 CorpusVerificationSource = Literal[
@@ -375,6 +379,18 @@ class FinancialProvider(ABC):
             document is ingestable and surfacing any warnings.
         """
 
+    def statement_account(self, path: Path, *, source_sha256: str) -> str | None:
+        """Return the one account the statement as a whole names, as a canonical IBAN.
+
+        The account is a fact of the file, not of a row. A format that prints
+        none, names several, or carries it per row (OFX ``ACCTID``) answers
+        ``None``. The answer is read from the bytes whose digest is
+        ``source_sha256``; a file that no longer holds those bytes answers
+        ``None`` rather than the account of other content.
+        """
+        del path, source_sha256
+        return None
+
     def _read_source_bytes(self, path: Path) -> bytes:
         """Read raw source bytes after enforcing adapter input safety guards.
 
@@ -419,6 +435,18 @@ class FinancialProvider(ABC):
             ingested_at=now(),
             provider_name=self.name,
         )
+
+
+def canonical_valid_iban(text: str) -> str | None:
+    """Return ``text`` as a canonical IBAN when it is one, else ``None``.
+
+    A printed IBAN may be grouped by spaces or hyphens; only a value that has
+    the ISO 13616 shape and passes the mod-97 check is an IBAN.
+    """
+    canonical = normalise_iban(text)
+    if IBAN_SHAPE_RE.match(canonical) is None or iban_mod_97(canonical) != 1:
+        return None
+    return canonical
 
 
 def describe_dialect(dialect: type[csv.Dialect]) -> str:

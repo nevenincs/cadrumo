@@ -3,7 +3,7 @@
 import sys
 from pathlib import Path
 
-from .dependency_observation import observe_check
+from .observed_journals import observe_check
 
 
 def _run() -> int:

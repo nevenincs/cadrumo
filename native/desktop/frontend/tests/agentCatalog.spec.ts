@@ -7,7 +7,9 @@ import {
 } from "../src/dev/fixtures/agentCatalog";
 import {
   catalogChoices,
+  catalogStillReading,
   intendedProvider,
+  laneSelection,
   offeredSelection,
   providerModelsToDownload,
   restoredSelection,
@@ -15,6 +17,11 @@ import {
   startingSelection,
 } from "../src/shell/agentCatalog";
 import type { ServedProviderLane } from "../src/shell/agentCatalogContract";
+import {
+  ACCOUNT_LIST_PAUSE_CEILING_MS,
+  ACCOUNT_LIST_PAUSE_MS,
+  accountListPause,
+} from "../src/shell/catalogReadPolicy";
 import { connectionWords } from "../src/shell/providerConnection";
 
 // How the agent column deduces its choices from cadrumo-agent's provider
@@ -560,4 +567,152 @@ test("the provider the person is on is the one kept, even where none of its ways
   expect(
     intendedProvider({ ...offered, providers: [] }, [null]),
   ).toBeUndefined();
+});
+
+/** The fixture catalog with `lane` stated as `change` says. */
+function withLane(
+  provider: string,
+  transport: string,
+  change: (lane: ServedProviderLane) => void,
+) {
+  const catalog = structuredClone(FIXTURE_CATALOG);
+  const lane = catalog.providers?.find(
+    (held) => held.provider_id === provider && held.transport === transport,
+  );
+  if (!lane) throw new Error(`The fixture catalog has no ${provider} lane.`);
+  change(lane);
+  return catalog;
+}
+
+test("a lane held back says the step the person can take, from the catalog's own reason", () => {
+  const way = (offered: typeof choices, id: string) =>
+    offered.providers.flatMap((held) => held.ways).find((one) => one.id === id);
+  // Signed out: sign in. Not configured or unreachable: nothing to do here.
+  expect(way(choices, "kimi/cli")?.heldStep).toBe("sign_in");
+  expect(way(choices, "deepseek/cli")?.heldStep).toBeUndefined();
+  expect(way(choices, "antigravity/cli")?.heldStep).toBeUndefined();
+  // A lane whose models were not read: ask again.
+  const unread = catalogChoices(
+    words,
+    withLane("qwen", "api", (lane) => {
+      lane.health.selectable = false;
+      lane.health.catalog = "unknown";
+    }),
+  );
+  expect(way(unread, "qwen/api")?.selectable).toBe(false);
+  expect(way(unread, "qwen/api")?.unavailableReason).toBe(
+    "desktop.agent.lane_no_catalog",
+  );
+  expect(way(unread, "qwen/api")?.heldStep).toBe("retry");
+  // A lane that can be chosen has none.
+  expect(way(choices, "kimi/api")?.heldStep).toBeUndefined();
+  // A declared lane is not yet observed: ask again.
+  const declared = catalogChoices(words, FIXTURE_DECLARED_CATALOG);
+  expect(
+    declared.providers.flatMap((held) => held.ways).map((one) => one.heldStep),
+  ).not.toContain(undefined);
+});
+
+test("a catalog is still being read while a lane waits on the service's reading, and not while a settled cause holds it", () => {
+  expect(catalogStillReading(FIXTURE_CATALOG)).toBe(false);
+  // The packaged model list in place of the account's.
+  expect(
+    catalogStillReading(
+      withLane("kimi", "api", (lane) => {
+        lane.catalog.model_list_source = "packaged";
+        lane.catalog.state.status = "stale";
+      }),
+    ),
+  ).toBe(true);
+  // Models not yet read.
+  expect(
+    catalogStillReading(
+      withLane("qwen", "api", (lane) => {
+        lane.health.selectable = false;
+        lane.health.catalog = "unknown";
+        lane.catalog.state.status = "unknown";
+      }),
+    ),
+  ).toBe(true);
+  // A sign-in not yet read, on a lane that is otherwise configured.
+  expect(
+    catalogStillReading(
+      withLane("qwen", "api", (lane) => {
+        lane.health.selectable = false;
+        lane.health.authentication = "unknown";
+      }),
+    ),
+  ).toBe(true);
+  // The account's own list, not observed again in time, and a launcher not
+  // yet measured.
+  expect(
+    catalogStillReading(
+      withLane("qwen", "api", (lane) => {
+        lane.health.selectable = false;
+        lane.health.catalog = "stale";
+        lane.catalog.state.status = "stale";
+        lane.health.admission = "unknown";
+      }),
+    ),
+  ).toBe(true);
+  // The same, on a lane that is not configured, signed out, unreachable or
+  // not admitted: the service has settled why it cannot be chosen.
+  for (const settled of [
+    { configured: "unavailable" },
+    { authentication: "unauthenticated" },
+    { transport: "unavailable" },
+    { admission: "not_admitted" },
+  ] as const)
+    expect(
+      catalogStillReading(
+        withLane("qwen", "api", (lane) => {
+          lane.health.selectable = false;
+          lane.health.authentication = "unknown";
+          Object.assign(lane.health, settled);
+        }),
+      ),
+    ).toBe(false);
+  // A lane that can be chosen is not being read, whatever an axis says.
+  expect(
+    catalogStillReading(
+      withLane("qwen", "api", (lane) => {
+        lane.health.authentication = "unknown";
+      }),
+    ),
+  ).toBe(false);
+});
+
+test("a choice the catalog stops offering for a while is offered again, whole, when the lane returns", () => {
+  const chosen = {
+    providerId: "qwen",
+    wayId: "qwen/api",
+    modelId: "fixture-chat",
+  };
+  expect(restoredSelection(choices, [chosen])).toEqual(chosen);
+  const away = catalogChoices(
+    words,
+    withLane("qwen", "api", (lane) => {
+      lane.health.selectable = false;
+      lane.health.catalog = "unknown";
+    }),
+  );
+  // While it is held back the start is another lane: nothing is sent on it.
+  expect(restoredSelection(away, [chosen])?.wayId).not.toBe("qwen/api");
+  // A conversation fixed to the lane is refused altogether.
+  expect(laneSelection(away, [chosen], "qwen/api")).toBeNull();
+  // The choice, held by the column, is the same once the lane returns.
+  expect(restoredSelection(choices, [chosen])).toEqual(chosen);
+  expect(laneSelection(choices, [chosen], "qwen/api")).toEqual(chosen);
+});
+
+test("the pauses before a catalog still being read is asked again double up to a ceiling", () => {
+  expect(accountListPause(0)).toBe(ACCOUNT_LIST_PAUSE_MS);
+  expect(accountListPause(1)).toBe(2 * ACCOUNT_LIST_PAUSE_MS);
+  expect(accountListPause(2)).toBe(4 * ACCOUNT_LIST_PAUSE_MS);
+  const pauses = Array.from({ length: 12 }, (_, reads) =>
+    accountListPause(reads),
+  );
+  expect(pauses).toEqual([...pauses].sort((a, b) => a - b));
+  expect(Math.max(...pauses)).toBe(ACCOUNT_LIST_PAUSE_CEILING_MS);
+  expect(accountListPause(1_000)).toBe(ACCOUNT_LIST_PAUSE_CEILING_MS);
 });

@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
+  accountListPause,
   CATALOG_BUSY_QUIET_MS,
   catalogBusyPause,
   catalogReadBusy,
@@ -32,11 +33,6 @@ import type { Translate } from "../../shell/strings";
 import type { AgentSelection } from "./types";
 import type { AgentRanWith } from "../../shell/agentSnapshotContract";
 
-/** How long the column waits before reading a catalog again that still shows
- * a packaged model list in place of the account's, and how many times. */
-const ACCOUNT_LIST_PAUSE_MS = 2_000;
-const ACCOUNT_LIST_READS = 3;
-
 /**
  * What the agent can run, which is the agent's own catalog, every lane of
  * it, and what the next message runs with. While the agent starts, the
@@ -54,6 +50,7 @@ export function useAgentCatalog({
   settingsChanges,
   opened,
   listChanges,
+  pickerOpened,
   chosen,
   ranWith,
   fixedWay,
@@ -72,6 +69,8 @@ export function useAgentCatalog({
   opened: number;
   /** Changes made to the local lists. */
   listChanges: number;
+  /** How many times the model picker was opened. */
+  pickerOpened: number;
   /** What the person chose while the conversation is shown. */
   chosen: AgentSelection | null;
   /** What the conversation shown last ran with. */
@@ -169,7 +168,7 @@ export function useAgentCatalog({
   // independently; an opening joins a read still out.
   const catalog = useAgentRead(
     readCatalog,
-    catalogAgain + settingsChanges + busyReads + opened,
+    catalogAgain + settingsChanges + busyReads + opened + pickerOpened,
   );
   // A settled setup may have downloaded a model: what the catalog says this
   // computer holds is read again.
@@ -225,24 +224,30 @@ export function useAgentCatalog({
     );
     return () => window.clearTimeout(again);
   }, [catalog, followBusy, status]);
-  // A cold read answers a lane's packaged model list as stale while the
-  // account's own is still being read; the account's list is served on a
-  // later read, so the catalog is read again, a bounded number of times.
+  // A cold read answers a lane's packaged model list as stale, or a lane's
+  // sign-in or catalog as not yet known, while the service is still reading
+  // it; the settled answer is served on a later read. So the catalog is read
+  // again, after pauses that grow to a ceiling, for as long as the served
+  // catalog says some lane is still being read. The count starts afresh for a
+  // new reader and once nothing is being read, and the pending pause is
+  // cleared when the catalog changes or the hook unmounts.
   const accountReads = useRef({ reader, count: 0 });
   if (accountReads.current.reader !== reader)
     accountReads.current = { reader, count: 0 };
   const stillReading =
     catalog.kind === "ready" && catalogStillReading(catalog.value);
   useEffect(() => {
-    if (!stillReading) return;
     const reads = accountReads.current;
-    if (reads.count >= ACCOUNT_LIST_READS) return;
+    if (!stillReading) {
+      reads.count = 0;
+      return;
+    }
     const again = window.setTimeout(() => {
       reads.count += 1;
       setCatalogAgain((count) => count + 1);
-    }, ACCOUNT_LIST_PAUSE_MS);
+    }, accountListPause(reads.count));
     return () => window.clearTimeout(again);
-  }, [stillReading, catalog]);
+  }, [stillReading, catalog, reader]);
   // What the next message runs with: what the person chose while this
   // conversation is shown, else what the conversation last ran with, else the
   // profile's last choice, each only where the catalog still offers it.

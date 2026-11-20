@@ -17,6 +17,8 @@ const TOKEN_LIMIT: usize = 4096;
 const FOLDER_LIMIT: usize = 1000;
 /// The longest filter name or suggested file name the window may word.
 const LABEL_LIMIT: usize = 128;
+/// How many kinds the window may name to narrow a purpose.
+const KINDS_LIMIT: usize = 32;
 
 /// What the person is choosing files for, and so which kinds a dialog offers.
 /// The `Modelo` purposes belong to the declarations workspace, whose door
@@ -75,9 +77,6 @@ impl Purpose {
             Self::Export | Self::ModeloExport => &[],
         }
     }
-    fn takes(self, path: &Path) -> bool {
-        extension(path).is_some_and(|found| self.extensions().contains(&found.as_str()))
-    }
     /// Whether the purpose names where a file is to be written, which only the
     /// save dialog chooses.
     fn written(self) -> bool {
@@ -91,6 +90,45 @@ impl Purpose {
             self,
             Self::BankStatements | Self::InvoiceBooks | Self::Documents
         )
+    }
+}
+
+/// The kinds a dialog offers and a drop takes: the purpose's own, or the
+/// ones of them the window named. The purpose's list stays the outer bound; a
+/// kind it does not list is never admitted.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(super) struct Kinds(Vec<&'static str>);
+impl Kinds {
+    /// Every kind of `purpose`.
+    pub(super) fn all(purpose: Purpose) -> Self {
+        Self(purpose.extensions().to_vec())
+    }
+
+    /// The kinds of `purpose` that `named` also names, compared exactly after
+    /// lowercasing; every kind where `named` is absent. A list that is too
+    /// long, holds a label that is not admitted, or leaves no kind is invalid.
+    pub(super) fn narrowed(purpose: Purpose, named: Option<Vec<String>>) -> Result<Self> {
+        let Some(named) = named else {
+            return Ok(Self::all(purpose));
+        };
+        if named.len() > KINDS_LIMIT || !named.iter().all(|kind| label_admitted(kind)) {
+            return Err(Failure::new("invalid"));
+        }
+        let named: Vec<String> = named.iter().map(|kind| kind.to_ascii_lowercase()).collect();
+        let kept: Vec<&'static str> = purpose
+            .extensions()
+            .iter()
+            .copied()
+            .filter(|kind| named.iter().any(|asked| asked == kind))
+            .collect();
+        if kept.is_empty() {
+            return Err(Failure::new("invalid"));
+        }
+        Ok(Self(kept))
+    }
+
+    fn takes(&self, path: &Path) -> bool {
+        extension(path).is_some_and(|found| self.0.contains(&found.as_str()))
     }
 }
 
@@ -161,6 +199,16 @@ pub(super) async fn choose<R: tauri::Runtime>(
     purpose: Purpose,
     filter_label: String,
 ) -> Result<Vec<PathBuf>> {
+    choose_kinds(window, pick, Kinds::all(purpose), filter_label).await
+}
+
+/// As `choose`, offering only `kinds`.
+pub(super) async fn choose_kinds<R: tauri::Runtime>(
+    window: tauri::WebviewWindow<R>,
+    pick: Pick,
+    kinds: Kinds,
+    filter_label: String,
+) -> Result<Vec<PathBuf>> {
     #[cfg(feature = "native-automation")]
     if let Some(chosen) = super::automation_picker::take(super::automation_picker::Kind::Open)? {
         if pick == Pick::Folder {
@@ -173,12 +221,12 @@ pub(super) async fn choose<R: tauri::Runtime>(
         let dialog = window.dialog().file().set_parent(&window);
         let chosen: Vec<_> = match pick {
             Pick::File => dialog
-                .add_filter(filter_label, purpose.extensions())
+                .add_filter(filter_label, &kinds.0)
                 .blocking_pick_file()
                 .into_iter()
                 .collect(),
             Pick::Files => dialog
-                .add_filter(filter_label, purpose.extensions())
+                .add_filter(filter_label, &kinds.0)
                 .blocking_pick_files()
                 .unwrap_or_default(),
             Pick::Folder => dialog.blocking_pick_folder().into_iter().collect(),
@@ -293,6 +341,17 @@ impl Files {
         purpose: Purpose,
         paths: Vec<PathBuf>,
     ) -> Result<Picks> {
+        self.issue_kinds(identity, purpose, &Kinds::all(purpose), paths)
+    }
+
+    /// As `issue_all`, taking only the files of `kinds`.
+    pub(super) fn issue_kinds(
+        &self,
+        identity: &Value,
+        purpose: Purpose,
+        kinds: &Kinds,
+        paths: Vec<PathBuf>,
+    ) -> Result<Picks> {
         let mut picks = Picks::default();
         let mut files = Vec::new();
         for path in paths {
@@ -312,7 +371,7 @@ impl Files {
             }
         }
         for path in files {
-            if purpose.takes(&path)
+            if kinds.takes(&path)
                 && path.is_absolute()
                 && path.is_file()
                 && picks.files.len() < FOLDER_LIMIT
@@ -433,6 +492,87 @@ mod tests {
                 .unwrap(),
             root.join("b.csv")
         );
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn narrowing_takes_only_the_named_kinds_and_never_widens_the_purpose() {
+        let root = scratch("narrow");
+        let files = Files::default();
+        let session = json!({"session_id":"one"});
+        let named = |kinds: &[&str]| Some(kinds.iter().map(|k| k.to_string()).collect());
+        let only_csv = Kinds::narrowed(Purpose::BankStatements, named(&["CSV"])).unwrap();
+        let picks = files
+            .issue_kinds(
+                &session,
+                Purpose::BankStatements,
+                &only_csv,
+                vec![root.clone()],
+            )
+            .unwrap();
+        let names: Vec<&str> = picks.files.iter().map(|p| p.name.as_str()).collect();
+        assert_eq!(names, ["b.csv"]);
+        assert_eq!(picks.refused, 2, "the ofx and the document are refused");
+
+        let widened =
+            Kinds::narrowed(Purpose::BankStatements, named(&["csv", "docx", "xlsm"])).unwrap();
+        assert_eq!(
+            widened,
+            Kinds(vec!["csv"]),
+            "a kind outside the list is dropped"
+        );
+        let picks = files
+            .issue_kinds(
+                &session,
+                Purpose::BankStatements,
+                &widened,
+                vec![root.join("notes.docx")],
+            )
+            .unwrap();
+        assert_eq!((picks.files.len(), picks.refused), (0, 1));
+
+        for empty in [named(&[]), named(&["docx"]), named(&["xlsm"])] {
+            assert_eq!(
+                Kinds::narrowed(Purpose::BankStatements, empty)
+                    .unwrap_err()
+                    .code,
+                "invalid"
+            );
+        }
+        let many: Vec<String> = (0..=KINDS_LIMIT).map(|_| "csv".to_owned()).collect();
+        assert_eq!(
+            Kinds::narrowed(Purpose::BankStatements, Some(many))
+                .unwrap_err()
+                .code,
+            "invalid"
+        );
+        assert_eq!(
+            Kinds::narrowed(Purpose::BankStatements, named(&["cs\nv"]))
+                .unwrap_err()
+                .code,
+            "invalid"
+        );
+        assert_eq!(
+            Kinds::narrowed(Purpose::Export, named(&["csv"]))
+                .unwrap_err()
+                .code,
+            "invalid",
+            "a purpose that is only written has no kind to narrow"
+        );
+        assert_eq!(
+            Kinds::narrowed(Purpose::BankStatements, None).unwrap(),
+            Kinds::all(Purpose::BankStatements),
+            "absent kinds are the purpose's full list"
+        );
+        let all = files
+            .issue_kinds(
+                &session,
+                Purpose::BankStatements,
+                &Kinds::all(Purpose::BankStatements),
+                vec![root.clone()],
+            )
+            .unwrap();
+        assert_eq!(all.files.len(), 2);
         std::fs::remove_dir_all(root).unwrap();
     }
 

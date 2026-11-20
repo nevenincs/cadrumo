@@ -31,7 +31,6 @@ from cadrumo.application.user_profile.censal_observation import (
 from cadrumo.application.user_profile.censal_operation import (
     CensalFieldIntent,
     CensalProfileBaseline,
-    CensalReviewedFieldIntent,
     CensalReviewedOperand,
 )
 from cadrumo.application.user_profile.cotejo_apply import apply_cotejo
@@ -43,6 +42,7 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
+from ......application.user_profile.tests.censal_intent_support import censal_field_intents
 from ......application.user_profile.tests.record_session_scope import bound_profile_record_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -93,13 +93,11 @@ def _proposal(record: object) -> CensalReviewedOperand:
             source_url=aeat_url("sede", "/censo/consulta"),
         ),
         baseline=CensalProfileBaseline.from_record(record),
-        field_intents=(
-            CensalReviewedFieldIntent(path="contact.fiscal_address", intent=CensalFieldIntent.ADOPT),
-            CensalReviewedFieldIntent(path="contact.postcode", intent=CensalFieldIntent.PRESERVE),
-            CensalReviewedFieldIntent(
-                path="contact.fiscal_address_cadastral_reference",
-                intent=CensalFieldIntent.ADOPT,
-            ),
+        field_intents=censal_field_intents(
+            {
+                "contact.fiscal_address": CensalFieldIntent.ADOPT,
+                "contact.fiscal_address_cadastral_reference": CensalFieldIntent.ADOPT,
+            }
         ),
     )
 

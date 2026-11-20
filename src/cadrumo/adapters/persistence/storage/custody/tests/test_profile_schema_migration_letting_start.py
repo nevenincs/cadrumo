@@ -28,8 +28,8 @@ _KEPT = (
 )
 
 
-def test_schema_15_is_the_written_schema_and_schema_13_still_opens() -> None:
-    assert MIGRATED_PROFILE_SCHEMA_VERSION == 15
+def test_schema_16_is_the_written_schema_and_schema_13_still_opens() -> None:
+    assert MIGRATED_PROFILE_SCHEMA_VERSION == 16
     assert _PRIOR_VERSION in SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS
 
 

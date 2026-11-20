@@ -78,8 +78,18 @@ export type SedeViewFixtureControls = {
   answers(): readonly SedeViewAnswer[];
 };
 
+/** Played into the port itself, before any view is open. */
+export type SedeViewOpenControls = {
+  /** The next `count` opens are refused `conflict`, as while the previous
+   * view still publishes its session; `Infinity` refuses every open. */
+  refuseOpens(count: number): void;
+  /** The host has not answered the open yet while this is true. */
+  holdOpens(held: boolean): void;
+};
+
 declare global {
   interface Window {
+    __scenarioSedeViewOpens?: SedeViewOpenControls;
     __scenarioSedeView?: SedeViewFixtureControls;
   }
 }
@@ -170,6 +180,16 @@ export function sedeViewFixture({
 }: SedeViewFixtureOptions): SedeViewPort {
   let issued = 0;
   let current: Open | null = null;
+  let refusals = 0;
+  let held = false;
+  window.__scenarioSedeViewOpens = {
+    holdOpens(value) {
+      held = value;
+    },
+    refuseOpens(count) {
+      refusals = count;
+    },
+  };
 
   // A page off https states only its marker, and has no address to open.
   const secure = (open: Open) =>
@@ -490,8 +510,12 @@ export function sedeViewFixture({
 
   return {
     async open(size, listener) {
-      if (current && !current.ended)
+      if (held) return new Promise<never>(() => undefined);
+      if (refusals > 0 || (current && !current.ended)) {
+        if (refusals > 0) refusals -= 1;
+        say("sedeViewOpenRefused");
         throw { code: "conflict", operation_id: null };
+      }
       say("sedeViewOpen");
       issued += 1;
       const open: Open = {
