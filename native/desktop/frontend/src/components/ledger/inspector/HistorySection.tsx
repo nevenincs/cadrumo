@@ -80,13 +80,18 @@ export function HistorySection({
             </span>
           </li>
         )}
-        {history === null || history.kind === "reading" ? (
+        {history?.kind === "reading" ? (
           <li className="text-sm text-muted-foreground">
             <span role="status">{t("desktop.ledger.loading")}</span>
           </li>
-        ) : history.kind === "failed" ? (
+        ) : history === null || history.kind === "failed" ? (
+          // Null: the movement has no id the ledger can be asked about.
           <li className="text-sm">
             <span role="alert">{t("desktop.ledger.inspector.unread")}</span>
+          </li>
+        ) : history.result.events.length === 0 ? (
+          <li className="text-sm text-muted-foreground">
+            {t("desktop.ledger.inspector.history.none")}
           </li>
         ) : (
           [...history.result.events].reverse().map((event) => {

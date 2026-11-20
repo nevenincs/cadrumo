@@ -3333,6 +3333,7 @@ desktop:
       from_value_date: la data valor
       fx_rate: Tipus {rate}
       history:
+        none: Sense historial desat
         parts: 'Parts: {count}'
         reason_withheld: No es mostra el motiu del model
         split_parts: Parts

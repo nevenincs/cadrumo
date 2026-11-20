@@ -3318,6 +3318,7 @@ desktop:
       from_value_date: az értéknap
       fx_rate: 'Árfolyam: {rate}'
       history:
+        none: Nincs mentett előzmény
         parts: 'Részek: {count}'
         reason_withheld: A modell indoklása nem látható
         split_parts: Részek
