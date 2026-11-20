@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable
-from typing import Annotated, Final, Literal
+from typing import Annotated, Final, Literal, get_args
 
 from pydantic import BaseModel, Field, StringConstraints
 
@@ -172,6 +172,12 @@ class OperationChooseReadingModelStepV1(BaseModel):
     words: _Words
 
 
+OffHostConsentRemedyKind = Literal["authorise_off_host", "switch_to_local_lane"]
+"""The ways an off-host consent refusal is put right; a step serves each at most once."""
+
+_OFF_HOST_CONSENT_REMEDY_KINDS: Final = get_args(OffHostConsentRemedyKind)
+
+
 class OperationOffHostConsentRemedyV1(BaseModel):
     """One way to put an off-host consent refusal right, and the words that offer it.
 
@@ -181,7 +187,7 @@ class OperationOffHostConsentRemedyV1(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    kind: Literal["authorise_off_host", "switch_to_local_lane"]
+    kind: OffHostConsentRemedyKind
     words: _Words
     unavailable_words: _Words
 
@@ -199,7 +205,10 @@ class OperationResolveOffHostConsentStepV1(BaseModel):
 
     kind: Literal["resolve_off_host_consent"] = "resolve_off_host_consent"
     words: _Words
-    remedies: Annotated[tuple[OperationOffHostConsentRemedyV1, ...], Field(min_length=1, max_length=2)]
+    remedies: Annotated[
+        tuple[OperationOffHostConsentRemedyV1, ...],
+        Field(min_length=1, max_length=len(_OFF_HOST_CONSENT_REMEDY_KINDS)),
+    ]
 
 
 type OperationNextStepV1 = Annotated[
