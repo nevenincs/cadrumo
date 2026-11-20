@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { label } from "../support/strings";
 import { profileStated } from "../support/profileFixture";
 import { open, band, row, save, aeatEditor } from "../support/userProfilePage";
@@ -332,6 +332,17 @@ test("the Censo review lists every proposed value beside the profile's and saves
     label("desktop.profile.censo.absent"),
   );
 
+  // Every value the read states has its own choice, from the host's proposal.
+  await expect(
+    review.locator('[data-part="choice"] [role="group"]'),
+  ).toHaveCount(10);
+  await expect(
+    office.getByRole("button", {
+      name: label("desktop.profile.censo.choice_accept"),
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(ended.locator('[data-part="choice"] button')).toHaveCount(0);
   expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(0);
   await review
     .getByRole("button", {
@@ -342,4 +353,106 @@ test("the Censo review lists every proposed value beside the profile's and saves
   await expect(review).toBeHidden();
   await expect(region).toContainText(label("desktop.profile.censo.done"));
   expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(8);
+});
+
+async function openReview(page: Page) {
+  const profile = await open(page, "censo-ready");
+  const region = band(page);
+  await region
+    .getByRole("button", {
+      name: label("desktop.profile.censo.pull"),
+      exact: true,
+    })
+    .click();
+  await region
+    .getByRole("button", {
+      name: label("desktop.profile.censo.review_count", { count: 10 }),
+    })
+    .click();
+  const review = page.getByRole("dialog", {
+    name: label("desktop.profile.censo.review_title"),
+  });
+  await expect(review).toBeVisible();
+  return { profile, region, review };
+}
+const choice = (review: Locator, path: string, which: "accept" | "reject") =>
+  review
+    .locator(`[data-censo-field="${path}"] [data-part="choice"]`)
+    .getByRole("button", {
+      name: label(
+        which === "accept"
+          ? "desktop.profile.censo.choice_accept"
+          : "desktop.profile.censo.choice_reject",
+      ),
+      exact: true,
+    });
+
+test("rejecting one proposed value saves only the accepted ones", async ({
+  page,
+}) => {
+  const { profile, region, review } = await openReview(page);
+  const path = "censo.aeat_administracion_name";
+  await choice(review, path, "reject").click();
+  await expect(choice(review, path, "reject")).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(choice(review, path, "accept")).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await expect(
+    review.locator(`[data-censo-field="${path}"] [data-part="outcome"]`),
+  ).toHaveText(label("desktop.profile.censo.preserve"));
+  // The other values keep the host's proposal.
+  await expect(
+    choice(review, "censo.activity_start_date", "accept"),
+  ).toHaveAttribute("aria-pressed", "true");
+  await review
+    .getByRole("button", {
+      name: label("desktop.profile.censo.apply"),
+      exact: true,
+    })
+    .click();
+  await expect(review).toBeHidden();
+  await expect(region).toContainText(label("desktop.profile.censo.done"));
+  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(7);
+  await expect(row(profile, path)).not.toContainText("OFICINA EJEMPLO");
+  await expect(
+    row(profile, "contact.fiscal_address_cadastral_reference"),
+  ).toContainText("1234567UF7613S0001AB");
+});
+
+test("Aceptar todo accepts every proposed value, including those the host kept", async ({
+  page,
+}) => {
+  const { profile, region, review } = await openReview(page);
+  await review
+    .getByRole("button", {
+      name: label("desktop.profile.censo.accept_all"),
+      exact: true,
+    })
+    .click();
+  await expect(
+    choice(review, "contact.fiscal_address", "accept"),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    review.locator(
+      '[data-censo-field="contact.fiscal_address"] [data-part="outcome"]',
+    ),
+  ).toHaveText(label("desktop.profile.censo.adopt"));
+  await review
+    .getByRole("button", {
+      name: label("desktop.profile.censo.apply"),
+      exact: true,
+    })
+    .click();
+  await expect(region).toContainText(label("desktop.profile.censo.done"));
+  // All ten values the read states, the two the host kept among them.
+  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(
+    10,
+  );
+  await expect(row(profile, "contact.fiscal_address")).toContainText(
+    "Calle Nueva 1",
+  );
 });

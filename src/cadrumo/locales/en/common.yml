@@ -4846,12 +4846,15 @@ desktop:
     cancel: Cancel
     censo:
       absent: AEAT did not supply this value. No change.
+      accept_all: Accept all
       adopt: Use the AEAT value when you save.
       apply: Save reviewed changes
       band: AEAT Censo
       blocked: 'Needed before you can sync:'
       cancel: Stop synchronization
       checking: Checking what synchronization needs…
+      choice_accept: Accept
+      choice_reject: Reject
       conflict: The review has changed. Refresh the sync and review it again.
       device: Approve the sign-in request in your Cl@ve app.
       done: Synchronization complete. Review any remaining gaps in your profile.
