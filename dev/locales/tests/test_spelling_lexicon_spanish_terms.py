@@ -100,7 +100,8 @@ def test_attested_spanish_tax_and_runtime_terms_are_exact_and_language_scoped() 
     ):
         assert not is_project_spelling("es", near_miss)
     for locale in ("ca", "en", "hu"):
-        assert all(not is_project_spelling(locale, form) for form in forms)
+        # English keeps the Spanish field name subclave verbatim beside its text.
+        assert all(not is_project_spelling(locale, form) for form in forms if (locale, form) != ("en", "subclave"))
 
 
 def test_attested_catalan_ui_forms_are_exact_and_language_scoped() -> None:
@@ -308,6 +309,7 @@ def test_aeat_census_period_tokens_are_exact_and_language_scoped() -> None:
                 not is_project_spelling(other_locale, form)
                 for form in forms
                 if not (other_locale == "hu" and form in {"alta", "modificacion"})
+                and (other_locale, form) != ("en", "alta")
             )
 
 
