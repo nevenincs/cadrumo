@@ -482,3 +482,27 @@ test("a pasted link to a movement opens the Ledger on that row", async ({
   await expect(shown).toHaveAttribute("aria-selected", "true");
   await expect(shown.locator(":focus")).toHaveCount(1);
 });
+
+test("a declarations search that fails says why instead of reading as no matches", async ({
+  page: target,
+}) => {
+  await target.goto("/scenarios.html?scenario=ledger&latency=0&bar=off");
+  // The fixture port names itself when the declarations are first read.
+  await target.locator("[data-rail=declarations]").click();
+  await target.waitForFunction(() => Boolean(window.__fixtureModelo));
+  await target.locator("[data-rail=ledger]").click();
+  await target.evaluate(() => {
+    window.__fixtureModelo!.search = () =>
+      Promise.reject({ code: "host_unavailable" });
+  });
+  await search(target, "130");
+  await expect(
+    palette(target)
+      .getByRole("alert")
+      .filter({
+        hasText: label("desktop.palette.declarations_failed", {
+          code: "host_unavailable",
+        }),
+      }),
+  ).toBeVisible();
+});

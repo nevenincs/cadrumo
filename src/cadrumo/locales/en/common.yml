@@ -1066,6 +1066,8 @@ desktop:
       browser_title: Browser not installed
       browser_why: Needed to update from AEAT.
       cancel: Cancel
+      cancel_failed: Couldn't cancel the sign-in ({code}). Try again, or close this
+        window.
       checking: Checking…
       ended_body: Your AEAT sign-in ended.
       ended_sign_in: Sign in again
@@ -2834,6 +2836,8 @@ desktop:
       too_short: Select two or more rows first, then fill down
     filters:
       account: Account
+      accounts_unread: Your accounts couldn't be read ({code}), so there are none
+        to choose from. Try again.
       active: '{count} active'
       any: Any
       classification: Classification
@@ -3905,6 +3909,7 @@ desktop:
       next: Next period
       of_year: Periods of {year}
       previous: Previous period
+      unread: The periods couldn't be read ({code}), so none are listed. Try again.
       year_next: Next year
       year_previous: Previous year
       years_supported: Years you can read
@@ -4799,6 +4804,8 @@ desktop:
     actions: Actions
     close: Close search
     copy_link: Copy the link to this view
+    declarations_failed: Your declarations couldn't be searched ({code}). The other
+      results are shown. Type again to retry.
     documentation: Documentation
     hide_view: Hide {view}
     keywords:
@@ -10522,6 +10529,8 @@ workspace:
       saved: Saved as {name}. It is not proof of filing.
       show_filed_file: Show the filed file
       show_in_folder: Show in folder
+      show_in_folder_failed: The file was saved, but it couldn't be shown in its folder
+        ({code}). Open the folder yourself to find it.
       title: Export and record
     filter:
       all: all boxes

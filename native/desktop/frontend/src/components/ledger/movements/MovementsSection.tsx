@@ -43,7 +43,7 @@ import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import {
   servedDraftCurrency,
   useLedgerMembership,
-  useOwnAccounts,
+  useOwnAccountsRead,
   useSearchElsewhere,
 } from "../../../shell/ledgerMovementReads";
 import {
@@ -297,7 +297,11 @@ export function MovementsSection({
     shownColumns(columnLayout(view.columns)).includes("account") ||
     groupBy === "account" ||
     stage.content.drafts.length > 0;
-  const accounts = useOwnAccounts(
+  const {
+    accounts,
+    failure: accountsFailure,
+    retry: retryAccounts,
+  } = useOwnAccountsRead(
     port,
     reader,
     wantAccounts || filters.account !== null || accountsShown,
@@ -1069,6 +1073,8 @@ export function MovementsSection({
           }
           accounts={accounts}
           onWantAccounts={() => setWantAccounts(true)}
+          accountsFailure={accountsFailure}
+          onRetryAccounts={retryAccounts}
           groupLabels={groupLabels}
           reasons={sets.reasons.map((entry) => entry.reason)}
           status={status}

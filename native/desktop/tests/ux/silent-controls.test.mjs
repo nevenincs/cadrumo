@@ -33,11 +33,19 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { after, before, test } from "node:test";
 import { queuePickerSelection } from "../automation/session.mjs";
-import { exec, label, sleep, start, teardown, win } from "./ux-driver.mjs";
+import {
+  exec,
+  label,
+  sleep,
+  start,
+  teardown,
+  waitFor,
+  win,
+} from "./ux-driver.mjs";
 import { dismissSetup, pickerAnswerPending } from "./ux-nav.mjs";
 
 const BOUND_MS = Number(process.env.CADRUMO_SILENT_BOUND_MS ?? 4000);
-const IDLE_MS = 900;
+const IDLE_MS = 2000;
 const ONLY = (process.env.CADRUMO_SILENT_ONLY ?? "")
   .split(",")
   .map((part) => part.trim())
@@ -54,7 +62,13 @@ before(async () => {
     process.env.CADRUMO_UX_RUN ??
     join(mkdtempSync(join(tmpdir(), "cadrumo-e2e-silent-")), "run");
   await start(runDir);
-  await dismissSetup();
+  // The first-run setup dialog arrives a while after sign-in; one that came
+  // during the first press would be counted as that press's effect.
+  await waitFor(() => dismissSetup(), {
+    timeout: 20_000,
+    what: "the first-run setup dialog",
+    soft: true,
+  });
 });
 after(async () => {
   writeReport();
@@ -66,7 +80,7 @@ after(async () => {
 // ---------------------------------------------------------------------------
 
 /** The shown, enabled controls outside the rail, one per distinct name. */
-function pageControls() {
+function pageControls(scopeSel) {
   const norm = (t) => (t ?? "").replace(/\s+/g, " ").trim();
   const shown = (el) => {
     if (!el.getClientRects().length) return false;
@@ -106,9 +120,13 @@ function pageControls() {
   };
   const seen = new Set();
   const out = [];
-  const nodes = document.querySelectorAll(
-    'button, a[href], [role="button"], [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="tab"], [role="link"], [role="option"], summary',
-  );
+  const selector =
+    'button, a[href], [role="button"], [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="tab"], [role="link"], [role="option"], summary';
+  const nodes = scopeSel
+    ? [...document.querySelectorAll(scopeSel)]
+        .filter((root) => root.getClientRects().length > 0)
+        .flatMap((root) => [...root.querySelectorAll(selector)])
+    : document.querySelectorAll(selector);
   for (const el of nodes) {
     if (el.closest("[data-rail], .rail, [data-silent-ignore]")) continue;
     if (!shown(el) || disabled(el)) continue;
@@ -214,6 +232,25 @@ function pageArm(key) {
     const role = el.getAttribute?.("role");
     return `${el.tagName.toLowerCase()}${role ? `[role=${role}]` : ""}${el.getAttribute?.("data-slot") ? `[${el.getAttribute("data-slot")}]` : ""}`;
   };
+  // Where a change happens, by the element and its labelled ancestors, so a
+  // place that changed while the page was idle (a clock, a status tick) is
+  // known as noise for every later press, even after it was redrawn.
+  const place = (node) => {
+    const parts = [];
+    let el = node.nodeType === 1 ? node : node.parentElement;
+    for (let depth = 0; el && el !== document.body && depth < 6; depth += 1) {
+      const name =
+        el.getAttribute("aria-label") ||
+        el.getAttribute("data-slot") ||
+        el.getAttribute("role") ||
+        (typeof el.className === "string" ? el.className.split(" ")[0] : "");
+      parts.push(`${el.tagName.toLowerCase()}${name ? `(${name})` : ""}`);
+      el = el.parentElement;
+    }
+    return parts.join("<");
+  };
+  window.__silentNoise ??= new Set();
+  const noise = window.__silentNoise;
   const observer = new MutationObserver((records) => {
     for (const record of records) {
       if (ignored(record.target)) continue;
@@ -233,9 +270,11 @@ function pageArm(key) {
       }
       if (state.phase === "idle") {
         state.noisy.add(record.target);
+        noise.add(place(record.target));
         continue;
       }
-      if (state.noisy.has(record.target)) continue;
+      if (state.noisy.has(record.target) || noise.has(place(record.target)))
+        continue;
       const added = [...(record.addedNodes ?? [])].filter((n) => !ignored(n));
       if (
         record.type === "childList" &&
@@ -467,11 +506,25 @@ async function press(view, control) {
     effect: "",
     silent: false,
   };
-  if (kind?.kind === "external" || kind?.kind === "session") {
+  if (["external", "session", "window"].includes(kind?.kind)) {
     row.effect = `not pressed: ${kind.reason}`;
     return row;
   }
   await goTo(view);
+  if (control.via) {
+    // An item of a menu or list another control opens: open it first.
+    if (await exec(pageArm, control.via)) {
+      try {
+        await (await win.browser.$("[data-silent-target]")).click();
+      } catch {
+        await exec(() =>
+          document.querySelector("[data-silent-target]")?.click(),
+        );
+      }
+      await exec(pageDisarm);
+      await sleep(800);
+    }
+  }
   if (!(await exec(pageArm, control.key))) {
     row.effect = "not found again after returning to the view";
     return row;
@@ -529,6 +582,9 @@ async function press(view, control) {
     }
   }
   await exec(pageDisarm);
+  // A menu or list the press opened holds controls of its own.
+  if (!control.via && !row.silent)
+    row.opened = await exec(pageControls, '[role="menu"], [role="listbox"]');
   await settle(view);
   return row;
 }
@@ -576,7 +632,8 @@ test(
     for (const view of await views()) {
       await goTo(view);
       const controls = await exec(pageControls);
-      for (const control of controls) {
+      for (let i = 0; i < controls.length; i += 1) {
+        const control = controls[i];
         // A control shared by several views (a header button) is pressed once.
         const once = `${view.rail.id}|${control.key}`;
         if (pressed.has(once) || pressed.has(`*|${control.key}`)) continue;
@@ -585,7 +642,14 @@ test(
           pressed.add(`*|${control.key}`);
         // Choosing the tab already shown changes nothing, by design.
         if (control.role === "tab" && control.selected) continue;
-        rows.push(await press(view, control));
+        const row = await press(view, control);
+        for (const item of row.opened ?? [])
+          if (
+            !controls.some((c) => c.key === item.key && c.via === control.key)
+          )
+            controls.push({ ...item, via: control.key });
+        delete row.opened;
+        rows.push(row);
       }
     }
     const silent = rows.filter((r) => r.silent);

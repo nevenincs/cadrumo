@@ -15,6 +15,8 @@
 // Usage:
 //   node native/desktop/tests/ux/run-silent-controls.mjs --build <CMake binary dir>
 //     [--config Release] [--persona <id>] [--report <file.md>] [--only <rail>[,...]]
+//     [--staged-package <app dir an earlier stage of --build mirrored>
+//      --strings-build <this checkout's CMake binary dir holding its chrome strings>]
 //
 // Exit 0 when no control was silent, 1 when the audit failed, 3 when a
 // prerequisite (the automation host, the world) is absent.
@@ -70,6 +72,8 @@ const { values: args } = parseArgs({
     persona: { type: "string", default: "autonomo-electricista" },
     report: { type: "string" },
     only: { type: "string", default: "" },
+    "staged-package": { type: "string" },
+    "strings-build": { type: "string" },
   },
 });
 
@@ -118,18 +122,29 @@ function fail(code, message) {
 
 if (!args.build) fail(3, "--build names no CMake binary directory");
 const build = resolve(args.build);
-const staged = spawnSync(
-  python,
-  [
-    "-m",
-    "dev.desktop_automation_stage",
-    "--build",
-    build,
-    "--config",
-    args.config,
-  ],
-  { cwd: repository, env: pythonEnv, encoding: "utf8" },
-);
+// A build owned by another checkout is staged by that checkout's own
+// dev.desktop_automation_stage (it admits only its own build tree); its
+// package mirror is then named here.
+const staged = args["staged-package"]
+  ? {
+      status: 0,
+      stdout: JSON.stringify({
+        package: resolve(args["staged-package"]),
+        executable: join(resolve(args["staged-package"]), "cadrumo.exe"),
+      }),
+    }
+  : spawnSync(
+      python,
+      [
+        "-m",
+        "dev.desktop_automation_stage",
+        "--build",
+        build,
+        "--config",
+        args.config,
+      ],
+      { cwd: repository, env: pythonEnv, encoding: "utf8" },
+    );
 if (staged.status !== 0)
   fail(
     3,
@@ -191,7 +206,9 @@ try {
         ...process.env,
         CADRUMO_PERSONA_WORLD: worldPath,
         CADRUMO_PERSONA_HOST: staged.stdout.trim(),
-        CADRUMO_CMAKE_BINARY_DIR: build,
+        // The window's chrome strings are read from an enrolled build of this
+        // checkout; with --staged-package that is --strings-build.
+        CADRUMO_CMAKE_BINARY_DIR: resolve(args["strings-build"] ?? build),
         CADRUMO_BUILD_CONFIG: args.config,
         CADRUMO_UX_RUN: join(root, "run"),
         CADRUMO_SILENT_REPORT: report,

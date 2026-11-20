@@ -489,6 +489,8 @@ declare global {
     __fixtureModelo?: ModeloPort;
     /** While true the filing-state read fails as an unavailable application. */
     __filingStateFails?: boolean;
+    /** While set, showing a saved file in its folder refuses with this code. */
+    __revealFileRefuses?: "file_unavailable" | "unavailable";
   }
 }
 
@@ -1445,6 +1447,8 @@ export function modeloFixture(options: Options): ModeloPort {
     async revealFile(token) {
       say("modelo revealFile");
       await answer();
+      if (typeof window !== "undefined" && window.__revealFileRefuses)
+        reject(window.__revealFileRefuses);
       const file = files.get(token);
       if (!file) reject("file_unavailable");
       if (file?.picked) reject("invalid");

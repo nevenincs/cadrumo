@@ -21,7 +21,11 @@ export type AeatSyncPrepareMode =
 declare global {
   interface Window {
     /** Approves the sign-in that waits on the phone, as the person would. */
-    __scenarioAeatPhone?: { approve(): void };
+    __scenarioAeatPhone?: {
+      approve(): void;
+      /** Makes the next cancel of the sign-in fail with `code`. */
+      failNextCancel(code: string): void;
+    };
   }
 }
 
@@ -34,6 +38,7 @@ export function aeatSyncPrepareFixture(
   options: { browserReady?: () => boolean; waitMs?: number } = {},
 ): AeatSyncPreparePort {
   let cancel: (() => void) | null = null;
+  let cancelRefusal: string | null = null;
   return {
     prepare: (): Promise<AeatSyncPrepared> => {
       const installed =
@@ -59,6 +64,9 @@ export function aeatSyncPrepareFixture(
             clearTimeout(timer);
             resolve();
           },
+          failNextCancel: (code: string) => {
+            cancelRefusal = code;
+          },
         };
         if (typeof window !== "undefined") window.__scenarioAeatPhone = phone;
         cancel = () => {
@@ -67,6 +75,11 @@ export function aeatSyncPrepareFixture(
         };
       }),
     cancelSignIn: () => {
+      if (cancelRefusal !== null) {
+        const code = cancelRefusal;
+        cancelRefusal = null;
+        return Promise.reject({ code });
+      }
       cancel?.();
       cancel = null;
       return Promise.resolve();
