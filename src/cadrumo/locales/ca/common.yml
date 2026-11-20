@@ -3015,14 +3015,25 @@ desktop:
       apply_files: Importa exactament aquests fitxers ({count})
       applying: S'està important {done} de {total}
       back: Enrere
+      book_column: Columna de l'arxiu
+      book_columns: Columnes del llibre
       book_created: 'Factures creades: {count}'
       book_kind: Factures del llibre
-      book_no_preview: Els llibres de factures no tenen previsualització
-      book_no_preview_note: Les files es comproven en crear-se. Les no acceptades
-        es llisten després amb el número de fila i el motiu; la resta es conserva.
-        {kind}; país {country}.
+      book_missing: Falten columnes que la importació necessita
+      book_missing_note: 'Tria una columna per a: {roles}. El llibre no es pot importar
+        fins que cadascun tingui la seva columna.'
       book_note: 'Files: {rows} · ja al catàleg: {skipped} · no acceptades: {refused}'
+      book_preview_note: 'S''importarà com a: {kind}; país {country}. Les files es
+        comproven en crear-se: les no acceptades es llisten després amb el número
+        de fila i el motiu, i la resta es conserva. Un significat pertany a una sola
+        columna: si el dónes a una altra, la primera el perd.'
+      book_reader_note: Només s'han reconegut les columnes el nom de les quals coneix
+        la importació. Pots assignar les altres a mà.
+      book_reader_unavailable: La IA local no ha pogut proposar les columnes
       book_refused: El llibre no s'ha importat
+      book_role: Significat
+      book_rows: 'Files llegides: {rows}'
+      book_source: Decidit per
       bound_note: La importació fa servir exactament aquests fitxers. Si un canvia
         després d'aquesta previsualització, no s'accepta.
       cancel: Cancel·la
@@ -3154,6 +3165,24 @@ desktop:
         transaction_validation: No s'ha pogut llegir com a extracte bancari.
       refused_rows: Files no acceptades
       remove: Treu {name}
+      role:
+        counterparty_name: Nom de l'altra part
+        counterparty_nif: NIF de l'altra part
+        country_code: País
+        currency: Moneda
+        invoice_date: Data de la factura
+        invoice_number: Número de factura
+        iva_rate: Tipus d'IVA
+        notes: Notes
+        retencion_amount: Import de la retenció
+        retencion_rate: Tipus de retenció
+        taxable_base: Base imposable
+        unmapped: Sense usar
+      role_source:
+        exact: Reconeguda
+        model: Proposada per la IA local
+        operator: Triada per tu
+        unmapped: Sense assignar
       row: Fila
       show_documents: Revisa a Documents
       show_failed: No s'han pogut llegir els moviments importats. Torna-ho a provar.

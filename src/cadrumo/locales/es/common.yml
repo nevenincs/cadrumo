@@ -3019,14 +3019,25 @@ desktop:
       apply_files: Importar exactamente estos archivos ({count})
       applying: Importando {done} de {total}
       back: Atrás
+      book_column: Columna del archivo
+      book_columns: Columnas del libro
       book_created: 'Facturas creadas: {count}'
       book_kind: Facturas del libro
-      book_no_preview: Los libros de facturas no tienen vista previa
-      book_no_preview_note: Las filas se comprueban al crearse. Las no aceptadas se
-        listan después con su número de fila y motivo; el resto se conserva. {kind};
-        país {country}.
+      book_missing: Faltan columnas que la importación necesita
+      book_missing_note: 'Elige una columna para: {roles}. El libro no se puede importar
+        hasta que cada uno tenga su columna.'
       book_note: 'Filas: {rows} · ya en el catálogo: {skipped} · no aceptadas: {refused}'
+      book_preview_note: 'Se importará como: {kind}; país {country}. Las filas se
+        comprueban al crearse: las no aceptadas se listan después con su número de
+        fila y motivo, y el resto se conserva. Un significado pertenece a una sola
+        columna: si se lo das a otra, la primera lo pierde.'
+      book_reader_note: Solo se han reconocido las columnas cuyo nombre conoce la
+        importación. Puedes asignar las demás a mano.
+      book_reader_unavailable: La IA local no ha podido proponer las columnas
       book_refused: El libro no se ha importado
+      book_role: Significado
+      book_rows: 'Filas leídas: {rows}'
+      book_source: Decidido por
       bound_note: La importación usa exactamente estos archivos. Si uno cambia tras
         esta vista previa, no se acepta.
       cancel: Cancelar
@@ -3158,6 +3169,24 @@ desktop:
         transaction_validation: No se ha podido leer como extracto bancario.
       refused_rows: Filas no aceptadas
       remove: Quitar {name}
+      role:
+        counterparty_name: Nombre de la otra parte
+        counterparty_nif: NIF de la otra parte
+        country_code: País
+        currency: Moneda
+        invoice_date: Fecha de la factura
+        invoice_number: Número de factura
+        iva_rate: Tipo de IVA
+        notes: Notas
+        retencion_amount: Importe de la retención
+        retencion_rate: Tipo de retención
+        taxable_base: Base imponible
+        unmapped: Sin usar
+      role_source:
+        exact: Reconocida
+        model: Propuesta por la IA local
+        operator: Elegida por ti
+        unmapped: Sin asignar
       row: Fila
       show_documents: Revisar en Documentos
       show_failed: No se han podido leer los movimientos importados. Vuelve a intentarlo.

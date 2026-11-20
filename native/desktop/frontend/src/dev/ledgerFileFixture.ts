@@ -129,6 +129,81 @@ export const BOOK_REFUSALS: Record<
   ],
 };
 
+/** The meanings a made-up invoice book's column can be given, as the import
+ * serves them: the importer field each feeds and whether the book must
+ * supply it. */
+export const BOOK_ROLES = [
+  { role: "counterparty_nif", field: "counterparty_nif", required: true },
+  { role: "counterparty_name", field: "counterparty_name", required: true },
+  { role: "invoice_number", field: "invoice_number", required: true },
+  { role: "invoice_date", field: "invoice_date", required: true },
+  { role: "taxable_base", field: "taxable_base", required: true },
+  { role: "iva_rate", field: "iva_rate", required: true },
+  { role: "retencion_amount", field: "retencion_amount", required: false },
+  { role: "retencion_rate", field: "retencion_rate", required: false },
+  { role: "currency", field: "currency", required: false },
+  { role: "country_code", field: "country_code", required: false },
+  { role: "notes", field: "notes", required: false },
+] as const;
+
+/** One column of a made-up invoice book: its header, and the role and
+ * origin the preview reads for it before anyone changes it. */
+type BookColumnRead = {
+  header: string;
+  role: string;
+  source: "exact" | "model" | "unmapped";
+};
+
+/** What each made-up invoice book holds. The received book's headers match
+ * nothing and the local AI cannot be asked, so nothing is read for it; the
+ * issued book names its columns as the import does but one, which the local
+ * AI places; the empty book has no invoice rows. */
+export const BOOKS: Record<
+  string,
+  { rows: number; columns: BookColumnRead[]; readerUnavailable: boolean }
+> = {
+  "libro-facturas-recibidas-2026.xlsx": {
+    rows: 6,
+    readerUnavailable: true,
+    columns: [
+      "Nº registro",
+      "Fecha asiento",
+      "Proveedor",
+      "CIF proveedor",
+      "Base",
+      "Tipo",
+      "Observaciones",
+    ].map((header) => ({ header, role: "unmapped", source: "unmapped" })),
+  },
+  "libro-facturas-emitidas-2026.csv": {
+    rows: 6,
+    readerUnavailable: false,
+    columns: [
+      ...[
+        "invoice_number",
+        "invoice_date",
+        "counterparty_name",
+        "counterparty_nif",
+        "taxable_base",
+        "iva_rate",
+      ].map((header) => ({ header, role: header, source: "exact" as const })),
+      { header: "Observaciones", role: "notes", source: "model" as const },
+    ],
+  },
+  "libro-facturas-vacio-2026.csv": {
+    rows: 0,
+    readerUnavailable: false,
+    columns: [
+      "invoice_number",
+      "invoice_date",
+      "counterparty_name",
+      "counterparty_nif",
+      "taxable_base",
+      "iva_rate",
+    ].map((header) => ({ header, role: header, source: "exact" as const })),
+  },
+};
+
 /** A blank imported movement the import fills in. */
 export function fixtureTemplate(): LedgerTransactionProjection {
   return {

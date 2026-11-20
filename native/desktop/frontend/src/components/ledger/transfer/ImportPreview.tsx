@@ -23,7 +23,6 @@ import {
   accountFact,
   type AccountKey,
   type BankFilePreview,
-  type ImportKind,
   type OwnAccount,
 } from "./importModel";
 import { diagnosticText, importRefusal, previewFailure } from "./transferWords";
@@ -318,23 +317,17 @@ export function ImportBankPreview({
   );
 }
 
-/** An invoice book's or documents' preview, which reads nothing before the
- * import: the files and what they will be imported as. */
+/** The documents' preview, which reads nothing before the import: the files
+ * and what they will be added as. */
 export function ImportPlainPreview({
   t,
   locale,
-  kind,
   files,
-  bookKind,
-  country,
   direction,
 }: {
   t: Translate;
   locale: string;
-  kind: ImportKind;
   files: PickedFile[];
-  bookKind: InvoiceKind | null;
-  country: string;
   direction: InvoiceKind | null;
 }) {
   return (
@@ -353,23 +346,11 @@ export function ImportPlainPreview({
           </FileRow>
         ))}
       </ul>
-      {kind === "book" ? (
-        <Alert tone="warning" icon={<Icon name="alert" />}>
-          <AlertTitle>{t("desktop.ledger.import.book_no_preview")}</AlertTitle>
-          <AlertDescription>
-            {t("desktop.ledger.import.book_no_preview_note", {
-              kind: t(`desktop.ledger.import.kind_${bookKind}`),
-              country: country || t("desktop.ledger.import.country_none"),
-            })}
-          </AlertDescription>
-        </Alert>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          {t("desktop.ledger.import.documents_note", {
-            kind: t(`desktop.ledger.import.kind_${direction}`),
-          })}
-        </p>
-      )}
+      <p className="text-sm text-muted-foreground">
+        {t("desktop.ledger.import.documents_note", {
+          kind: t(`desktop.ledger.import.kind_${direction}`),
+        })}
+      </p>
     </>
   );
 }

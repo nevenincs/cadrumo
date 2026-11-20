@@ -7,6 +7,7 @@ from collections.abc import Callable
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
@@ -17,6 +18,7 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
+from ....core.field_role import FieldRole
 from ....core.hashing import sha256_hex
 from ....core.model_roles import ModelRole
 from ....core.operations import (
@@ -30,6 +32,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.iva.schema import InvoiceKind
+from ....tests.inventory import FIXTURES_DIR
 from ...ledger.column_roles import ColumnRoleReaderUnavailable
 from ...ledger.import_ports import LedgerImportReaderUnavailableError
 from ...operations import profile_guard
@@ -46,9 +49,11 @@ from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import catalogue_intake_contracts as intake_contracts
 from .. import catalogue_intake_operation as intake_operation
-from ..catalogue_creation_ports import CatalogueInvoiceAuditCommitPort
+from ..bulk_import_columns import BULK_IMPORT_FIELD_BY_ROLE
+from ..catalogue_creation_ports import CatalogueCreationPorts, CatalogueInvoiceAuditCommitPort
 from ..catalogue_intake_executor import InvoiceIntakeExecutor
 from ..catalogue_intake_operation_ports import (
+    InvoiceIntakeColumnMapper,
     InvoiceIntakeCommit,
     InvoiceIntakeCommitConflictError,
     InvoiceIntakePorts,
@@ -647,3 +652,277 @@ def test_correct_digest_header_only_source_keeps_zero_rows_and_no_write(
     assert operands.value.projection.rows == 0 and operands.value.projection.created == 0
     assert events.effects[-1] is OperationEffect.NONE and OperationEffect.UNKNOWN not in events.effects
     assert len(creation.invoice_repository.load()) == 0
+
+
+_RECIBIDAS = FIXTURES_DIR / "financial" / "tabular-dialects" / "libro_facturas_recibidas_2025_2026.csv"
+_RECIBIDAS_ROLES = tuple(
+    intake_contracts.InvoiceBookColumnRole(column_index=index, role=role)
+    for index, role in (
+        (0, FieldRole.INVOICE_DATE),
+        (1, FieldRole.INVOICE_NUMBER),
+        (2, FieldRole.COUNTERPARTY_NAME),
+        (3, FieldRole.COUNTERPARTY_NIF),
+        (4, FieldRole.UNMAPPED),
+        (5, FieldRole.TAXABLE_BASE),
+        (6, FieldRole.IVA_RATE),
+        (7, FieldRole.UNMAPPED),
+        (8, FieldRole.UNMAPPED),
+        (9, FieldRole.NOTES),
+    )
+)
+_IMPORT = intake_contracts.INVOICE_IMPORT_OPERATION_DEFINITION_ID
+
+
+def _book_request(
+    path: Path,
+    *,
+    roles: tuple[intake_contracts.InvoiceBookColumnRole, ...] | None = None,
+    preview: bool = False,
+    sha256: str | None = None,
+) -> OperationRequest[BaseModel]:
+    return _wire(
+        intake_contracts.InvoiceImportRequest(
+            profile_id=_PROFILE,
+            kind=InvoiceKind.RECEIVED,
+            source_path=str(path),
+            source_sha256=sha256,
+            country="ES",
+            column_roles=roles,
+            preview=preview,
+        ),
+        _IMPORT,
+    )
+
+
+def _run_book_import(
+    request: OperationRequest[BaseModel],
+    authority_operation: PinnedAuthorityOperation,
+    *,
+    mapper: InvoiceIntakeColumnMapper,
+    creation: CatalogueCreationPorts | None = None,
+    reached_storage: list[str] | None = None,
+):
+    """Run the real executor over ``request``; returns the context, events, operands and fence."""
+    context, events, operands, fence = _context(request, authority_operation)
+    ports_for_writes = creation if creation is not None else in_memory_catalogue_creation_ports()
+
+    def factory(
+        *,
+        profile_id: UUID,
+        operation: PinnedAuthorityOperation,
+        commit: InvoiceIntakeCommit,
+        admit_provider: InvoiceIntakeProviderAdmission,
+    ) -> InvoiceIntakePorts:
+        def creation_ports():
+            if reached_storage is not None:
+                reached_storage.append("creation")
+            return replace(
+                ports_for_writes, audit_commit=_PreparedFakeCommit(ports_for_writes.audit_commit, commit, fence)
+            )
+
+        return InvoiceIntakePorts(profile_id, operation, creation_ports, mapper, lambda: ())
+
+    asyncio.run(InvoiceIntakeExecutor(factory).execute(request, context))
+    return context, events, operands
+
+
+def _book_projection(operands: _Operands) -> intake_contracts.InvoiceImportProjection:
+    assert isinstance(operands.value, intake_contracts.InvoiceIntakeExecutionResult)
+    assert isinstance(operands.value.projection, intake_contracts.InvoiceImportProjection)
+    return operands.value.projection
+
+
+def test_preview_with_the_reader_unavailable_reports_every_column_unmapped_and_writes_nothing(
+    authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    verdict = model_not_installed_verdict(ModelRole.COLUMN_ROLE_MAPPING)
+    reached: list[str] = []
+    creation = in_memory_catalogue_creation_ports()
+
+    context, events, operands = _run_book_import(
+        _book_request(_RECIBIDAS, preview=True),
+        authority_operation,
+        mapper=lambda _headers: ColumnRoleReaderUnavailable(precondition_verdict=verdict),
+        creation=creation,
+        reached_storage=reached,
+    )
+
+    projection = _book_projection(operands)
+    assert projection.preview and projection.source_sha256 == sha256_hex(_RECIBIDAS.read_bytes())
+    assert [column.header for column in projection.columns] == [
+        "FECHA", "NUM_FACTURA", "PROVEEDOR", "NIF", "CATEGORIA", "BASE", "TIPO_IVA", "CUOTA_IVA", "TOTAL", "OBSERVACIONES",
+    ]  # fmt: skip
+    assert all(column.role is FieldRole.UNMAPPED and column.source == "unmapped" for column in projection.columns)
+    assert projection.missing_fields == (
+        "counterparty_name",
+        "counterparty_nif",
+        "invoice_date",
+        "invoice_number",
+        "taxable_base",
+    )
+    assert projection.row_count == 10 and projection.rows == 0 and projection.created == 0
+    assert projection.reader_unavailable_verdict is not None
+    assert projection.reader_unavailable_verdict.failed_condition_id == verdict.failed_condition_id
+    required = {item.field for item in projection.assignable_roles if item.required}
+    assert required == set(projection.missing_fields)
+    assert {item.role for item in projection.assignable_roles} == set(BULK_IMPORT_FIELD_BY_ROLE)
+    # Nothing was written and the storage capability was never even composed.
+    assert (
+        reached == [] and len(creation.invoice_repository.load()) == 0 and not creation.event_repository.load().events
+    )
+    assert events.effects and all(effect is OperationEffect.NONE for effect in events.effects)
+    receipt = OperationTerminalReceipt(
+        identity=context.identity,
+        revision=1,
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.NONE,
+        settled_at=datetime.now(UTC),
+        result_ref="d" * 64,
+    )
+    assert project_invoice_intake_result(operands.value, receipt) == projection
+
+
+def test_preview_with_canonical_headers_never_asks_the_model(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    path = tmp_path / "canonical.csv"
+    path.write_bytes(
+        b"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,extra\n"
+        b"B00000281,Supplier,BOOK-1,2026-05-01,100.00,x\n"
+    )
+
+    def must_not_ask(_headers):
+        pytest.fail("a book written in the product's own names reached the mapping lane")
+
+    _, _, operands = _run_book_import(_book_request(path, preview=True), authority_operation, mapper=must_not_ask)
+
+    projection = _book_projection(operands)
+    assert projection.missing_fields == () and projection.reader_unavailable_verdict is None
+    assert [column.source for column in projection.columns] == ["exact"] * 5 + ["unmapped"]
+    assert projection.unmapped_column_headers == ("extra",) and projection.row_count == 1
+
+
+def test_apply_with_operator_roles_imports_the_recibidas_book_and_refuses_only_the_row_it_cannot_ground(
+    authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    creation = in_memory_catalogue_creation_ports()
+
+    def must_not_ask(_headers):
+        pytest.fail("the operator's roles supplied every required field")
+
+    _, events, operands = _run_book_import(
+        _book_request(_RECIBIDAS, roles=_RECIBIDAS_ROLES),
+        authority_operation,
+        mapper=must_not_ask,
+        creation=creation,
+    )
+
+    projection = _book_projection(operands)
+    assert not projection.preview and projection.rows == 10 and projection.created == 8
+    assert projection.unmapped_column_headers == ("CATEGORIA", "CUOTA_IVA", "TOTAL")
+    # The two refusals are the rows whose own NIF the importer cannot ground; the printed total is never read.
+    assert [(row.row_number, row.field) for row in projection.refused] == [(10, "invoice"), (11, "invoice")]
+    assert "must be exactly 9 characters" in projection.refused[0].reason
+    assert "CIF checksum mismatch" in projection.refused[1].reason
+    invoices = {invoice.invoice_number: invoice for invoice in creation.invoice_repository.load().invoices.values()}
+    assert len(invoices) == 8 and "SIN-NUMERO" not in invoices and "INV-2026-77120" not in invoices
+    first = invoices["IBL-2025-88170342"]
+    # Comma decimals were read under the book's own convention, and the cuota is derived, not copied.
+    assert (first.base_total, first.iva_total, first.grand_total) == (
+        Decimal("360.55"),
+        Decimal("75.72"),
+        Decimal("436.27"),
+    )
+    assert first.notes == "Deducible 100%"
+    assert events.effects[-1] is OperationEffect.PARTIAL
+
+
+def test_changed_bytes_between_preview_and_apply_are_refused_before_any_write(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    path = tmp_path / "book.tsv"
+    path.write_bytes(_RECIBIDAS.read_bytes())
+    _, _, operands = _run_book_import(
+        _book_request(path, roles=_RECIBIDAS_ROLES, preview=True), authority_operation, mapper=lambda _headers: None
+    )
+    previewed = _book_projection(operands).source_sha256
+    path.write_bytes(path.read_bytes().replace(b"360,55", b"999,99"))
+    creation = in_memory_catalogue_creation_ports()
+    request = _book_request(path, roles=_RECIBIDAS_ROLES, sha256=previewed)
+
+    with pytest.raises(InvoiceValidationError, match="differs from its submitted digest"):
+        _run_book_import(request, authority_operation, mapper=lambda _headers: None, creation=creation)
+    assert len(creation.invoice_repository.load()) == 0
+    # The unchanged bytes still apply under the same digest.
+    path.write_bytes(_RECIBIDAS.read_bytes())
+    _, _, operands = _run_book_import(request, authority_operation, mapper=lambda _headers: None, creation=creation)
+    assert _book_projection(operands).source_sha256 == previewed
+
+
+def test_a_stated_column_beyond_the_file_is_refused_before_any_write(
+    authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    creation = in_memory_catalogue_creation_ports()
+    roles = (intake_contracts.InvoiceBookColumnRole(column_index=40, role=FieldRole.NOTES),)
+
+    with pytest.raises(InvoiceValidationError, match="column 40 is not in the file"):
+        _run_book_import(
+            _book_request(_RECIBIDAS, roles=roles), authority_operation, mapper=lambda _h: None, creation=creation
+        )
+    assert len(creation.invoice_repository.load()) == 0
+
+
+@pytest.mark.parametrize(
+    "roles",
+    [
+        [
+            {"column_index": 0, "role": FieldRole.NOTES},
+            {"column_index": 1, "role": FieldRole.NOTES},
+        ],
+        [
+            {"column_index": 0, "role": FieldRole.NOTES},
+            {"column_index": 0, "role": FieldRole.INVOICE_DATE},
+        ],
+        [{"column_index": 0, "role": FieldRole.GRAND_TOTAL}],
+        [{"column_index": -1, "role": FieldRole.NOTES}],
+    ],
+    ids=["role-twice", "column-twice", "role-the-importer-lacks", "negative-column"],
+)
+def test_the_request_refuses_role_assignments_the_importer_cannot_honour(
+    tmp_path: Path, roles: list[dict[str, object]]
+) -> None:
+    with pytest.raises(ValueError):
+        intake_contracts.InvoiceImportRequest.model_validate(
+            {
+                "profile_id": _PROFILE,
+                "kind": InvoiceKind.RECEIVED,
+                "source_path": str(tmp_path / "book.csv"),
+                "column_roles": roles,
+            }
+        )
+
+
+def test_a_preview_asks_for_read_access_only_and_an_import_still_asks_for_commit(
+    authority_operation: PinnedAuthorityOperation, tmp_path: Path
+) -> None:
+    definition = intake_operation.build_invoice_import_definition(lambda **_kwargs: pytest.fail("unused"))
+    registration = intake_operation.build_invoice_intake_registration(definition)
+    registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+    context = OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=uuid4(),
+        action=AccessAction.SUBMIT,
+        frontend=OperationFrontendProjection.CLI,
+        contract=registration.contract,
+        published_authority=Availability.AVAILABLE,
+        authority_operation=authority_operation,
+    )
+    for preview in (True, False):
+        request = _book_request(tmp_path / "book.csv", preview=preview)
+        access = resolve_operation_access(registry=registry, request=request, context=context)
+        assert (AccessAction.COMMIT in access.policy.actions) is not preview

@@ -57,6 +57,27 @@ export function previewFailure(t: Translate, code: string): string {
     : t("desktop.ledger.import.failure.other");
 }
 
+/** Why a call failed, in plain words: the file refusal the runtime named,
+ * else the code the call failed with. The sentence is never empty. */
+export function failureWords(
+  t: Translate,
+  code: string,
+  reason: string | null,
+): string {
+  return reason !== null && IMPORT_REFUSALS.has(reason)
+    ? importRefusal(t, reason)
+    : previewFailure(t, code);
+}
+
+/** Why a book was not imported: the sentence the backend served for the
+ * refusal, else its code in plain words, else a general sentence. */
+export function bookRefusalWords(
+  t: Translate,
+  refusal: { words: string | null; reason: string | null },
+): string {
+  return refusal.words ?? failureWords(t, "refused", refusal.reason);
+}
+
 const DIAGNOSTICS: Record<LedgerImportDiagnosticMessage, string> = {
   "transactions.import.message_185962": "no_rows",
   "transactions.import.all_rows_already_in_ledger": "all_already_in_ledger",
