@@ -93,7 +93,7 @@ def test_the_aeat_setup_handoff_link_opens_on_the_window() -> None:
     assert _opens_on_the_window(auth_setup_handoff(AuthSyncReadiness()).url)
 
 
-@pytest.mark.parametrize("view_id", ["operations", "installation", "reference"])
+@pytest.mark.parametrize("view_id", ["operations", "installation"])
 def test_the_gate_detects_a_link_to_an_element_no_surface_implements(view_id: str) -> None:
     link = f"cadrumo://view/{view_id}"
     assert not _opens_on_the_window(link)

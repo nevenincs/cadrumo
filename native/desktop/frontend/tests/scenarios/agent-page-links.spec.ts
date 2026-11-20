@@ -213,6 +213,7 @@ const PAGE_ROOT: Record<WindowPage, string> = {
   calendar: ".calendar-page",
   ledger: ".ledger-page",
   withholding: ".withholding-page",
+  reference: ".reference-page",
   declarations: ".declarations-page",
   docs: ".docs-frame",
   browser: "[data-browser-surface]",

@@ -533,6 +533,12 @@ export interface HostCommands {
     args: Authorized<{ language: string }>;
     result: import("../shell/homeContract").HomeServed;
   };
+  /** Reference: the bundled corpus searched for `query`, at most `limit`
+   * passages, its words in `language`. The host keeps nothing of the query. */
+  profile_views_reference: {
+    args: Authorized<{ query: string; limit: number; language: string }>;
+    result: import("../shell/referenceContract").ReferenceServed;
+  };
   /** Submits one admitted ledger operation with its request, without the
    * profile, and follows it until it settles or waits on the person. A
    * failure rejects with `LedgerFailure`. */

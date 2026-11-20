@@ -280,12 +280,10 @@ for (const width of [1280, 1440])
     );
   });
 
-test("History reads the movement's recorded events even where the window draws nothing, never an endless reading line", async ({
-  page: target,
-}) => {
-  // A window the system does not draw (behind another, or read by an
-  // assistive technology without scrolling) reports no intersections.
-  await target.addInitScript(() => {
+/** A window the system does not draw (behind another, or read by an
+ * assistive technology without scrolling) reports no intersections. */
+const drawsNothing = (target: Page) =>
+  target.addInitScript(() => {
     window.IntersectionObserver = class {
       observe() {}
       unobserve() {}
@@ -295,6 +293,11 @@ test("History reads the movement's recorded events even where the window draws n
       }
     } as unknown as typeof IntersectionObserver;
   });
+
+test("History reads the movement's recorded events even where the window draws nothing, never an endless reading line", async ({
+  page: target,
+}) => {
+  await drawsNothing(target);
   await target.setViewportSize({ width: 1440, height: 900 });
   await openLedger(target);
   await inspect(target, "PAPELERIA TRAZO");
@@ -318,6 +321,35 @@ test("History reads the movement's recorded events even where the window draws n
       ),
     }),
   ).toHaveCount(1);
+});
+
+test("Documents and Invoice read the profile's records even where the window draws nothing", async ({
+  page: target,
+}) => {
+  await drawsNothing(target);
+  await target.setViewportSize({ width: 1440, height: 900 });
+  await openLedger(target);
+  await inspect(target, "PAPELERIA TRAZO");
+  await jumpTo(
+    target,
+    "invoice",
+    label("desktop.ledger.inspector.section.invoice"),
+  );
+  const invoice = body(target).locator("[data-section-body=invoice]");
+  await expect(invoice).not.toContainText(label("desktop.ledger.loading"));
+  await jumpTo(
+    target,
+    "documents",
+    label("desktop.ledger.inspector.section.documents"),
+  );
+  const attach = body(target).getByRole("button", {
+    name: label("desktop.ledger.inspector.documents.attach_existing"),
+  });
+  await attach.click();
+  await expect(target.getByRole("option").first()).toBeVisible();
+  await expect(target.getByRole("listbox")).not.toContainText(
+    label("desktop.ledger.inspector.documents.no_free"),
+  );
 });
 
 test("jumping to a section scrolls to it and focuses its heading", async ({

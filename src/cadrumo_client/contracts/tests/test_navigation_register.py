@@ -214,7 +214,7 @@ def test_the_shipped_register_declares_the_initial_elements() -> None:
         "aeat-sync": {gui},
         "operations": set(),
         "installation": set(),
-        "reference": set(),
+        "reference": {gui},
         "profile": {gui},
         "profile/aeat-access": {gui},
         "calendar": {gui},
