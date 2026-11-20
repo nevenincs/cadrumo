@@ -45,6 +45,9 @@ export type CensoPort = {
     operation: string,
     reviewDigest: string | null,
     decision: CensoDecision,
+    /** With `apply`: the paths the operator accepted, one by one. Absent, the
+     * host saves the values its review proposes to adopt. */
+    accepted?: string[],
   ): Promise<CensoSnapshot>;
 };
 
@@ -256,7 +259,7 @@ export function useCensoSync(
     if (finished) settled.current();
   }, [finished, operation]);
 
-  const run = async (decision?: CensoDecision) => {
+  const run = async (decision?: CensoDecision, accepted?: string[]) => {
     if (!port || id === null || busy || recovering || (uncertain && !snapshot))
       return;
     setBusy(true);
@@ -269,6 +272,7 @@ export function useCensoSync(
               snapshot.operation,
               snapshot.review_digest,
               decision,
+              accepted,
             )
           : await port.start(id);
       keep(port, id, value);
@@ -318,7 +322,8 @@ export function useCensoSync(
     error: actionError ?? (readinessError ? "unavailable" : null),
     uncertain,
     start: () => run(),
-    answer: (decision: CensoDecision) => run(decision),
+    answer: (decision: CensoDecision, accepted?: string[]) =>
+      run(decision, accepted),
     /** Puts a finished pull away, back to what the next one needs. */
     dismiss: () => {
       if (!finished) return;

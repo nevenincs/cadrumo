@@ -45,14 +45,14 @@ import {
   type HomeShape,
 } from "./fixtures/home";
 import { referenceFixture } from "./fixtures/reference";
-import {
-  fixtureAgent,
-  type FixtureAsks,
-  type FixtureDocuments,
-  type FixtureEngineChoices,
-  type FixtureLocalModels,
-  type FixtureStream,
-} from "./agentFixtureHost";
+import { fixtureAgent } from "./agentFixtureHost";
+import type {
+  FixtureAsks,
+  FixtureDocuments,
+  FixtureEngineChoices,
+  FixtureLocalModels,
+  FixtureStream,
+} from "./agentFixtureOptions";
 import type {
   FixtureCatalog,
   FixtureEngineHealth,

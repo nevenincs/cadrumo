@@ -19,10 +19,12 @@ const field = (target: Page, key: string) =>
     .getByLabel(label(`desktop.ledger.invoices.field.${key}`), { exact: true })
     .and(editor(target).locator("input, select, textarea"));
 
-/** The ledger fails its next `count` reads of the entry vocabularies, before
- * the page that reads them is opened. The page's reads of one year's periods
- * of the same operation are not among them: they ask for a year. */
-const failVocabulary = (target: Page, count: number) =>
+/** The ledger does not answer the request that serves the entry
+ * vocabularies, before the page that reads them is opened. The same bare
+ * request also serves the years a typed year takes, and either reader may ask
+ * first, so every read of it fails. The page's reads of one year's periods of
+ * the same operation are not among them: they ask for a year. */
+const failVocabulary = (target: Page) =>
   target.evaluate(
     ([definition, times]) =>
       (
@@ -38,12 +40,12 @@ const failVocabulary = (target: Page, count: number) =>
       ).__scenarioLedger.nextReads(definition as string, times as number, {
         periods: {},
       }),
-    ["ledger.entry-options", count] as const,
+    ["ledger.entry-options", Number.MAX_SAFE_INTEGER] as const,
   );
 
-async function openInvoices(target: Page, failing = 0) {
+async function openInvoices(target: Page, failing = false) {
   await target.goto("/scenarios.html?scenario=ledger&latency=0&bar=off");
-  if (failing > 0) await failVocabulary(target, failing);
+  if (failing) await failVocabulary(target);
   await target.locator("[data-rail=ledger]").click();
   await target
     .getByRole("tab", { name: label("desktop.ledger.section.invoices") })
@@ -72,7 +74,7 @@ test("the invoice editor offers the classes and IVA categories the ledger served
 test("the class filter says the list is not available when it could not be read", async ({
   page: target,
 }) => {
-  await openInvoices(target, 1);
+  await openInvoices(target, true);
   const filter = section(target).locator(".ledger-invoices-class");
   await expect(filter.locator("option[disabled]")).toHaveText(
     label("desktop.ledger.unavailable"),
@@ -84,7 +86,7 @@ test("the class filter says the list is not available when it could not be read"
 test("a stored class stays on offer as itself while the list is not available", async ({
   page: target,
 }) => {
-  await openInvoices(target, 1);
+  await openInvoices(target, true);
   await target.locator(".pane-docs .pane-head .ledger-add").click();
   await expect(editor(target)).toBeVisible();
   const classes = field(target, "invoice_class");

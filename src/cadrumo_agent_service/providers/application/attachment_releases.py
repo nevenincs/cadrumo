@@ -65,6 +65,8 @@ class AttachmentRefusal(OutputSchema):
 
     kind: Literal["refused"] = "refused"
     code: DisclosureRefusalCode | AttachmentAdminRefusalCode
+    name: str | None = None
+    """The attachment's display name when the refused read was resolved to one, else ``None``."""
 
 
 class AttachmentNotRequired(OutputSchema):
@@ -246,8 +248,8 @@ class DisclosureStore(Protocol):
         ...
 
 
-def _refused(code: DisclosureRefusalCode) -> AttachmentRefusal:
-    return AttachmentRefusal(code=code)
+def _refused(code: DisclosureRefusalCode, read: PendingRead | None = None) -> AttachmentRefusal:
+    return AttachmentRefusal(code=code, name=None if read is None else read.name)
 
 
 def _covers(grant: DisclosureGrant, read: PendingRead, document: StoredDocument) -> bool:
@@ -311,10 +313,10 @@ class AttachmentReleases:
             return AttachmentNotRequired()
         barred = self._eligibility()
         if barred is not None:
-            return _refused(barred)
+            return _refused(barred, read)
         stored = self._store.read_grants()
         if stored is None:
-            return _refused(DisclosureRefusalCode.NOT_SIGNED_IN)
+            return _refused(DisclosureRefusalCode.NOT_SIGNED_IN, read)
         held = (*self._current_session_grants(session), *stored.grants)
         return AttachmentCard(
             name=read.name,
@@ -340,16 +342,16 @@ class AttachmentReleases:
             return AttachmentNotRequired()
         barred = self._eligibility()
         if barred is not None:
-            return _refused(barred)
+            return _refused(barred, read)
         stored = self._store.read_grants()
         if stored is None:
-            return _refused(DisclosureRefusalCode.NOT_SIGNED_IN)
+            return _refused(DisclosureRefusalCode.NOT_SIGNED_IN, read)
         held = (*self._current_session_grants(session), *stored.grants)
         covered = any(_covers(grant, read, document) for grant in held)
         if scope is None and not covered:
-            return _refused(DisclosureRefusalCode.ACKNOWLEDGEMENT_MISSING)
+            return _refused(DisclosureRefusalCode.ACKNOWLEDGEMENT_MISSING, read)
         if not self._keep(read, document, scope, stored, covered=covered):
-            return _refused(DisclosureRefusalCode.SERVICE_FAILED)
+            return _refused(DisclosureRefusalCode.SERVICE_FAILED, read)
         return self._record_and_release(read, document, scope)
 
     def _keep(
@@ -395,12 +397,12 @@ class AttachmentReleases:
             )
         )
         if not recorded:
-            return _refused(DisclosureRefusalCode.SERVICE_FAILED)
+            return _refused(DisclosureRefusalCode.SERVICE_FAILED, read)
         answer = self._gateway.release(read, document.sha256, seconds=RELEASE_SECONDS)
         if answer is GatewayAnswer.CHANGED:
-            return _refused(DisclosureRefusalCode.FILE_CHANGED_DURING_READ)
+            return _refused(DisclosureRefusalCode.FILE_CHANGED_DURING_READ, read)
         if answer is GatewayAnswer.UNAVAILABLE:
-            return _refused(DisclosureRefusalCode.SERVICE_FAILED)
+            return _refused(DisclosureRefusalCode.SERVICE_FAILED, read)
         self._released_to.setdefault(f"{read.lane}\x1f{read.model}", set()).add(read.conversation_id)
         return AttachmentReleased()
 

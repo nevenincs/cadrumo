@@ -3338,6 +3338,7 @@ desktop:
       from_value_date: la fecha valor
       fx_rate: Tipo {rate}
       history:
+        none: Sin historial guardado
         parts: 'Partes: {count}'
         reason_withheld: No se muestra el motivo del modelo
         split_parts: Partes
@@ -4982,12 +4983,15 @@ desktop:
     cancel: Cancelar
     censo:
       absent: La AEAT no ha proporcionado este dato. Sin cambios.
+      accept_all: Aceptar todo
       adopt: Usar el dato de la AEAT al guardar.
       apply: Guardar cambios revisados
       band: Censo de la AEAT
       blocked: 'Necesario antes de sincronizar:'
       cancel: Detener sincronización
       checking: Comprobando qué necesita la sincronización…
+      choice_accept: Aceptar
+      choice_reject: Rechazar
       conflict: La revisión ha cambiado. Actualiza la sincronización y vuelve a revisarla.
       device: Aprueba la solicitud de acceso en tu aplicación Cl@ve.
       done: Sincronización completada. Revisa los datos que aún faltan en tu perfil.

@@ -107,7 +107,9 @@ function useSeen(
 /**
  * The inspector of one movement: its stored state in the header, the
  * actions behind ⋯, and one scroll of sections with a jump index that
- * follows the reading. A section's reads are made when it first comes
+ * follows the reading. The movement's own reads, its history among them,
+ * are made with the inspector, whether or not the window draws them; the
+ * documents and invoices lists are read when their section first comes
  * into view. Every change it makes is staged into the page's changes; the
  * header and the counts show what is stored.
  */
@@ -181,7 +183,6 @@ export function MovementInspector({
   // ---- Reads -----------------------------------------------------------------
   const [documentsRef, documentsSeen] = useSeen(scroll, key);
   const [invoiceRef, invoiceSeen] = useSeen(scroll, key);
-  const [historyRef, historySeen] = useSeen(scroll, key);
   const prefix = isTransactionPrefix(id) ? { transaction_prefix: id } : null;
   const track = useLedgerRead(port, "ledger.track", prefix, key, true);
   const view = useLedgerRead(port, "ledger.view", prefix, key, true);
@@ -190,7 +191,7 @@ export function MovementInspector({
     "ledger.history.typed",
     prefix ? { ...prefix, include_split_siblings: true } : null,
     key,
-    historySeen,
+    true,
   );
   const evidence = useLedgerRead(
     port,
@@ -574,7 +575,6 @@ export function MovementInspector({
             locale={locale}
             onShow={onShow}
           />,
-          historyRef,
         )}
       </div>
     </div>

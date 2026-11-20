@@ -3319,6 +3319,7 @@ desktop:
       from_value_date: az értéknap
       fx_rate: 'Árfolyam: {rate}'
       history:
+        none: Nincs mentett előzmény
         parts: 'Részek: {count}'
         reason_withheld: A modell indoklása nem látható
         split_parts: Részek
@@ -4955,12 +4956,15 @@ desktop:
     cancel: Mégse
     censo:
       absent: Az AEAT nem adott meg értéket. Nincs változás.
+      accept_all: Mindet elfogadom
       adopt: Mentéskor az AEAT értékének használata.
       apply: Ellenőrzött módosítások mentése
       band: AEAT Censo
       blocked: 'A szinkronizáláshoz szükséges:'
       cancel: Szinkronizálás leállítása
       checking: A szinkronizálás feltételeinek ellenőrzése…
+      choice_accept: Elfogadás
+      choice_reject: Elutasítás
       conflict: Az ellenőrzés megváltozott. Frissítsd a szinkronizálást, és ellenőrizd
         újra.
       device: Hagyd jóvá a bejelentkezést a Cl@ve alkalmazásban.
