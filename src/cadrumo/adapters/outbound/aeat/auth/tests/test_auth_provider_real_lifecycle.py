@@ -18,11 +18,13 @@ from ......application.auth.session_types import (
     ClaveMovilSessionDetail,
 )
 from ......application.auth_credentials import unnamed_certificate_credentials
+from ......application.live.errors import LiveIvaAcquisitionFailureMode
 from ......core.async_cleanup import AsyncResourceCleanupError
 from ......core.auth_provider import AuthProviderKind
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import Settings
 from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
+from ......core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ......core.errors.hierarchy import AeatLoginAssertionError, AuthError
 from .....persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -32,7 +34,11 @@ from .. import session_store as session_store
 from ..authenticator import AEAT_SESSION_IDLE_TTL
 from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_movil_metadata import ClaveMovilSessionMetadata
-from ..clave_movil_support import ClaveMovilApprovalTimeoutError, ClaveMovilFailureMode
+from ..clave_movil_support import (
+    ClaveMovilApprovalNotReceivedError,
+    ClaveMovilApprovalTimeoutError,
+    ClaveMovilFailureMode,
+)
 from ..clave_permanente_metadata import ClavePermanenteSessionMetadata
 from ..clave_permanente_support import ClavePermanenteFailureMode
 from ..provider_selection import select_provider
@@ -269,6 +275,41 @@ async def test_clave_movil_public_authenticate_refuses_real_pending_petition_pag
     assert raised.value.failure_mode == ClaveMovilFailureMode.PENDING_PETITION_BLOCKED.value
     assert raised.value.context is not None
     assert raised.value.context["diagnostic_id"]
+    registered = get_registered_error_code(raised.value)
+    assert registered.category is ErrorCategory.AUTH
+
+
+@pytest.mark.asyncio
+async def test_clave_movil_public_authenticate_refuses_when_phone_approval_never_arrives(tmp_path: Path) -> None:
+    """An approval window that elapses on AEAT's waiting page is an operator refusal, not a fault."""
+    bucket_id = "1f6b0000-0000-4000-8000-00000000a090"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
+        async with opened_http_boundary() as boundary:
+            boundary.configure("clave-movil-approval-never-arrives")
+            settings = auth_provider_real_lifecycle_settings(tmp_path, AuthProviderKind.CLAVE_MOVIL).model_copy(
+                update={"cadrumo_clave_movil_timeout_ms": 1_000}
+            )
+            provider = select_provider(
+                AuthProviderKind.CLAVE_MOVIL,
+                settings=settings,
+                browser_session_factory=real_browser_factory(
+                    boundary=boundary,
+                    profile_name="clave-movil-approval-never-arrives",
+                ),
+            )
+            try:
+                with pytest.raises(ClaveMovilApprovalTimeoutError) as raised:
+                    await provider.authenticate()
+            finally:
+                await provider.close()
+
+    assert type(raised.value) is ClaveMovilApprovalNotReceivedError
+    assert raised.value.failure_mode == ClaveMovilFailureMode.AUTH_COMPLETION_TIMEOUT.value
+    assert raised.value.live_iva_failure_mode is LiveIvaAcquisitionFailureMode.OPERATOR_TIMEOUT
+    assert raised.value.context is not None
+    assert raised.value.context["verification_code_present"] is True
+    registered = get_registered_error_code(raised.value)
+    assert registered.category is ErrorCategory.REFUSED
 
 
 @pytest.mark.asyncio

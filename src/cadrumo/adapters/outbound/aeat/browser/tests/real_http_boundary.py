@@ -204,6 +204,13 @@ class _BoundaryHandler(BaseHTTPRequestHandler):
                 "<p>No ha sido posible generar una nueva petición de autenticación con Cl@ve Móvil. "
                 "Rechace la petición pendiente en la APP Cl@ve.</p>"
             )
+        elif self.path == "/clave-movil-waiting":
+            # AEAT's push waiting page: it shows the verification code and only
+            # leaves when the phone approves, which this scenario never does.
+            html = (
+                "<main><p>Confirme la petición en la APP Cl@ve Móvil.</p>"
+                '<p>Código de verificación <span id="spanCodigoVerificacion">K7Q2</span></p></main>'
+            )
         elif self.path == "/clave-movil-selector-representation":
             html = (
                 f'<form method="get" action="{_REPRESENTATION_URL}">'
@@ -391,6 +398,12 @@ class LocalHttpBoundary:
                 "/clave-movil-selector-pending"
                 if _CLAVE_MOVIL.selector_access_path_marker in requested_url
                 else "/clave-movil-pending"
+            )
+        if scenario == "clave-movil-approval-never-arrives":
+            return (
+                "/clave-movil-selector-pending"
+                if _CLAVE_MOVIL.selector_access_path_marker in requested_url
+                else "/clave-movil-waiting"
             )
         if scenario not in {
             "clave-movil-representation",

@@ -150,6 +150,21 @@ class ClaveMovilApprovalTimeoutError(AuthError):
         return LiveIvaAcquisitionFailureMode.UNKNOWN
 
 
+class ClaveMovilApprovalNotReceivedError(ClaveMovilApprovalTimeoutError):
+    """The operator's Cl@ve Movil approval did not arrive within the approval window.
+
+    Raised only after AEAT showed the push waiting state and the operator was
+    given the verification code. Every page the driver must observe was
+    reached; the operator simply did not confirm the request on the phone in
+    time. That is an expected operator outcome, so its registered error code is
+    a refusal rather than an authentication fault: the operation settles as a
+    refusal the operator can act on (approve faster or start again), not as a
+    failed operation with a traceback. It stays a
+    :class:`ClaveMovilApprovalTimeoutError` so callers that handle the timeout
+    family and its live failure-mode translation are unchanged.
+    """
+
+
 class ClaveMovilFailureMode(StrEnum):
     """Closed failure taxonomy for :class:`ClaveMovilApprovalTimeoutError`."""
 
@@ -316,6 +331,7 @@ async def render_progress_banner(
 __all__ = [
     "DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS",
     "ClaveIdentityProbeAdapter",
+    "ClaveMovilApprovalNotReceivedError",
     "ClaveMovilApprovalTimeoutError",
     "ClaveMovilConfigurationError",
     "ClaveMovilFailureMode",
