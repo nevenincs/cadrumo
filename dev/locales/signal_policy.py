@@ -37,8 +37,4 @@ OPEN_ENDED_NAMESPACES: Final[dict[str, str]] = {
         "Keyed by the free-text reason_code a workbench zone carries; copy is optional "
         "and the page falls back to its generic refusal line for an unauthored reason."
     ),
-    "tui.home.availability.reason": (
-        "Keyed by the free-text reason_code a workbench zone carries; copy is optional "
-        "and the page falls back to its generic availability line for an unauthored reason."
-    ),
 }

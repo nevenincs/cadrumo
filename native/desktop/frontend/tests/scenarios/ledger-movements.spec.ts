@@ -21,6 +21,13 @@ async function open(target: Page, extra = "") {
   );
 }
 
+/** What the count says of `count` selected movements: a count of one agrees
+ * differently, so it has its own wording. */
+const selectedWords = (count: number) =>
+  count === 1
+    ? label("desktop.ledger.selected_one")
+    : label("desktop.ledger.selected", { count });
+
 const page = (target: Page) => target.locator(".ledger-page");
 const head = (target: Page) => target.locator(".pane-docs .pane-head");
 const grid = (target: Page) => page(target).getByRole("grid");
@@ -148,9 +155,7 @@ test("a reason chip leads to the fix: its movements, its column and the first on
     .nth(4)
     .click({ modifiers: ["Control"] });
   await chip.click();
-  await expect(count(target)).toContainText(
-    label("desktop.ledger.selected", { count: 1 }),
-  );
+  await expect(count(target)).toContainText(selectedWords(1));
   const first = dataRows(target).first();
   await expect(first).toHaveAttribute("aria-selected", "true");
   const category = first.locator("[data-column=category]");
@@ -512,9 +517,7 @@ test("the header box selects what is shown, and a hidden selection is said", asy
   });
   await box.click();
   const total = (await shownOf(target)).total;
-  await expect(count(target)).toContainText(
-    label("desktop.ledger.selected", { count: total }),
-  );
+  await expect(count(target)).toContainText(selectedWords(total));
   // A search hides some of the selection: the page says so before any
   // command acts on it.
   const search = page(target).getByRole("searchbox", {
@@ -540,18 +543,14 @@ test("the header box selects what is shown, and a hidden selection is said", asy
     })
     .click();
   await expect(banner).toHaveCount(0);
-  await expect(count(target)).toContainText(
-    label("desktop.ledger.selected", { count: shown }),
-  );
+  await expect(count(target)).toContainText(selectedWords(shown));
   // The header box with Ctrl adds the shown movements to the selection.
   await search.fill("");
   await dataRows(target).first().locator("[data-column=description]").click();
   await search.fill("farmacia");
   await box.click({ modifiers: ["Control"] });
   await search.fill("");
-  await expect(count(target)).toContainText(
-    label("desktop.ledger.selected", { count: shown + 1 }),
-  );
+  await expect(count(target)).toContainText(selectedWords(shown + 1));
 });
 
 test("the grid's keys: typing never runs a command, Alt+B and F8 do, shell chords pass", async ({
@@ -1259,4 +1258,44 @@ test("a rule saved from a selection says so and hands the keyboard back to the g
     "data-column",
     "description",
   );
+});
+
+test("a cell that draws nothing is named empty and no cell is named by its generated id", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await choosePeriod(target, scenarioYear, "0A");
+  const cells = grid(target).locator("[role=gridcell]");
+  await expect(cells.first()).toBeVisible();
+  const named = await cells.evaluateAll((all) =>
+    all.map((cell) => ({
+      id: cell.id,
+      column: cell.getAttribute("data-column"),
+      // innerText leaves out the cell's hidden description.
+      drawn: (cell as HTMLElement).innerText.trim() !== "",
+      name: cell.getAttribute("aria-label"),
+    })),
+  );
+  expect(named.length).toBeGreaterThan(0);
+  // Without a name of its own a cell is announced by its id, which React
+  // generates and which begins `_r_`.
+  for (const cell of named) {
+    expect(cell.name ?? "").not.toBe(cell.id);
+    expect(cell.name ?? "").not.toMatch(/^_r_/);
+  }
+  const counterparties = grid(target).locator(
+    "[role=gridcell][data-column=counterparty]",
+  );
+  const empty = (
+    await counterparties.evaluateAll((all) =>
+      all.map((cell) => (cell as HTMLElement).innerText.trim() === ""),
+    )
+  ).indexOf(true);
+  expect(empty).toBeGreaterThanOrEqual(0);
+  await expect(counterparties.nth(empty)).toHaveAccessibleName(
+    label("desktop.ledger.cell_empty"),
+  );
+  // A cell that draws text keeps the name its text gives it.
+  for (const cell of named.filter((found) => found.drawn))
+    expect(cell.name).toBeNull();
 });

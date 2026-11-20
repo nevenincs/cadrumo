@@ -510,6 +510,17 @@ export function useMovementEditing(input: MovementEditingInput) {
           />
         );
       },
+      drawsOver: (row, column) => {
+        const key = row.transaction.transaction_id;
+        if (drafts.has(key) || refused.has(cellKey(key, column))) return true;
+        const field = columnField(column, row);
+        const changes = content.rows[key];
+        if (!field || !changes) return false;
+        return (
+          !!changes[field] ||
+          (column === "classification" && !!changes.business_pct)
+        );
+      },
       describeCell: (key, column) => {
         const marked = refused.get(cellKey(key, column));
         if (marked)

@@ -97,7 +97,7 @@ surfaces = ["gui"]
 id = "withholding"
 label = "navigation.view.withholding.label"
 keywords = "navigation.view.withholding.keywords"
-surfaces = []
+surfaces = ["gui"]
 
 [[element]]
 id = "declarations"

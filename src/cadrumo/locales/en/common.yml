@@ -2205,6 +2205,7 @@ desktop:
       vehiculo_seguro: seguro coche vehiculo
       viajes_alojamiento: hotel lodging hotel alojamiento hostal apartamento
       viajes_transporte: train flight plane taxi bus tren avion vuelo taxi autobus
+    cell_empty: Empty
     classification:
       business: Business
       failed_validation: Failed validation
@@ -4232,11 +4233,14 @@ desktop:
       row: Select {description}
       shown: Select the shown movements · Ctrl-click adds them
     selected: '{count} selected'
+    selected_one: 1 selected
     selection:
       actions_count: Actions · {count} selected
+      actions_count_one: Actions · 1 selected
       all_shown: 'All shown are selected: {count}.'
       clear_category: Remove category
       hidden: 'Hidden: {hidden} of {selected} selected'
+      hidden_one: The selected movement is hidden
       keep_visible: Keep only visible
       select_all: Select all {count} in {period}
       show: Show them
@@ -4876,12 +4880,15 @@ desktop:
     cancel: Cancel
     censo:
       absent: AEAT did not supply this value. No change.
+      accept_all: Accept all
       adopt: Use the AEAT value when you save.
       apply: Save reviewed changes
       band: AEAT Censo
       blocked: 'Needed before you can sync:'
       cancel: Stop synchronization
       checking: Checking what synchronization needs…
+      choice_accept: Accept
+      choice_reject: Reject
       conflict: The review has changed. Refresh the sync and review it again.
       device: Approve the sign-in request in your Cl@ve app.
       done: Synchronization complete. Review any remaining gaps in your profile.
@@ -5345,6 +5352,35 @@ desktop:
     hide: Hide workspace
     label: Cadrumo workspace
     show: Show workspace
+  withholding:
+    absences:
+      empty: No statements of no withholding in force for {ejercicio}.
+      history: Withdrawn statements
+      title: No withholding
+    change: Change in the Ledger
+    column:
+      class: Income class
+      note: Note
+      origin: Source
+      payer: Payer
+      state: State
+      stated_on: Stated on
+      withdrawn_on: Withdrawn on
+    ejercicio: Year
+    empty: 'Nothing is recorded for {ejercicio}: no certificates and no statements
+      of no withholding.'
+    failed: This couldn't be read ({code}).
+    loading: Reading withholding…
+    read_again: Read again
+    records:
+      empty: No certificates recorded for {ejercicio}.
+      title: Certificates
+    refresh: Refresh
+    signed_out: Sign in to see your withholding.
+    title: Withholding
+    what: The withholding your payers took from your income in the year you choose,
+      as each certificate states it, and the statements that an income class had none.
+      Record or change them in the Ledger.
 entries:
   portal_calendario_contribuyente:
     label: Taxpayer Calendar
@@ -7216,42 +7252,15 @@ tui:
       context_across_records: Across records
       reason: Suggested by the local overview
     action_context: '%{label} - %{reason} · %{context}'
-    address: Modelo %{modelo} · %{period} %{filing_year}
     aeat_evidence: 'AEAT data: %{state}'
     availability:
       available: Available
       available_empty: '%{label} - %{detail}'
       locked: Locked - unlock the selected profile to view this information
       never_captured: Not read yet
-      reason:
-        workbench:
-          calendar:
-            aeat_reader_unavailable: Not read yet - appears after the first AEAT Sync
-            taxpayer_model_undeclared: Unavailable - the profile does not yet say
-              what kind of taxpayer this is
-          home:
-            actions_projector_unavailable: Unavailable - next actions appear once
-              all your records have been checked
-            agenda_projector_unavailable: Unavailable - the filing calendar could
-              not be worked out
-            declarations_resume_projector_unavailable: Unavailable - the declarations
-              to resume could not be read
-            messages_never_pulled: Not read yet - AEAT messages appear after the first
-              AEAT Sync
-            taxpayer_profile_incomplete: Unavailable - the profile is missing required
-              answers; complete them in Profile
-          ledger:
-            snapshot_projector_unavailable: Unavailable - shown once all your records
-              have been checked
       stale: Out of date - the last local copy needs refreshing
       stale_observed: '%{label}; last observed %{observed_at}'
       unavailable: Unavailable - this information cannot be shown right now
-    declaration_state:
-      discarded: Discarded
-      draft: Draft
-      filed: Recorded as filed
-      needs_review: Needs review
-      ready: Ready
     empty:
       actions: no suggested actions
       agenda: no upcoming filing dates
@@ -7264,8 +7273,6 @@ tui:
       ledger: Records readiness
       messages: Messages
       navigation: Go to
-    ledger_summary: Available - %{entries} entries; %{requiring_review} need review;
-      %{unclassified} unclassified; %{missing_evidence} missing supporting documents
     link:
       search_declarations: Search declarations
     link_state:
@@ -7274,13 +7281,6 @@ tui:
       stale: Out of date
       unavailable: Unavailable
     messages_summary: Available - %{count} requiring attention
-    reason:
-      blocked_dependency: A declaration dependency is blocked
-      blocked_evidence: A blocker needs a supporting document
-      blocked_review: Blocked work needs review
-      declaration_needs_review: Declaration needs review
-      evidence_missing: A supporting document is missing
-      ledger_classification_pending: Classification in Records is pending
     session:
       active: Active local session
       expired: Session expired

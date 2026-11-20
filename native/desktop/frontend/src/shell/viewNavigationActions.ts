@@ -106,6 +106,7 @@ export function useViewActions({
         {
           profile: { icon: "user", group: "views" },
           home: { icon: "home", group: "views" },
+          withholding: { icon: "ledger", group: "views" },
           calendar: {
             id: "view.calendar",
             icon: "calendar",

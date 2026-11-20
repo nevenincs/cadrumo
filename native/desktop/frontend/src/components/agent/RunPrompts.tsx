@@ -1,9 +1,15 @@
+import { useCallback, useState } from "react";
+import {
+  groupBarredReads,
+  type BarredRead,
+} from "../../shell/attachmentRefusals";
 import type {
   AgentQuestionnaireAnswer,
   AgentSession,
 } from "../../shell/agentSession";
 import { ApprovalPrompt } from "./ApprovalPrompt";
 import { AttachmentReadPrompt } from "./AttachmentReadPrompt";
+import { AttachmentRefusalGroup } from "./AttachmentRefusalGroup";
 import { QuestionsPrompt } from "./QuestionsPrompt";
 import type {
   AgentApproval,
@@ -23,19 +29,57 @@ export function RunPrompts({
   onDecide,
   onAnswer,
   onResolved,
+  onOpenProfile,
 }: {
   session: AgentSession | undefined;
   approvals: readonly AgentApproval[];
   questionnaire: AgentQuestionnaire | undefined;
   answering: boolean;
-  onDecide: (approval: AgentApproval, optionId: string) => void;
+  /** Settles once the decision is answered; the column takes one at a time. */
+  onDecide: (approval: AgentApproval, optionId: string) => void | Promise<void>;
   onAnswer: (
     asked: AgentQuestionnaire,
     reply: AgentQuestionnaireAnswer,
   ) => void;
   /** The reply no longer waits on the request. */
   onResolved: (requestId: string) => void;
+  /** Opens the profile page; absent where the window cannot. */
+  onOpenProfile?: () => void;
 }) {
+  // The reads the service refused for a bar on every off-host read, by the
+  // agent's request: one refusal is worded for all of them.
+  const [barred, setBarred] = useState<
+    Readonly<Record<string, Omit<BarredRead, "requestId">>>
+  >({});
+  const onBarred = useCallback(
+    (requestId: string, one: Omit<BarredRead, "requestId"> | null) =>
+      setBarred((held) => {
+        if (one === null) {
+          if (!(requestId in held)) return held;
+          return Object.fromEntries(
+            Object.entries(held).filter(([key]) => key !== requestId),
+          );
+        }
+        return { ...held, [requestId]: one };
+      }),
+    [],
+  );
+  const refusal = (approval: AgentApproval) =>
+    approval.options.find((option) => option.kind === "reject_once")?.option_id;
+  // The column answers one request at a time, so the reads of a group are
+  // declined one after another.
+  const declineAll = async (reads: readonly AgentApproval[]) => {
+    for (const approval of reads) {
+      const refuse = refusal(approval);
+      if (refuse) await onDecide(approval, refuse);
+    }
+  };
+  const groups = groupBarredReads(
+    approvals.flatMap((approval) => {
+      const one = barred[approval.request_id];
+      return one ? [{ requestId: approval.request_id, ...one }] : [];
+    }),
+  );
   return (
     <>
       {approvals.map((approval) => {
@@ -59,9 +103,7 @@ export function RunPrompts({
           approval.tool_server
         )
           return prompt;
-        const refuse = approval.options.find(
-          (option) => option.kind === "reject_once",
-        )?.option_id;
+        const refuse = refusal(approval);
         return (
           <AttachmentReadPrompt
             key={approval.request_id}
@@ -72,10 +114,28 @@ export function RunPrompts({
             onDecline={
               answering && refuse ? () => onDecide(approval, refuse) : undefined
             }
+            onBarred={onBarred}
             plain={prompt}
           />
         );
       })}
+      {groups.map((group) => (
+        <AttachmentRefusalGroup
+          key={group.code}
+          group={group}
+          onOpenProfile={onOpenProfile}
+          onDecline={
+            answering
+              ? () =>
+                  void declineAll(
+                    approvals.filter((approval) =>
+                      group.requestIds.includes(approval.request_id),
+                    ),
+                  )
+              : undefined
+          }
+        />
+      ))}
       {questionnaire && (
         <QuestionsPrompt
           key={questionnaire.request_id}

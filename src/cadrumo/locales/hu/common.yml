@@ -2249,6 +2249,7 @@ desktop:
       vehiculo_seguro: seguro coche vehiculo
       viajes_alojamiento: hotel alojamiento hostal apartamento
       viajes_transporte: tren avion vuelo taxi autobus
+    cell_empty: Üres
     classification:
       business: Üzleti
       failed_validation: Sikertelen ellenőrzés
@@ -4289,11 +4290,14 @@ desktop:
       row: 'Jelöld ki: {description}'
       shown: Jelöld ki a látható tételeket · Ctrl+kattintás hozzáadja őket
     selected: '{count} kijelölve'
+    selected_one: 1 kijelölve
     selection:
       actions_count: Műveletek · {count} kijelölve
+      actions_count_one: Műveletek · 1 kijelölve
       all_shown: 'Minden látható ki van jelölve: {count}.'
       clear_category: Kategória törlése
       hidden: 'Rejtett: {hidden} a(z) {selected} kijelöltből'
+      hidden_one: A kijelölt tétel rejtett
       keep_visible: Csak a láthatók maradjanak
       select_all: 'Mind a {count} kijelölése: {period}'
       show: Mutasd őket
@@ -4952,12 +4956,15 @@ desktop:
     cancel: Mégse
     censo:
       absent: Az AEAT nem adott meg értéket. Nincs változás.
+      accept_all: Mindet elfogadom
       adopt: Mentéskor az AEAT értékének használata.
       apply: Ellenőrzött módosítások mentése
       band: AEAT Censo
       blocked: 'A szinkronizáláshoz szükséges:'
       cancel: Szinkronizálás leállítása
       checking: A szinkronizálás feltételeinek ellenőrzése…
+      choice_accept: Elfogadás
+      choice_reject: Elutasítás
       conflict: Az ellenőrzés megváltozott. Frissítsd a szinkronizálást, és ellenőrizd
         újra.
       device: Hagyd jóvá a bejelentkezést a Cl@ve alkalmazásban.
@@ -5431,6 +5438,35 @@ desktop:
     hide: Munkaterület elrejtése
     label: Cadrumo-munkaterület
     show: Munkaterület megjelenítése
+  withholding:
+    absences:
+      empty: Nincs érvényes jelzés arról, hogy a(z) {ejercicio} évben nem volt levonás.
+      history: Visszavont jelzések
+      title: Nincs levonás
+    change: Módosítás a Naplóban
+    column:
+      class: Jövedelemosztály
+      note: Megjegyzés
+      origin: Forrás
+      payer: Kifizető
+      state: Állapot
+      stated_on: Nyilatkozat dátuma
+      withdrawn_on: Visszavonás dátuma
+    ejercicio: Év
+    empty: 'A(z) {ejercicio} évre nincs rögzítve semmi: sem igazolás, sem a levonás
+      hiányára vonatkozó jelzés.'
+    failed: Nem sikerült beolvasni ({code}).
+    loading: Levonások beolvasása…
+    read_again: Beolvasás újra
+    records:
+      empty: Nincs rögzített igazolás a(z) {ejercicio} évre.
+      title: Igazolások
+    refresh: Frissítés
+    signed_out: Jelentkezz be a levonásaid megtekintéséhez.
+    title: Levonások
+    what: A kifizetőid által a választott évben levont összegek, ahogyan az egyes
+      igazolások mutatják, és azok a jelzések, hogy egy jövedelemosztályban nem volt
+      levonás. Rögzítsd vagy módosítsd őket a Naplóban.
 entries:
   portal_calendario_contribuyente:
     label: Adófizetői naptár
@@ -7354,43 +7390,15 @@ tui:
       context_across_records: Minden nyilvántartásra
       reason: A helyi áttekintés javaslata
     action_context: '%{label} - %{reason} · %{context}'
-    address: Modelo %{modelo} · %{period} %{filing_year}
     aeat_evidence: 'AEAT-adatok: %{state}'
     availability:
       available: Elérhető
       available_empty: '%{label} - %{detail}'
       locked: Zárolva - oldd fel a kiválasztott profilt az adatok megtekintéséhez
       never_captured: Még nincs beolvasva
-      reason:
-        workbench:
-          calendar:
-            aeat_reader_unavailable: Még nincs beolvasva - az első AEAT-szinkron után
-              jelenik meg
-            taxpayer_model_undeclared: Nem érhető el - a profil még nem adja meg,
-              milyen típusú adózóról van szó
-          home:
-            actions_projector_unavailable: Nem elérhető - a következő teendők akkor
-              jelennek meg, ha a nyilvántartásaidat mind ellenőrizték
-            agenda_projector_unavailable: Nem elérhető - a bevallási naptárt nem sikerült
-              kiszámítani
-            declarations_resume_projector_unavailable: Nem elérhető - a folytatandó
-              bevallásokat nem sikerült beolvasni
-            messages_never_pulled: Még nincs beolvasva - az AEAT-üzenetek az első
-              AEAT-szinkron után jelennek meg
-            taxpayer_profile_incomplete: Nem érhető el - a profilból hiányoznak kötelező
-              válaszok; töltsd ki őket a Profil részben
-          ledger:
-            snapshot_projector_unavailable: Nem elérhető - akkor jelenik meg, ha a
-              nyilvántartásaidat mind ellenőrizték
       stale: Elavult - a legutóbbi helyi másolat frissítést igényel
       stale_observed: '%{label}; utolsó megfigyelés: %{observed_at}'
       unavailable: Nem elérhető - ez az információ most nem jeleníthető meg
-    declaration_state:
-      discarded: Elvetve
-      draft: Piszkozat
-      filed: Benyújtottként rögzítve
-      needs_review: Ellenőrzésre vár
-      ready: Kész
     empty:
       actions: nincs javasolt teendő
       agenda: nincs közelgő benyújtási határidő
@@ -7403,8 +7411,6 @@ tui:
       ledger: A nyilvántartás készültsége
       messages: Üzenetek
       navigation: Oldalak
-    ledger_summary: Elérhető - %{entries} tétel; %{requiring_review} ellenőrzésre
-      vár; %{unclassified} besorolatlan; %{missing_evidence} hiányzó bizonylat
     link:
       search_declarations: Bevallások keresése
     link_state:
@@ -7413,13 +7419,6 @@ tui:
       stale: Elavult
       unavailable: Nem érhető el
     messages_summary: Elérhető - %{count} igényel figyelmet
-    reason:
-      blocked_dependency: A bevallás egyik függősége blokkolva van
-      blocked_evidence: Egy blokkolóhoz bizonylat kell
-      blocked_review: A blokkolt munka ellenőrzésre vár
-      declaration_needs_review: A bevallás ellenőrzésre vár
-      evidence_missing: Hiányzik egy bizonylat
-      ledger_classification_pending: A Nyilvántartás besorolása még hiányzik
     session:
       active: Aktív helyi munkamenet
       expired: A munkamenet lejárt

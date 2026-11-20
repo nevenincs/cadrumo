@@ -556,6 +556,7 @@ def compose_user_profile_censal_operation(inputs: OperationCompositionInputs) ->
         from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
         from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
         from .adapter_composition_ports import build_censal_fetch_port
+        from .censal_readback_composition import read_stored_censal_observation
         from .live_state_composition import preflight_filed_history_provider
 
         definition = build_censal_operation_definition(
@@ -564,6 +565,7 @@ def compose_user_profile_censal_operation(inputs: OperationCompositionInputs) ->
             operator_scope_ports=inputs.scope,
             censal_fetch_port=build_censal_fetch_port(),
             provider_preflight=preflight_filed_history_provider,
+            observation_reader=read_stored_censal_observation,
         )
     return built((definition,), (build_censal_operation_registration(definition),))
 

@@ -156,6 +156,7 @@ export function App({ host }: { host: Host }) {
     homeVisible,
     calendarVisible,
     ledgerVisible,
+    withholdingVisible,
     declarationsVisible,
     browserVisible,
     tuiVisible,
@@ -319,6 +320,7 @@ export function App({ host }: { host: Host }) {
     ledgerPage: navigation.ledgerPage,
     declarationsPage: navigation.declarationsPage,
     homePage: navigation.homePage,
+    withholdingPage: navigation.withholdingPage,
     calendarPage: navigation.calendarPage,
     aeatSyncPage: navigation.aeatSyncPage,
     docs,
@@ -465,6 +467,7 @@ export function App({ host }: { host: Host }) {
     ledgerPage: navigation.ledgerPage,
     declarationsPage: navigation.declarationsPage,
     homePage: navigation.homePage,
+    withholdingPage: navigation.withholdingPage,
     calendarPage: navigation.calendarPage,
     aeatSyncPage: navigation.aeatSyncPage,
     docs,
@@ -506,6 +509,7 @@ export function App({ host }: { host: Host }) {
     aeatSyncOn: visibility.aeatSyncOn,
     homeVisible,
     ledgerVisible,
+    withholdingVisible,
     declarationsVisible,
     calendarVisible,
     browserVisible,
@@ -539,6 +543,7 @@ export function App({ host }: { host: Host }) {
       profileOn={visibility.profileOn}
       aeatSyncOn={visibility.aeatSyncOn}
       homeOn={visibility.homeOn}
+      withholdingOn={visibility.withholdingOn}
       calendarOn={visibility.calendarOn}
       openDeclaration={memories.openDeclaration}
       openWorkUnit={memories.openWorkUnit}
@@ -562,6 +567,7 @@ export function App({ host }: { host: Host }) {
       profilePage={navigation.profilePage}
       aeatSyncPage={navigation.aeatSyncPage}
       homePage={navigation.homePage}
+      withholdingPage={navigation.withholdingPage}
       calendarPage={navigation.calendarPage}
       toggleMaximize={toggleMaximize}
       maximizeControl={maximizeControl}
@@ -743,6 +749,7 @@ export function App({ host }: { host: Host }) {
               pageOn={pageOn}
               profileOn={visibility.profileOn}
               homeOn={visibility.homeOn}
+              withholdingOn={visibility.withholdingOn}
               calendarOn={visibility.calendarOn}
               ledgerOn={visibility.ledgerOn}
               declarationsOn={visibility.declarationsOn}
