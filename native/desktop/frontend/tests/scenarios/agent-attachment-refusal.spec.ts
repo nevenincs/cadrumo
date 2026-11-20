@@ -119,3 +119,27 @@ test("a bar the installation owns says so and offers no setting to open", async 
     }),
   ).toBeVisible();
 });
+
+test("a profile the service could not read is worded as unread and offers no setting to open", async ({
+  page: target,
+}) => {
+  scenarioOnly("the service's refusal is the scenario host's");
+  await open(target);
+  await send(target, "Lee los adjuntos sin enviar (profile_unreadable).");
+  const group = refusal(target);
+  await expect(group).toContainText(
+    label("desktop.agent.attachment_refusal.profile_unreadable"),
+  );
+  for (const name of FILES) await expect(group).toContainText(name);
+  await expect(
+    group.getByRole("button", {
+      name: label("desktop.agent.attachment_open_profile"),
+    }),
+  ).toHaveCount(0);
+  await expect(
+    group.getByRole("button", {
+      name: label("desktop.agent.consent_decline"),
+      exact: true,
+    }),
+  ).toBeVisible();
+});

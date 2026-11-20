@@ -55,3 +55,8 @@ def test_the_profile_refusal_names_the_setting_by_the_profile_label(locale: str)
 @pytest.mark.parametrize("locale", _LOCALES)
 def test_the_installation_refusal_offers_no_profile_setting(locale: str) -> None:
     assert _profile_label(locale) not in _service_refusal(locale, "cloud_upload_not_permitted")
+
+
+@pytest.mark.parametrize("locale", _LOCALES)
+def test_the_unreadable_profile_refusal_names_the_setting_it_could_not_read(locale: str) -> None:
+    assert _profile_label(locale) in _service_refusal(locale, "profile_unreadable")

@@ -34,6 +34,9 @@ desktop:
       not_signed_in: A válaszhoz jelentkezz be.
       profile_not_eligible: A profilod nem engedi, hogy a dokumentumok elhagyják ezt
         a számítógépet. A profil „Dokumentumolvasás a gépen kívül” beállítása szabályozza.
+      profile_unreadable: A profil „Dokumentumolvasás a gépen kívül” beállítását most
+        nem sikerült elolvasni, ezért semmi sem lett elküldve. Próbáld újra egy pillanat
+        múlva.
       reference_unknown: Az ügynök már nem vár erre a fájlra.
       service_failed: Az engedélyt nem sikerült rögzíteni, ezért semmi sem lett elküldve.
     attachment_refused: Ez a fájl nem lett elküldve. {reason}
