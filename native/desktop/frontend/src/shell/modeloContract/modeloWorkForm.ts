@@ -54,6 +54,11 @@ import type {
   SourceSurface,
 } from "./modeloWork";
 import type {
+  PublicSpanishTaxIdFormat,
+  ReconciliationSourceRequirementV1,
+  RefundEligibilityBasis,
+  RefundEligibilityOutcome,
+  SourceFamily,
   SourcePolicyV1,
   TemporalProjectionDirection,
 } from "./modeloWorkFormPart2";
@@ -810,7 +815,21 @@ export type OperationNextStepV1 =
   | OperationOpenMovementStepV1
   | OperationOpenIvaWalletStepV1
   | OperationOpenIvaWalletOpeningBalanceStepV1
-  | OperationChooseReadingModelStepV1;
+  | OperationChooseReadingModelStepV1
+  | OperationResolveOffHostConsentStepV1;
+
+/**
+ * One way to put an off-host consent refusal right, and the words that offer
+ * it.
+ *
+ * `unavailable_words` is the sentence a surface shows when it has no door to
+ * the remedy: it says where the person puts the refusal right instead.
+ */
+export type OperationOffHostConsentRemedyV1 = {
+  kind: "authorise_off_host" | "switch_to_local_lane";
+  words: string;
+  unavailable_words: string;
+};
 
 /**
  * Record the opening IVA balance the period's carry reads, in the IVA balance
@@ -866,6 +885,20 @@ export type OperationOpenWorkStepV1 = {
   kind: "open_work";
   work_unit_id: WorkUnitId;
   words: string;
+};
+
+/**
+ * Resolve the refusal to send a document to an off-host model without consent.
+ *
+ * The person either authorises the off-host read for this document or switches
+ * the role to a model that runs on this computer. Each remedy is typed so a
+ * frontend offers the control it already knows for that kind; the backend
+ * serves the words and keeps no say in how a surface presents them.
+ */
+export type OperationResolveOffHostConsentStepV1 = {
+  kind: "resolve_off_host_consent";
+  words: string;
+  remedies: OperationOffHostConsentRemedyV1[];
 };
 
 /**
@@ -1260,55 +1293,3 @@ export type PublicScalarValueV1 = {
   kind: "string" | "integer" | "boolean" | "decimal" | "date" | "null";
   text: string;
 };
-
-/**
- * Typed local-human workbench view of the governed SpanishTaxIdFormat.
- */
-export type PublicSpanishTaxIdFormat = {
-  width: number;
-  country_prefix: string;
-  country_prefixed_width: number;
-  country_prefix_strip_width: number;
-  prefixed_nif_leaders: string;
-  nie_leaders: string;
-  cif_leaders: string;
-  nif_letters: string;
-  nif_check_modulus: number;
-  nie_prefix_substitutions: [string, string][];
-  cif_digit_only_kinds: string;
-  cif_letter_only_kinds: string;
-  cif_letter_table: string;
-};
-
-/**
- * One source declaration the to-do list names before the summary can be worked
- * out, and its door.
- */
-export type ReconciliationSourceRequirementV1 = {
-  words: string;
-  next_step: OperationNextStepV1;
-};
-
-/**
- * Which fact settled the outcome.
- */
-export type RefundEligibilityBasis =
-  "final_period" | "redeme" | "non_final_period";
-
-/**
- * What may be done with a negative Modelo 303 result in one period.
- */
-export type RefundEligibilityOutcome =
-  "refund_allowed" | "carry_forward_only" | "undetermined_redeme_unstated";
-
-/**
- * The kind of place a value comes from, as a filer thinks of it.
- */
-export type SourceFamily =
-  | "records"
-  | "registers"
-  | "profile"
-  | "earlier_filings"
-  | "aeat_draft"
-  | "your_entries"
-  | "fixed_by_design";

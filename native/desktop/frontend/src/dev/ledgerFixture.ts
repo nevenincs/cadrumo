@@ -994,7 +994,7 @@ export function ledgerFixture(options: Options): LedgerPort {
           operation_id: operation,
           revision: 3,
           reason: error.reason,
-          detail: null,
+          detail: error.detail as unknown as LedgerErrorDetail | null,
         };
         outcomes.set(operation, refused);
         return refused;

@@ -11,6 +11,7 @@ import type { LedgerProrrataContracts } from "./ledgerProrrataContract";
 import type { LedgerReadContracts } from "./ledgerReadContract";
 import type {
   OperationNextStepV1,
+  OperationOffHostConsentRemedyV1,
   LedgerEvidenceAttachmentQueueProjection,
   LedgerEvidenceAttachmentViewWindowRequest,
   LedgerEvidenceAttachmentViewProjection,
@@ -539,6 +540,33 @@ export function servedNextStep(detail: unknown): OperationNextStepV1 | null {
     return { kind: "complete_profile_setup", words };
   if (served.kind === "choose_reading_model")
     return { kind: "choose_reading_model", words };
+  if (served.kind === "resolve_off_host_consent") {
+    const remedies = Array.isArray(served.remedies)
+      ? served.remedies.flatMap(
+          (remedy: unknown): OperationOffHostConsentRemedyV1[] => {
+            const found = remedy as Record<string, unknown> | null;
+            return found &&
+              (found.kind === "authorise_off_host" ||
+                found.kind === "switch_to_local_lane") &&
+              typeof found.words === "string" &&
+              found.words !== "" &&
+              typeof found.unavailable_words === "string" &&
+              found.unavailable_words !== ""
+              ? [
+                  {
+                    kind: found.kind,
+                    words: found.words,
+                    unavailable_words: found.unavailable_words,
+                  },
+                ]
+              : [];
+          },
+        )
+      : [];
+    return remedies.length === 0
+      ? null
+      : { kind: "resolve_off_host_consent", words, remedies };
+  }
   return null;
 }
 

@@ -799,6 +799,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.ledger.evidence_errors.LedgerOffHostConsentRequiredError",
+        ErrorCode(
+            code="REFUSED_LEDGER_OFF_HOST_CONSENT_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_llm_consent",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.ledger.evidence_errors.PurchaseInvoiceEvidenceNotFoundError",
         ErrorCode(
             code="REFUSED_LEDGER_EVIDENCE_NOT_FOUND",

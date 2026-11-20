@@ -291,13 +291,23 @@ export function MovementInspector({
     if (asked.index) indexFirst.current?.focus();
   }, [id, focus.tick, jump]);
 
-  const focusField = (field: string) => {
+  // Brings one fact into view and opens its editor, as pressing it would.
+  // False where the page draws no editor for it, so the caller can say so.
+  const focusField = (field: string): boolean => {
     const target = scroll.current?.querySelector<HTMLElement>(
       `[data-field="${field}"]`,
     );
-    if (!target) return;
+    if (
+      !target ||
+      target.getAttribute("aria-disabled") === "true" ||
+      (target instanceof HTMLInputElement && target.disabled) ||
+      (target instanceof HTMLButtonElement && target.disabled)
+    )
+      return false;
     target.scrollIntoView({ block: "nearest" });
     target.focus();
+    target.click();
+    return true;
   };
 
   // ---- The header ------------------------------------------------------------

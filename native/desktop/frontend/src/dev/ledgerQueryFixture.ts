@@ -435,6 +435,23 @@ export function issues(ledger: FixtureLedger, period: JsonValue | undefined) {
           reason: "missing_proportionality_reference",
           detail: "Mixed without a usage ratio.",
         });
+      // The product's IVA rule: a movement no invoice pays for, taxed at a
+      // rate, that lacks a figure of its invoice reports that figure missing,
+      // in the order the aggregation names them. The scenario's untaxed
+      // categories carry no figures by design and are left silent.
+      if (
+        (t.iva_category === "domestic_general" ||
+          t.iva_category === "domestic_reduced") &&
+        t.invoice_id === null
+      ) {
+        for (const [reason, figure, detail] of [
+          ["missing_taxable_base", t.taxable_base, "Taxable base missing."],
+          ["missing_iva_amount", t.iva_amount, "IVA amount missing."],
+          ["missing_iva_rate", t.iva_rate, "IVA rate missing."],
+        ] as const)
+          if (figure === null)
+            found.push({ transaction_id: id, reason, detail });
+      }
       if (t.currency !== "EUR" && !t.value_in_eur)
         found.push({
           transaction_id: id,

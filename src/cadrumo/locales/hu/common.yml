@@ -3313,8 +3313,14 @@ desktop:
         updated: Frissítve
       file_row: '{file}, {row}. sor'
       fix:
-        derive: Összegek kiszámítása
+        derive_already: A számítás már ott van a még nem mentett változásaid között.
+        derive_from_category: Számítás az ÁFA-kategóriából
+        derive_needs_category: 'Előbb válassz ÁFA-kategóriát: az összegeket abból
+          számítjuk ki.'
         go: Javítás
+        locked: 'A(z) {field} nem módosítható: {reason}'
+        unreachable: A(z) {field} innen nem nyitható meg. Keresd meg lejjebb a mezők
+          között, és válaszd ki.
       from_booked_date: a könyvelési dátum
       from_value_date: az értéknap
       fx_rate: 'Árfolyam: {rate}'
@@ -3381,6 +3387,8 @@ desktop:
         description: Minden rész visszakerül abba a tételbe, amelyből felosztották.
         title: '{count} rész egyesítése'
       missing: Ami még hiányzik
+      missing_why: Ezek az adatok nélkül ez a tétel kimarad az ÁFA-számításból. Írd
+        be vagy számítsd ki őket; semmi sem mentődik, amíg át nem nézed a változásokat.
       mode: Panel
       mode_match: Párosítandó
       mode_movement: Tétel

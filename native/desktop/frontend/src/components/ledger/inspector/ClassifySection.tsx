@@ -38,6 +38,7 @@ import {
 } from "../../../shell/ledgerGrammar";
 import {
   effectiveFacts,
+  STAGE_FIELDS,
   storedFieldValue,
   type StagedAction,
 } from "../../../shell/ledgerStage";
@@ -99,7 +100,8 @@ export function ClassifySection({
   actions: readonly StagedAction[];
   rejectedBefore: boolean;
   history: LedgerHistoryTypedProjection | null;
-  onFocusField: (field: string) => void;
+  /** Opens the editor of one fact; false where the page has no editor for it. */
+  onFocusField: (field: string) => boolean;
   say: (text: string) => void;
 }) {
   const t = useStrings();
@@ -123,6 +125,8 @@ export function ClassifySection({
   }, [id, effective.business_pct]);
   // The one IVA category the movement has: the field's, staged or stored.
   const ivaCategory = effective.iva_category || null;
+  // One way of working the missing IVA figures out, offered once for all.
+  const derivable = !refusesDerive && issues.some(isIvaDerivableReason);
 
   const suggestion = actions.find(
     (action): action is Extract<StagedAction, { kind: "suggestion" }> =>
@@ -132,6 +136,58 @@ export function ClassifySection({
     (action): action is Extract<StagedAction, { kind: "iva_derive" }> =>
       action.kind === "iva_derive",
   );
+  /** Opens the editor of one fact. A fact that cannot change says why, and
+   * one the page cannot reach says so: a press is never answered by nothing. */
+  const open = (name: string) => {
+    const known = STAGE_FIELDS.find((each) => each === name);
+    const named = known ? fieldName(t, known) : name;
+    const why = known ? fieldLock(scope, known) : null;
+    if (why) {
+      say(
+        t("desktop.ledger.inspector.fix.locked", { field: named, reason: why }),
+      );
+      return;
+    }
+    if (!onFocusField(name))
+      say(t("desktop.ledger.inspector.fix.unreachable", { field: named }));
+  };
+  const stageDerivation = () => {
+    if (ivaCategory === null) return;
+    onStage({
+      type: "stage_action",
+      action: {
+        id: `iva_derive:${id}`,
+        kind: "iva_derive",
+        transactionId: id,
+        ivaCategory,
+      },
+    });
+    say(t("desktop.ledger.inspector.derive.staged_toast"));
+  };
+  /** Working the missing figures out from the IVA category: a proposal the
+   * person saves with the rest, and the category first where there is none. */
+  const deriveMissing = () => {
+    const why = fieldLock(scope, "iva_category");
+    if (why) {
+      say(
+        t("desktop.ledger.inspector.fix.locked", {
+          field: fieldName(t, "iva_category"),
+          reason: why,
+        }),
+      );
+      return;
+    }
+    if (derivation) {
+      say(t("desktop.ledger.inspector.fix.derive_already"));
+      return;
+    }
+    if (ivaCategory === null) {
+      open("iva_category");
+      say(t("desktop.ledger.inspector.fix.derive_needs_category"));
+      return;
+    }
+    stageDerivation();
+  };
   const field = (
     name: Parameters<typeof stagedField>[1],
     kind: Parameters<typeof stagedField>[2],
@@ -208,10 +264,12 @@ export function ClassifySection({
             <span className="font-medium text-foreground">
               {t("desktop.ledger.inspector.missing")}
             </span>
+            <p className="text-foreground">
+              {t("desktop.ledger.inspector.missing_why")}
+            </p>
             <ul className="grid gap-1 text-foreground">
               {issues.map((reason) => {
                 const target = READINESS_REASON_FIELD[reason];
-                const derive = isIvaDerivableReason(reason);
                 return (
                   <li
                     key={reason}
@@ -220,27 +278,11 @@ export function ClassifySection({
                     <span className="min-w-0 flex-1">
                       {reasonDetail(t, reason)}
                     </span>
-                    {derive ? (
+                    {target ? (
                       <Button
                         variant="outline"
                         size="xs"
-                        disabled={lock !== null}
-                        onClick={() =>
-                          onFocusField(
-                            ivaCategory === null
-                              ? "iva_category"
-                              : "iva-derive",
-                          )
-                        }
-                      >
-                        {t("desktop.ledger.inspector.fix.derive")}
-                      </Button>
-                    ) : target ? (
-                      <Button
-                        variant="outline"
-                        size="xs"
-                        disabled={lock !== null}
-                        onClick={() => onFocusField(target)}
+                        onClick={() => open(target)}
                       >
                         {t("desktop.ledger.inspector.fix.go")}
                       </Button>
@@ -249,6 +291,16 @@ export function ClassifySection({
                 );
               })}
             </ul>
+            {derivable && (
+              <Button
+                variant="outline"
+                size="xs"
+                className="w-fit"
+                onClick={deriveMissing}
+              >
+                {t("desktop.ledger.inspector.fix.derive_from_category")}
+              </Button>
+            )}
           </div>
         </Alert>
       )}
@@ -418,8 +470,8 @@ export function ClassifySection({
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={lock !== null || refusesDerive}
-                  onClick={() => onFocusField("iva_category")}
+                  disabled={refusesDerive}
+                  onClick={() => open("iva_category")}
                 >
                   {fieldName(t, "iva_category")}
                 </Button>
@@ -430,19 +482,7 @@ export function ClassifySection({
               size="sm"
               data-field="iva-derive"
               disabled={ivaCategory === null || lock !== null || refusesDerive}
-              onClick={() => {
-                if (ivaCategory === null) return;
-                onStage({
-                  type: "stage_action",
-                  action: {
-                    id: `iva_derive:${id}`,
-                    kind: "iva_derive",
-                    transactionId: id,
-                    ivaCategory,
-                  },
-                });
-                say(t("desktop.ledger.inspector.derive.staged_toast"));
-              }}
+              onClick={stageDerivation}
             >
               {t("desktop.ledger.inspector.derive.stage")}
             </Button>

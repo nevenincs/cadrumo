@@ -23,9 +23,13 @@ import type { LedgerTransactionProjection } from "../shell/ledgerInvoiceContract
 
 /** A request its registered contract would not decode. */
 export class MovementActionInvalid extends Error {}
-/** Settled without writing, with the refusal's code. */
+/** Settled without writing, with the refusal's code and, where the
+ * operation records one, the detail it refused with. */
 export class MovementActionStopped extends Error {
-  constructor(readonly reason: string) {
+  constructor(
+    readonly reason: string,
+    readonly detail: JsonObject | null = null,
+  ) {
     super(reason);
   }
 }
