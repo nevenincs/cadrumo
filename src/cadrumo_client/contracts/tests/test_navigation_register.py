@@ -209,7 +209,7 @@ def test_the_shipped_register_declares_the_initial_elements() -> None:
         "ledger/rules": {gui},
         "ledger/registers": {gui},
         "ledger/health": {gui},
-        "withholding": set(),
+        "withholding": {gui},
         "declarations": {gui},
         "aeat-sync": {gui},
         "operations": set(),

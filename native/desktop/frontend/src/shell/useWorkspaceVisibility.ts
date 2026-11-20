@@ -47,6 +47,7 @@ export function useWorkspaceVisibility({
   const homeOn = views !== undefined && page === "home";
   const calendarOn = views !== undefined && page === "calendar";
   const ledgerOn = host.ledger !== undefined && page === "ledger";
+  const withholdingOn = host.ledger !== undefined && page === "withholding";
   const declarationsOn = host.modelo !== undefined && page === "declarations";
   const browserOn = host.sedeView !== undefined && page === "browser";
   const aeatSyncOn = host.aeatSync !== undefined && page === "aeat-sync";
@@ -56,6 +57,7 @@ export function useWorkspaceVisibility({
     calendarOn ||
     profileOn ||
     ledgerOn ||
+    withholdingOn ||
     declarationsOn ||
     browserOn ||
     aeatSyncOn;
@@ -158,6 +160,7 @@ export function useWorkspaceVisibility({
   const homeVisible = homeOn && firstPaneShown;
   const calendarVisible = calendarOn && firstPaneShown;
   const ledgerVisible = ledgerOn && firstPaneShown;
+  const withholdingVisible = withholdingOn && firstPaneShown;
   const declarationsVisible = declarationsOn && firstPaneShown;
   const browserVisible = browserOn && firstPaneShown;
   const tuiVisible =
@@ -175,6 +178,7 @@ export function useWorkspaceVisibility({
     homeOn,
     calendarOn,
     ledgerOn,
+    withholdingOn,
     declarationsOn,
     browserOn,
     aeatSyncOn,
@@ -191,6 +195,7 @@ export function useWorkspaceVisibility({
     homeVisible,
     calendarVisible,
     ledgerVisible,
+    withholdingVisible,
     declarationsVisible,
     browserVisible,
     tuiVisible,

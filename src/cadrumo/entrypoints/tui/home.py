@@ -22,12 +22,10 @@ from textual.message import Message
 from textual.widgets import DataTable, Static
 
 from ...application.modelo.declarations_list import observed_text
-from ...application.overview.filing_status_words import filing_status_words
 from ...application.overview.home import (
     HomeAgendaEntry,
     HomeAvailability,
     HomeDeclarationResume,
-    HomeDeclarationState,
     HomeNextAction,
     HomeProjectionV1,
     HomeTargetKind,
@@ -35,12 +33,11 @@ from ...application.overview.home import (
 )
 from ...application.search.workbench import WorkbenchDestinationAdmissionState
 from ...core.external_constants import OutputLanguage
-from ...core.i18n.render import lookup_translation, output_language, tr
+from ...core.i18n.render import output_language, tr
 from .components.account_chrome import AccountChromeScreen
 from .components.language import localized, repaint_tables
 from .components.theme import BASE_CSS, tokenised
 from .components.widgets import ContentDataTable, ContentScroll
-from .search import workbench_action_label
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,13 +100,6 @@ _AVAILABILITY_LOCALE_KEYS: Final = {
     HomeAvailability.NEVER_CAPTURED: "tui.home.availability.never_captured",
     HomeAvailability.UNAVAILABLE: "tui.home.availability.unavailable",
 }
-_DECLARATION_LOCALE_KEYS: Final = {
-    HomeDeclarationState.DRAFT: "tui.home.declaration_state.draft",
-    HomeDeclarationState.NEEDS_REVIEW: "tui.home.declaration_state.needs_review",
-    HomeDeclarationState.READY: "tui.home.declaration_state.ready",
-    HomeDeclarationState.FILED: "tui.home.declaration_state.filed",
-    HomeDeclarationState.DISCARDED: "tui.home.declaration_state.discarded",
-}
 _LINK_LABEL_LOCALE_KEYS: Final = {
     HomeLinkV1.DECLARATIONS: "tui.destination.declarations",
     HomeLinkV1.NEW_DECLARATION: "workspace.declarations.list.key.new",
@@ -149,30 +139,19 @@ _LINK_STATE_LOCALE_KEYS: Final = {
     WorkbenchDestinationAdmissionState.UNAVAILABLE: "tui.home.link_state.unavailable",
 }
 _LINK_ROW_PREFIX: Final = "link:"
-
-
-def _has_copy(translation_key: str) -> bool:
-    """Whether the active language authors this key.
-
-    :func:`tr` never reports a miss: it humanises the key's last segment, so
-    comparing its result with the key cannot tell an authored sentence from
-    an invented one.
-    """
-    return lookup_translation(translation_key, locale=output_language()) is not None
+_UNKNOWN_ACTION_LOCALE_KEY: Final = "tui.search.action.unknown"
 
 
 def _state_copy(state: HomeZoneState, *, empty_key: str | None = None) -> str:
     """Render one zone's availability as words, never as colour alone.
 
-    A zone that is not showing its data says why, from the reason the
-    application attached, because the generic line can only guess at a cause
-    and an operator acts on the cause. The generic line remains for a reason
-    this page has no words for yet.
+    A zone that is not showing its data says why, in the words the projection
+    served for the reason the application attached, because the generic line
+    can only guess at a cause and an operator acts on the cause. The generic
+    line remains for a reason the projection served no words for.
     """
-    if state.reason_code is not None and state.availability is not HomeAvailability.STALE:
-        reason_key = f"tui.home.availability.reason.{state.reason_code}"
-        if _has_copy(reason_key):
-            return tr(reason_key)
+    if state.reason_words is not None:
+        return state.reason_words
     label = tr(_AVAILABILITY_LOCALE_KEYS[state.availability])
     if state.availability is HomeAvailability.STALE and state.observed_at is not None:
         return tr(
@@ -185,9 +164,9 @@ def _state_copy(state: HomeZoneState, *, empty_key: str | None = None) -> str:
     return label
 
 
-def home_address(modelo: object, filing_year: int, period_token: str) -> str:
-    """Format the shared non-sensitive natural address for a Home row."""
-    return tr("tui.home.address", modelo=modelo, filing_year=filing_year, period=period_token)
+def _address(modelo: object, period_words: str | None) -> str:
+    """Name a Modelo and its period as the agenda rows do, from the period words the projection served."""
+    return f"M{modelo}" if period_words is None else f"M{modelo} {period_words}"
 
 
 def home_action_identity(item: HomeNextAction) -> str:
@@ -230,33 +209,36 @@ def home_target_agenda_address(target: HomeTarget) -> tuple[str, str, str] | Non
     return modelo, year, period
 
 
-def _action_cells(item: HomeNextAction) -> tuple[str, str, str]:
-    """Name the action and its reason from the ids the application ranked.
+def _ledger_copy(summary_words: str | None) -> str:
+    """Say the ledger zone is available with the counts the projection worded, or without them when it served none."""
+    label = tr(_AVAILABILITY_LOCALE_KEYS[HomeAvailability.AVAILABLE])
+    if summary_words is None:
+        return label
+    return tr("tui.home.availability.available_empty", label=label, detail=summary_words)
 
-    Both come from catalogues rather than from local prose: the verb resolves
-    through the same authority the command palette uses, so a suggested task
-    and the command that performs it are never described differently, and an
-    unrecognised reason code degrades to the honest generic line instead of
-    exposing its identifier.
+
+def _action_cells(item: HomeNextAction) -> tuple[str, str, str]:
+    """Name the action, its reason and its context from the words the projection served.
+
+    The projection words the action, the reason and the period; this page adds
+    none of its own. A part it served no words for shows the frontend's
+    generic line instead of exposing its identifier.
     """
-    label = workbench_action_label(str(item.action.action.action_id))
-    reason_key = f"tui.home.reason.{item.reason_code}"
-    reason = tr(reason_key) if _has_copy(reason_key) else tr("tui.home.action.reason")
+    label = item.action_words if item.action_words is not None else tr(_UNKNOWN_ACTION_LOCALE_KEY)
+    reason = item.reason_words if item.reason_words is not None else tr("tui.home.action.reason")
     if item.period is None:
         context = tr("tui.home.action.context_across_records")
     elif item.modelo is None or item.filing_year is None:  # pragma: no cover - projection rejects this shape
         raise ValueError("an addressed Home action requires Modelo, year, and period")
     else:
-        context = home_address(item.modelo, item.filing_year, item.period.registry_token)
+        context = _address(item.modelo, item.period_words)
     return reason, label, context
 
 
-def _declaration_cells(item: HomeDeclarationResume) -> tuple[str, str, str]:
-    return (
-        home_address(item.modelo, item.filing_year, item.period.registry_token),
-        item.name,
-        tr(_DECLARATION_LOCALE_KEYS[item.state]),
-    )
+def _declaration_text(item: HomeDeclarationResume) -> str:
+    """One resumable-declaration row: address, name and the state words the projection served."""
+    parts = (_address(item.modelo, item.period_words), item.name, item.state_words)
+    return " · ".join(part for part in parts if part is not None)
 
 
 def _link_label(link: HomeLinkV1) -> str:
@@ -276,12 +258,10 @@ def _link_cell(link: HomeLinkV1, state: WorkbenchDestinationAdmissionState) -> t
     return f"{_link_label(link)}\n{'':<3} {tr(state_key)}", 2
 
 
-def _agenda_cells(item: HomeAgendaEntry) -> tuple[str, str, str]:
-    return (
-        item.due_on_text,
-        f"M{item.modelo} {item.period_words}",
-        filing_status_words(item.filing_status, OutputLanguage(output_language())),
-    )
+def _agenda_text(item: HomeAgendaEntry) -> str:
+    """One agenda row: the served date, address and filing status words."""
+    parts = (item.due_on_text, _address(item.modelo, item.period_words), item.filing_status_words)
+    return " · ".join(part for part in parts if part is not None)
 
 
 class HomeScreen(AccountChromeScreen):
@@ -535,9 +515,8 @@ class HomeScreen(AccountChromeScreen):
     ) -> None:
         table.add_column("")
         for item in items:
-            address, name, state = _declaration_cells(item)
             table.add_row(
-                f"{address} · {name} · {state}",
+                _declaration_text(item),
                 key=self._remember(HomeTargetKind.DECLARATION, home_declaration_identity(item)),
             )
         table.display = bool(items)
@@ -549,9 +528,8 @@ class HomeScreen(AccountChromeScreen):
     ) -> None:
         table.add_column("")
         for item in items:
-            due, address, state = _agenda_cells(item)
             table.add_row(
-                f"{due} · {address} · {state}",
+                _agenda_text(item),
                 key=self._remember(HomeTargetKind.AGENDA, home_agenda_identity(item)),
             )
         table.display = bool(items)
@@ -565,15 +543,7 @@ class HomeScreen(AccountChromeScreen):
         evidence.display = evidence_state.availability is not HomeAvailability.AVAILABLE
         ledger = projection.ledger
         self.query_one("#home-ledger", Static).update(
-            _state_copy(projection.ledger_state)
-            if ledger is None
-            else tr(
-                "tui.home.ledger_summary",
-                entries=ledger.entries,
-                requiring_review=ledger.requiring_review,
-                unclassified=ledger.unclassified,
-                missing_evidence=ledger.missing_evidence,
-            )
+            _state_copy(projection.ledger_state) if ledger is None else _ledger_copy(ledger.summary_words)
         )
         messages = projection.messages_requiring_attention
         self.query_one("#home-messages", Static).update(
@@ -668,7 +638,6 @@ __all__ = [
     "HomeTarget",
     "HomeTargetSelected",
     "home_action_identity",
-    "home_address",
     "home_agenda_identity",
     "home_declaration_identity",
     "home_target_action_id",

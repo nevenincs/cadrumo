@@ -390,7 +390,7 @@ def test_home_offers_ledger_work_only_when_there_is_some_and_never_for_an_unmeas
     measured reports the same zero a finished one does.
 
     Also asserts the reason codes are Home's OWN declared vocabulary. A code
-    with no `tui.home.reason.*` entry renders the degraded generic line, so an
+    with no served-words entry renders the degraded generic line, so an
     action invented to fill the zone would arrive unreadable.
     """
     from ..workbench_generation_home import home_ledger_actions
@@ -406,7 +406,7 @@ def test_home_offers_ledger_work_only_when_there_is_some_and_never_for_an_unmeas
 
     catalogue = _home_reason_keys_for_test()
     for item in offered:
-        assert f"tui.home.reason.{item.reason_code}" in catalogue, (
+        assert f"application.overview.served.home.reason.{item.reason_code}" in catalogue, (
             f"offered action reason {item.reason_code!r} has no copy, so Home degrades to its generic line"
         )
 
@@ -421,13 +421,13 @@ def test_home_offers_ledger_work_only_when_there_is_some_and_never_for_an_unmeas
 
 
 def _home_reason_keys_for_test() -> frozenset[str]:
-    """Every `tui.home.reason.*` key the Spanish catalogue declares."""
+    """Every `application.overview.served.home.reason.*` key the Spanish catalogue declares."""
     import yaml
 
-    root = Path(__file__).resolve().parents[2] / "locales" / "es" / "common.yml"
+    root = Path(__file__).resolve().parents[2] / "locales" / "es" / "application.yml"
     raw = yaml.safe_load(root.read_text(encoding="utf-8"))
-    reasons = raw["tui"]["home"]["reason"]
-    return frozenset(f"tui.home.reason.{name}" for name in reasons)
+    reasons = raw["application"]["overview"]["served"]["home"]["reason"]
+    return frozenset(f"application.overview.served.home.reason.{name}" for name in reasons)
 
 
 def test_a_declaration_needing_review_is_offered_with_its_own_address() -> None:

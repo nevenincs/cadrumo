@@ -39,6 +39,7 @@ const LINKS_REPLY = [
   "- [el inicio](cadrumo://view/home)",
   "- [el calendario](cadrumo://view/calendar)",
   "- [los movimientos](cadrumo://view/ledger/movements)",
+  "- [las retenciones](cadrumo://view/withholding)",
   "- [las operaciones](cadrumo://view/operations)",
   "- [los datos de la AEAT](cadrumo://view/aeat-sync)",
   "- [el espacio de trabajo](cadrumo://view/terminal)",

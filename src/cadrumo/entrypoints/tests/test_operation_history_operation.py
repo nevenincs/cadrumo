@@ -69,8 +69,8 @@ from cadrumo_client.contracts.access_vocabulary import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_T0 = datetime(2026, 11, 1, 9, tzinfo=UTC)
-_NOW = datetime(2026, 11, 20, 12, tzinfo=UTC)
+_NOW = datetime.now(UTC).replace(microsecond=0)
+_T0 = _NOW - timedelta(days=19)
 _MARKER = "history-private-marker-never-in-a-row"
 _LEDGER_READS = ("list", "view", "status", "check", "history", "track", "preflight", "review")
 
@@ -511,8 +511,8 @@ def test_access_is_the_signed_in_profile_own_period_independent_read(tmp_path: P
         {"limit": 0},
         {"limit": OPERATIONS_HISTORY_LIMIT_MAX + 1},
         {"limit": "5"},
-        {"after": {"started_at": "2026-11-01T09:00:00", "operation_id": "a" * 64}},
-        {"after": {"started_at": "2026-11-01T09:00:00Z", "operation_id": "short"}},
+        {"after": {"started_at": _T0.replace(tzinfo=None).isoformat(), "operation_id": "a" * 64}},
+        {"after": {"started_at": _T0.isoformat(), "operation_id": "short"}},
         {"include": "payloads"},
     ),
 )

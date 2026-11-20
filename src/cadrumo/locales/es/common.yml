@@ -5457,6 +5457,35 @@ desktop:
     hide: Ocultar el espacio de trabajo
     label: Espacio de trabajo de Cadrumo
     show: Mostrar el espacio de trabajo
+  withholding:
+    absences:
+      empty: No hay indicaciones vigentes de que no hubo retenciones en {ejercicio}.
+      history: Indicaciones retiradas
+      title: Sin retenciones
+    change: Cambiar en el Libro
+    column:
+      class: Clase de renta
+      note: Nota
+      origin: Origen
+      payer: Pagador
+      state: Estado
+      stated_on: Declarado el
+      withdrawn_on: Retirado el
+    ejercicio: Año
+    empty: 'No hay nada anotado para {ejercicio}: ni certificados ni indicaciones
+      de que no hubo retenciones.'
+    failed: No se pudo leer ({code}).
+    loading: Leyendo las retenciones…
+    read_again: Leer de nuevo
+    records:
+      empty: No hay certificados anotados para {ejercicio}.
+      title: Certificados
+    refresh: Actualizar
+    signed_out: Inicia sesión para ver tus retenciones.
+    title: Retenciones
+    what: Las retenciones que tus pagadores te practicaron en el año que elijas, tal
+      como indica cada certificado, y las indicaciones de que una clase de renta no
+      tuvo ninguna. Anótalas o cámbialas en el Libro.
 entries:
   portal_calendario_contribuyente:
     label: Calendario del contribuyente
@@ -7380,43 +7409,15 @@ tui:
       context_across_records: En todos los registros
       reason: Sugerida por el resumen local
     action_context: '%{label} - %{reason} · %{context}'
-    address: Modelo %{modelo} · %{period} %{filing_year}
     aeat_evidence: 'Datos de la AEAT: %{state}'
     availability:
       available: Disponible
       available_empty: '%{label} - %{detail}'
       locked: Bloqueado - desbloquea el perfil seleccionado para ver esta información
       never_captured: Aún sin leer
-      reason:
-        workbench:
-          calendar:
-            aeat_reader_unavailable: Aún sin leer - aparece tras la primera Sincronización
-              AEAT
-            taxpayer_model_undeclared: No disponible - el perfil aún no indica qué
-              tipo de contribuyente es
-          home:
-            actions_projector_unavailable: No disponible - las próximas acciones aparecen
-              cuando se han comprobado todos tus registros
-            agenda_projector_unavailable: No disponible - no se pudo calcular el calendario
-              de presentación
-            declarations_resume_projector_unavailable: No disponible - no se pudieron
-              leer las declaraciones que retomar
-            messages_never_pulled: Aún sin leer - los mensajes de la AEAT aparecen
-              tras la primera Sincronización AEAT
-            taxpayer_profile_incomplete: No disponible - al perfil le faltan respuestas
-              obligatorias; complétalas en Perfil
-          ledger:
-            snapshot_projector_unavailable: No disponible - se muestra cuando se han
-              comprobado todos tus registros
       stale: Desactualizado - la última copia local necesita actualizarse
       stale_observed: '%{label}; última observación %{observed_at}'
       unavailable: No disponible - esta información no puede mostrarse ahora
-    declaration_state:
-      discarded: Descartada
-      draft: Borrador
-      filed: Registrada como presentada
-      needs_review: Necesita revisión
-      ready: Lista
     empty:
       actions: sin acciones sugeridas
       agenda: sin próximas fechas de presentación
@@ -7429,8 +7430,6 @@ tui:
       ledger: Preparación de los registros
       messages: Mensajes
       navigation: Ir a
-    ledger_summary: Disponible - %{entries} apuntes; %{requiring_review} necesitan
-      revisión; %{unclassified} sin clasificar; %{missing_evidence} sin justificante
     link:
       search_declarations: Buscar declaraciones
     link_state:
@@ -7439,13 +7438,6 @@ tui:
       stale: Sin actualizar
       unavailable: No disponible
     messages_summary: Disponible - %{count} requieren atención
-    reason:
-      blocked_dependency: Una dependencia de la declaración está bloqueada
-      blocked_evidence: Un bloqueo necesita un justificante
-      blocked_review: El trabajo bloqueado necesita revisión
-      declaration_needs_review: La declaración necesita revisión
-      evidence_missing: Falta un justificante
-      ledger_classification_pending: Falta clasificar apuntes en Registros
     session:
       active: Sesión local activa
       expired: Sesión caducada

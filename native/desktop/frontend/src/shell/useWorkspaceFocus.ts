@@ -27,6 +27,7 @@ export function useWorkspaceFocus({
   ledgerPage,
   declarationsPage,
   homePage,
+  withholdingPage,
   calendarPage,
   aeatSyncPage,
   docs,
@@ -47,6 +48,7 @@ export function useWorkspaceFocus({
   ledgerPage: FocusTarget;
   declarationsPage: FocusTarget;
   homePage: FocusTarget;
+  withholdingPage: FocusTarget;
   calendarPage: FocusTarget;
   aeatSyncPage: FocusTarget;
   docs: FocusTarget;
@@ -91,6 +93,7 @@ export function useWorkspaceFocus({
         ledgerPage.current ??
         declarationsPage.current ??
         homePage.current ??
+        withholdingPage.current ??
         calendarPage.current ??
         aeatSyncPage.current ??
         docs.current)
@@ -100,6 +103,7 @@ export function useWorkspaceFocus({
         ledgerPage.current ??
         declarationsPage.current ??
         homePage.current ??
+        withholdingPage.current ??
         calendarPage.current ??
         aeatSyncPage.current ??
         docs.current
@@ -120,6 +124,7 @@ export function useWorkspaceFocus({
     ledgerPage,
     declarationsPage,
     homePage,
+    withholdingPage,
     calendarPage,
     aeatSyncPage,
     docs,

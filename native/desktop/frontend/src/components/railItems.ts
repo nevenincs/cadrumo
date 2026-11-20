@@ -36,6 +36,7 @@ export function railItems({
   aeatSyncOn,
   homeVisible,
   ledgerVisible,
+  withholdingVisible,
   declarationsVisible,
   calendarVisible,
   browserVisible,
@@ -70,6 +71,7 @@ export function railItems({
   aeatSyncOn: boolean;
   homeVisible: boolean;
   ledgerVisible: boolean;
+  withholdingVisible: boolean;
   declarationsVisible: boolean;
   calendarVisible: boolean;
   browserVisible: boolean;
@@ -167,6 +169,13 @@ export function railItems({
             label: t("desktop.ledger.title"),
             pressed: ledgerVisible,
             onClick: () => runAction("view.ledger"),
+          } satisfies RailItem,
+          {
+            id: "withholding",
+            icon: "ledger",
+            label: t("desktop.withholding.title"),
+            pressed: withholdingVisible,
+            onClick: () => runAction("view.withholding"),
           } satisfies RailItem,
         ]
       : []),

@@ -62,6 +62,7 @@ from .desktop_ledger_catalogue_keys import DESKTOP_LEDGER_CATALOGUE_KEYS
 from .desktop_ledger_document_keys import DESKTOP_LEDGER_DOCUMENT_KEYS
 from .desktop_ledger_workflow_keys import DESKTOP_LEDGER_WORKFLOW_KEYS
 from .desktop_modelo_choice_keys import MODELO_CHOICE_FAMILIES, MODELO_CHOICE_KEYS
+from .desktop_withholding_keys import DESKTOP_WITHHOLDING_KEYS
 from .desktop_workspace_keys import WORKSPACE_FAMILIES, WORKSPACE_KEYS
 from .errors import LocaleError
 from .invoice_figures_preview_keys import FINDING_KEYS, RATE_SLOT_KEYS, RULE_FINDING_KEYS
@@ -813,6 +814,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = (
     | DESKTOP_LEDGER_CATALOGUE_KEYS
     | DESKTOP_INTERFACE_KEYS
     | DESKTOP_HOME_KEYS
+    | DESKTOP_WITHHOLDING_KEYS
     | WORKSPACE_KEYS
     | ASSET_KEYS
     | INVENTORY_KEYS
