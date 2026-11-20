@@ -91,7 +91,7 @@ import {
   MODEL_UNAVAILABLE,
   MODEL_UNAVAILABLE_WHY,
   admitted,
-  withStaleReads,
+  withScenarioReads,
 } from "./fixtures/agentLanes";
 import { pieces } from "./fixtures/textPieces";
 import type {
@@ -1013,7 +1013,7 @@ export function fixtureAgent({
       const stated = engineHealth
         ? withEngineHealth(served, engineHealth)
         : served;
-      return withStaleReads(models ? models.report(stated) : stated);
+      return withScenarioReads(models ? models.report(stated) : stated);
     },
     async localModels() {
       say("agentLocalModels");

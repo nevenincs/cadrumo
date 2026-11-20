@@ -157,3 +157,59 @@ def _model_without_installed(model: object) -> object:
     if not isinstance(model, dict):
         return model
     return {key: value for key, value in cast(dict[str, object], model).items() if key != "installed"}
+
+
+class HeldLaneLog:
+    """Log why each lane the picker serves cannot be chosen, once for each change.
+
+    The window words a held lane from its health axes alone, so every axis that
+    holds it, the catalogue state and the agent's own reasons are logged when a
+    lane becomes held or its cause changes, and once when it is selectable again.
+    The agent serves these values publicly; none names a credential or a path.
+    """
+
+    def __init__(self) -> None:
+        """Start with no lane logged."""
+        self._held: dict[tuple[str, str], tuple[object, ...]] = {}
+
+    def observe(self, document: dict[str, Any]) -> None:
+        """Log the lanes of a served ``document`` whose cause changed since the last one."""
+        lanes: object = document.get("providers")
+        if not isinstance(lanes, list):
+            return
+        for lane in cast(list[object], lanes):
+            if isinstance(lane, dict):
+                self._observe_lane(cast(dict[str, object], lane))
+
+    def _observe_lane(self, lane: dict[str, object]) -> None:
+        key = (str(lane.get("provider_id")), str(lane.get("transport")))
+        health = lane.get("health")
+        if not isinstance(health, dict):
+            return
+        axes = cast(dict[str, object], health)
+        if axes.get("selectable") is True:
+            if self._held.pop(key, None) is not None:
+                _LOGGER.info("agent picker lane selectable provider=%s transport=%s", *key)
+            return
+        catalog = lane.get("catalog")
+        state = cast(dict[str, object], catalog).get("state") if isinstance(catalog, dict) else None
+        status = cast(dict[str, object], state).get("status") if isinstance(state, dict) else None
+        cause = (
+            axes.get("configured"),
+            axes.get("transport"),
+            axes.get("authentication"),
+            axes.get("catalog"),
+            axes.get("admission"),
+            status,
+            tuple(cast(list[object], axes.get("reasons") or [])),
+        )
+        if self._held.get(key) == cause:
+            return
+        self._held[key] = cause
+        _LOGGER.info(
+            "agent picker lane held provider=%s transport=%s configured=%s transport_health=%s "
+            "authentication=%s catalog=%s admission=%s catalog_state=%s reasons=%s",
+            *key,
+            *cause[:6],
+            "; ".join(str(reason) for reason in cause[6]),
+        )
