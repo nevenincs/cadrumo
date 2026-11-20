@@ -13,6 +13,7 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.adapters.inbound.einvoice.shape import probe_document_shape
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
     LedgerEvidenceAttachmentIngestor,
@@ -147,6 +148,7 @@ def test_ledger_view_settles_only_declared_static_refusal_detail(
             evidence_repository=LedgerEvidenceRepositoryAdapter(objects=profile.repository),
             attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=profile.repository)),
             bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+            document_shape_probe=probe_document_shape,
         )
         with pytest.raises(PurchaseInvoiceEvidenceNotFoundError):
             PurchaseInvoiceEvidenceService(ports=ports).view(bucket_id=str(_PROFILE), evidence_id=_EVIDENCE_ID)

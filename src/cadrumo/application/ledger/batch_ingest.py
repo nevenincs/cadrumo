@@ -1068,8 +1068,15 @@ def _ingest_one_batch_item(
             expected_content_digest=content_address,
         )
     except Exception as exc:  # reason: one document's failure is its own row, never the run's end.
+        # Bytes no reader can read were once stored first and refused at the read below as
+        # `not_readable`; the add now refuses them before custody, and the row keeps that code.
+        owned = getattr(exc, "terminal_precondition_verdict", None)
+        unreadable = (
+            isinstance(owned, PreconditionVerdict)
+            and owned.failed_condition_id == LedgerPreconditionCondition.EVIDENCE_BYTES_READABLE.value
+        )
         return refused(
-            "evidence_refused",
+            "not_readable" if unreadable else "evidence_refused",
             exc,
             condition=LedgerPreconditionCondition.EVIDENCE_DOCUMENT_BYTES_AVAILABLE,
         )

@@ -26,10 +26,11 @@ import {
 import { textLimit } from "../../../shell/ledgerLimits";
 import type { LedgerPlan } from "../../../shell/ledgerPlan";
 import type { TextLimitName } from "../../../shell/ledgerEntryContract";
-import type {
-  SinceReadConflict,
-  StepOutcome,
-  StepReport,
+import {
+  outcomeUnits,
+  type SinceReadConflict,
+  type StepOutcome,
+  type StepReport,
 } from "../../../shell/ledgerApply";
 import {
   effectiveFacts,
@@ -961,19 +962,14 @@ export function linksReady(
   );
 }
 
-/** How many movements, new movements and actions came to each outcome. */
+/** How many changes came to each outcome, in the unit the review counted:
+ * a movement's edits, an action with its follow-up writes, a new movement. */
 export function outcomeTally(
   reports: readonly StepReport[],
 ): Partial<Record<StepOutcome["kind"], number>> {
   const tally: Partial<Record<StepOutcome["kind"], number>> = {};
-  const add = (kind: StepOutcome["kind"]) => {
-    tally[kind] = (tally[kind] ?? 0) + 1;
-  };
-  for (const report of reports) {
-    if (report.step.kind === "bulk")
-      for (const row of report.rows) add(row.outcome.kind);
-    else add(report.outcome.kind);
-  }
+  for (const { outcome } of outcomeUnits(reports))
+    tally[outcome.kind] = (tally[outcome.kind] ?? 0) + 1;
   return tally;
 }
 

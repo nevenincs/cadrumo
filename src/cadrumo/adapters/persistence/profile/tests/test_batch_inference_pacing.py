@@ -20,6 +20,7 @@ from reportlab.pdfgen import canvas
 
 from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
+from .....adapters.inbound.einvoice.shape import probe_document_shape
 from .....application.ledger import tests as ledger_application_tests
 from .....application.ledger.batch_ingest import COMPLETED_BATCH_ITEM_STATUSES, BatchRunResult, run_evidence_batch
 from .....application.ledger.evidence_ports import LedgerEvidencePorts
@@ -103,6 +104,7 @@ def _run(profile: TestRuntimeProfile, folder: Path) -> BatchRunResult:
         evidence_repository=LedgerEvidenceRepositoryAdapter(objects=profile.repository),
         attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=profile.repository)),
         bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+        document_shape_probe=probe_document_shape,
     )
     period = default_invoice_extraction_period()
     with bundled_indexed_authority().operation() as operation:

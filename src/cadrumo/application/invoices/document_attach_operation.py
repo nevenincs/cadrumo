@@ -27,7 +27,7 @@ from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.attachments.errors import AttachmentNotFoundError
 from ...domain.attachments.service import link_attachment_invoice
-from ..ledger.evidence import MediaKind, admit_evidence_file, ingest_evidence_file
+from ..ledger.evidence import MediaKind, admit_evidence_file, ingest_evidence_file, require_readable_evidence_file
 from ..ledger.evidence_port_identity import require_exact_evidence_ports
 from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -137,9 +137,11 @@ class InvoiceDocumentAttachExecutor:
         def preflight() -> tuple[InvoiceDocumentAttachPorts, str, tuple[Path, MediaKind]]:
             ports = self._ports_factory(bucket_id=bucket_id)
             require_exact_evidence_ports(ports.evidence, bucket_id=bucket_id)
-            # Both refusals land before custody is touched, so a refused attach changed nothing.
+            # Every refusal (unknown invoice, unkept file, unreadable bytes) lands before custody is touched,
+            # so a refused attach changed nothing.
             invoice = resolve_catalogue_invoice(ports.invoice_reader.load(), payload.invoice_id)
             admitted = admit_evidence_file(payload.source_path, Path(payload.source_directory))
+            require_readable_evidence_file(ports=ports.evidence, admitted=admitted)
             return ports, invoice.invoice_id, admitted
 
         def store_and_link(

@@ -30,8 +30,10 @@ from ....application.ledger.evidence_add_operation import (
 )
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ....application.ledger.evidence_ports import LedgerEvidencePorts
+from ....application.ledger.preconditions import LedgerPreconditionCondition
 from ....application.operations.models import OperationRequest
 from ....application.operations.owner import OperationExecutorContext
+from ....core.document_shape import DocumentShape
 from ....core.operations import OperationEffect, profile_operation_subject
 from .unused_repository_ports import UnusedBucketEventRepository, UnusedEvidenceAttachmentIngestor
 
@@ -39,6 +41,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
+
+
+def _readable_probe(data: bytes) -> DocumentShape:
+    """Isolate the effect ordering from document reading: every non-empty payload is a readable PDF."""
+    return DocumentShape.PDF_TEXT_LAYER if data else DocumentShape.UNKNOWN
 
 
 def _record(evidence_id: str, *, source_path: str = "invoice.pdf") -> PurchaseInvoiceEvidence:
@@ -113,8 +120,10 @@ def test_invalid_source_directory_refuses_before_custody_access(tmp_path: Path, 
 @pytest.mark.parametrize("keyed_replay", [False, True])
 async def test_add_effect_is_unknown_before_ingestion_and_updated_even_for_keyed_replay(
     monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
     keyed_replay: bool,
 ) -> None:
+    (tmp_path / "invoice.pdf").write_bytes(b"synthetic evidence bytes")
     backend = object()
     key = "retry-key" if keyed_replay else None
     prior = (
@@ -144,6 +153,7 @@ async def test_add_effect_is_unknown_before_ingestion_and_updated_even_for_keyed
         evidence_repository=EvidenceRepository(),
         attachment_ingestor=UnusedEvidenceAttachmentIngestor(backend),
         bucket_event_repository=UnusedBucketEventRepository(backend),
+        document_shape_probe=_readable_probe,
     )
 
     class Cancellation:
@@ -200,7 +210,7 @@ async def test_add_effect_is_unknown_before_ingestion_and_updated_even_for_keyed
     ) -> PurchaseInvoiceEvidenceResult:
         assert bucket_id == str(_PROFILE)
         assert source_path == "invoice.pdf"
-        assert source_directory == Path.cwd()
+        assert source_directory == tmp_path
         assert supplier == "Supplier SL"
         assert invoice_number == "INV-2026-05"
         assert invoice_date == "2026-05-08"
@@ -247,7 +257,7 @@ async def test_add_effect_is_unknown_before_ingestion_and_updated_even_for_keyed
         payload=LedgerEvidenceAddRequest(
             profile_id=_PROFILE,
             source_path="invoice.pdf",
-            source_directory=str(Path.cwd()),
+            source_directory=str(tmp_path),
             supplier="Supplier SL",
             invoice_number="INV-2026-05",
             invoice_date="2026-05-08",
@@ -274,4 +284,83 @@ async def test_add_effect_is_unknown_before_ingestion_and_updated_even_for_keyed
     assert effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
     assert cancellation.active is False
     definition = build_ledger_evidence_add_definition(ports_factory)
-    assert definition.capabilities.permitted_effects == frozenset({OperationEffect.UPDATED, OperationEffect.UNKNOWN})
+    # A refusal about the file lands before the UNKNOWN effect, so the definition must declare NONE too.
+    assert definition.capabilities.permitted_effects == frozenset(
+        {OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("content", [b"", b"bytes no reader can read"])
+async def test_unreadable_bytes_are_refused_before_any_effect_or_custody(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, content: bytes
+) -> None:
+    """A refusal about the file's bytes precedes the UNKNOWN effect and every custody write."""
+    (tmp_path / "invoice.pdf").write_bytes(content)
+    backend = object()
+    effects: list[OperationEffect] = []
+
+    class Events:
+        async def phase(self, _phase: str) -> None:
+            return None
+
+        async def effect(self, effect: OperationEffect) -> None:
+            effects.append(effect)
+
+    class EvidenceRepository:
+        secure_object_repository = backend
+
+        def load(self, **_kwargs: object) -> tuple[PurchaseInvoiceEvidence, ...]:
+            return ()
+
+        def save(self, **_kwargs: object) -> None:
+            raise AssertionError("a refused add must not save the catalogue")
+
+        def load_revisioned(self, **_kwargs: object) -> tuple[tuple[PurchaseInvoiceEvidence, ...], str]:
+            raise AssertionError("a refused add must not read the catalogue for replay")
+
+        def save_if_revision_with_secure_object_writes(self, **_kwargs: object) -> None:
+            raise AssertionError("a refused add must not save the catalogue")
+
+    def refusing_probe(data: bytes) -> DocumentShape:
+        return DocumentShape.UNKNOWN
+
+    ports = LedgerEvidencePorts(
+        evidence_repository=EvidenceRepository(),
+        attachment_ingestor=UnusedEvidenceAttachmentIngestor(backend),
+        bucket_event_repository=UnusedBucketEventRepository(backend),
+        document_shape_probe=refusing_probe,
+    )
+    monkeypatch.setattr(
+        "cadrumo.application.ledger.evidence_add_operation.require_active_bucket_id", lambda: str(_PROFILE)
+    )
+    monkeypatch.setattr(
+        "cadrumo.application.ledger.evidence_port_identity.require_active_bucket_id", lambda: str(_PROFILE)
+    )
+
+    def ports_factory(*, bucket_id: str) -> LedgerEvidencePorts:
+        assert bucket_id == str(_PROFILE)
+        return ports
+
+    context = SimpleNamespace(
+        identity=SimpleNamespace(
+            definition_id=LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
+            subject_ref=profile_operation_subject(str(_PROFILE)),
+        ),
+        events=Events(),
+    )
+    request = OperationRequest[LedgerEvidenceAddRequest](
+        definition_id=LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=LedgerEvidenceAddRequest(
+            profile_id=_PROFILE, source_path="invoice.pdf", source_directory=str(tmp_path)
+        ),
+    )
+
+    with pytest.raises(PurchaseInvoiceEvidenceInputError) as refused:
+        await LedgerEvidenceAddExecutor(ports_factory).execute(request, cast(OperationExecutorContext, context))
+
+    assert effects == []
+    verdict = refused.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == LedgerPreconditionCondition.EVIDENCE_BYTES_READABLE.value

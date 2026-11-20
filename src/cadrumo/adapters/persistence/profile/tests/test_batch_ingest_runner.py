@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.inbound.einvoice.shape import probe_document_shape
 from cadrumo.adapters.outbound.llm.tests.model_run_support import serving_agent
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
@@ -38,6 +39,7 @@ from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
 from cadrumo.application.ledger.extraction_draft_store import load_extraction_drafts
 from cadrumo.application.ledger.invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
 from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
+from cadrumo.application.ledger.preconditions import LedgerPreconditionCondition
 from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.model_roles import ModelRole
@@ -101,6 +103,7 @@ def _batch_ports(
         evidence_repository=LedgerEvidenceRepositoryAdapter(objects=profile.repository),
         attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=profile.repository)),
         bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+        document_shape_probe=probe_document_shape,
     )
     return evidence_ports, invoice_draft_extraction_ports(evidence_ports=evidence_ports, operation=operation)
 
@@ -206,9 +209,9 @@ def test_the_refused_row_says_what_was_wrong_with_that_document(
     result = _run(runtime_profile, batch_dir)
     poison = next(item for item in result.items if item.source_name == _POISON)
 
-    assert poison.refusal_code is not None and poison.refusal_code
+    assert poison.refusal_code == "not_readable"
     assert poison.refusal_verdict is not None, "a refusal must name the condition that failed"
-    assert poison.refusal_verdict.failed_condition_id
+    assert poison.refusal_verdict.failed_condition_id == LedgerPreconditionCondition.EVIDENCE_BYTES_READABLE.value
     facts = {key: value for evidence in poison.refusal_verdict.evidence for key, value in evidence.values.items()}
     assert facts, "a refusal an operator cannot act on is barely better than a silent drop"
 
@@ -328,11 +331,10 @@ def test_an_item_that_failed_to_read_is_retried_rather_than_stranded(
 ) -> None:
     """Evidence-without-draft is an incomplete item, not a completed one.
 
-    The subtle half of idempotency. The poisoned document's evidence record IS
-    written on the first pass — the bytes attach fine, it is the READ that
-    fails — so a runner treating "evidence exists" as completion would report
-    it as an untroubled ``no_op`` on every later run and never attempt it
-    again. It must stay a visible refusal.
+    The subtle half of idempotency. The poisoned document is refused before
+    custody on every pass, so a runner that reported "nothing new to do" for a
+    document it holds no evidence for would hide it forever. It must stay a
+    visible refusal.
     """
     _run(runtime_profile, batch_dir)
     second = _run(runtime_profile, batch_dir)

@@ -23,7 +23,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG, host_filled_schema
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.contribuyente.inventory.corrections import inventory_refusal_key
-from ..ledger.evidence import MediaKind, admit_evidence_file, ingest_evidence_file
+from ..ledger.evidence import MediaKind, admit_evidence_file, ingest_evidence_file, require_readable_evidence_file
 from ..ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..ledger.evidence_port_identity import require_exact_evidence_ports
 from ..ledger.evidence_ports import LedgerEvidencePorts, LedgerEvidencePortsFactory
@@ -130,7 +130,9 @@ class InventoryEvidenceAddExecutor:
         def preflight() -> tuple[LedgerEvidencePorts, tuple[Path, MediaKind]]:
             ports = self._ports_factory(bucket_id=bucket_id)
             require_exact_evidence_ports(ports, bucket_id=bucket_id)
-            return ports, admit_evidence_file(payload.source_path, Path(payload.source_directory))
+            admitted = admit_evidence_file(payload.source_path, Path(payload.source_directory))
+            require_readable_evidence_file(ports=ports, admitted=admitted)
+            return ports, admitted
 
         async def capture() -> str | OperationRefusalEvidence:
             try:

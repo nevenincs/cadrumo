@@ -1685,8 +1685,10 @@ desktop:
       action:
         allocate: Parte profesional · {share}
         archive: Archivar
-        attach: Adjuntar
-        attach_file: Adjuntar {name}
+        attach_file_other: Adjuntar {name} como otro documento
+        attach_file_purchase: Adjuntar {name} como factura de compra
+        attach_other: Adjuntar como otro documento
+        attach_purchase: Adjuntar como factura de compra
         detach: Separar
         exclude: Excluir
         iva_derive: Calcular el IVA · {category}
@@ -3286,19 +3288,26 @@ desktop:
         active_only: Solo los movimientos activos admiten documentos.
         add_file: Añadir desde este ordenador
         add_staged: '{file} · adjunto aún sin guardar'
-        adding: Añadir {file} · sin guardar
+        adding_other: Añadir {file} como otro documento · sin guardar
+        adding_purchase: Añadir {file} como factura de compra · sin guardar
         advisory: No hay ninguna factura de compra adjunta. Puedes guardar el movimiento;
           para calcular una deducción pueden hacer falta sus datos fiscales y la documentación
           justificativa.
         attach_existing: Adjuntar un documento
         attach_staged: Adjunto aún sin guardar
-        attaching: Adjuntar {file} · sin guardar
+        attaching_other: Adjuntar {file} como otro documento · sin guardar
+        attaching_purchase: Adjuntar {file} como factura de compra · sin guardar
         detach: Quitar
         detach_named: Quitar {file}
         detach_pending: Quitar, aún sin guardar
         detach_staged: Quitar, aún sin guardar
         detaching: Quitar {file} · sin guardar
         hint: Un PDF o una imagen, leído de este ordenador y guardado cifrado.
+        kind:
+          choose: Elige primero si es la factura de compra del movimiento u otro documento.
+          label: Adjuntar como
+          other: Otro documento
+          purchase: Factura de compra
         no_free: No hay otro documento en el libro
         none: Sin documentos
         pick_failed: No se abrió el diálogo de archivos.

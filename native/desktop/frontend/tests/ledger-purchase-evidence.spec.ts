@@ -66,17 +66,15 @@ test("an unrelated evidence catalogue record does not invent a movement link", (
   });
 });
 
-test("a later document supplements immutable purchase evidence instead of replacing it", () => {
-  const row = movement(hexId("a"), {
-    purchase_invoice_evidence_id: hexId("f"),
-  });
-  expect(documentAttachmentReference(row.transaction, record)).toEqual({
+test("a document is attached in the role the person chose, never by default as the purchase invoice", () => {
+  expect(documentAttachmentReference(record, "other")).toEqual({
     evidenceId: null,
     attachmentIds: [record.attachment_id],
   });
-  expect(
-    documentAttachmentReference({ purchase_invoice_evidence_id: null }, record),
-  ).toEqual({ evidenceId: record.evidence_id, attachmentIds: [] });
+  expect(documentAttachmentReference(record, "purchase")).toEqual({
+    evidenceId: record.evidence_id,
+    attachmentIds: [],
+  });
 });
 
 test("ordinary stored deduction and investment facts survive a new inspector read", () => {
