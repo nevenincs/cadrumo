@@ -29,9 +29,15 @@ import {
 import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
 /** What is known of a record's reading waiting for review: the queue's row
- * for it, none, or that the queue could not be read. */
+ * for it, none, or that the queue could not be read. `precondition` is the
+ * sentence served for a profile fact no confirm can go without, when the
+ * profile lacks it. */
 export type DocumentReading =
-  | { kind: "waiting"; row: EvidenceReviewQueueRowProjection }
+  | {
+      kind: "waiting";
+      row: EvidenceReviewQueueRowProjection;
+      precondition?: string | null;
+    }
   | { kind: "none" }
   | { kind: "unknown" };
 
@@ -130,12 +136,14 @@ function readingGroup(input: DocumentOverviewInput): OverviewGroup {
                 tone: "warning" as const,
               },
             ]
-        : [
-            {
-              text: t("desktop.ledger.documents.ready_to_confirm"),
-              tone: "neutral" as const,
-            },
-          ],
+        : reading.precondition
+          ? [{ text: reading.precondition, tone: "warning" as const }]
+          : [
+              {
+                text: t("desktop.ledger.documents.ready_to_confirm"),
+                tone: "neutral" as const,
+              },
+            ],
   };
 }
 
@@ -163,7 +171,7 @@ function chipsOf(input: DocumentOverviewInput): OverviewChip[] {
         : {
             id: "reading",
             text: t("desktop.ledger.documents.in_review"),
-            tone: "neutral",
+            tone: reading.precondition ? "warning" : "neutral",
           },
     );
   return chips;

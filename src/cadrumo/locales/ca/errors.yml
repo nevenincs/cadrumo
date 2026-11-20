@@ -1893,6 +1893,14 @@ errors:
       i cada forma abreujada cap en la seva amplada.
     refused_ledger_counterparty_provincia_input: La província indicada no és un codi
       de província de l'INE.
+    refused_ledger_evidence_filer_postcode_missing: El teu perfil no indica el codi
+      postal del teu domicili fiscal. Sense ell no se sap el teu territori d'IVA (península
+      i Balears, Canàries, o Ceuta i Melilla), i no es pot confirmar cap factura.
+      Afegeix-lo a El teu perfil o porta'l del cens.
+    refused_ledger_evidence_filer_postcode_unreadable: El codi postal del domicili
+      fiscal del teu perfil no és un codi postal espanyol vàlid, així que no se sap
+      el teu territori d'IVA i no es pot confirmar cap factura. Corregeix-lo a El
+      teu perfil.
     refused_ledger_evidence_input: Una dada d'evidència indicada infringeix el contracte
       de la factura de compra. Corregeix l'entrada i torna-ho a provar.
     refused_ledger_evidence_not_found: No existeix cap evidència de factura de compra

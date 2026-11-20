@@ -33,11 +33,15 @@ EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY: Final = "errors.refused.refused_ledger_e
 """The reader refusal: the reader could not run."""
 
 
-class PurchaseInvoiceEvidenceInputError(LedgerPreconditionErrorMixin, CadrumoError):
-    """Raised when a CLI-supplied evidence input violates the typed contract."""
+class PurchaseInvoiceEvidenceInputError(OperationNextStepErrorMixin, LedgerPreconditionErrorMixin, CadrumoError):
+    """Raised when a CLI-supplied evidence input violates the typed contract.
+
+    It carries the step that puts the refusal right where the producer knows
+    one, such as the profile fact a confirm needs before it can classify.
+    """
 
 
-class PurchaseInvoiceEvidenceReaderError(OperationNextStepErrorMixin, PurchaseInvoiceEvidenceInputError):
+class PurchaseInvoiceEvidenceReaderError(PurchaseInvoiceEvidenceInputError):
     """Raised when the reader, not the document, is why a read did not happen.
 
     A subclass because every caller that catches an evidence-input refusal must

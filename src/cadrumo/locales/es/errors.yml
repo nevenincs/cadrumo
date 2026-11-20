@@ -1873,6 +1873,14 @@ errors:
       finales ni dobles, y cada forma abreviada cabe en su ancho.
     refused_ledger_counterparty_provincia_input: La provincia indicada no es un código
       de provincia del INE.
+    refused_ledger_evidence_filer_postcode_missing: Tu perfil no indica el código
+      postal de tu domicilio fiscal. Sin él no se sabe tu territorio de IVA (península
+      y Baleares, Canarias, o Ceuta y Melilla), y no se puede confirmar ninguna factura.
+      Añádelo en Tu perfil o tráelo del censo.
+    refused_ledger_evidence_filer_postcode_unreadable: El código postal del domicilio
+      fiscal de tu perfil no es un código postal español válido, así que no se sabe
+      tu territorio de IVA y no se puede confirmar ninguna factura. Corrígelo en Tu
+      perfil.
     refused_ledger_evidence_input: Un dato de evidencia indicado infringe el contrato
       de la factura de compra. Corrige la entrada y vuelve a intentarlo.
     refused_ledger_evidence_not_found: No existe ninguna evidencia de factura de compra

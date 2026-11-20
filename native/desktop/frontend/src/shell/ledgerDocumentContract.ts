@@ -150,12 +150,18 @@ export type EvidencePageMediaType =
  * One fact a structured e-invoice states, under the served key of the word
  * that names it.
  *
- * The fact is either text the record states, copied as it stands, or a figure
- * it states; never both.
+ * `value_kind` says what the value is and exactly one member carries it:
+ * `text` for text the record states, copied as it stands; `iso_date` for a
+ * calendar date; `number` for an amount, a rate in percentage points or a
+ * quantity. A date or figure the record states in a form that cannot be read
+ * as one is served as its text instead, so nothing the record states is
+ * dropped.
  */
 export type EvidenceStructuredFactV1 = {
   label_key: string;
+  value_kind: EvidenceStructuredValueKind;
   text: string | null;
+  iso_date: string | null;
   number: PublicDecimal | null;
 };
 
@@ -175,6 +181,17 @@ export type EvidenceStructuredInvoiceV1 = {
 export type EvidenceStructuredLineV1 = {
   facts: EvidenceStructuredFactV1[];
 };
+
+/**
+ * What a structured e-invoice fact's value is, so a frontend formats it for
+ * the person's locale.
+ *
+ * A figure is never served as formatted text: an amount is written with the
+ * locale's decimal and grouping marks and the invoice's currency, a rate as a
+ * percentage, a quantity as a plain number, a date in the locale's date order.
+ */
+export type EvidenceStructuredValueKind =
+  "text" | "date" | "amount" | "rate_percent" | "quantity";
 
 /**
  * Why the model did not fill the fields a partial label reading left unread.

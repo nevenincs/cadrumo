@@ -376,13 +376,14 @@ def confirmed_lines_from_the_document(
 
     The per-rate breakdown is used whenever the document states one, at ANY
     length. A single entry is not the harmless case it looks like: the
-    structured readers populate the breakdown and never the draft's flat
-    ``iva_rate``, so a one-rate structured document reached the writer with no
-    rate at all and resolved to the base-only EXEMPT slot -- minting a
-    zero-cuota invoice out of a document that plainly charged one. Reading the
-    breakdown at length one is what recovers that rate; reading it at length two
-    or more is additionally what preserves WHICH part of the base carried which
-    rate, since Modelo 303 sums cuota devengada per tier.
+    breakdown is the document's own per-rate statement, and the draft's flat
+    ``iva_rate`` is only a convenience copy of it that a several-rate document
+    leaves unset. A one-rate document read without its breakdown would reach the
+    writer with no rate at all and resolve to the base-only EXEMPT slot --
+    minting a zero-cuota invoice out of a document that plainly charged one.
+    Reading the breakdown at length one recovers that rate; reading it at length
+    two or more is additionally what preserves WHICH part of the base carried
+    which rate, since Modelo 303 sums cuota devengada per tier.
 
     Args:
         draft: The re-run extraction being confirmed.

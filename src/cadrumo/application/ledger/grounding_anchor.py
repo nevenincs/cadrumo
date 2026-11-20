@@ -77,7 +77,7 @@ See Also:
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final
 
@@ -760,6 +760,11 @@ _STRUCTURED_ENVELOPE_FIELDS: Final = (
 )
 
 _STRUCTURED_ELEMENT_PATHS: Final[dict[str, dict[DocumentShape, str]]] = {
+    "iva_rate": {
+        DocumentShape.XML_FACTURAE: "TaxesOutputs/Tax/TaxRate",
+        DocumentShape.XML_UBL: "cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:Percent",
+        DocumentShape.XML_CII: "ram:ApplicableHeaderTradeSettlement/ram:ApplicableTradeTax/ram:RateApplicablePercent",
+    },
     "retencion_rate": {
         DocumentShape.XML_FACTURAE: "TaxesWithheld/Tax/TaxRate",
         DocumentShape.XML_UBL: "cac:WithholdingTaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:Percent",
@@ -840,6 +845,16 @@ def structured_provenance(
                 source_text=source_text,
             ),
         )
+    sole_rate = sole_stated_iva_rate(parsed.iva_breakdown)
+    if sole_rate is not None:
+        envelopes.append(
+            ground_structured_value(
+                field="iva_rate",
+                value=sole_rate,
+                element_path=_structured_element_path("iva_rate", record=parsed),
+                source_text=source_text,
+            ),
+        )
     for stated_field, resolved_field in _STATED_COUNTRY_FIELDS:
         stated = getattr(parsed, resolved_field, None)
         if stated is None or not stated.strip():
@@ -867,6 +882,28 @@ def structured_provenance(
             ),
         )
     return tuple(envelopes)
+
+
+def sole_stated_iva_rate(
+    iva_breakdown: Sequence[tuple[Decimal | None, Decimal | None, Decimal | None]],
+) -> Decimal | None:
+    """Return the one IVA rate a structured record's breakdown states, or ``None``.
+
+    The invoice-level rate exists only where one rate describes the whole
+    invoice. A record stating two rates has no single rate, and choosing one --
+    by size, by order -- would put part of the base under a rate it was not
+    charged at, so the scalar stays unset and the per-rate breakdown carries the
+    answer. A breakdown entry that states no rate leaves the answer open for the
+    same reason: the unstated part might be charged at another one.
+
+    Rates compare by value, so a record repeating ``21`` and ``21.00`` across two
+    tax subtotals still states one rate.
+    """
+    rates = [rate for rate, _base, _cuota in iva_breakdown]
+    first = rates[0] if rates else None
+    if first is None or any(rate != first for rate in rates):
+        return None
+    return first
 
 
 def resolved_country_code(

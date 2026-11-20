@@ -31,9 +31,11 @@ import { periodBounds, usePeriods } from "../../../shell/ledgerPeriods";
 import { ServedOptions } from "../suggestions/ServedOptions";
 import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { INVOICE_TSV_COLUMNS, invoicesTsv } from "../transfer/tsv";
+import { periodText } from "../ledgerWords";
 import { InvoiceEditor, type EditorTarget } from "./InvoiceEditor";
 import {
   filterCatalogue,
+  hiddenByPeriod,
   seriesAndNumber,
   sortCatalogue,
   type CatalogueFilter,
@@ -238,6 +240,7 @@ export function InvoicesSection({
   copy,
   onPeriod,
   linked,
+  onCatalogueChange,
 }: {
   port: LedgerPort;
   reader: string | null;
@@ -251,6 +254,9 @@ export function InvoicesSection({
   onPeriod?: (period: LedgerPeriod | null) => void;
   /** The invoice a link selects, held by the page. */
   linked: LinkedRow;
+  /** Tells the page the catalogue changed, so what it offers from the
+   * catalogue, as the years, is read again. */
+  onCatalogueChange?: () => void;
 }) {
   const t = useStrings();
   const vocabulary = useVocabulary();
@@ -366,6 +372,10 @@ export function InvoicesSection({
     key: K,
     value: (typeof filter)[K],
   ) => setFilter((held) => ({ ...held, [key]: value }));
+  // What the period alone hides, so an empty list can say so and offer every
+  // period instead of reading as an empty catalogue.
+  const hiddenElsewhere =
+    invoices === null ? 0 : hiddenByPeriod(invoices, { ...filter, period });
   const filtered =
     filter.kind !== "all" ||
     filter.search.trim() !== "" ||
@@ -433,15 +443,36 @@ export function InvoicesSection({
             : undefined
         }
         empty={
-          <EmptyState
-            className="ledger-invoices-empty"
-            icon="page"
-            description={t(
-              filtered || period !== null
-                ? "desktop.ledger.invoices.empty_filtered"
-                : "desktop.ledger.invoices.empty",
-            )}
-          />
+          period !== null && hiddenElsewhere > 0 ? (
+            <EmptyState
+              className="ledger-invoices-empty ledger-invoices-empty-period"
+              icon="page"
+              description={t("desktop.ledger.invoices.empty_period", {
+                period: periodText(t, locale, period),
+                count: hiddenElsewhere,
+              })}
+            >
+              {onPeriod && (
+                <Button
+                  variant="outline"
+                  className="ledger-invoices-all-periods"
+                  onClick={() => onPeriod(null)}
+                >
+                  {t("desktop.ledger.period.all")}
+                </Button>
+              )}
+            </EmptyState>
+          ) : (
+            <EmptyState
+              className="ledger-invoices-empty"
+              icon="page"
+              description={t(
+                filtered || period !== null
+                  ? "desktop.ledger.invoices.empty_filtered"
+                  : "desktop.ledger.invoices.empty",
+              )}
+            />
+          )
         }
       />
     );
@@ -596,6 +627,7 @@ export function InvoicesSection({
           onWritten={(invoice, removed) => {
             settle(invoice, removed);
             reread();
+            onCatalogueChange?.();
           }}
           onOpenInvoice={(invoiceId) => onEditor({ kind: "open", invoiceId })}
           say={setToast}

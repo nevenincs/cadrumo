@@ -15,6 +15,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.confirmation_gate import confirmation_blockers
+from ....application.ledger.confirmation_record_repository import ConfirmationRecordRepositoryFactory
 from ....application.ledger.consent_withdrawal import ConsentedDispatch
 from ....application.ledger.evidence_followup_contracts import (
     LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID,
@@ -225,6 +226,10 @@ def _unused_draft_store(*, bucket_id: str, settings: Settings):
     raise AssertionError((bucket_id, settings))
 
 
+def _unused_confirmation_records(*, bucket_id: str, settings: Settings | None):
+    raise AssertionError((bucket_id, settings))
+
+
 def _unused_consent_entries(*, bucket_id: str) -> tuple[ConsentedDispatch, ...]:
     raise AssertionError(bucket_id)
 
@@ -238,6 +243,7 @@ def _unopened_ports() -> LedgerEvidenceFollowupOperationPorts:
         settings=load_settings(),
         attachment_store_factory=cast(AttachmentStoreFactory, _unused_attachment_store),
         extraction_draft_repository_factory=cast(ExtractionDraftRepositoryFactory, _unused_draft_store),
+        confirmation_record_repository_factory=cast(ConfirmationRecordRepositoryFactory, _unused_confirmation_records),
         consent_entries_factory=cast(EvidenceConsentEntriesFactory, _unused_consent_entries),
         off_host_read_askable=_unused_off_host_read_askable,
     )
@@ -468,7 +474,8 @@ _EXTERNAL_RESULT_FIELDS: dict[str, dict[str, frozenset[str]]] = {
         ),
     },
     LEDGER_EVIDENCE_REVIEW_LIST_OPERATION_DEFINITION_ID: {
-        "LedgerEvidenceReviewListProjection": frozenset({"profile_id", "filters", "rows"}),
+        "LedgerEvidenceReviewListProjection": frozenset({"profile_id", "filters", "rows", "confirm_precondition"}),
+        "EvidenceConfirmPreconditionProjection": frozenset({"condition", "words", "words_language", "next_step"}),
         "EvidenceReviewQueueRowProjection": frozenset(
             {
                 "evidence_reference",

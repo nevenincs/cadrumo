@@ -34,6 +34,7 @@ from cadrumo.application.ledger.evidence_page_contracts import (
     EvidencePageMediaType,
     EvidenceStructuredFactV1,
     EvidenceStructuredInvoiceV1,
+    EvidenceStructuredValueKind,
     LedgerEvidencePagePorts,
     LedgerEvidencePageProjection,
     LedgerEvidencePageRequest,
@@ -749,7 +750,9 @@ def _structured_page(evidence_id: str = "f" * 16) -> LedgerEvidencePageProjectio
             title_key="application.ledger.evidence.structured.title.xml_facturae",
             facts=(
                 EvidenceStructuredFactV1(
-                    label_key="application.ledger.evidence.structured.fact.supplier_name", text="Proveedor Example SL"
+                    label_key="application.ledger.evidence.structured.fact.supplier_name",
+                    value_kind=EvidenceStructuredValueKind.TEXT,
+                    text="Proveedor Example SL",
                 ),
             ),
             lines=(),

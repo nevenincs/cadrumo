@@ -14,11 +14,21 @@ import {
   holdsUpdate,
   recordUpdate,
   readCorrection,
+  readCountryOf,
+  vatPrefixCountryOf,
+  readingRows,
   resolutionOf,
+  changedReadingFields,
   sameReading,
 } from "../src/components/ledger/documents/documentsModel";
-import { EMPTY_DRAFT } from "../src/dev/ledgerEvidenceSeed";
+import {
+  FIELD_NAMES,
+  provenanceText,
+} from "../src/components/ledger/documents/documentWords";
+import { EMPTY_DRAFT, read } from "../src/dev/ledgerEvidenceSeed";
+import type { Translate } from "../src/shell/strings";
 import { hexId } from "./support/ledger";
+import { label } from "./support/strings";
 
 // The Documents section's rules: a confirmation always names its kind and
 // country, sends only corrections that change the reading, in the
@@ -353,4 +363,122 @@ test("a supplied finding value is held to the confirmation's served bound, and t
   } finally {
     holdLedgerLimits(servedLimits);
   }
+});
+
+// ---- A fresh reading of the same document ---------------------------------------
+
+const structured = {
+  source_code: "FC",
+  kind: "invoice",
+} as unknown as NonNullable<InvoiceDraftProjectionV1["facturae_invoice_class"]>;
+
+test("a reading served from the store and a fresh reading of the same Facturae document say the same", () => {
+  // The store keeps what the document says, not how it was read: it holds no
+  // structured class, a fresh read of the same bytes has one, and keys come
+  // in another order.
+  const stored: InvoiceDraftProjectionV1 = {
+    ...draft,
+    facturae_invoice_class: null,
+  };
+  const fresh = {
+    facturae_invoice_class: structured,
+    ...[...Object.entries(draft)]
+      .reverse()
+      .reduce((held, [key, value]) => ({ ...held, [key]: value }), {}),
+  } as InvoiceDraftProjectionV1;
+  expect(sameReading(stored, fresh)).toBe(true);
+  expect(sameReading(fresh, stored)).toBe(true);
+  expect(changedReadingFields(stored, fresh, FIELD_NAMES)).toEqual([]);
+});
+
+test("a structured class that both readings state and that differs is a change", () => {
+  const left: InvoiceDraftProjectionV1 = {
+    ...draft,
+    facturae_invoice_class: structured,
+  };
+  const right: InvoiceDraftProjectionV1 = {
+    ...draft,
+    facturae_invoice_class: { ...structured, kind: "credit_note" } as never,
+  };
+  expect(sameReading(left, right)).toBe(false);
+  // Nothing the page names changed: the notice stays general.
+  expect(changedReadingFields(left, right, FIELD_NAMES)).toEqual([]);
+});
+
+test("a changed reading names the fields that changed, in the page's own vocabulary", () => {
+  const fresh: InvoiceDraftProjectionV1 = {
+    ...draft,
+    taxable_base: { decimal: "31.00" },
+    invoice_date: "2026-10-16",
+    raw_text_length: 7,
+  };
+  expect(sameReading(draft, fresh)).toBe(false);
+  expect(changedReadingFields(draft, fresh, FIELD_NAMES)).toEqual([
+    "invoice_date",
+    "taxable_base",
+  ]);
+  // A figure rewritten with the same value is not a change of the reading.
+  expect(
+    sameReading(draft, { ...draft, taxable_base: { decimal: "30.00" } }),
+  ).toBe(true);
+});
+
+test("the country a reading states is the counterparty's on the chosen side", () => {
+  const both = {
+    ...draft,
+    supplier_country_code: "PT",
+    customer_country_code: "FR",
+  };
+  expect(readCountryOf(both, "received")).toBe("PT");
+  expect(readCountryOf(both, "issued")).toBe("FR");
+  expect(readCountryOf(both, null)).toBeNull();
+  expect(
+    readCountryOf({ ...both, supplier_country_code: null }, "received"),
+  ).toBeNull();
+});
+
+test("a reading with IVA at more than one rate is shown rate by rate in place of the one rate row", () => {
+  const fields = (byRate: boolean) =>
+    readingRows("received", byRate).map((row) => row.field);
+  expect(fields(false)).toContain("iva_rate");
+  expect(fields(false)).not.toContain("iva_breakdown");
+  expect(fields(true)).not.toContain("iva_rate");
+  expect(fields(true)).toContain("iva_breakdown");
+  // Everything else keeps its place.
+  expect(fields(true).filter((field) => field !== "iva_breakdown")).toEqual(
+    fields(false).filter((field) => field !== "iva_rate"),
+  );
+});
+
+test("a value read from a record's own data is not said to be found on a page", () => {
+  const t = Object.assign(
+    (key: string, values?: Record<string, string | number>) =>
+      label(key, values, "en"),
+    { locale: "en" },
+  ) as Translate;
+  const structuredRead = provenanceText(
+    t,
+    read("invoice_number", "exact_structured", "anchored"),
+  );
+  expect(structuredRead).toContain(
+    label("desktop.ledger.documents.origin.exact_structured"),
+  );
+  expect(structuredRead).toContain(
+    label("desktop.ledger.documents.grounding.anchored_record"),
+  );
+  expect(structuredRead).not.toContain(
+    label("desktop.ledger.documents.grounding.anchored"),
+  );
+  // A page's own reading keeps the page's word.
+  expect(
+    provenanceText(t, read("invoice_number", "text_layer", "anchored")),
+  ).toContain(label("desktop.ledger.documents.grounding.anchored"));
+});
+
+test("the VAT-number prefix suggests the counterparty's country on the chosen side only", () => {
+  const prefixes = { supplier: "PT", customer: null };
+  expect(vatPrefixCountryOf(prefixes, "received")).toBe("PT");
+  expect(vatPrefixCountryOf(prefixes, "issued")).toBeNull();
+  expect(vatPrefixCountryOf(prefixes, null)).toBeNull();
+  expect(vatPrefixCountryOf(null, "received")).toBeNull();
 });

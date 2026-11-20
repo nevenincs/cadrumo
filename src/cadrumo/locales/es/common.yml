@@ -2496,8 +2496,11 @@ desktop:
         registra antes de que salga el documento. Lo enviado no se puede recuperar.
       count: 'Documentos: {count}'
       country: País de la contraparte
+      country_from_vat_prefix: Del prefijo del NIF-IVA
       currency_not_read: 'No figura en el documento: indica cuál'
       derived: Generado a partir de una lectura externa
+      direction_disagrees: 'Importado como: {declared}. El documento parece: {suggested}.
+        Elige cuál es correcto.'
       duplicate: 'Ya está en el catálogo: {number}'
       duplicate_check_failed: El libro no ha dicho si esta lectura ya está en el catálogo,
         así que aún no puedes confirmarla.
@@ -2531,6 +2534,7 @@ desktop:
       grounding:
         ambiguous: varias lecturas posibles
         anchored: encontrado en la página
+        anchored_record: encontrado en el registro del documento
         contradicted: la página no coincide
         reconciled: los totales cuadran
         unanchored: no encontrado en la página
@@ -2543,6 +2547,7 @@ desktop:
         duplicate: Puede que ya esté en el catálogo
         findings: Responde antes a todas las preguntas
       in_review: En revisión
+      iva_by_rate: IVA por tipo
       keep: Conservarlo
       left_out: 'Omitidos por no ser documentos: {count}'
       link_offer: ¿Vincularla a su movimiento?
@@ -2602,6 +2607,7 @@ desktop:
         unavailable: No disponible
         version: Versión {version}
       reading_changed: La lectura cambió. Revísala de nuevo.
+      reading_changed_in: 'La lectura cambió en: {fields}. Revísala de nuevo.'
       readings: Lecturas
       reads_as: 'El documento parece: {kind}'
       ready_to_confirm: Lista para confirmar
@@ -3073,8 +3079,8 @@ desktop:
       documents_note: '{kind}. Cada documento se añade como justificante y se lee
         en este equipo; las imágenes esperan en Documentos para leerse.'
       documents_refused: Los documentos no se han añadido
-      documents_result: 'Esperando lectura: {waiting} · ya añadidos: {held} · en pausa:
-        {paused}'
+      documents_result: 'Pendientes de tu revisión: {waiting} · ya añadidos: {held}
+        · en pausa: {paused}'
       done: Hecho
       drop:
         bank: Suelta aquí archivos de extracto o una carpeta
@@ -3558,6 +3564,7 @@ desktop:
       duplicate: Ya está en el catálogo.
       empty: Aún no hay facturas. Añade una o importa un libro de facturas.
       empty_filtered: Ninguna factura coincide.
+      empty_period: 'Ninguna factura coincide en {period}. En otros periodos: {count}'
       failed: No se ha guardado nada. Inténtalo de nuevo.
       field:
         counterparty_country: País
@@ -3913,7 +3920,7 @@ desktop:
       year_next: Año siguiente
       year_previous: Año anterior
       years_supported: Ejercicios que puedes consultar
-      years_with_movements: Años con movimientos
+      years_with_movements_or_invoices: Años con movimientos o facturas
     position: Fila {row} de {count}
     prorrata:
       action:
