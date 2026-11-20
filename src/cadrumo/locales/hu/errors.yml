@@ -1768,6 +1768,13 @@ errors:
       ilyen; egy szervezethez csak a cégneve. Minden részt kezdő, záró és dupla szóköz
       nélkül írj, és minden rövidebb alak férjen el a saját szélességében.
     refused_ledger_counterparty_provincia_input: A megadott tartomány nem INE-tartománykód.
+    refused_ledger_evidence_filer_postcode_missing: A profilod nem adja meg az adózási
+      lakcímed irányítószámát. Enélkül nem ismert az IVA-területed (félsziget és Baleár-szigetek,
+      Kanári-szigetek, vagy Ceuta és Melilla), ezért egy számla sem erősíthető meg.
+      Add meg A profilod oldalon, vagy hozd át a cenzusból.
+    refused_ledger_evidence_filer_postcode_unreadable: A profilodban megadott adózási
+      irányítószám nem érvényes spanyol irányítószám, ezért nem ismert az IVA-területed,
+      és egy számla sem erősíthető meg. Javítsd A profilod oldalon.
     refused_ledger_evidence_input: Egy megadott igazolás-bemenet sérti a vásárlási
       számla szerződést. Javítsd a bemenetet, és próbáld újra.
     refused_ledger_evidence_not_found: Nem létezik vásárlási számla igazolás a megadott

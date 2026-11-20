@@ -76,6 +76,7 @@ def ledger_known_values(ctx: typer.Context, kinds: Sequence[LedgerKnownValueKind
             )
             for row in projection.counterparties
         ),
+        *(f"{LedgerKnownValueKind.LEDGER_YEAR.value}	{year}" for year in projection.ledger_years),
         *(line for kind, rows in sections for line in _text_lines(kind, rows)),
         *(f"truncated\t{kind.value}" for kind in projection.truncated),
     ]
@@ -96,6 +97,7 @@ def ledger_known_values(ctx: typer.Context, kinds: Sequence[LedgerKnownValueKind
         command="ledger.known-values",
         result=LedgerKnownValuesResult(
             bucket_id=str(projection.profile_id),
+            ledger_years=list(projection.ledger_years),
             counterparties=[
                 LedgerKnownCounterpartyPayload(
                     name=row.name,

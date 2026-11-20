@@ -17,6 +17,7 @@ from .....application.ledger.evidence_page_contracts import (
     EvidenceStructuredFactV1,
     EvidenceStructuredInvoiceV1,
     EvidenceStructuredLineV1,
+    EvidenceStructuredValueKind,
     LedgerEvidencePageProjection,
 )
 from .....application.ledger.evidence_page_errors import LedgerEvidencePageNotFoundError
@@ -54,7 +55,7 @@ def _record(file_name: str) -> LedgerEvidenceRecordRowV1:
 
 
 def _text(key: str, value: str) -> EvidenceStructuredFactV1:
-    return EvidenceStructuredFactV1(label_key=key, text=value)
+    return EvidenceStructuredFactV1(label_key=key, value_kind=EvidenceStructuredValueKind.TEXT, text=value)
 
 
 def _structured(
@@ -115,13 +116,21 @@ async def test_a_structured_invoice_shows_its_served_facts_and_lines_under_the_s
     page = _structured(
         (
             _text(_FACT_KEYS["supplier_name"], "Proveedor Example SL"),
-            EvidenceStructuredFactV1(label_key=_FACT_KEYS["grand_total"], number=PublicDecimal(decimal="121.00")),
+            EvidenceStructuredFactV1(
+                label_key=_FACT_KEYS["grand_total"],
+                value_kind=EvidenceStructuredValueKind.AMOUNT,
+                number=PublicDecimal(decimal="121.00"),
+            ),
         ),
         (
             EvidenceStructuredLineV1(
                 facts=(
                     _text(_LINE_KEYS["description"], "Monitor display"),
-                    EvidenceStructuredFactV1(label_key=_LINE_KEYS["quantity"], number=PublicDecimal(decimal="2")),
+                    EvidenceStructuredFactV1(
+                        label_key=_LINE_KEYS["quantity"],
+                        value_kind=EvidenceStructuredValueKind.QUANTITY,
+                        number=PublicDecimal(decimal="2"),
+                    ),
                 )
             ),
         ),

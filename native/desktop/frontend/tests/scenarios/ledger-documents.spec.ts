@@ -121,10 +121,31 @@ test("a clean reading is confirmed only with a kind and a country, then offers i
   );
   const confirm = draft(target).locator(".ledger-draft-confirm");
   const holds = draft(target).locator(".ledger-draft-holds");
-  // Neither the kind nor the country has a default.
-  await expect(holds).toContainText(
-    label("desktop.ledger.documents.hold.choose_kind"),
+  // The reading puts the filer on the receiving side and states the
+  // supplier's country: both stand until the person says otherwise, and the
+  // hint names the suggestion rather than a missing default.
+  await expect(
+    draft(target)
+      .locator(".ledger-draft-kind")
+      .getByRole("radio", {
+        name: label("desktop.ledger.invoices.kind_choice.received"),
+      }),
+  ).toBeChecked();
+  await expect(draft(target).locator(".ledger-draft-country")).toHaveValue(
+    /^ES\b/,
   );
+  await expect(draft(target)).toContainText(
+    label("desktop.ledger.documents.reads_as", {
+      kind: label("desktop.ledger.invoices.kind_choice.received"),
+    }),
+  );
+  await expect(draft(target)).not.toContainText(
+    label("desktop.ledger.documents.no_default"),
+  );
+  await expect(holds).toHaveCount(0);
+  // A country the person clears is theirs to give again, and holds the
+  // confirmation until they do.
+  await draft(target).locator(".ledger-draft-country").fill("");
   await expect(holds).toContainText(
     label("desktop.ledger.documents.hold.country"),
   );
@@ -133,7 +154,6 @@ test("a clean reading is confirmed only with a kind and a country, then offers i
   await expect(draft(target)).toBeVisible();
   expect(await calls(target)).not.toContain("ledger ledger.evidence.confirm");
 
-  await kind(target, "received");
   await draft(target).locator(".ledger-draft-country-read").click();
   await expect(draft(target).locator(".ledger-draft-country")).toHaveValue(
     /^ES\b/,
@@ -197,7 +217,6 @@ for (const moved of [false, true]) {
       };
     });
     await kind(target, "received");
-    await draft(target).locator(".ledger-draft-country-read").click();
     await draft(target).locator(".ledger-draft-confirm").click();
     const done = section(target).locator(".ledger-draft-confirmed");
     await expect
@@ -221,7 +240,6 @@ test("a withheld figure the document reads and the record lacks is said after co
   await openDocuments(target);
   await choose(target, DOMESTIKA);
   await kind(target, "received");
-  await draft(target).locator(".ledger-draft-country-read").click();
   await draft(target).locator(".ledger-draft-confirm").click();
   const done = section(target).locator(".ledger-draft-confirmed");
   await expect(done.locator(".ledger-draft-retention-differs")).toHaveText(
@@ -803,7 +821,6 @@ test("a confirmation not seen to settle is settled by reading the queue and the 
   await openDocuments(target);
   await choose(target, DOMESTIKA);
   await kind(target, "received");
-  await draft(target).locator(".ledger-draft-country-read").click();
   // Bound to a fresh reading first, so the confirmation is the one write.
   await draft(target).locator(".ledger-draft-reread").click();
   await expect(draft(target).locator(".ledger-draft-reread")).toBeEnabled();

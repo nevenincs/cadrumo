@@ -16,14 +16,18 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_va
 
 from ...core.config import Settings
 from ...core.confirmation_gate import ConfirmationBlockReason, ReviewAdvisoryKind
+from ...core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
 from ...domain.attachments.protocols import AttachmentStoreProtocol
+from ...domain.iva.schema import InvoiceKind
 from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
+from ..operations.next_step import OperationNextStepV1
 from .attachment_review import AttachmentReviewItem
+from .confirmation_record_repository import ConfirmationRecordRepositoryFactory
 from .consent_withdrawal import CloudDerivedArtefact, ConsentedDispatch, ConsentWithdrawalSurvey
 from .evidence_followup_types import EvidenceFollowupReference, EvidenceFollowupText
 from .evidence_review_advisories import (
@@ -39,6 +43,7 @@ from .invoice_evidence_operation_dtos import (
     InvoiceDraftProjectionV1,
     LabelReadingFallbackProjectionV1,
 )
+from .preconditions import LedgerPreconditionCondition
 
 LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID = "ledger.evidence.attachment_queue"
 
@@ -101,11 +106,12 @@ class OffHostReadAskable(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class LedgerEvidenceFollowupOperationPorts:
-    """Explicit capabilities needed by the five evidence follow-up reads."""
+    """Explicit capabilities needed by the evidence follow-up reads."""
 
     settings: Settings
     attachment_store_factory: AttachmentStoreFactory
     extraction_draft_repository_factory: ExtractionDraftRepositoryFactory
+    confirmation_record_repository_factory: ConfirmationRecordRepositoryFactory
     consent_entries_factory: EvidenceConsentEntriesFactory
     off_host_read_askable: OffHostReadAskable
 
@@ -307,13 +313,33 @@ class EvidenceReviewQueueRowProjection(BaseModel):
         return self
 
 
+class EvidenceConfirmPreconditionProjection(BaseModel):
+    """A profile fact every confirm needs and this profile does not state.
+
+    It belongs to the profile, not to any one draft: no draft in the queue can
+    be confirmed until it is supplied, so the queue says so before a person
+    works through a review, with the sentence and the step that supplies it.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    condition: LedgerPreconditionCondition
+    words: ServedReasonSentence
+    words_language: OutputLanguage
+    next_step: OperationNextStepV1
+
+
 class LedgerEvidenceReviewListProjection(BaseModel):
-    """Complete bounded queue result and the request's displayed filters."""
+    """Complete bounded queue result and the request's displayed filters.
+
+    ``confirm_precondition`` names the profile fact that stops every confirm,
+    or is ``None`` when the profile states what a confirm reads from it.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
     filters: Annotated[tuple[str, ...], Field(max_length=16)] = ()
     rows: _ReviewRows = ()
+    confirm_precondition: EvidenceConfirmPreconditionProjection | None = None
 
     @model_validator(mode="after")
     def _ordered_unique_rows(self) -> LedgerEvidenceReviewListProjection:
@@ -323,12 +349,91 @@ class LedgerEvidenceReviewListProjection(BaseModel):
         return self
 
 
+_CountryAlpha2 = Annotated[str, Field(pattern=f"^{COUNTRY_CODE_ALPHA2_PATTERN}$")]
+
+
+class EvidenceReviewDirectionProjection(BaseModel):
+    """What the operator and the reading each say about which side of the invoice the filer is on.
+
+    ``declared_kind`` is the direction the operator stated when they imported
+    the document; ``suggested_kind`` is what the reading proposed from the
+    document's layout. Both are served as they are. ``preselected_kind`` is the
+    one kind every statement present agrees on, so a review can open on it; it is
+    ``None`` while nothing was said and while the two disagree, and ``disagree``
+    says which of those it is. Neither statement overwrites the other, and
+    neither is the decision: the operator states the kind when they confirm.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    declared_kind: InvoiceKind | None = None
+    suggested_kind: InvoiceKind | None = None
+    preselected_kind: InvoiceKind | None = None
+    disagree: bool = False
+
+    @classmethod
+    def of(
+        cls, *, declared_kind: InvoiceKind | None, suggested_kind: InvoiceKind | None
+    ) -> EvidenceReviewDirectionProjection | None:
+        """Combine the two statements, or return ``None`` when neither was made."""
+        if declared_kind is None and suggested_kind is None:
+            return None
+        preselected_kind, disagree = _agreed_kind(declared_kind, suggested_kind)
+        return cls(
+            declared_kind=declared_kind,
+            suggested_kind=suggested_kind,
+            preselected_kind=preselected_kind,
+            disagree=disagree,
+        )
+
+    @model_validator(mode="after")
+    def _derived_from_the_two_statements(self) -> EvidenceReviewDirectionProjection:
+        if self.declared_kind is None and self.suggested_kind is None:
+            raise ValueError("a direction states the operator's kind or the reading's")
+        if (self.preselected_kind, self.disagree) != _agreed_kind(self.declared_kind, self.suggested_kind):
+            raise ValueError("a direction's preselection derives from the two statements it carries")
+        return self
+
+
+def _agreed_kind(
+    declared_kind: InvoiceKind | None, suggested_kind: InvoiceKind | None
+) -> tuple[InvoiceKind | None, bool]:
+    """Return the kind every statement present agrees on, and whether two statements disagree."""
+    if declared_kind is not None and suggested_kind is not None and declared_kind is not suggested_kind:
+        return None, True
+    return (declared_kind if declared_kind is not None else suggested_kind), False
+
+
+class EvidenceReviewVatPrefixCountryProjection(BaseModel):
+    """The Member State whose VAT prefix each party's identification number carries.
+
+    A suggestion for the person to accept as the counterparty's country, derived
+    from the number's prefix alone (Directive 2006/112/EC art. 215). It says
+    which State issued the identification, not where the party is established,
+    and it is never written to the draft. A side is ``None`` when its number
+    carries no recognised prefix, including a bare Spanish identifier.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    supplier: _CountryAlpha2 | None = None
+    customer: _CountryAlpha2 | None = None
+
+    @model_validator(mode="after")
+    def _states_something(self) -> EvidenceReviewVatPrefixCountryProjection:
+        if self.supplier is None and self.customer is None:
+            raise ValueError("a VAT-prefix suggestion names at least one party's country")
+        return self
+
+
 class LedgerEvidenceReviewViewProjection(BaseModel):
     """Full canonical draft plus every finding and advisory needed for review.
 
     ``label_reading_fallback`` is read off the stored record, not the draft: the
     draft store moves it there when it writes, so the draft a review loads never
     carries it.
+
+    ``direction`` carries the operator's import direction beside the reading's
+    suggestion, and ``counterparty_vat_prefix_country`` the country each party's
+    VAT-number prefix names; both are suggestions to review, never draft facts.
 
     ``off_host_read_offered`` says whether the person may be asked to send this
     profile's documents off this computer to be read: the deployment permits it,
@@ -347,6 +452,8 @@ class LedgerEvidenceReviewViewProjection(BaseModel):
     blockers: _BlockerRows = ()
     party_attribution_advisory: PartyAttributionAdvisoryProjection | None = None
     country_vocabulary_advisory: CountryVocabularyAdvisoryProjection | None = None
+    direction: EvidenceReviewDirectionProjection | None = None
+    counterparty_vat_prefix_country: EvidenceReviewVatPrefixCountryProjection | None = None
     off_host_read_offered: bool = False
 
     @field_validator("drafted_at")
@@ -459,9 +566,12 @@ __all__ = [
     "CloudDerivedArtefactProjection",
     "ConsentWithdrawalSurveyProjection",
     "ConsentedDispatchProjection",
+    "EvidenceConfirmPreconditionProjection",
     "EvidenceConsentEntriesFactory",
+    "EvidenceReviewDirectionProjection",
     "EvidenceReviewQueueRowProjection",
     "EvidenceReviewReasonWordsWire",
+    "EvidenceReviewVatPrefixCountryProjection",
     "LedgerEvidenceAttachmentQueueExecutionResult",
     "LedgerEvidenceAttachmentQueueProjection",
     "LedgerEvidenceAttachmentQueueRequest",

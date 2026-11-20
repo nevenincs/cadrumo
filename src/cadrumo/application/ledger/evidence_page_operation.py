@@ -14,6 +14,7 @@ import asyncio
 import base64
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 
 from pydantic import BaseModel
@@ -48,11 +49,13 @@ from .evidence_page_contracts import (
     EVIDENCE_STRUCTURED_MAX_LINES,
     EVIDENCE_STRUCTURED_MAX_TEXT_LENGTH,
     EVIDENCE_STRUCTURED_TITLE_KEYS,
+    EVIDENCE_STRUCTURED_VALUE_KINDS,
     LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID,
     EvidencePageMediaType,
     EvidenceStructuredFactV1,
     EvidenceStructuredInvoiceV1,
     EvidenceStructuredLineV1,
+    EvidenceStructuredValueKind,
     LedgerEvidencePageExecutionResult,
     LedgerEvidencePagePorts,
     LedgerEvidencePageProjection,
@@ -136,16 +139,45 @@ def _load_manifest(ports: LedgerEvidencePagePorts, bucket_id: str, document: _St
 
 
 def _structured_fact(label_key: str, value: object) -> EvidenceStructuredFactV1 | None:
-    """The fact a record field states, or ``None`` when the record leaves it out."""
+    """The fact a record field states, or ``None`` when the record leaves it out.
+
+    A figure and a date are served typed, under the kind its served key
+    declares, so the frontend formats them for the person's locale. A date the
+    record states in a form that is not an ISO calendar date is served as the
+    text it states.
+    """
+    kind = EVIDENCE_STRUCTURED_VALUE_KINDS.get(label_key, EvidenceStructuredValueKind.TEXT)
     if isinstance(value, Decimal):
         if not value.is_finite():
             raise LedgerEvidencePageUnreadableError()
-        return EvidenceStructuredFactV1(label_key=label_key, number=PublicDecimal(decimal=str(value)))
+        if kind in {
+            EvidenceStructuredValueKind.AMOUNT,
+            EvidenceStructuredValueKind.RATE_PERCENT,
+            EvidenceStructuredValueKind.QUANTITY,
+        }:
+            return EvidenceStructuredFactV1(
+                label_key=label_key, value_kind=kind, number=PublicDecimal(decimal=str(value))
+            )
+        return EvidenceStructuredFactV1(
+            label_key=label_key, value_kind=EvidenceStructuredValueKind.TEXT, text=str(value)
+        )
     if not isinstance(value, str) or not (text := value.strip()):
         return None
     if len(text) > EVIDENCE_STRUCTURED_MAX_TEXT_LENGTH:
         raise LedgerEvidencePageTooLargeError()
-    return EvidenceStructuredFactV1(label_key=label_key, text=text)
+    if kind is EvidenceStructuredValueKind.DATE and (stated_date := _iso_calendar_date(text)) is not None:
+        return EvidenceStructuredFactV1(label_key=label_key, value_kind=kind, iso_date=stated_date)
+    return EvidenceStructuredFactV1(label_key=label_key, value_kind=EvidenceStructuredValueKind.TEXT, text=text)
+
+
+def _iso_calendar_date(text: str) -> date | None:
+    """The calendar date *text* states in the ISO ``YYYY-MM-DD`` form, or ``None`` for any other form."""
+    if len(text) != len("YYYY-MM-DD"):
+        return None
+    try:
+        return date.fromisoformat(text)
+    except ValueError:
+        return None
 
 
 def _structured_facts(source: object, keys: Sequence[tuple[str, str]]) -> tuple[EvidenceStructuredFactV1, ...]:

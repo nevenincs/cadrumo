@@ -472,6 +472,29 @@ def test_the_same_document_under_two_directions_is_two_records(
     assert len(service.list_all(bucket_id=_BUCKET_ID)) == 2, "issued and received are genuinely two records"
 
 
+@pytest.mark.parametrize("direction", [InvoiceKind.RECEIVED, InvoiceKind.ISSUED])
+def test_the_stored_draft_carries_the_direction_the_import_was_declared_under(
+    runtime_profile: TestRuntimeProfile,
+    tmp_path: Path,
+    direction: InvoiceKind,
+) -> None:
+    """The review opens on the operator's own choice, beside the reading's untouched suggestion.
+
+    A structured record states no direction, so the reading suggests none; the
+    declared kind is therefore the only statement the draft has, and it must be
+    kept on the stored record rather than dying in the idempotency key.
+    """
+    folder = tmp_path / "declared"
+    folder.mkdir()
+    (folder / _STRUCTURED).write_bytes((_CORPUS / _STRUCTURED).read_bytes())
+
+    _run_batch(runtime_profile, sources=[folder], direction=direction)
+
+    (stored,) = load_extraction_drafts(_BUCKET_ID, runtime_profile.settings).drafts
+    assert stored.declared_kind is direction
+    assert stored.draft.suggested_kind is None
+
+
 class TestInferencePacing:
     """A contended machine must cost the batch its readable items, not its whole run.
 

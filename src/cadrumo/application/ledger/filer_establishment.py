@@ -54,10 +54,15 @@ if TYPE_CHECKING:
 
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.user_profile.values import UserProfileRecord
+    from ..operations.next_step import OperationNextStepWording
 
 __all__ = [
     "FILER_POSTCODE_FACT_PATH",
+    "FILER_POSTCODE_MISSING_LOCALE_KEY",
+    "FILER_POSTCODE_UNREADABLE_LOCALE_KEY",
     "FILER_TAX_ID_FACT_PATH",
+    "filer_postcode_declared",
+    "filer_postcode_step",
     "resolve_filer_tax_id",
     "resolve_filer_territorial_scope",
 ]
@@ -75,6 +80,12 @@ reads as the obvious answer and the profile schema rejects it. A fact read at a
 path nothing writes is indistinguishable from a profile that declares none, and
 the difference between the two spellings is invisible at every call site.
 """
+
+FILER_POSTCODE_MISSING_LOCALE_KEY: Final[str] = "errors.refused.refused_ledger_evidence_filer_postcode_missing"
+"""The sentence a confirm serves when the profile states no fiscal-address postcode."""
+
+FILER_POSTCODE_UNREADABLE_LOCALE_KEY: Final[str] = "errors.refused.refused_ledger_evidence_filer_postcode_unreadable"
+"""The sentence a confirm serves when the stated postcode is not a readable Spanish one."""
 
 FILER_POSTCODE_FACT_PATH: Final[str] = "contact.postcode"
 """Profile fact path carrying the taxpayer's own fiscal-address postcode.
@@ -127,10 +138,12 @@ def resolve_filer_territorial_scope(
             f"({FILER_POSTCODE_FACT_PATH}), so the taxpayer's own IVA territory "
             "cannot be established; it separates the peninsula from Canarias and "
             "from Ceuta y Melilla and is never read off an invoice",
+            translated_message=FILER_POSTCODE_MISSING_LOCALE_KEY,
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.FILER_POSTCODE_VALID,
                 facts={"filer_postcode_present": False},
             ),
+            next_step=filer_postcode_step(),
         )
 
     scope = territorial_scope_for_spanish_postal_code(declared, effective_date=effective_date, operation=operation)
@@ -139,12 +152,33 @@ def resolve_filer_territorial_scope(
             f"the fiscal-address postcode this profile declares ({declared!r}) is "
             f"not a readable Spanish postal code, so the taxpayer's own IVA "
             f"territory cannot be established from {FILER_POSTCODE_FACT_PATH}",
+            translated_message=FILER_POSTCODE_UNREADABLE_LOCALE_KEY,
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.FILER_POSTCODE_VALID,
                 facts={"filer_postcode_readable": False},
             ),
+            next_step=filer_postcode_step(),
         )
     return scope
+
+
+def filer_postcode_declared(profile_record: UserProfileRecord | None) -> bool:
+    """Whether the profile states a fiscal-address postcode at all.
+
+    The date-free half of :func:`resolve_filer_territorial_scope`'s precondition,
+    for a surface that says before any confirm that none can succeed until the
+    profile carries it. Whether a stated postcode is readable depends on the
+    operation date's vocabulary and stays with the confirm.
+    """
+    return _declared_postcode(profile_record) is not None
+
+
+def filer_postcode_step() -> OperationNextStepWording:
+    """The step that puts a missing or unreadable filer postcode right: the profile fact itself."""
+    # Call-time import for the cycle-break the readers below document.
+    from ..modelo.profile_readiness_gate import open_profile_path_step
+
+    return open_profile_path_step(FILER_POSTCODE_FACT_PATH)
 
 
 def resolve_filer_tax_id(*, profile_record: UserProfileRecord | None) -> str | None:
