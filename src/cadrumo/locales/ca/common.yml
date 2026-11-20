@@ -4599,6 +4599,9 @@ desktop:
       review: Revisa
       review_count: Revisa i desa · {count}
       undo: Desfés
+      undone:
+        one: Canvi desfet
+        other: '{count} canvis desfets'
       window_only: només en aquesta finestra
     unavailable: Encara no disponible
     view:

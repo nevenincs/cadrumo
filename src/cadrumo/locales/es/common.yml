@@ -4608,6 +4608,9 @@ desktop:
       review: Revisar
       review_count: Revisar y guardar · {count}
       undo: Deshacer
+      undone:
+        one: Cambio deshecho
+        other: '{count} cambios deshechos'
       window_only: solo en esta ventana
     unavailable: Aún no disponible
     view:

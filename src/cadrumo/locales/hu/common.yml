@@ -4576,6 +4576,9 @@ desktop:
       review: Áttekintés
       review_count: Áttekintés és mentés · {count}
       undo: Visszavonás
+      undone:
+        one: Módosítás visszavonva
+        other: '{count} módosítás visszavonva'
       window_only: csak ebben az ablakban
     unavailable: Még nem érhető el
     view:

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { Icon } from "@/components/ui/icon";
@@ -11,8 +11,11 @@ import {
 import { chordAria, chordText } from "@/shared/chords";
 import { REVIEW_CHORD, UNDO_CHORD } from "../ledgerChords";
 import { described, facts } from "../../../shell/compose";
-import { useStrings } from "../../../shell/strings";
+import { countWords, useStrings } from "../../../shell/strings";
 import type { StageTally } from "./editingModel";
+
+/** How long the tray says a change was undone. */
+const UNDONE_NOTE_MS = 5000;
 
 /** Staged changes at which the tray suggests saving in parts. */
 export const SAVE_IN_PARTS_AT = 50;
@@ -39,8 +42,10 @@ export function tallyText(
 /**
  * The page-wide tray of what is staged, docked at the foot of every
  * section: "10 · Review" at rest, counted in the page's one unit. Opened,
- * it says what the count holds and offers undo and discard. While a write's
- * outcome is unknown, saving waits for a re-read.
+ * it says what the count holds and offers undo and discard. An undo is said
+ * in words, since the change it takes back may be in another section and
+ * leave the count as it was. While a write's outcome is unknown, saving
+ * waits for a re-read.
  */
 export function ChangesTray({
   tally,
@@ -60,6 +65,13 @@ export function ChangesTray({
 }) {
   const t = useStrings();
   const [open, setOpen] = useState(false);
+  // Each undo from here, so a second one says so again.
+  const [undone, setUndone] = useState(0);
+  useEffect(() => {
+    if (undone === 0) return;
+    const timer = window.setTimeout(() => setUndone(0), UNDONE_NOTE_MS);
+    return () => window.clearTimeout(timer);
+  }, [undone]);
   const what = tallyText(t, tally);
   const name = t("desktop.ledger.tray.name", {
     count: tally.units,
@@ -106,6 +118,22 @@ export function ChangesTray({
               {t("desktop.ledger.tray.paused")}
             </span>
           )}
+          <span
+            role="status"
+            className="ledger-tray-undone text-muted-foreground"
+          >
+            {undone > 0
+              ? countWords(
+                  t,
+                  undone,
+                  {
+                    one: "desktop.ledger.tray.undone.one",
+                    other: "desktop.ledger.tray.undone.other",
+                  },
+                  { count: undone },
+                )
+              : null}
+          </span>
         </span>
       ) : (
         <span className="flex-1" />
@@ -119,7 +147,9 @@ export function ChangesTray({
             size="sm"
             aria-disabled={canUndo ? undefined : true}
             onClick={() => {
-              if (canUndo) onUndo();
+              if (!canUndo) return;
+              onUndo();
+              setUndone((count) => count + 1);
             }}
           >
             <Icon name="reset" />

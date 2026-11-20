@@ -4513,6 +4513,9 @@ desktop:
       review: Review
       review_count: Review and save · {count}
       undo: Undo
+      undone:
+        one: Change undone
+        other: '{count} changes undone'
       window_only: kept only in this window
     unavailable: Not available yet
     view:

@@ -612,6 +612,8 @@ DESKTOP_LEDGER_CATALOGUE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.tray.review",
         "desktop.ledger.tray.review_count",
         "desktop.ledger.tray.undo",
+        "desktop.ledger.tray.undone.one",
+        "desktop.ledger.tray.undone.other",
         "desktop.ledger.tray.window_only",
         "desktop.ledger.capital.art108",
         "desktop.ledger.capital.column.cuota",
