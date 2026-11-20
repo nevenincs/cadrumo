@@ -5,7 +5,7 @@ tags:
 date: '2026-11-20'
 modified: '2026-11-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:1009b392ed0b5eeb29e361422b50741f9633796e50ed8b6130cf980796ee784d'
+body_hash: 'sha256:8c6a2f5c1db7ff126b5e57292efdc27e28a472c976e3d996e8ea67fdd6b88ff2'
 related:
   - "[[2026-11-20-ledger-classify-queue-plan]]"
 ---
@@ -58,7 +58,29 @@ related:
 - `S03` `M` `src/cadrumo/adapters/persistence/storage/namespace_registry.py`
 - `S03` `verify:` `pytest classification_job tests + storage/errors/transactions` -> `pass`
 - `S03` `verify:` `dev.quality.types --full` -> `pass`
+- `S04` `A` `src/cadrumo/application/ledger/classification_job_operation.py`
+- `S04` `A` `src/cadrumo/application/ledger/classification_job_read_operation.py`
+- `S04` `A` `src/cadrumo/application/ledger/classification_job_contracts.py`
+- `S04` `M` `src/cadrumo/entrypoints/operation_composition_ledger.py`
+- `S04` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S04` `A` `native/desktop/frontend/src/shell/ledgerClassificationJobContract.ts`
+- `S04` `verify:` `pytest classification job operations + ledger/operations/errors (1186)` -> `pass`
+- `S04` `verify:` `manifest --check` -> `pass`
+- `S04` `verify:` `relay_contracts --check` -> `pass`
+- `S08` `M` `src/cadrumo_agent_service/providers/application/model_runs.py`
+- `S08` `M` `src/cadrumo_agent_service/providers/domain/record.py`
+- `S08` `M` `src/cadrumo_client/contracts/model_runs.py`
+- `S08` `M` `src/cadrumo_runtime/host/operation_authority.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/llm/text_classifier.py`
+- `S08` `verify:` `pytest cadrumo_agent_service + client/runtime/llm/runtime_lifecycle (1895)` -> `pass`
+- `S08` `verify:` `dev.quality.types --full` -> `pass`
+- `S09` `A` `native/desktop/frontend/src/components/settings/TaskModels.tsx`
+- `S09` `A` `native/desktop/frontend/src/shell/taskModels.ts`
+- `S09` `A` `native/desktop/frontend/tests/scenarios/task-models.spec.ts`
+- `S09` `verify:` `playwright task-models, agent-readers, local-models, agent-settings-sections, ledger-reading-model (36)` -> `pass`
 
 ## Notes
 
 - `S07` Landed on cadrumo-agent main 5b8bdea; Cadrumo pin moved in ec5b6375ee with the consumer (catalog v8, effort in agent.effort); no task-kind setting caller yet (S08)
+- `S04` Broad sweep stopped as hung on PRIME order; focused tests only, broad sweeps left to QUALITY
+- `S08` No cadrumo-agent change needed; no re-pin
