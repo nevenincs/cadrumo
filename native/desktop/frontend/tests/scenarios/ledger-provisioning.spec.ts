@@ -315,8 +315,13 @@ test("a PDF statement for a local AI this computer cannot set up says why and of
     `${LOCAL_AI}: This computer does not have enough memory for this.`,
   );
   await expect(card.locator(".setup-offer")).toHaveCount(0);
-  await expect(card.getByRole("button")).toHaveCount(0);
+  // The held row opens the panel on it, which says why in full.
+  const open = card.getByRole("button");
+  await expect(open).toHaveCount(1);
+  await expect(open).toHaveText(label("desktop.setup.open"));
   await expect(setupDialog(target)).toHaveCount(0);
+  await open.click();
+  await heldByHardware(target);
 });
 
 test("a PDF statement while the setup status cannot be read offers nothing", async ({

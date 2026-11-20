@@ -47,6 +47,14 @@ class FinancialProviderBoundary(FinancialProviderProtocol):
             raise _translate_provider_error(exc, operation="ingest", path=path) from exc
 
     @override
+    def statement_account(self, path: Path, *, source_sha256: str) -> str | None:
+        """Return the one account the statement names, translating provider failures."""
+        try:
+            return self._provider.statement_account(path, source_sha256=source_sha256)
+        except FinancialProviderError as exc:
+            raise _translate_provider_error(exc, operation="statement_account", path=path) from exc
+
+    @override
     def validate_source(self, path: Path) -> LedgerProviderValidation:
         """Return application validation facts while translating failures."""
         try:

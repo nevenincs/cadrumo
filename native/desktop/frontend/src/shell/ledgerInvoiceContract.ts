@@ -70,6 +70,7 @@ export type EntryOptionFamily =
   | "capital_good_kind"
   | "capital_good_disposal"
   | "import_format"
+  | "import_extension"
   | "export_format"
   | "gasto_capital_inmobiliario"
   | "rental_lease"

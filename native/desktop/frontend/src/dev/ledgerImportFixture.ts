@@ -114,6 +114,17 @@ export function importOperations(
     if (period && !span) return invalid();
     const dryRun = request.dry_run === true;
     const verify = request.verify === true;
+    // The label and holding to register the statement's own account with: only
+    // an import that writes one file, with no account chosen.
+    const registration = (request.register_statement_account ??
+      null) as JsonObject | null;
+    if (
+      registration !== null &&
+      (dryRun || account !== null || chosen.length !== 1)
+    )
+      return invalid();
+    let registered: string | null = null;
+    const statements: JsonObject[] = [];
     const profile = LEDGER_FIXTURE_PROFILE_ID;
     const ref = (id: string): JsonObject => ({
       bucket_id: profile,
@@ -136,6 +147,15 @@ export function importOperations(
         refused.push({ file_name: file.name, reason_code: "source_changed" });
         return;
       }
+      if (spec.stops) throw new Stopped(spec.stops);
+      // The format's reader is not part of this installation.
+      if (spec.installed === false) {
+        refused.push({
+          file_name: file.name,
+          reason_code: "format_not_installed",
+        });
+        return;
+      }
       // Where the local AI is not set up, a PDF statement, which only the
       // local AI reads, is refused for it.
       if (readerMissing && file.name.endsWith(".pdf")) {
@@ -152,20 +172,59 @@ export function importOperations(
         });
         return;
       }
+      // The own account the statement names, if one is registered, and the
+      // mask of the account it names, by which only a mask is ever shown.
+      let held = ledger.accounts.find(
+        (known) =>
+          known.own_account_id === spec.names ||
+          (spec.mask !== undefined && known.masked_iban === spec.mask),
+      );
+      const mask = held?.masked_iban ?? spec.mask ?? null;
       // A chosen account that the file's own rows contradict refuses it.
-      if (account !== null && spec.names !== null && spec.names !== account) {
+      if (
+        account !== null &&
+        mask !== null &&
+        held?.own_account_id !== account
+      ) {
         refused.push({
           file_name: file.name,
           reason_code: "own_account_mismatch",
         });
         return;
       }
-      const named = ledger.accounts.some(
-        (known) => known.own_account_id === spec.names,
-      )
-        ? spec.names
-        : null;
-      const bound = account ?? named;
+      if (registration !== null && mask === null) {
+        refused.push({
+          file_name: file.name,
+          reason_code: "statement_account_missing",
+        });
+        return;
+      }
+      if (mask !== null)
+        statements.push({
+          file_index: index,
+          masked_iban: mask,
+          own_account_id: held?.own_account_id ?? null,
+          registrable: held === undefined,
+        });
+      if (registration !== null && held === undefined) {
+        held = {
+          own_account_id: `acc-${String(ledger.accounts.length + 1).padStart(2, "0")}`,
+          label: text(registration.label) ?? mask!,
+          holding:
+            registration.holding === "cotitular" ? "cotitular" : "titular",
+          masked_iban: mask!,
+          country_code: mask!.slice(0, 2),
+          sepa_marca: "1",
+          has_swift_bic: false,
+          has_bank_block: false,
+          currency: "EUR",
+          opened_on: null,
+          closed_on: null,
+        };
+        ledger.accounts.push(held);
+        registered = held.own_account_id;
+      }
+      const bound = account ?? held?.own_account_id ?? null;
       const read = statementRows(file.name, bound).filter(
         (row) => !span || (row.date >= span[0] && row.date <= span[1]),
       );
@@ -263,6 +322,8 @@ export function importOperations(
       diagnostics,
       refused_files: refused,
       source_digests: digests,
+      statement_accounts: statements,
+      registered_own_account_id: registered,
     };
   }
 

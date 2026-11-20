@@ -26,6 +26,7 @@ import type {
 import { publicPeriod, type LedgerPeriod } from "../../../shell/ledgerGrammar";
 import type { ShowImportBatch } from "../../../shell/ledgerImports";
 import { useStrings } from "../../../shell/strings";
+import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { formatCount } from "../../../shared/numbers";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import {
@@ -43,6 +44,7 @@ import {
   readImported,
   readOwnAccounts,
   type AccountKey,
+  type BankApplied,
   type BankFilePreview,
   type BankOptions,
   type ImportKind,
@@ -178,6 +180,13 @@ export function ImportDialog({
   );
   const [showing, setShowing] = useState<"idle" | "reading" | "failed">("idle");
   const kindName = useId();
+  // The extensions the statement formats this installation parses come in;
+  // until the ledger serves them the dialog asks the host for none in
+  // particular, and the host offers the most it allows rather than a list
+  // the window made up.
+  const served = useVocabulary().importExtensions;
+  const kinds = kind === "bank" && served.length > 0 ? served : null;
+  const kindsKey = kinds?.join(",") ?? "";
 
   const options: BankOptions = {
     provider,
@@ -238,21 +247,25 @@ export function ImportDialog({
     let stop: (() => void) | null = null;
     let active = true;
     void port
-      .observeDrops(PURPOSE[kind], (signal) => {
-        if (!active) {
-          if (signal.kind === "dropped")
-            void port
-              .forgetFiles(signal.files.map((file) => file.token))
-              .catch(() => {});
-          return;
-        }
-        if (signal.kind === "over") setOver(true);
-        else if (signal.kind === "left") setOver(false);
-        else {
-          setOver(false);
-          latestTake.current(signal.files, signal.refused);
-        }
-      })
+      .observeDrops(
+        PURPOSE[kind],
+        (signal) => {
+          if (!active) {
+            if (signal.kind === "dropped")
+              void port
+                .forgetFiles(signal.files.map((file) => file.token))
+                .catch(() => {});
+            return;
+          }
+          if (signal.kind === "over") setOver(true);
+          else if (signal.kind === "left") setOver(false);
+          else {
+            setOver(false);
+            latestTake.current(signal.files, signal.refused);
+          }
+        },
+        kindsKey === "" ? null : kindsKey.split(","),
+      )
       .then((unobserve) => {
         if (active) stop = unobserve;
         else unobserve();
@@ -262,7 +275,7 @@ export function ImportDialog({
       active = false;
       stop?.();
     };
-  }, [port, step, kind]);
+  }, [port, step, kind, kindsKey]);
 
   const pick = async (how: FilePick) => {
     if (pickingNow.current) return;
@@ -275,6 +288,7 @@ export function ImportDialog({
         PURPOSE[kind],
         how,
         t(`desktop.ledger.import.filter.${kind}`),
+        kinds,
       );
       if (mine !== generation.current) {
         void port
@@ -403,6 +417,7 @@ export function ImportDialog({
         file: preview.file,
         account: accountOf(preview)!,
         digest: preview.digest!,
+        statement: preview.statement,
       }));
       // What each file's preview said it brings in, for a re-read to tell
       // whether an import not seen to settle wrote it.
@@ -419,7 +434,27 @@ export function ImportDialog({
         setProgress({ kind: "applying", done, total: plan.length }),
       );
       setProgress(null);
-      setOutcome({ kind: "bank", applied });
+      // An account the import registered is an own account from now on: the
+      // list is read again, so a file previewed next binds to it.
+      if (
+        applied.some(
+          (item) =>
+            item.kind === "imported" &&
+            item.result.registered_own_account_id !== null,
+        )
+      )
+        void readOwnAccounts(port).then((read) => read && setAccounts(read));
+      // A file whose rows are all in the ledger was not sent; the result
+      // still counts and lists it, as its preview read it.
+      const skipped: BankApplied[] = readPreviews.flatMap((preview) =>
+        preview.digest !== null &&
+        !sendable.includes(preview) &&
+        shown(preview).imported === 0 &&
+        shown(preview).skipped > 0
+          ? [{ kind: "skipped", file: preview.file, result: shown(preview) }]
+          : [],
+      );
+      setOutcome({ kind: "bank", applied: [...applied, ...skipped] });
       setStep("result");
       const unseen = applied.flatMap((item) =>
         item.kind === "unknown" ? [item] : [],

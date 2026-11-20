@@ -191,7 +191,8 @@ def test_over_budget_file_is_refused_before_persist_and_later_small_file_fits(
         name = command.path.name
         prepared_paths.append(name)
         return SimpleNamespace(
-            command=command, source=SimpleNamespace(parsed_rows=_parsed_rows(counts[name], "a" * 64))
+            command=command,
+            source=SimpleNamespace(statement_account=None, parsed_rows=_parsed_rows(counts[name], "a" * 64)),
         )
 
     def persist(staged, *, transaction_repository, bucket_event_repository, currency_normalizer):
@@ -250,7 +251,7 @@ def test_a_file_whose_parsed_bytes_differ_from_the_preview_digest_is_refused_bef
         del ports, own_accounts
         return SimpleNamespace(
             command=command,
-            source=SimpleNamespace(parsed_rows=_parsed_rows(2, digests[command.path.name])),
+            source=SimpleNamespace(statement_account=None, parsed_rows=_parsed_rows(2, digests[command.path.name])),
         )
 
     def persist(staged, *, transaction_repository, bucket_event_repository, currency_normalizer):
@@ -327,7 +328,9 @@ def test_each_source_is_staged_under_the_session_label_for_automation_and_the_pr
     def prepare(command, *, ports, own_accounts):
         del ports, own_accounts
         actors.append(command.actor)
-        return SimpleNamespace(command=command, source=SimpleNamespace(parsed_rows=_parsed_rows(1, "a" * 64)))
+        return SimpleNamespace(
+            command=command, source=SimpleNamespace(statement_account=None, parsed_rows=_parsed_rows(1, "a" * 64))
+        )
 
     def persist(staged, *, transaction_repository, bucket_event_repository, currency_normalizer):
         del staged, transaction_repository, bucket_event_repository, currency_normalizer
@@ -379,7 +382,9 @@ def _imported_once(operation: PinnedAuthorityOperation, monkeypatch: pytest.Monk
 
     def prepare(command, *, ports, own_accounts):
         del ports, own_accounts
-        return SimpleNamespace(command=command, source=SimpleNamespace(parsed_rows=_parsed_rows(rows, "a" * 64)))
+        return SimpleNamespace(
+            command=command, source=SimpleNamespace(statement_account=None, parsed_rows=_parsed_rows(rows, "a" * 64))
+        )
 
     def persist(staged, *, transaction_repository, bucket_event_repository, currency_normalizer):
         del staged, transaction_repository, bucket_event_repository, currency_normalizer

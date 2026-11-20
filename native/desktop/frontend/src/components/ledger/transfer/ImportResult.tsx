@@ -226,6 +226,11 @@ export function ImportResultStep({
     const sum = (pick: (result: LedgerImportResultProjection) => number) =>
       imported.reduce((total, item) => total + pick(item.result), 0);
     const flagged = sum((result) => result.likely_duplicates);
+    const left = outcome.applied.reduce(
+      (total, item) =>
+        total + (item.kind === "skipped" ? item.result.skipped : 0),
+      0,
+    );
     const unknownFiles = outcome.applied.filter(
       (item) => item.kind === "unknown",
     );
@@ -240,7 +245,7 @@ export function ImportResultStep({
             </AlertTitle>
             <AlertDescription>
               {t("desktop.ledger.import.imported_note", {
-                skipped: sum((result) => result.skipped),
+                skipped: sum((result) => result.skipped) + left,
                 flagged,
               })}
             </AlertDescription>
@@ -267,7 +272,7 @@ export function ImportResultStep({
                   ? "unknown"
                   : item.kind === "not_sent"
                     ? "pending"
-                    : item.kind === "imported"
+                    : item.kind === "imported" || item.kind === "skipped"
                       ? "check"
                       : undefined
               }
@@ -278,13 +283,17 @@ export function ImportResultStep({
                       fresh: count(item.result.imported),
                       skipped: count(item.result.skipped),
                     })
-                  : item.kind === "changed"
-                    ? importRefusal(t, "source_changed")
-                    : item.kind === "refused"
-                      ? importRefusal(t, item.reason, item.setup ?? null)
-                      : item.kind === "unknown"
-                        ? t("desktop.ledger.import.file_unknown")
-                        : t("desktop.ledger.import.file_not_sent")}
+                  : item.kind === "skipped"
+                    ? t("desktop.ledger.import.file_skipped", {
+                        skipped: count(item.result.skipped),
+                      })
+                    : item.kind === "changed"
+                      ? importRefusal(t, "source_changed")
+                      : item.kind === "refused"
+                        ? importRefusal(t, item.reason, item.setup ?? null)
+                        : item.kind === "unknown"
+                          ? t("desktop.ledger.import.file_unknown")
+                          : t("desktop.ledger.import.file_not_sent")}
               </span>
               {item.kind === "refused" && (
                 <SetupOffer action={item.setup ?? null} className="mt-1" />
