@@ -222,9 +222,10 @@ test("the amount editor refuses what could be read two ways, echoing it, and sav
   await openReview(target);
   await save(target);
   // The product's single update refuses any but the shortest spelling.
-  // Everything saved: the result says so once and lists nothing.
+  // Everything saved: the result says so once and lists the one change.
   await expect(headline(target)).toHaveText(titled("applied", 1));
-  await expect(review(target).locator("[data-outcome]")).toHaveCount(0);
+  await expect(review(target).locator("[data-outcome]")).toHaveCount(1);
+  await expect(review(target).locator("[data-outcome=applied]")).toHaveCount(1);
   await review(target).locator(".ledger-apply-done").click();
   await focusOnGrid(target);
   await expect(rowOf(target, "SOFTNUBE IRELAND SUSCRIPCION")).toHaveCount(1);
@@ -975,8 +976,8 @@ test("a part refused whole saves nothing of it and keeps it staged", async ({
     review(target).locator("[data-part=part][data-outcome=refused]"),
   ).toContainText(label("desktop.ledger.apply.part_refused"));
   await expect(headline(target)).toHaveText(titled("refused", 1));
-  // Only what did not save is listed; the saved one is counted.
-  await expect(review(target).locator("[data-outcome=applied]")).toHaveCount(0);
+  // Every unit is listed, the saved one among them, and each is counted once.
+  await expect(review(target).locator("[data-outcome=applied]")).toHaveCount(1);
   await expect(review(target).locator("[data-tally=applied]")).toContainText(
     "1",
   );

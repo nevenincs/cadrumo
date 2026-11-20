@@ -58,6 +58,7 @@ from .....core.operator_action_enums import ActionEvidenceProvenance
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.iva.regime_legend import RegimeLegend
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from .....tests.pdf_fixtures import text_pdf_bytes
 from ....inbound.einvoice.application_translation import translate_parsed_einvoice
 from ....inbound.einvoice.parsers import parse_einvoice_document
 from ....inbound.einvoice.shape import probe_document_shape
@@ -109,6 +110,7 @@ def _ledger_evidence_ports(*, bucket_id: str) -> LedgerEvidencePorts:
         evidence_repository=LedgerEvidenceRepositoryAdapter(objects=objects),
         attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=objects)),
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
+        document_shape_probe=probe_document_shape,
     )
 
 
@@ -308,7 +310,7 @@ def secure_objects(runtime_profile: TestRuntimeProfile) -> SecureObjectRepositor
 @pytest.fixture
 def pdf_file(tmp_path: Path) -> Path:
     path = tmp_path / "receipt.pdf"
-    path.write_bytes(b"%PDF-1.4 test")
+    path.write_bytes(text_pdf_bytes(("synthetic purchase receipt",)))
     return path
 
 

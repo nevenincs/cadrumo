@@ -1655,8 +1655,10 @@ desktop:
       action:
         allocate: Üzleti arány · {share}
         archive: Archiválás
-        attach: Csatolás
-        attach_file: '{name} csatolása'
+        attach_file_other: '{name} csatolása egyéb dokumentumként'
+        attach_file_purchase: '{name} csatolása beszerzési számlaként'
+        attach_other: Csatolás egyéb dokumentumként
+        attach_purchase: Csatolás beszerzési számlaként
         detach: Leválasztás
         exclude: Kizárás
         iva_derive: IVA kiszámítása · {category}
@@ -3268,18 +3270,26 @@ desktop:
         active_only: Csak aktív tételhez csatolható dokumentum.
         add_file: Hozzáadás erről a gépről
         add_staged: '{file} · a csatolás még nincs mentve'
-        adding: '{file} hozzáadása · nincs mentve'
+        adding_other: '{file} hozzáadása egyéb dokumentumként · nincs mentve'
+        adding_purchase: '{file} hozzáadása beszerzési számlaként · nincs mentve'
         advisory: Nincs csatolva beszerzési számla. A pénzmozgást elmentheted; a levonás
           kiszámításához szükség lehet a számla adózási adataira és az igazoló dokumentumokra.
         attach_existing: Dokumentum csatolása
         attach_staged: A csatolás még nincs mentve
-        attaching: '{file} csatolása · nincs mentve'
+        attaching_other: '{file} csatolása egyéb dokumentumként · nincs mentve'
+        attaching_purchase: '{file} csatolása beszerzési számlaként · nincs mentve'
         detach: Leválasztás
         detach_named: '{file} leválasztása'
         detach_pending: A leválasztás még nincs mentve
         detach_staged: A leválasztás még nincs mentve
         detaching: '{file} leválasztása · nincs mentve'
         hint: PDF vagy kép, erről a gépről olvasva, titkosítva tárolva.
+        kind:
+          choose: Először válaszd ki, hogy a tétel beszerzési számlája vagy egyéb
+            dokumentum.
+          label: Csatolás mint
+          other: Egyéb dokumentum
+          purchase: Beszerzési számla
         no_free: Nincs más dokumentum a főkönyvben
         none: Nincs dokumentum
         pick_failed: A fájlválasztó nem nyílt meg.

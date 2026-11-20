@@ -45,6 +45,7 @@ from ..evidence_read_operation import (
     build_ledger_evidence_query_definition,
     build_ledger_evidence_query_registration,
 )
+from .unused_repository_ports import unused_evidence_document_shape_probe
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -101,6 +102,7 @@ def _ports_factory(*, bucket_id: str) -> LedgerEvidencePorts:
         evidence_repository=_StoredEvidence(),
         attachment_ingestor=cast(EvidenceAttachmentIngestorProtocol, object()),
         bucket_event_repository=cast(BucketEventHistoryRepositoryProtocol, object()),
+        document_shape_probe=unused_evidence_document_shape_probe,
     )
 
 

@@ -19,6 +19,7 @@ import { formatTime } from "../../../shared/dateFormats";
 import {
   documentAttachmentReference,
   movementDocuments,
+  type DocumentRole,
 } from "./movementDocuments";
 import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
@@ -31,7 +32,9 @@ type DocumentAction = Extract<
  * The inspector's Documents section: the movement's purchase invoice and
  * other attachments. Only supplementary attachments can be detached; the
  * purchase evidence reference is immutable. An existing document
- * to attach, and a document from this computer to add and attach. A
+ * to attach, and a document from this computer to add and attach. While the
+ * movement has no purchase invoice, the person says what a document is
+ * before it is staged: nothing makes a file the purchase invoice unasked. A
  * missing document is shown with the ledger's advice. Every change is staged.
  */
 export function DocumentsSection({
@@ -59,6 +62,7 @@ export function DocumentsSection({
   const id = tx.transaction_id;
   const [picking, setPicking] = useState(false);
   const [pickFailed, setPickFailed] = useState(false);
+  const [chosenRole, setChosenRole] = useState<DocumentRole | null>(null);
   const records = evidence?.kind === "ready" ? evidence.result.rows : [];
   const documents = movementDocuments(tx, records);
   const purchase = documents.purchase;
@@ -74,6 +78,16 @@ export function DocumentsSection({
       action.kind === "detach" ||
       action.kind === "attach_file",
   );
+  // Purchase evidence, once linked or staged, is the only one: any further
+  // document can only be another document.
+  const purchaseOpen =
+    tx.purchase_invoice_evidence_id === null &&
+    !staged.some(
+      (action) =>
+        (action.kind === "attach" && action.evidenceId !== null) ||
+        (action.kind === "attach_file" && !action.supplementary),
+    );
+  const role: DocumentRole | null = purchaseOpen ? chosenRole : "other";
   const detaching = new Set(
     staged.flatMap((action) =>
       action.kind === "detach" ? action.attachmentIds : [],
@@ -115,13 +129,14 @@ export function DocumentsSection({
     setPicking(true);
     setPickFailed(false);
     try {
+      if (!role) return;
       const picks = await port.pickFiles(
         "documents",
         "file",
         t("desktop.ledger.import.filter.documents"),
       );
       const file = picks.files[0];
-      if (file) {
+      if (file && role) {
         onStage({
           type: "stage_action",
           action: {
@@ -131,9 +146,10 @@ export function DocumentsSection({
             file: file.token,
             name: file.name,
             idempotencyKey: newIdempotencyKey(),
-            supplementary: tx.purchase_invoice_evidence_id !== null,
+            supplementary: role === "other",
           },
         });
+        setChosenRole(null);
         say(
           t("desktop.ledger.inspector.documents.add_staged", {
             file: file.name,
@@ -222,20 +238,28 @@ export function DocumentsSection({
               />
               <span className="min-w-0 flex-1 break-words">
                 {action.kind === "attach_file"
-                  ? t("desktop.ledger.inspector.documents.adding", {
-                      file: action.name,
-                    })
+                  ? t(
+                      action.supplementary
+                        ? "desktop.ledger.inspector.documents.adding_other"
+                        : "desktop.ledger.inspector.documents.adding_purchase",
+                      { file: action.name },
+                    )
                   : action.kind === "attach"
-                    ? t("desktop.ledger.inspector.documents.attaching", {
-                        file: action.evidenceId
-                          ? fileName(
-                              records.find(
-                                (record) =>
-                                  record.evidence_id === action.evidenceId,
-                              )?.source_path ?? action.evidenceId,
-                            )
-                          : listed(t, action.attachmentIds.map(nameOf)),
-                      })
+                    ? t(
+                        action.evidenceId === null
+                          ? "desktop.ledger.inspector.documents.attaching_other"
+                          : "desktop.ledger.inspector.documents.attaching_purchase",
+                        {
+                          file: action.evidenceId
+                            ? fileName(
+                                records.find(
+                                  (record) =>
+                                    record.evidence_id === action.evidenceId,
+                                )?.source_path ?? action.evidenceId,
+                              )
+                            : listed(t, action.attachmentIds.map(nameOf)),
+                        },
+                      )
                     : t("desktop.ledger.inspector.documents.detaching", {
                         file: listed(t, action.attachmentIds.map(nameOf)),
                       })}
@@ -252,6 +276,44 @@ export function DocumentsSection({
         </ul>
       )}
 
+      {purchaseOpen && (
+        <div className="grid gap-1">
+          <span
+            id={`documents-kind-${id}`}
+            className="text-xs text-muted-foreground"
+          >
+            {t("desktop.ledger.inspector.documents.kind.label")}
+          </span>
+          <div
+            role="radiogroup"
+            aria-labelledby={`documents-kind-${id}`}
+            className="ledger-document-kind flex flex-wrap gap-1"
+          >
+            {(["purchase", "other"] as const).map((choice) => (
+              <Button
+                key={choice}
+                role="radio"
+                aria-checked={chosenRole === choice}
+                variant={chosenRole === choice ? "outline" : "ghost"}
+                size="xs"
+                disabled={lock !== null}
+                onClick={() => setChosenRole(choice)}
+              >
+                {t(
+                  choice === "purchase"
+                    ? "desktop.ledger.inspector.documents.kind.purchase"
+                    : "desktop.ledger.inspector.documents.kind.other",
+                )}
+              </Button>
+            ))}
+          </div>
+          {!chosenRole && (
+            <p className="text-xs text-muted-foreground">
+              {t("desktop.ledger.inspector.documents.kind.choose")}
+            </p>
+          )}
+        </div>
+      )}
       <div className="flex flex-wrap gap-2">
         <Combobox
           label={t("desktop.ledger.inspector.documents.attach_existing")}
@@ -267,20 +329,25 @@ export function DocumentsSection({
             const record = records.find(
               (record) => record.evidence_id === chosen,
             );
-            if (!record) return;
+            if (!record || !role) return;
             onStage({
               type: "stage_action",
               action: {
                 id: `attach:${id}:${chosen}`,
                 kind: "attach",
                 transactionId: id,
-                ...documentAttachmentReference(tx, record),
+                ...documentAttachmentReference(record, role),
               },
             });
+            setChosenRole(null);
             say(t("desktop.ledger.inspector.documents.attach_staged"));
           }}
         >
-          <Button variant="outline" size="sm" disabled={lock !== null}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={lock !== null || role === null}
+          >
             <Icon name="attach" />
             {t("desktop.ledger.inspector.documents.attach_existing")}
           </Button>
@@ -288,7 +355,7 @@ export function DocumentsSection({
         <Button
           variant="outline"
           size="sm"
-          disabled={lock !== null || picking}
+          disabled={lock !== null || picking || role === null}
           onClick={() => void pick()}
         >
           <Icon name="folder" />

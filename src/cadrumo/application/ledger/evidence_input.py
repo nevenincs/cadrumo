@@ -27,9 +27,8 @@ from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.attachments.protocols import AttachmentStoreProtocol
 from .evidence import PurchaseInvoiceEvidence
-from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .evidence_input_ports import EvidenceInputPorts
-from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
+from .evidence_shape_admission import require_readable_document_shape
 
 __all__ = [
     "EvidenceInput",
@@ -121,35 +120,6 @@ class EvidenceInput(BaseModel):
         raise NotImplementedError(_REFUSAL_MESSAGE)
 
 
-def _reject_unreadable_bytes(data: bytes, *, mime_type: str, ports: EvidenceInputPorts) -> DocumentShape:
-    """Refuse evidence whose BYTES match no readable document shape.
-
-    The read path's admission question used to be asked of the stored MIME type
-    through a two-member media kind, and a label cannot see inside a document.
-    It got both directions wrong: a PNG announced as ``application/pdf`` was
-    admitted and called a PDF, while a genuine PDF announced as
-    ``application/octet-stream`` was refused outright. Neither answer was about
-    the document.
-
-    :attr:`DocumentShape.UNKNOWN` is the probe's own "never guessed at, always
-    refused" verdict, so refusing on it moves the authority to the bytes while
-    leaving every case where the label told the truth decided exactly as before.
-    ``mime_type`` appears in the message only as the operator-visible breadcrumb
-    identifying the record they are looking at; it decides nothing.
-    """
-    document_shape = ports.document_shape_probe(data)
-    if document_shape is DocumentShape.UNKNOWN:
-        raise PurchaseInvoiceEvidenceInputError(
-            f"evidence bytes (stored as {mime_type!r}) match no readable document shape; "
-            "only PDF, structured XML and image evidence can be read",
-            precondition_verdict=ledger_no_recovery_verdict(
-                LedgerPreconditionCondition.EVIDENCE_BYTES_READABLE,
-                facts={"document_shape_recognized": False},
-            ),
-        )
-    return document_shape
-
-
 def resolve_attachment_evidence_input(
     attachment_id: str,
     *,
@@ -186,7 +156,9 @@ def resolve_attachment_evidence_input(
     """
     manifest = store.load_manifest(attachment_id)
     data = store.read_bytes(manifest.sha256)
-    document_shape = _reject_unreadable_bytes(data, mime_type=manifest.mime_type, ports=ports)
+    document_shape = require_readable_document_shape(
+        data, mime_type=manifest.mime_type, probe=ports.document_shape_probe
+    )
     return EvidenceInput(
         mime_type=manifest.mime_type,
         document_shape=document_shape,

@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from ...core.identity.digest import ContentDigest
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from .evidence_input_ports import EvidenceDocumentShapeProbe
 
 if TYPE_CHECKING:
     from .evidence import PurchaseInvoiceEvidence
@@ -101,6 +102,8 @@ class LedgerEvidencePorts:
     evidence_repository: PurchaseInvoiceEvidenceRepositoryProtocol
     attachment_ingestor: EvidenceAttachmentIngestorProtocol
     bucket_event_repository: BucketEventHistoryRepositoryProtocol
+    document_shape_probe: EvidenceDocumentShapeProbe
+    """Classifies the evidence file's own bytes, so an unreadable document is refused before custody."""
 
 
 class LedgerEvidencePortsFactory(Protocol):
