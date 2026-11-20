@@ -195,6 +195,8 @@ declare global {
       holdTracks(): void;
       releaseTracks(): void;
       pendingTracks(): number;
+      /** The requests the page sent for `definition`, oldest first. */
+      requests(definition: string): JsonObject[];
       /** Changes a stored movement's field, as another window saving it
        * would. */
       editElsewhere(id: string, field: string, value: string | null): void;
@@ -276,6 +278,8 @@ export function ledgerFixture(options: Options): LedgerPort {
   let tracksHeld: Promise<void> | null = null;
   let releaseTracks = () => {};
   let pendingTracks = 0;
+  // Every request the page sent, as it was sent.
+  const sent: { definition: string; request: JsonObject }[] = [];
   // Reads that fail only where their request carries these values.
   const failingWhere: {
     definition: string;
@@ -387,6 +391,10 @@ export function ledgerFixture(options: Options): LedgerPort {
     },
     releaseTracks: () => releaseTracks(),
     pendingTracks: () => pendingTracks,
+    requests: (definition) =>
+      sent
+        .filter((found) => found.definition === definition)
+        .map((found) => found.request),
     editElsewhere(id, field, value) {
       const movement = transactionOf(id);
       if (!movement) return;
@@ -426,6 +434,8 @@ export function ledgerFixture(options: Options): LedgerPort {
     releaseTracks: () => ledgers.forEach((made) => made.releaseTracks()),
     pendingTracks: () =>
       [...ledgers].reduce((total, made) => total + made.pendingTracks(), 0),
+    requests: (definition) =>
+      [...ledgers].flatMap((made) => made.requests(definition)),
     editElsewhere: (id, field, value) =>
       ledgers.forEach((made) => made.editElsewhere(id, field, value)),
     waitingReviews: () => [...ledgers].flatMap((made) => made.waitingReviews()),
@@ -827,6 +837,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     )
       return reject("invalid");
     const request = payload as JsonObject;
+    sent.push({ definition, request: structuredClone(request) });
     if ("profile_id" in request || "source_directory" in request)
       return reject("invalid");
     if (

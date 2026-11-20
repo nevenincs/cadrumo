@@ -196,8 +196,65 @@ const EMPTY: State = {
   saved: false,
 };
 
-/** One mounted profile reader. Pushes coalesce behind a single read; stale
- * responses are dropped and drafts keep the revision they were opened on. */
+/** What every reader of one port, reader and language shares while any of
+ * them is subscribed: the profile as last read, and whether a change cue (or
+ * no read yet) says it is out of date. A page that mounts again, or a reader
+ * that is shown again, renders this at once and reads only when it is stale. */
+type Shared = {
+  data: UserProfile | null;
+  stale: boolean;
+  /** Counts cues, so a read that a cue overtook leaves the data stale. */
+  epoch: number;
+  holders: number;
+  adopters: Set<(data: UserProfile | null) => void>;
+};
+const shared = new WeakMap<UserProfilePort, Map<string, Shared>>();
+const sharedKey = (reader: string, language: string) =>
+  `${reader}\u0000${language}`;
+function peek(
+  port: UserProfilePort | undefined,
+  reader: string | null,
+  language: string,
+): Shared | undefined {
+  if (!port || reader === null) return undefined;
+  return shared.get(port)?.get(sharedKey(reader, language));
+}
+function hold(port: UserProfilePort, reader: string, language: string) {
+  let entries = shared.get(port);
+  if (!entries) shared.set(port, (entries = new Map()));
+  const key = sharedKey(reader, language);
+  let entry = entries.get(key);
+  if (!entry) {
+    entry = {
+      data: null,
+      stale: true,
+      epoch: 0,
+      holders: 0,
+      adopters: new Set(),
+    };
+    entries.set(key, entry);
+  }
+  entry.holders += 1;
+  const held = entry;
+  return {
+    entry: held,
+    release() {
+      held.holders -= 1;
+      if (held.holders === 0 && entries.get(key) === held) entries.delete(key);
+    },
+  };
+}
+const seeded = (entry: Shared | undefined): State =>
+  entry?.data && !entry.stale
+    ? { ...EMPTY, data: entry.data, loading: false }
+    : EMPTY;
+
+/** One mounted profile reader. The subscription and the data belong to the
+ * port, reader and language, never to `shown`: the first read waits for the
+ * reader to be shown, a change cue while it is hidden only marks the data
+ * stale, and showing it again reads only if it never read or is stale.
+ * Pushes coalesce behind a single read; stale responses are dropped and
+ * drafts keep the revision they were opened on. */
 export function useUserProfile(
   port: UserProfilePort | undefined,
   reader: string | null,
@@ -205,30 +262,44 @@ export function useUserProfile(
   shown: boolean,
 ) {
   const identity = useMemo(
-    () => ({ port, reader, language, shown }),
-    [port, reader, language, shown],
+    () => ({ port, reader, language }),
+    [port, reader, language],
   );
-  const [stored, setStored] = useState({ identity, state: EMPTY });
+  const [stored, setStored] = useState(() => ({
+    identity,
+    state: seeded(peek(port, reader, language)),
+  }));
+  const shownNow = useRef(shown);
   const control = useRef<{
     refresh(): Promise<void>;
     save(base: UserProfile, edit: ProfileEdit): Promise<boolean>;
     latest(): UserProfile | null;
+    wake(): void;
   } | null>(null);
   useEffect(() => {
     control.current = null;
-    if (!port || reader === null || !shown) return;
+    if (!port || reader === null) return;
+    const held = hold(port, reader, language);
+    const { entry } = held;
     let alive = true,
       reading = false,
       saving = false,
-      again = false;
+      again = false,
+      subscribed = false;
     let unsubscribe: (() => void) | undefined;
     let readFinished = Promise.resolve();
-    let state = EMPTY;
+    let state = seeded(entry);
     const update = (patch: Partial<State>) => {
       if (!alive) return;
       state = { ...state, ...patch };
       setStored({ identity, state });
     };
+    // Another reader of the same profile read it: take what it read.
+    const adopt = (data: UserProfile | null) => {
+      if (!reading && !saving && state.data !== data)
+        update({ data, loading: false });
+    };
+    entry.adopters.add(adopt);
     const refresh = async (saveReadback = false) => {
       if (!alive) return;
       if (reading || (saving && !saveReadback)) {
@@ -242,12 +313,20 @@ export function useUserProfile(
       });
       do {
         again = false;
+        const epoch = entry.epoch;
         update({ loading: true });
         try {
           const data = await port.read(language);
+          entry.data = data;
+          if (entry.epoch === epoch) entry.stale = false;
+          for (const other of entry.adopters) if (other !== adopt) other(data);
           update({ data, error: state.error === "unknown" ? "unknown" : null });
         } catch (error) {
           const code = failure(error);
+          if (code === "not_signed_in") {
+            entry.data = null;
+            entry.stale = true;
+          }
           update({
             data: code === "not_signed_in" ? null : state.data,
             error: state.error === "unknown" ? "unknown" : code,
@@ -264,6 +343,12 @@ export function useUserProfile(
         await refresh();
       },
       latest: () => state.data,
+      wake() {
+        if (!subscribed || reading) return;
+        if (entry.stale) void refresh();
+        else if (entry.data && state.data !== entry.data)
+          update({ data: entry.data, loading: false });
+      },
       async save(base, edit) {
         // A save while another is held, or after one whose outcome is
         // unknown, is not sent: the page shows that save, or that unknown
@@ -328,7 +413,10 @@ export function useUserProfile(
     };
     void port
       .observe(() => {
-        void refresh();
+        entry.epoch += 1;
+        entry.stale = true;
+        // Hidden, a cue only marks the data stale; showing the reader reads.
+        if (shownNow.current) void refresh();
       })
       .then((stop) => {
         if (!alive) {
@@ -336,15 +424,23 @@ export function useUserProfile(
           return;
         }
         unsubscribe = stop;
-        void refresh();
+        subscribed = true;
+        // The first read waits until the reader is shown.
+        if (shownNow.current && entry.stale) void refresh();
       })
       .catch(() => update({ loading: false, error: "unavailable" }));
     return () => {
       alive = false;
       unsubscribe?.();
+      entry.adopters.delete(adopt);
+      held.release();
       control.current = null;
     };
-  }, [identity, port, reader, language, shown]);
+  }, [identity, port, reader, language]);
+  useEffect(() => {
+    shownNow.current = shown;
+    if (shown) control.current?.wake();
+  }, [shown, identity]);
   const refresh = useCallback(() => {
     void control.current?.refresh();
   }, []);
@@ -357,9 +453,11 @@ export function useUserProfile(
    * base of the next edit in a sequence of saves. */
   const latest = useCallback(() => control.current?.latest() ?? null, []);
   const state =
-    stored.identity === identity && reader !== null && shown
-      ? stored.state
-      : EMPTY;
+    reader === null
+      ? EMPTY
+      : stored.identity === identity
+        ? stored.state
+        : seeded(peek(port, reader, language));
   return { ...state, refresh, save, latest };
 }
 
