@@ -140,8 +140,11 @@ function keepLogs(from, to) {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const path = join(dir, entry.name);
       if (entry.isSymbolicLink()) continue;
-      if (entry.isDirectory()) walk(path, depth + 1);
-      else if (
+      // The WebView's profile (LevelDB *.log files) holds page storage, not
+      // the host's logs.
+      if (entry.isDirectory()) {
+        if (!/^(webview|EBWebView)$/i.test(entry.name)) walk(path, depth + 1);
+      } else if (
         entry.isFile() &&
         LOG_FILE.test(entry.name) &&
         lstatSync(path).size <= LOG_LIMIT

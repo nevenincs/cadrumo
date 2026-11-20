@@ -258,6 +258,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.persistence.storage.errors.StorageSessionUnavailableError",
+        ErrorCode(
+            code="REFUSED_STORAGE_RUNTIME_SESSION_UNAVAILABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_master_key_no_active_session",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.persistence.storage.master_key.active_session.NoActiveBucketSessionError",
         ErrorCode(
             code="REFUSED_STORAGE_MASTER_KEY_NO_ACTIVE_SESSION",

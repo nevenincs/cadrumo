@@ -62,7 +62,7 @@ from cadrumo.application.user_profile.recovery_custody import (
 )
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
-from cadrumo.core.time.clock import frozen_clock, now
+from cadrumo.core.time.clock import frozen_clock, now, wall_now
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginThrottledError
@@ -439,7 +439,10 @@ def test_replacement_fences_sign_in_only_after_successful_proof(tmp_path: Path, 
         if proof == "password":
             _rotate(profile_id)
         else:
-            with frozen_clock(now() + timedelta(minutes=2)):
+            # The throttle reads the wall clock; move only recovery's reading past the failure.
+            later = wall_now() + timedelta(minutes=2)
+            with pytest.MonkeyPatch.context() as patched:
+                patched.setattr(recovery_custody, "wall_now", lambda: later)
                 _reset(profile_id, code)
         advanced = custody.observe().current
         assert advanced is not None

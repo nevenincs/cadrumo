@@ -5,8 +5,9 @@ import type { CallPlan } from "./hostCall";
 // column only says it and offers the next step.
 
 /** The next step a refused send offers: the local AI's settings, where a
- * model is downloaded or a smaller one is chosen. */
-export type SendRefusalStep = "local_models";
+ * model is downloaded or a smaller one is chosen, or the providers' settings,
+ * where the key or sign-in a lane needs is given. */
+export type SendRefusalStep = "local_models" | "providers";
 
 /** The next step for the send refused with `code`, where it has one. */
 export function sendRefusalStep(code: string | null): SendRefusalStep | null {
@@ -19,6 +20,10 @@ export function sendRefusalStep(code: string | null): SendRefusalStep | null {
     // same settings, to choose another.
     case "agent_gateway_model_does_not_fit":
       return "local_models";
+    // The chosen lane's provider has no key or sign-in yet: the way on is
+    // giving it, in the providers' settings.
+    case "agent_provider_credential_missing":
+      return "providers";
     default:
       return null;
   }

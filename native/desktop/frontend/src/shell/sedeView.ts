@@ -55,12 +55,21 @@ export type SedeViewSession = {
   close(): Promise<void>;
 };
 
+/** The caller's wait on a previous view: whether it asks again after a
+ * `conflict`, and whether the wait is still the one it expects. */
+export type SedeViewHandover = {
+  scheduled(): boolean;
+  expected(): boolean;
+};
+
 export type SedeViewPort = {
   /** Opens the view at the panel's size. The host refuses `conflict` while
-   * the previous view is still publishing its session. */
+   * the previous view is still publishing its session; `handover` says how
+   * the caller waits on it. */
   open(
     size: SedeViewSize,
     listener: (event: SedeViewEvent) => void,
+    handover?: SedeViewHandover,
   ): Promise<SedeViewSession>;
 };
 

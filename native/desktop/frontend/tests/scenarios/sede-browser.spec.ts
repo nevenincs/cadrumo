@@ -313,7 +313,7 @@ test("a page off https shows its marker instead of the address it left, and has 
     .toHaveLength(1);
 });
 
-test("the shell's chords stay out of the canvas while it has focus, and run again once focus leaves", async ({
+test("the page's chords stay in the canvas while it has focus, and the browser's own reach the shell", async ({
   page: target,
 }) => {
   await showBrowser(target);
@@ -327,13 +327,14 @@ test("the shell's chords stay out of the canvas while it has focus, and run agai
   await target.mouse.click(box.x + 60, box.y + 60);
   await expect(surface(target).locator("textarea")).toBeFocused();
 
-  // The platform's primary modifier plus K belongs to the page.
-  await target.keyboard.press("ControlOrMeta+KeyK");
-  await expect.poll(() => heard("k")).toBe(2);
+  // The platform's primary modifier plus a key the shell does not hold
+  // belongs to the page.
+  await target.keyboard.press("ControlOrMeta+KeyF");
+  await expect.poll(() => heard("f")).toBe(2);
   await expect(palette).toHaveCount(0);
   expect(
     (await inputs(target)).find(
-      (each) => each.type === "key" && each.key === "k",
+      (each) => each.type === "key" && each.key === "f",
     ),
   ).toMatchObject({
     action: "down",
@@ -349,7 +350,17 @@ test("the shell's chords stay out of the canvas while it has focus, and run agai
   await target.keyboard.press("ControlOrMeta+Shift+KeyK");
   await expect(palette).toBeVisible();
   expect(await heard("K")).toBe(0);
-  expect(await heard("k")).toBe(2);
+  await target.keyboard.press("Escape");
+  await expect(palette).toHaveCount(0);
+
+  // The palette's chord is the browser's own: a browser keeps it for its
+  // chrome, so it opens the palette from the focused canvas and the page never
+  // gets it.
+  await target.mouse.click(box.x + 60, box.y + 60);
+  await expect(surface(target).locator("textarea")).toBeFocused();
+  await target.keyboard.press("ControlOrMeta+KeyK");
+  await expect(palette).toBeVisible();
+  expect(await heard("k")).toBe(0);
   await target.keyboard.press("Escape");
   await expect(palette).toHaveCount(0);
 
@@ -362,7 +373,8 @@ test("the shell's chords stay out of the canvas while it has focus, and run agai
   await expect(palette).toHaveCount(0);
   await browserPage(target).focus();
   await target.keyboard.press("KeyA");
-  expect(await heard("k")).toBe(2);
+  expect(await heard("k")).toBe(0);
+  expect(await heard("f")).toBe(2);
   expect(await heard("a")).toBe(0);
 });
 

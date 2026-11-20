@@ -75,6 +75,16 @@ class StorageValidationError(PersistenceError):
     """
 
 
+class StorageSessionUnavailableError(StorageValidationError):
+    """Raised when profile storage is unready because no unlocked session serves it, or its session ended.
+
+    A locked, signed-out or lapsed profile is the operator's to sign in to
+    again, not a storage fault: this registered refusal keeps the
+    storage-validation type its callers dispatch on, and its context carries
+    the readiness code that names which state it met.
+    """
+
+
 _STORAGE_VALIDATION_MESSAGE_KEY = "errors.integrity.integrity_storage_validation"
 
 

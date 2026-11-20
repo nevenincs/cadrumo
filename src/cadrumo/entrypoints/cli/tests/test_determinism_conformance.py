@@ -51,6 +51,7 @@ from ....core.time.clock import frozen_clock
 from ....domain.transactions.enums import TransactionDirection
 from ....tests.env_scope import scoped_cwd
 from ....tests.golden_comparison import canonicalise, differing_field_names, differing_paths, mask_document
+from ....tests.pdf_fixtures import text_pdf_bytes
 from ...adapter_composition_work_ports import build_ledger_evidence_ports
 from ..command_schema import command_schema_types
 from ..ledger_business_payloads import EvidenceAddResult
@@ -237,7 +238,7 @@ class TestEnrolledCommandDeterminism:
         fields, so no ``GOLDEN_MASK_FIELDS`` entry is warranted.
         """
         pdf = tmp_path / "receipt.pdf"
-        pdf.write_bytes(b"%PDF-1.4 determinism")
+        pdf.write_bytes(text_pdf_bytes(("synthetic determinism receipt",)))
 
         first = _emit_evidence_add(tmp_path / "run-a", pdf)
         second = _emit_evidence_add(tmp_path / "run-b", pdf)
@@ -260,7 +261,7 @@ class TestEnrolledCommandDeterminism:
         machine-absolutized path), and the persisted ``source_path`` echoes the
         argv-faithful relative path in both runs, not the resolved absolute form.
         """
-        pdf_bytes = b"%PDF-1.4 cwd-independent"
+        pdf_bytes = text_pdf_bytes(("synthetic cwd-independent receipt",))
         cwd_a = tmp_path / "cwd-a"
         cwd_b = tmp_path / "cwd-b"
         for cwd in (cwd_a, cwd_b):

@@ -21,6 +21,9 @@ const RETRY_MS = 750;
  * 92 s. The budget lies past that, so giving up means the host is stuck. */
 const HANDOVER_BUDGET_MS = 120_000;
 const RETRY_LIMIT = Math.ceil(HANDOVER_BUDGET_MS / RETRY_MS);
+/** How long a handover is the wait expected: a previous view publishes its
+ * session within seconds. A longer one is noted once as a warning. */
+const HANDOVER_QUIET_MS = 30_000;
 /** How long a panel size must hold before the page is told of it. */
 const RESIZE_SETTLE_MS = 120;
 const RESIZE_RETRY_MS = 350;
@@ -177,11 +180,23 @@ export function useSedeView({
       }
       dispatch({ type: "event", event });
     };
+    let since = 0;
+    let warned = false;
     const begin = (tries: number) => {
       const first = latest.current.size;
       if (!first) return;
+      if (tries === 0) since = performance.now();
       dispatch({ type: tries === 0 ? "opening" : "waiting" });
-      port.open(first, onEvent).then(
+      const handover = {
+        scheduled: () => !cancelled && tries < RETRY_LIMIT,
+        expected: () => {
+          if (warned || performance.now() - since < HANDOVER_QUIET_MS)
+            return true;
+          warned = true;
+          return false;
+        },
+      };
+      port.open(first, onEvent, handover).then(
         (view) => {
           if (cancelled) {
             void view.close().catch(nothing);
