@@ -923,6 +923,10 @@ _STORAGE_SESSION_NO_ACTIONS: Final[Mapping[str, tuple[CliExceptionPrecondition, 
         CliExceptionPrecondition.BUCKET_SESSION_FRESH,
         {"active_session_fresh": False, "session_expired": True},
     ),
+    "REFUSED_STORAGE_RUNTIME_SESSION_UNAVAILABLE": (
+        CliExceptionPrecondition.ACTIVE_BUCKET_SESSION_AVAILABLE,
+        {"active_bucket_session_available": False},
+    ),
     "REFUSED_STORAGE_BUCKET_NO_ACTIVE": (
         CliExceptionPrecondition.ACTIVE_BUCKET_SELECTED,
         {"active_bucket_selected": False},
@@ -952,6 +956,7 @@ def _storage_session_failure_verdict(error: CadrumoError) -> PreconditionVerdict
     if code in {
         "REFUSED_STORAGE_MASTER_KEY_NO_ACTIVE_SESSION",
         "REFUSED_STORAGE_SESSION_EXPIRED",
+        "REFUSED_STORAGE_RUNTIME_SESSION_UNAVAILABLE",
     }:
         profile_name = active_profile_label_for_error(error)
         if profile_name is not None:
@@ -959,9 +964,13 @@ def _storage_session_failure_verdict(error: CadrumoError) -> PreconditionVerdict
             from ...core.profile_session import ProfileSessionRefusalReason
 
             reason = (
-                ProfileSessionRefusalReason.ABSENT
-                if code == "REFUSED_STORAGE_MASTER_KEY_NO_ACTIVE_SESSION"
-                else ProfileSessionRefusalReason.EXPIRED_IDLE
+                ProfileSessionRefusalReason.EXPIRED_IDLE
+                if code == "REFUSED_STORAGE_SESSION_EXPIRED"
+                or (
+                    isinstance(error.context, Mapping)
+                    and error.context.get("readiness_code") in {"session_sealed", "session_expired"}
+                )
+                else ProfileSessionRefusalReason.ABSENT
             )
             return profile_session_failure_verdict(reason, profile_name=profile_name)
 

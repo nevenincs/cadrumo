@@ -30,7 +30,7 @@ from enum import StrEnum
 from pydantic import BaseModel
 
 from ....core.models import STRICT_FROZEN_CONFIG
-from .errors import StorageValidationError
+from .errors import StorageSessionUnavailableError, StorageValidationError
 
 
 class StorageRuntimeReadinessCode(StrEnum):
@@ -74,6 +74,15 @@ class StorageRuntimeReadiness(BaseModel):
     issues: tuple[StorageRuntimeReadinessIssue, ...] = ()
 
 
+_SESSION_CODES = frozenset(
+    {
+        StorageRuntimeReadinessCode.NO_ACTIVE_SESSION,
+        StorageRuntimeReadinessCode.SESSION_SEALED,
+        StorageRuntimeReadinessCode.SESSION_EXPIRED,
+    }
+)
+
+
 def readiness_issue(*, code: StorageRuntimeReadinessCode) -> StorageRuntimeReadinessIssue:
     """Return one typed readiness issue for ``code``."""
     return StorageRuntimeReadinessIssue(code=code)
@@ -85,16 +94,19 @@ def readiness_error(readiness: StorageRuntimeReadiness) -> StorageValidationErro
     The refusal is locale-neutral: the operator-facing sentence comes from the
     translated message key, and the codes travel as structured context so a
     caller can tell WHICH unready state it met without parsing prose.
+
+    A profile with no unlocked session, or whose session ended, refuses as
+    :class:`StorageSessionUnavailableError`: the operator signs in again, and
+    nothing in the store is wrong. Only a route that does not serve the
+    session's bucket stays a storage validation failure.
     """
-    issue_codes = tuple(issue.code.value for issue in readiness.issues)
-    return StorageValidationError(
-        context={
-            "details": readiness.code.value,
-            "readiness_code": readiness.code.value,
-            "readiness_issue_codes": issue_codes,
-        },
-        translated_message="errors.storage.runtime.not_ready",
-    )
+    context: dict[str, object] = {
+        "details": readiness.code.value,
+        "readiness_code": readiness.code.value,
+        "readiness_issue_codes": tuple(issue.code.value for issue in readiness.issues),
+    }
+    error_type = StorageSessionUnavailableError if readiness.code in _SESSION_CODES else StorageValidationError
+    return error_type(context=context, translated_message="errors.storage.runtime.not_ready")
 
 
 def runtime_not_ready_error(code: StorageRuntimeReadinessCode) -> StorageValidationError:
