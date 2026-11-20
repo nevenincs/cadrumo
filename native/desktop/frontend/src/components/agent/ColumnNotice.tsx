@@ -32,6 +32,7 @@ export function ColumnNotice({
   onSetUpProviders,
   onDownloadModels,
   onOpenModelSettings,
+  onOpenProviderSettings,
 }: {
   /** The refusal code of the last send or request, null where none. */
   failure: string | null;
@@ -50,6 +51,9 @@ export function ColumnNotice({
   /** Opens the settings that download a model, the way on from a send
    * refused for a model this computer does not hold. */
   onOpenModelSettings?: () => void;
+  /** Opens the providers' settings, the way on from a send refused for a
+   * lane whose provider has no key or sign-in yet. */
+  onOpenProviderSettings?: () => void;
 }) {
   const t = useStrings();
   const download = (open: () => void) => (
@@ -57,16 +61,21 @@ export function ColumnNotice({
       {t("desktop.agent.download_models")}
     </Button>
   );
-  const failureStep =
-    failure !== null && sendRefusalStep(failure) === "local_models"
-      ? onOpenModelSettings
-      : undefined;
+  const step = failure === null ? null : sendRefusalStep(failure);
+  const failureStep = step === "local_models" ? onOpenModelSettings : undefined;
+  const providerStep =
+    step === "providers" ? onOpenProviderSettings : undefined;
   return failure !== null ? (
     <p role="alert" className="flex items-start gap-2 text-sm">
       <Icon name="alert" className="mt-0.5 text-destructive" />
       <span className="grid justify-items-start gap-1.5">
         {refusalWords(t, failure, fit)}
         {failureStep && download(failureStep)}
+        {providerStep && (
+          <Button variant="outline" size="xs" onClick={providerStep}>
+            {t("desktop.agent.set_up_providers")}
+          </Button>
+        )}
       </span>
     </p>
   ) : engines && engines.length > 0 ? (

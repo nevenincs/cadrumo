@@ -1076,6 +1076,7 @@ export function AgentColumn({
             }
             onDownloadModels={noModelHeld ? openSettings : undefined}
             onOpenModelSettings={openSettings}
+            onOpenProviderSettings={openSettings}
           />
           <LaneSwitchNotice
             changeAsk={view.changeAsk?.facts ?? null}

@@ -308,12 +308,14 @@ test("an agent column whose service stays busy past the quiet bound records one 
   expect(past.levels.at(-1)).toBe("DEBUG");
 });
 
-// A send the agent refuses for a model this computer does not hold is said
-// to the person with its next step: it is noted as a warning with its code.
-// A send refusal the column has no next step for stays an error.
+// A send the agent refuses for a model this computer does not hold, or for a
+// provider with no key or sign-in yet, is said to the person with its next
+// step: it is noted as a warning with its code. A send refusal the column has
+// no next step for stays an error.
 for (const [code, level] of [
   ["agent_gateway_model_not_installed", "WARNING"],
   ["agent_gateway_model_does_not_fit", "WARNING"],
+  ["agent_provider_credential_missing", "WARNING"],
   ["agent_gateway_422", "ERROR"],
 ] as const)
   test(`a send refused with ${code} is reported at ${level}`, async ({

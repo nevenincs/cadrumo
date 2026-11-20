@@ -90,6 +90,7 @@ import {
   LINK_REPLIES,
   LINK_TO,
   MODEL_DOES_NOT_FIT,
+  PROVIDER_CREDENTIAL_MISSING,
   RICH,
   RICH_REPLY,
   RICH_THOUGHTS,
@@ -1245,6 +1246,9 @@ export function fixtureAgent({
       // A model this computer cannot run is refused the same way.
       if (MODEL_DOES_NOT_FIT.test(text))
         throw coded("agent_gateway_model_does_not_fit");
+      // A lane whose provider lost its key is refused before a run starts.
+      if (PROVIDER_CREDENTIAL_MISSING.test(text))
+        throw coded("agent_provider_credential_missing");
       // Each named document is read where the conversation stored it, as
       // it was when it was named.
       const named: AgentDocumentReference[] = [];
