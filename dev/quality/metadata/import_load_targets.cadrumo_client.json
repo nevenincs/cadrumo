@@ -161,6 +161,7 @@
         "cadrumo_client.transport.profile_transport",
         "cadrumo_client.transport.receipt_proof",
         "cadrumo_client.transport.service_client",
+        "cadrumo_client.transport.service_profile_view",
         "cadrumo_client.transport.startup",
         "cadrumo_client.transport.transport_cleanup",
         "cadrumo_client.transport.verified_transport",

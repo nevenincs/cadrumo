@@ -683,6 +683,21 @@ LEDGER_CLASSIFICATION_RULES_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+# A classification job names the profile's movements and holds a model's typed
+# proposal for each, which discloses how the taxpayer's spending is classified,
+# so it is FINANCIAL. It is working state of one bucket's queue, kept only in
+# full custody: a structured export carries the applied classifications, not
+# the proposals still awaiting review.
+LEDGER_CLASSIFICATION_JOBS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="ledger_classification_jobs",
+    namespace="cadrumo.application.ledger.classification_jobs",
+    owner="cadrumo.application.ledger",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="classification-job:{bucket_id}:{job_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
+)
 # The taxpayer's own bank accounts and their modelo charge and refund designations.
 # FINANCIAL: every account carries an IBAN and possibly a BIC and bank block, so the
 # register is ciphertext at rest under a fixed key; no account material or derived

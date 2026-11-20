@@ -338,6 +338,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.transactions.errors.ClassificationJobError",
+        ErrorCode(
+            code="ERROR_TRANSACTION_CLASSIFICATION_JOB",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_cadrumo_core",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.transactions.errors.ClassificationRuleError",
         ErrorCode(
             code="ERROR_TRANSACTION_CLASSIFICATION_RULE",
