@@ -5133,6 +5133,7 @@
         "dev.locales.chrome_projection",
         "dev.locales.cli",
         "dev.locales.command_spec_scanner",
+        "dev.locales.desktop_agent_tool_keys",
         "dev.locales.desktop_assets_keys",
         "dev.locales.desktop_chrome",
         "dev.locales.desktop_entry_option_keys",
