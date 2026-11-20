@@ -3263,8 +3263,14 @@ desktop:
         updated: Updated
       file_row: '{file}, row {row}'
       fix:
-        derive: Derive figures
+        derive_already: The calculation is already waiting in your unsaved changes.
+        derive_from_category: Work out from the IVA category
+        derive_needs_category: 'Choose the IVA category first: the figures are worked
+          out from it.'
         go: Fix
+        locked: '{field} cannot be changed: {reason}'
+        unreachable: '{field} cannot be opened from here. Find it among the fields
+          below and select it.'
       from_booked_date: the booked date
       from_value_date: the value date
       fx_rate: Rate {rate}
@@ -3330,6 +3336,8 @@ desktop:
         description: Every part goes back into the movement it was split from.
         title: Merge {count} parts
       missing: What's still missing
+      missing_why: Without these facts this movement is left out of the IVA calculation.
+        Type them in or work them out; nothing is saved until you review the changes.
       mode: Panel
       mode_match: To match
       mode_movement: Movement

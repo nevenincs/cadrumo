@@ -385,6 +385,9 @@ errors:
     ledger_gross_above_cash_needs_withholding_category: The declared base and IVA
       add up to more than the money that moved; that gap is an IRPF withholding, and
       no IRPF category is declared.
+    ledger_gross_does_not_reconstitute: The base, the IVA amount and any equivalence
+      surcharge add up to {reconstituted}, but the amount is {expected}. Correct the
+      base and the IVA amount, or the amount, so they agree, then save again.
     m145_communication_record_not_found: No Modelo 145 local communication record
       matches the requested id.
     m145_communication_service: A Modelo 145 local communication service operation

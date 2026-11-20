@@ -1467,7 +1467,14 @@ application:
           %{count} camps que les etiquetes no cobrien queden buits: %{fields}. Emplena''ls
           tu.'
       next_step:
+        authorise_off_host: Permet que aquest document es llegeixi fora del teu equip
+        authorise_off_host_unavailable: Encara no pots permetre lectures fora del
+          teu equip des d'aquí. Arribarà amb la cua de classificació.
         choose_reading_model: Triar un model de lectura
+        resolve_off_host_consent: Tria com llegir aquest document
+        switch_to_local_lane: Canvia a un model que s'executi al teu equip
+        switch_to_local_lane_unavailable: Tria un model que s'executi al teu equip
+          al selector de models de l'agent.
       structured:
         fact:
           currency: Moneda

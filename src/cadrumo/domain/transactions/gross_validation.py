@@ -132,8 +132,17 @@ def _raise_gross_mismatch(
     raise TransactionValidationError(
         "taxable_base + iva_amount + recargo_amount must equal the gross to the cent: "
         f"{taxable_base} + {iva_amount} + {recargo} = {reconstituted} != {expected}.{detail}",
+        translated_message=GROSS_DOES_NOT_RECONSTITUTE_LOCALE_KEY,
+        context={"reconstituted": reconstituted, "expected": expected},
     )
 
+
+GROSS_DOES_NOT_RECONSTITUTE_LOCALE_KEY = "errors.error.ledger_gross_does_not_reconstitute"
+"""The sentence said for a base, IVA amount and surcharge that do not add up to the movement's amount.
+
+It names the two figures that disagree, as ``{reconstituted}`` and ``{expected}``, and the way out:
+correct the split or the amount. It names no field identifier and no command option.
+"""
 
 GROSS_NEEDS_WITHHOLDING_CATEGORY_LOCALE_KEY = "errors.error.ledger_gross_above_cash_needs_withholding_category"
 """The sentence said for a substrate above the cash that a declared withholding category would settle."""

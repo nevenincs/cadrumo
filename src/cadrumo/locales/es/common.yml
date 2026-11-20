@@ -3336,8 +3336,14 @@ desktop:
         updated: Actualizado
       file_row: '{file}, fila {row}'
       fix:
-        derive: Calcular importes
+        derive_already: El cálculo ya está entre tus cambios sin guardar.
+        derive_from_category: Calcular con la categoría de IVA
+        derive_needs_category: 'Elige primero la categoría de IVA: los importes se
+          calculan a partir de ella.'
         go: Corregir
+        locked: 'No se puede cambiar {field}: {reason}'
+        unreachable: No se puede abrir {field} desde aquí. Búscalo entre los campos
+          de más abajo y selecciónalo.
       from_booked_date: la fecha contable
       from_value_date: la fecha valor
       fx_rate: Tipo {rate}
@@ -3404,6 +3410,9 @@ desktop:
         description: Todas las partes vuelven al movimiento del que se dividieron.
         title: Unir {count} partes
       missing: Lo que aún falta
+      missing_why: Sin estos datos, este movimiento no entra en el cálculo del IVA.
+        Puedes escribir cada dato o calcularlo; nada se guarda hasta que revises los
+        cambios.
       mode: Panel
       mode_match: Por vincular
       mode_movement: Movimiento
