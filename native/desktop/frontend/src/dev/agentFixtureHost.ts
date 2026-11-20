@@ -55,6 +55,15 @@ import {
   seeded,
   type FixtureRun,
 } from "./fixtures/agent";
+import type { BarredRead } from "../shell/attachmentRefusals";
+import type { Reply, Waiting } from "./agentFixtureReply";
+import type {
+  FixtureAsks,
+  FixtureDocuments,
+  FixtureEngineChoices,
+  FixtureLocalModels,
+  FixtureStream,
+} from "./agentFixtureOptions";
 import {
   CANONICAL_OPTIONS,
   MOST_DESCRIPTION,
@@ -67,12 +76,13 @@ import {
   TOOL_OPTIONS,
   UNNAMED_OPTIONS,
   asked,
+  barredAsk,
+  barredCard,
   refusalProse,
   refusedWith,
   requested,
 } from "./agentFixtureAsks";
 import { atState, toolCall, toolTitle } from "./agentFixtureTools";
-import { readAnswers, readWaits } from "./agentFixtureReads";
 import {
   AUTHENTICATION_REQUIRED,
   BUSY_ELSEWHERE,
@@ -98,7 +108,6 @@ import {
 import { pieces } from "./fixtures/textPieces";
 import type {
   AgentApproval,
-  AgentApprovalOption,
   AgentDocumentReference,
   AgentQuestionnaire,
   AgentRanWith,
@@ -119,31 +128,6 @@ import type {
 // frame to a new watch, is the only place its text so far can be had. A reply
 // takes no second message while it is going.
 //
-/** How the fixture stream behaves: in order, with one frame sent twice, as a
- * resumed stream does; or with the stream lost once, as one the host could not
- * resume is, which the column recovers by reading the history and what is
- * pending again and watching anew. */
-export type FixtureStream = "steady" | "gap";
-
-/** What every fixture reply stops to wait on, if anything: questions, a tool
- * to use, or three reads of files the installation keeps on this computer. */
-export type FixtureAsks = "questions" | "approval" | "attachments";
-
-/** What the conversations have stored: the fixture documents, nothing at
- * all, storage the host does not serve, or storage that cannot be read. */
-export type FixtureDocuments = "stored" | "none" | "unavailable" | "failed";
-/** Which of the local lane's models the made-up computer holds: none, as
- * before any setup, or all, as after every download. */
-export type FixtureLocalModels = "none" | "all";
-
-/** What the made-up service offers to choose among for the local engine and
- * its placement, where not every engine and placement it knows: each list is
- * served as written. */
-export type FixtureEngineChoices = {
-  engines?: readonly string[];
-  placements?: readonly string[];
-};
-
 /** How long a `busy-past-ready` service stays busy once it reports ready,
  * as work begun before it was ready ends: longer than reads asked back to
  * back take, shorter than the window's first pause. */
@@ -200,34 +184,6 @@ const coded = (code: string) => Object.assign(new Error(code), { code });
 const STOPPING_MS = 600;
 /** What a message can be: the agent's own bound. */
 const MESSAGE_MAX = 65_536;
-
-type Reply = {
-  conversationId: string;
-  run: FixtureRun;
-  timers: number[];
-  /** The frames the agent retains for the run, from its first: what a new
-   * watch is replayed. */
-  frames: AgentStreamEvent[];
-  /** The sequence of the last frame. */
-  sequence: number;
-  /** The message being written: its id, and its text so far. The agent
-   * records it when its turn ends. */
-  message: { id: string; text: string } | null;
-  /** The stream has been lost once, as `stream=gap` asks. */
-  lost: boolean;
-};
-
-type Waiting =
-  | {
-      kind: "questions";
-      questionnaire: AgentQuestionnaire;
-      then: (answer: AgentQuestionnaireAnswer) => void;
-    }
-  | {
-      kind: "approval";
-      approval: AgentApproval;
-      then: (option: AgentApprovalOption) => void;
-    };
 
 export function fixtureAgent({
   say,
@@ -416,6 +372,8 @@ export function fixtureAgent({
   const replies = new Map<string, Reply>();
   // What each reply waits on, by request id.
   const waiting = new Map<string, Waiting>();
+  // The reads the service refuses for a bar, by request.
+  const barredReads = new Map<string, BarredRead>();
   let next = 0;
   const id = (prefix: string) => `${prefix}-${++next}`;
 
@@ -654,12 +612,32 @@ export function fixtureAgent({
       ]);
       return;
     }
-    if (asks === "attachments") {
-      const reads = readWaits(held.run.id, id, () => goOn([finish(held)]));
+    const barred =
+      asks === "approval"
+        ? barredAsk(text, held.run.id, id, barredReads)
+        : null;
+    if (barred) {
+      let open = barred.length;
       schedule(held, [
         started(held),
-        ...write(held, "Voy a leer los archivos."),
-        ...reads.map((read) => park(held, read)),
+        ...write(held, "Voy a leer los archivos adjuntos."),
+        ...barred.map((approval) =>
+          park(held, {
+            kind: "approval",
+            approval,
+            then: () => {
+              open -= 1;
+              if (open > 0) return;
+              goOn([
+                () => {
+                  held.run.status = "running";
+                },
+                ...write(held, "No he podido leer los archivos."),
+                finish(held),
+              ]);
+            },
+          }),
+        ),
       ]);
       return;
     }
@@ -1426,7 +1404,17 @@ export function fixtureAgent({
       return {};
     },
     // The fixture's lanes stay on this computer, so its reads need no grant.
-    ...readAnswers(say, asks === "attachments", waiting),
+    attachmentCard: ({ request_id }) =>
+      Promise.resolve(barredCard(barredReads, request_id)),
+    attachmentRelease: () => Promise.resolve({ kind: "not_required" as const }),
+    attachmentGrants: () =>
+      Promise.resolve({ kind: "grants" as const, grants: [] }),
+    attachmentGrantRevoke: () =>
+      Promise.resolve({
+        kind: "refused" as const,
+        code: "grant_revoked",
+        name: null,
+      }),
     async decideApproval(approval, optionId) {
       say(`agentDecideApproval ${approval.request_id} ${optionId}`);
       await check();

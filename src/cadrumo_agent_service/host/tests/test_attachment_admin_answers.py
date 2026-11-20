@@ -223,36 +223,41 @@ def test_grant_answers_are_their_declared_models(admin: _Admin) -> None:
 
 
 @pytest.mark.parametrize(
-    ("ask", "answer_type", "code"),
+    ("ask", "answer_type", "code", "name"),
     [
-        (lambda admin: admin.read("attachment_release"), AttachmentReleaseAnswer, "acknowledgement_missing"),
+        (
+            lambda admin: admin.read("attachment_release"),
+            AttachmentReleaseAnswer,
+            "acknowledgement_missing",
+            "nota.txt",
+        ),
         (
             lambda admin: admin.ask("attachment_card", run_id=_RUN, permission_request_id="perm-other"),
             AttachmentCardAnswer,
             "reference_unknown",
+            None,
         ),
         (
             lambda admin: admin.ask("attachment_grant_revoke", grant_id="f" * 32),
             AttachmentGrantRevokeAnswer,
             "grant_revoked",
+            None,
         ),
-        (lambda admin: admin.ask("attachment_card"), AttachmentCardAnswer, "invalid_request"),
+        (lambda admin: admin.ask("attachment_card"), AttachmentCardAnswer, "invalid_request", None),
     ],
     ids=["no-acknowledgement", "unknown-read", "unknown-grant", "no-run"],
 )
 def test_a_refusal_keeps_its_code(
-    admin: _Admin, ask: Callable[[_Admin], object], answer_type: object, code: str
+    admin: _Admin, ask: Callable[[_Admin], object], answer_type: object, code: str, name: str | None
 ) -> None:
     document = ask(admin)
     assert isinstance(document, dict)
     assert document["kind"] == "refused"
-    assert document["code"] == code
+    assert document == {"kind": "refused", "code": code, "name": name}
     refusal = _typed(answer_type, document)
     assert isinstance(refusal, AttachmentRefusal)
     assert refusal.code == code
-    assert (refusal.name, refusal.provider) == (
-        ("nota.txt", "claude") if code == "acknowledgement_missing" else (None, None)
-    )
+    assert refusal.name == name
 
 
 def test_a_decline_is_an_answer_of_its_own_and_tells_the_agent(admin: _Admin) -> None:
@@ -266,5 +271,5 @@ def test_a_stopping_service_refuses_every_action_with_its_code(admin: _Admin) ->
     admin.target.closing = True
     for action in ("attachment_card", "attachment_release", "attachment_grants"):
         document = admin.read(action)
-        assert document == {"kind": "refused", "code": "service_stopping", "name": None, "provider": None}
+        assert document == {"kind": "refused", "code": "service_stopping", "name": None}
         assert isinstance(_typed(AttachmentCardAnswer, document), AttachmentRefusal)

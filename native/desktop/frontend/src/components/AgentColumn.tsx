@@ -9,7 +9,8 @@ import {
   type Ref,
 } from "react";
 import { Button } from "@/components/ui/button";
-import { isCadrumoLink } from "../shell/navigation/links";
+import { formatViewLink, isCadrumoLink } from "../shell/navigation/links";
+import { NAVIGATION } from "../shell/navigation/projection";
 import { Icon } from "@/components/ui/icon";
 import { failureCode } from "../errors";
 import { useAgentAccess, type AgentAccess } from "../shell/agentAccess";
@@ -1028,11 +1029,14 @@ export function AgentColumn({
             approvals={live.approvals}
             questionnaire={questionnaire}
             answering={!!answering}
-            onDecide={(approval, optionId) => void decide(approval, optionId)}
+            onDecide={decide}
             onAnswer={(asked, reply) => void answer(asked, reply)}
             onResolved={live.resolved}
-            run={live.open}
-            onChooseModel={openModelPicker}
+            onOpenProfile={
+              onOpenView
+                ? () => onOpenView(formatViewLink(NAVIGATION, "profile"))
+                : undefined
+            }
           />
           {conversationId !== null && (
             <ReplyFacts

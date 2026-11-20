@@ -17,10 +17,18 @@ _FAMILY_PAGES = {
     "user-profile": "profile",
     "auth": "profile/aeat-access",
     "export": "declarations",
+    "overview": "home",
 }
 _EXCEPTIONS = {
     "modelo.reconcile.pull": "aeat-sync",
     "modelo.reconcile.import": "aeat-sync",
+    "overview.calendar": "calendar",
+    "ledger.retencion_soportada.list": "withholding",
+    "ledger.retencion_soportada.list_absences": "withholding",
+    "ledger.retencion_soportada.record": "withholding",
+    "ledger.retencion_soportada.remove": "withholding",
+    "ledger.retencion_soportada.attest_absence": "withholding",
+    "ledger.retencion_soportada.withdraw_absence": "withholding",
 }
 
 
@@ -30,7 +38,7 @@ def _registered() -> tuple[str, ...]:
 
 def test_every_registered_family_has_a_decided_page() -> None:
     # A new family must be given a page, or be named here as one no page shows.
-    pageless = {"app", "config", "diagnostics", "overview", "profile", "workbench", "workflow"}
+    pageless = {"app", "config", "diagnostics", "operations", "profile", "reference", "workbench", "workflow"}
     register = load_navigation_register()
     for definition_id in _registered():
         family = definition_id.split(".", 1)[0]
@@ -38,6 +46,8 @@ def test_every_registered_family_has_a_decided_page() -> None:
         page = operation_destination(definition_id)
         if family in pageless:
             assert page is None, definition_id
+        elif definition_id in _EXCEPTIONS:
+            assert page == _EXCEPTIONS[definition_id], definition_id
         elif family != "modelo":
             assert page == _FAMILY_PAGES[family], definition_id
         assert page is None or register.element(page) is not None, definition_id
@@ -53,6 +63,7 @@ def test_bookkeeping_profile_and_declaration_writes_open_their_pages() -> None:
         "modelo.work.calculate": "declarations",
         "modelo.export": "declarations",
         "live.notifications.capture": "aeat-sync",
+        "overview.status": "home",
         **_EXCEPTIONS,
     }.items():
         assert definition_id in registered, definition_id

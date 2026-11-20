@@ -84,9 +84,11 @@ export type Layout = {
   docking: DockLayout | null;
   page:
     | "docs"
+    | "home"
     | "calendar"
     | "profile"
     | "ledger"
+    | "withholding"
     | "declarations"
     | "browser"
     | "aeat-sync";
@@ -307,9 +309,11 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
         l.page,
         [
           "docs",
+          "home",
           "calendar",
           "profile",
           "ledger",
+          "withholding",
           "declarations",
           "aeat-sync",
         ] as const,

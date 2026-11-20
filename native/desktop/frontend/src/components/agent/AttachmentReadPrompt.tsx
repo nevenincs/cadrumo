@@ -10,41 +10,19 @@ import { failureCode } from "../../errors";
 import type { AgentSession } from "../../shell/agentSession";
 import type {
   AttachmentCardAnswer,
-  AttachmentReleaseAnswer,
   ReleaseScope,
 } from "../../shell/attachmentAdminContract";
+import {
+  isBarCode,
+  refusalKey,
+  type BarredRead,
+} from "../../shell/attachmentRefusals";
 import { useStrings } from "../../shell/strings";
 import { AgentTextAction } from "./AgentAction";
 import { ConsentPrompt } from "./ConsentPrompt";
-import { barKey, isBar, type BarredRead } from "./AttachmentBarNotice";
 import type { AgentApproval } from "../../shell/agentSnapshotContract";
 
 type Sent = "idle" | "sending" | "done";
-
-/** Each refusal in the closed set, in its own words. Any other failure could
- * not be recorded, and says so. */
-const refusalKey = (code: string) => {
-  switch (code) {
-    case "acknowledgement_missing":
-      return "desktop.agent.attachment_refusal.acknowledgement_missing";
-    case "reference_unknown":
-      return "desktop.agent.attachment_refusal.reference_unknown";
-    case "document_removed":
-      return "desktop.agent.attachment_refusal.document_removed";
-    case "gestor_mode":
-    case "cloud_upload_not_permitted":
-    case "profile_not_eligible":
-      return barKey(code);
-    case "file_changed_during_read":
-      return "desktop.agent.attachment_refusal.file_changed_during_read";
-    case "not_signed_in":
-      return "desktop.agent.attachment_refusal.not_signed_in";
-    case "grant_revoked":
-      return "desktop.agent.attachment_refusal.grant_revoked";
-    default:
-      return "desktop.agent.attachment_refusal.service_failed";
-  }
-};
 
 /**
  * The question asked when an agent's read of an attached file would leave this
@@ -59,7 +37,6 @@ export function AttachmentReadPrompt({
   onSettled,
   onDecline,
   onBarred,
-  quiet,
   plain,
 }: {
   session: Pick<AgentSession, "attachmentCard" | "attachmentRelease">;
@@ -68,40 +45,26 @@ export function AttachmentReadPrompt({
   /** The agent's request has been answered. */
   onSettled: () => void;
   onDecline: (() => void) | undefined;
-  /** The service refused the read because the installation or profile keeps
-   * documents on this computer: the caller words it once for the run. */
-  onBarred: (read: BarredRead) => void;
-  /** Draws nothing: the caller is answering this read for the person. */
-  quiet: boolean;
+  /** The read was refused for a bar that holds for every off-host read, or no
+   * longer is: the column words those once for all the reads it refuses, so
+   * this prompt draws nothing for it. */
+  onBarred: (
+    requestId: string,
+    barred: Omit<BarredRead, "requestId"> | null,
+  ) => void;
   plain: ReactNode;
 }) {
   const t = useStrings();
   const [card, setCard] = useState<AttachmentCardAnswer | null>(null);
-  const [refusal, setRefusal] = useState<string | null>(null);
-  const [refusedFile, setRefusedFile] = useState<string | null>(null);
+  const [refusal, setRefusal] = useState<{
+    code: string;
+    name: string | null;
+  } | null>(null);
   const [sent, setSent] = useState<Sent>("idle");
   const allowOnce = approval.options.find(
     (option) => option.kind === "allow_once",
   )?.option_id;
   const asked = useRef(false);
-
-  // A refusal that names the file and the lane it was bound for, when it is a
-  // bar of the installation or profile.
-  const noteBar = useCallback(
-    (refused: AttachmentCardAnswer | AttachmentReleaseAnswer) => {
-      if (refused.kind !== "refused") return;
-      setRefusedFile(refused.name);
-      if (isBar(refused.code) && refused.name && refused.provider)
-        onBarred({
-          requestId: approval.request_id,
-          replyId: approval.reply_id,
-          code: refused.code,
-          name: refused.name,
-          provider: refused.provider,
-        });
-    },
-    [approval, onBarred],
-  );
 
   const answer = useCallback(
     async (scope: ReleaseScope | null) => {
@@ -115,19 +78,18 @@ export function AttachmentReadPrompt({
           scope,
         );
         if (answered.kind === "refused") {
-          noteBar(answered);
-          setRefusal(answered.code);
+          setRefusal({ code: answered.code, name: answered.name });
           setSent("idle");
           return;
         }
         setSent("done");
         onSettled();
       } catch (error) {
-        setRefusal(failureCode(error));
+        setRefusal({ code: failureCode(error), name: null });
         setSent("idle");
       }
     },
-    [session, approval, allowOnce, onSettled, noteBar],
+    [session, approval, allowOnce, onSettled],
   );
 
   // The person's refusal is told to the agent first, so the model hears that
@@ -149,27 +111,36 @@ export function AttachmentReadPrompt({
     void session.attachmentCard(approval).then(
       (read) => {
         setCard(read);
-        noteBar(read);
         if (read.kind === "card" && read.existing_grant) void answer(null);
       },
-      (error: unknown) => setRefusal(failureCode(error)),
+      (error: unknown) => setRefusal({ code: failureCode(error), name: null }),
     );
     // One read is one question: the ref keeps a later render from asking again.
-  }, [session, approval, answer, noteBar]);
+  }, [session, approval, answer]);
+
+  const refused =
+    refusal ??
+    (card?.kind === "refused" ? { code: card.code, name: card.name } : null);
+  const barCode = refused && isBarCode(refused.code) ? refused.code : null;
+  const barName = refused?.name ?? null;
+  const requestId = approval.request_id;
+  useEffect(() => {
+    if (!barCode) return;
+    onBarred(requestId, { code: barCode, name: barName });
+    return () => onBarred(requestId, null);
+  }, [barCode, barName, requestId, onBarred]);
 
   if (card?.kind === "not_required") return <>{plain}</>;
-  if (quiet) return null;
-  const refused = refusal ?? (card?.kind === "refused" ? card.code : null);
-  const file = refusedFile ?? (card?.kind === "refused" ? card.name : null);
+  if (barCode) return null;
   const reason =
     refused &&
-    (file
-      ? t("desktop.agent.attachment_refused_named", {
-          name: file,
-          reason: t(refusalKey(refused)),
+    (refused.name === null
+      ? t("desktop.agent.attachment_refused", {
+          reason: t(refusalKey(refused.code)),
         })
-      : t("desktop.agent.attachment_refused", {
-          reason: t(refusalKey(refused)),
+      : t("desktop.agent.attachment_refused_named", {
+          name: refused.name,
+          reason: t(refusalKey(refused.code)),
         }));
   if (card?.kind !== "card" || (card.existing_grant && !refused)) {
     return reason ? (

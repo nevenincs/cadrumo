@@ -1,6 +1,7 @@
-//! Named read-only views of the signed-in profile: the filing calendar and
-//! the counts of the last notifications capture. Each runs fixed registered
-//! reads over the held person's relay; the window names no operation. Nothing
+//! Named read-only views of the signed-in profile: the filing calendar, the
+//! counts of the last notifications capture and Home. Each runs fixed
+//! registered reads over the held person's relay; the window names no
+//! operation. Nothing
 //! read here is kept, logged or written: it is passed on and dropped. The
 //! calendar is passed on as the product served it, under the product's names,
 //! so the window's types are generated from the product's schema alone; the
@@ -59,6 +60,26 @@ struct Projection {
 #[derive(Debug, Serialize)]
 #[serde(transparent)]
 pub struct FilingCalendar(Value);
+
+// Only what the host checks before passing Home on: whose generation it is
+// and that its `home` state is a state. The rest of the generation, which
+// carries the declarations, ledger, AEAT sync and search states, is read
+// into this and dropped; the window is never sent it.
+#[derive(Deserialize)]
+struct GenerationRead {
+    profile_id: String,
+    generation: HomeGeneration,
+}
+#[derive(Deserialize)]
+struct HomeGeneration {
+    home: Value,
+}
+
+/// The `home` state of the product's `workbench.generation` read, unchanged:
+/// its availability, observed time, refusal and Home projection.
+#[derive(Debug, Serialize)]
+#[serde(transparent)]
+pub struct HomeState(Value);
 
 /// A calendar day as the product writes it, `YYYY-MM-DD`, as its year.
 fn iso_year(day: &str) -> Option<u32> {
@@ -151,6 +172,34 @@ fn without_event_sources(mut calendar: Value) -> Value {
         }
     }
     calendar
+}
+
+/// The registered read Home comes from. It serves the whole workbench
+/// generation; only its `home` state is passed on.
+pub(super) const HOME_DEFINITION: &str = "workbench.generation";
+
+/// The generation read, for the held profile and the language the window
+/// shows its words in: nothing else is asked.
+fn home_request(profile: &str, language: &str) -> Value {
+    json!({"profile_id":profile, "output_language":language})
+}
+
+/// Passes on only the `home` state of a generation read for `profile`. A
+/// generation naming another profile, or a `home` that is not a state with
+/// an availability, is refused rather than shown.
+fn home_state(projection: Value, profile: &str) -> Result<HomeState> {
+    let read: GenerationRead = serde_json::from_value(projection).map_err(|_| protocol())?;
+    if read.profile_id != profile
+        || read
+            .generation
+            .home
+            .get("availability")
+            .and_then(Value::as_str)
+            .is_none()
+    {
+        return Err(protocol());
+    }
+    Ok(HomeState(read.generation.home))
 }
 
 /// The registered read the record groups come from.
@@ -268,6 +317,31 @@ impl ProfileHost {
         .await
         .unwrap_or_else(|_| Err(protocol()))
     }
+    /// Home for the signed-in profile: one `workbench.generation` read, of
+    /// which only its `home` state is returned. The read is local to the
+    /// profile and never reaches the tax agency.
+    pub(super) async fn home(&self, language: String) -> Result<HomeState> {
+        if !super::super::language::supported(&language) {
+            return Err(protocol());
+        }
+        tokio::time::timeout(PROFILE_READ_LIMIT, async {
+            let _serial = self.operation.lock().await;
+            let person = self.person(None).await?;
+            let profile = Self::profile_of(&person).await?;
+            let projection = self
+                .run(
+                    &person,
+                    HOME_DEFINITION,
+                    home_request(&profile, &language),
+                    false,
+                )
+                .await?;
+            self.still_held(&person, &profile).await?;
+            home_state(projection, &profile)
+        })
+        .await
+        .unwrap_or_else(|_| Err(protocol()))
+    }
     pub(super) async fn filing_calendar(
         &self,
         from: String,
@@ -348,6 +422,77 @@ mod tests {
         let summary =
             notifications_summary(json!({"bucket_id":PROFILE, "snapshot_id":null}), None).unwrap();
         assert_eq!(summary.captured_at, None);
+    }
+
+    fn generation(profile: &str, home: Value) -> Value {
+        json!({"profile_id":profile,
+            "generation":{"contract_version":1, "assembled_at":"2026-10-20T09:00:00Z",
+                "home":home,
+                "ledger":{"availability":"available", "projection":{"bucket_id":profile}},
+                "declarations":{"availability":"available", "projection":{"bucket_id":profile}},
+                "aeat_sync":{"availability":"available", "projection":{"notifications":[{"titular_nif":"00000000T"}]}},
+                "search":{"availability":"available"}}})
+    }
+
+    #[test]
+    fn home_asks_for_the_held_profile_and_the_language_and_nothing_else() {
+        assert_eq!(HOME_DEFINITION, "workbench.generation");
+        assert_eq!(
+            home_request(PROFILE, "hu"),
+            json!({"profile_id":PROFILE, "output_language":"hu"})
+        );
+    }
+
+    #[test]
+    fn only_the_home_state_of_the_generation_reaches_the_window() {
+        let home = json!({"availability":"available", "observed_at":"2026-10-20T09:00:00Z",
+            "refusal":null, "projection":{"actions":[], "agenda":[]}});
+        let sent =
+            serde_json::to_value(home_state(generation(PROFILE, home.clone()), PROFILE).unwrap())
+                .unwrap();
+        assert_eq!(sent, home);
+        for withheld in [
+            "ledger",
+            "declarations",
+            "aeat_sync",
+            "search",
+            "bucket_id",
+            "00000000T",
+        ] {
+            assert!(
+                !sent.to_string().contains(withheld),
+                "{withheld} was passed on"
+            );
+        }
+    }
+
+    #[test]
+    fn an_unavailable_or_refused_home_is_passed_on_as_the_product_served_it() {
+        let refused = json!({"availability":"unavailable", "observed_at":null,
+            "refusal":"workbench.home.unavailable", "projection":null});
+        let sent = serde_json::to_value(
+            home_state(generation(PROFILE, refused.clone()), PROFILE).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(sent, refused);
+    }
+
+    #[test]
+    fn a_generation_of_another_profile_or_without_a_home_state_is_refused() {
+        let home = json!({"availability":"available", "projection":null});
+        assert!(home_state(generation("another", home.clone()), PROFILE).is_err());
+        assert!(home_state(generation(PROFILE, json!({"projection":null})), PROFILE).is_err());
+        assert!(home_state(generation(PROFILE, json!("available")), PROFILE).is_err());
+        let mut headless = generation(PROFILE, home.clone());
+        headless.as_object_mut().unwrap().remove("profile_id");
+        assert!(home_state(headless, PROFILE).is_err());
+        let mut homeless = generation(PROFILE, home);
+        homeless["generation"]
+            .as_object_mut()
+            .unwrap()
+            .remove("home");
+        assert!(home_state(homeless, PROFILE).is_err());
+        assert!(home_state(json!(null), PROFILE).is_err());
     }
 
     #[test]

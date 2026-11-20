@@ -5,8 +5,9 @@ never seen — ``fecha_expedicion``, ``base_imponible``, ``nif_destinatario`` �
 and not one of them matches a canonical column name. The importer used to refuse
 such a file whole, so a book with every required field present imported nothing.
 
-Resolution is deterministic first: a column whose header is already a canonical
-importer column keeps that field without consulting anything. Only the columns
+Resolution is deterministic first: a role the operator assigned to a column binds
+it, and a column whose header is already a canonical importer column keeps that
+field without consulting anything. Only the columns
 left over are put to the semantic mapping lane, once per file, over the closed
 :class:`~core.field_role.FieldRole` vocabulary. Exact-first matters for the same reason it
 does in the statement lane — a file already written in the product's own
@@ -26,12 +27,14 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
+from typing import Literal
 
 from pydantic import BaseModel, NonNegativeInt
 
 from ...core.field_role import FieldRole
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.invoices.errors import InvoiceValidationError
 from ..ledger.column_roles import ColumnRoleReaderUnavailable
 from ..operator_actions.models import PreconditionVerdict
 
@@ -39,6 +42,7 @@ __all__ = [
     "BULK_IMPORT_FIELD_BY_ROLE",
     "BulkImportColumnResolution",
     "ColumnRoleMapper",
+    "ColumnSource",
     "ResolvedColumn",
     "resolve_bulk_import_columns",
 ]
@@ -72,6 +76,10 @@ model that names columns was never asked; ``None`` means it established nothing.
 """
 
 
+ColumnSource = Literal["operator", "exact", "model", "unmapped"]
+"""Who settled a column's role: the operator, a canonical header, the mapping lane, or no one."""
+
+
 class ResolvedColumn(BaseModel):
     """One source column and the importer field it feeds.
 
@@ -84,6 +92,8 @@ class ResolvedColumn(BaseModel):
         role: The role the column was mapped to. ``UNMAPPED`` when the mapping
             lane could not place it; a real role with ``field`` still ``None``
             means the product understood the column but has no slot for it.
+        source: Who settled the role. ``operator`` also covers a column the
+            operator stated is not used.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -92,6 +102,7 @@ class ResolvedColumn(BaseModel):
     header: str
     field: str | None = None
     role: FieldRole = FieldRole.UNMAPPED
+    source: ColumnSource = "unmapped"
 
 
 class BulkImportColumnResolution(BaseModel):
@@ -121,6 +132,11 @@ class BulkImportColumnResolution(BaseModel):
     def unmapped_columns(self) -> tuple[ResolvedColumn, ...]:
         """Return every column that feeds no importer field, for reporting."""
         return tuple(column for column in self.columns if column.field is None)
+
+    @property
+    def operator_assigned(self) -> bool:
+        """Return whether the operator stated a role for any column."""
+        return any(column.source == "operator" for column in self.columns)
 
     @property
     def fields_present(self) -> frozenset[str]:
@@ -155,19 +171,20 @@ def _role_for_exact_field(field: str | None) -> FieldRole:
 
 def _apply_semantic_column_mapping(
     headers: Sequence[str],
-    exact_fields: list[str | None],
+    fields: list[str | None],
     roles: list[FieldRole],
+    sources: list[ColumnSource],
     *,
     mapper: ColumnRoleMapper | None,
     required_fields: frozenset[str],
 ) -> bool | ColumnRoleReaderUnavailable:
-    """Fill unresolved columns from one mapping-lane verdict without displacing exact fields.
+    """Fill open columns from one mapping-lane verdict without displacing stated or exact fields.
 
     Returns whether the lane's roles were applied, or the lane's report that
     its reader could not be asked.
     """
-    claimed_fields = {field for field in exact_fields if field is not None}
-    if mapper is None or _mapping_lane_not_needed(mapper, required_fields, claimed_fields):
+    claimed_fields = {field for field in fields if field is not None}
+    if mapper is None or not required_fields - claimed_fields:
         return False
     proposed_roles = mapper(list(headers))
     if proposed_roles is None:
@@ -175,34 +192,59 @@ def _apply_semantic_column_mapping(
     if isinstance(proposed_roles, ColumnRoleReaderUnavailable):
         return proposed_roles
     for index, role in enumerate(proposed_roles):
-        _apply_proposed_role(index, role, headers, exact_fields, roles, claimed_fields)
+        _apply_proposed_role(index, role, headers, fields, roles, sources, claimed_fields)
     return True
-
-
-def _mapping_lane_not_needed(
-    mapper: ColumnRoleMapper | None,
-    required_fields: frozenset[str],
-    claimed_fields: set[str],
-) -> bool:
-    return mapper is None or not required_fields - claimed_fields
 
 
 def _apply_proposed_role(
     index: int,
     role: FieldRole,
     headers: Sequence[str],
-    exact_fields: list[str | None],
+    fields: list[str | None],
     roles: list[FieldRole],
+    sources: list[ColumnSource],
     claimed_fields: set[str],
 ) -> None:
-    if index >= len(headers) or exact_fields[index] is not None:
+    if index >= len(headers) or sources[index] != "unmapped" or role is FieldRole.UNMAPPED:
         return
     field = BULK_IMPORT_FIELD_BY_ROLE.get(role)
     roles[index] = role
+    sources[index] = "model"
     if field is None or field in claimed_fields:
         return
-    exact_fields[index] = field
+    fields[index] = field
     claimed_fields.add(field)
+
+
+def _check_operator_roles(operator_roles: Mapping[int, FieldRole], column_count: int) -> None:
+    """Refuse a stated assignment the importer cannot honour, before anything is resolved.
+
+    Raises:
+        InvoiceValidationError: A column index is not in the file, a role is not
+            one the importer accepts, or a role is stated for two columns.
+    """
+    claimed_roles: set[FieldRole] = set()
+    prefix = "the column roles stated for the invoice book are invalid"
+    for index, role in operator_roles.items():
+        if not 0 <= index < column_count:
+            raise InvoiceValidationError(
+                f"{prefix}: column {index} is not in the file, which has {column_count} columns",
+                translated_message="application.invoices.bulk_import.errors.column_role_out_of_range",
+                context={"column": index + 1, "columns": column_count},
+            )
+        if role is not FieldRole.UNMAPPED and role not in BULK_IMPORT_FIELD_BY_ROLE:
+            raise InvoiceValidationError(
+                f"{prefix}: role {role.value!r} is not one the importer accepts",
+                translated_message="application.invoices.bulk_import.errors.column_role_not_accepted",
+                context={"role": role.value},
+            )
+        if role is not FieldRole.UNMAPPED and role in claimed_roles:
+            raise InvoiceValidationError(
+                f"{prefix}: role {role.value!r} is stated for more than one column",
+                translated_message="application.invoices.bulk_import.errors.column_role_repeated",
+                context={"role": role.value},
+            )
+        claimed_roles.add(role)
 
 
 def resolve_bulk_import_columns(
@@ -210,35 +252,62 @@ def resolve_bulk_import_columns(
     *,
     mapper: ColumnRoleMapper | None = None,
     required_fields: frozenset[str] = frozenset(),
+    operator_roles: Mapping[int, FieldRole] | None = None,
 ) -> BulkImportColumnResolution:
-    """Resolve ``headers`` onto importer fields, exact names first.
+    """Resolve ``headers`` onto importer fields: the operator's roles, then exact names, then the mapping lane.
 
-    A header that already names a canonical importer column is bound to it
-    without consulting ``mapper`` at all. The mapping lane is called at most
-    once, and **only when exact matching cannot supply every required field** —
-    a file already written in the product's own vocabulary is read without any
-    judgement, even when it carries extra columns the importer has no slot for.
-    Those extras are simply reported. Its verdict is applied only to columns
-    exact matching left open, so it can never displace an exact match.
+    A column the operator assigned a role keeps it whatever its header says,
+    and a field the operator assigned is never given to another column by its
+    exact name. A header that already names a canonical importer column is
+    bound to it without consulting ``mapper`` at all. The mapping lane is called
+    at most once, and **only when the stated roles and exact matching cannot
+    supply every required field** — a file already written in the product's own
+    vocabulary is read without any judgement, even when it carries extra columns
+    the importer has no slot for. Those extras are simply reported. Its verdict
+    is applied only to columns still open, so it can never displace a stated
+    role or an exact match.
 
     Args:
         headers: The source header cells, in column order.
-        mapper: Establishes roles for the columns exact matching did not
-            resolve. ``None`` leaves them unmapped and reported.
+        mapper: Establishes roles for the columns neither the operator nor exact
+            matching resolved. ``None`` leaves them unmapped and reported.
         required_fields: Fields the importer cannot proceed without. The
-            mapping lane is consulted only if exact matching misses one.
+            mapping lane is consulted only if the stated roles and exact
+            matching miss one.
+        operator_roles: The role the operator assigned to a column, by its
+            zero-based index. ``UNMAPPED`` states that the column is not used.
 
     Returns:
         The per-column resolution, with everything unresolved reported rather
         than refused, and the reader's verdict when the lane was needed and
         could not be asked.
+
+    Raises:
+        InvoiceValidationError: A stated assignment names a column the file does
+            not have, a role the importer does not accept, or one role twice.
     """
-    exact: list[str | None] = [_canonical_field(header) for header in headers]
-    roles = [_role_for_exact_field(field) for field in exact]
+    stated = dict(operator_roles or {})
+    _check_operator_roles(stated, len(headers))
+    fields: list[str | None] = [None] * len(headers)
+    roles = [FieldRole.UNMAPPED] * len(headers)
+    sources: list[ColumnSource] = ["unmapped"] * len(headers)
+    for index, role in stated.items():
+        fields[index] = BULK_IMPORT_FIELD_BY_ROLE.get(role)
+        roles[index] = role
+        sources[index] = "operator"
+    stated_fields = {field for field in fields if field is not None}
+    for index, header in enumerate(headers):
+        field = _canonical_field(header)
+        if sources[index] != "unmapped" or field is None or field in stated_fields:
+            continue
+        fields[index] = field
+        roles[index] = _role_for_exact_field(field)
+        sources[index] = "exact"
     consulted = _apply_semantic_column_mapping(
         headers,
-        exact,
+        fields,
         roles,
+        sources,
         mapper=mapper,
         required_fields=required_fields,
     )
@@ -246,7 +315,9 @@ def resolve_bulk_import_columns(
 
     return BulkImportColumnResolution(
         columns=tuple(
-            ResolvedColumn(column_index=index, header=header, field=exact[index], role=roles[index])
+            ResolvedColumn(
+                column_index=index, header=header, field=fields[index], role=roles[index], source=sources[index]
+            )
             for index, header in enumerate(headers)
         ),
         consulted_mapping_lane=consulted is True,

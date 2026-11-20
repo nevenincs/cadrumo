@@ -119,12 +119,13 @@ export function tauriHost(): Host {
       start: (profile) => bound("profile_censo_start", { profile }),
       status: (profile, operation) =>
         bound("profile_censo_status", { profile, operation }),
-      answer: (profile, operation, reviewDigest, decision) =>
+      answer: (profile, operation, reviewDigest, decision, accepted) =>
         bound("profile_censo_answer", {
           profile,
           operation,
           reviewDigest,
           decision,
+          accepted: accepted ?? null,
         }),
     },
     userProfile: {
@@ -236,6 +237,7 @@ export function tauriHost(): Host {
           to: range.to,
           language,
         }),
+      home: (language) => bound("profile_views_home", { language }),
     },
     ledger: tauriLedger(token, call),
     modelo: tauriModelo(token, call),

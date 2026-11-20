@@ -22,25 +22,26 @@ desktop:
     attachment_grant_images: Imatges de pàgines a {model}
     attachment_grant_revoke: Revoca
     attachment_grants_title: Permisos recordats
-    attachment_kept_here: 'Aquests {count} fitxers no s''han enviat a {provider}:'
-    attachment_kept_here_models: Tria un model
-    attachment_kept_here_one: 'Aquest fitxer no s''ha enviat a {provider}:'
-    attachment_kept_here_way: Un model local els pot llegir en aquest ordinador.
-    attachment_kept_here_way_one: Un model local el pot llegir en aquest ordinador.
+    attachment_open_profile: Obre el perfil
     attachment_refusal:
       acknowledgement_missing: No has permès aquesta lectura.
       cloud_upload_not_permitted: Aquesta instal·lació no permet que els documents
-        surtin d'aquest ordinador.
+        surtin d'aquest ordinador, i cap ajust del teu perfil no ho canvia.
       document_removed: El fitxer s'ha eliminat.
       file_changed_during_read: El fitxer ha canviat. Torna a afegir-lo per llegir
         la versió nova.
+      gestor_mode: El mode gestor mai envia documents fora d'aquest ordinador.
       grant_revoked: Aquest permís ja s'ha revocat.
       not_signed_in: Inicia la sessió per respondre.
-      profile_not_eligible: Aquest perfil no pot enviar documents fora d'aquest ordinador.
+      profile_not_eligible: El teu perfil no permet que els documents surtin d'aquest
+        ordinador. Ho controla l'ajust «Lectura de documents fora de l'equip» del
+        teu perfil.
       reference_unknown: L'agent ja no espera aquest fitxer.
       service_failed: No s'ha pogut registrar el permís, així que no s'ha enviat res.
     attachment_refused: Aquest fitxer no s'ha enviat. {reason}
+    attachment_refused_group: Aquests fitxers no s'han enviat. {reason}
     attachment_refused_named: '{name} no s''ha enviat. {reason}'
+    attachment_refused_title: Fitxers sense enviar
     attachments: Fitxers per al missatge següent
     attachments_refused: 'No acceptats: {count}'
     attachments_uploading: 'S''estan pujant: {count}'
@@ -535,6 +536,8 @@ desktop:
     reason_record_unreadable: No es pot llegir la clau API desada. Torna-la a afegir.
     refresh: Torna-ho a provar
     refused_base_url_rejected: Revisa l’adreça del servidor i torna-ho a provar.
+    refused_busy: Encara hi ha un altre canvi als teus proveïdors en curs. Torna-ho
+      a provar d'aquí a un moment.
     refused_invalid_key_format: Això no sembla una clau d'aquest proveïdor.
     refused_model_list_full: La llista de models és plena. Treu un model abans d'afegir-ne
       un altre.
@@ -545,6 +548,9 @@ desktop:
     refused_revision_conflict: Aquesta configuració ha canviat mentrestant. Es mostra
       la darrera; torna-ho a provar.
     refused_runtime_unavailable: Reinicia Cadrumo i torna-ho a provar.
+    refused_service_failed: No s'ha pogut completar el canvi.
+    refused_timed_out: Cadrumo no ha rebut resposta a temps. Actualitza per veure
+      si el canvi s'ha fet.
     remove_key: Elimina la clau API
     replace_key: Substitueix la clau API
     save: Desa
@@ -593,6 +599,11 @@ desktop:
       login_already_running: Ja hi ha un altre inici de sessió en curs per a aquest
         perfil.
       login_not_completed: L'inici de sessió no s'ha completat.
+      logout_agent_unavailable: No s'ha pogut iniciar l'agent que tanca la sessió
+        dels proveïdors.
+      logout_not_completed: L'aplicació del proveïdor no ha tancat la sessió, o el
+        proveïdor encara té la sessió iniciada.
+      logout_timed_out: Tancar la sessió ha trigat massa i s'ha aturat.
       prepare_failed: No s'ha pogut preparar l'inici de sessió.
       previous_cleanup_unconfirmed: No s'ha pogut confirmar que l'inici de sessió
         anterior es tanqués correctament.

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { facts } from "@/shell/compose";
 import { servedRefusalWords, type PickedFile } from "../../../shell/ledger";
-import type { PublicDecimal } from "../../../shell/ledgerInvoiceContract";
 import {
   WITHHOLDING_INCOME_CLASSES,
   WITHHOLDING_ORIGINS,
@@ -36,6 +35,7 @@ import {
   figuresTyped,
   readFigures,
   requestFigures,
+  servedAmount,
 } from "./withholdingFigures";
 import {
   CallLine,
@@ -70,16 +70,6 @@ const SHOWN_HEX = 12;
  * words the backend serves. The list's columns, their words and the ejercicios
  * it can be read for are the backend's too.
  */
-/** The amount a row holds under the field a served column names; the
- * backend names the fields, so the window does not list them. */
-const servedAmount = (
-  found: RetencionSoportadaRowProjection,
-  column: RetencionSoportadaAmountColumnProjection,
-): PublicDecimal | null | undefined =>
-  (found as unknown as Record<string, PublicDecimal | null | undefined>)[
-    column.field
-  ];
-
 export function WithholdingPane({
   port,
   reader,

@@ -30,7 +30,7 @@ export function LeaveDialog({
     <Dialog open onOpenChange={(open) => !open && onCancel()}>
       <DialogContent
         className="ledger-leave w-dialog-md"
-        closeLabel={t("desktop.ledger.leave.cancel")}
+        closeLabel={t("desktop.ledger.form.close")}
       >
         <DialogHeader>
           <DialogTitle>{t("desktop.ledger.leave.title")}</DialogTitle>

@@ -280,6 +280,46 @@ for (const width of [1280, 1440])
     );
   });
 
+test("History reads the movement's recorded events even where the window draws nothing, never an endless reading line", async ({
+  page: target,
+}) => {
+  // A window the system does not draw (behind another, or read by an
+  // assistive technology without scrolling) reports no intersections.
+  await target.addInitScript(() => {
+    window.IntersectionObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+      takeRecords() {
+        return [];
+      }
+    } as unknown as typeof IntersectionObserver;
+  });
+  await target.setViewportSize({ width: 1440, height: 900 });
+  await openLedger(target);
+  await inspect(target, "PAPELERIA TRAZO");
+  await jumpTo(
+    target,
+    "history",
+    label("desktop.ledger.inspector.section.history"),
+  );
+  const history = body(target).locator(".ledger-history");
+  await expect(history.getByRole("status")).toHaveCount(0);
+  // The movement's first event is how it reached the ledger.
+  await expect(
+    history.locator("li").filter({
+      hasText: new RegExp(
+        [
+          label("desktop.ledger.inspector.event.created"),
+          label("desktop.ledger.inspector.event.imported"),
+        ]
+          .map((text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+          .join("|"),
+      ),
+    }),
+  ).toHaveCount(1);
+});
+
 test("jumping to a section scrolls to it and focuses its heading", async ({
   page: target,
 }) => {
@@ -813,27 +853,6 @@ test("a staged approval left with the page lets its review go", async ({
   await target.locator(".ledger-leave .ledger-leave-discard").click();
   await expect(page(target)).toHaveCount(0);
   await expect.poll(() => waitingReviews(target)).toEqual([]);
-});
-
-test("IVA worked out from a category is staged as its own write", async ({
-  page: target,
-}) => {
-  await openLedger(target);
-  await inspect(target, "SOFTNUBE IRELAND SUSCRIPCION");
-  const derive = body(target).locator(".ledger-derive");
-  await derive.locator("[data-field=iva-derive]").click();
-  await choose(target, label("desktop.ledger.iva_category.domestic_general"));
-  await derive
-    .getByRole("button", {
-      name: label("desktop.ledger.inspector.derive.stage"),
-    })
-    .click();
-  await expect(derive).toContainText(
-    label("desktop.ledger.inspector.derive.staged", {
-      category: label("desktop.ledger.iva_category.domestic_general"),
-    }),
-  );
-  expect(await trayCount(target)).toBe(1);
 });
 
 test("a link is permanent, and an invoice staged for one movement is held for every other", async ({

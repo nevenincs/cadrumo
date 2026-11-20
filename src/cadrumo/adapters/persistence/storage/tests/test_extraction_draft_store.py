@@ -40,14 +40,20 @@ from .....application.ledger.invoice_draft_records import (
     LabelReadingFallback,
     LabelReadingFallbackCause,
 )
+from .....application.ledger.structured_invoice_ports import (
+    StructuredInvoiceClassification,
+    StructuredInvoiceClassificationKind,
+)
 from .....core.field_grounding import FieldGroundingOutcome
 from .....core.field_origin import FieldOrigin
+from .....domain.iva.schema import InvoiceKind
 from .secure_sql import TestRuntimeProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _REFERENCE = "ev-structured-001"
+_CORRECTIVE = StructuredInvoiceClassificationKind.CORRECTIVE
 
 
 def _two_rate_draft() -> InvoiceDraft:
@@ -480,3 +486,53 @@ def test_a_draft_stored_before_the_degradation_was_kept_reads_as_none_recorded(p
     (stored,) = loaded.drafts
     assert stored.label_reading_fallback is None
     assert stored == current.drafts[0].model_copy(update={"label_reading_fallback": None})
+
+
+def test_the_class_a_structured_reader_stated_and_the_direction_a_person_declared_survive_the_boundary(
+    profile: TestRuntimeProfile,
+) -> None:
+    """Two facts the draft's own serialisation cannot carry come back with the draft.
+
+    The document class lives on the draft in a private attribute that is not
+    part of its serialised form, so a stored review that lost it would differ
+    from a fresh read of the same bytes. The declared direction is a fact about
+    the import, which only the stored record can hold.
+    """
+    draft = _two_rate_draft()
+    draft.set_facturae_invoice_class(StructuredInvoiceClassification(source_code="OR", kind=_CORRECTIVE))
+
+    write_extraction_draft(
+        bucket_id=profile.bucket_id,
+        evidence_reference=_REFERENCE,
+        draft=draft,
+        extractor="facturae-32",
+        settings=profile.settings,
+        declared_kind=InvoiceKind.ISSUED,
+    )
+
+    stored = read_extraction_draft(
+        bucket_id=profile.bucket_id, evidence_reference=_REFERENCE, settings=profile.settings
+    )
+
+    assert stored is not None
+    assert stored.draft.facturae_invoice_class == StructuredInvoiceClassification(source_code="OR", kind=_CORRECTIVE)
+    assert stored.declared_kind is InvoiceKind.ISSUED
+
+
+def test_a_draft_stating_no_class_and_no_direction_stores_none_of_either(profile: TestRuntimeProfile) -> None:
+    write_extraction_draft(
+        bucket_id=profile.bucket_id,
+        evidence_reference=_REFERENCE,
+        draft=_two_rate_draft(),
+        extractor="en16931-ubl",
+        settings=profile.settings,
+    )
+
+    stored = read_extraction_draft(
+        bucket_id=profile.bucket_id, evidence_reference=_REFERENCE, settings=profile.settings
+    )
+
+    assert stored is not None
+    assert stored.draft.facturae_invoice_class is None
+    assert stored.structured_invoice_class is None
+    assert stored.declared_kind is None

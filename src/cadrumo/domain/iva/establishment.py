@@ -102,6 +102,7 @@ __all__ = [
     "country_code_for_printed_country_name",
     "country_code_for_printed_tax_identifier",
     "country_code_for_stated_country_code",
+    "is_iso_3166_user_assigned_alpha2",
     "record_country_code_status",
     "stated_country_code_status",
     "territorial_scope_for_country",
@@ -332,6 +333,17 @@ def catalogued_country_codes(
         | {SPAIN_COUNTRY_CODE}
         | frozenset(code for code, _ in _territory_carve_out_records(operation=operation))
     )
+
+
+def is_iso_3166_user_assigned_alpha2(code: str) -> bool:
+    """Return whether *code* is an alpha-2 pair ISO 3166-1 reserves for private use.
+
+    Such a pair denotes no country by construction. It matters here because a
+    jurisdiction code the tax vocabularies carry for their own purposes, such as
+    Northern Ireland's ``XI`` VAT prefix, sits inside a reserved range and must
+    never be served where an ISO country is expected.
+    """
+    return code.strip().upper() in _USER_ASSIGNED_ALPHA2
 
 
 def stated_country_code_status(

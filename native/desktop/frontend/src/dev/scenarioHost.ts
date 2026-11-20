@@ -39,13 +39,19 @@ import type { AgentServiceStatus } from "../shell/agentSession";
 import type { ProfileAccounts } from "../shell/profiles";
 import type { ProfileViews } from "../shell/views";
 import {
-  fixtureAgent,
-  type FixtureAsks,
-  type FixtureDocuments,
-  type FixtureEngineChoices,
-  type FixtureLocalModels,
-  type FixtureStream,
-} from "./agentFixtureHost";
+  EMPTY_HOME,
+  FIXTURE_HOME,
+  HOME_SHAPES,
+  type HomeShape,
+} from "./fixtures/home";
+import { fixtureAgent } from "./agentFixtureHost";
+import type {
+  FixtureAsks,
+  FixtureDocuments,
+  FixtureEngineChoices,
+  FixtureLocalModels,
+  FixtureStream,
+} from "./agentFixtureOptions";
 import type {
   FixtureCatalog,
   FixtureEngineHealth,
@@ -128,6 +134,9 @@ export type ScenarioHostOptions = {
    * was evaluated on, everything ahead, that day inside a month, or the
    * turn of a year with many windows open at once. */
   calendar?: CalendarShape | null;
+  /** Another shape of Home: every zone empty, zones in each standing that is
+   * not showing data, or the whole of Home unavailable. */
+  home?: HomeShape | null;
   /** How the agent's reply streams: in order, or with a piece missing. */
   agentStream?: FixtureStream;
   /** What every agent reply stops to ask the person, if anything. */
@@ -251,6 +260,8 @@ declare global {
     __scenarioWindow?: ScenarioWindowControls;
     /** The filing calendar read is refused while this is true. */
     __scenarioCalendarRefused?: boolean;
+    /** The Home read is refused while this is true. */
+    __scenarioHomeRefused?: boolean;
     /** The signed-in profile's runtime stops answering, or answers again. */
     __scenarioRuntime?: { lose(): void; restore(): void };
     /** Plays the host's console environment event with this payload, as
@@ -626,6 +637,14 @@ export function scenarioHost(
       return options.calendar
         ? CALENDAR_SHAPES[options.calendar]
         : FIXTURE_CALENDAR;
+    },
+    async home(language) {
+      say(`home ${language}`);
+      await wait(options.latencyMs);
+      if (!readable() || window.__scenarioHomeRefused)
+        throw failure("timed_out", "cli");
+      if (options.home) return HOME_SHAPES[options.home];
+      return scenario.views === "empty" ? EMPTY_HOME : FIXTURE_HOME;
     },
   };
 

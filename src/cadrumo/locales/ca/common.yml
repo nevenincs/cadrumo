@@ -1575,6 +1575,28 @@ desktop:
     title: Compte de Google
     unknown: Ara no s'ha pogut llegir l'accés a Google.
     waiting: Acaba d'iniciar la sessió a Google al teu navegador.
+  home:
+    aeat_evidence: 'Dades de l''AEAT: {state}'
+    availability_locked: 'Blocat: desbloqueja aquest perfil per veure-ho'
+    availability_never_captured: Encara sense llegir
+    availability_stale: Desactualitzat
+    availability_stale_observed: 'Desactualitzat: darrera lectura el {date}'
+    availability_unavailable: No disponible
+    empty: No hi ha res per mostrar aquí.
+    failed: No s'ha pogut llegir l'Inici ({code}). Prova d'actualitzar-lo.
+    heading_actions: Properes accions
+    heading_agenda: Dates de presentació
+    heading_declarations: Declaracions
+    heading_ledger: Estat dels registres
+    heading_messages: Missatges
+    loading: Carregant l'Inici…
+    messages_attention: '{count} requereixen atenció'
+    modelo: Modelo {modelo}
+    observed: (darrera lectura el {date})
+    refresh: Actualitza
+    signed_out: Inicia la sessió per veure l'Inici.
+    title: Inici
+    unworded: Encara no hi ha descripció en el teu idioma.
   host:
     failed: Aquesta part no s'ha pogut carregar.
     unavailable: Aquesta part necessita l'aplicació d'escriptori.
@@ -2244,6 +2266,7 @@ desktop:
       vehiculo_seguro: seguro coche vehiculo
       viajes_alojamiento: hotel alojamiento hostal apartamento
       viajes_transporte: tren avion vuelo taxi autobus
+    cell_empty: Buit
     classification:
       business: Empresarial
       failed_validation: Validació fallida
@@ -2495,8 +2518,11 @@ desktop:
         i es registra abans que surti el document. El que s'ha enviat no es pot recuperar.
       count: 'Documents: {count}'
       country: País de la contrapart
+      country_from_vat_prefix: Del prefix del NIF-IVA
       currency_not_read: 'No consta al document: indica quina'
       derived: Generat a partir d'una lectura externa
+      direction_disagrees: 'Importat com a: {declared}. El document sembla: {suggested}.
+        Tria quin és correcte.'
       duplicate: 'Ja és al catàleg: {number}'
       duplicate_check_failed: El llibre no ha dit si aquesta lectura ja és al catàleg,
         així que encara no pots confirmar-la.
@@ -2530,6 +2556,7 @@ desktop:
       grounding:
         ambiguous: diverses lectures possibles
         anchored: trobat a la pàgina
+        anchored_record: trobat al registre del document
         contradicted: la pàgina no hi coincideix
         reconciled: els totals quadren
         unanchored: no trobat a la pàgina
@@ -2542,6 +2569,7 @@ desktop:
         duplicate: Pot ser que ja sigui al catàleg
         findings: Respon abans totes les preguntes
       in_review: En revisió
+      iva_by_rate: IVA per tipus
       keep: Conserva'l
       left_out: 'Omesos per no ser documents: {count}'
       link_offer: La vincules al seu moviment?
@@ -2601,6 +2629,7 @@ desktop:
         unavailable: No disponible
         version: Versió {version}
       reading_changed: La lectura ha canviat. Torna-la a revisar.
+      reading_changed_in: 'La lectura ha canviat en: {fields}. Torna-la a revisar.'
       readings: Lectures
       reads_as: 'El document sembla: {kind}'
       ready_to_confirm: A punt per confirmar
@@ -3015,14 +3044,25 @@ desktop:
       apply_files: Importa exactament aquests fitxers ({count})
       applying: S'està important {done} de {total}
       back: Enrere
+      book_column: Columna de l'arxiu
+      book_columns: Columnes del llibre
       book_created: 'Factures creades: {count}'
       book_kind: Factures del llibre
-      book_no_preview: Els llibres de factures no tenen previsualització
-      book_no_preview_note: Les files es comproven en crear-se. Les no acceptades
-        es llisten després amb el número de fila i el motiu; la resta es conserva.
-        {kind}; país {country}.
+      book_missing: Falten columnes que la importació necessita
+      book_missing_note: 'Tria una columna per a: {roles}. El llibre no es pot importar
+        fins que cadascun tingui la seva columna.'
       book_note: 'Files: {rows} · ja al catàleg: {skipped} · no acceptades: {refused}'
+      book_preview_note: 'S''importarà com a: {kind}; país {country}. Les files es
+        comproven en crear-se: les no acceptades es llisten després amb el número
+        de fila i el motiu, i la resta es conserva. Un significat pertany a una sola
+        columna: si el dónes a una altra, la primera el perd.'
+      book_reader_note: Només s'han reconegut les columnes el nom de les quals coneix
+        la importació. Pots assignar les altres a mà.
+      book_reader_unavailable: La IA local no ha pogut proposar les columnes
       book_refused: El llibre no s'ha importat
+      book_role: Significat
+      book_rows: 'Files llegides: {rows}'
+      book_source: Decidit per
       bound_note: La importació fa servir exactament aquests fitxers. Si un canvia
         després d'aquesta previsualització, no s'accepta.
       cancel: Cancel·la
@@ -3072,8 +3112,8 @@ desktop:
       documents_note: '{kind}. Cada document s''afegeix com a justificant i es llegeix
         en aquest ordinador; les imatges esperen a Documents per llegir-se.'
       documents_refused: Els documents no s'han afegit
-      documents_result: 'Esperant lectura: {waiting} · ja afegits: {held} · en pausa:
-        {paused}'
+      documents_result: 'Pendents de la teva revisió: {waiting} · ja afegits: {held}
+        · en pausa: {paused}'
       done: Fet
       drop:
         bank: Deixa anar aquí fitxers d'extracte o una carpeta
@@ -3154,6 +3194,24 @@ desktop:
         transaction_validation: No s'ha pogut llegir com a extracte bancari.
       refused_rows: Files no acceptades
       remove: Treu {name}
+      role:
+        counterparty_name: Nom de l'altra part
+        counterparty_nif: NIF de l'altra part
+        country_code: País
+        currency: Moneda
+        invoice_date: Data de la factura
+        invoice_number: Número de factura
+        iva_rate: Tipus d'IVA
+        notes: Notes
+        retencion_amount: Import de la retenció
+        retencion_rate: Tipus de retenció
+        taxable_base: Base imposable
+        unmapped: Sense usar
+      role_source:
+        exact: Reconeguda
+        model: Proposada per la IA local
+        operator: Triada per tu
+        unmapped: Sense assignar
       row: Fila
       show_documents: Revisa a Documents
       show_failed: No s'han pogut llegir els moviments importats. Torna-ho a provar.
@@ -3276,6 +3334,7 @@ desktop:
       from_value_date: la data valor
       fx_rate: Tipus {rate}
       history:
+        none: Sense historial desat
         parts: 'Parts: {count}'
         reason_withheld: No es mostra el motiu del model
         split_parts: Parts
@@ -3568,6 +3627,7 @@ desktop:
       duplicate: Ja és al catàleg.
       empty: Encara no hi ha factures. Afegeix-ne una o importa un llibre de factures.
       empty_filtered: Cap factura no coincideix.
+      empty_period: 'Cap factura no coincideix a {period}. En altres períodes: {count}'
       failed: No s'ha desat res. Torna-ho a provar.
       field:
         counterparty_country: País
@@ -3762,7 +3822,7 @@ desktop:
     iva_category:
       domestic_exempt: Exempta
       domestic_general: Tipus general
-      domestic_not_subject: No subjecta
+      domestic_not_subject: No subjecta (art. 7 LIVA)
       domestic_reduced: Tipus reduït
       domestic_reverse_charge: Inversió del subjecte passiu
       domestic_super_reduced: Tipus superreduït
@@ -3777,7 +3837,7 @@ desktop:
       intra_community_service_supply: Prestació intracomunitària de serveis
       intra_community_supply: Lliurament intracomunitari
       intra_community_triangulation: Operació triangular
-      operacion_no_sujeta: Operació no subjecta
+      operacion_no_sujeta: No subjecta per localització (arts. 68 a 70 LIVA)
       reagp_compensation: Compensació REAGP
       recargo_equivalencia: Recàrrec d'equivalència
       regimen_simplificado: Règim simplificat
@@ -3923,7 +3983,7 @@ desktop:
       year_next: Any següent
       year_previous: Any anterior
       years_supported: Exercicis que pots consultar
-      years_with_movements: Anys amb moviments
+      years_with_movements_or_invoices: Anys amb moviments o factures
     position: Fila {row} de {count}
     prorrata:
       action:
@@ -4256,11 +4316,14 @@ desktop:
       row: Selecciona {description}
       shown: Selecciona els moviments mostrats · Ctrl+clic els afegeix
     selected: '{count} seleccionats'
+    selected_one: 1 seleccionat
     selection:
       actions_count: Accions · {count} seleccionats
+      actions_count_one: Accions · 1 seleccionat
       all_shown: 'Tots els mostrats estan seleccionats: {count}.'
       clear_category: Treu la categoria
       hidden: 'Amagats: {hidden} de {selected} seleccionats'
+      hidden_one: El moviment seleccionat està amagat
       keep_visible: Deixa només els visibles
       select_all: Selecciona els {count} de {period}
       show: Mostra'ls
@@ -4911,12 +4974,15 @@ desktop:
     cancel: Cancel·la
     censo:
       absent: L’AEAT no ha proporcionat aquesta dada. Sense canvis.
+      accept_all: Accepta-ho tot
       adopt: Utilitza la dada de l’AEAT en desar.
       apply: Desa els canvis revisats
       band: Cens de l’AEAT
       blocked: 'Cal abans de sincronitzar:'
       cancel: Atura la sincronització
       checking: S’està comprovant què necessita la sincronització…
+      choice_accept: Accepta
+      choice_reject: Rebutja
       conflict: La revisió ha canviat. Actualitza la sincronització i torna-la a revisar.
       device: Aprova la sol·licitud d’accés a l’aplicació Cl@ve.
       done: Sincronització completada. Revisa les dades que encara falten al perfil.
@@ -5398,6 +5464,35 @@ desktop:
     hide: Amaga l'espai de treball
     label: Espai de treball de Cadrumo
     show: Mostra l'espai de treball
+  withholding:
+    absences:
+      empty: No hi ha cap indicació vigent que no hi hagués retencions a {ejercicio}.
+      history: Indicacions retirades
+      title: Sense retencions
+    change: Canvia al Llibre
+    column:
+      class: Classe de renda
+      note: Nota
+      origin: Origen
+      payer: Pagador
+      state: Estat
+      stated_on: Declarat el
+      withdrawn_on: Retirat el
+    ejercicio: Any
+    empty: 'No hi ha res anotat per a {ejercicio}: cap certificat ni cap indicació
+      que no hi hagués retencions.'
+    failed: No s'ha pogut llegir ({code}).
+    loading: Llegint les retencions…
+    read_again: Torna a llegir
+    records:
+      empty: No hi ha cap certificat anotat per a {ejercicio}.
+      title: Certificats
+    refresh: Actualitza
+    signed_out: Inicia la sessió per veure les teves retencions.
+    title: Retencions
+    what: Les retencions que els teus pagadors et van practicar l'any que triïs, tal
+      com indica cada certificat, i les indicacions que una classe de renda no en
+      va tenir cap. Anota-les o canvia-les al Llibre.
 entries:
   portal_calendario_contribuyente:
     label: Calendari del contribuent
@@ -7319,43 +7414,15 @@ tui:
       context_across_records: A tots els registres
       reason: Suggerida pel resum local
     action_context: '%{label} - %{reason} · %{context}'
-    address: Model %{modelo} · %{period} %{filing_year}
     aeat_evidence: 'Dades de l''AEAT: %{state}'
     availability:
       available: Disponible
       available_empty: '%{label} - %{detail}'
       locked: Blocat - desbloca el perfil seleccionat per veure aquesta informació
       never_captured: Encara sense llegir
-      reason:
-        workbench:
-          calendar:
-            aeat_reader_unavailable: Encara sense llegir - apareix després de la primera
-              Sincronització AEAT
-            taxpayer_model_undeclared: No disponible - el perfil encara no indica
-              quin tipus de contribuent és
-          home:
-            actions_projector_unavailable: No disponible - les properes accions apareixen
-              quan s'han comprovat tots els teus registres
-            agenda_projector_unavailable: No disponible - no s'ha pogut calcular el
-              calendari de presentació
-            declarations_resume_projector_unavailable: No disponible - no s'han pogut
-              llegir les declaracions per reprendre
-            messages_never_pulled: Encara sense llegir - els missatges de l'AEAT apareixen
-              després de la primera Sincronització AEAT
-            taxpayer_profile_incomplete: No disponible - al perfil li falten respostes
-              obligatòries; completa-les a Perfil
-          ledger:
-            snapshot_projector_unavailable: No disponible - es mostra quan s'han comprovat
-              tots els teus registres
       stale: Desactualitzat - la darrera còpia local necessita actualitzar-se
       stale_observed: '%{label}; darrera observació %{observed_at}'
       unavailable: No disponible - aquesta informació no es pot mostrar ara
-    declaration_state:
-      discarded: Descartada
-      draft: Esborrany
-      filed: Registrada com a presentada
-      needs_review: Necessita revisió
-      ready: Llesta
     empty:
       actions: sense accions suggerides
       agenda: sense properes dates de presentació
@@ -7368,8 +7435,6 @@ tui:
       ledger: Preparació dels registres
       messages: Missatges
       navigation: Anar a
-    ledger_summary: Disponible - %{entries} apunts; %{requiring_review} necessiten
-      revisió; %{unclassified} sense classificar; %{missing_evidence} sense justificant
     link:
       search_declarations: Cercar declaracions
     link_state:
@@ -7378,13 +7443,6 @@ tui:
       stale: Desactualitzat
       unavailable: No disponible
     messages_summary: Disponible - %{count} requereixen atenció
-    reason:
-      blocked_dependency: Una dependència de la declaració està blocada
-      blocked_evidence: Un bloqueig necessita un justificant
-      blocked_review: La feina blocada necessita revisió
-      declaration_needs_review: La declaració necessita revisió
-      evidence_missing: Falta un justificant
-      ledger_classification_pending: Falta classificar apunts a Registres
     session:
       active: Sessió local activa
       expired: Sessió caducada

@@ -81,14 +81,13 @@ export type AttachmentNotRequired = {
 /**
  * A refused attachment request, by its closed code.
  *
- * Once the service has resolved the read it also names the file and the lane
- * the read would have gone to, so the window can say which file was not sent.
+ * Once the service has resolved the read it also names the file, so the window
+ * can say which file was not sent.
  */
 export type AttachmentRefusal = {
   kind: "refused";
   code: DisclosureRefusalCode | AttachmentAdminRefusalCode;
   name: string | null;
-  provider: string | null;
 };
 
 export type AttachmentReleaseAnswer =

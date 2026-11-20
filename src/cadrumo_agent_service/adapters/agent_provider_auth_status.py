@@ -22,7 +22,7 @@ from ..host.launch_environment import (
     system_environment,
 )
 from ..host.store_lifecycle import AgentInvocationResult, InvocationCancellation
-from ..providers.application.contracts import CliObservation, CliState, CliStateCause
+from ..providers.application.contracts import CliObservation, CliState, CliStateCause, ServiceCause
 from ..providers.domain.catalog import ProviderCatalogEntry
 from .agent_process import WindowsAgentInvocationRunner
 from .agent_programs import AGENT_COMMAND_LINE, AgentProgramRefusalError, agent_image, hosted_python
@@ -38,6 +38,8 @@ _ProbeCause = Literal[
 ]
 CONFIRMATION_SECONDS = 20.0
 """The bound on one fresh read of every provider's status: the read that confirms a sign-in, and each refresh."""
+LOGOUT_SECONDS = 45.0
+"""The bound on the agent's logout: its start, the provider's logout (up to 10 s) and its confirming probe (20 s)."""
 _FRESH_SECONDS = 5.0
 """How long a kept reading is served before a status read asks for it again."""
 
@@ -184,18 +186,22 @@ class AgentProviderAuthStatusProbe:
         with self._lock:
             return self._read(root, CONFIRMATION_SECONDS).observe(provider)
 
-    def log_out(self, provider: str, *, root: Path) -> bool:
+    def log_out(self, provider: str, *, root: Path) -> ServiceCause | None:
         """Run the agent's logout for ``provider`` within the confirmation bound; drop the kept read either way.
 
+        Returns ``None`` when the agent confirmed the provider signed out, else the closed cause it did not.
         Only the exit status is read: whatever the agent prints is provider output and is never kept.
         """
         try:
             with self._lock:
-                return self._run(root, ("auth", "logout", "--provider", provider), CONFIRMATION_SECONDS).status == 0
+                result = self._run(root, ("auth", "logout", "--provider", provider), LOGOUT_SECONDS)
         except (AgentProgramRefusalError, AgentHostError, RefusalError, OSError, ValueError):
-            return False
+            return "logout_agent_unavailable"
         finally:
             self.forget()
+        if result.status is None:
+            return "logout_timed_out"
+        return None if result.status == 0 else "logout_not_completed"
 
     def _run(self, root: Path, verb: tuple[str, ...], timeout: float) -> AgentInvocationResult:
         """Run one agent verb against the profile's agent root, refusing beside an unsettled earlier one.

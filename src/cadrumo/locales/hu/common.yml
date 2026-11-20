@@ -1555,6 +1555,28 @@ desktop:
     title: Google-fiók
     unknown: A Google-bejelentkezést most nem sikerült beolvasni.
     waiting: Fejezd be a bejelentkezést a Google-be a böngésződben.
+  home:
+    aeat_evidence: 'AEAT-adatok: {state}'
+    availability_locked: Zárolva - oldd fel ezt a profilt, hogy lásd
+    availability_never_captured: Még nincs beolvasva
+    availability_stale: Elavult
+    availability_stale_observed: 'Elavult - utolsó beolvasás: {date}'
+    availability_unavailable: Nem érhető el
+    empty: Itt nincs mit mutatni.
+    failed: A Kezdőlapot nem sikerült beolvasni ({code}). Próbáld meg frissíteni.
+    heading_actions: Következő teendők
+    heading_agenda: Benyújtási határidők
+    heading_declarations: Bevallások
+    heading_ledger: Nyilvántartás állapota
+    heading_messages: Üzenetek
+    loading: Kezdőlap betöltése…
+    messages_attention: '{count} igényel figyelmet'
+    modelo: Modelo {modelo}
+    observed: '(utolsó beolvasás: {date})'
+    refresh: Frissítés
+    signed_out: Jelentkezz be a Kezdőlap megtekintéséhez.
+    title: Kezdőlap
+    unworded: Még nincs leírás a te nyelveden.
   host:
     failed: Ezt a részt nem sikerült betölteni.
     unavailable: Ehhez a részhez az asztali alkalmazás kell.
@@ -2227,6 +2249,7 @@ desktop:
       vehiculo_seguro: seguro coche vehiculo
       viajes_alojamiento: hotel alojamiento hostal apartamento
       viajes_transporte: tren avion vuelo taxi autobus
+    cell_empty: Üres
     classification:
       business: Üzleti
       failed_validation: Sikertelen ellenőrzés
@@ -2478,8 +2501,11 @@ desktop:
         mielőtt a dokumentum elmegy. Az elküldöttet nem lehet visszahívni.
       count: 'Dokumentumok: {count}'
       country: Partner országa
+      country_from_vat_prefix: Az áfa-azonosító előtagjából
       currency_not_read: 'Nincs a dokumentumon: add meg'
       derived: Gépen kívüli beolvasásból készült
+      direction_disagrees: 'Importálva mint: {declared}. A dokumentum alapján: {suggested}.
+        Válaszd ki, melyik a helyes.'
       duplicate: 'Már a katalógusban: {number}'
       duplicate_check_failed: A főkönyv nem mondta meg, hogy ez az olvasat már a katalógusban
         van-e, ezért még nem erősítheted meg.
@@ -2513,6 +2539,7 @@ desktop:
       grounding:
         ambiguous: több lehetséges olvasat
         anchored: megtalálva az oldalon
+        anchored_record: megtalálva a dokumentum rekordjában
         contradicted: az oldal ellentmond
         reconciled: az összegek egyeznek
         unanchored: nem található az oldalon
@@ -2525,6 +2552,7 @@ desktop:
         duplicate: Lehet, hogy már a katalógusban van
         findings: Előbb válaszolj minden kérdésre
       in_review: Ellenőrzés alatt
+      iva_by_rate: Áfa kulcsonként
       keep: Megtartás
       left_out: 'Kihagyva, nem dokumentum: {count}'
       link_offer: Összekapcsolod a tételével?
@@ -2586,6 +2614,7 @@ desktop:
         unavailable: Nem elérhető
         version: '{version} verzió'
       reading_changed: Az olvasat megváltozott. Ellenőrizd újra.
+      reading_changed_in: 'Az olvasat megváltozott itt: {fields}. Ellenőrizd újra.'
       readings: Olvasatok
       reads_as: 'A dokumentum alapján: {kind}'
       ready_to_confirm: Megerősíthető
@@ -3000,14 +3029,25 @@ desktop:
       apply_files: Pontosan ezek importálása ({count})
       applying: 'Importálás: {done}/{total}'
       back: Vissza
+      book_column: Oszlop a fájlban
+      book_columns: A könyv oszlopai
       book_created: 'Létrehozott számlák: {count}'
       book_kind: A könyv számlái
-      book_no_preview: A számlakönyveknek nincs előnézete
-      book_no_preview_note: 'A sorokat létrehozáskor ellenőrzi. A nem elfogadott sorok
-        utána sorszámmal és okkal jelennek meg; a többi megmarad. {kind}; ország:
-        {country}.'
+      book_missing: Az importáláshoz szükséges oszlopok még nincsenek hozzárendelve
+      book_missing_note: 'Válassz oszlopot ehhez: {roles}. A könyv addig nem importálható,
+        amíg mindegyikhez nincs oszlop.'
       book_note: 'Sorok: {rows} · már a katalógusban: {skipped} · nem elfogadva: {refused}'
+      book_preview_note: 'Importálás ide: {kind}; ország: {country}. A sorokat létrehozásukkor
+        ellenőrizzük: az el nem fogadottak utólag, sorszámmal és indoklással kerülnek
+        felsorolásra, a többi megmarad. Egy jelentés egyetlen oszlopé: ha másiknak
+        adod, az első elveszíti.'
+      book_reader_note: Csak azok az oszlopok lettek felismerve, amelyek nevét az
+        importálás ismeri. A többit kézzel rendelheted hozzá.
+      book_reader_unavailable: A helyi MI nem tudta javasolni az oszlopokat
       book_refused: A könyv nem lett importálva
+      book_role: Jelentés
+      book_rows: 'Beolvasott sorok: {rows}'
+      book_source: Ki döntötte el
       bound_note: Az importálás pontosan ezeket a fájlokat használja. Az előnézet
         után módosult fájlt nem fogadja el.
       cancel: Mégse
@@ -3056,8 +3096,8 @@ desktop:
       documents_note: '{kind}. Minden dokumentum bizonylatként kerül be, és ezen a
         gépen olvassa be; a képek a Dokumentumokban várnak beolvasásra.'
       documents_refused: A dokumentumok nem lettek hozzáadva
-      documents_result: 'Beolvasásra vár: {waiting} · már hozzáadva: {held} · szüneteltetve:
-        {paused}'
+      documents_result: 'A te ellenőrzésedre vár: {waiting} · már hozzáadva: {held}
+        · szüneteltetve: {paused}'
       done: Kész
       drop:
         bank: Húzd ide a kivonatfájlokat vagy egy mappát
@@ -3140,6 +3180,24 @@ desktop:
         transaction_validation: Nem olvasható be bankszámlakivonatként.
       refused_rows: Nem elfogadott sorok
       remove: '{name} eltávolítása'
+      role:
+        counterparty_name: A másik fél neve
+        counterparty_nif: A másik fél adószáma
+        country_code: Ország
+        currency: Pénznem
+        invoice_date: Számla kelte
+        invoice_number: Számlaszám
+        iva_rate: IVA-kulcs
+        notes: Megjegyzések
+        retencion_amount: Retención összege
+        retencion_rate: Retención kulcsa
+        taxable_base: Adóalap
+        unmapped: Nincs használatban
+      role_source:
+        exact: Felismerve
+        model: A helyi MI javasolta
+        operator: Te választottad
+        unmapped: Nincs hozzárendelve
       row: Sor
       show_documents: Áttekintés a Dokumentumokban
       show_failed: Az importált tételeket nem sikerült beolvasni. Próbáld újra.
@@ -3261,6 +3319,7 @@ desktop:
       from_value_date: az értéknap
       fx_rate: 'Árfolyam: {rate}'
       history:
+        none: Nincs mentett előzmény
         parts: 'Részek: {count}'
         reason_withheld: A modell indoklása nem látható
         split_parts: Részek
@@ -3553,6 +3612,7 @@ desktop:
       duplicate: Már szerepel a katalógusban.
       empty: Még nincs számla. Adj hozzá egyet, vagy importálj számlakönyvet.
       empty_filtered: Nincs egyező számla.
+      empty_period: '{period}: nincs egyező számla. Más időszakokban: {count}'
       failed: Semmi sem lett mentve. Próbáld újra.
       field:
         counterparty_country: Ország
@@ -3744,7 +3804,7 @@ desktop:
     iva_category:
       domestic_exempt: Adómentes
       domestic_general: Általános kulcs
-      domestic_not_subject: Nem adóköteles
+      domestic_not_subject: Nem adóköteles (LIVA 7. cikk)
       domestic_reduced: Kedvezményes kulcs
       domestic_reverse_charge: Belföldi fordított adózás
       domestic_super_reduced: Különösen kedvezményes kulcs
@@ -3759,7 +3819,7 @@ desktop:
       intra_community_service_supply: Közösségen belüli szolgáltatásnyújtás
       intra_community_supply: Közösségen belüli értékesítés
       intra_community_triangulation: Háromszögügylet
-      operacion_no_sujeta: Nem adóköteles ügylet
+      operacion_no_sujeta: Nem adóköteles a teljesítés helye miatt (LIVA 68–70. cikk)
       reagp_compensation: REAGP-kompenzáció
       recargo_equivalencia: Recargo de equivalencia
       regimen_simplificado: Régimen simplificado
@@ -3904,7 +3964,7 @@ desktop:
       year_next: Következő év
       year_previous: Előző év
       years_supported: Évek, amelyeket megnézhetsz
-      years_with_movements: Évek tételekkel
+      years_with_movements_or_invoices: Évek tételekkel vagy számlákkal
     position: '{row}. sor / {count}'
     prorrata:
       action:
@@ -4230,11 +4290,14 @@ desktop:
       row: 'Jelöld ki: {description}'
       shown: Jelöld ki a látható tételeket · Ctrl+kattintás hozzáadja őket
     selected: '{count} kijelölve'
+    selected_one: 1 kijelölve
     selection:
       actions_count: Műveletek · {count} kijelölve
+      actions_count_one: Műveletek · 1 kijelölve
       all_shown: 'Minden látható ki van jelölve: {count}.'
       clear_category: Kategória törlése
       hidden: 'Rejtett: {hidden} a(z) {selected} kijelöltből'
+      hidden_one: A kijelölt tétel rejtett
       keep_visible: Csak a láthatók maradjanak
       select_all: 'Mind a {count} kijelölése: {period}'
       show: Mutasd őket
@@ -4893,12 +4956,15 @@ desktop:
     cancel: Mégse
     censo:
       absent: Az AEAT nem adott meg értéket. Nincs változás.
+      accept_all: Mindet elfogadom
       adopt: Mentéskor az AEAT értékének használata.
       apply: Ellenőrzött módosítások mentése
       band: AEAT Censo
       blocked: 'A szinkronizáláshoz szükséges:'
       cancel: Szinkronizálás leállítása
       checking: A szinkronizálás feltételeinek ellenőrzése…
+      choice_accept: Elfogadás
+      choice_reject: Elutasítás
       conflict: Az ellenőrzés megváltozott. Frissítsd a szinkronizálást, és ellenőrizd
         újra.
       device: Hagyd jóvá a bejelentkezést a Cl@ve alkalmazásban.
@@ -5372,6 +5438,35 @@ desktop:
     hide: Munkaterület elrejtése
     label: Cadrumo-munkaterület
     show: Munkaterület megjelenítése
+  withholding:
+    absences:
+      empty: Nincs érvényes jelzés arról, hogy a(z) {ejercicio} évben nem volt levonás.
+      history: Visszavont jelzések
+      title: Nincs levonás
+    change: Módosítás a Naplóban
+    column:
+      class: Jövedelemosztály
+      note: Megjegyzés
+      origin: Forrás
+      payer: Kifizető
+      state: Állapot
+      stated_on: Nyilatkozat dátuma
+      withdrawn_on: Visszavonás dátuma
+    ejercicio: Év
+    empty: 'A(z) {ejercicio} évre nincs rögzítve semmi: sem igazolás, sem a levonás
+      hiányára vonatkozó jelzés.'
+    failed: Nem sikerült beolvasni ({code}).
+    loading: Levonások beolvasása…
+    read_again: Beolvasás újra
+    records:
+      empty: Nincs rögzített igazolás a(z) {ejercicio} évre.
+      title: Igazolások
+    refresh: Frissítés
+    signed_out: Jelentkezz be a levonásaid megtekintéséhez.
+    title: Levonások
+    what: A kifizetőid által a választott évben levont összegek, ahogyan az egyes
+      igazolások mutatják, és azok a jelzések, hogy egy jövedelemosztályban nem volt
+      levonás. Rögzítsd vagy módosítsd őket a Naplóban.
 entries:
   portal_calendario_contribuyente:
     label: Adófizetői naptár
@@ -7295,43 +7390,15 @@ tui:
       context_across_records: Minden nyilvántartásra
       reason: A helyi áttekintés javaslata
     action_context: '%{label} - %{reason} · %{context}'
-    address: Modelo %{modelo} · %{period} %{filing_year}
     aeat_evidence: 'AEAT-adatok: %{state}'
     availability:
       available: Elérhető
       available_empty: '%{label} - %{detail}'
       locked: Zárolva - oldd fel a kiválasztott profilt az adatok megtekintéséhez
       never_captured: Még nincs beolvasva
-      reason:
-        workbench:
-          calendar:
-            aeat_reader_unavailable: Még nincs beolvasva - az első AEAT-szinkron után
-              jelenik meg
-            taxpayer_model_undeclared: Nem érhető el - a profil még nem adja meg,
-              milyen típusú adózóról van szó
-          home:
-            actions_projector_unavailable: Nem elérhető - a következő teendők akkor
-              jelennek meg, ha a nyilvántartásaidat mind ellenőrizték
-            agenda_projector_unavailable: Nem elérhető - a bevallási naptárt nem sikerült
-              kiszámítani
-            declarations_resume_projector_unavailable: Nem elérhető - a folytatandó
-              bevallásokat nem sikerült beolvasni
-            messages_never_pulled: Még nincs beolvasva - az AEAT-üzenetek az első
-              AEAT-szinkron után jelennek meg
-            taxpayer_profile_incomplete: Nem érhető el - a profilból hiányoznak kötelező
-              válaszok; töltsd ki őket a Profil részben
-          ledger:
-            snapshot_projector_unavailable: Nem elérhető - akkor jelenik meg, ha a
-              nyilvántartásaidat mind ellenőrizték
       stale: Elavult - a legutóbbi helyi másolat frissítést igényel
       stale_observed: '%{label}; utolsó megfigyelés: %{observed_at}'
       unavailable: Nem elérhető - ez az információ most nem jeleníthető meg
-    declaration_state:
-      discarded: Elvetve
-      draft: Piszkozat
-      filed: Benyújtottként rögzítve
-      needs_review: Ellenőrzésre vár
-      ready: Kész
     empty:
       actions: nincs javasolt teendő
       agenda: nincs közelgő benyújtási határidő
@@ -7344,8 +7411,6 @@ tui:
       ledger: A nyilvántartás készültsége
       messages: Üzenetek
       navigation: Oldalak
-    ledger_summary: Elérhető - %{entries} tétel; %{requiring_review} ellenőrzésre
-      vár; %{unclassified} besorolatlan; %{missing_evidence} hiányzó bizonylat
     link:
       search_declarations: Bevallások keresése
     link_state:
@@ -7354,13 +7419,6 @@ tui:
       stale: Elavult
       unavailable: Nem érhető el
     messages_summary: Elérhető - %{count} igényel figyelmet
-    reason:
-      blocked_dependency: A bevallás egyik függősége blokkolva van
-      blocked_evidence: Egy blokkolóhoz bizonylat kell
-      blocked_review: A blokkolt munka ellenőrzésre vár
-      declaration_needs_review: A bevallás ellenőrzésre vár
-      evidence_missing: Hiányzik egy bizonylat
-      ledger_classification_pending: A Nyilvántartás besorolása még hiányzik
     session:
       active: Aktív helyi munkamenet
       expired: A munkamenet lejárt

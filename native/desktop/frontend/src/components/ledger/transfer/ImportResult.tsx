@@ -25,7 +25,7 @@ import {
   type BankApplied,
   type DocumentsApplied,
 } from "./importModel";
-import { importRefusal } from "./transferWords";
+import { bookRefusalWords, failureWords, importRefusal } from "./transferWords";
 import type { LedgerTransactionProjection } from "../../../shell/ledgerInvoiceContract";
 
 /** What an import's apply answered, by the kind of import. */
@@ -356,12 +356,22 @@ export function ImportResultStep({
     const { answer } = outcome;
     if (answer.kind === "failed" && answer.code === "unknown")
       return unknown([outcome.file.name]);
-    if (answer.kind !== "settled")
+    if (answer.kind !== "settled") {
+      const refused = answer.kind === "refused";
       return (
-        <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
-          <AlertTitle>{t("desktop.ledger.import.book_refused")}</AlertTitle>
-        </Alert>
+        <>
+          <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
+            <AlertTitle>{t("desktop.ledger.import.book_refused")}</AlertTitle>
+            <AlertDescription>
+              {refused
+                ? bookRefusalWords(t, answer)
+                : failureWords(t, answer.code, answer.reason)}
+            </AlertDescription>
+          </Alert>
+          {refused && <SetupOffer action={answer.setup} />}
+        </>
       );
+    }
     const result = answer.result;
     return (
       <>

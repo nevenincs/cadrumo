@@ -379,6 +379,7 @@ export interface HostCommands {
       operation: string;
       reviewDigest: string | null;
       decision: import("../shell/profileCenso").CensoDecision;
+      accepted: string[] | null;
     };
     result: import("../shell/profileCenso").CensoSnapshot;
   };
@@ -525,6 +526,12 @@ export interface HostCommands {
   profile_views_calendar: {
     args: Authorized<{ from: string; to: string; language: string }>;
     result: import("../shell/calendarContract").FilingCalendarServed;
+  };
+  /** Home: only the `home` state of the product's workbench generation, its
+   * sentences in `language`. */
+  profile_views_home: {
+    args: Authorized<{ language: string }>;
+    result: import("../shell/homeContract").HomeServed;
   };
   /** Submits one admitted ledger operation with its request, without the
    * profile, and follows it until it settles or waits on the person. A

@@ -55,7 +55,7 @@ export function PasteDialog({
     <Dialog open onOpenChange={(open) => !open && onCancel()}>
       <DialogContent
         className="ledger-paste w-dialog-md"
-        closeLabel={t("desktop.ledger.paste.cancel")}
+        closeLabel={t("desktop.ledger.form.close")}
         onCloseAutoFocus={onCloseAutoFocus}
       >
         <DialogHeader>
@@ -139,7 +139,7 @@ export function CostDialog({
     <Dialog open onOpenChange={(open) => !open && onCancel()}>
       <DialogContent
         className="ledger-cost w-dialog-md"
-        closeLabel={t("desktop.ledger.cost.cancel")}
+        closeLabel={t("desktop.ledger.form.close")}
         onCloseAutoFocus={onCloseAutoFocus}
       >
         <DialogHeader>

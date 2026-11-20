@@ -240,3 +240,33 @@ def test_a_runner_left_unsettled_refuses_later_reads_until_close_settles_it(
     assert len(_UnsettledRunner.instances) == 1
     probe.close()
     assert _UnsettledRunner.instances[0].settled
+
+
+@pytest.mark.parametrize(
+    ("step", "cause"),
+    [
+        (AgentInvocationResult(status=0, standard_output=b""), None),
+        (AgentInvocationResult(status=1, standard_output=b"signed in still"), "logout_not_completed"),
+        (AgentInvocationResult(status=None, standard_output=b""), "logout_timed_out"),
+        (OSError("an earlier agent invocation is unsettled"), "logout_agent_unavailable"),
+    ],
+    ids=["signed_out", "exit_nonzero", "ended_at_bound", "agent_unavailable"],
+)
+def test_a_logout_names_why_it_did_not_sign_the_provider_out(
+    probe: AgentProviderAuthStatusProbe, tmp_path: Path, step: AgentInvocationResult | BaseException, cause: str | None
+) -> None:
+    _Runner.script = [step]
+    assert probe.log_out("claude", root=tmp_path) == cause
+    assert _Runner.calls == [("-m", "cadrumo_agent.cli.main", "auth", "logout", "--provider", "claude")]
+
+
+def test_a_logout_is_given_the_agents_own_logout_and_confirmation_time(
+    probe: AgentProviderAuthStatusProbe, tmp_path: Path
+) -> None:
+    _Runner.script = [AgentInvocationResult(status=0, standard_output=b"")]
+    assert probe.log_out("claude", root=tmp_path) is None
+    assert _Runner.calls == [("-m", "cadrumo_agent.cli.main", "auth", "logout", "--provider", "claude")]
+    # The agent waits up to 10 s for the provider's logout and up to 20 s for
+    # the status probe that confirms it, after its own start.
+    assert _Runner.timeouts == [status_module.LOGOUT_SECONDS]
+    assert status_module.LOGOUT_SECONDS > 30

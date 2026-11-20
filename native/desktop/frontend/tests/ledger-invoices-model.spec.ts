@@ -24,6 +24,7 @@ import {
   correctionPreview,
   emptyDraft,
   filterCatalogue,
+  hiddenByPeriod,
   holdsCorrection,
   readDraft,
   sortCatalogue,
@@ -1019,6 +1020,64 @@ test("the catalogue filters by kind, class, payment, links, period and words", (
   expect(
     ids(sortCatalogue(catalogue, { key: "date", direction: "desc" })),
   ).toEqual(["A-1093", `F-${fixtureYear}-002`, `F-${fixtureYear}-001`]);
+});
+
+test("the invoices a period alone hides are counted by what the other clauses keep, and none while its days are not served", () => {
+  const catalogue = [
+    invoice({
+      invoice_id: "1".repeat(64),
+      invoice_number: "I-1",
+      issued_at: fixtureDay(2, 1),
+    }),
+    invoice({
+      invoice_id: "2".repeat(64),
+      kind: "received",
+      invoice_number: "R-1",
+      issued_at: fixtureDay(10, 14),
+    }),
+    invoice({
+      invoice_id: "3".repeat(64),
+      invoice_number: "I-2",
+      issued_at: fixtureDay(8, 1),
+    }),
+    invoice({
+      invoice_id: "4".repeat(64),
+      invoice_number: "I-3",
+      issued_at: fixtureDay(10, 14, -2),
+    }),
+  ];
+  const third = { year: fixtureYear, code: "3T" } as const;
+  const second = { year: fixtureYear, code: "2T" } as const;
+  // No period hides nothing, and a period that is not served hides nothing
+  // that can be said.
+  expect(hiddenByPeriod(catalogue, NO_FILTER)).toBe(0);
+  expect(hiddenByPeriod(catalogue, { ...NO_FILTER, period: third })).toBe(0);
+  holdRecordedPeriods("en");
+  try {
+    expect(hiddenByPeriod(catalogue, { ...NO_FILTER, period: third })).toBe(3);
+    // A period with no invoice of the catalogue's hides all of them.
+    expect(hiddenByPeriod(catalogue, { ...NO_FILTER, period: second })).toBe(4);
+    // The other clauses still decide what counts as hidden.
+    expect(
+      hiddenByPeriod(catalogue, {
+        ...NO_FILTER,
+        kind: "received",
+        period: third,
+      }),
+    ).toBe(1);
+    expect(
+      hiddenByPeriod(catalogue, {
+        ...NO_FILTER,
+        search: "I-2",
+        period: second,
+      }),
+    ).toBe(1);
+    expect(
+      hiddenByPeriod(catalogue, { ...NO_FILTER, search: "I-2", period: third }),
+    ).toBe(0);
+  } finally {
+    holdLedgerPeriods(null, null);
+  }
 });
 
 test("a payment id is read against the shape the ledger serves, and not at all while it serves none", () => {

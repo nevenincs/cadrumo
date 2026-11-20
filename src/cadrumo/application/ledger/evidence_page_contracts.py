@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import date
 from enum import StrEnum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Annotated, Final, Protocol, Self
@@ -54,6 +55,27 @@ EVIDENCE_STRUCTURED_MAX_TEXT_LENGTH: Final = 4_096
 
 EVIDENCE_STRUCTURED_MAX_LINES: Final = 5_000
 """The most lines a shown e-invoice carries; more refuse the read as too large."""
+
+
+class EvidenceStructuredValueKind(StrEnum):
+    """What a structured e-invoice fact's value is, so a frontend formats it for the person's locale.
+
+    A figure is never served as formatted text: an amount is written with the
+    locale's decimal and grouping marks and the invoice's currency, a rate as a
+    percentage, a quantity as a plain number, a date in the locale's date order.
+    """
+
+    TEXT = "text"
+    """Text the record states, shown as it stands."""
+    DATE = "date"
+    """A calendar date, carried in ``iso_date``."""
+    AMOUNT = "amount"
+    """A money figure in the invoice's own currency, carried in ``number``."""
+    RATE_PERCENT = "rate_percent"
+    """A rate in percentage points (``21`` is 21 %), carried in ``number``."""
+    QUANTITY = "quantity"
+    """A count or measure of units, carried in ``number``."""
+
 
 #: The served key of the word naming each structured e-invoice the read shows, by its document shape.
 EVIDENCE_STRUCTURED_TITLE_KEYS: Final[Mapping[DocumentShape, str]] = MappingProxyType(
@@ -102,6 +124,28 @@ EVIDENCE_STRUCTURED_LABEL_KEYS: Final[frozenset[str]] = frozenset(
         *(key for _field, key in EVIDENCE_STRUCTURED_FACT_KEYS),
         *(key for _field, key in EVIDENCE_STRUCTURED_LINE_KEYS),
     )
+)
+
+#: What each fact's figure is, by the served key of its word. A key absent here names text.
+#:
+#: Declared beside the key tables so that a fact the read serves as a figure
+#: cannot lack its kind: the fact refuses any kind this table does not allow it.
+EVIDENCE_STRUCTURED_VALUE_KINDS: Final[Mapping[str, EvidenceStructuredValueKind]] = MappingProxyType(
+    {
+        "application.ledger.evidence.structured.fact.invoice_date": EvidenceStructuredValueKind.DATE,
+        "application.ledger.evidence.structured.fact.taxable_base": EvidenceStructuredValueKind.AMOUNT,
+        "application.ledger.evidence.structured.fact.iva_amount": EvidenceStructuredValueKind.AMOUNT,
+        "application.ledger.evidence.structured.fact.recargo_amount": EvidenceStructuredValueKind.AMOUNT,
+        "application.ledger.evidence.structured.fact.retencion_rate": EvidenceStructuredValueKind.RATE_PERCENT,
+        "application.ledger.evidence.structured.fact.retencion_amount": EvidenceStructuredValueKind.AMOUNT,
+        "application.ledger.evidence.structured.fact.suplidos_amount": EvidenceStructuredValueKind.AMOUNT,
+        "application.ledger.evidence.structured.fact.grand_total": EvidenceStructuredValueKind.AMOUNT,
+        "application.ledger.evidence.structured.line.quantity": EvidenceStructuredValueKind.QUANTITY,
+        "application.ledger.evidence.structured.line.unit_price": EvidenceStructuredValueKind.AMOUNT,
+        "application.ledger.evidence.structured.line.taxable_base": EvidenceStructuredValueKind.AMOUNT,
+        "application.ledger.evidence.structured.line.iva_rate": EvidenceStructuredValueKind.RATE_PERCENT,
+        "application.ledger.evidence.structured.line.iva_amount": EvidenceStructuredValueKind.AMOUNT,
+    }
 )
 
 _XML_MEDIA_TYPES: Final = frozenset({"application/xml", "text/xml"})
@@ -209,21 +253,39 @@ class LedgerEvidencePageRequest(BaseModel):
 class EvidenceStructuredFactV1(BaseModel):
     """One fact a structured e-invoice states, under the served key of the word that names it.
 
-    The fact is either text the record states, copied as it stands, or a
-    figure it states; never both.
+    ``value_kind`` says what the value is and exactly one member carries it:
+    ``text`` for text the record states, copied as it stands; ``iso_date`` for a
+    calendar date; ``number`` for an amount, a rate in percentage points or a
+    quantity. A date or figure the record states in a form that cannot be read as
+    one is served as its text instead, so nothing the record states is dropped.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     label_key: _LabelKey
+    value_kind: EvidenceStructuredValueKind
     text: _FactText | None = None
+    iso_date: date | None = None
     number: PublicDecimal | None = None
 
     @model_validator(mode="after")
     def _one_served_value(self) -> Self:
         if self.label_key not in EVIDENCE_STRUCTURED_LABEL_KEYS:
             raise ValueError("a structured e-invoice fact is named by a served key")
-        if (self.text is None) == (self.number is None):
-            raise ValueError("a structured e-invoice fact states text or a figure")
+        carried = (self.text is not None, self.iso_date is not None, self.number is not None)
+        if sum(carried) != 1:
+            raise ValueError("a structured e-invoice fact states one value: text, a date or a figure")
+        stated_kind = {
+            EvidenceStructuredValueKind.TEXT: carried[0],
+            EvidenceStructuredValueKind.DATE: carried[1],
+            EvidenceStructuredValueKind.AMOUNT: carried[2],
+            EvidenceStructuredValueKind.RATE_PERCENT: carried[2],
+            EvidenceStructuredValueKind.QUANTITY: carried[2],
+        }
+        if not stated_kind[self.value_kind]:
+            raise ValueError("a structured e-invoice fact's value is carried in the member its kind names")
+        declared = EVIDENCE_STRUCTURED_VALUE_KINDS.get(self.label_key, EvidenceStructuredValueKind.TEXT)
+        if self.value_kind not in {declared, EvidenceStructuredValueKind.TEXT}:
+            raise ValueError("a structured e-invoice fact is of the kind its served key declares, or text")
         return self
 
 
@@ -320,12 +382,14 @@ __all__ = [
     "EVIDENCE_STRUCTURED_MAX_LINES",
     "EVIDENCE_STRUCTURED_MAX_TEXT_LENGTH",
     "EVIDENCE_STRUCTURED_TITLE_KEYS",
+    "EVIDENCE_STRUCTURED_VALUE_KINDS",
     "LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID",
     "EvidencePageMediaType",
     "EvidencePageRenderer",
     "EvidenceStructuredFactV1",
     "EvidenceStructuredInvoiceV1",
     "EvidenceStructuredLineV1",
+    "EvidenceStructuredValueKind",
     "LedgerEvidencePageExecutionResult",
     "LedgerEvidencePagePorts",
     "LedgerEvidencePageProjection",

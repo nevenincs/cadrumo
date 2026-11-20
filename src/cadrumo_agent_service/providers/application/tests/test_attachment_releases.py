@@ -311,7 +311,7 @@ def test_a_deployment_bar_is_recorded_with_the_agent_and_still_answered(
 
     card = world.card()
 
-    assert card == {"kind": "refused", "code": code.value, "name": "nota.txt", "provider": "claude"}
+    assert card == {"kind": "refused", "code": code.value, "name": "nota.txt"}
     assert world.agent.refusals == [
         {
             "sha256": world.agent.digest,

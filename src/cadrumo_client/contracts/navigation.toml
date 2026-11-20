@@ -40,7 +40,7 @@ length = 64
 id = "home"
 label = "navigation.view.home.label"
 keywords = "navigation.view.home.keywords"
-surfaces = []
+surfaces = ["gui"]
 
 [[element]]
 id = "ledger"
@@ -97,7 +97,7 @@ surfaces = ["gui"]
 id = "withholding"
 label = "navigation.view.withholding.label"
 keywords = "navigation.view.withholding.keywords"
-surfaces = []
+surfaces = ["gui"]
 
 [[element]]
 id = "declarations"

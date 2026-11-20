@@ -12,12 +12,15 @@ _PAGE_BY_PREFIX: Final[tuple[tuple[str, str | None], ...]] = (
     ("modelo.reconcile.", "aeat-sync"),
     ("modelo.", "declarations"),
     ("export.", "declarations"),
+    # The payers' certificates and the statements of no withholding have their own page, as the TUI has.
+    ("ledger.retencion_soportada.", "withholding"),
     ("ledger.", "ledger"),
     ("live.", "aeat-sync"),
     ("user-profile.", "profile"),
     ("auth.", "profile/aeat-access"),
-    # The overview has no page of its own in any surface yet.
-    ("overview.", None),
+    # The calendar read is drawn on its own page; the overview's other reads are what Home shows.
+    ("overview.calendar", "calendar"),
+    ("overview.", "home"),
 )
 """Ordered most specific first; the first matching prefix names the register view, or ``None`` for no page.
 

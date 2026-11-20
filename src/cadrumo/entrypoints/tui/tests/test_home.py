@@ -17,11 +17,12 @@ from ....application.overview.calendar_models import (
     OverviewPeriodState,
 )
 from ....application.overview.filing_status_words import filing_status_words
-from ....application.overview.home import HomeProjectionV1
+from ....application.overview.home import HomeAgendaEntry, HomeAvailability, HomeProjectionV1, HomeZoneState
 from ....application.search.workbench import WorkbenchDestinationAdmissionState
+from ....application.workbench_generation_home_words import serve_home_projection
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
-from ....core.i18n.render import tr
+from ....core.i18n.render import output_language, tr
 from ..components.host import ScreenHostApp
 from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ..home import HomeLinkSelected, HomeLinkV1, HomeScreen
@@ -87,11 +88,8 @@ async def test_home_renders_the_selected_due_driven_projection_without_overflow(
         action_table = screen.query_one("#home-actions", DataTable)
         assert tuple(
             cast("DataTable[str]", action_table).get_row_at(index)[0] for index in range(action_table.row_count)
-        ) == (
-            "View earlier calculations",
-            "Classify records",
-            "Review supporting documents",
-        )
+        ) == tuple(item.action_words for item in projection.actions)
+        assert all(item.action_words is not None for item in projection.actions)
 
 
 @pytest.mark.asyncio
@@ -183,7 +181,16 @@ _AXES_BY_AGENDA: tuple[tuple[_RowAxes, ...], ...] = (
 def _served_agenda(axes: tuple[_RowAxes, ...]) -> HomeProjectionV1:
     projection = build_home_projection_fixture(HomeFixtureScenario.READY)
     agenda = tuple(
-        entry.model_copy(update={"period_state": period, "local_filing_state": local, "aeat_submission_state": aeat})
+        HomeAgendaEntry.worded(
+            modelo=entry.modelo,
+            filing_year=entry.filing_year,
+            period=entry.period,
+            due_on=entry.due_on,
+            period_state=period,
+            local_filing_state=local,
+            aeat_submission_state=aeat,
+            language=entry.words_language,
+        )
         for entry, (period, local, aeat) in zip(projection.agenda, axes, strict=True)
     )
     return projection.model_copy(update={"agenda": agenda})
@@ -228,6 +235,89 @@ async def test_home_agenda_says_the_served_date_and_period_words() -> None:
         f"{filing_status_words(entry.filing_status, OutputLanguage.EN)}"
         for entry in projection.agenda
     )
+
+
+@pytest.mark.asyncio
+async def test_home_says_the_words_the_projection_served_for_every_code_it_carries() -> None:
+    """Actions, reasons, declaration states, periods and the ledger counts are the served words, not Home's own."""
+    projection = build_home_projection_fixture(HomeFixtureScenario.READY)
+    screen = HomeScreen(projection)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
+        declarations = cast("DataTable[str]", screen.query_one("#home-declarations", DataTable))
+        rows = tuple(str(declarations.get_row_at(index)[0]) for index in range(declarations.row_count))
+        contexts = str(screen.query_one("#home-action-contexts", Static).render())
+        ledger = str(screen.query_one("#home-ledger", Static).render())
+    assert rows == tuple(
+        f"M{item.modelo} {item.period_words} · {item.name} · {item.state_words}" for item in projection.declarations
+    )
+    for item in projection.actions:
+        assert item.action_words is not None and item.reason_words is not None
+        assert f"{item.action_words} - {item.reason_words}" in contexts
+    assert projection.ledger is not None and projection.ledger.summary_words is not None
+    assert ledger == tr(
+        "tui.home.availability.available_empty",
+        label=tr("tui.home.availability.available"),
+        detail=projection.ledger.summary_words,
+    )
+
+
+@pytest.mark.asyncio
+async def test_home_serves_the_reason_a_zone_is_not_showing_its_data() -> None:
+    reason = "workbench.home.actions_projector_unavailable"
+    base = build_home_projection_fixture(HomeFixtureScenario.UNAVAILABLE)
+    unavailable = HomeZoneState(availability=HomeAvailability.UNAVAILABLE, reason_code=reason)
+    projection = serve_home_projection(
+        base.model_copy(update={"actions_state": unavailable}), OutputLanguage(output_language())
+    )
+    served = projection.actions_state.reason_words
+    assert served is not None
+    screen = HomeScreen(projection)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
+        shown = str(screen.query_one("#home-actions-state", Static).render())
+        generic = str(screen.query_one("#home-declarations-state", Static).render())
+    assert shown == served
+    assert generic == tr("tui.home.availability.unavailable")
+
+
+@pytest.mark.asyncio
+async def test_home_meets_a_projection_with_no_served_words_in_its_own_generic_words() -> None:
+    """Words the projection did not serve are absent or generic, never a catalogue key or an identifier."""
+    served = build_home_projection_fixture(HomeFixtureScenario.READY)
+    bare = served.model_copy(
+        update={
+            "actions": tuple(
+                item.model_copy(
+                    update={"action_words": None, "reason_words": None, "period_words": None, "words_language": None}
+                )
+                for item in served.actions
+            ),
+            "declarations": tuple(
+                item.model_copy(update={"state_words": None, "period_words": None, "words_language": None})
+                for item in served.declarations
+            ),
+            "ledger": None
+            if served.ledger is None
+            else served.ledger.model_copy(update={"summary_words": None, "words_language": None}),
+        }
+    )
+    screen = HomeScreen(bare)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await settle(pilot)
+        actions = cast("DataTable[str]", screen.query_one("#home-actions", DataTable))
+        action_rows = tuple(str(actions.get_row_at(index)[0]) for index in range(actions.row_count))
+        declarations = cast("DataTable[str]", screen.query_one("#home-declarations", DataTable))
+        declaration_rows = tuple(str(declarations.get_row_at(index)[0]) for index in range(declarations.row_count))
+        contexts = str(screen.query_one("#home-action-contexts", Static).render())
+        ledger = str(screen.query_one("#home-ledger", Static).render())
+    assert action_rows == (tr("tui.search.action.unknown"),) * len(bare.actions)
+    assert tr("tui.home.action.reason") in contexts
+    assert declaration_rows == tuple(f"M{item.modelo} · {item.name}" for item in bare.declarations)
+    assert ledger == tr("tui.home.availability.available")
 
 
 def test_home_module_reads_no_filing_evidence_axis() -> None:

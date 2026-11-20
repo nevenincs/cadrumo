@@ -22,26 +22,27 @@ desktop:
     attachment_grant_images: Imágenes de páginas a {model}
     attachment_grant_revoke: Revocar
     attachment_grants_title: Permisos recordados
-    attachment_kept_here: 'Estos {count} archivos no se han enviado a {provider}:'
-    attachment_kept_here_models: Elige un modelo
-    attachment_kept_here_one: 'Este archivo no se ha enviado a {provider}:'
-    attachment_kept_here_way: Un modelo local puede leerlos en este ordenador.
-    attachment_kept_here_way_one: Un modelo local puede leerlo en este ordenador.
+    attachment_open_profile: Abrir el perfil
     attachment_refusal:
       acknowledgement_missing: No has permitido esta lectura.
       cloud_upload_not_permitted: Esta instalación no permite que los documentos salgan
-        de este ordenador.
+        de este ordenador, y ningún ajuste de tu perfil lo cambia.
       document_removed: El archivo se ha eliminado.
       file_changed_during_read: El archivo ha cambiado. Vuelve a añadirlo para leer
         la nueva versión.
+      gestor_mode: El modo gestor nunca envía documentos fuera de este ordenador.
       grant_revoked: Ese permiso ya se ha revocado.
       not_signed_in: Inicia sesión para responder.
-      profile_not_eligible: Este perfil no puede enviar documentos fuera de este ordenador.
+      profile_not_eligible: Tu perfil no permite que los documentos salgan de este
+        ordenador. Lo controla el ajuste «Lectura de documentos fuera del equipo»
+        de tu perfil.
       reference_unknown: El agente ya no está esperando este archivo.
       service_failed: No se ha podido registrar el permiso, así que no se ha enviado
         nada.
     attachment_refused: Este archivo no se ha enviado. {reason}
+    attachment_refused_group: Estos archivos no se han enviado. {reason}
     attachment_refused_named: '{name} no se ha enviado. {reason}'
+    attachment_refused_title: Archivos sin enviar
     attachments: Archivos para el próximo mensaje
     attachments_refused: 'No aceptados: {count}'
     attachments_uploading: 'Subiendo: {count}'
@@ -535,6 +536,8 @@ desktop:
     reason_record_unreadable: No se puede leer la clave API guardada. Vuelve a añadirla.
     refresh: Volver a intentar
     refused_base_url_rejected: Revisa la dirección del servidor y vuelve a intentarlo.
+    refused_busy: Todavía hay otro cambio en tus proveedores en curso. Vuelve a intentarlo
+      en un momento.
     refused_invalid_key_format: Eso no parece una clave de este proveedor.
     refused_model_list_full: La lista de modelos está llena. Quita un modelo antes
       de añadir otro.
@@ -545,6 +548,9 @@ desktop:
     refused_revision_conflict: Estos ajustes han cambiado mientras tanto. Se muestran
       los últimos; vuelve a intentarlo.
     refused_runtime_unavailable: Reinicia Cadrumo y vuelve a intentarlo.
+    refused_service_failed: No se ha podido completar el cambio.
+    refused_timed_out: Cadrumo no ha recibido respuesta a tiempo. Actualiza para ver
+      si el cambio se ha hecho.
     remove_key: Quitar clave API
     replace_key: Sustituir clave API
     save: Guardar
@@ -594,6 +600,11 @@ desktop:
       lane_not_signable: No se puede iniciar sesión en este proveedor desde aquí.
       login_already_running: Ya hay otro inicio de sesión en curso para este perfil.
       login_not_completed: El inicio de sesión no se completó.
+      logout_agent_unavailable: No se ha podido iniciar el agente que cierra la sesión
+        de los proveedores.
+      logout_not_completed: La aplicación del proveedor no ha cerrado la sesión, o
+        el proveedor sigue con la sesión iniciada.
+      logout_timed_out: Cerrar la sesión ha tardado demasiado y se ha detenido.
       prepare_failed: No se pudo preparar el inicio de sesión.
       previous_cleanup_unconfirmed: No se pudo confirmar que el inicio de sesión anterior
         se cerrara correctamente.

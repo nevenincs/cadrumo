@@ -9,19 +9,21 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.corpus_search import reference_search
 from cadrumo.application.corpus_search import runtime as corpus_runtime
 from cadrumo.application.corpus_search.citation_lookup import bundled_citation_lookup
 from cadrumo.application.corpus_search.lexical_index import bundled_corpus_html_root
 from cadrumo.application.corpus_search.models import RetrievalResponse
 from cadrumo.application.corpus_search.terminology import search_terminology
 from cadrumo.core.config import override_settings
+from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry import authority as authority_module
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin
 
-from .. import corpus_query as mcp_corpus
+from ..bounded_pages import REPLY_BYTES
 from ..server import build_server
 from .admitted_lease import admitted_adapter
 from .session import connected_server_and_client_session
@@ -32,6 +34,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 # distractor that shares no recargo vocabulary.
 _SAMPLE_STEMS = ("ley-58-2003-art-27", "ley-27-2014-art-7")
 _CITATION_ID = "ley-58-2003:art-27.2"
+# LIVA art. 20 (the exempt operations) is the longest verbatim text a citation resolves to among
+# the registry's own legal references; it runs to several replies.
+_LONG_CITATION_ID = "ley-37-1992:art-20"
 
 
 @pytest.fixture
@@ -106,15 +111,67 @@ async def test_exact_citation_returns_published_verbatim_evidence() -> None:
 
 @pytest.mark.anyio
 @pytest.mark.usefixtures("sample_corpus")
+async def test_a_citation_text_too_long_for_one_reply_is_served_in_windows_that_join_to_it() -> None:
+    with bundled_indexed_authority().operation() as operation:
+        published = bundled_citation_lookup((_LONG_CITATION_ID,), operation=operation).resolve(_LONG_CITATION_ID)
+    assert len(canonical_json_bytes(published.verbatim_text)) > 2 * REPLY_BYTES, "the citation fits in two replies"
+    adapter = admitted_adapter()
+    try:
+        replies = [await adapter.call("corpus_search", {"query": _LONG_CITATION_ID})]
+        while (cursor := replies[-1]["paging"]["next_cursor"]) is not None:
+            assert replies[-1]["paging"]["next_call"] == {
+                "tool": "corpus_search",
+                "arguments": {"query": _LONG_CITATION_ID, "cursor": cursor},
+            }
+            replies.append(await adapter.call("corpus_search", {"query": _LONG_CITATION_ID, "cursor": cursor}))
+    finally:
+        await adapter.close()
+
+    assert len(replies) > 2
+    assert all(len(canonical_json_bytes(reply)) <= REPLY_BYTES for reply in replies)
+    assert [reply["paging"]["offset"] for reply in replies] == [
+        sum(earlier["paging"]["returned"] for earlier in replies[:index]) for index in range(len(replies))
+    ]
+    assert all(reply["paging"]["total"] == len(published.verbatim_text) for reply in replies)
+    # The windows are raw text: validating one as a citation would trim the whitespace a cut falls on.
+    windows = [reply["retrieval"] for reply in replies]
+    assert all(window["mode"] == "citation" and window["hits"] == [] for window in windows)
+    assert "".join(window["citation"]["verbatim_text"] for window in windows) == published.verbatim_text
+    # Everything but the window is the citation as published, on every page.
+    expected = published.model_dump(mode="json")
+    for window in windows:
+        assert {**window["citation"], "verbatim_text": published.verbatim_text} == expected
+
+
+@pytest.mark.anyio
+@pytest.mark.usefixtures("sample_corpus")
+async def test_a_citation_that_fits_one_reply_has_no_window_and_takes_no_cursor() -> None:
+    adapter = admitted_adapter()
+    try:
+        whole = await adapter.call("corpus_search", {"query": _CITATION_ID})
+        refused = await adapter.call("corpus_search", {"query": _CITATION_ID, "cursor": 1})
+        searched = await adapter.call("corpus_search", {"query": "recargo", "cursor": 1})
+        past_end = await adapter.call("corpus_search", {"query": _LONG_CITATION_ID, "cursor": 10_000_000})
+    finally:
+        await adapter.close()
+
+    assert "paging" not in whole
+    for reply in (refused, searched, past_end):
+        assert reply["outcome"] == "refused" and reply["code"] == "invalid_request"
+        assert "cursor" in reply["message"]
+
+
+@pytest.mark.anyio
+@pytest.mark.usefixtures("sample_corpus")
 async def test_reported_generation_is_the_pin_the_citation_lookup_used(monkeypatch: pytest.MonkeyPatch) -> None:
-    canonical = mcp_corpus.search_corpus
+    canonical = reference_search.search_corpus
     observed: list[AuthorityGenerationPin] = []
 
     def record_pin(query: str, *, operation: PinnedAuthorityOperation, limit: int) -> RetrievalResponse:
         observed.append(operation.pin())
         return canonical(query, operation=operation, limit=limit)
 
-    monkeypatch.setattr(mcp_corpus, "search_corpus", record_pin)
+    monkeypatch.setattr(reference_search, "search_corpus", record_pin)
     adapter = admitted_adapter()
     try:
         result = await adapter.call("corpus_search", {"query": _CITATION_ID})

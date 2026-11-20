@@ -552,10 +552,10 @@ def test_intentionally_open_reason_copy_is_optional_but_unknown_family_blocks(tm
     monkeypatch.setattr(
         manager,
         "get_codebase_namespaces",
-        lambda: {"tui.home.availability.reason.*", "unknown.family.*"},
+        lambda: {"workspace.declarations.refusal.reason.*", "unknown.family.*"},
     )
     monkeypatch.setattr(discovery, "dynamic_key_families", lambda markers: ({}, tuple(sorted(markers))))
-    optional = "tui.home.availability.reason.ready"
+    optional = "workspace.declarations.refusal.reason.ready"
     leaves = {"en": {optional: "Ready"}, "es": {}}
     monkeypatch.setattr(discovery, "catalogue_leaves", lambda _manager, _required_keys: (leaves, []))
 

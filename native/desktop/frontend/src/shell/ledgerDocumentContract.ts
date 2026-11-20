@@ -6,67 +6,12 @@ import type {
   ContentDigest,
   InvoiceKind,
   OutputLanguage,
+  PreconditionVerdictSnapshot,
   PublicDecimal,
   PublicNamedScalar,
-  PublicScalar,
   TransactionId,
   WorkUnitId,
 } from "./ledgerInvoiceContract";
-
-/**
- * One bounded recovery argument with its canonical provenance.
- */
-export type ActionArgumentSnapshot = {
-  argument_name: string;
-  status: ActionArgumentStatus;
-  value: PublicScalar | null;
-  source: ActionArgumentSource | null;
-  source_key: string | null;
-  source_evidence_id: string | null;
-};
-
-/**
- * Provenance of a projected recovery-action argument value.
- */
-export type ActionArgumentSource =
-  | "operator_action.verdict_context"
-  | "operator_action.condition_evidence"
-  | "operator_action.request_context";
-
-/**
- * Whether a recovery-action argument has a concrete projected value.
- */
-export type ActionArgumentStatus = "resolved" | "missing";
-
-/**
- * Whether a projected recovery action is currently materialisable.
- */
-export type ActionConditionality =
-  "immediate" | "requires_arguments" | "not_applicable";
-
-/**
- * Authority that observed one failed-condition fact.
- */
-export type ActionEvidenceProvenance =
-  | "application_state"
-  | "domain_evaluation"
-  | "persisted_state"
-  | "registry_record"
-  | "runtime_observation";
-
-/**
- * One further recovery action of a verdict, in the order it is offered, with
- * its served words and routing.
- */
-export type AlternativeActionSnapshot = {
-  action_words?: string | null;
-  action_words_language?: OutputLanguage | null;
-  target_operation_ids?: string[];
-  action_id: string;
-  argument_bindings: ActionArgumentSnapshot[];
-  missing_argument_names: string[];
-  conditionality: ActionConditionality;
-};
 
 /**
  * Non-secret manifest facts exposed to an invoice-review operator.
@@ -109,16 +54,6 @@ export type CloudDerivedArtefactProjection = {
 };
 
 /**
- * One canonical condition evidence with typed immutable scalar facts.
- */
-export type ConditionEvidenceSnapshot = {
-  condition_id: string;
-  evidence_id: string;
-  provenance: ActionEvidenceProvenance;
-  values: PublicNamedScalar[];
-};
-
-/**
  * Complete consent survey copied into schema-safe public snapshots.
  */
 export type ConsentWithdrawalSurveyProjection = {
@@ -150,12 +85,18 @@ export type EvidencePageMediaType =
  * One fact a structured e-invoice states, under the served key of the word
  * that names it.
  *
- * The fact is either text the record states, copied as it stands, or a figure
- * it states; never both.
+ * `value_kind` says what the value is and exactly one member carries it:
+ * `text` for text the record states, copied as it stands; `iso_date` for a
+ * calendar date; `number` for an amount, a rate in percentage points or a
+ * quantity. A date or figure the record states in a form that cannot be read
+ * as one is served as its text instead, so nothing the record states is
+ * dropped.
  */
 export type EvidenceStructuredFactV1 = {
   label_key: string;
+  value_kind: EvidenceStructuredValueKind;
   text: string | null;
+  iso_date: string | null;
   number: PublicDecimal | null;
 };
 
@@ -175,6 +116,17 @@ export type EvidenceStructuredInvoiceV1 = {
 export type EvidenceStructuredLineV1 = {
   facts: EvidenceStructuredFactV1[];
 };
+
+/**
+ * What a structured e-invoice fact's value is, so a frontend formats it for
+ * the person's locale.
+ *
+ * A figure is never served as formatted text: an amount is written with the
+ * locale's decimal and grouping marks and the invoice's currency, a rate as a
+ * percentage, a quantity as a plain number, a date in the locale's date order.
+ */
+export type EvidenceStructuredValueKind =
+  "text" | "date" | "amount" | "rate_percent" | "quantity";
 
 /**
  * Why the model did not fill the fields a partial label reading left unread.
@@ -511,11 +463,6 @@ export type LedgerEvidenceViewSuccess = {
 export type MediaKind = "pdf" | "image";
 
 /**
- * Closed reasons a refusal deliberately has no recovery action.
- */
-export type NoRecoveryOutcome = "terminal" | "safety" | "operator_decision";
-
-/**
  * Calculate the declaration one work unit holds.
  */
 export type OperationCalculateWorkStepV1 = {
@@ -636,31 +583,6 @@ export type OperationVerifyWorkStepV1 = {
   kind: "verify_work";
   work_unit_id: WorkUnitId;
   words: string;
-};
-
-/**
- * Typed action evidence needed by the existing CLI action resolver.
- *
- * `alternative_actions` is left out of the serialized snapshot when empty, so
- * a verdict without alternatives keeps the bytes it was stored with. The
- * snapshot is the verdict as it crosses a process boundary, so it carries the
- * words and routing served for the primary action, or the sentence served for
- * a refusal with no way out, in the language of the process that projected it.
- */
-export type PreconditionVerdictSnapshot = {
-  no_recovery_words?: string | null;
-  no_recovery_words_language?: OutputLanguage | null;
-  action_words?: string | null;
-  action_words_language?: OutputLanguage | null;
-  target_operation_ids?: string[];
-  failed_condition_id: string;
-  evidence: ConditionEvidenceSnapshot[];
-  action_id: string | null;
-  argument_bindings: ActionArgumentSnapshot[];
-  missing_argument_names: string[];
-  conditionality: ActionConditionality;
-  no_recovery_outcome: NoRecoveryOutcome | null;
-  alternative_actions?: AlternativeActionSnapshot[];
 };
 
 /** Each ledger definition's registered request and result, as the runtime's

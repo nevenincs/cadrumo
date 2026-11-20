@@ -44,16 +44,20 @@ export function useWorkspaceVisibility({
   // shown. The first pane holds the documentation or a view of the profile,
   // and is on screen while either is asked for.
   const profileOn = host.userProfile !== undefined && page === "profile";
+  const homeOn = views !== undefined && page === "home";
   const calendarOn = views !== undefined && page === "calendar";
   const ledgerOn = host.ledger !== undefined && page === "ledger";
+  const withholdingOn = host.ledger !== undefined && page === "withholding";
   const declarationsOn = host.modelo !== undefined && page === "declarations";
   const browserOn = host.sedeView !== undefined && page === "browser";
   const aeatSyncOn = host.aeatSync !== undefined && page === "aeat-sync";
   // A page of the window holds the first pane, in place of the documentation.
   const pageOn =
+    homeOn ||
     calendarOn ||
     profileOn ||
     ledgerOn ||
+    withholdingOn ||
     declarationsOn ||
     browserOn ||
     aeatSyncOn;
@@ -153,8 +157,10 @@ export function useWorkspaceVisibility({
     [docsMin, panelMin],
   );
   const docsVisible = firstPaneShown && !pageOn;
+  const homeVisible = homeOn && firstPaneShown;
   const calendarVisible = calendarOn && firstPaneShown;
   const ledgerVisible = ledgerOn && firstPaneShown;
+  const withholdingVisible = withholdingOn && firstPaneShown;
   const declarationsVisible = declarationsOn && firstPaneShown;
   const browserVisible = browserOn && firstPaneShown;
   const tuiVisible =
@@ -169,8 +175,10 @@ export function useWorkspaceVisibility({
     unhidden("agent");
   return {
     profileOn,
+    homeOn,
     calendarOn,
     ledgerOn,
+    withholdingOn,
     declarationsOn,
     browserOn,
     aeatSyncOn,
@@ -184,8 +192,10 @@ export function useWorkspaceVisibility({
     dockBesideWidths,
     dockMinimumHeights,
     docsVisible,
+    homeVisible,
     calendarVisible,
     ledgerVisible,
+    withholdingVisible,
     declarationsVisible,
     browserVisible,
     tuiVisible,

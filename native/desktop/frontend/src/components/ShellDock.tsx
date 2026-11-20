@@ -107,6 +107,8 @@ export function ShellDock({
   activePanes,
   pageOn,
   profileOn,
+  homeOn,
+  withholdingOn,
   calendarOn,
   ledgerOn,
   declarationsOn,
@@ -184,6 +186,8 @@ export function ShellDock({
   activePanes: DockPane[];
   pageOn: boolean;
   profileOn: boolean;
+  homeOn: boolean;
+  withholdingOn: boolean;
   calendarOn: boolean;
   ledgerOn: boolean;
   declarationsOn: boolean;
@@ -350,17 +354,21 @@ export function ShellDock({
           title: t(
             profileOn
               ? "desktop.profile.title"
-              : calendarOn
-                ? "desktop.calendar.title"
-                : ledgerOn
-                  ? "desktop.ledger.title"
-                  : declarationsOn
-                    ? "workspace.declarations.destination.overview"
-                    : browserOn
-                      ? "desktop.browser.title"
-                      : aeatSyncOn
-                        ? "desktop.aeat_sync.title"
-                        : "desktop.pane.docs",
+              : homeOn
+                ? "desktop.home.title"
+                : calendarOn
+                  ? "desktop.calendar.title"
+                  : ledgerOn
+                    ? "desktop.ledger.title"
+                    : withholdingOn
+                      ? "desktop.withholding.title"
+                      : declarationsOn
+                        ? "workspace.declarations.destination.overview"
+                        : browserOn
+                          ? "desktop.browser.title"
+                          : aeatSyncOn
+                            ? "desktop.aeat_sync.title"
+                            : "desktop.pane.docs",
           ),
           content: docsPane,
           pageActions:

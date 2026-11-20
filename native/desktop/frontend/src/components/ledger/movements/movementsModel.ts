@@ -879,7 +879,7 @@ function sortValue(
     case "lifecycle":
       return text(labels.lifecycle(t.lifecycle_state));
     case "classified_by":
-      return text(labels.classifiedBy(t.classified_by));
+      return text(labels.classifiedBy(t.classification_decided_by));
     case "status":
       return text(labels.status(row));
     default:

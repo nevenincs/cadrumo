@@ -35,6 +35,7 @@ from cadrumo.application.ledger.attachment_mutation_operation import (
 )
 from cadrumo.application.ledger.attachment_review import AttachmentReviewItem
 from cadrumo.application.ledger.batch_ingest import BatchRunResult
+from cadrumo.application.ledger.confirmation_record_repository import ConfirmationRecordRepositoryFactory
 from cadrumo.application.ledger.evidence import MediaKind
 from cadrumo.application.ledger.evidence_followup_contracts import (
     AttachmentStoreFactory,
@@ -151,6 +152,9 @@ def _registry() -> OperationRegistry:
         attachment_store_factory=cast(AttachmentStoreFactory, cast(object, lambda _bucket: None)),
         extraction_draft_repository_factory=cast(
             ExtractionDraftRepositoryFactory, cast(object, lambda **_kwargs: None)
+        ),
+        confirmation_record_repository_factory=cast(
+            ConfirmationRecordRepositoryFactory, cast(object, lambda **_kwargs: None)
         ),
         consent_entries_factory=cast(EvidenceConsentEntriesFactory, cast(object, lambda **_kwargs: ())),
         off_host_read_askable=cast(OffHostReadAskable, cast(object, lambda **_kwargs: False)),

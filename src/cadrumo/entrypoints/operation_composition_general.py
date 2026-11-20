@@ -188,6 +188,31 @@ def compose_workbench_generation_operation(inputs: OperationCompositionInputs) -
     return built((definition,), (build_workbench_generation_operation_registration(definition),))
 
 
+def compose_reference_corpus_search_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose reference corpus search operation."""
+    from ..application.corpus_search.search_operation import (
+        build_reference_corpus_search_definition,
+        build_reference_corpus_search_registration,
+    )
+
+    del inputs
+    definition = build_reference_corpus_search_definition()
+    return built((definition,), (build_reference_corpus_search_registration(definition),))
+
+
+def compose_operation_history_list_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose operation history list operation."""
+    from ..application.operation_history.list_operation import (
+        build_operation_history_list_definition,
+        build_operation_history_list_registration,
+    )
+    from .operation_history_composition import compose_operation_history_ports
+
+    del inputs
+    definition = build_operation_history_list_definition(compose_operation_history_ports)
+    return built((definition,), (build_operation_history_list_registration(definition),))
+
+
 def compose_actividad_asset_registered_operations(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose actividad asset registered operations."""
     from ..application.actividad_asset.registered_operations import (
@@ -531,6 +556,7 @@ def compose_user_profile_censal_operation(inputs: OperationCompositionInputs) ->
         from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
         from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
         from .adapter_composition_ports import build_censal_fetch_port
+        from .censal_readback_composition import read_stored_censal_observation
         from .live_state_composition import preflight_filed_history_provider
 
         definition = build_censal_operation_definition(
@@ -539,6 +565,7 @@ def compose_user_profile_censal_operation(inputs: OperationCompositionInputs) ->
             operator_scope_ports=inputs.scope,
             censal_fetch_port=build_censal_fetch_port(),
             provider_preflight=preflight_filed_history_provider,
+            observation_reader=read_stored_censal_observation,
         )
     return built((definition,), (build_censal_operation_registration(definition),))
 

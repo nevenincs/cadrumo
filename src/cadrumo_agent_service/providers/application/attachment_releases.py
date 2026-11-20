@@ -72,16 +72,14 @@ class AttachmentAdminRefusalCode(StrEnum):
 class AttachmentRefusal(OutputSchema):
     """A refused attachment request, by its closed code.
 
-    Once the service has resolved the read it also names the file and the lane
-    the read would have gone to, so the window can say which file was not sent.
+    Once the service has resolved the read it also names the file, so the window
+    can say which file was not sent.
     """
 
     kind: Literal["refused"] = "refused"
     code: DisclosureRefusalCode | AttachmentAdminRefusalCode
     name: str | None = None
     """The attachment's name, when the service resolved the read."""
-    provider: str | None = None
-    """The provider the read was bound for, when the service resolved the read."""
 
 
 class AttachmentNotRequired(OutputSchema):
@@ -274,9 +272,7 @@ class DisclosureStore(Protocol):
 
 
 def _refused(code: DisclosureRefusalCode, read: PendingRead | None = None) -> AttachmentRefusal:
-    if read is None:
-        return AttachmentRefusal(code=code)
-    return AttachmentRefusal(code=code, name=read.name, provider=read.provider)
+    return AttachmentRefusal(code=code, name=None if read is None else read.name)
 
 
 def _covers(grant: DisclosureGrant, read: PendingRead, document: StoredDocument) -> bool:

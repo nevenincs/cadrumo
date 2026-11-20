@@ -243,7 +243,7 @@ export function censoFixture(
       if (!snapshot || failure) throw { code: "unavailable" };
       return structuredClone(snapshot);
     },
-    async answer(_, operation, digest, decision) {
+    async answer(_, operation, digest, decision, accepted) {
       answers++;
       await held;
       if (failure) throw { code: "unknown" };
@@ -253,11 +253,25 @@ export function censoFixture(
         (decision !== "cancel" && snapshot.review_digest !== digest)
       )
         throw { code: "conflict" };
+      // Only what the operator accepted is written; where that is not the
+      // review's own adopt set the host reviews the stored read again, so the
+      // answer comes from a follow-up operation.
+      const adopts = (field: CensoSnapshot["fields"][number]) =>
+        accepted
+          ? field.incoming !== null && accepted.includes(field.path)
+          : !field.preserve && field.incoming !== null;
+      const followed =
+        decision === "apply" &&
+        !!accepted &&
+        snapshot.fields.some(
+          (field) =>
+            adopts(field) !== (!field.preserve && field.incoming !== null),
+        );
       if (decision === "apply")
         // The host commits the reviewed values at once; one field edit each
         // is how this fixture's profile takes them.
         for (const field of snapshot.fields) {
-          if (field.preserve || field.incoming === null) continue;
+          if (!adopts(field) || field.incoming === null) continue;
           const current = await profile.read("en");
           await profile.change({
             profile_id: current.profile_id,
@@ -268,6 +282,7 @@ export function censoFixture(
         }
       snapshot = {
         ...snapshot,
+        operation: followed ? "e".repeat(64) : snapshot.operation,
         state: decision === "apply" ? "done" : "stopped",
         can_cancel: false,
         review_digest: null,

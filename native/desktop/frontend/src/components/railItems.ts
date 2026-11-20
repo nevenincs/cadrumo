@@ -34,7 +34,9 @@ export function railItems({
   firstPaneShown,
   profileOn,
   aeatSyncOn,
+  homeVisible,
   ledgerVisible,
+  withholdingVisible,
   declarationsVisible,
   calendarVisible,
   browserVisible,
@@ -67,7 +69,9 @@ export function railItems({
   firstPaneShown: boolean;
   profileOn: boolean;
   aeatSyncOn: boolean;
+  homeVisible: boolean;
   ledgerVisible: boolean;
+  withholdingVisible: boolean;
   declarationsVisible: boolean;
   calendarVisible: boolean;
   browserVisible: boolean;
@@ -118,6 +122,17 @@ export function railItems({
       pressed: docsVisible,
       onClick: () => runAction("docs.toggle"),
     },
+    ...(views
+      ? [
+          {
+            id: "home",
+            icon: "home",
+            label: t("desktop.home.title"),
+            pressed: homeVisible,
+            onClick: () => runAction("view.home"),
+          } satisfies RailItem,
+        ]
+      : []),
     ...(host.userProfile
       ? [
           {
@@ -154,6 +169,13 @@ export function railItems({
             label: t("desktop.ledger.title"),
             pressed: ledgerVisible,
             onClick: () => runAction("view.ledger"),
+          } satisfies RailItem,
+          {
+            id: "withholding",
+            icon: "ledger",
+            label: t("desktop.withholding.title"),
+            pressed: withholdingVisible,
+            onClick: () => runAction("view.withholding"),
           } satisfies RailItem,
         ]
       : []),

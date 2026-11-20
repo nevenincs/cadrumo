@@ -13,6 +13,21 @@ import {
   TAX_AMOUNT_RULE,
   type Parsed,
 } from "../../../shell/ledgerGrammar";
+import type { PublicDecimal } from "../../../shell/ledgerInvoiceContract";
+import type {
+  RetencionSoportadaAmountColumnProjection,
+  RetencionSoportadaRowProjection,
+} from "../../../shell/ledgerWithholdingContract";
+
+/** The amount a row holds under the field a served column names; the
+ * backend names the fields, so the window does not list them. */
+export const servedAmount = (
+  found: RetencionSoportadaRowProjection,
+  column: RetencionSoportadaAmountColumnProjection,
+): PublicDecimal | null | undefined =>
+  (found as unknown as Record<string, PublicDecimal | null | undefined>)[
+    column.field
+  ];
 
 /** What a figure's box holds before anything is typed: zero for a figure
  * every certificate states, blank for one only some classes state, which the

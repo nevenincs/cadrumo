@@ -10,6 +10,7 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.outbound.aeat.sede.censal_datos import fetch_censal_datos
@@ -39,6 +40,7 @@ from cadrumo.application.operations.interactions import (
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from cadrumo.application.operations.persistence.events import OperationPhaseEvent
 from cadrumo.application.operations.projection_services import (
     OperationResultProjectionService,
     OperationReviewProjectionService,
@@ -52,6 +54,9 @@ from cadrumo.application.user_profile.censal_observation import (
     CensalObservationIdentity,
 )
 from cadrumo.application.user_profile.censal_operation import (
+    CENSAL_PHASE_CLAVE_DEVICE_WAIT,
+    CENSAL_PHASE_PREFLIGHT,
+    CENSAL_PHASE_REMOTE_READ,
     CENSAL_PHASE_SETTLEMENT,
     CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING,
     CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING,
@@ -63,10 +68,13 @@ from cadrumo.application.user_profile.censal_operation import (
     CensalProfileBaseline,
     CensalReviewedOperand,
     CensalReviewProjectionV1,
+    CensalStoredObservationReference,
     build_censal_operation_definition,
     build_censal_operation_registration,
+    build_censal_operation_request,
 )
-from cadrumo.application.user_profile.cotejo_apply import apply_cotejo
+from cadrumo.application.user_profile.censo_sync import CENSO_SOURCE_TAG
+from cadrumo.application.user_profile.cotejo_apply import CensoDivergence, apply_cotejo, open_censo_divergences
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
@@ -624,3 +632,172 @@ def test_censal_executor_cancellation_before_irreversible_entry_keeps_none_and_w
             == before
         )
         assert ProfileRecordStore(session=session).history() == history_before
+
+
+def _stored_executor(
+    reader,
+    calls: list[str],
+) -> CensalOperationExecutor:
+    """An executor whose live paths record any use, so a stored review proves it made none."""
+
+    async def acquire() -> CensalObservation:
+        calls.append("acquire")
+        return observation()
+
+    def preflight(_profile_id: UUID, _operation: PinnedAuthorityOperation) -> None:
+        calls.append("preflight")
+
+    return CensalOperationExecutor(
+        certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+        browser_session_factory=default_browser_session_factory,
+        operator_scope_ports=OPERATOR_SCOPE_PORTS,
+        censal_fetch_port=fetch_censal_datos,
+        provider_preflight=preflight,
+        acquire=acquire,
+        observation_reader=reader,
+    )
+
+
+def _stored_request(
+    profile_id: str, captured_at: datetime, *, preserve: str | None = None
+) -> OperationRequest[CensalOperationRequest]:
+    payload = censal_request_payload(profile_id).model_copy(
+        update={
+            "field_intents": censal_field_intents(
+                {preserve: CensalFieldIntent.PRESERVE} if preserve is not None else None,
+                default=CensalFieldIntent.ADOPT,
+            ),
+            "stored_observation": CensalStoredObservationReference(captured_at=captured_at),
+        }
+    )
+    return OperationRequest(
+        definition_id=censal_test_operation_definition_id(), subject_ref=profile_id, payload=payload
+    )
+
+
+def test_stored_observation_review_reuses_the_read_and_records_preserved_fields_as_divergences(
+    tmp_path: Path,
+) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
+    calls: list[str] = []
+
+    async def reader(_profile_id: UUID) -> CensalObservation | None:
+        calls.append("read")
+        return observation()
+
+    with subject(tmp_path) as (profile_id, objects, _session):
+        durable_root = tmp_path / "operations"
+        supervisor = censal_supervisor(
+            root=durable_root,
+            objects=objects,
+            executor=_stored_executor(reader, calls),
+            owner="1" * 64,
+            token="2" * 64,
+        )
+
+        async def run() -> None:
+            operation_id = await supervisor.submit(
+                _stored_request(profile_id, NOW, preserve="contact.postcode"), operation_id="3" * 64
+            )
+            waiting = await start(supervisor, operation_id)
+            assert waiting.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
+            assert waiting.effect is OperationEffect.NONE
+            pending = waiting.pending_interaction
+            assert pending is not None
+            events = (await supervisor.replay(operation_id, 0, limit=50)).events
+            phases = [event.phase_code for event in events if isinstance(event, OperationPhaseEvent)]
+            assert CENSAL_PHASE_PREFLIGHT in phases
+            assert CENSAL_PHASE_CLAVE_DEVICE_WAIT not in phases
+            assert CENSAL_PHASE_REMOTE_READ not in phases
+            await apply_pending(supervisor, operation_id, pending)
+            applied = await supervisor.await_terminal(operation_id)
+            assert applied.terminal_condition is OperationTerminalCondition.SUCCEEDED
+            assert applied.effect is OperationEffect.UPDATED
+
+        asyncio.run(run())
+        assert calls == ["read"]
+        record = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        ).load(profile_id)
+        assert [divergence.axis for divergence in open_censo_divergences(record)] == ["contact.postcode"]
+
+
+@pytest.mark.parametrize("stored", ["missing", "different-capture", "no-reader"])
+def test_stored_observation_review_refuses_without_effect_when_the_named_capture_is_not_stored(
+    tmp_path: Path, stored: str
+) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
+    calls: list[str] = []
+
+    async def reader(_profile_id: UUID) -> CensalObservation | None:
+        if stored == "missing":
+            return None
+        return observation().model_copy(update={"captured_at": NOW + timedelta(minutes=1)})
+
+    with subject(tmp_path) as (profile_id, objects, _session):
+        before = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        ).load(profile_id)
+        supervisor = censal_supervisor(
+            root=tmp_path / "operations",
+            objects=objects,
+            executor=_stored_executor(None if stored == "no-reader" else reader, calls),
+            owner="1" * 64,
+            token="2" * 64,
+        )
+
+        async def run() -> None:
+            operation_id = await supervisor.submit(_stored_request(profile_id, NOW), operation_id="3" * 64)
+            await start(supervisor, operation_id)
+            terminal = await supervisor.await_terminal(operation_id)
+            assert terminal.terminal_condition is OperationTerminalCondition.FAILED
+            assert terminal.effect is OperationEffect.NONE
+            assert terminal.pending_interaction is None
+
+        asyncio.run(run())
+        assert calls == []
+        assert (
+            ProfileRecordRepository.for_current_session(
+                profile_id, profile_decode_context=_profile_decode_context_for_test
+            ).load(profile_id)
+            == before
+        )
+
+
+def test_default_review_request_preserves_a_path_with_an_open_divergence(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
+    with subject(tmp_path) as (profile_id, _objects, _session):
+        repository = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        )
+        unset = {
+            item.path: item.intent for item in build_censal_operation_request(repository.load(profile_id)).field_intents
+        }
+        assert unset["contact.postcode"] is CensalFieldIntent.ADOPT
+        apply_cotejo(
+            None,
+            adopted=(),
+            divergences=(CensoDivergence(axis="contact.postcode", artefact_value="28013", source=CENSO_SOURCE_TAG),),
+            profile_decode_context=_profile_decode_context_for_test,
+        )
+        decided = {
+            item.path: item.intent for item in build_censal_operation_request(repository.load(profile_id)).field_intents
+        }
+        assert decided["contact.postcode"] is CensalFieldIntent.PRESERVE
+        assert decided["contact.fiscal_address"] is CensalFieldIntent.ADOPT
+
+
+def test_stored_observation_reference_round_trips_and_refuses_a_naive_instant(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
+    with subject(tmp_path) as (profile_id, _objects, _session):
+        live = censal_request_payload(profile_id)
+        assert live.stored_observation is None
+        assert CensalOperationRequest.model_validate_json(live.model_dump_json()) == live
+        stored = live.model_copy(update={"stored_observation": CensalStoredObservationReference(captured_at=NOW)})
+        restored = CensalOperationRequest.model_validate_json(stored.model_dump_json())
+        assert restored == stored
+        assert '"stored_observation":{"captured_at":"2026-08-24T18:00:00Z"}' in stored.model_dump_json()
+    with pytest.raises(ValidationError):
+        CensalStoredObservationReference.model_validate_json('{"captured_at":"2026-08-24T18:00:00"}')
+    with pytest.raises(ValidationError):
+        CensalStoredObservationReference.model_validate_json('{"captured_at":"2026-08-24T18:00:00+02:00"}')
