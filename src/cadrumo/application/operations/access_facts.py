@@ -369,8 +369,9 @@ _NETWORK_WRITES: Final = (
     # A ledger or invoice write that converts a foreign-currency amount looks
     # its rate up at the central bank.
     "ledger.add",
-    # The model-backed reviews and the extraction call the local reader at its
-    # endpoint setting, which can name another host.
+    # The model-backed reviews, the classification job run and the extraction
+    # call the local reader at its endpoint setting, which can name another host.
+    "ledger.classify.job.run",
     "ledger.classify.review",
     "ledger.evidence.batch",
     # Confirmation creates the invoice, which may need an exchange rate.

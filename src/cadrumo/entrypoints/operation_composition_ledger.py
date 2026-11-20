@@ -562,6 +562,22 @@ def compose_ledger_classification_job_operation(inputs: OperationCompositionInpu
     )
 
 
+def compose_ledger_classification_job_run_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the cooperative run of one ledger classification job."""
+    from ..application.ledger.classification_job_ports import ClassificationJobRunPorts
+    from ..application.ledger.classification_job_run import (
+        build_ledger_classify_job_run_definition,
+        build_ledger_classify_job_run_registration,
+    )
+    from .ledger_llm_composition import classification_job_reader_factory
+
+    readers = classification_job_reader_factory(settings=inputs.resolved_settings, reads=inputs.ledger_reads())
+    definition = build_ledger_classify_job_run_definition(
+        ClassificationJobRunPorts(jobs=_classification_job_repository, readers=readers)
+    )
+    return built((definition,), (build_ledger_classify_job_run_registration(definition),))
+
+
 def compose_ledger_classification_job_read_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose the reads of one ledger classification job and of the profile's newest jobs."""
     from ..application.ledger.classification_job_read_operation import (

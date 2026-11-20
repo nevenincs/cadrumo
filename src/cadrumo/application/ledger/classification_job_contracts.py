@@ -51,6 +51,7 @@ __all__ = [
     "LEDGER_CLASSIFY_JOB_PAGE_MAX",
     "LEDGER_CLASSIFY_JOB_READ_DEFINITION_ID",
     "LEDGER_CLASSIFY_JOB_RETRY_DEFINITION_ID",
+    "LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID",
     "LedgerClassifyJobCancelRequest",
     "LedgerClassifyJobChangeResult",
     "LedgerClassifyJobDismissRequest",
@@ -64,6 +65,8 @@ __all__ = [
     "LedgerClassifyJobReadRequest",
     "LedgerClassifyJobReadResult",
     "LedgerClassifyJobRetryRequest",
+    "LedgerClassifyJobRunRequest",
+    "LedgerClassifyJobRunResult",
     "LedgerClassifyJobStateCounts",
     "classification_queue_revision",
 ]
@@ -74,6 +77,7 @@ LEDGER_CLASSIFY_JOB_LIST_DEFINITION_ID: Final = "ledger.classify.job.list"
 LEDGER_CLASSIFY_JOB_CANCEL_DEFINITION_ID: Final = "ledger.classify.job.cancel"
 LEDGER_CLASSIFY_JOB_RETRY_DEFINITION_ID: Final = "ledger.classify.job.retry"
 LEDGER_CLASSIFY_JOB_DISMISS_DEFINITION_ID: Final = "ledger.classify.job.dismiss"
+LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID: Final = "ledger.classify.job.run"
 LEDGER_CLASSIFY_JOB_CHANGE_DEFINITION_IDS: Final = frozenset(
     {
         LEDGER_CLASSIFY_JOB_CANCEL_DEFINITION_ID,
@@ -168,6 +172,17 @@ class LedgerClassifyJobDismissRequest(CredentialFreeOperationRequest):
     profile_id: UUID
     job_id: Hex64Str
     expected_revision: Annotated[int, Field(ge=1)]
+
+
+class LedgerClassifyJobRunRequest(CredentialFreeOperationRequest):
+    """Work one job's pending movements until none is left, the job is cancelled or the run is stopped.
+
+    A run takes the job as stored, so it names no revision: running a job again
+    continues from where the last run left it.
+    """
+
+    profile_id: UUID
+    job_id: Hex64Str
 
 
 class LedgerClassifyJobLaneProjection(BaseModel):
@@ -310,6 +325,22 @@ class LedgerClassifyJobChangeResult(BaseModel):
 
     profile_id: UUID
     outcome: Literal["enqueued", "cancelled", "cancelling", "retried", "dismissed"]
+    job: LedgerClassifyJobProjection
+
+
+class LedgerClassifyJobRunResult(BaseModel):
+    """The job as stored when its run ended.
+
+    ``settled``: no movement is left to ask. ``interrupted``: an earlier run
+    stopped with a movement in flight, and that movement reads ``unknown`` until
+    the person asks for it again. ``cancelled``: the person cancelled the job.
+    Nothing a run proposes is applied.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    outcome: Literal["settled", "interrupted", "cancelled"]
     job: LedgerClassifyJobProjection
 
 

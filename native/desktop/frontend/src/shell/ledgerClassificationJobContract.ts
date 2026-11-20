@@ -212,6 +212,32 @@ export type LedgerClassifyJobRetryRequest = {
 };
 
 /**
+ * Work one job's pending movements until none is left, the job is cancelled or
+ * the run is stopped.
+ *
+ * A run takes the job as stored, so it names no revision: running a job again
+ * continues from where the last run left it.
+ */
+export type LedgerClassifyJobRunRequest = {
+  profile_id: string;
+  job_id: string;
+};
+
+/**
+ * The job as stored when its run ended.
+ *
+ * `settled`: no movement is left to ask. `interrupted`: an earlier run stopped
+ * with a movement in flight, and that movement reads `unknown` until the
+ * person asks for it again. `cancelled`: the person cancelled the job. Nothing
+ * a run proposes is applied.
+ */
+export type LedgerClassifyJobRunResult = {
+  profile_id: string;
+  outcome: "settled" | "interrupted" | "cancelled";
+  job: LedgerClassifyJobProjection;
+};
+
+/**
  * How many of the job's movements are in each state.
  */
 export type LedgerClassifyJobStateCounts = {
@@ -251,6 +277,10 @@ export type LedgerClassifyJobContracts = {
     request: LedgerClassifyJobRetryRequest;
     result: LedgerClassifyJobChangeResult;
   };
+  "ledger.classify.job.run": {
+    request: LedgerClassifyJobRunRequest;
+    result: LedgerClassifyJobRunResult;
+  };
 };
 
 export type LedgerClassifyJobCancelWindowRequest = Omit<
@@ -280,5 +310,10 @@ export type LedgerClassifyJobReadWindowRequest = Omit<
 
 export type LedgerClassifyJobRetryWindowRequest = Omit<
   LedgerClassifyJobRetryRequest,
+  "profile_id"
+>;
+
+export type LedgerClassifyJobRunWindowRequest = Omit<
+  LedgerClassifyJobRunRequest,
   "profile_id"
 >;
