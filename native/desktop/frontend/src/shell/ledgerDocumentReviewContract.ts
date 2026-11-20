@@ -4,6 +4,7 @@
 import type {
   LabelReadingFallbackProjectionV1,
   OperationEffect,
+  OperationNextStepV1,
 } from "./ledgerDocumentContract";
 import type {
   CatalogueInvoiceSnapshot,
@@ -279,6 +280,39 @@ export type EstablishmentRung =
   | "confirmed_counterparty_fact";
 
 /**
+ * A profile fact every confirm needs and this profile does not state.
+ *
+ * It belongs to the profile, not to any one draft: no draft in the queue can
+ * be confirmed until it is supplied, so the queue says so before a person
+ * works through a review, with the sentence and the step that supplies it.
+ */
+export type EvidenceConfirmPreconditionProjection = {
+  condition: LedgerPreconditionCondition;
+  words: string;
+  words_language: OutputLanguage;
+  next_step: OperationNextStepV1;
+};
+
+/**
+ * What the operator and the reading each say about which side of the invoice
+ * the filer is on.
+ *
+ * `declared_kind` is the direction the operator stated when they imported the
+ * document; `suggested_kind` is what the reading proposed from the document's
+ * layout. Both are served as they are. `preselected_kind` is the one kind
+ * every statement present agrees on, so a review can open on it; it is `None`
+ * while nothing was said and while the two disagree, and `disagree` says which
+ * of those it is. Neither statement overwrites the other, and neither is the
+ * decision: the operator states the kind when they confirm.
+ */
+export type EvidenceReviewDirectionProjection = {
+  declared_kind: InvoiceKind | null;
+  suggested_kind: InvoiceKind | null;
+  preselected_kind: InvoiceKind | null;
+  disagree: boolean;
+};
+
+/**
  * One pending draft with its complete blocker/advisory summary.
  */
 export type EvidenceReviewQueueRowProjection = {
@@ -291,6 +325,21 @@ export type EvidenceReviewQueueRowProjection = {
   reason_words_language: OutputLanguage | null;
   advisory_count: number;
   advisories: ReviewAdvisoryKind[];
+};
+
+/**
+ * The Member State whose VAT prefix each party's identification number
+ * carries.
+ *
+ * A suggestion for the person to accept as the counterparty's country, derived
+ * from the number's prefix alone (Directive 2006/112/EC art. 215). It says
+ * which State issued the identification, not where the party is established,
+ * and it is never written to the draft. A side is `None` when its number
+ * carries no recognised prefix, including a bare Spanish identifier.
+ */
+export type EvidenceReviewVatPrefixCountryProjection = {
+  supplier: string | null;
+  customer: string | null;
 };
 
 /**
@@ -586,11 +635,15 @@ export type LedgerEvidenceExtractRequest = {
 
 /**
  * Complete bounded queue result and the request's displayed filters.
+ *
+ * `confirm_precondition` names the profile fact that stops every confirm, or
+ * is `None` when the profile states what a confirm reads from it.
  */
 export type LedgerEvidenceReviewListProjection = {
   profile_id: string;
   filters: string[];
   rows: EvidenceReviewQueueRowProjection[];
+  confirm_precondition: EvidenceConfirmPreconditionProjection | null;
 };
 
 /**
@@ -611,6 +664,10 @@ export type LedgerEvidenceReviewListRequest = {
  * draft store moves it there when it writes, so the draft a review loads never
  * carries it.
  *
+ * `direction` carries the operator's import direction beside the reading's
+ * suggestion, and `counterparty_vat_prefix_country` the country each party's
+ * VAT-number prefix names; both are suggestions to review, never draft facts.
+ *
  * `off_host_read_offered` says whether the person may be asked to send this
  * profile's documents off this computer to be read: the deployment permits it,
  * gestor mode is off and the profile is eligible. It never stands for the
@@ -627,6 +684,8 @@ export type LedgerEvidenceReviewViewProjection = {
   blockers: ConfirmationBlockerProjectionV1[];
   party_attribution_advisory: PartyAttributionAdvisoryProjection | null;
   country_vocabulary_advisory: CountryVocabularyAdvisoryProjection | null;
+  direction: EvidenceReviewDirectionProjection | null;
+  counterparty_vat_prefix_country: EvidenceReviewVatPrefixCountryProjection | null;
   off_host_read_offered: boolean;
 };
 
@@ -637,6 +696,30 @@ export type LedgerEvidenceReviewViewRequest = {
   profile_id: string;
   evidence_reference: string;
 };
+
+/**
+ * Closed failed-condition identities for evidence and ledger refusals.
+ */
+export type LedgerPreconditionCondition =
+  | "ledger.confirmation.blockers_resolved"
+  | "ledger.evidence.attachment_selection_valid"
+  | "ledger.evidence.bytes_readable"
+  | "ledger.evidence.counterparty_valid"
+  | "ledger.evidence.document_bytes_available"
+  | "ledger.evidence.file_extension_supported"
+  | "ledger.evidence.file_readable"
+  | "ledger.evidence.idempotency_key_unique"
+  | "ledger.evidence.invoice_date_available"
+  | "ledger.evidence.required_field_available"
+  | "ledger.evidence.reference_resolves"
+  | "ledger.evidence.reader_available"
+  | "ledger.evidence.text_layer_available"
+  | "ledger.evidence.vision_capability_enabled"
+  | "ledger.evidence.xml_invoice_supported"
+  | "ledger.filer.postcode_valid"
+  | "ledger.counterparty.identifier_valid"
+  | "ledger.counterparty.provincia_known"
+  | "ledger.counterparty.filing_name_stated";
 
 /**
  * One bounded input gap in the classification assembly.

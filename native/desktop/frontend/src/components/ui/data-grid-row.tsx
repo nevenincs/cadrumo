@@ -144,6 +144,9 @@ export function DataGridRow<R>({
                 id={id}
                 role="gridcell"
                 aria-colindex={position + 1}
+                aria-label={
+                  isEditing ? undefined : column.emptyName?.(row.data)
+                }
                 aria-describedby={described(noteText ? noteId : undefined)}
                 aria-invalid={note?.invalid || undefined}
                 aria-readonly={readOnly || undefined}

@@ -97,6 +97,8 @@ type Tools = {
   readerMissing: boolean;
   /** Whether the local AI is there but no model is picked to read with. */
   noReadingModel: boolean;
+  /** Whether the profile states no fiscal-address postcode. */
+  missingPostcode: boolean;
   /** The language the backend words a reason in. */
   language: string;
 };
@@ -182,6 +184,45 @@ const noModelRefusal = (language: string) => {
     kind: "registered_error",
     error_code: "REFUSED_LEDGER_EVIDENCE_READER",
     message_key: "errors.refused.refused_llm_no_model_selected",
+    context: [],
+    context_entries_omitted: 0,
+    precondition_verdict_json: null,
+    refusal_words: served.words,
+    refusal_words_language: served.language,
+    next_step: served.step,
+  });
+};
+
+/** What the backend serves for a profile that states no fiscal-address
+ * postcode: the sentence, the step to state it and the profile path it names,
+ * in `language`. */
+const missingPostcode = (language: string) => {
+  const sentences: Record<string, string> =
+    servedWords.confirm_precondition.refusal;
+  const steps: Record<string, string> = servedWords.confirm_precondition.step;
+  const paths: Record<string, string> = servedWords.confirm_precondition.path;
+  const served = servedLanguage(sentences, language);
+  return {
+    words: sentences[served]!,
+    language: served,
+    step: {
+      kind: "open_profile_field" as const,
+      path: paths[served]!,
+      words: steps[served]!,
+    },
+  };
+};
+
+/** The registered refusal of a confirmation for a profile that states no
+ * fiscal-address postcode. */
+const missingPostcodeRefusal = (language: string) => {
+  const served = missingPostcode(language);
+  return new InvoiceStopped("REFUSED_LEDGER_EVIDENCE_INPUT", {
+    detail_version: 1,
+    kind: "registered_error",
+    error_code: "REFUSED_LEDGER_EVIDENCE_INPUT",
+    message_key:
+      "errors.refused.refused_ledger_evidence_filer_postcode_missing",
     context: [],
     context_entries_omitted: 0,
     precondition_verdict_json: null,
@@ -784,7 +825,23 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       .sort((left, right) =>
         String(right.drafted_at).localeCompare(String(left.drafted_at)),
       );
-    return { profile_id: profileId, filters: [], rows };
+    // A profile without the postcode says so once for the queue, as the
+    // backend does whenever a reading waits.
+    const served = missingPostcode(tools.language);
+    return {
+      profile_id: profileId,
+      filters: [],
+      rows,
+      confirm_precondition:
+        tools.missingPostcode && rows.length > 0
+          ? {
+              condition: "ledger.filer.postcode_valid",
+              words: served.words,
+              words_language: served.language,
+              next_step: served.step,
+            }
+          : null,
+    };
   }
   function reviewView(request: JsonObject): JsonObject {
     const reference = text(request.evidence_reference);
@@ -801,6 +858,17 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       blockers: reading!.blockers as unknown as JsonValue,
       party_attribution_advisory: null,
       country_vocabulary_advisory: null,
+      // What the reading suggests is the one statement of direction here: no
+      // import stated one.
+      direction: reading!.draft.suggested_kind
+        ? {
+            declared_kind: null,
+            suggested_kind: reading!.draft.suggested_kind,
+            preselected_kind: reading!.draft.suggested_kind,
+            disagree: false,
+          }
+        : null,
+      counterparty_vat_prefix_country: null,
       off_host_read_offered: offHostOpen,
     };
   }
@@ -938,6 +1006,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
     }
     const reading = readingOf(source.reference);
     if (!reading || reading.confirmed) notFound();
+    if (tools.missingPostcode) throw missingPostcodeRefusal(tools.language);
     if (request.expected_source_sha256 !== source.sha)
       throw new InvoiceStopped("ERROR_VALIDATION", {});
     if (request.expected_draft_review_sha256 !== digestOf(reading!))

@@ -2205,6 +2205,7 @@ desktop:
       vehiculo_seguro: seguro coche vehiculo
       viajes_alojamiento: hotel lodging hotel alojamiento hostal apartamento
       viajes_transporte: train flight plane taxi bus tren avion vuelo taxi autobus
+    cell_empty: Empty
     classification:
       business: Business
       failed_validation: Failed validation
@@ -2455,8 +2456,11 @@ desktop:
         recorded before the document leaves. What was sent cannot be recalled.
       count: 'Documents: {count}'
       country: Counterparty country
+      country_from_vat_prefix: From the VAT number's prefix
       currency_not_read: 'Not on the document: say which'
       derived: Made from a read off this computer
+      direction_disagrees: 'Imported as: {declared}. The document reads as: {suggested}.
+        Choose which is right.'
       duplicate: 'Already in the catalogue: {number}'
       duplicate_check_failed: The ledger did not say whether this reading is already
         in the catalogue, so it can't be confirmed yet.
@@ -2490,6 +2494,7 @@ desktop:
       grounding:
         ambiguous: several readings
         anchored: found on the page
+        anchored_record: found in the document's record
         contradicted: the page disagrees
         reconciled: totals agree
         unanchored: not found on the page
@@ -2502,6 +2507,7 @@ desktop:
         duplicate: It may already be in the catalogue
         findings: Answer every question first
       in_review: In review
+      iva_by_rate: IVA by rate
       keep: Keep it
       left_out: 'Left out, not a document: {count}'
       link_offer: Link it to its movement?
@@ -2560,6 +2566,7 @@ desktop:
         unavailable: Not available
         version: Version {version}
       reading_changed: The reading changed. Review it again.
+      reading_changed_in: 'The reading changed: {fields}. Review it again.'
       readings: Readings
       reads_as: 'The document reads as: {kind}'
       ready_to_confirm: Ready to confirm
@@ -3041,8 +3048,8 @@ desktop:
       documents_note: '{kind}. Each document is added as evidence and read on this
         computer; images wait in Documents to be read.'
       documents_refused: The documents were not added
-      documents_result: 'Waiting to be read: {waiting} · already added: {held} · paused:
-        {paused}'
+      documents_result: 'Waiting for your review: {waiting} · already added: {held}
+        · paused: {paused}'
       done: Done
       drop:
         bank: Drop statement files or a folder here
@@ -3547,6 +3554,7 @@ desktop:
       duplicate: Already in the catalogue.
       empty: No invoices yet. Add one or import an invoice book.
       empty_filtered: No invoices match.
+      empty_period: 'No invoices match in {period}. In other periods: {count}'
       failed: Nothing was saved. Try again.
       field:
         counterparty_country: Country
@@ -3899,7 +3907,7 @@ desktop:
       year_next: Next year
       year_previous: Previous year
       years_supported: Years you can read
-      years_with_movements: Years with movements
+      years_with_movements_or_invoices: Years with movements or invoices
     position: Row {row} of {count}
     prorrata:
       action:
@@ -4224,11 +4232,14 @@ desktop:
       row: Select {description}
       shown: Select the shown movements · Ctrl-click adds them
     selected: '{count} selected'
+    selected_one: 1 selected
     selection:
       actions_count: Actions · {count} selected
+      actions_count_one: Actions · 1 selected
       all_shown: 'All shown are selected: {count}.'
       clear_category: Remove category
       hidden: 'Hidden: {hidden} of {selected} selected'
+      hidden_one: The selected movement is hidden
       keep_visible: Keep only visible
       select_all: Select all {count} in {period}
       show: Show them

@@ -14,9 +14,12 @@ import { WINDOW_VIEWS } from "./navigation/windowViews";
 import type { Translate } from "./strings";
 
 /** Where a chord fires. "global": everywhere, focused terminals included.
- * "app": everywhere except a focused terminal, which keeps the key. "docs": the
- * documentation frame and shell chrome. "terminal": only a focused terminal. */
-export type ChordScope = "global" | "app" | "docs" | "terminal";
+ * "app": everywhere except a focused terminal or the browser page, which keep
+ * the key. "browser": everywhere except a focused terminal, the browser page
+ * included: a key a real browser keeps for its own chrome, which the page never
+ * receives. "docs": the documentation frame and shell chrome. "terminal": only
+ * a focused terminal. */
+export type ChordScope = "global" | "app" | "browser" | "docs" | "terminal";
 
 /** A window chord, by its physical key: the documentation bridge matches `code`,
  * so a chord matched by what it types is a page's own, not the registry's. */
@@ -54,7 +57,7 @@ export type Action = {
   choose?: () => void;
 };
 
-export type FocusArea = "terminal" | "docs" | "chrome";
+export type FocusArea = "terminal" | "browser" | "docs" | "chrome";
 
 export function chordLabel(chord: Chord | undefined): string {
   return chord ? chordText(chord) : "";
@@ -66,8 +69,9 @@ export function primaryChord(action: Action | undefined): string {
 
 const ALLOWED: Record<FocusArea, readonly ChordScope[]> = {
   terminal: ["global", "terminal"],
-  docs: ["global", "app", "docs"],
-  chrome: ["global", "app", "docs"],
+  browser: ["global", "browser"],
+  docs: ["global", "app", "browser", "docs"],
+  chrome: ["global", "app", "browser", "docs"],
 };
 
 export function findAction(

@@ -56,6 +56,7 @@ _MOVEMENT_KINDS: Final = frozenset(
         LedgerKnownValueKind.GROUP_LABEL,
         LedgerKnownValueKind.M210_PAYER,
         LedgerKnownValueKind.M210_ASSET,
+        LedgerKnownValueKind.LEDGER_YEAR,
     }
 )
 
@@ -100,11 +101,16 @@ class KnownText(BaseModel):
 
 
 class LedgerKnownValuesProjection(BaseModel):
-    """The values of each requested kind, most recent first, and which kinds were cut short."""
+    """The values of each requested kind, most recent first, and which kinds were cut short.
+
+    ``ledger_years`` are the calendar years of the ledger's filing dates that hold a
+    movement or a catalogue invoice, oldest first. They are not capped.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
+    ledger_years: tuple[int, ...] = ()
     counterparties: tuple[KnownCounterparty, ...] = ()
     descriptions: tuple[KnownText, ...] = ()
     group_labels: tuple[KnownText, ...] = ()
@@ -313,9 +319,10 @@ class LedgerKnownValuesExecutor:
             if row.lifecycle_state is not TransactionLifecycleState.SPLIT
         )
 
-    def _counterparties(
-        self, bucket_id: str, context: OperationExecutorContext, movements: tuple[Transaction, ...]
-    ) -> tuple[tuple[KnownCounterparty, ...], bool]:
+    def _from_invoices[Answer](
+        self, bucket_id: str, context: OperationExecutorContext, answer: Callable[[StoredInvoiceCatalogue], Answer]
+    ) -> Answer:
+        """Answer from the exact profile's invoice catalogue, refused if any invoice is another profile's."""
         operation = context.authority_operation
         ports = self._ports.invoices(bucket_id=bucket_id, operation=operation)
         if ports.bucket_id != bucket_id or ports.invoices.bucket_id != bucket_id:
@@ -324,7 +331,26 @@ class LedgerKnownValuesExecutor:
             catalogue = ports.invoices.load_authenticated()
             if any(attributed != bucket_id for attributed in catalogue.attributed_bucket_ids()):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            return _known_counterparties(movements, catalogue)
+            return answer(catalogue)
+
+    def _counterparties(
+        self, bucket_id: str, context: OperationExecutorContext, movements: tuple[Transaction, ...]
+    ) -> tuple[tuple[KnownCounterparty, ...], bool]:
+        return self._from_invoices(bucket_id, context, lambda catalogue: _known_counterparties(movements, catalogue))
+
+    def _ledger_years(
+        self, bucket_id: str, context: OperationExecutorContext, movements: tuple[Transaction, ...]
+    ) -> tuple[int, ...]:
+        """The years of the movements' filing dates and of the invoices' issue dates, oldest first."""
+        return self._from_invoices(
+            bucket_id,
+            context,
+            lambda catalogue: tuple(
+                sorted(
+                    {_dated(row).year for row in movements} | {invoice.issued_at.year for invoice in catalogue.values()}
+                )
+            ),
+        )
 
     def _read(
         self, payload: LedgerKnownValuesRequest, context: OperationExecutorContext
@@ -334,6 +360,8 @@ class LedgerKnownValuesExecutor:
         movements = self._movements(bucket_id, context) if kinds & _MOVEMENT_KINDS else ()
         found: dict[str, object] = {}
         cut: list[LedgerKnownValueKind] = []
+        if LedgerKnownValueKind.LEDGER_YEAR in kinds:
+            found["ledger_years"] = self._ledger_years(bucket_id, context, movements)
 
         def keep(kind: LedgerKnownValueKind, field: str, section: tuple[tuple[BaseModel, ...], bool]) -> None:
             found[field] = section[0]

@@ -18,7 +18,7 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
-import { facts, listed } from "@/shell/compose";
+import { counted, facts, listed } from "@/shell/compose";
 import {
   ledgerFailure,
   type LedgerPort,
@@ -569,10 +569,15 @@ export function SelectionInspector({
         {hidden > 0 && (
           <Alert tone="warning" role="alert" icon={<Icon name="alert" />}>
             <span className="grid gap-1.5 text-foreground">
-              {t("desktop.ledger.selection.hidden", {
-                hidden,
-                selected: selected.length,
-              })}
+              {counted(
+                t,
+                selected.length,
+                {
+                  one: "desktop.ledger.selection.hidden_one",
+                  many: "desktop.ledger.selection.hidden",
+                },
+                { hidden, selected: selected.length },
+              )}
               <span className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"

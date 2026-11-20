@@ -442,6 +442,7 @@ export function EvidenceRecords({
   inReview,
   pending,
   readings = null,
+  precondition = null,
   selected,
   onSelect,
   onWritten,
@@ -454,6 +455,9 @@ export function EvidenceRecords({
   /** The readings waiting for review, for a record's overview; null where
    * the queue could not be read. */
   readings?: readonly EvidenceReviewQueueRowProjection[] | null;
+  /** The sentence the backend served for the profile fact every confirm
+   * needs and the profile does not state, when it does not. */
+  precondition?: string | null;
   rows: LedgerTransactionReviewProjection[] | null;
   inReview: ReadonlySet<string>;
   /** When each reading waiting for review was drafted, by reference. */
@@ -500,7 +504,7 @@ export function EvidenceRecords({
     if (readings === null) return { kind: "unknown" } as const;
     const row = readings.find((found) => found.evidence_reference === id);
     return row
-      ? ({ kind: "waiting", row } as const)
+      ? ({ kind: "waiting", row, precondition } as const)
       : ({ kind: "none" } as const);
   };
 

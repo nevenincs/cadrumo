@@ -97,8 +97,11 @@ test("a tax id picked in a reading fills the name only while it is untouched", a
   await expect(cell(target, "counterparty_tax_id")).toHaveValue("B98000013");
   await expect(cell(target, "counterparty_name")).toHaveValue("");
   await expect(cell(target, "invoice_number")).toHaveValue("T-1015-0042");
-  // The country is the person's own answer, not part of a pick here.
-  await expect(draft(target).locator(".ledger-draft-country")).toHaveValue("");
+  // A pick leaves the country as it stood: the one the reading states for the
+  // supplier, which a pick of the catalogue's party does not change.
+  await expect(draft(target).locator(".ledger-draft-country")).toHaveValue(
+    /^ES\b/,
+  );
 });
 
 test("invoice numbers offer the chosen party's own and keep the rest as typed", async ({

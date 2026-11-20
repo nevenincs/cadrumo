@@ -909,10 +909,12 @@ class LedgerKnownValuesResult(OutputSchema):
     """JSON envelope for ``aeat app ledger known-values``.
 
     Each list is most recent first and capped; ``truncated`` names the kinds that
-    hold more than they show.
+    hold more than they show. ``ledger_years`` are the years that hold a movement or
+    an invoice, oldest first.
     """
 
     bucket_id: BucketId
+    ledger_years: list[int]
     counterparties: list[LedgerKnownCounterpartyPayload]
     descriptions: list[LedgerKnownTextPayload]
     group_labels: list[LedgerKnownTextPayload]

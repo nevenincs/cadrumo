@@ -36,7 +36,9 @@ async function selectMovements(target: Page, names: readonly string[]) {
       .locator("[data-column=status]")
       .click(index === 0 ? {} : { modifiers: ["Control"] });
   await expect(page(target).locator(".ledger-count")).toContainText(
-    label("desktop.ledger.selected", { count: names.length }),
+    names.length === 1
+      ? label("desktop.ledger.selected_one")
+      : label("desktop.ledger.selected", { count: names.length }),
   );
 }
 

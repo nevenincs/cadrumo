@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty";
 import type { DocsLanguage } from "../ipc/environment";
 import type { Action } from "../shell/actions";
 import { ModelListContext, type ModelList } from "../shell/agentModelList";
+import { ProfileStepContext } from "../shell/profileStepDoor";
 import type { useFilingCalendar } from "../shell/calendar";
 import type { useHome } from "../shell/home";
 import type { Host } from "../shell/host";
@@ -355,47 +356,53 @@ export function MainPane({
         />
       ) : ledgerOn && routedLedger ? (
         <ModelListContext.Provider value={modelList}>
-          <LedgerPage
-            key={reader ?? ""}
-            port={routedLedger}
-            reader={reader}
-            withheld={
-              <SignedOut
-                account={account}
-                lead={t("desktop.ledger.signed_out")}
-                quiet
-                onSignIn={askSignIn}
-              />
-            }
-            locale={locale}
-            shown={firstPaneShown}
-            page={ledgerPage}
-            view={layout.ledgerView}
-            onViewChange={changeLedgerView}
-            memory={ledgerMemory}
-            contribute={contribute}
-            copy={(text) => host.writeClipboard(text)}
-            paste={() => host.readClipboard()}
-            onOpenLink={openLink}
-            onFloor={setLedgerFloor}
-            pane={{
-              title: t("desktop.ledger.title"),
-              onToggleMaximize: () => toggleMaximize("docs"),
-              controls: [
-                maximizeControl("docs", "desktop.ledger.maximize"),
-                ...splitControls.map((control) => ({
-                  ...control,
-                  yields: true,
-                })),
-                {
-                  id: "close",
-                  icon: "close",
-                  label: t("desktop.ledger.close"),
-                  run: closePage,
-                },
-              ],
-            }}
-          />
+          {/* The door a refusal here names for the profile, as the declarations
+              page offers it: only a window with a profile page, signed in. */}
+          <ProfileStepContext.Provider
+            value={signedIn && host.userProfile ? askProfileStep : null}
+          >
+            <LedgerPage
+              key={reader ?? ""}
+              port={routedLedger}
+              reader={reader}
+              withheld={
+                <SignedOut
+                  account={account}
+                  lead={t("desktop.ledger.signed_out")}
+                  quiet
+                  onSignIn={askSignIn}
+                />
+              }
+              locale={locale}
+              shown={firstPaneShown}
+              page={ledgerPage}
+              view={layout.ledgerView}
+              onViewChange={changeLedgerView}
+              memory={ledgerMemory}
+              contribute={contribute}
+              copy={(text) => host.writeClipboard(text)}
+              paste={() => host.readClipboard()}
+              onOpenLink={openLink}
+              onFloor={setLedgerFloor}
+              pane={{
+                title: t("desktop.ledger.title"),
+                onToggleMaximize: () => toggleMaximize("docs"),
+                controls: [
+                  maximizeControl("docs", "desktop.ledger.maximize"),
+                  ...splitControls.map((control) => ({
+                    ...control,
+                    yields: true,
+                  })),
+                  {
+                    id: "close",
+                    icon: "close",
+                    label: t("desktop.ledger.close"),
+                    run: closePage,
+                  },
+                ],
+              }}
+            />
+          </ProfileStepContext.Provider>
         </ModelListContext.Provider>
       ) : null}
       {browserMounted && host.sedeView && (

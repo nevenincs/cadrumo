@@ -110,7 +110,7 @@ export function PeriodSelector(
   const { label, years, locale, fallbackYear, onOpenChange, className } = props;
   const t = useStrings();
   const yearsWords = t(
-    props.yearsKey ?? "desktop.ledger.period.years_with_movements",
+    props.yearsKey ?? "desktop.ledger.period.years_with_movements_or_invoices",
   );
   const [ownOpen, setOwnOpen] = useState(false);
   const open = props.open ?? ownOpen;

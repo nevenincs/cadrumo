@@ -13,7 +13,9 @@ import { ServedStep } from "./ServedStep";
 
 /** How the last reading or confirmation went, when it needs saying. */
 export type ReviewNotice =
-  | { kind: "changed" }
+  /** `fields` are the fields of the reading, by name, that a fresh read
+   * changed; none where only details the page has no name for did. */
+  | { kind: "changed"; fields: string[] }
   /** `recovery` is the setup action the refusal names, if any; `words`
    * the sentence the backend served for it, if any; `step` the step it
    * served for putting it right, if any. */
@@ -51,7 +53,14 @@ export function ReviewNotices({
     <>
       {notice?.kind === "changed" && (
         <Alert tone="warning" role="alert" icon={<Icon name="alert" />}>
-          {t("desktop.ledger.documents.reading_changed")}
+          {notice.fields.length > 0
+            ? t("desktop.ledger.documents.reading_changed_in", {
+                fields: listed(
+                  t,
+                  notice.fields.map((field) => fieldLabel(t, field)),
+                ),
+              })
+            : t("desktop.ledger.documents.reading_changed")}
         </Alert>
       )}
       {(notice?.kind === "refused" || notice?.kind === "failed") && (

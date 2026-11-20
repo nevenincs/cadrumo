@@ -17,7 +17,12 @@ import type {
 } from "../../../shell/ledgerDocumentContract";
 import type { LedgerPort } from "../../../shell/ledger";
 import type { LedgerReadFailure } from "../../../shell/ledgerWindow";
-import { formatDecimal } from "../../../shared/numbers";
+import { formatDay } from "../../../shared/dateFormats";
+import {
+  formatAmount,
+  formatDecimal,
+  formatPercent,
+} from "../../../shared/numbers";
 import {
   SOURCE_LOCALE,
   useStrings,
@@ -68,15 +73,25 @@ function refusalText(t: Translate, failure: LedgerReadFailure): string | null {
     : null;
 }
 
-/** A fact's value as the record states it: its text as it stands, or its
- * figure in the locale's marks. */
+/** A fact's value as the record states it, by the kind the backend serves
+ * for it: text as it stands; a date, an amount, a rate and a quantity in the
+ * locale's marks and order. */
 function factValue(t: Translate, fact: EvidenceStructuredFactV1): string {
-  return (
-    fact.text ??
-    (fact.number
-      ? formatDecimal(t.locale ?? SOURCE_LOCALE, fact.number.decimal)
-      : "")
-  );
+  const locale = t.locale ?? SOURCE_LOCALE;
+  switch (fact.value_kind) {
+    case "date":
+      return fact.iso_date ? formatDay(locale, fact.iso_date) : "";
+    case "amount":
+      return fact.number ? formatAmount(locale, fact.number.decimal) : "";
+    case "rate_percent":
+      return fact.number
+        ? formatPercent(locale, fact.number.decimal, { unit: "points" })
+        : "";
+    case "quantity":
+      return fact.number ? formatDecimal(locale, fact.number.decimal) : "";
+    case "text":
+      return fact.text ?? "";
+  }
 }
 
 /** The columns of the lines table: each served label once, in the order the
