@@ -6,8 +6,19 @@
 // what the view was already changing while idle, though never the control's
 // own name or state), opened no dialog and asked no file chooser. A host log
 // line alone is no effect a person sees; one that correlates with the press
-// is named in the row. Controls under a modal layer or covered at their
-// centre are listed and not pressed: a person could not press them there.
+// is named in the row. Focus moved into a text field (a search the press
+// opened for typing) is an effect a person sees: the caret is there. Controls
+// under a modal layer or covered at their centre are listed and not pressed:
+// a person could not press them there.
+//
+// A radio or menu radio already checked before its press is recorded as a
+// no-op by design, not as silent: choosing what is chosen changes nothing.
+//
+// Before a control is armed, the window is let settle: no dialog, menu or
+// popper is still closing and the page takes pointer input again. A layer the
+// previous press opened and the audit closed is otherwise still on its way
+// out while the next control is armed, which teaches its place as the view's
+// idle noise and hides the next dialog drawn there.
 //
 // A press is a pointer down and up at the control's centre through the
 // WebDriver Actions API; each row says which method reached the control.
@@ -70,6 +81,8 @@ import { dismissSetup, pickerAnswerPending } from "./ux-nav.mjs";
 
 const BOUND_MS = Number(process.env.CADRUMO_SILENT_BOUND_MS ?? 4000);
 const IDLE_MS = 2000;
+/** The longest a closing layer is waited for before a control is armed. */
+const SETTLE_MS = 5000;
 const RENEW_MS = Number(process.env.CADRUMO_SILENT_RENEW_MS ?? 10 * 60_000);
 /** How long a signed-out reading may last before it is believed: the account
  * menu can pass through a transient phase while its status is reread. */
@@ -306,8 +319,11 @@ function pageArm(key, noiseScope) {
     noisy: new Set(),
     effects: [],
     own: null,
-    dialogs: document.querySelectorAll('[role="dialog"], [role="alertdialog"]')
-      .length,
+    checked: false,
+    focused: null,
+    dialogs: new Set(
+      document.querySelectorAll('[role="dialog"], [role="alertdialog"]'),
+    ),
   };
   // Focus, hover and highlight are the press itself, not its effect.
   const pointerOnly = new Set([
@@ -416,7 +432,14 @@ function pageArm(key, noiseScope) {
 
 function pagePress() {
   const silent = window.__silent;
+  const target = silent.target;
   silent.state.own = silent.ownState();
+  // Read before the press: only an option checked then is a no-op by design.
+  silent.state.checked =
+    ["radio", "menuitemradio"].includes(target.getAttribute("role") ?? "") &&
+    (target.getAttribute("aria-checked") === "true" ||
+      target.getAttribute("data-state") === "checked");
+  silent.state.focused = document.activeElement;
   silent.state.phase = "press";
 }
 
@@ -452,7 +475,30 @@ function pageEffect() {
           `the control's own ${attr} "${was ?? ""}" -> "${now[attr] ?? ""}"`,
         );
   }
+  // Focus the press sent into a text field, outside the control itself: the
+  // caret stands there for the person to type.
+  const active = document.activeElement;
+  const typing =
+    active instanceof HTMLElement &&
+    active !== state.focused &&
+    !silent.target.contains(active) &&
+    (active.isContentEditable ||
+      active.tagName === "TEXTAREA" ||
+      (active.tagName === "INPUT" &&
+        !/^(button|checkbox|radio|submit|reset|image|file|range|color|hidden)$/i.test(
+          active.getAttribute("type") ?? "text",
+        )) ||
+      ["searchbox", "textbox", "combobox"].includes(
+        active.getAttribute("role") ?? "",
+      ));
+  if (typing)
+    own.push(
+      `focus moved to the text field ${active.tagName.toLowerCase()}(${(active.getAttribute("aria-label") ?? active.getAttribute("placeholder") ?? "").slice(0, 40)})`,
+    );
   const effects = [...own, ...state.effects];
+  // Dialogs drawn since the control was armed, by identity: one that was
+  // leaving then and is gone now does not hide one that came.
+  const opened = dialogs.filter((dialog) => !state.dialogs.has(dialog));
   return {
     signedIn:
       !!trigger?.querySelector(".profile-status.signed-in") &&
@@ -460,8 +506,9 @@ function pageEffect() {
     effects: effects.slice(0, 5),
     count: effects.length,
     dialogs: dialogs.length,
-    newDialog: dialogs.length > state.dialogs,
-    dialogText: dialogs
+    newDialog: opened.length > 0,
+    checked: state.checked,
+    dialogText: opened
       .map((d) =>
         (d.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 80),
       )
@@ -559,6 +606,20 @@ function pageGateSignIn(words) {
   );
   button?.click();
   return !!button;
+}
+
+/** Whether a layer is still on its way out, or the page still refuses the
+ * pointer as a modal layer leaves it: Radix keeps a closing dialog, menu or
+ * popper mounted with data-state=closed until its exit animation ends. */
+function pageSettling() {
+  const closing =
+    !!document.querySelector(
+      ':is([role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"])[data-state="closed"]',
+    ) ||
+    !!document.querySelector(
+      '[data-radix-popper-content-wrapper] > [data-state="closed"]',
+    );
+  return closing || getComputedStyle(document.body).pointerEvents === "none";
 }
 
 function pageOpenLayers() {
@@ -749,7 +810,20 @@ async function settle(view) {
     await win.browser.keys("Escape");
     await sleep(300);
   }
+  await settled();
   await goTo(view);
+}
+
+/** Wait until no layer is still closing and the page takes the pointer
+ * again. Returns false when it did not settle within SETTLE_MS; the row
+ * then says so. */
+async function settled() {
+  return !!(await waitFor(async () => !(await exec(pageSettling)), {
+    timeout: SETTLE_MS,
+    what: "the window to settle",
+    interval: 150,
+    soft: true,
+  }));
 }
 
 async function goTo(view) {
@@ -902,6 +976,7 @@ async function press(view, control) {
       session,
     );
   await goTo(view);
+  let calm = await settled();
   if (control.via) {
     // An item of a menu or list another control opens: open it first.
     const opener = await exec(pageArm, control.via, view.name);
@@ -932,6 +1007,10 @@ async function press(view, control) {
   }
   const idleLogs = logSizes();
   await sleep(IDLE_MS);
+  calm = (await settled()) && calm;
+  if (!calm)
+    row.note =
+      "a layer was still closing, or the page refused the pointer, when the control was pressed";
   session = await exec(pageSession);
   if (!session.signedIn && !(session = await readSession()).signedIn)
     sessionEnded(
@@ -988,6 +1067,13 @@ async function press(view, control) {
       break;
     }
     if (Date.now() > end) {
+      // Choosing the option already chosen changes nothing, by design; only
+      // one checked before the press is excused.
+      if (seen?.checked) {
+        row.effect =
+          "no-op by design: the option was already checked before the press";
+        break;
+      }
       // A press the host logged but the page never showed is silent to the
       // person all the same: a failure must reach a visible notice too. Only
       // lines that correlate with the press are named.
