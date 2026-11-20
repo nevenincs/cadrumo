@@ -2485,6 +2485,8 @@ desktop:
         refused: No acceptat
       cancel: Cancel·la
       check: Comprova
+      check_failed: No s'ha pogut comprovar el resultat ({code}). Continua sense saber-se.
+        Prem Comprova de nou.
       checked_not_saved: No s'ha desat.
       checked_saved: S'ha desat.
       choose_files: Tria fitxers…
@@ -3444,6 +3446,8 @@ desktop:
       nothing: Selecciona un moviment per veure'l aquí.
       panel: Detall del moviment
       panel_match: Moviments per vincular
+      period_unread: No s'ha pogut llegir el trimestre de la nova data ({code}), així
+        que no es mostra si canvia de trimestre. Torna-ho a provar.
       ratio_missing: 'Cap: Mixt en necessita una abans de calcular'
       ratio_not_needed: No cal
       read_as: Llegit com a

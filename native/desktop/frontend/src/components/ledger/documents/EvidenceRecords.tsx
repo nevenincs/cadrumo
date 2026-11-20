@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from "react";
+import { failureCode } from "../../../errors";
 import { NotesEditor } from "@/components/editors/NotesEditor";
 import { TypedField } from "@/components/editors/TypedField";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -64,7 +65,12 @@ type Notice =
       words: string | null;
       step: OperationNextStepV1 | null;
     }
-  | { kind: "unknown"; asked: "update" | "remove" | "read" }
+  | {
+      kind: "unknown";
+      asked: "update" | "remove" | "read";
+      /** Why the last check could not read the outcome, where it could not. */
+      checkFailed?: string;
+    }
   | { kind: "checked"; saved: boolean };
 
 /** One record's detail: its correction, its removal, and a reading of it. */
@@ -213,7 +219,10 @@ function RecordDetail({
           evidence_id: record.evidence_id,
         }),
       );
-      if (answer.kind !== "answer") return;
+      if (answer.kind !== "answer") {
+        setNotice({ ...notice, checkFailed: "unavailable" });
+        return;
+      }
       const outcome = answer.result.outcome;
       if (notice.asked === "remove")
         setNotice({ kind: "checked", saved: outcome.kind === "refused" });
@@ -223,8 +232,9 @@ function RecordDetail({
           saved: holdsUpdate(outcome.record, asked),
         });
       onWritten();
-    } catch {
-      // The outcome stays unknown.
+    } catch (error) {
+      // The outcome stays unknown, and the notice says the check failed.
+      setNotice({ ...notice, checkFailed: failureCode(error) });
     }
   }
 
@@ -290,6 +300,13 @@ function RecordDetail({
           <AlertTitle>{t("desktop.ledger.documents.unknown")}</AlertTitle>
           <AlertDescription className="flex flex-wrap items-center gap-2">
             {t("desktop.ledger.documents.unknown_note")}
+            {notice.checkFailed !== undefined && (
+              <span className="ledger-record-check-failed w-full" role="alert">
+                {t("desktop.ledger.documents.check_failed", {
+                  code: notice.checkFailed,
+                })}
+              </span>
+            )}
             {notice.asked !== "read" && (
               <Button
                 size="xs"

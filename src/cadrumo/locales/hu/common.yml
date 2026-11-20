@@ -2468,6 +2468,8 @@ desktop:
         refused: Nem elfogadva
       cancel: Mégse
       check: Ellenőrzés
+      check_failed: Az eredményt nem sikerült ellenőrizni ({code}). Továbbra sem ismert.
+        Nyomd meg újra az Ellenőrzést.
       checked_not_saved: Nem lett mentve.
       checked_saved: Mentve lett.
       choose_files: Fájlok kiválasztása…
@@ -3430,6 +3432,8 @@ desktop:
       nothing: Jelölj ki egy tételt, hogy itt lásd.
       panel: Tétel részletei
       panel_match: Párosítandó tételek
+      period_unread: Az új dátum negyedévét nem sikerült beolvasni ({code}), ezért
+        nem látszik, hogy átkerül-e másik negyedévbe. Próbáld újra.
       ratio_missing: 'Nincs: vegyes tételhez számítás előtt kell'
       ratio_not_needed: Nem szükséges
       read_as: Beolvasva mint

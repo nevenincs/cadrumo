@@ -2486,6 +2486,8 @@ desktop:
         refused: No aceptado
       cancel: Cancelar
       check: Comprobar
+      check_failed: No se pudo comprobar el resultado ({code}). Sigue sin saberse.
+        Pulsa Comprobar de nuevo.
       checked_not_saved: No se guardó.
       checked_saved: Se guardó.
       choose_files: Elegir archivos…
@@ -3449,6 +3451,8 @@ desktop:
       nothing: Selecciona un movimiento para verlo aquí.
       panel: Detalle del movimiento
       panel_match: Movimientos por vincular
+      period_unread: No se pudo leer el trimestre de la nueva fecha ({code}), así
+        que no se muestra si cambia de trimestre. Inténtalo de nuevo.
       ratio_missing: 'Ninguna: Mixto necesita una antes de calcular'
       ratio_not_needed: No hace falta
       read_as: Leído como

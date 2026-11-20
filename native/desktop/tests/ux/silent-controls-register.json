@@ -40,6 +40,26 @@
       "key": "desktop.titlebar.restore",
       "kind": "window",
       "reason": "native window chrome"
+    },
+    {
+      "key": "desktop.account.switch_profile",
+      "kind": "session",
+      "reason": "leaves the audited profile for the profile chooser"
+    },
+    {
+      "key": "desktop.signin.submit",
+      "kind": "session",
+      "reason": "signs in again; only offered once the session ended"
+    },
+    {
+      "key": "desktop.google.palette_sign_in",
+      "kind": "external",
+      "reason": "opens the Google sign-in in the system browser"
+    },
+    {
+      "key": "desktop.profile.censo.title",
+      "kind": "remote",
+      "reason": "starts a live AEAT census read"
     }
   ]
 }

@@ -400,6 +400,11 @@ function pageChooseTab(list, name) {
   return false;
 }
 
+function pageSignedOutNow() {
+  const field = document.querySelector("#profile-password");
+  return !!field && field.getClientRects().length > 0;
+}
+
 function pageOpenLayers() {
   return [
     ...document.querySelectorAll(
@@ -446,7 +451,13 @@ function classify(control) {
           .map(literal)
           .join(".+")
       : null;
-    if (shape && new RegExp(`^${shape}$`).test(control.name)) return entry;
+    // A palette option or menu item carries its shortcut or group after the
+    // label ("Cerrar sesiónCtrl+Q").
+    const trailing = ["option", "menuitem"].includes(control.role)
+      ? "(?:$|[A-Z0-9])"
+      : "$";
+    if (shape && new RegExp(`^${shape}${trailing}`).test(control.name))
+      return entry;
     if (entry.pattern && new RegExp(entry.pattern).test(control.name))
       return entry;
   }
@@ -586,6 +597,16 @@ async function press(view, control) {
   if (!control.via && !row.silent)
     row.opened = await exec(pageControls, '[role="menu"], [role="listbox"]');
   await settle(view);
+  // A press that ended the session would make every later press look
+  // silent: stop and name it, so the register can say what it is.
+  if (await exec(pageSignedOutNow)) {
+    row.effect = `the session ended: ${row.effect}`;
+    row.silent = true;
+    rows.push(row);
+    throw new Error(
+      `the session ended after pressing ${row.view} :: ${row.control}; register it (kind session) or make it ask first`,
+    );
+  }
   return row;
 }
 
