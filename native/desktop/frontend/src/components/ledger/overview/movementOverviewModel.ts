@@ -161,12 +161,13 @@ function classificationGroup(input: MovementOverviewInput): OverviewGroup {
       ? stored(categoryLabel(t, tx.category_id))
       : absent(notSet),
   });
-  const by = decidedBy(t, tx.classified_by);
+  const by = decidedBy(t, tx.classification_decided_by);
   list.push({
     id: "classified_by",
     label: t("desktop.ledger.column.classified_by"),
     value:
-      tx.classified_by === "" || tx.classified_by === "none"
+      tx.classification_decided_by === "" ||
+      tx.classification_decided_by === "none"
         ? absent(by)
         : stored(by, {
             detail: tx.classified_at

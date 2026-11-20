@@ -33,6 +33,7 @@ from .modelo.declarations_workspace_contracts import DeclarationsWorkspaceProjec
 from .modelo.workspace_models import (
     ModeloWorkspaceProjectionV1,
 )
+from .operations.error_detail import served_words_language
 from .overview.home import (
     HomeProjectionInput,
     HomeProjectionV1,
@@ -51,6 +52,7 @@ from .workbench_generation_contracts import (
     WorkbenchGenerationSourceResultV1,
     WorkbenchGenerationV1,
 )
+from .workbench_generation_home_words import serve_home_projection
 
 if TYPE_CHECKING:
     pass
@@ -123,7 +125,7 @@ def _project_home(
             observed_at=source.observed_at,
             refusal=source.refusal,
         )
-    projection = compose_home_projection(source.value)
+    projection = serve_home_projection(compose_home_projection(source.value), served_words_language())
     return WorkbenchGenerationProjectionResultV1(
         availability=source.availability,
         observed_at=source.observed_at,

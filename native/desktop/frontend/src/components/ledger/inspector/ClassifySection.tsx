@@ -50,11 +50,10 @@ import {
   classificationText,
   ivaCategoryLabel,
   reasonDetail,
-  vocabularyEmpty,
 } from "../movements/movementWords";
 import { InspectorField } from "./InspectorField";
 import { ModelSuggestion } from "./ModelSuggestion";
-import { decidedBy, eventName, ivaCategoryOptions } from "./inspectorWords";
+import { decidedBy, eventName } from "./inspectorWords";
 import {
   fieldLock,
   servedChoiceField,
@@ -65,7 +64,6 @@ import { useLedgerRead } from "./useInspectorReads";
 import {
   useFieldSuggestions,
   useServedChoices,
-  useVocabulary,
 } from "../suggestions/SuggestionsProvider";
 import { formatTime } from "../../../shared/dateFormats";
 import { formatPercent, heldDecimal } from "../../../shared/numbers";
@@ -105,7 +103,6 @@ export function ClassifySection({
   say: (text: string) => void;
 }) {
   const t = useStrings();
-  const vocabulary = useVocabulary();
   // Drawn again once the backend has served what each classification takes.
   useLedgerClassifications();
   const { row, changes, locale, onStage } = scope;
@@ -124,7 +121,8 @@ export function ClassifySection({
     setShare(effective.business_pct ? heldDecimal(effective.business_pct) : "");
     setShareError(null);
   }, [id, effective.business_pct]);
-  const [deriveCategory, setDeriveCategory] = useState<string | null>(null);
+  // The one IVA category the movement has: the field's, staged or stored.
+  const ivaCategory = effective.iva_category || null;
 
   const suggestion = actions.find(
     (action): action is Extract<StagedAction, { kind: "suggestion" }> =>
@@ -137,7 +135,29 @@ export function ClassifySection({
   const field = (
     name: Parameters<typeof stagedField>[1],
     kind: Parameters<typeof stagedField>[2],
-  ) => <InspectorField key={name} {...stagedField(scope, name, kind)} />;
+  ) => {
+    const props = stagedField(scope, name, kind);
+    // Base, rate and IVA the product worked out say so, beside the value and
+    // in what describes it, never in the field's name.
+    const worked =
+      row.transaction.figures_derived &&
+      (name === "taxable_base" || name === "iva_rate" || name === "iva_amount");
+    return (
+      <InspectorField
+        key={name}
+        {...props}
+        note={
+          worked ? (
+            <>
+              <span className="ledger-figures-derived block">
+                {t("desktop.ledger.inspector.by.derived")}
+              </span>
+            </>
+          ) : undefined
+        }
+      />
+    );
+  };
   const deductionKinds = useServedChoices("deduction_fact_kind");
 
   const stageShare = () => {
@@ -205,7 +225,13 @@ export function ClassifySection({
                         variant="outline"
                         size="xs"
                         disabled={lock !== null}
-                        onClick={() => onFocusField("iva-derive")}
+                        onClick={() =>
+                          onFocusField(
+                            ivaCategory === null
+                              ? "iva_category"
+                              : "iva-derive",
+                          )
+                        }
                       >
                         {t("desktop.ledger.inspector.fix.derive")}
                       </Button>
@@ -234,7 +260,7 @@ export function ClassifySection({
           </span>
           <span className="text-muted-foreground">
             {facts(t, [
-              decidedBy(t, row.transaction.classified_by),
+              decidedBy(t, row.transaction.classification_decided_by),
               row.transaction.classified_at &&
                 formatTime(locale, row.transaction.classified_at),
             ])}
@@ -384,48 +410,35 @@ export function ClassifySection({
           </Alert>
         ) : (
           <div className="flex flex-wrap items-center gap-2">
-            <Combobox
-              label={fieldName(t, "iva_category")}
-              value={deriveCategory}
-              options={ivaCategoryOptions(t, vocabulary)}
-              emptyLabel={vocabularyEmpty(
-                t,
-                vocabulary,
-                t("desktop.ledger.inspector.no_match"),
-                vocabulary.ivaCategories.length,
-              )}
-              onCommit={setDeriveCategory}
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                data-field="iva-derive"
-                disabled={lock !== null || refusesDerive}
-                className="min-w-0 flex-1 justify-between"
-              >
-                <span className="truncate">
-                  {deriveCategory
-                    ? ivaCategoryLabel(t, deriveCategory)
-                    : t("desktop.ledger.inspector.derive.choose")}
+            {ivaCategory === null ? (
+              <>
+                <span className="min-w-0 flex-1 text-sm text-muted-foreground">
+                  {t("desktop.ledger.inspector.derive.choose")}
                 </span>
-                <Icon name="chevronDown" size="xs" />
-              </Button>
-            </Combobox>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={lock !== null || refusesDerive}
+                  onClick={() => onFocusField("iva_category")}
+                >
+                  {fieldName(t, "iva_category")}
+                </Button>
+              </>
+            ) : null}
             <Button
               variant="outline"
               size="sm"
-              disabled={
-                deriveCategory === null || lock !== null || refusesDerive
-              }
+              data-field="iva-derive"
+              disabled={ivaCategory === null || lock !== null || refusesDerive}
               onClick={() => {
-                if (!deriveCategory) return;
+                if (ivaCategory === null) return;
                 onStage({
                   type: "stage_action",
                   action: {
                     id: `iva_derive:${id}`,
                     kind: "iva_derive",
                     transactionId: id,
-                    ivaCategory: deriveCategory,
+                    ivaCategory,
                   },
                 });
                 say(t("desktop.ledger.inspector.derive.staged_toast"));

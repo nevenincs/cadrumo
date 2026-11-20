@@ -17,6 +17,7 @@ from .catalogue_intake_contracts import (
     INVOICE_INTAKE_PROJECTION_TYPES,
     INVOICE_INTAKE_REQUEST_TYPES,
     INVOICE_WIZARD_OPERATION_DEFINITION_ID,
+    InvoiceImportRequest,
     InvoiceIntakeExecutionResult,
 )
 from .catalogue_intake_executor import InvoiceIntakeExecutor
@@ -84,12 +85,14 @@ def build_invoice_wizard_definition(
 def resolve_invoice_intake_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """The existing catalogue reads require whole-profile rights and actual COMMIT."""
+    """The existing catalogue reads require whole-profile rights and actual COMMIT, except a preview's."""
+    previews = isinstance(request.payload, InvoiceImportRequest) and request.payload.preview
     return resolve_ledger_exact_request_access(
         request,
         context,
         request_types=INVOICE_INTAKE_REQUEST_TYPES,
-        commit_definition_ids=frozenset(INVOICE_INTAKE_REQUEST_TYPES),
+        commit_definition_ids=frozenset(INVOICE_INTAKE_REQUEST_TYPES)
+        - ({INVOICE_IMPORT_OPERATION_DEFINITION_ID} if previews else frozenset()),
     )
 
 

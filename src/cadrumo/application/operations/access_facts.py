@@ -157,6 +157,7 @@ _LOCAL_READS: Final = (
     "modelo.work.revision_snapshot",
     "modelo.work.revisions",
     "modelo.work.wizard_context",
+    "operations.history.list",
     "overview.agenda",
     "overview.backlog",
     "overview.calendar",
@@ -166,6 +167,8 @@ _LOCAL_READS: Final = (
     "overview.status",
     "profile.history",
     "profile.history.timeline",
+    # Builds its derived lexical index in the application cache on first use; no profile record changes.
+    "reference.corpus.search",
     "user-profile.censo-prepare",
     "user-profile.imputation-election.read",
     "user-profile.record-groups",

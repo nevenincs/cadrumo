@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from cadrumo.application.corpus_search.runtime import search_corpus
-from cadrumo.application.corpus_search.terminology import search_terminology
+from cadrumo.application.corpus_search.reference_search import search_reference_corpus
 from cadrumo.application.reference_catalogue import read_pinned_reference
 
 from .bounded_pages import REPLY_BYTES, CursorRefusedError, encoded_size, page_text
@@ -25,14 +24,14 @@ def corpus_query(args: dict[str, Any]) -> dict[str, Any]:
     """
     query = args["query"]
     limit = args.get("limit", _CORPUS_LIMIT)
-    retrieval = read_pinned_reference(lambda operation: search_corpus(query, operation=operation, limit=limit))
-    terminology = [public_value(hit) for hit in search_terminology(query, limit=limit)]
+    answer = read_pinned_reference(lambda operation: search_reference_corpus(query, limit=limit, operation=operation))
+    terminology = [public_value(hit) for hit in answer.report.terminology]
     envelope = {
         "outcome": "found",
-        "logical_generation": retrieval.generation.logical_generation,
-        "reader_incarnation": retrieval.generation.reader_incarnation,
+        "logical_generation": answer.generation.logical_generation,
+        "reader_incarnation": answer.generation.reader_incarnation,
     }
-    found = public_value(retrieval.report)
+    found = public_value(answer.report.retrieval)
     whole = {**envelope, "retrieval": found, "terminology": terminology}
     citation = found["citation"]
     if citation is None or encoded_size(whole) <= REPLY_BYTES:

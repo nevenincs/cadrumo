@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.period import Period
 from ...domain.iva.schema import EUMemberState, IvaCategory
+from ...domain.transactions.classification_origin import classification_decided_by, figures_derived
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
 from ...domain.transactions.withheld_figures import withhold_figures_without_business
@@ -229,6 +230,8 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         notes=transaction.notes,
         lifecycle_state=transaction.lifecycle_state.value,
         classified_by=transaction.classified_by,
+        classification_decided_by=classification_decided_by(transaction),
+        figures_derived=figures_derived(transaction),
         classified_at=_optional_iso_datetime(transaction.classified_at),
         classification_reason=transaction.classification_reason,
         classification_confidence=_display_optional_decimal(transaction.classification_confidence),

@@ -94,6 +94,8 @@ def _transaction(transaction_id: str) -> LedgerTransactionProjection:
         business_classification="business",
         lifecycle_state="active",
         classified_by="operator",
+        classification_decided_by="operator",
+        figures_derived=False,
         created_at="2026-01-02T10:00:00Z",
         modified_at="2026-01-02T10:00:00Z",
     )

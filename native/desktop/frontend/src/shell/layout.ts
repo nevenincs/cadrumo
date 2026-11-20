@@ -84,6 +84,7 @@ export type Layout = {
   docking: DockLayout | null;
   page:
     | "docs"
+    | "home"
     | "calendar"
     | "profile"
     | "ledger"
@@ -307,6 +308,7 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
         l.page,
         [
           "docs",
+          "home",
           "calendar",
           "profile",
           "ledger",

@@ -137,6 +137,8 @@ def synthetic_entry(
         notes="",
         lifecycle_state=lifecycle_state,
         classified_by="manual",
+        classification_decided_by="manual",
+        figures_derived=False,
         classified_at=None,
         classification_reason="",
         classification_confidence=None,

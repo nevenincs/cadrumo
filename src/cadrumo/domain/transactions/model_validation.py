@@ -25,7 +25,7 @@ from decimal import Decimal
 
 from ...core.decimal.constants import ONE
 from ...core.errors.hierarchy import CoreValidationError
-from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
+from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_DERIVED_PREFIX, CLASSIFIED_BY_MANUAL
 from ...core.time.utc import parse_iso_datetime, validate_utc_aware
 from ...core.unit_proportion import is_unit_proportion
 from .classification_effects import fields_refused_by_classification
@@ -69,7 +69,7 @@ def validate_classified_by_shape(value: str) -> str:
     normalized = value.strip()
     if normalized in {CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL}:
         return normalized
-    for prefix in ("rule:", "llm:", "derived:"):
+    for prefix in ("rule:", "llm:", CLASSIFIED_BY_DERIVED_PREFIX):
         if normalized.startswith(prefix) and normalized.removeprefix(prefix).strip():
             return normalized
     raise TransactionValidationError(

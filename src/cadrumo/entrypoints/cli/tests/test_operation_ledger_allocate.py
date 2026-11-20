@@ -68,6 +68,8 @@ def _projection(
         notes="",
         lifecycle_state="active",
         classified_by="operator:fixture",
+        classification_decided_by="operator:fixture",
+        figures_derived=False,
         classified_at=None,
         classification_reason="Allocated by fixture",
         classification_confidence=None,

@@ -7,9 +7,11 @@
 // one that is not registered can be registered by the import itself, from the
 // statement's own number. The apply then sends each file alone with the
 // account chosen for it and the digest its preview read, so a file that
-// changed since is refused rather than imported. Invoice books have no dry
-// run; documents are added in parts the host can carry. Nothing here keeps
-// a value beyond the dialog's memory, and no write is ever sent twice.
+// changed since is refused rather than imported. An invoice book is read
+// once in a preview that gives each column a role, which the person can
+// change, and is imported with those roles and the digest it read; documents
+// are added in parts the host can carry. Nothing here keeps a value beyond
+// the dialog's memory, and no write is ever sent twice.
 
 import {
   ledgerFailure,
@@ -73,7 +75,14 @@ export type OwnAccount = { id: string; label: string; masked: string };
  * again. */
 export type Attempt<Result> =
   | { kind: "settled"; result: Result }
-  | { kind: "refused"; reason: string | null }
+  | {
+      kind: "refused";
+      reason: string | null;
+      /** The sentence the backend served for the refusal, in its language. */
+      words: string | null;
+      /** The setup action the refusal names, if any. */
+      setup: string | null;
+    }
   | { kind: "failed"; code: string; reason: string | null };
 
 async function attempt<D extends LedgerDefinitionId>(
@@ -87,7 +96,12 @@ async function attempt<D extends LedgerDefinitionId>(
     if (outcome.kind === "settled")
       return { kind: "settled", result: outcome.result };
     if (outcome.kind === "refused")
-      return { kind: "refused", reason: outcome.reason };
+      return {
+        kind: "refused",
+        reason: outcome.reason,
+        words: outcome.detail?.refusal_words ?? null,
+        setup: provisionActionOf(outcome.detail),
+      };
     // Still running or waiting where the page stopped looking.
     return {
       kind: "failed",
@@ -462,18 +476,175 @@ export async function applyBank(
   return applied;
 }
 
-/** Imports an invoice book. It has no dry run: its rows are checked as
- * they are created. */
-export function applyBook(
+/** One column of an invoice book as its preview read it. */
+export type BookColumn = NonNullable<
+  InvoiceImportProjection["columns"]
+>[number];
+/** The closed set of meanings a column can be given. */
+export type BookRole = BookColumn["role"];
+/** A meaning the importer takes, the importer field it feeds, and whether
+ * the book must supply it. */
+export type AssignableRole = NonNullable<
+  InvoiceImportProjection["assignable_roles"]
+>[number];
+
+/** The role that stands for a column that is not used: a member of the
+ * closed set the ledger serves, not a word the window made up. */
+export const UNUSED_ROLE: BookRole = "unmapped";
+
+/** What the person has done to a book's columns since its preview: the role
+ * each column holds now, and the columns whose role they set themselves. */
+export type BookReview = {
+  roles: Record<number, BookRole>;
+  chosen: ReadonlySet<number>;
+};
+
+/** An invoice book as its preview read it: which role each column came to
+ * hold, who settled it, and what the importer still lacks. */
+export type BookPreview =
+  | {
+      kind: "read";
+      file: PickedFile;
+      /** The digest of the bytes the preview read, which the import sends
+       * back so a changed file is refused. */
+      digest: string;
+      rows: number;
+      columns: BookColumn[];
+      assignable: AssignableRole[];
+      /** Whether the local AI could not be asked to propose roles, and the
+       * setup action its verdict names. */
+      readerUnavailable: boolean;
+      setup: string | null;
+    }
+  | {
+      kind: "refused";
+      file: PickedFile;
+      reason: string | null;
+      words: string | null;
+      setup: string | null;
+    }
+  | { kind: "failed"; file: PickedFile; code: string; reason: string | null };
+
+/** Reads an invoice book's columns, writing nothing: which role each holds,
+ * who settled it, and the roles the importer needs that no column supplies. */
+export async function previewBook(
   port: LedgerPort,
   file: PickedFile,
+  kind: InvoiceKind,
+  country: string | null,
+): Promise<BookPreview> {
+  const read = await attempt(
+    port,
+    "ledger.invoice.import",
+    {
+      kind,
+      source_path: file.token,
+      country,
+      preview: true,
+      column_roles: null,
+    },
+    false,
+  );
+  if (read.kind === "failed")
+    return { kind: "failed", file, code: read.code, reason: read.reason };
+  if (read.kind === "refused")
+    return {
+      kind: "refused",
+      file,
+      reason: read.reason,
+      words: read.words,
+      setup: read.setup,
+    };
+  const result = read.result;
+  const verdict = result.reader_unavailable_verdict ?? null;
+  return {
+    kind: "read",
+    file,
+    digest: result.source_sha256,
+    rows: result.row_count ?? result.rows,
+    columns: result.columns,
+    assignable: result.assignable_roles ?? [],
+    readerUnavailable: verdict !== null,
+    setup: provisionActionOf(verdict),
+  };
+}
+
+/** The review a fresh preview starts from: each column's served role. A
+ * role the importer has no slot for stands as "not used", as it is imported. */
+export function startingReview(preview: BookPreview): BookReview {
+  if (preview.kind !== "read") return { roles: {}, chosen: new Set() };
+  const takes = new Set(preview.assignable.map((role) => role.role));
+  return {
+    roles: Object.fromEntries(
+      preview.columns.map((column) => [
+        column.column_index,
+        takes.has(column.role) ? column.role : UNUSED_ROLE,
+      ]),
+    ),
+    chosen: new Set(),
+  };
+}
+
+/** `role` given to `column`. A role other than "not used" is held by one
+ * column only, so the column that held it lets it go. */
+export function assignRole(
+  review: BookReview,
+  column: number,
+  role: BookRole,
+): BookReview {
+  const roles = { ...review.roles, [column]: role };
+  const chosen = new Set(review.chosen).add(column);
+  if (role !== UNUSED_ROLE)
+    for (const [index, held] of Object.entries(roles))
+      if (held === role && Number(index) !== column) {
+        roles[Number(index)] = UNUSED_ROLE;
+        chosen.add(Number(index));
+      }
+  return { roles, chosen };
+}
+
+/** Who settled `column`'s role as the review stands: the person for a
+ * column they set, else whoever the preview said. */
+export const sourceOfColumn = (
+  column: BookColumn,
+  review: BookReview,
+): BookColumn["source"] =>
+  review.chosen.has(column.column_index) ? "operator" : column.source;
+
+/** The roles the importer requires that no column holds in `review`. */
+export const missingRoles = (
+  preview: Extract<BookPreview, { kind: "read" }>,
+  review: BookReview,
+): AssignableRole[] => {
+  const held = new Set(Object.values(review.roles));
+  return preview.assignable.filter(
+    (role) => role.required && !held.has(role.role),
+  );
+};
+
+/** Imports an invoice book exactly as previewed: every column with the role
+ * the review gave it, and the digest of the bytes the preview read. */
+export function applyBook(
+  port: LedgerPort,
+  preview: Extract<BookPreview, { kind: "read" }>,
+  review: BookReview,
   kind: InvoiceKind,
   country: string | null,
 ): Promise<Attempt<InvoiceImportProjection>> {
   return attempt(
     port,
     "ledger.invoice.import",
-    { kind, source_path: file.token, country },
+    {
+      kind,
+      source_path: preview.file.token,
+      country,
+      preview: false,
+      source_sha256: preview.digest,
+      column_roles: preview.columns.map((column) => ({
+        column_index: column.column_index,
+        role: review.roles[column.column_index] ?? column.role,
+      })),
+    },
     true,
   );
 }

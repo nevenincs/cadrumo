@@ -209,6 +209,7 @@ const register = JSON.parse(
 /** What shows a page of the first pane, by the page alone. */
 const PAGE_ROOT: Record<WindowPage, string> = {
   profile: ".user-profile-page",
+  home: ".home-page",
   calendar: ".calendar-page",
   ledger: ".ledger-page",
   declarations: ".declarations-page",
