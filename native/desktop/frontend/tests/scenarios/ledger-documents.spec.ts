@@ -145,7 +145,11 @@ test("a clean reading is confirmed only with a kind and a country, then offers i
   await expect(holds).toHaveCount(0);
   // A country the person clears is theirs to give again, and holds the
   // confirmation until they do.
-  await draft(target).locator(".ledger-draft-country").fill("");
+  const country = draft(target).locator(".ledger-draft-country");
+  await country.click();
+  await target.keyboard.press("ControlOrMeta+a");
+  await target.keyboard.press("Backspace");
+  await expect(country).toHaveValue("");
   await expect(holds).toContainText(
     label("desktop.ledger.documents.hold.country"),
   );
