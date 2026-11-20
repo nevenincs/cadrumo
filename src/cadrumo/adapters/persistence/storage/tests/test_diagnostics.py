@@ -443,7 +443,7 @@ def test_secure_object_unreadable_total_logs_missing_active_bucket_session(
             dispose_engine(settings)
 
     assert "secure objects engine unreachable for repair probe" in delivered_text(caplog)
-    assert "StorageValidationError" in delivered_text(caplog)
+    assert "StorageSessionUnavailableError" in delivered_text(caplog)
     assert "errors.storage.runtime.not_ready" in delivered_text(caplog)
     assert "no active bucket session" not in delivered_text(caplog)
 

@@ -81,6 +81,7 @@ from .clave_movil_page_flow import ClaveMovilPageFlowMixin
 from .clave_movil_salvage import ClaveMovilSessionSalvageMixin
 from .clave_movil_state import ClaveMovilPageState
 from .clave_movil_support import (
+    ClaveMovilApprovalNotReceivedError,
     ClaveMovilApprovalTimeoutError,
     ClaveMovilConfigurationError,
     ClaveMovilFailureMode,
@@ -1044,7 +1045,7 @@ class ClaveMovilAuthProvider(ClaveMovilPageFlowMixin, ClaveMovilSessionSalvageMi
             diagnostic_id = await self._dump_diagnostic(page, reason="post-auth-landing-timeout")
             await self._cancel_pending_auth_request(page)
             current_url = getattr(page, "url", "") or ""
-            raise ClaveMovilApprovalTimeoutError(
+            raise ClaveMovilApprovalNotReceivedError(
                 f"Cl@ve Móvil browser authentication did not complete after {timeout_ms // 1000} seconds. "
                 "The driver observed the AEAT browser page but cannot infer the phone/app state.",
                 translated_message="adapters.auth.clave_movil.errors.approval_timeout",

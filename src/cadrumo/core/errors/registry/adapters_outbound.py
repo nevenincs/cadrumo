@@ -28,6 +28,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.outbound.aeat.auth.clave_movil_support.ClaveMovilApprovalNotReceivedError",
+        ErrorCode(
+            code="REFUSED_AUTH_CLAVE_MOVIL_APPROVAL_NOT_RECEIVED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.auth.auth_auth_clave_movil_clave_movil_approval_timeout",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.outbound.aeat.auth.clave_movil_support.ClaveMovilConfigurationError",
         ErrorCode(
             code="AUTH_AUTH_CLAVE_MOVIL_CLAVE_MOVIL_CONFIGURATION",
