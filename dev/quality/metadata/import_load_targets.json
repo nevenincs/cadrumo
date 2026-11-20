@@ -4195,6 +4195,7 @@
         "cadrumo_mcp.mcp.access_scope",
         "cadrumo_mcp.mcp.admitted_operations",
         "cadrumo_mcp.mcp.authority_query",
+        "cadrumo_mcp.mcp.bounded_pages",
         "cadrumo_mcp.mcp.corpus_query",
         "cadrumo_mcp.mcp.lifecycle_notices",
         "cadrumo_mcp.mcp.main",
