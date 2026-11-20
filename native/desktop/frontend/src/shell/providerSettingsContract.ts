@@ -160,6 +160,9 @@ export type ProviderSignInSnapshot = {
     | "settings_change_failed"
     | "prepare_failed"
     | "previous_cleanup_unconfirmed"
+    | "logout_agent_unavailable"
+    | "logout_timed_out"
+    | "logout_not_completed"
     | null;
   /** What to do about ``cause``. */
   next_step?:

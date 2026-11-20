@@ -7,6 +7,8 @@ import {
   questionnaireFaults,
   type AnswerFault,
 } from "../shell/agentClarification";
+import type { AttachmentCardAnswer } from "../shell/attachmentAdminContract";
+import type { BarCode, BarredRead } from "../shell/attachmentRefusals";
 import type {
   AgentApproval,
   AgentApprovalOption,
@@ -225,4 +227,49 @@ export function requested(approval: AgentApproval): AgentApproval {
   if (notes.length > 0)
     throw new Error(`The fixture requests what the agent would not: ${notes}`);
   return approval;
+}
+
+// A message that asks the agent to read files the service refuses to release,
+// by the bar it names (the profile's when it names none): one parked read per
+// file, as the agent parks them when it reads each attached file.
+const BARRED_READS =
+  /adjuntos sin enviar(?: \((gestor_mode|cloud_upload_not_permitted|profile_not_eligible)\))?/i;
+const BARRED_FILES = ["escaneo.pdf", "foto.jpg", "factura.xml", "gastos.xlsx"];
+
+/** The reads `text` asks for, as the agent requests permission for each, and
+ * what the service says of each in `reads`; null when it asks for none. */
+export function barredAsk(
+  text: string,
+  replyId: string,
+  nextId: (prefix: string) => string,
+  reads: Map<string, BarredRead>,
+): AgentApproval[] | null {
+  const asked = BARRED_READS.exec(text);
+  if (!asked) return null;
+  const code = (asked[1] ?? "profile_not_eligible") as BarCode;
+  return BARRED_FILES.map((name) => {
+    const request_id = nextId("p");
+    reads.set(request_id, { requestId: request_id, code, name });
+    return requested({
+      request_id,
+      reply_id: replyId,
+      source: "agent_tool",
+      tool_call: "read_attachment",
+      tool_kind: "other",
+      tool_server: null,
+      description: `Permission required: read_attachment; attachment: "${name}"`,
+      options: CANONICAL_OPTIONS,
+    });
+  });
+}
+
+/** What the service answers for the card of the read `requestId`. */
+export function barredCard(
+  reads: ReadonlyMap<string, BarredRead>,
+  requestId: string,
+): AttachmentCardAnswer {
+  const read = reads.get(requestId);
+  return read
+    ? { kind: "refused", code: read.code, name: read.name }
+    : { kind: "not_required" };
 }

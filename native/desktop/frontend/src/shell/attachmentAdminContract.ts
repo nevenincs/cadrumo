@@ -76,6 +76,7 @@ export type AttachmentNotRequired = {
 export type AttachmentRefusal = {
   kind: "refused";
   code: DisclosureRefusalCode | AttachmentAdminRefusalCode;
+  name: string | null;
 };
 
 export type AttachmentReleaseAnswer =
