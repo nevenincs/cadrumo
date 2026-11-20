@@ -4957,6 +4957,9 @@ desktop:
       checking: Checking what synchronization needs…
       choice_accept: Accept
       choice_reject: Reject
+      confirm: Cadrumo will sign in to the AEAT with the configured access and retrieve
+        your Censo data. Nothing is saved to your profile until you review the retrieved
+        information.
       conflict: The review has changed. Refresh the sync and review it again.
       device: Approve the sign-in request in your Cl@ve app.
       done: Synchronization complete. Review any remaining gaps in your profile.

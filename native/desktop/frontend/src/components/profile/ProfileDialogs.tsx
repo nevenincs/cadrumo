@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Icon } from "@/components/ui/icon";
 import { Kbd } from "@/components/ui/kbd";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Spinner } from "@/components/ui/spinner";
@@ -242,6 +243,50 @@ export function PasswordChange({
             </Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Asked before a Censo pull that would start from outside the band: the
+ * pull signs in to the AEAT, so it reaches the AEAT only once the person
+ * says so here. */
+export function CensoConfirm({
+  open,
+  onCancel,
+  onConfirm,
+}: {
+  open: boolean;
+  onCancel(): void;
+  onConfirm(): void;
+}) {
+  const t = useStrings();
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(value) => {
+        if (!value) onCancel();
+      }}
+    >
+      <DialogContent closeLabel={t("desktop.profile.cancel")}>
+        <DialogHeader>
+          <DialogTitle>{t("desktop.profile.censo.title")}</DialogTitle>
+          <DialogDescription>
+            {t("desktop.profile.censo.confirm")}
+          </DialogDescription>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          {t("desktop.profile.censo.scope")}
+        </p>
+        <DialogFooter>
+          <Button variant="outline" onClick={onCancel}>
+            {t("desktop.profile.cancel")}
+          </Button>
+          <Button onClick={onConfirm}>
+            <Icon name="sync" size="xs" />
+            {t("desktop.profile.censo.pull")}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -5035,6 +5035,9 @@ desktop:
       checking: A szinkronizálás feltételeinek ellenőrzése…
       choice_accept: Elfogadás
       choice_reject: Elutasítás
+      confirm: A Cadrumo a beállított hozzáféréssel bejelentkezik az AEAT-hoz, és
+        lekéri a Censo-adataidat. A profilodba semmi sem kerül mentésre, amíg át nem
+        tekinted a lekért adatokat.
       conflict: Az ellenőrzés megváltozott. Frissítsd a szinkronizálást, és ellenőrizd
         újra.
       device: Hagyd jóvá a bejelentkezést a Cl@ve alkalmazásban.
