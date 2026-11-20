@@ -93,11 +93,11 @@ pub(crate) struct Cues(Mutex<Vec<(u32, tauri::async_runtime::JoinHandle<()>)>>);
 impl Cues {
     /// Holds `updates` beside the cues held before, sent to by the task
     /// `follow` makes; once the host closed nothing is followed.
-    pub(crate) fn observe<F>(
+    pub(crate) fn observe<T, F>(
         &self,
         closed: bool,
-        updates: Channel<()>,
-        follow: impl FnOnce(Channel<()>) -> F,
+        updates: Channel<T>,
+        follow: impl FnOnce(Channel<T>) -> F,
     ) -> u32
     where
         F: std::future::Future<Output = ()> + Send + 'static,

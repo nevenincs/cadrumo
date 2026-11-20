@@ -38,6 +38,11 @@ impl Definition {
     pub(super) fn mutation(self) -> bool {
         self.kind != Kind::Read
     }
+    /// Runs as long as its work lasts: submitted under the serial lock and
+    /// followed without it, so other ledger writes go on meanwhile.
+    pub(super) fn background(self) -> bool {
+        BACKGROUND.contains(&self.id)
+    }
     pub(super) fn settling(self) -> Settling {
         Settling {
             id: self.id,
@@ -52,6 +57,10 @@ use Kind::{Read, Review, Write};
 /// The definitions whose subject is not the profile: a classification review
 /// holds only the movement it asks about.
 const FIELD_SUBJECTS: [(&str, &[&str]); 1] = [("ledger.classify.review", &["transaction_id"])];
+
+/// The definitions whose run can outlast any wait the window makes: a
+/// classification job's run asks a model about each of its movements.
+const BACKGROUND: [&str; 1] = ["ledger.classify.job.run"];
 
 const ADMITTED: [(&str, Kind); 145] = [
     ("ledger.actividad-asset.acquisition-candidates", Read),
@@ -279,6 +288,25 @@ mod tests {
                 .all(|(id, _)| ADMITTED.iter().any(|(admitted, _)| admitted == id)),
             "a field subject names an admitted definition"
         );
+    }
+
+    #[test]
+    fn only_a_classification_job_run_is_followed_in_the_background() {
+        let background: Vec<&str> = ADMITTED
+            .iter()
+            .filter(|(id, _)| super::admitted(id).unwrap().background())
+            .map(|(id, _)| *id)
+            .collect();
+        assert_eq!(background, ["ledger.classify.job.run"]);
+        let run = super::admitted("ledger.classify.job.run").unwrap();
+        assert_eq!((run.kind, run.subject), (Write, Subject::Profile));
+        for id in [
+            "ledger.classify.job.cancel",
+            "ledger.classify.review",
+            "ledger.update",
+        ] {
+            assert!(!super::admitted(id).unwrap().background(), "{id}");
+        }
     }
 
     #[test]

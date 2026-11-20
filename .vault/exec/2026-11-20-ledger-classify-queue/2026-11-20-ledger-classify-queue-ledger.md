@@ -5,7 +5,7 @@ tags:
 date: '2026-11-20'
 modified: '2026-11-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:a57fb03e7fb37badf3de2d04e4a051d9d0d86087eb28daad975e1bbf5b7ad11c'
+body_hash: 'sha256:895e3171635127c19b29c5877509e6d8136c8e0ead5fd03a3ecfa3260ffd8620'
 related:
   - "[[2026-11-20-ledger-classify-queue-plan]]"
 ---
@@ -91,6 +91,13 @@ related:
 - `S06` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
 - `S06` `verify:` `pytest consent/run/operations/evidence_consent/errors (194)` -> `pass`
 - `S06` `verify:` `desktop-host-unit-test (1048)` -> `pass`
+- `S10` `A` `native/desktop/src-tauri/src/shell/background_tasks.rs`
+- `S10` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S10` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S10` `A` `native/desktop/frontend/src/shell/backgroundTasksContract.ts`
+- `S10` `verify:` `desktop-host-unit-test (1061)` -> `pass`
+- `S10` `verify:` `cargo fmt --check` -> `pass`
+- `S10` `verify:` `desktop-host-unit-clippy` -> `fail`
 
 ## Notes
 
@@ -99,3 +106,4 @@ related:
 - `S08` No cadrumo-agent change needed; no re-pin
 - `S05` Tests written after code; defect-injection check done instead of fail-first. Off-host jobs refuse until S06.
 - `S06` Tests written alongside code; defect injection substituted for fail-first. Apply commits per movement then the job once (non-atomic; re-apply refused as stale).
+- `S10` clippy fails only on pre-existing `large_enum_variant` at agent/stream.rs:308 (tui 24e08b0f29). Gaps: no mid-run progress for runs started outside this window; auto-resume on profile open undecided (S11); list read returns whole jobs, limit 50.
