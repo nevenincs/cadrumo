@@ -22,21 +22,27 @@ desktop:
     attachment_grant_images: Imágenes de páginas a {model}
     attachment_grant_revoke: Revocar
     attachment_grants_title: Permisos recordados
+    attachment_open_profile: Abrir el perfil
     attachment_refusal:
       acknowledgement_missing: No has permitido esta lectura.
       cloud_upload_not_permitted: Esta instalación no permite que los documentos salgan
-        de este ordenador.
+        de este ordenador, y ningún ajuste de tu perfil lo cambia.
       document_removed: El archivo se ha eliminado.
       file_changed_during_read: El archivo ha cambiado. Vuelve a añadirlo para leer
         la nueva versión.
       gestor_mode: El modo gestor nunca envía documentos fuera de este ordenador.
       grant_revoked: Ese permiso ya se ha revocado.
       not_signed_in: Inicia sesión para responder.
-      profile_not_eligible: Este perfil no puede enviar documentos fuera de este ordenador.
+      profile_not_eligible: Tu perfil no permite que los documentos salgan de este
+        ordenador. Lo controla el ajuste «Lectura de documentos fuera del equipo»
+        de tu perfil.
       reference_unknown: El agente ya no está esperando este archivo.
       service_failed: No se ha podido registrar el permiso, así que no se ha enviado
         nada.
     attachment_refused: Este archivo no se ha enviado. {reason}
+    attachment_refused_group: Estos archivos no se han enviado. {reason}
+    attachment_refused_named: '{name} no se ha enviado. {reason}'
+    attachment_refused_title: Archivos sin enviar
     attachments: Archivos para el próximo mensaje
     attachments_refused: 'No aceptados: {count}'
     attachments_uploading: 'Subiendo: {count}'

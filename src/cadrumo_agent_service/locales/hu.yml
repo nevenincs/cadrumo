@@ -22,19 +22,24 @@ desktop:
     attachment_grant_images: 'Oldalképek ide: {model}'
     attachment_grant_revoke: Visszavonás
     attachment_grants_title: Megjegyzett engedélyek
+    attachment_open_profile: Profil megnyitása
     attachment_refusal:
       acknowledgement_missing: Nem engedélyezted ezt az olvasást.
       cloud_upload_not_permitted: Ez a telepítés nem engedi, hogy a dokumentumok elhagyják
-        ezt a számítógépet.
+        ezt a számítógépet, és a profilod egyetlen beállítása sem változtat ezen.
       document_removed: A fájlt eltávolították.
       file_changed_during_read: A fájl megváltozott. Add hozzá újra az új verzió olvasásához.
       gestor_mode: A gestor mód soha nem küld dokumentumot erről a számítógépről.
       grant_revoked: Ezt az engedélyt már visszavonták.
       not_signed_in: A válaszhoz jelentkezz be.
-      profile_not_eligible: Ez a profil nem küldhet dokumentumot erről a számítógépről.
+      profile_not_eligible: A profilod nem engedi, hogy a dokumentumok elhagyják ezt
+        a számítógépet. A profil „Dokumentumolvasás a gépen kívül” beállítása szabályozza.
       reference_unknown: Az ügynök már nem vár erre a fájlra.
       service_failed: Az engedélyt nem sikerült rögzíteni, ezért semmi sem lett elküldve.
     attachment_refused: Ez a fájl nem lett elküldve. {reason}
+    attachment_refused_group: Ezek a fájlok nem lettek elküldve. {reason}
+    attachment_refused_named: '{name} nem lett elküldve. {reason}'
+    attachment_refused_title: El nem küldött fájlok
     attachments: Fájlok a következő üzenethez
     attachments_refused: 'Nem elfogadva: {count}'
     attachments_uploading: 'Feltöltés alatt: {count}'

@@ -295,6 +295,23 @@ def test_each_eligibility_bar_refuses_even_a_stored_grant(world: _World, code: D
     assert len(world.agent.releases) == 1
 
 
+@pytest.mark.parametrize(
+    "code",
+    [
+        DisclosureRefusalCode.GESTOR_MODE,
+        DisclosureRefusalCode.CLOUD_UPLOAD_NOT_PERMITTED,
+        DisclosureRefusalCode.PROFILE_NOT_ELIGIBLE,
+    ],
+)
+def test_an_eligibility_refusal_names_the_file_it_refused(world: _World, code: DisclosureRefusalCode) -> None:
+    world.bar[0] = code
+
+    assert world.card() == {"kind": "refused", "code": code.value, "name": "nota.txt"}
+    assert world.release(ReleaseScope.ONCE) == {"kind": "refused", "code": code.value, "name": "nota.txt"}
+    assert world.agent.releases == []
+    assert world.store.ledger == []
+
+
 def test_a_lane_that_stays_here_needs_no_grant_and_records_nothing(world: _World) -> None:
     world.off_host[0] = False
     world.bar[0] = DisclosureRefusalCode.GESTOR_MODE

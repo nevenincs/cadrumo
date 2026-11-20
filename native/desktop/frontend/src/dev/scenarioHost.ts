@@ -38,14 +38,14 @@ import { parseConsoleEnvironmentChange } from "../shell/consoleEnvironment";
 import type { AgentServiceStatus } from "../shell/agentSession";
 import type { ProfileAccounts } from "../shell/profiles";
 import type { ProfileViews } from "../shell/views";
-import {
-  fixtureAgent,
-  type FixtureAsks,
-  type FixtureDocuments,
-  type FixtureEngineChoices,
-  type FixtureLocalModels,
-  type FixtureStream,
-} from "./agentFixtureHost";
+import { fixtureAgent } from "./agentFixtureHost";
+import type {
+  FixtureAsks,
+  FixtureDocuments,
+  FixtureEngineChoices,
+  FixtureLocalModels,
+  FixtureStream,
+} from "./agentFixtureOptions";
 import type {
   FixtureCatalog,
   FixtureEngineHealth,

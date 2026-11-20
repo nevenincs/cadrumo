@@ -22,19 +22,24 @@ desktop:
     attachment_grant_images: Page images to {model}
     attachment_grant_revoke: Revoke
     attachment_grants_title: Remembered permissions
+    attachment_open_profile: Open the profile
     attachment_refusal:
       acknowledgement_missing: You haven't allowed this read.
       cloud_upload_not_permitted: This installation doesn't allow documents to leave
-        this computer.
+        this computer, and no setting in your profile changes that.
       document_removed: The file has been removed.
       file_changed_during_read: The file changed. Add it again to read the new version.
       gestor_mode: Gestor mode never sends documents off this computer.
       grant_revoked: That permission has already been revoked.
       not_signed_in: Sign in to answer this.
-      profile_not_eligible: This profile can't send documents off this computer.
+      profile_not_eligible: Your profile doesn't allow documents to leave this computer.
+        The profile setting “Off-host document reading” controls it.
       reference_unknown: The agent isn't waiting on this file any more.
       service_failed: The permission couldn't be recorded, so nothing was sent.
     attachment_refused: This file wasn't sent. {reason}
+    attachment_refused_group: These files weren't sent. {reason}
+    attachment_refused_named: '{name} wasn''t sent. {reason}'
+    attachment_refused_title: Files not sent
     attachments: Files for the next message
     attachments_refused: 'Not accepted: {count}'
     attachments_uploading: 'Uploading: {count}'
