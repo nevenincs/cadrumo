@@ -481,7 +481,7 @@ def test_prepared_reset_cannot_replay_or_retire_sessions_before_valid_proof(
     from datetime import timedelta
 
     from cadrumo.application.user_profile import recovery_custody
-    from cadrumo.core.time.clock import now
+    from cadrumo.core.time.clock import wall_now
     from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
     _, decode = profile_authority_contexts()
@@ -503,8 +503,8 @@ def test_prepared_reset_cannot_replay_or_retire_sessions_before_valid_proof(
         assert not retired
         assert load_committed_profile_password_material(profile_id).envelope == before
         # Advance only the explicit recovery clock past the real shared throttle.
-        later = now() + timedelta(minutes=1)
-        monkeypatch.setattr(recovery_custody, "now", lambda: later)
+        later = wall_now() + timedelta(minutes=1)
+        monkeypatch.setattr(recovery_custody, "wall_now", lambda: later)
         reset_profile_passphrase_with_recovery(
             profile_id=profile_id,
             recovery_code=code,
