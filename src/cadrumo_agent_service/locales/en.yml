@@ -6,6 +6,7 @@ desktop:
       saved setup again, help with any remaining requirements, and continue our task
       when it is ready.
     agent_replied: Agent replied
+    already_new: You are already in a new conversation
     approval_allow_once: Allow once
     approval_allow_session: Allow for this session
     approval_attachment: 'Attachment: {target}'

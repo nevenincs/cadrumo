@@ -6,6 +6,7 @@ desktop:
       mentett beállításokat, segíts a hiányzó adatokkal, és folytasd a feladatunkat,
       ha minden készen áll.
     agent_replied: Az ügynök válasza
+    already_new: Már egy új beszélgetésben vagy
     approval_allow_once: Egyszer engedélyezem
     approval_allow_session: Engedélyezés erre a munkamenetre
     approval_attachment: 'Melléklet: {target}'

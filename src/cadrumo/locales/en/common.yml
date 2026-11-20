@@ -1236,8 +1236,6 @@ desktop:
     unavailable: Can't show AEAT data right now.
     update: Update
     update_area: Update {area}
-  agent:
-    already_new: You are already in a new conversation
   automation_access:
     cancel: Cancel
     cleanup_pending: Removed. Cadrumo is still deleting the stored key from this computer.

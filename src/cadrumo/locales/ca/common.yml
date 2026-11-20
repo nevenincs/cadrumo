@@ -1280,8 +1280,6 @@ desktop:
     unavailable: Ara no es poden mostrar les dades de l'AEAT.
     update: Actualitza
     update_area: Actualitza {area}
-  agent:
-    already_new: Ja ets en una conversa nova
   automation_access:
     cancel: Cancel·la
     cleanup_pending: Eliminada. Cadrumo encara està esborrant la clau desada d’aquest

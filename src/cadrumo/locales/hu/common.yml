@@ -1263,8 +1263,6 @@ desktop:
     unavailable: Az AEAT-adatok most nem jeleníthetők meg.
     update: Frissítés
     update_area: '{area} frissítése'
-  agent:
-    already_new: Már egy új beszélgetésben vagy
   automation_access:
     cancel: Mégse
     cleanup_pending: Eltávolítva. A Cadrumo még törli a tárolt kulcsot erről a számítógépről.
