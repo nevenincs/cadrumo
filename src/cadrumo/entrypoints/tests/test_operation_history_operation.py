@@ -23,8 +23,8 @@ from cadrumo.adapters.persistence.operations.tests.profile_operation_supervisor 
 )
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.application.operation_history.list_operation import (
-    OPERATIONS_HISTORY_LIMIT_MAX,
     OPERATIONS_HISTORY_LIST_DEFINITION_ID,
+    OPERATIONS_HISTORY_PAGE_SIZE_MAX,
     OperationHistoryCursorV1,
     OperationHistoryListRequest,
     OperationHistoryResultV1,
@@ -509,7 +509,7 @@ def test_access_is_the_signed_in_profile_own_period_independent_read(tmp_path: P
     "fields",
     (
         {"limit": 0},
-        {"limit": OPERATIONS_HISTORY_LIMIT_MAX + 1},
+        {"limit": OPERATIONS_HISTORY_PAGE_SIZE_MAX + 1},
         {"limit": "5"},
         {"after": {"started_at": _T0.replace(tzinfo=None).isoformat(), "operation_id": "a" * 64}},
         {"after": {"started_at": _T0.isoformat(), "operation_id": "short"}},

@@ -86,6 +86,7 @@ from .tax_literal_sweep_vocabulary import (
     THOUSAND,
     UNIT_CONVERSIONS,
     VALUE_KEYWORDS,
+    VERSION_KEYED_NAME,
     WIDTH_QUANTIFIER,
     YEAR_ARITHMETIC_CALLS,
     YEAR_ENDPOINTS,
@@ -296,6 +297,20 @@ class _Sweep(BoundReader, ast.NodeVisitor):
             return False
         value = parent.values[parent.keys.index(node)]
         return isinstance(value, ast.Constant) and f"month_{node.value}" in str(value.value)
+
+    def _keys_are_versions(self, node: ast.Dict) -> bool:
+        """A mapping bound to a name that says it is keyed by schema version or transition counts that history."""
+        current: ast.AST = node
+        parent = self._parents.get(current)
+        while isinstance(parent, ast.Call) and current in parent.args:
+            current, parent = parent, self._parents.get(parent)
+        if isinstance(parent, ast.AnnAssign) and parent.value is current:
+            names = [expression_names(parent.target)]
+        elif isinstance(parent, ast.Assign) and parent.value is current:
+            names = [expression_names(target) for target in parent.targets]
+        else:
+            return False
+        return any(VERSION_KEYED_NAME.search(name) and not tax_name(name) for name in names)
 
     def _defines_period_code(self, node: ast.Constant) -> bool:
         """A member of the enum the gate reads the period codes from is their definition."""
@@ -930,7 +945,13 @@ class _Sweep(BoundReader, ast.NodeVisitor):
             if isinstance(key, ast.Constant) and single_code_letter(key.value) and self._holds_facts():
                 self._report("letter_key", key.value, key)
             key_number = constant_number(key)
-            if key is not None and key_number is not None and self._holds_facts() and self._may_be_fact(key_number, ""):
+            if (
+                key is not None
+                and key_number is not None
+                and self._holds_facts()
+                and self._may_be_fact(key_number, "")
+                and not self._keys_are_versions(node)
+            ):
                 self._report("dict_key", key_number, key)
         for key, value in zip(node.keys, node.values, strict=True):
             number = constant_number(value)

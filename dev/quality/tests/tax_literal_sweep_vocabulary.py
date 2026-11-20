@@ -142,6 +142,11 @@ FILE_PERMISSION_NAME: Final = re.compile(r"(?:^|_)MODE$", re.IGNORECASE)
 
 FILE_PERMISSIONS: Final = frozenset({0o600, 0o640, 0o644, 0o700, 0o750, 0o755})
 
+VERSION_KEYED_NAME: Final = re.compile(r"(?:^|_)BY_(?:VERSION|TRANSITION)$", re.IGNORECASE)
+
+"""A mapping named as keyed by a stored schema's version, or by the transition that leaves one: its integer keys
+count the schema's own history, as ``_SCHEMA_VERSION = 3`` does, unless a tax word in the name says otherwise."""
+
 YEAR_NAME: Final = re.compile(r"year|ejercicio", re.IGNORECASE)
 
 _CENTURY: Final = 100
