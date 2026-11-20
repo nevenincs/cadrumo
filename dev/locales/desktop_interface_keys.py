@@ -382,6 +382,8 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.agent.catalog_unavailable",
         "desktop.agent.choose_model",
         "desktop.agent.choose_provider",
+        "desktop.agent.choose_provider_first",
+        "desktop.agent.choose_to_start",
         "desktop.agent.close_documents",
         "desktop.agent.condition_budget_exhausted",
         "desktop.agent.condition_credits_exhausted",

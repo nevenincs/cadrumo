@@ -8,7 +8,10 @@ import type {
   AgentSendRequest,
 } from "../../shell/agentSession";
 import { isLiveStatus } from "../../shell/agentViews";
-import type { ServedProviderCatalog } from "../../shell/agentCatalogContract";
+import type {
+  ProviderHealthResponse,
+  ServedProviderCatalog,
+} from "../../shell/agentCatalogContract";
 import { SEED_DEPTH, type FixtureMessage, type FixtureRun } from "./agent";
 
 // What the scenario host's agent answers where a conversation changes lane or
@@ -115,6 +118,18 @@ declare global {
     /** How many of the next catalog reads answer the first lane's model list
      * as the packaged one, stale, while the account's is still being read. */
     __fixtureCatalogStaleReads?: number;
+    /** What the served catalog states of some lanes now, by
+     * `<provider>/<transport>`, in place of what the fixture catalog writes:
+     * the health axes it names, and the state of the lane's model list. A
+     * scenario changes it while the page runs, as the service's reading of a
+     * lane settles; a lane it does not name is as the fixture catalog has it. */
+    __fixtureLaneStates?: Record<
+      string,
+      {
+        health?: Partial<ProviderHealthResponse>;
+        catalogStatus?: "available" | "unavailable" | "stale" | "unknown";
+      }
+    >;
   }
 }
 
@@ -165,6 +180,37 @@ export function admitted(
     throw coded("agent_gateway_carry_source_not_settled");
   return carryFrom(source);
 }
+
+/** `answer` with the lanes `__fixtureLaneStates` names as it states them. */
+export function withLaneStates(
+  answer: ServedProviderCatalog,
+): ServedProviderCatalog {
+  const states = window.__fixtureLaneStates;
+  if (!states) return answer;
+  return {
+    ...answer,
+    providers: (answer.providers ?? []).map((lane) => {
+      const stated = states[`${lane.provider_id}/${lane.transport}`];
+      if (!stated) return lane;
+      return {
+        ...lane,
+        health: { ...lane.health, ...stated.health },
+        catalog: stated.catalogStatus
+          ? {
+              ...lane.catalog,
+              state: { ...lane.catalog.state, status: stated.catalogStatus },
+            }
+          : lane.catalog,
+      };
+    }),
+  };
+}
+
+/** What a catalog read answers as the scenario has the service reading its
+ * lanes now: the lane states it set, and the stale reads it asked for. */
+export const withScenarioReads = (
+  answer: ServedProviderCatalog,
+): ServedProviderCatalog => withStaleReads(withLaneStates(answer));
 
 /** `answer` with the first lane's model list the packaged one, stale, for as
  * many reads as the scenario asked in `__fixtureCatalogStaleReads`: the

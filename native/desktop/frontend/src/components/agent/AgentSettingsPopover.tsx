@@ -1,4 +1,11 @@
-import { useId, useState, type ReactElement } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactElement,
+} from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -10,6 +17,8 @@ import {
 import { listOf } from "@/shared/lists";
 import { TextEditor } from "@/components/editors/TextEditor";
 import { heldModel, startingSelection } from "../../shell/agentCatalog";
+import { described, labelled } from "../../shell/compose";
+import { connectionWords } from "../../shell/providerConnection";
 import { useStrings } from "../../shell/strings";
 import { ProviderSelect } from "./ProviderSelect";
 import type { AgentSelection, ModelOption, ProviderOption } from "./types";
@@ -34,7 +43,10 @@ export function AgentSettingsPopover({
   children,
   openRequests = 0,
   onClosed,
+  onOpened,
   onDownloadModels,
+  onRetryCatalog,
+  onSignIn,
 }: {
   providers: readonly ProviderOption[];
   /** Each way's models, by way id. */
@@ -52,8 +64,15 @@ export function AgentSettingsPopover({
   openRequests?: number;
   /** Called when the person closes the popover. */
   onClosed?: () => void;
+  /** Called each time the popover opens, however it was asked to. */
+  onOpened?: () => void;
   /** Opens the settings where a model this computer lacks is downloaded. */
   onDownloadModels?: () => void;
+  /** Reads the catalog again, the way on for a lane whose models could not
+   * be read. */
+  onRetryCatalog?: () => void;
+  /** Opens the settings where a lane that is signed out is signed in. */
+  onSignIn?: () => void;
 }) {
   const t = useStrings();
   const [open, setOpen] = useState(false);
@@ -62,6 +81,15 @@ export function AgentSettingsPopover({
     setRequestsSeen(openRequests);
     if (openRequests > 0) setOpen(true);
   }
+  // The newest `onOpened`, so an opening is told once whatever the parent
+  // renders in between.
+  const opening = useRef(onOpened);
+  useLayoutEffect(() => {
+    opening.current = onOpened;
+  }, [onOpened]);
+  useEffect(() => {
+    if (open) opening.current?.();
+  }, [open]);
   const providerId = useId();
   const modelId = useId();
   const effortId = useId();
@@ -71,14 +99,17 @@ export function AgentSettingsPopover({
   const model = offered.find((option) => option.id === selection.modelId);
   const efforts = way?.modelWritten?.efforts ?? model?.efforts ?? [];
   const hasDefault = Boolean(model?.defaultEffort);
-  // The way to download is offered where the chosen way lists a model this
-  // computer lacks, or a way cannot be chosen until one is downloaded.
+  // The way to download is offered where the chosen way is one whose models
+  // are downloaded to this computer and lists one it lacks. With no way
+  // chosen it is offered where some way cannot be chosen until one is
+  // downloaded. Under a way whose models are not downloaded it is never.
   const download =
     onDownloadModels &&
-    (way?.modelsToDownload === true ||
-      providers.some((held) =>
-        held.ways.some((each) => !each.selectable && each.modelsToDownload),
-      ))
+    (way
+      ? way.modelsToDownload === true
+      : providers.some((held) =>
+          held.ways.some((each) => !each.selectable && each.modelsToDownload),
+        ))
       ? () => {
           setOpen(false);
           onClosed?.();
@@ -98,6 +129,17 @@ export function AgentSettingsPopover({
       return;
     }
   };
+  // The lanes held back that the catalog's own reason has a step for, said
+  // with that reason: asking again, or signing in.
+  const heldLanes = providers.flatMap((held) =>
+    held.ways.flatMap((each) =>
+      !each.selectable &&
+      ((each.heldStep === "retry" && onRetryCatalog) ||
+        (each.heldStep === "sign_in" && onSignIn))
+        ? [{ provider: held, way: each }]
+        : [],
+    ),
+  );
   const chooseModel = (next: string) => {
     const chosen = offered.find((option) => option.id === next);
     if (!chosen || !heldModel(chosen)) return;
@@ -150,6 +192,39 @@ export function AgentSettingsPopover({
               })}
             </FieldDescription>
           )}
+          {heldLanes.map(({ provider: held, way: each }) => (
+            <div
+              key={each.id}
+              data-held-way={each.id}
+              className="grid justify-items-start gap-1.5"
+            >
+              <FieldDescription>
+                {labelled(
+                  t,
+                  described(t, held.name, connectionWords(t, each)),
+                  each.unavailableReason ?? t("desktop.agent.unavailable"),
+                )}
+              </FieldDescription>
+              <Button
+                variant="outline"
+                size="xs"
+                data-held-step={each.heldStep}
+                onClick={
+                  each.heldStep === "sign_in"
+                    ? () => {
+                        setOpen(false);
+                        onClosed?.();
+                        onSignIn?.();
+                      }
+                    : onRetryCatalog
+                }
+              >
+                {each.heldStep === "sign_in"
+                  ? t("desktop.providers.sign_in_action")
+                  : t("desktop.agent.retry")}
+              </Button>
+            </div>
+          ))}
         </Field>
         <Field>
           <FieldLabel htmlFor={modelId}>{t("desktop.agent.model")}</FieldLabel>
@@ -165,6 +240,10 @@ export function AgentSettingsPopover({
                 {t("desktop.agent.model_written")}
               </FieldDescription>
             </>
+          ) : !way ? (
+            <p className="text-sm text-muted-foreground">
+              {t("desktop.agent.choose_provider_first")}
+            </p>
           ) : offered.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               {t("desktop.agent.no_models")}

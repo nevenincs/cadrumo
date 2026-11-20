@@ -61,6 +61,8 @@ desktop:
     choose_another_model: Elige otro modelo
     choose_model: Elige un modelo
     choose_provider: Elige un proveedor
+    choose_provider_first: Elige primero un proveedor.
+    choose_to_start: Elige un proveedor y un modelo para empezar.
     close_documents: Cerrar los documentos
     condition_budget_exhausted: Presupuesto agotado
     condition_credits_exhausted: Sin créditos
