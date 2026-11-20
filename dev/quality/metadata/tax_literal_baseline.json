@@ -56,9 +56,6 @@
     "domain/modelos/m232_related_party.py: module_value:'_NAME_MAX_LENGTH=60'",
     "domain/modelos/m232_related_party.py: module_value:'_TAX_ID_MAX_LENGTH=15'",
     "domain/period.py: month_tuple:(4, 6, 9, 11)",
-    "domain/user_profile/schema_migration.py: dict_key:13",
-    "domain/user_profile/schema_migration.py: dict_key:14",
-    "domain/user_profile/schema_migration.py: dict_key:15",
     "domain/user_profile/schema_migration.py: number_set:13",
     "domain/user_profile/schema_migration.py: number_set:14"
   ]

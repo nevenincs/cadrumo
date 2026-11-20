@@ -74,8 +74,8 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 
 OPERATIONS_HISTORY_LIST_DEFINITION_ID: Final = "operations.history.list"
 
-OPERATIONS_HISTORY_LIMIT_DEFAULT: Final = 25
-OPERATIONS_HISTORY_LIMIT_MAX: Final = 100
+OPERATIONS_HISTORY_PAGE_SIZE_DEFAULT: Final = 25
+OPERATIONS_HISTORY_PAGE_SIZE_MAX: Final = 100
 
 
 class OperationHistoryCursorV1(BaseModel):
@@ -99,7 +99,7 @@ class OperationHistoryListRequest(CredentialFreeOperationRequest):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    limit: Annotated[int, Field(ge=1, le=OPERATIONS_HISTORY_LIMIT_MAX)] = OPERATIONS_HISTORY_LIMIT_DEFAULT
+    limit: Annotated[int, Field(ge=1, le=OPERATIONS_HISTORY_PAGE_SIZE_MAX)] = OPERATIONS_HISTORY_PAGE_SIZE_DEFAULT
     after: OperationHistoryCursorV1 | None = None
 
 
@@ -391,9 +391,9 @@ def build_operation_history_list_registration(
 
 
 __all__ = [
-    "OPERATIONS_HISTORY_LIMIT_DEFAULT",
-    "OPERATIONS_HISTORY_LIMIT_MAX",
     "OPERATIONS_HISTORY_LIST_DEFINITION_ID",
+    "OPERATIONS_HISTORY_PAGE_SIZE_DEFAULT",
+    "OPERATIONS_HISTORY_PAGE_SIZE_MAX",
     "OperationHistoryCursorV1",
     "OperationHistoryListExecutor",
     "OperationHistoryListRequest",
