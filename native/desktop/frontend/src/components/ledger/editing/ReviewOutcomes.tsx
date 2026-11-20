@@ -4,7 +4,13 @@ import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import { facts, labelled, listed } from "@/shell/compose";
-import type { StepOutcome, StepReport } from "../../../shell/ledgerApply";
+import {
+  outcomeUnits,
+  reportUnitKeys,
+  type OutcomeUnit,
+  type StepOutcome,
+  type StepReport,
+} from "../../../shell/ledgerApply";
 import type { PlanStep } from "../../../shell/ledgerPlan";
 import {
   actionRows,
@@ -147,8 +153,9 @@ type OutcomeItem = {
   head?: string;
 };
 
-/** Every step's outcome, a bulk part's row by row unless the part ended
- * whole. */
+/** Every change's outcome, one item for each unit the review counted: a
+ * movement's edits, an action with the writes that followed it, a new
+ * movement. A bulk part that ended whole is one item of its own. */
 export function outcomeItems(
   t: Translate,
   locale: string,
@@ -167,7 +174,80 @@ export function outcomeItems(
     if (!row || !field) return null;
     return { field, value: storedFieldValue(row, field) ?? null };
   };
+  const units = new Map(outcomeUnits(reports).map((unit) => [unit.key, unit]));
+  const emitted = new Set<string>();
   const items: OutcomeItem[] = [];
+  const unitItem = (unit: OutcomeUnit): OutcomeItem | null => {
+    const [kind, ...rest] = unit.key.split(":");
+    const id = rest.join(":");
+    if (kind === "row") {
+      const steps = unit.reports.map((report) => report.step);
+      const written = steps.filter(
+        (step) => step.kind === "classify" || step.kind === "update",
+      );
+      const fields = written.flatMap((step) => step.fields);
+      const first = steps.find(
+        (step) =>
+          step.kind === "bulk" ||
+          step.kind === "classify" ||
+          step.kind === "update",
+      );
+      const own =
+        first?.kind === "bulk"
+          ? first.rows.find((row) => row.transactionId === id)?.fields
+          : first?.fields;
+      return {
+        key: unit.key,
+        title: written.length
+          ? labelled(
+              t,
+              titleOf(t, rows, id),
+              listed(
+                t,
+                [...new Set(fields)].map((field) => fieldName(t, field)),
+              ),
+            )
+          : titleOf(t, rows, id),
+        outcome: unit.outcome,
+        note: outcomeText(t, locale, unit.outcome, storedOf(id, own ?? [])),
+      };
+    }
+    if (kind === "draft") {
+      const add = unit.reports[0]?.step;
+      return add
+        ? {
+            key: unit.key,
+            title: stepTitle(t, add, rows, content, actionText),
+            outcome: unit.outcome,
+            note: outcomeText(t, locale, unit.outcome, null),
+          }
+        : null;
+    }
+    const parent = unit.reports.find(
+      (report) =>
+        !report.follows &&
+        (report.step.kind === "action" || report.step.kind === "answer") &&
+        report.step.action.id === id,
+    );
+    // An M210 action rides on a classification and has no step of its own.
+    const staged = content.actions.find((action) => action.id === id);
+    const title = parent
+      ? stepTitle(t, parent.step, rows, content, actionText)
+      : staged
+        ? facts(t, [
+            actionText(t, "", staged),
+            titleOf(t, rows, actionRows(staged)[0] ?? ""),
+          ])
+        : null;
+    return title === null
+      ? null
+      : {
+          key: unit.key,
+          title,
+          outcome: unit.outcome,
+          note: outcomeText(t, locale, unit.outcome, null),
+        };
+  };
   for (const report of reports) {
     const step = report.step;
     if (step.kind === "bulk") {
@@ -175,9 +255,9 @@ export function outcomeItems(
         report.rows.length > 0 &&
         report.rows.every((row) => row.outcome === report.outcome) &&
         !["applied", "unchanged", "settled"].includes(report.outcome.kind);
-      if (whole)
+      if (whole) {
         items.push({
-          key: `${report.index}`,
+          key: `part:${report.index}`,
           title: stepTitle(t, step, rows, content, actionText),
           outcome: report.outcome,
           head: "part",
@@ -188,36 +268,19 @@ export function outcomeItems(
                 ? t("desktop.ledger.apply.part_unknown")
                 : outcomeText(t, locale, report.outcome, null),
         });
-      else
-        step.rows.forEach((row, at) => {
-          const outcome = report.rows[at]?.outcome ?? report.outcome;
-          items.push({
-            key: `${report.index}:${row.transactionId}`,
-            title: titleOf(t, rows, row.transactionId),
-            outcome,
-            note: outcomeText(
-              t,
-              locale,
-              outcome,
-              storedOf(row.transactionId, row.fields),
-            ),
-          });
-        });
-      continue;
+        // Its rows are in the part's item unless a later write touched them.
+        for (const key of reportUnitKeys(report))
+          if (units.get(key)?.reports.length === 1) emitted.add(key);
+        continue;
+      }
     }
-    items.push({
-      key: `${report.index}`,
-      title: stepTitle(t, step, rows, content, actionText),
-      outcome: report.outcome,
-      note: outcomeText(
-        t,
-        locale,
-        report.outcome,
-        step.kind === "classify" || step.kind === "update"
-          ? storedOf(step.transactionId, step.fields)
-          : null,
-      ),
-    });
+    for (const key of reportUnitKeys(report)) {
+      if (emitted.has(key)) continue;
+      emitted.add(key);
+      const unit = units.get(key);
+      const item = unit && unitItem(unit);
+      if (item) items.push(item);
+    }
   }
   return items;
 }

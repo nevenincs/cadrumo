@@ -1616,8 +1616,10 @@ desktop:
       action:
         allocate: Business share · {share}
         archive: Archive
-        attach: Attach
-        attach_file: Attach {name}
+        attach_file_other: Attach {name} as another document
+        attach_file_purchase: Attach {name} as the purchase invoice
+        attach_other: Attach as another document
+        attach_purchase: Attach as the purchase invoice
         detach: Detach
         exclude: Exclude
         iva_derive: Work out IVA · {category}
@@ -3209,18 +3211,26 @@ desktop:
         active_only: Only active movements take documents.
         add_file: Add from this computer
         add_staged: '{file} · attachment not saved yet'
-        adding: Add {file} · not saved
+        adding_other: Add {file} as another document · not saved
+        adding_purchase: Add {file} as the purchase invoice · not saved
         advisory: No purchase invoice document is attached. You can save the movement;
           calculating a deduction may require its tax details and supporting evidence.
         attach_existing: Attach a document
         attach_staged: Attachment not saved yet
-        attaching: Attach {file} · not saved
+        attaching_other: Attach {file} as another document · not saved
+        attaching_purchase: Attach {file} as the purchase invoice · not saved
         detach: Detach
         detach_named: Detach {file}
         detach_pending: Detach not saved yet
         detach_staged: Detach not saved yet
         detaching: Detach {file} · not saved
         hint: A PDF or an image, read from this computer and stored encrypted.
+        kind:
+          choose: First choose whether it is the movement's purchase invoice or another
+            document.
+          label: Attach as
+          other: Other document
+          purchase: Purchase invoice
         no_free: No other document in the ledger
         none: No documents
         pick_failed: The file dialog did not open.

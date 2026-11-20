@@ -75,6 +75,7 @@ from ...domain.contribuyente.inventory.closing_foundations import (
 )
 from ...domain.filing_evidence import FilingEvidenceReference
 from ...domain.renta.retencion_soportada import RetencionSoportadaOrigen
+from ...tests.pdf_fixtures import text_pdf_bytes
 from ...tests.persona_invoices import render_facturae
 from ...tests.persona_types import InventoryBook, Persona, PersonaDocument, WithholdingCertificate, YearEnvelope
 from ..ledger_action_composition import compose_ledger_action_ports
@@ -361,7 +362,7 @@ def inventory_statement(persona: Persona, book: InventoryBook, *, envelope: Year
     year = book.year.resolve(envelope)
     target = workdir / "inventory" / f"{persona.id}-{book.activity}-{year}.pdf"
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_bytes(f"%PDF-1.4\n% {book.statement} ({year})\n%%EOF\n".encode())
+    target.write_bytes(text_pdf_bytes((f"{book.statement} ({year})",)))
     return target
 
 

@@ -42,7 +42,11 @@ from ....application.user_profile.access_contracts import SessionKind
 from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.secure_object_write import SecureObjectWrite
 from .evidence_mutation_support import EVIDENCE_MUTATION_PROFILE, evidence_mutation_record
-from .unused_repository_ports import UnusedBucketEventRepository, UnusedEvidenceAttachmentIngestor
+from .unused_repository_ports import (
+    UnusedBucketEventRepository,
+    UnusedEvidenceAttachmentIngestor,
+    unused_evidence_document_shape_probe,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -199,6 +203,7 @@ async def test_update_result_carries_the_stored_record_whole_whichever_frontend_
         evidence_repository=_StoredEvidence(current, backend),
         attachment_ingestor=UnusedEvidenceAttachmentIngestor(backend),
         bucket_event_repository=UnusedBucketEventRepository(backend),
+        document_shape_probe=unused_evidence_document_shape_probe,
     )
     monkeypatch.setattr(
         "cadrumo.application.ledger.evidence_mutation_operation.require_active_bucket_id",
@@ -287,6 +292,7 @@ async def test_update_effect_is_unknown_before_guarded_mutation_and_updated_afte
         evidence_repository=EvidenceRepository(),
         attachment_ingestor=UnusedEvidenceAttachmentIngestor(backend),
         bucket_event_repository=UnusedBucketEventRepository(backend),
+        document_shape_probe=unused_evidence_document_shape_probe,
     )
 
     class Cancellation:

@@ -28,16 +28,19 @@ export function movementDocuments(
   };
 }
 
-/** Once purchase evidence is linked it is immutable. A later document is
- * supplementary, so its blob is attached without replacing that reference. */
+/** What a document is on its movement, as the person said: the purchase
+ * invoice, or another document. */
+export type DocumentRole = "purchase" | "other";
+
+/** The attach reference for a document in the role the person chose. Once
+ * purchase evidence is linked it is immutable, so a later document can only
+ * be another document: its blob is attached without replacing that
+ * reference. */
 export function documentAttachmentReference(
-  transaction: Pick<
-    LedgerTransactionProjection,
-    "purchase_invoice_evidence_id"
-  >,
   record: LedgerEvidenceRecordProjection,
+  role: DocumentRole,
 ) {
-  return transaction.purchase_invoice_evidence_id
-    ? { evidenceId: null, attachmentIds: [record.attachment_id] }
-    : { evidenceId: record.evidence_id, attachmentIds: [] };
+  return role === "purchase"
+    ? { evidenceId: record.evidence_id, attachmentIds: [] }
+    : { evidenceId: null, attachmentIds: [record.attachment_id] };
 }

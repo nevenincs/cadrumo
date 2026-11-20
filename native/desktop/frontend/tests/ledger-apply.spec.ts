@@ -9,6 +9,7 @@ import {
   changedSinceRead,
   keepAfterApply,
   askReview,
+  outcomeUnits,
   plannedStepsReported,
   prepareApply,
   RELEASE_OBSERVATIONS,
@@ -18,6 +19,10 @@ import {
   stageAfterApply,
   type ApplyReport,
 } from "../src/shell/ledgerApply";
+import {
+  outcomeTally,
+  stageTally,
+} from "../src/components/ledger/editing/editingModel";
 import type { LedgerPlan } from "../src/shell/ledgerPlan";
 import {
   EMPTY_STAGE,
@@ -885,6 +890,77 @@ test("progress counts the plan's own steps, never the follow-ups a settled step 
   expect(plannedStepsReported(done.report.steps.slice(0, 1))).toBe(1);
   expect(plannedStepsReported(done.report.steps)).toBe(done.plan.steps.length);
   expect(plannedStepsReported([])).toBe(0);
+});
+
+const stagedFile: StagedAction = {
+  id: "doc",
+  kind: "attach_file",
+  transactionId: A,
+  file: "file-1" as never,
+  name: "ticket.pdf",
+  idempotencyKey: "desktop-evidence-1",
+  supplementary: false,
+};
+const evidenceSettled: FakeAnswer = {
+  settle: {
+    profile_id: PROFILE,
+    record: { evidence_id: "0123456789abcdef" },
+  },
+};
+
+test("one staged file is one unit saved, however many writes it took", async () => {
+  const content: StagedContent = {
+    rows: {},
+    drafts: [],
+    actions: [stagedFile],
+  };
+  const done = await apply(content, rowsOf(business(A)), {
+    "ledger.evidence.add": [evidenceSettled],
+    "ledger.attach": [{ settle: { profile_id: PROFILE } }],
+  });
+  expect(done.report.steps).toHaveLength(2);
+  expect(stageTally(content).units).toBe(1);
+  expect(outcomeTally(done.report.steps)).toEqual({ applied: 1 });
+  expect(done.report.saved).toBe(1);
+  const units = outcomeUnits(done.report.steps);
+  expect(units).toHaveLength(1);
+  expect(units[0]?.reports).toHaveLength(2);
+});
+
+test("a follow-up attach that did not save makes its unit not saved", async () => {
+  const content: StagedContent = {
+    rows: {},
+    drafts: [],
+    actions: [stagedFile],
+  };
+  const done = await apply(content, rowsOf(business(A)), {
+    "ledger.evidence.add": [evidenceSettled],
+    "ledger.attach": [{ refuse: "validation_error" }],
+  });
+  expect(outcomeTally(done.report.steps)).toEqual({ refused: 1 });
+  expect(done.report.saved).toBe(0);
+});
+
+test("a movement's edits across several writes are one unit, and each action and new movement another", async () => {
+  const content: StagedContent = {
+    rows: {
+      [A]: {
+        description: set("one"),
+        counterparty: set("two"),
+      },
+    },
+    drafts: [],
+    actions: [stagedFile],
+  };
+  const done = await apply(content, rowsOf(business(A)), {
+    "ledger.update": [updated(A, A)],
+    "ledger.evidence.add": [evidenceSettled],
+    "ledger.attach": [{ settle: { profile_id: PROFILE } }],
+  });
+  expect(done.report.steps.length).toBeGreaterThan(2);
+  expect(stageTally(content).units).toBe(2);
+  expect(outcomeTally(done.report.steps)).toEqual({ applied: 2 });
+  expect(done.report.saved).toBe(2);
 });
 
 test("a new file supplements an existing purchase reference by its stored blob", async () => {

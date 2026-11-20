@@ -671,7 +671,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         ),
         "desktop.ledger.apply.action.": (
             "link",
-            "attach",
             "detach",
             "archive",
             "stash",

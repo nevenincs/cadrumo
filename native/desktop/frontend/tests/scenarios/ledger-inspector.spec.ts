@@ -345,6 +345,11 @@ test("Documents and Invoice read the profile's records even where the window dra
   const attach = body(target).getByRole("button", {
     name: label("desktop.ledger.inspector.documents.attach_existing"),
   });
+  await body(target)
+    .getByRole("radio", {
+      name: label("desktop.ledger.inspector.documents.kind.other"),
+    })
+    .click();
   await attach.click();
   await expect(target.getByRole("option").first()).toBeVisible();
   await expect(target.getByRole("listbox")).not.toContainText(

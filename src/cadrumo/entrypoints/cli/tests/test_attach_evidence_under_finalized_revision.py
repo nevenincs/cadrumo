@@ -26,6 +26,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.remove_draft_revision_support import seed_revision_citing_transaction
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
+from ....adapters.inbound.einvoice.shape import probe_document_shape
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -54,6 +55,7 @@ from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import BucketTransactionRef, derive_transaction_id
+from ....tests.pdf_fixtures import text_pdf_bytes
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -69,7 +71,7 @@ def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 @pytest.fixture
 def pdf_file(tmp_path: Path) -> Path:
     path = tmp_path / "supplier-invoice.pdf"
-    path.write_bytes(b"%PDF-1.4 supplier invoice")
+    path.write_bytes(text_pdf_bytes(("synthetic supplier invoice",)))
     return path
 
 
@@ -109,6 +111,7 @@ def _mint_evidence_id(profile: TestRuntimeProfile, pdf_file: Path) -> str:
             evidence_repository=LedgerEvidenceRepositoryAdapter(objects=profile.repository),
             attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=profile.repository)),
             bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+            document_shape_probe=probe_document_shape,
         )
     )
     return service.add(bucket_id=profile.bucket_id, source_path=pdf_file).record.evidence_id

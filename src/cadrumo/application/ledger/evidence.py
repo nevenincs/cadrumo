@@ -28,10 +28,11 @@ rung requires strictly more than the one below it, so none can absorb another
 without either dropping fiscal fields or refusing evidence the tier below
 legitimately accepts.
 
-File-type scope is restricted to PDF and image inputs. Plaintext, email
-body, and Drive-URL evidence sources are out of scope. ``add`` refuses
-non-PDF/non-image source paths with a typed
-:class:`PurchaseInvoiceEvidenceInputError`.
+File-type scope is restricted to PDF, image and structured XML inputs.
+Plaintext, email body, and Drive-URL evidence sources are out of scope. ``add``
+refuses source paths of any other type, and files whose bytes match no readable
+document shape (an empty file, a PDF header over garbage), with a typed
+:class:`PurchaseInvoiceEvidenceInputError` before any custody write.
 
 Persistence is bucket-scoped encrypted secure-object storage. The evidence
 catalogue is a :class:`PurchaseInvoiceEvidenceDocument` and the source bytes
@@ -54,7 +55,7 @@ from pydantic import BaseModel, Field, field_serializer
 
 from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TYPE
-from ...core.hashing import content_hash_hex
+from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
@@ -72,6 +73,7 @@ from .evidence_ports import (
     LedgerEvidencePorts,
     RevisionGuardedPurchaseInvoiceEvidenceRepositoryProtocol,
 )
+from .evidence_shape_admission import require_readable_document_shape
 from .persistence_ports import LedgerPersistenceConflictError
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
@@ -516,6 +518,47 @@ def _emit_evidence_event(
     return event.event_id
 
 
+def _read_readable_evidence_digest(
+    *,
+    ports: LedgerEvidencePorts,
+    resolved: Path,
+    expected_content_digest: ContentDigest | None,
+) -> ContentDigest:
+    """Read the file's bytes once and refuse, before any effect, bytes no reader can read.
+
+    The suffix admits a file; only its bytes say what it is. The probe is the
+    same capability the read path asks, so a document the reader would refuse is
+    never stored as evidence. A caller's planned digest is checked against these
+    same bytes. The returned digest names exactly the bytes that were probed,
+    and custody is asked to store only bytes with that digest.
+    """
+    try:
+        data = resolved.read_bytes()
+    except OSError:
+        raise PurchaseInvoiceEvidenceInputError(
+            translated_message="errors.refused.refused_ledger_evidence_input",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_FILE_READABLE,
+                facts={"source_file_readable": False},
+            ),
+        ) from None
+    digest = sha256_hex(data)
+    if expected_content_digest is not None and digest != expected_content_digest:
+        raise PurchaseInvoiceEvidenceInputError(
+            translated_message="errors.refused.refused_ledger_evidence_input",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_DOCUMENT_BYTES_AVAILABLE,
+                facts={"source_content_matches_planned_digest": False},
+            ),
+        )
+    require_readable_document_shape(
+        data,
+        mime_type=_SUFFIX_MIME[resolved.suffix.lower()],
+        probe=ports.document_shape_probe,
+    )
+    return digest
+
+
 def _ingest_evidence_attachment(
     *,
     ports: LedgerEvidencePorts,
@@ -526,7 +569,12 @@ def _ingest_evidence_attachment(
     actor: str,
     expected_content_digest: ContentDigest | None = None,
 ) -> ContentDigest:
-    """Write one admitted evidence file through the application custody port."""
+    """Write one admitted, readable evidence file through the application custody port."""
+    probed_digest = _read_readable_evidence_digest(
+        ports=ports,
+        resolved=resolved,
+        expected_content_digest=expected_content_digest,
+    )
     return ports.attachment_ingestor.ingest(
         EvidenceAttachmentIngestRequest(
             bucket_id=bucket_id,
@@ -535,7 +583,7 @@ def _ingest_evidence_attachment(
             mime_type=_SUFFIX_MIME[resolved.suffix.lower()],
             captured_at=now,
             actor=actor,
-            expected_content_digest=expected_content_digest,
+            expected_content_digest=probed_digest,
         ),
     )
 
@@ -556,6 +604,22 @@ def admit_evidence_file(source_path: str | Path, source_directory: Path | None) 
     return resolved, media_kind
 
 
+def require_readable_evidence_file(
+    *,
+    ports: LedgerEvidencePorts,
+    admitted: tuple[Path, MediaKind],
+) -> ContentDigest:
+    """Refuse, before any effect, an admitted file whose bytes match no readable document shape.
+
+    Registered operations call this in their preflight, ahead of the first
+    ``UNKNOWN`` effect, so a refused document is reported as a refusal and not as
+    an ambiguous write. The ingestion that follows probes the bytes again and
+    stores only bytes with the digest it probed.
+    """
+    resolved, _media_kind = admitted
+    return _read_readable_evidence_digest(ports=ports, resolved=resolved, expected_content_digest=None)
+
+
 def ingest_evidence_file(
     *,
     ports: LedgerEvidencePorts,
@@ -564,7 +628,10 @@ def ingest_evidence_file(
     now: datetime,
     actor: str,
 ) -> ContentDigest:
-    """Store one admitted file's bytes in custody, with no invoice record."""
+    """Store one admitted file's bytes in custody, with no invoice record.
+
+    Refuses, before the custody write, bytes that match no readable document shape.
+    """
     resolved, media_kind = admitted
     return _ingest_evidence_attachment(
         ports=ports,
@@ -849,7 +916,7 @@ class PurchaseInvoiceEvidenceService:
                 two attachments of one file are two distinct pieces of
                 evidence, and collapsing them would be its own defect.
             expected_content_digest: Optional planned source identity checked
-                against the single byte allocation entering attachment custody.
+                against the bytes that are probed and then stored.
 
         Returns:
             :class:`PurchaseInvoiceEvidenceResult`: Carrying the new record and the
@@ -857,7 +924,9 @@ class PurchaseInvoiceEvidenceService:
 
         Raises:
             ``PurchaseInvoiceEvidenceInputError``: if ``source_path`` is not a
-                readable file or has an unsupported extension.
+                readable file, has an unsupported extension, does not match
+                ``expected_content_digest``, or holds bytes that match no
+                readable document shape. All refusals precede custody writes.
         """
         resolved, media_kind = _resolve_evidence_source(source_path, source_directory)
         now = clock_utc_now()
@@ -885,8 +954,9 @@ class PurchaseInvoiceEvidenceService:
             notes=notes,
         )
         # The attachment service is the single manifest and encrypted-byte write
-        # authority. Ledger retains its narrow PDF/image admission, stable source
-        # provenance, and evidence-specific audit lifecycle around that custody write.
+        # authority. Ledger retains its narrow PDF/image admission, byte-shape
+        # refusal, stable source provenance, and evidence-specific audit
+        # lifecycle around that custody write.
         digest = _ingest_evidence_attachment(
             ports=self._ports,
             bucket_id=bucket_id,

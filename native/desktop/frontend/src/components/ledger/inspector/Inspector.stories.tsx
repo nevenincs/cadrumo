@@ -384,6 +384,14 @@ export const AttachDocument: Story = {
     ),
   },
   play: async ({ canvasElement }) => {
+    // The movement has no purchase invoice, so the person first says what
+    // the document is.
+    const kind = await drawn<HTMLButtonElement>(
+      canvasElement,
+      '[data-section-body="documents"] .ledger-document-kind [role="radio"]',
+    );
+    kind.scrollIntoView({ block: "center" });
+    await userEvent.click(kind);
     const attach = await drawn<HTMLButtonElement>(
       canvasElement,
       '[data-section-body="documents"] button[aria-haspopup]',

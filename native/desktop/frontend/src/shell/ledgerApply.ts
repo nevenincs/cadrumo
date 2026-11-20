@@ -430,6 +430,91 @@ const DONE: ReadonlySet<StepOutcome["kind"]> = new Set([
   "saved_unread",
 ]);
 
+/** The outcomes worst first: a unit that holds one takes the first it holds. */
+export const WORST_OUTCOMES: readonly StepOutcome["kind"][] = [
+  "unknown",
+  "saved_unread",
+  "refused",
+  "not_sent",
+];
+const BEST_OUTCOMES: readonly StepOutcome["kind"][] = [
+  "applied",
+  "settled",
+  "unchanged",
+];
+
+/** A change as the review counts it: one movement's row edits, one staged
+ * action with the writes that followed it, or one new movement. */
+export type OutcomeUnit = {
+  key: string;
+  /** The worst outcome of its parts; one that did not save is not saved. */
+  outcome: StepOutcome;
+  reports: StepReport[];
+};
+
+/** The units a report contributes to, as keys. A follow-up belongs to the
+ * action it follows; a classification that carries an M210 action is also
+ * that action's write. */
+export function reportUnitKeys(report: StepReport): string[] {
+  const step = report.step;
+  if (report.follows) return [`action:${report.follows}`];
+  switch (step.kind) {
+    case "bulk":
+    case "update":
+      return report.rows.map((row) => `row:${row.transactionId}`);
+    case "classify":
+      return [
+        ...report.rows.map((row) => `row:${row.transactionId}`),
+        ...(step.m210Action ? [`action:${step.m210Action}`] : []),
+      ];
+    case "add":
+      return [`draft:${step.draftKey}`];
+    case "action":
+    case "answer":
+      return [`action:${step.action.id}`];
+  }
+}
+
+/** The outcome each report gave to one unit of its own. */
+function unitPartOutcome(report: StepReport, key: string): StepOutcome {
+  if (report.step.kind === "bulk" || report.step.kind === "update") {
+    const row = report.rows.find(
+      (found) => `row:${found.transactionId}` === key,
+    );
+    if (row) return row.outcome;
+  }
+  return report.outcome;
+}
+
+/**
+ * The reports grouped into the units the review counted, in the order each
+ * first reported. This is the one count of changes saved, shown or listed.
+ */
+export function outcomeUnits(reports: readonly StepReport[]): OutcomeUnit[] {
+  const parts = new Map<
+    string,
+    { report: StepReport; outcome: StepOutcome }[]
+  >();
+  for (const report of reports)
+    for (const key of reportUnitKeys(report)) {
+      const held = parts.get(key) ?? [];
+      held.push({ report, outcome: unitPartOutcome(report, key) });
+      parts.set(key, held);
+    }
+  return [...parts].map(([key, held]) => {
+    const kinds = new Set(held.map((part) => part.outcome.kind));
+    const kind =
+      WORST_OUTCOMES.find((worse) => kinds.has(worse)) ??
+      BEST_OUTCOMES.find((better) => kinds.has(better)) ??
+      held[0]!.outcome.kind;
+    return {
+      key,
+      outcome: held.find((part) => part.outcome.kind === kind)!.outcome,
+      reports: held.map((part) => part.report),
+    };
+  });
+}
+
 /**
  * Runs `plan`'s steps in order. Each is sent once. A refused step keeps its
  * movement's later steps back; an unknown one keeps every later step back;
@@ -542,21 +627,20 @@ export async function runPlan(
     onStep?.(report);
   }
   const reread = new Set<string>();
-  let saved = 0;
-  for (const report of steps)
+  for (const report of steps) {
     for (const row of report.rows) {
       const kind = row.outcome.kind;
       if (DONE.has(kind) || kind === "unknown")
         reread.add(current(row.transactionId));
-      if (kind === "applied" || kind === "settled" || kind === "saved_unread")
-        saved += 1;
     }
-  for (const report of steps)
     if (report.step.kind === "add" && DONE.has(report.outcome.kind)) {
-      saved += 1;
       const created = ids.get(report.step.draftKey);
       if (created) reread.add(created);
     }
+  }
+  const saved = outcomeUnits(steps).filter(({ outcome }) =>
+    ["applied", "settled", "saved_unread"].includes(outcome.kind),
+  ).length;
   return {
     steps,
     paused,
