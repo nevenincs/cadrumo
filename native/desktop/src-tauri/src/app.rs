@@ -157,6 +157,7 @@ pub fn run(
         shell::user_profile::censo::commands(),
         shell::aeat_sync::commands(),
         shell::ledger::commands(),
+        shell::background_tasks::commands(),
         shell::modelo::commands(),
         shell::sede_view::commands::register(),
         manager::commands(),
@@ -496,6 +497,9 @@ fn close_clients_and_supervision<R: Runtime>(handle: &tauri::AppHandle<R>) -> Re
     if let Some(ledger) = handle.try_state::<Arc<shell::ledger::LedgerHost>>() {
         ledger.close();
     }
+    if let Some(tasks) = handle.try_state::<Arc<shell::background_tasks::BackgroundTasks>>() {
+        tasks.close();
+    }
     if let Some(profile) = handle.try_state::<Arc<shell::user_profile::ProfileHost>>() {
         profile.close();
     }
@@ -624,8 +628,13 @@ pub(crate) async fn assemble<R: Runtime>(
     )));
     let profile = Arc::new(shell::user_profile::ProfileHost::new(sign_in.clone()));
     app.manage(profile.clone());
+    let background_tasks = Arc::new(shell::background_tasks::BackgroundTasks::new(
+        profile.clone(),
+    ));
+    app.manage(background_tasks.clone());
     app.manage(Arc::new(shell::ledger::LedgerHost::new(
         profile.clone(),
+        background_tasks,
         diagnostics.clone(),
     )));
     app.manage(Arc::new(shell::sede_view::SedeViewHost::new(
@@ -981,6 +990,7 @@ mod tests {
             shell::user_profile::censo::commands(),
             shell::aeat_sync::commands(),
             shell::ledger::commands(),
+            shell::background_tasks::commands(),
             shell::modelo::commands(),
             shell::sede_view::commands::register(),
             manager::commands(),

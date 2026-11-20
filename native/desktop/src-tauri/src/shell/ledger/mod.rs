@@ -10,11 +10,18 @@
 //! Files reach a submission only as tokens the host issued for the person's
 //! own picks, and an own account's number only in a raw body that is wiped
 //! once sent.
+//!
+//! A background definition, a classification job's run, holds the serial
+//! lock only while it is submitted. The window is answered where it stands
+//! then, and the host follows it to its end without the lock, so a cancel or
+//! any other ledger write is not held up behind it; each move of the run cues
+//! the background-task channel.
 mod admitted;
 
+use super::background_tasks::BackgroundTasks;
 use super::picked_files::{self, Files, Kinds, Pick, Picks, Purpose};
 use super::relay::{self, Failure, Result, Wiped, lock, protocol};
-use super::settle::{self, Decision, Operations, Outcome, ReviewDocument, Tracked};
+use super::settle::{self, Decision, Operations, Outcome, ReviewDocument, Serial, Tracked};
 use super::user_profile::ProfileHost;
 use crate::agent::person::{HeldPerson, PersonEvent};
 use admitted::{Definition, Subject, admitted};
@@ -300,6 +307,46 @@ async fn submit_on(
     settle::settle(events, &tracked, person).await
 }
 
+/// Submits a background definition's payload, already admitted, for the
+/// profile of the held session `identity` names, holding `serial` only until
+/// the runtime has taken it, and tracks it for the window to observe and
+/// cancel. Its text is overwritten once sent, or when it is refused here.
+async fn start_on(
+    serial: &impl Serial,
+    operations: &Operations,
+    person: &HeldPerson,
+    identity: Value,
+    definition: Definition,
+    mut payload: Wiped,
+) -> Result<Tracked> {
+    let profile = identity["profile_id"]
+        .as_str()
+        .ok_or_else(protocol)?
+        .to_owned();
+    let fields = payload
+        .0
+        .as_object_mut()
+        .ok_or_else(|| failure("invalid"))?;
+    fields.insert("profile_id".into(), json!(profile));
+    let subject = subject(definition, &profile, fields)?;
+    let request = relay::submission(definition.id, &subject, std::mem::take(&mut payload.0));
+    relay::admit_size(&request.0)?;
+    operations.room(&identity)?;
+    let operation = {
+        let _serial = serial.serial().await;
+        relay::submit_wiping(person, request, definition.mutation()).await?
+    };
+    let tracked = operations.timed(Tracked::new(
+        operation,
+        definition.settling(),
+        subject,
+        identity,
+        Vec::new(),
+    ));
+    operations.track(tracked.clone());
+    Ok(tracked)
+}
+
 /// Where a drop on the window goes: the Ledger page's current drop target.
 struct Dropping {
     subscription: u32,
@@ -356,18 +403,32 @@ pub struct LedgerHost {
     files: Files,
     dropping: Mutex<Option<Dropping>>,
     listening: AtomicBool,
+    /// Cued each time a background run this window started moves.
+    tasks: Arc<BackgroundTasks>,
+    /// The follows of the background runs this window started.
+    runs: Mutex<Vec<tauri::async_runtime::JoinHandle<()>>>,
 }
 impl LedgerHost {
-    pub fn new(profile: Arc<ProfileHost>, diagnostics: Arc<Diagnostics>) -> Self {
+    pub fn new(
+        profile: Arc<ProfileHost>,
+        tasks: Arc<BackgroundTasks>,
+        diagnostics: Arc<Diagnostics>,
+    ) -> Self {
         Self {
             profile,
             operations: Operations::measured(diagnostics),
             files: Files::default(),
             dropping: Mutex::new(None),
             listening: AtomicBool::new(false),
+            tasks,
+            runs: Mutex::default(),
         }
     }
     pub fn close(&self) {
+        // A run goes on in the profile's worker: only the window's follow of it ends.
+        for run in lock(&self.runs).drain(..) {
+            run.abort();
+        }
         self.operations.clear();
         self.files.clear();
         *lock(&self.dropping) = None;
@@ -391,6 +452,9 @@ impl LedgerHost {
     async fn relay(&self, definition: Definition, mut payload: Wiped) -> Result<Outcome> {
         if self.profile.is_closed() {
             return Err(protocol());
+        }
+        if definition.background() {
+            return self.start(definition, payload).await;
         }
         let _serial = self.profile.serial().await;
         let person = self.profile.person(None).await?;
@@ -416,6 +480,37 @@ impl LedgerHost {
         )
         .await?;
         settle::still_held(&self.profile, &person, outcome, definition.mutation()).await
+    }
+    /// Starts a background definition for the window's signed-in profile and
+    /// answers where it stands now; the host follows it from there, outside
+    /// the serial lock. It names no file.
+    async fn start(&self, definition: Definition, payload: Wiped) -> Result<Outcome> {
+        let person = self.profile.person(None).await?;
+        let identity = relay::identity(&person).await?;
+        let events = self.profile.sign_in().person_events();
+        let tracked = start_on(
+            self.profile.as_ref(),
+            &self.operations,
+            &person,
+            identity,
+            definition,
+            payload,
+        )
+        .await?;
+        let standing = settle::observe_on(&tracked, &person).await;
+        let tasks = self.tasks.clone();
+        let follow = tauri::async_runtime::spawn(settle::follow_detached(
+            events,
+            tracked,
+            person.clone(),
+            move || tasks.changed(),
+        ));
+        {
+            let mut runs = lock(&self.runs);
+            runs.retain(|run| !run.inner().is_finished());
+            runs.push(follow);
+        }
+        settle::still_held(&self.profile, &person, standing?, definition.mutation()).await
     }
     /// Tokens for what the person dropped on the page that takes drops.
     fn dropped(self: &Arc<Self>, event: &tauri::DragDropEvent) {
