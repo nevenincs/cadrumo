@@ -161,7 +161,9 @@ export function routeCensoRefusals(
     ...port,
     start: (profile) => watched(port.start(profile)),
     status: (profile, operation) => watched(port.status(profile, operation)),
-    answer: (profile, operation, reviewDigest, decision) =>
-      watched(port.answer(profile, operation, reviewDigest, decision)),
+    answer: (profile, operation, reviewDigest, decision, accepted) =>
+      watched(
+        port.answer(profile, operation, reviewDigest, decision, accepted),
+      ),
   };
 }

@@ -379,6 +379,7 @@ export interface HostCommands {
       operation: string;
       reviewDigest: string | null;
       decision: import("../shell/profileCenso").CensoDecision;
+      accepted: string[] | null;
     };
     result: import("../shell/profileCenso").CensoSnapshot;
   };

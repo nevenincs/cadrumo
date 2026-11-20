@@ -9,21 +9,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
+import { useEffect, useState } from "react";
 import type { CensoDecision, CensoSnapshot } from "../../shell/profileCenso";
 import { useStrings } from "../../shell/strings";
 
 type Field = CensoSnapshot["fields"][number];
 
-/** What saving the review does to one detail, as the host decided it. */
-function outcomeKey(field: Field) {
+/** What saving the review does to one detail, given the operator's choice. */
+function outcomeKey(field: Field, accepted: boolean) {
   if (field.incoming === null) return "desktop.profile.censo.absent" as const;
-  if (field.preserve) return "desktop.profile.censo.preserve" as const;
+  if (!accepted) return "desktop.profile.censo.preserve" as const;
   return "desktop.profile.censo.adopt" as const;
 }
+/** The host's own proposal for a value: adopt it unless it keeps the answer. */
+const proposed = (field: Field) => !field.preserve && field.incoming !== null;
 
 /**
  * Every value a Censo read proposes, beside what the profile holds now and
- * what saving will do with it. The review is answered here as a whole.
+ * what saving will do with it. Each value the read states is accepted or
+ * rejected on its own, starting from the host's proposal; the review is then
+ * saved with the accepted ones or discarded as a whole.
  */
 export function CensoReview({
   open,
@@ -39,9 +44,20 @@ export function CensoReview({
   /** The profile's own name for a detail's path. */
   label(path: string): string;
   busy: boolean;
-  onAnswer(decision: Extract<CensoDecision, "apply" | "reject">): void;
+  onAnswer(
+    decision: Extract<CensoDecision, "apply" | "reject">,
+    accepted?: string[],
+  ): void;
 }) {
   const t = useStrings();
+  const [choices, setChoices] = useState<Record<string, boolean>>({});
+  // Each time the review opens, or another one arrives, the choices start
+  // from what the host proposes.
+  useEffect(() => {
+    setChoices(Object.fromEntries(fields.map((f) => [f.path, proposed(f)])));
+  }, [open, fields]);
+  const accepts = (field: Field) =>
+    field.incoming !== null && (choices[field.path] ?? proposed(field));
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -68,14 +84,15 @@ export function CensoReview({
                 <th scope="col" className="py-1 pr-3 font-medium">
                   {t("desktop.profile.censo.incoming")}
                 </th>
-                <th scope="col" className="py-1 font-medium">
+                <th scope="col" className="py-1 pr-3 font-medium">
                   {t("desktop.profile.censo.review_outcome")}
                 </th>
+                <td className="py-1" aria-hidden />
               </tr>
             </thead>
             <tbody>
               {fields.map((field) => {
-                const adopting = !field.preserve && field.incoming !== null;
+                const adopting = accepts(field);
                 return (
                   <tr
                     key={field.path}
@@ -113,9 +130,45 @@ export function CensoReview({
                     </td>
                     <td
                       data-part="outcome"
-                      className="py-1.5 text-muted-foreground italic"
+                      className="py-1.5 pr-3 text-muted-foreground italic"
                     >
-                      {t(outcomeKey(field))}
+                      {t(outcomeKey(field, adopting))}
+                    </td>
+                    <td data-part="choice" className="py-1">
+                      {field.incoming !== null && (
+                        <div
+                          role="group"
+                          aria-label={label(field.path)}
+                          className="flex gap-1"
+                        >
+                          {(["accept", "reject"] as const).map((choice) => (
+                            <Button
+                              key={choice}
+                              size="xs"
+                              variant={
+                                (choice === "accept") === adopting
+                                  ? "primary"
+                                  : "outline"
+                              }
+                              data-choice={choice}
+                              aria-pressed={(choice === "accept") === adopting}
+                              disabled={busy}
+                              onClick={() =>
+                                setChoices((now) => ({
+                                  ...now,
+                                  [field.path]: choice === "accept",
+                                }))
+                              }
+                            >
+                              {t(
+                                choice === "accept"
+                                  ? "desktop.profile.censo.choice_accept"
+                                  : "desktop.profile.censo.choice_reject",
+                              )}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -131,7 +184,28 @@ export function CensoReview({
           >
             {t("desktop.profile.censo.reject")}
           </Button>
-          <Button disabled={busy} onClick={() => onAnswer("apply")}>
+          <Button
+            variant="outline"
+            disabled={busy}
+            onClick={() =>
+              setChoices(
+                Object.fromEntries(
+                  fields.map((f) => [f.path, f.incoming !== null]),
+                ),
+              )
+            }
+          >
+            {t("desktop.profile.censo.accept_all")}
+          </Button>
+          <Button
+            disabled={busy}
+            onClick={() =>
+              onAnswer(
+                "apply",
+                fields.filter(accepts).map((field) => field.path),
+              )
+            }
+          >
             {busy && <Spinner />}
             {t("desktop.profile.censo.apply")}
           </Button>

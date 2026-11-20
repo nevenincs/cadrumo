@@ -196,8 +196,14 @@ export const UserProfilePage = memo(function UserProfilePage({
   // What a review brings is remembered until it is answered, so the values
   // it saved can say where they came from.
   const reviewed = useRef<CensoSnapshot["fields"]>([]);
+  // The paths the operator accepted when they saved the review, if they
+  // chose one by one; a review that comes back replaces that choice.
+  const choiceMade = useRef<string[] | null>(null);
   useEffect(() => {
-    if (review) reviewed.current = review.fields;
+    if (review) {
+      reviewed.current = review.fields;
+      choiceMade.current = null;
+    }
   }, [review]);
   const syncState = sync.snapshot?.state;
   useEffect(() => {
@@ -205,7 +211,11 @@ export const UserProfilePage = memo(function UserProfilePage({
       setFromAeat(
         new Set(
           reviewed.current
-            .filter((field) => !field.preserve && field.incoming !== null)
+            .filter((field) =>
+              choiceMade.current
+                ? choiceMade.current.includes(field.path)
+                : !field.preserve && field.incoming !== null,
+            )
             .map((field) => field.path),
         ),
       );
@@ -1065,9 +1075,21 @@ export const UserProfilePage = memo(function UserProfilePage({
           fields={review.fields.filter((field) => rowById(field.path))}
           label={(path) => rowById(path)?.field.label ?? ""}
           busy={sync.busy}
-          onAnswer={(decision) => {
+          onAnswer={(decision, accepted) => {
             setReviewing(false);
-            void sync.answer(decision);
+            // A value the dialog does not list keeps the host's proposal.
+            const unlisted = review.fields.filter(
+              (field) =>
+                !rowById(field.path) &&
+                !field.preserve &&
+                field.incoming !== null,
+            );
+            const chosen = accepted && [
+              ...accepted,
+              ...unlisted.map((field) => field.path),
+            ];
+            choiceMade.current = chosen ?? null;
+            void sync.answer(decision, chosen);
           }}
         />
       )}
