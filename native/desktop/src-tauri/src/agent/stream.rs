@@ -306,7 +306,8 @@ pub enum StreamEvent {
 /// What the stream's owner does next.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Step {
-    Emit(StreamEvent),
+    /// Boxed so the common non-event steps stay small.
+    Emit(Box<StreamEvent>),
     /// Read the run's status for the questionnaire `request_id` names: the
     /// frame carries only the handle.
     ReadQuestionnaire(String),
@@ -318,6 +319,12 @@ pub enum Step {
     Resume,
     /// Nothing more is read from this stream.
     End,
+}
+
+impl Step {
+    pub fn emit(event: StreamEvent) -> Self {
+        Self::Emit(Box::new(event))
+    }
 }
 
 /// One run's stream, mapped frame by frame.
@@ -359,7 +366,7 @@ impl Mapping {
     fn lost(&mut self) -> Vec<Step> {
         self.ended = true;
         vec![
-            Step::Emit(StreamEvent::Lost {
+            Step::emit(StreamEvent::Lost {
                 reply_id: Some(self.reply_id.clone()),
             }),
             Step::End,
@@ -422,7 +429,7 @@ impl Mapping {
         let mut steps = Vec::new();
         if !self.started {
             self.started = true;
-            steps.push(Step::Emit(StreamEvent::ReplyStarted {
+            steps.push(Step::emit(StreamEvent::ReplyStarted {
                 reply_id: self.reply_id.clone(),
             }));
         }
@@ -475,7 +482,7 @@ impl Mapping {
         if content.chars().count() >= CONTENT_CAP {
             return Err(());
         }
-        Ok(vec![Step::Emit(StreamEvent::Text {
+        Ok(vec![Step::emit(StreamEvent::Text {
             reply_id: self.reply_id.clone(),
             message_id: message.to_owned(),
             sequence,
@@ -494,7 +501,7 @@ impl Mapping {
         let subagent = text(frame, "subagent_id").is_some_and(|id| !id.is_empty());
         match message {
             Some(message) if !content.is_empty() && !subagent => {
-                vec![Step::Emit(StreamEvent::Thought {
+                vec![Step::emit(StreamEvent::Thought {
                     reply_id: self.reply_id.clone(),
                     message_id: message.to_owned(),
                     sequence,
@@ -584,7 +591,7 @@ impl Mapping {
                 tool
             }
         };
-        Ok(vec![Step::Emit(StreamEvent::Tool {
+        Ok(vec![Step::emit(StreamEvent::Tool {
             reply_id: self.reply_id.clone(),
             tool,
         })])
@@ -619,7 +626,7 @@ impl Mapping {
             return Err(());
         }
         self.pending.insert(request_id.to_owned());
-        Ok(vec![Step::Emit(StreamEvent::Approval {
+        Ok(vec![Step::emit(StreamEvent::Approval {
             reply_id: self.reply_id.clone(),
             approval: Approval {
                 request_id: request_id.to_owned(),
@@ -700,7 +707,7 @@ impl Mapping {
         let mut steps: Vec<Step> = std::mem::take(&mut self.pending)
             .into_iter()
             .map(|request_id| {
-                Step::Emit(StreamEvent::Resolved {
+                Step::emit(StreamEvent::Resolved {
                     reply_id: self.reply_id.clone(),
                     request_id,
                 })
@@ -759,7 +766,7 @@ mod tests {
         steps
             .into_iter()
             .filter_map(|step| match step {
-                Step::Emit(event) => Some(event),
+                Step::Emit(event) => Some(*event),
                 _ => None,
             })
             .collect()
@@ -1055,7 +1062,7 @@ mod tests {
     #[test]
     fn what_a_replay_cannot_cover_ends_the_stream_as_lost() {
         let lost = [
-            Step::Emit(StreamEvent::Lost {
+            Step::emit(StreamEvent::Lost {
                 reply_id: Some("run-1".into()),
             }),
             Step::End,
@@ -1195,7 +1202,7 @@ mod tests {
         assert_eq!(
             steps,
             [
-                Step::Emit(StreamEvent::Lost {
+                Step::emit(StreamEvent::Lost {
                     reply_id: Some("run-1".into())
                 }),
                 Step::End
@@ -1278,7 +1285,7 @@ mod tests {
         assert_eq!(
             steps,
             [
-                Step::Emit(StreamEvent::Resolved {
+                Step::emit(StreamEvent::Resolved {
                     reply_id: "run-1".into(),
                     request_id: "clar-1".into()
                 }),
@@ -1308,7 +1315,7 @@ mod tests {
         assert_eq!(
             steps,
             [
-                Step::Emit(StreamEvent::ReplyStarted {
+                Step::emit(StreamEvent::ReplyStarted {
                     reply_id: "run-1".into()
                 }),
                 Step::Settle(RunEnd::Cancelled),

@@ -118,9 +118,12 @@ mod before {
                     .frame(&frame.to_string())
                     .into_iter()
                     .find_map(|step| match step {
-                        Step::Emit(StreamEvent::Approval { approval, .. }) => {
-                            serde_json::to_value(approval).ok()
-                        }
+                        Step::Emit(event) => match *event {
+                            StreamEvent::Approval { approval, .. } => {
+                                serde_json::to_value(approval).ok()
+                            }
+                            _ => None,
+                        },
                         _ => None,
                     })
             })
