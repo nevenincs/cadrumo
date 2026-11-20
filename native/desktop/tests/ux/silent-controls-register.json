@@ -1,0 +1,4 @@
+{
+  "about": "Controls the silent-controls audit must not activate as an ordinary press. Each entry matches a shown control by its chrome-string label key (resolved in the window's language) or, when the control has no catalogue label, by an exact accessible-name pattern. kind destructive or remote: the press must open a confirmation (a dialog or alertdialog), which the audit then cancels; kind external: the control hands off to the system (browser, folder) and is not pressed. A Button with data-variant=destructive is treated as destructive without an entry.",
+  "entries": []
+}
