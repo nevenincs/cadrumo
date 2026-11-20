@@ -1289,6 +1289,8 @@ desktop:
     unavailable: Ahora no se pueden mostrar los datos de la AEAT.
     update: Actualizar
     update_area: Actualizar {area}
+  agent:
+    already_new: Ya estás en una conversación nueva
   automation_access:
     cancel: Cancelar
     cleanup_pending: Eliminada. Cadrumo aún está borrando la clave guardada de este

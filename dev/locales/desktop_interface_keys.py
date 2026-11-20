@@ -502,6 +502,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.agent.download_models",
         "desktop.agent.more_files",
         "desktop.agent.new_conversation",
+        "desktop.agent.already_new",
         "desktop.agent.no_models",
         "desktop.agent.no_provider",
         "desktop.agent.no_installed_model",
