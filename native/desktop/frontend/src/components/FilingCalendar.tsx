@@ -419,6 +419,7 @@ export function FilingCalendarView({
   );
   /** A scroll of one of the page's scrollers, as the reader's or not. */
   const scrolled = (scroller: HTMLElement, faces: ("months" | "list")[]) => {
+    checkToday();
     const el = root.current;
     // Reported while the page is a width its faces have not yet been put
     // back for: the new layout's doing, not the reader's.
@@ -554,9 +555,16 @@ export function FilingCalendarView({
   ]);
   // Back to where the calendar stands: the month of the evaluated day among
   // the months, and its mark in the list, each where a face first opens.
-  const toToday = () => {
+  // Where each shown face's scroller would have to be for that, kept within
+  // how far it can scroll.
+  const todayPlaces = useCallback(() => {
     const el = root.current;
-    if (!el || evaluatedOn === null) return;
+    const places: {
+      face: "months" | "list";
+      scroller: HTMLElement;
+      top: number;
+    }[] = [];
+    if (!el || evaluatedOn === null) return places;
     for (const [face, to, air] of [
       [
         "months",
@@ -569,10 +577,36 @@ export function FilingCalendarView({
     ] as const) {
       const at = frame(face);
       if (!at || !to) continue;
-      at.scroller.scrollTop += to.getBoundingClientRect().top - at.under - air;
+      const wanted =
+        at.scroller.scrollTop + to.getBoundingClientRect().top - at.under - air;
+      const furthest = at.scroller.scrollHeight - at.scroller.clientHeight;
+      places.push({
+        face,
+        scroller: at.scroller,
+        top: Math.max(0, Math.min(wanted, furthest)),
+      });
+    }
+    return places;
+  }, [root, evaluatedOn, frame]);
+  const toToday = () => {
+    for (const { face, scroller, top } of todayPlaces()) {
+      scroller.scrollTop = top;
       remember(face);
     }
   };
+  // Whether the way back to today would move anything: where today is
+  // already in place, the control has nothing to do and is not offered.
+  const [awayFromToday, setAwayFromToday] = useState(false);
+  const checkToday = useCallback(
+    () =>
+      setAwayFromToday(
+        todayPlaces().some(
+          ({ scroller, top }) => Math.abs(scroller.scrollTop - top) >= 1,
+        ),
+      ),
+    [todayPlaces],
+  );
+  useLayoutEffect(checkToday);
   // Just chosen, an obligation is in view: it was pressed, or is brought
   // into view below. Whether it still is, is the reader's scrolling to say.
   const selectedWas = useRef(selected);
@@ -944,7 +978,12 @@ export function FilingCalendarView({
                             date: dateFormats(locale).medium.format(day(today)),
                           })
                     }
-                    onClick={toToday}
+                    // Kept in the Tab order where it has nothing to do, as
+                    // the year's own controls are.
+                    aria-disabled={awayFromToday ? undefined : true}
+                    onClick={() => {
+                      if (awayFromToday) toToday();
+                    }}
                   >
                     {evaluatedWord(today, here, locale)}
                   </Button>

@@ -83,6 +83,19 @@ const NO_SELECTION: AgentSelection = {
   wayId: "",
   modelId: "",
 };
+// What a new conversation sets: the column already holding all of it is on a
+// new conversation, and starting one there would change nothing.
+const NEW_CONVERSATION = {
+  panel: "none",
+  conversationId: null,
+  pending: null,
+  sending: false,
+  interactionId: null,
+  chosen: null,
+  carryFrom: null,
+  changeAsk: null,
+  sendFailure: null,
+} as const satisfies Partial<AgentColumnView>;
 
 export type AgentColumnControl = {
   /** Shows the conversation with the model picker open. */
@@ -831,18 +844,15 @@ export function AgentColumn({
           agent
             ? () => {
                 pendingPrompt.current = null;
-                change({
-                  panel: "none",
-                  conversationId: null,
-                  pending: null,
-                  sending: false,
-                  interactionId: null,
-                  chosen: null,
-                  carryFrom: null,
-                  changeAsk: null,
-                  sendFailure: null,
-                });
+                change(NEW_CONVERSATION);
               }
+            : undefined
+        }
+        newConversationHeldBy={
+          (
+            Object.keys(NEW_CONVERSATION) as (keyof typeof NEW_CONVERSATION)[]
+          ).every((key) => view[key] === NEW_CONVERSATION[key])
+            ? t("desktop.agent.already_new")
             : undefined
         }
         onToggleHistory={agent ? () => toggle("history") : undefined}

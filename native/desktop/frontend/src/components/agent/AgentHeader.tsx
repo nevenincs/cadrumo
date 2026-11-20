@@ -26,6 +26,7 @@ export function AgentHeader({
   onRename,
   onMenu,
   onNewConversation,
+  newConversationHeldBy,
   historyOpen = false,
   onToggleHistory,
   documentsOpen = false,
@@ -43,6 +44,8 @@ export function AgentHeader({
   /** Opens a menu for the title. */
   onMenu?: OpenMenu;
   onNewConversation?: () => void;
+  /** Why a new conversation would change nothing now. */
+  newConversationHeldBy?: string;
   historyOpen?: boolean;
   onToggleHistory?: () => void;
   documentsOpen?: boolean;
@@ -127,6 +130,7 @@ export function AgentHeader({
         icon="plus"
         label={t("desktop.agent.new_conversation")}
         onAction={onNewConversation}
+        heldBy={newConversationHeldBy}
       />
       <AgentIconAction
         icon="clock"

@@ -1121,6 +1121,8 @@ desktop:
       phone_title: Aprova al mòbil
       try_again: Torna-ho a provar
     bring_all: Actualitza des de l'AEAT
+    confirm: Cadrumo iniciarà sessió a l'AEAT amb el teu accés configurat i llegirà
+      aquestes dades. No es presenta ni es canvia res a l'AEAT.
     count:
       borrador_refused: '{count} no es poden usar'
       filed_aeat_only: '{count} només a l''AEAT'
@@ -4597,6 +4599,9 @@ desktop:
       review: Revisa
       review_count: Revisa i desa · {count}
       undo: Desfés
+      undone:
+        one: Canvi desfet
+        other: '{count} canvis desfets'
       window_only: només en aquesta finestra
     unavailable: Encara no disponible
     view:

@@ -1079,6 +1079,8 @@ desktop:
       phone_title: Approve on your phone
       try_again: Try again
     bring_all: Update from AEAT
+    confirm: Cadrumo will sign in to the AEAT with your configured access and read
+      this data. Nothing is filed or changed at the AEAT.
     count:
       borrador_refused: '{count} can''t be used'
       filed_aeat_only: '{count} only at AEAT'
@@ -4511,6 +4513,9 @@ desktop:
       review: Review
       review_count: Review and save · {count}
       undo: Undo
+      undone:
+        one: Change undone
+        other: '{count} changes undone'
       window_only: kept only in this window
     unavailable: Not available yet
     view:

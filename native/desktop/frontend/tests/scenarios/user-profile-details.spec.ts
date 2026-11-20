@@ -341,6 +341,35 @@ test("a detail's context menu offers its own actions, by pointer and by key", as
   await expect(row(profile, "identity.tax_id")).toBeFocused();
 });
 
+test("searching from the actions menu leaves the cursor in the search field", async ({
+  page,
+}) => {
+  await open(page);
+  const profile = page.locator(".user-profile-page");
+  const button = profile.getByRole("button", {
+    name: label("desktop.profile.action.menu"),
+    exact: true,
+  });
+  await button.click();
+  await page
+    .getByRole("menu")
+    .getByRole("menuitem", { name: label("desktop.profile.search") })
+    .click();
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  // The menu closing does not take focus back to its button.
+  await expect(
+    profile.getByRole("searchbox", { name: label("desktop.profile.search") }),
+  ).toBeFocused();
+  // An item that sends focus nowhere gives it back to the button.
+  await button.click();
+  await page
+    .getByRole("menu")
+    .getByRole("menuitem", { name: label("desktop.profile.action.collapse") })
+    .click();
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await expect(button).toBeFocused();
+});
+
 test("the actions menu leads each action with its icon and shows the chord of the key that runs it", async ({
   page,
 }) => {

@@ -311,9 +311,13 @@ test("a context menu in the documentation offers copy, link and history", async 
   await expect(
     menu.getByRole("menuitem", { name: label("desktop.menu.copy_link") }),
   ).toBeEnabled();
+  // The page was just opened: there is no page to go back or forward to.
   await expect(
     menu.getByRole("menuitem", { name: label("desktop.action.docs_back") }),
-  ).toBeEnabled();
+  ).toBeDisabled();
+  await expect(
+    menu.getByRole("menuitem", { name: label("desktop.action.docs_forward") }),
+  ).toBeDisabled();
   await expect(
     menu.getByRole("menuitem", { name: label("desktop.rail.docs_home") }),
   ).toBeEnabled();

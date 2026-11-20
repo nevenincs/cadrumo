@@ -467,6 +467,30 @@ test("a conversation of several runs shows each message once, the tools before t
   ]);
 });
 
+test("a new conversation is held back, saying why, while the column is already on one", async ({
+  page: target,
+}) => {
+  await open(target);
+  const literal = (words: string) =>
+    words.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const named = literal(label("desktop.agent.new_conversation"));
+  const why = literal(label("desktop.agent.already_new"));
+  // The header's button, whose name gains the reason while it is held back;
+  // a history row of an untitled conversation starts with the same words.
+  const start = column(target).getByRole("button", {
+    name: new RegExp(`^${named}(\\W+${why})?$`),
+  });
+  // Nothing is open and no conversation is shown: a new one is what is there.
+  await expect(start).toHaveAttribute("aria-disabled", "true");
+  await expect(start).toHaveAccessibleName(new RegExp(why));
+  const body = await openHistory(target);
+  await expect(body.getByText("Pago fraccionado del 130")).toBeVisible();
+  await expect(start).not.toHaveAttribute("aria-disabled");
+  await start.click();
+  await expect(body.getByText("Pago fraccionado del 130")).toHaveCount(0);
+  await expect(start).toHaveAttribute("aria-disabled", "true");
+});
+
 test("a conversation the agent was given no title for keeps the new-conversation heading", async ({
   page: target,
 }) => {

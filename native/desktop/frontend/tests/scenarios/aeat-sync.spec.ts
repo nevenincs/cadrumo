@@ -33,6 +33,25 @@ const update = (page: Locator) =>
     name: label("desktop.aeat_sync.bring_all"),
     exact: true,
   });
+// Starting an update signs in to the AEAT, so the press asks first; the
+// person's word is what starts it.
+const confirmation = (page: Locator) => page.page().getByRole("dialog");
+async function confirm(page: Locator, language = "en") {
+  await expect(confirmation(page)).toContainText(
+    label("desktop.aeat_sync.confirm", {}, language),
+  );
+  await confirmation(page)
+    .getByRole("button", {
+      name: label("desktop.aeat_sync.update", {}, language),
+      exact: true,
+    })
+    .click();
+  await expect(confirmation(page)).toHaveCount(0);
+}
+async function bring(page: Locator) {
+  await update(page).click();
+  await confirm(page);
+}
 const done = (page: Locator) =>
   page.getByRole("button", {
     name: label("desktop.aeat_sync.progress.done_all"),
@@ -105,7 +124,7 @@ test("unread progress does not certify a cached completed run", async ({
   page: target,
 }) => {
   const page = await open(target, "aeat-sync");
-  await update(page).click();
+  await bring(page);
   await expect(done(page)).toBeVisible();
   await target.evaluate(() => window.__scenarioAeatRun!.failReads(true));
   await expect(button(page, "desktop.aeat_sync.progress.reload")).toBeVisible();
@@ -129,7 +148,7 @@ test("an accepted update with unread progress keeps a recovery action", async ({
   const page = await open(target, "aeat-sync-running");
   await expect(update(page)).toBeEnabled();
   await target.evaluate(() => window.__scenarioAeatRun!.failAfterStart());
-  await update(page).click();
+  await bring(page);
   await expect(button(page, "desktop.aeat_sync.progress.reload")).toBeVisible();
   await expect(update(page)).toHaveCount(0);
   await expect(done(page)).toHaveCount(0);
@@ -219,7 +238,7 @@ test("one action brings everything and each area can be updated on its own", asy
   page: target,
 }) => {
   const page = await open(target, "aeat-sync");
-  await update(page).click();
+  await bring(page);
   await expect
     .poll(() => calls(target, "aeatSync.start"))
     .toEqual(["aeatSync.start census,filed,notifications,vat,identity"]);
@@ -227,12 +246,44 @@ test("one action brings everything and each area can be updated on its own", asy
   await button(area(page, "notifications"), "desktop.aeat_sync.update_area", {
     area: label("desktop.aeat_sync.area.notifications.name"),
   }).click();
+  await expect(
+    confirmation(page).getByRole("heading", {
+      name: label("desktop.aeat_sync.update_area", {
+        area: label("desktop.aeat_sync.area.notifications.name"),
+      }),
+    }),
+  ).toBeVisible();
+  await confirm(page);
   await expect
     .poll(() => calls(target, "aeatSync.start"))
     .toEqual([
       "aeatSync.start census,filed,notifications,vat,identity",
       "aeatSync.start notifications",
     ]);
+});
+
+test("an update reaches the AEAT only once the person says so", async ({
+  page: target,
+}) => {
+  const page = await open(target, "aeat-sync");
+  for (const leave of ["cancel", "escape"] as const) {
+    await update(page).click();
+    await expect(confirmation(page)).toContainText(
+      label("desktop.aeat_sync.confirm"),
+    );
+    if (leave === "escape") await target.keyboard.press("Escape");
+    else
+      await confirmation(page)
+        .getByRole("button", {
+          name: label("desktop.aeat_sync.before.cancel"),
+          exact: true,
+        })
+        .first()
+        .click();
+    await expect(confirmation(page)).toHaveCount(0);
+    await expectNoCalls(target, "aeatSync.start");
+  }
+  await expect(page.getByTestId("aeat-sync-checking")).toHaveCount(0);
 });
 
 test("nothing brought yet shows every area as never brought, not as empty", async ({
@@ -263,7 +314,7 @@ test("an update goes from the overview to its progress and then to its results",
   page: target,
 }) => {
   const page = await open(target, "aeat-sync");
-  await update(page).click();
+  await bring(page);
   // Nothing blocks, so the checks are only passed through.
   await expect(page.locator("[data-run=running]")).toBeVisible();
   await expect(results(page)).toBeVisible();
@@ -279,7 +330,7 @@ test("a running update is shown again when the page is, and stops when asked", a
   page: target,
 }) => {
   const page = await open(target, "aeat-sync-running");
-  await update(page).click();
+  await bring(page);
   await expect(page.locator("[data-run=running]")).toBeVisible();
   // Another page, then back: the update is still in view.
   await target
@@ -314,7 +365,7 @@ test("a missing secure browser is installed in the page and the update then goes
     .getByRole("button", { name: label("desktop.setup.not_now") })
     .click();
   const page = await reach(target);
-  await update(page).click();
+  await bring(page);
   const card = page.getByTestId("aeat-sync-browser");
   await expect(card).toContainText(
     label("desktop.aeat_sync.before.browser_title"),
@@ -342,7 +393,7 @@ test("AEAT access that is not set up leads to the access editor", async ({
   page: target,
 }) => {
   const page = await open(target, "aeat-sync-access");
-  await update(page).click();
+  await bring(page);
   const card = page.getByTestId("aeat-sync-access");
   await expect(card).toBeVisible();
   await expectNoCalls(target, "aeatSync.start");
@@ -359,7 +410,7 @@ test("leaving the checks asks nothing of the host", async ({
   page: target,
 }) => {
   const page = await open(target, "aeat-sync-access");
-  await update(page).click();
+  await bring(page);
   await button(
     page.getByTestId("aeat-sync-access"),
     "desktop.aeat_sync.before.not_now",
@@ -394,7 +445,7 @@ test("waiting for the phone shows the approval and carries the update on once ap
   page: target,
 }) => {
   const page = await open(target, "aeat-sync-phone");
-  await update(page).click();
+  await bring(page);
   const phone = page.getByTestId("aeat-sync-phone");
   await expect(phone).toContainText(
     label("desktop.aeat_sync.before.phone_title"),
@@ -416,7 +467,7 @@ test("cancelling the wait for the phone returns to the overview and starts nothi
   page: target,
 }) => {
   const page = await open(target, "aeat-sync-phone");
-  await update(page).click();
+  await bring(page);
   const phone = page.getByTestId("aeat-sync-phone");
   await button(phone, "desktop.aeat_sync.before.cancel").click();
   await expect(phone).toHaveCount(0);
@@ -437,7 +488,7 @@ test("a browser that cannot be downloaded says why, offers another try and a way
     .getByRole("button", { name: label("desktop.setup.not_now") })
     .click();
   const page = await reach(target);
-  await update(page).click();
+  await bring(page);
   const card = page.getByTestId("aeat-sync-browser");
   await button(card, "desktop.aeat_sync.before.browser_install").click();
   await expect(card.getByRole("alert")).toHaveText(
@@ -460,7 +511,7 @@ test("a session that times out pauses the update until the person signs in again
   page: target,
 }) => {
   const page = await open(target, "aeat-sync-timeout");
-  await update(page).click();
+  await bring(page);
   const ended = page.getByTestId("aeat-sync-ended");
   await expect(ended).toBeVisible();
   await expect(page.locator("[data-run=paused]")).toBeVisible();
@@ -475,7 +526,7 @@ test("parts that failed are shown and read again only when asked", async ({
   page: target,
 }) => {
   const page = await open(target, "aeat-sync-partial");
-  await update(page).click();
+  await bring(page);
   await expect(page.locator("[data-run=done]")).toContainText(
     label("desktop.aeat_sync.progress.done_problems"),
   );
@@ -493,7 +544,7 @@ test("a part whose outcome is unknown is read again only after the warning", asy
   page: target,
 }) => {
   const page = await open(target, "aeat-sync-unknown");
-  await update(page).click();
+  await bring(page);
   const name = label("desktop.aeat_sync.area.notifications.name");
   await expect(
     progress(page).locator('[data-area="notifications"]'),
@@ -528,7 +579,7 @@ test("in the results, an area whose outcome is unknown is read again only after 
   page: target,
 }) => {
   const page = await open(target, "aeat-sync-unknown");
-  await update(page).click();
+  await bring(page);
   const census = results(page).locator('[data-area="census"]');
   await expect(census).toHaveAttribute("data-outcome", "unknown");
   await button(census, "desktop.aeat_sync.results.retry").click();
@@ -550,7 +601,7 @@ test("an update that finds nothing new says so in its results", async ({
   page: target,
 }) => {
   const page = await open(target, "aeat-sync-quiet");
-  await update(page).click();
+  await bring(page);
   await expect(results(page)).toBeVisible();
   await expect(progress(page)).toHaveCount(0);
   await expect(results(page)).toContainText(
@@ -561,7 +612,7 @@ test("an update that finds nothing new says so in its results", async ({
 
 test("the results lead on to the census review", async ({ page: target }) => {
   const page = await open(target, "aeat-sync");
-  await update(page).click();
+  await bring(page);
   await expect(results(page)).toBeVisible();
   await button(
     area(page, "census"),
@@ -576,7 +627,7 @@ test("the census review takes over the pull that is going on and starts no secon
   const page = await open(target, "aeat-sync-census-running");
   // The run's census item began the pull at the host; this window did not.
   await target.evaluate(() => window.__scenarioCenso!.begin());
-  await update(page).click();
+  await bring(page);
   await expect(results(page)).toBeVisible();
   await button(
     area(page, "census"),
@@ -614,7 +665,7 @@ test("the census review takes over the pull that is going on and starts no secon
 
 test("the results lead on to the AEAT browser", async ({ page: target }) => {
   const page = await open(target, "aeat-sync");
-  await update(page).click();
+  await bring(page);
   await expect(results(page)).toBeVisible();
   await button(
     area(page, "notifications"),
@@ -632,7 +683,7 @@ test("filed declarations are grouped with their record, what AEAT showed and the
   page: target,
 }) => {
   const page = await open(target, "aeat-sync");
-  await update(page).click();
+  await bring(page);
   await expect(results(page)).toBeVisible();
   const filed = results(page).locator('[data-area="filed"]');
   for (const [match, count] of [
@@ -664,7 +715,7 @@ test("a notification shows its date and no sender", async ({
   page: target,
 }) => {
   const page = await open(target, "aeat-sync");
-  await update(page).click();
+  await bring(page);
   const list = results(page).locator('[data-area="notifications"]');
   await expect(list).toContainText("Requerimiento de información");
   await expect(list).not.toContainText("Agencia Tributaria");
@@ -675,7 +726,7 @@ for (const outcome of ["failed", "unknown"] as const)
     page: target,
   }) => {
     const page = await open(target, `aeat-sync-${outcome}-empty`);
-    await update(page).click();
+    await bring(page);
     for (const id of ["filed", "notifications"]) {
       const result = area(results(page), id);
       await expect(result).toHaveAttribute("data-outcome", outcome);
@@ -692,7 +743,7 @@ test("confirmed empty results retain their explicit empty messages", async ({
   page: target,
 }) => {
   const page = await open(target, "aeat-sync-empty");
-  await update(page).click();
+  await bring(page);
   for (const id of ["filed", "notifications"])
     await expect(area(results(page), id)).toContainText(
       label(`desktop.aeat_sync.results.${id}.empty`),
@@ -713,6 +764,7 @@ for (const language of ["en", "es", "ca", "hu"])
         exact: true,
       });
     await localButton(page, "desktop.aeat_sync.bring_all").click();
+    await confirm(page, language);
     const saved = results(page);
     const rows = area(saved, "filed").locator('[data-match="matched"]');
     await expect(rows).toHaveCount(2);
@@ -754,7 +806,7 @@ for (const attempt of [
     page: target,
   }) => {
     const page = await open(target, "aeat-sync-retry-unknown");
-    await update(page).click();
+    await bring(page);
     const result = area(results(page), attempt.area);
     const name =
       attempt.year === null
@@ -791,7 +843,7 @@ test("retrying another year does not clear the original year's acknowledgement r
   page: target,
 }) => {
   const page = await open(target, "aeat-sync-retry-unknown");
-  await update(page).click();
+  await bring(page);
   const filed = area(results(page), "filed");
   const year = (value: number) =>
     button(filed, "desktop.aeat_sync.results.retry_named", {
@@ -823,7 +875,7 @@ test("acknowledging one year does not clear an uncertain whole-area retry", asyn
   page: target,
 }) => {
   const page = await open(target, "aeat-sync-retry-unknown");
-  await update(page).click();
+  await bring(page);
   const filed = area(results(page), "filed");
   await button(filed, "desktop.aeat_sync.results.retry_named", {
     name: label("desktop.aeat_sync.area.filed.name"),
@@ -858,7 +910,7 @@ test("a pending result retry disables other retries without issuing another requ
   page: target,
 }) => {
   const page = await open(target, "aeat-sync-retry-pending");
-  await update(page).click();
+  await bring(page);
   const saved = results(page);
   await button(area(saved, "filed"), "desktop.aeat_sync.results.retry_named", {
     name: label("desktop.aeat_sync.results.part.year", {
@@ -884,7 +936,7 @@ test("the Borrador import is for the year the person chooses", async ({
   page: target,
 }) => {
   const page = await open(target, "aeat-sync");
-  await update(page).click();
+  await bring(page);
   const borrador = results(page).locator('[data-area="borrador"]');
   const year = borrador.getByRole("combobox", {
     name: label("desktop.aeat_sync.results.borrador.year"),
@@ -956,7 +1008,7 @@ test("a cancel of the wait for the phone that fails says why and keeps the wait"
   page: target,
 }) => {
   const page = await open(target, "aeat-sync-phone");
-  await update(page).click();
+  await bring(page);
   const phone = page.getByTestId("aeat-sync-phone");
   await target.evaluate(() =>
     window.__scenarioAeatPhone!.failNextCancel("host_unavailable"),

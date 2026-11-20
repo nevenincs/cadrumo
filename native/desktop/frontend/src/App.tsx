@@ -348,6 +348,7 @@ export function App({ host }: { host: Host }) {
     setPaletteOpen: overlays.setPaletteOpen,
     contributed: overlays.contributed,
     docsSearchReady: docsFrame.docsSearchReady,
+    docsHistory: docsFrame.docsHistory,
     docsEntry,
     docs,
     goHome,
@@ -622,6 +623,7 @@ export function App({ host }: { host: Host }) {
       chords={chords}
       setDocsTheme={docsFrame.setDocsTheme}
       setDocsSearchReady={docsFrame.setDocsSearchReady}
+      setDocsHistory={docsFrame.setDocsHistory}
       runShortcut={runShortcut}
       docsMenu={docsMenu}
     />

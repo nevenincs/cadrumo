@@ -41,12 +41,17 @@ export function useShellMenus({
   setFilters: (update: SetStateAction<RecordFilters>) => void;
   selectLogLevel: (level: number) => void;
 }) {
-  // An item that does what a registry action does takes its icon and its
-  // first chord, so a shown shortcut is one the keymap binds.
+  // An item that does what a registry action does takes its icon, its
+  // first chord and whether it can act now, so a shown shortcut is one the
+  // keymap binds and an item that would do nothing is not offered.
   const registered = useCallback(
     (id: string) => {
       const known = actionsRef.current.find((action) => action.id === id);
-      return { icon: known?.icon, chord: known?.chords?.[0] };
+      return {
+        icon: known?.icon,
+        chord: known?.chords?.[0],
+        enabled: known?.enabled?.() ?? true,
+      };
     },
     [actionsRef],
   );
@@ -74,14 +79,12 @@ export function useShellMenus({
             id: "back",
             label: t("desktop.action.docs_back"),
             ...registered("docs.back"),
-            enabled: true,
             run: () => runAction("docs.back"),
           },
           {
             id: "forward",
             label: t("desktop.action.docs_forward"),
             ...registered("docs.forward"),
-            enabled: true,
             run: () => runAction("docs.forward"),
           },
           {
