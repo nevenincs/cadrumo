@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from enum import StrEnum
 from typing import Protocol
 
@@ -46,20 +47,20 @@ class ProfileCloudEligibilityRead:
     or a withdrawn lease is seen by the next decision, not by a later one.
     """
 
-    def __init__(self, *, view: CapabilityView, timeout_seconds: float) -> None:
-        """Bind the reads to a view, each bounded by ``timeout_seconds``."""
-        self._view = view
+    def __init__(self, *, open_view: Callable[[], CapabilityView], timeout_seconds: float) -> None:
+        """Open a view with ``open_view`` for each read, each read bounded by ``timeout_seconds``."""
+        self._open_view = open_view
         self._timeout = timeout_seconds
 
     @classmethod
     def over(cls, client: InstalledServiceClient, *, timeout_seconds: float) -> ProfileCloudEligibilityRead:
-        """Read through the service's own runtime connection."""
-        return cls(view=InstalledServiceProfileView(client), timeout_seconds=timeout_seconds)
+        """Read through the service's own runtime connection, as it stands at each read."""
+        return cls(open_view=lambda: InstalledServiceProfileView(client), timeout_seconds=timeout_seconds)
 
     def read(self, *, settings: Settings) -> ProfileCloudEligibility:
         """Answer from the profile as it is now; a failed read is ``UNREADABLE``."""
         try:
-            decision = self._view.read_capability(
+            decision = self._open_view().read_capability(
                 ServiceCapability.CLOUD_EVIDENCE_UPLOAD, settings=settings, timeout=self._timeout
             )
         except (FrontendRefusedError, RefusalError, TimeoutError, OSError, ValueError) as error:

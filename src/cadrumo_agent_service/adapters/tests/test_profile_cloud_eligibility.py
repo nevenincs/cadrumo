@@ -95,7 +95,7 @@ class _ServedProfile(InstalledServiceProfileView):
 
 
 def _read(view: _ServedProfile) -> ProfileCloudEligibilityRead:
-    return ProfileCloudEligibilityRead(view=view, timeout_seconds=4.0)
+    return ProfileCloudEligibilityRead(open_view=lambda: view, timeout_seconds=4.0)
 
 
 def _settings(*, permitted: bool = True, gestor: bool = False) -> Settings:
