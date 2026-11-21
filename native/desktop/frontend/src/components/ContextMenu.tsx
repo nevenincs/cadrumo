@@ -37,8 +37,13 @@ export type MenuSeparator = { separator: true };
 
 export type MenuEntry = MenuAction | MenuSeparator;
 
-/** Opens a menu at the anchor. */
-export type OpenMenu = (items: MenuEntry[], at: MenuAnchor) => void;
+/** Opens a menu at the anchor; `closed` runs once it is no longer shown, so
+ * a control that opened it can say whether it is expanded. */
+export type OpenMenu = (
+  items: MenuEntry[],
+  at: MenuAnchor,
+  closed?: () => void,
+) => void;
 
 // The shell's own drawing of every context menu, the same in the desktop
 // application and the browser. It opens at a point, not from a control, so

@@ -132,6 +132,8 @@ export const UserProfilePage = memo(function UserProfilePage({
   const data = profile.data;
   const sync = useCensoSync(host.censo, data, shown && !!data, profile.refresh);
   const [search, setSearch] = useState("");
+  // Whether the profile actions menu this page opened is shown.
+  const [actionsOpen, setActionsOpen] = useState(false);
   const [active, setActive] = useState<string | null>(null);
   const [current, setCurrent] = useState("");
   const [draft, setDraft] = useState<ProfileDraft | null>(null);
@@ -702,6 +704,7 @@ export const UserProfilePage = memo(function UserProfilePage({
     );
   const actionsMenu = (button: HTMLElement) => {
     const box = button.getBoundingClientRect();
+    setActionsOpen(true);
     openMenu(
       menuOf(
         profileActions,
@@ -709,6 +712,7 @@ export const UserProfilePage = memo(function UserProfilePage({
         accountActions().filter((item) => !item.enabled || item.enabled()),
       ),
       { x: box.left, y: box.top, height: box.height },
+      () => setActionsOpen(false),
     );
   };
 
@@ -858,6 +862,7 @@ export const UserProfilePage = memo(function UserProfilePage({
           size="sm"
           variant="outline"
           aria-haspopup="menu"
+          aria-expanded={actionsOpen}
           aria-keyshortcuts="Shift+F10"
           onClick={(event) => actionsMenu(event.currentTarget)}
         >

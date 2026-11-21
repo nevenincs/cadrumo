@@ -350,12 +350,16 @@ test("searching from the actions menu leaves the cursor in the search field", as
     name: label("desktop.profile.action.menu"),
     exact: true,
   });
+  await expect(button).toHaveAttribute("aria-expanded", "false");
   await button.click();
+  // The button says its menu is open, as an assistive technology reads it.
+  await expect(button).toHaveAttribute("aria-expanded", "true");
   await page
     .getByRole("menu")
     .getByRole("menuitem", { name: label("desktop.profile.search") })
     .click();
   await expect(page.getByRole("menu")).toHaveCount(0);
+  await expect(button).toHaveAttribute("aria-expanded", "false");
   // The menu closing does not take focus back to its button.
   await expect(
     profile.getByRole("searchbox", { name: label("desktop.profile.search") }),
