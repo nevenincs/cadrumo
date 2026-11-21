@@ -3375,7 +3375,7 @@ desktop:
           keep: Keep as a document
           kept: The purchase document is now an ordinary document on the movement.
           next_step:
-            detach_instead: Unlink it instead.
+            detach_instead: Remove the link instead.
             link_movement_to_invoice: Link the movement to that invoice, or keep the
               document on the movement.
             reopen_finalized_calculation: Reopen the declaration that uses it first.

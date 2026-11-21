@@ -307,8 +307,8 @@ cli:
           oldala; nyisd meg az ablakban az adatai elolvasásához.
         pull_actor_help: A neved vagy címkéd.
         pull_id_help: A nyilvántartás tranzakciójának azonosítója.
-        release_disposition_help: 'Mi legyen a bizonyítékkal: a detach leválasztja,
-          a keep_as_document egyszerű dokumentumként a tételen hagyja.'
+        release_disposition_help: 'Mi legyen a bizonyítékkal: a `detach` leválasztja,
+          a `keep_as_document` egyszerű dokumentumként a tételen hagyja.'
         release_expected_evidence_id_help: A tételhez kapcsolt beszerzési bizonyíték
           azonosítója, ahogy az `aeat app ledger view` mutatja.
         release_expected_modified_at_help: A tétel modified_at értéke, ahogy az `aeat
