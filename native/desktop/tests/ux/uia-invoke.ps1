@@ -6,18 +6,22 @@
 .DESCRIPTION
   Started by silent-controls.test.mjs. Finds the element whose AutomationId
   (the HTML id Chromium exposes) is -AutomationId under the top-level windows
-  of process -ProcessId or of a process it started, and calls its Invoke
-  pattern, as an assistive technology or an automation client does; where the
-  control has no Invoke (Chromium offers Expand instead on a control that
-  opens something) it calls the control's MSAA default action, as a screen
-  reader does. Writes one JSON line: found, invoked, the patterns and default
-  action used when there was no Invoke and, on failure, the error. It sends no
-  keys or clicks, changes no system setting and starts nothing.
+  of process -ProcessId or of a process it started. Chromium builds its tree
+  when a client first asks and does not carry an id the page sets afterwards,
+  so when no element has that id the one button whose name is -Name is taken;
+  names are compared without white space, and more than one such button is a
+  failure, never a guess. The control is then activated through the pattern
+  an assistive technology uses: Invoke, or where Chromium offers none, Expand
+  on a control that opens something and Toggle on a pressed button. Writes
+  one JSON line: found, how it was found, invoked, the pattern used and, on
+  failure, the error. It sends no keys or clicks, changes no system setting
+  and starts nothing.
 #>
 param(
     [Parameter(Mandatory = $true)][int]$ProcessId,
     [Parameter(Mandatory = $true)][string]$AutomationId,
-    [int]$TimeoutMs = 3000
+    [string]$Name = '',
+    [int]$TimeoutMs = 8000
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
@@ -43,77 +47,61 @@ $byProcess = New-Object System.Windows.Automation.OrCondition(
     ))
 $byId = New-Object System.Windows.Automation.PropertyCondition(
     $Automation::AutomationIdProperty, $AutomationId)
+$button = New-Object System.Windows.Automation.PropertyCondition(
+    $Automation::ControlTypeProperty, [System.Windows.Automation.ControlType]::Button)
+$wanted = $Name -replace '\s', ''
 
 function Find-Control {
+    $named = @()
     foreach ($window in $Automation::RootElement.FindAll($Scope::Children, $byProcess)) {
         $found = $window.FindFirst($Scope::Descendants, $byId)
-        if ($null -ne $found) { return $found }
+        if ($null -ne $found) { return @{ element = $found; by = 'id' } }
+        if ($wanted) {
+            $named += @($window.FindAll($Scope::Descendants, $button) |
+                Where-Object { ($_.Current.Name -replace '\s', '') -eq $wanted })
+        }
     }
+    if ($named.Count -eq 1) { return @{ element = $named[0]; by = 'name' } }
+    if ($named.Count -gt 1) { throw "$($named.Count) buttons are named '$Name'" }
     return $null
 }
 
-Add-Type -ReferencedAssemblies Accessibility -TypeDefinition @'
-using System;
-using System.Runtime.InteropServices;
-using Accessibility;
-public static class DefaultAction {
-    [DllImport("oleacc.dll")]
-    static extern int AccessibleObjectFromWindow(
-        IntPtr hwnd, uint id, ref Guid iid,
-        [MarshalAs(UnmanagedType.Interface)] out object accessible);
-    // Chromium answers a negative child id with the node of that unique id:
-    // the last part of the element's UI Automation runtime id.
-    public static string Do(IntPtr window, int uniqueId) {
-        Guid iid = new Guid("618736E0-3C3D-11CF-810C-00AA00389B71");
-        object found;
-        int hr = AccessibleObjectFromWindow(window, 0xFFFFFFFC, ref iid, out found);
-        if (hr != 0) Marshal.ThrowExceptionForHR(hr);
-        IAccessible root = (IAccessible)found;
-        object child = -uniqueId;
-        string verb = root.get_accDefaultAction(child);
-        root.accDoDefaultAction(child);
-        return verb;
-    }
-}
-'@
-
-function Invoke-DefaultAction($control) {
-    $walker = [System.Windows.Automation.TreeWalker]::RawViewWalker
-    $window = $control
-    while ($null -ne $window -and $window.Current.NativeWindowHandle -eq 0) {
-        $window = $walker.GetParent($window)
-    }
-    if ($null -eq $window) { throw 'no window holds the control' }
-    $id = $control.GetRuntimeId()
-    return [DefaultAction]::Do(
-        [IntPtr]$window.Current.NativeWindowHandle, $id[$id.Length - 1])
+function Use-Pattern($control, $pattern) {
+    $found = $null
+    if ($control.TryGetCurrentPattern($pattern, [ref]$found)) { return $found }
+    return $null
 }
 
 $reply = @{ found = $false; invoked = $false }
 try {
-    # The accessibility tree takes a moment to carry an id set just before.
+    # The tree is built when it is first asked for, and takes a moment to
+    # carry what the page changed just before.
     $deadline = [DateTime]::UtcNow.AddMilliseconds($TimeoutMs)
-    $control = Find-Control
-    while ($null -eq $control -and [DateTime]::UtcNow -lt $deadline) {
+    $hit = Find-Control
+    while ($null -eq $hit -and [DateTime]::UtcNow -lt $deadline) {
         Start-Sleep -Milliseconds 150
-        $control = Find-Control
+        $hit = Find-Control
     }
-    if ($null -ne $control) {
+    if ($null -ne $hit) {
+        $control = $hit.element
         $reply.found = $true
-        $invoke = $null
-        if ($control.TryGetCurrentPattern(
-                [System.Windows.Automation.InvokePattern]::Pattern, [ref]$invoke)) {
-            $invoke.Invoke()
+        $reply.by = $hit.by
+        $patterns = [System.Windows.Automation.InvokePattern]::Pattern,
+            [System.Windows.Automation.ExpandCollapsePattern]::Pattern,
+            [System.Windows.Automation.TogglePattern]::Pattern
+        foreach ($pattern in $patterns) {
+            $use = Use-Pattern $control $pattern
+            if ($null -eq $use) { continue }
+            if ($use -is [System.Windows.Automation.InvokePattern]) { $use.Invoke() }
+            elseif ($use -is [System.Windows.Automation.ExpandCollapsePattern]) { $use.Expand() }
+            else { $use.Toggle() }
+            $reply.pattern = $pattern.ProgrammaticName
             $reply.invoked = $true
+            break
         }
-        else {
-            # Chromium offers no Invoke on a control that opens something
-            # (it offers Expand instead); a screen reader activates it through
-            # its default action, so that is what is called here.
-            $reply.patterns = @($control.GetSupportedPatterns() |
-                ForEach-Object { $_.ProgrammaticName })
-            $reply.defaultAction = Invoke-DefaultAction $control
-            $reply.invoked = $true
+        if (-not $reply.invoked) {
+            $reply.error = 'no Invoke, Expand or Toggle: ' + (($control.GetSupportedPatterns() |
+                ForEach-Object { $_.ProgrammaticName }) -join ' ')
         }
     }
 }

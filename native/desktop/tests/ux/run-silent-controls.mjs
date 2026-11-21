@@ -19,6 +19,7 @@
 //   node native/desktop/tests/ux/run-silent-controls.mjs --build <CMake binary dir>
 //     [--config Release] [--persona <id>] [--report <file.md>] [--only <rail>[,...]]
 //     [--assistive]   (only the UI Automation activation tests: popup openers, rail pages)
+//     [--idle]        (instead: the model-list idle check, model-list-idle.test.mjs)
 //     [--staged-package <app dir an earlier stage of --build mirrored>
 //      --strings-build <this checkout's CMake binary dir holding its chrome strings>]
 //
@@ -50,8 +51,11 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
 const repository = fileURLToPath(new URL("../../../../", import.meta.url));
-const spec = fileURLToPath(
+const audit = fileURLToPath(
   new URL("./silent-controls.test.mjs", import.meta.url),
+);
+const idleCheck = fileURLToPath(
+  new URL("./model-list-idle.test.mjs", import.meta.url),
 );
 const python = resolve(
   repository,
@@ -87,6 +91,7 @@ const { values: args } = parseArgs({
     report: { type: "string" },
     only: { type: "string", default: "" },
     assistive: { type: "boolean", default: false },
+    idle: { type: "boolean", default: false },
     "staged-package": { type: "string" },
     "strings-build": { type: "string" },
   },
@@ -249,7 +254,7 @@ try {
       "--test",
       "--test-reporter=spec",
       ...(args.assistive ? ["--test-name-pattern=assistive activation"] : []),
-      spec,
+      args.idle ? idleCheck : audit,
     ],
     {
       cwd: repository,
