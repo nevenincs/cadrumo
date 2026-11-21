@@ -11,14 +11,27 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo.core.model_roles import ModelRole
 from cadrumo_client.contracts.model_runs import (
     ModelRunBody,
+    ModelRunHeader,
     ModelRunLane,
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
 )
 
+from ...local_ai_relay import LocalAiFacts, LocalAiModel, LocalAiServer, ServedLocalAi
+from ...providers.application.local_model_list import LocalModelListService
+from ...providers.application.model_runs import ModelRunService
+from ...providers.application.resolution import ProviderCredentialResolver
+from ...providers.application.tests.memory_store import MemoryLocalModelListStore, MemoryProviderSettingsStore
+from ...providers.application.tests.synthetic_catalog import (
+    KEYLESS_TEXT_MODEL,
+    ProvidedProviderCatalogSource,
+    engine_catalog,
+    sleeping_engine_document,
+)
 from ...providers.domain.catalog import BackgroundOption, EffortLevel
 from ...providers.domain.record import LocalEngine
 from ..local_ai_demand import (
@@ -30,6 +43,7 @@ from ..local_ai_demand import (
     decode_demand_response,
     manager_demand_from_environment,
 )
+from ..served_catalog_models import ServedCatalogModels
 
 pytestmark = [pytest.mark.hex_outbound_adapter]
 
@@ -118,6 +132,45 @@ def test_a_local_read_runs_once_its_demanded_server_listens() -> None:
     assert isinstance(_run(_gateway(runs, manager), _LOCAL), ModelRunOutput)
     assert manager.demands == 1
     assert runs.lanes == [_LOCAL]
+
+
+@pytest.mark.unit
+def test_a_run_on_a_sleeping_server_s_stored_model_demands_it_and_reading_the_catalogue_does_not() -> None:
+    """The service's own composition: the kept manager facts, the live catalogue, the list and the run."""
+    source = ProvidedProviderCatalogSource(engine_catalog())
+    served = ServedLocalAi()
+    live = ServedCatalogModels(served.over(lambda: sleeping_engine_document(LocalEngine.LLAMACPP, KEYLESS_TEXT_MODEL)))
+    model_list = MemoryLocalModelListStore()
+    lists = LocalModelListService(
+        store=model_list, catalog_source=source, live_models=live, default_engine=LocalEngine.LLAMACPP
+    )
+    runs, manager = _Runs(), _Manager(DemandOutcome.DEMANDED)
+    service = ModelRunService(
+        model_list=model_list,
+        resolver=ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=source),
+        catalog_source=source,
+        live_models=live,
+        selected_engine=lists.selected_engine,
+        gateway=_gateway(runs, manager),
+    )
+    served.keep(
+        LocalAiFacts(
+            engine=LocalEngine.LLAMACPP,
+            server=LocalAiServer.DORMANT,
+            models=(LocalAiModel(name=KEYLESS_TEXT_MODEL, stored=True),),
+        )
+    )
+
+    lists.status()
+    lists.engine_status()
+    assert isinstance(service.lookup(ModelRole.TEXT_EXTRACTION.value), ModelRunLane)
+    assert manager.demands == 0
+
+    answer = service.run(ModelRunHeader(role=ModelRole.TEXT_EXTRACTION.value, deadline_seconds=30), _BODY)
+
+    assert isinstance(answer, ModelRunOutput)
+    assert manager.demands == 1
+    assert [(lane.provider_id, lane.model) for lane in runs.lanes] == [("llamacpp", KEYLESS_TEXT_MODEL)]
 
 
 @pytest.mark.unit

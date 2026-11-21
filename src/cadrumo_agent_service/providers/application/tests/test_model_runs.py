@@ -25,6 +25,8 @@ from cadrumo_client.contracts.model_runs import (
 )
 
 from ....adapters.agent_background_runs import HostedBackgroundRuns
+from ....adapters.served_catalog_models import ServedCatalogModels
+from ....local_ai_relay import LocalAiFacts, LocalAiModel, LocalAiServer, ServedLocalAi
 from ...domain.catalog import BackgroundOption, EffortLevel, parse_provider_catalog
 from ...domain.record import (
     LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
@@ -51,7 +53,9 @@ from .synthetic_catalog import (
     OTHER_KEY_LANE,
     ProvidedProviderCatalogSource,
     StaticLiveModels,
+    engine_catalog,
     live_model,
+    sleeping_engine_document,
     synthetic_document,
 )
 
@@ -729,3 +733,39 @@ def test_a_task_setting_without_an_effort_names_none() -> None:
 
     assert isinstance(runs.run(_header(task_kind=_CLASSIFY), _BODY), ModelRunOutput)
     assert gateway.efforts == [None]
+
+
+def test_a_sleeping_local_server_s_stored_model_stands_in_and_the_run_reaches_the_gateway() -> None:
+    """On a fresh profile the agent lists the sleeping server's models as not held; the manager's files hold one."""
+    source = ProvidedProviderCatalogSource(engine_catalog())
+    served = ServedLocalAi()
+    document = sleeping_engine_document(LocalEngine.LLAMACPP, KEYLESS_TEXT_MODEL, KEYLESS_VISION_MODEL)
+    gateway = _RecordingGateway()
+    runs = ModelRunService(
+        model_list=MemoryLocalModelListStore(),
+        resolver=ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=source),
+        catalog_source=source,
+        live_models=ServedCatalogModels(served.over(lambda: document)),
+        selected_engine=lambda: LocalEngine.LLAMACPP,
+        gateway=gateway,
+    )
+
+    assert runs.run(_header(), _BODY) == _NO_SELECTION
+    assert gateway.runs == []
+
+    served.keep(
+        LocalAiFacts(
+            engine=LocalEngine.LLAMACPP,
+            server=LocalAiServer.DORMANT,
+            models=(
+                LocalAiModel(name=KEYLESS_TEXT_MODEL, stored=True),
+                LocalAiModel(name=KEYLESS_VISION_MODEL, stored=False),
+            ),
+        )
+    )
+
+    assert isinstance(runs.run(_header(), _BODY), ModelRunOutput)
+    # The agent's background record takes no attachment family, so the lane carries none.
+    reached = _declared(KEYLESS_TEXT_MODEL, provider_id="llamacpp").model_copy(update={"accepted_media": ()})
+    assert [lane for lane, _, _ in gateway.runs] == [reached]
+    assert runs.lookup("vision_transcription") == _NO_SELECTION

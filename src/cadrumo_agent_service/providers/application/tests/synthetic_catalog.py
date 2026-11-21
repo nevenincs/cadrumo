@@ -260,3 +260,44 @@ def live_model(model_id: str, **facts: Any) -> LiveCatalogModel:
     }
     stated.update(facts)
     return LiveCatalogModel.model_validate({"id": model_id, **stated})
+
+
+def sleeping_engine_document(engine: LocalEngine, *models: str) -> dict[str, Any]:
+    """Return the catalogue a running agent serves while ``engine``'s local server sleeps.
+
+    The agent reaches no server, so it states the engine not running, cannot
+    read the server's version and refuses the lane for it, and lists the
+    packaged ``models`` as not held.
+    """
+    return {
+        "api_version": "v1",
+        "providers": [
+            {
+                "provider_id": engine.value,
+                "transport": "api",
+                "health": {
+                    "configured": "available",
+                    "transport": "unavailable",
+                    "authentication": "not_applicable",
+                    "catalog": "available",
+                    "admission": "not_admitted",
+                    "selectable": False,
+                    "reasons": ["provider transport is unavailable", "binary_version_unavailable"],
+                    "engine": {
+                        "engine": engine.value,
+                        "state": "not_running",
+                        "reason": "not_reachable",
+                        "door": "local_ai_setup",
+                    },
+                },
+                "catalog": {"models": [_sleeping_entry(model) for model in models]},
+                "background_requests": {"accepts_images": False, "accepts_pdfs": False, "options": []},
+            }
+        ],
+    }
+
+
+def _sleeping_entry(model: str) -> dict[str, Any]:
+    """A packaged model as the agent lists it on a server it did not reach: not held, its facts unstated."""
+    facts = dict.fromkeys(("vision", "size_bytes", "context_length", "licence"))
+    return {"model": model, **facts, "installed": False}

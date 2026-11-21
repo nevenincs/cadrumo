@@ -43,6 +43,7 @@ from .host.sign_in_refusal import refuse, sign_in_in_flight
 from .host.store_lifecycle import (
     InvocationCancellation,
 )
+from .local_ai_relay import LocalAiFacts, ServedLocalAi, relay_local_ai
 from .providers.application.agent_credentials import ProviderSettingsAgentCredentialSource
 from .providers.application.attachment_releases import (
     AttachmentReleases,
@@ -124,7 +125,10 @@ class AgentServiceAdministration(ABC):
             close_read=client.connection.close,
         )
         model_list = SecureLocalModelListStore(client=client)
-        live_models = ServedCatalogModels(self._live_catalog)
+        # The manager's facts say which models a sleeping local server holds, so
+        # a run on one resolves and demands the server.
+        self._local_ai = ServedLocalAi()
+        live_models = ServedCatalogModels(self._local_ai.over(self._live_catalog))
         self._local_models = LocalModelListService(
             store=model_list,
             catalog_source=self._catalog,
@@ -256,8 +260,13 @@ class AgentServiceAdministration(ABC):
         placement: str | None = None,
         task_kind: str | None = None,
         effort: str | None = None,
+        local_ai: LocalAiFacts | None = None,
     ) -> Any:
-        """Apply one bounded masked administration request under the live lease."""
+        """Apply one bounded masked administration request under the live lease.
+
+        ``local_ai`` is the manager's facts a catalogue read carries; any other
+        action carries none.
+        """
         if action.startswith("attachment_"):
             return answer_attachment_admin(
                 self._attachment_releases,
@@ -277,7 +286,7 @@ class AgentServiceAdministration(ABC):
         if read is not None:
             return read()
         if action == "catalog":
-            return self._cached_catalog()
+            return self._relayed_catalog(local_ai)
         arguments: dict[str, Any] = {
             "provider": provider,
             "expected_revision": expected_revision,
@@ -293,6 +302,14 @@ class AgentServiceAdministration(ABC):
             "effort": effort,
         }
         return self._lifecycle_admin(action, arguments)
+
+    def _relayed_catalog(self, local_ai: LocalAiFacts | None) -> Any:
+        """The catalogue with the local engines' lanes as the manager serves them, logged as the window shows it."""
+        self._local_ai.keep(local_ai)
+        answer = relay_local_ai(self._cached_catalog(), local_ai)
+        if isinstance(answer, dict):
+            self._held_lanes.observe(answer)
+        return answer
 
     def _cached_catalog(self) -> Any:
         if self._closing.is_set():
@@ -625,9 +642,7 @@ class AgentServiceAdministration(ABC):
                     self._clear_hosted_certifications()
                     raise
                 self._remember_hosted_certifications(controller, ready, document)
-                picked = self._picker_catalog(document)
-                self._held_lanes.observe(picked)
-                return picked
+                return self._picker_catalog(document)
         self._clear_hosted_certifications()
         return self._picker_catalog(declared_provider_catalog_response())
 

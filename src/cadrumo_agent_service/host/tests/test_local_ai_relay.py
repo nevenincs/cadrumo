@@ -8,7 +8,7 @@ from typing import Any, cast
 import pytest
 
 from ...admin import AdminRequest
-from ...local_ai_relay import LocalAiFacts, LocalAiModel, LocalAiServer, relay_local_ai
+from ...local_ai_relay import LocalAiFacts, LocalAiModel, LocalAiServer, ServedLocalAi, relay_local_ai
 from ...providers.application.served_catalog import catalog_nonconformance
 from ...providers.application.tests.served_catalog_documents import declared_catalog, served_catalog
 from ...providers.domain.record import LocalEngine
@@ -18,32 +18,50 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _HELD = "synthetic-held:1"
 _ABSENT = "synthetic-absent:1"
 _UNLISTED = "synthetic-unlisted:1"
+_VERSION_UNREAD = "binary_version_unavailable"
+"""The refusal the agent serves for a lane whose server it could not ask its version."""
+_UNREAD_SERVER_REASONS = ("provider transport is unavailable", "the router did not answer")
+"""Reasons the agent words for a server it could not reach."""
 
 
-def _health(*, read: bool) -> dict[str, Any]:
-    engine = (
-        {"engine": "llamacpp", "state": "running", "reason": None, "door": None}
-        if read
-        else {"engine": "llamacpp", "state": "not_running", "reason": "not_reachable", "door": "local_ai_setup"}
-    )
+def _health(*, read: bool, refusals: tuple[str, ...] = (_VERSION_UNREAD,)) -> dict[str, Any]:
+    """A lane's health as the agent serves it; a sleeping server's version is unread, so the lane is not admitted."""
+    if read:
+        return {
+            "configured": "available",
+            "transport": "available",
+            "authentication": "not_applicable",
+            "catalog": "available",
+            "admission": "unproven",
+            "selectable": True,
+            "reasons": [],
+            "engine": {"engine": "llamacpp", "state": "running", "reason": None, "door": None},
+        }
     return {
         "configured": "available",
-        "transport": "available" if read else "unavailable",
+        "transport": "unavailable",
         "authentication": "not_applicable",
         "catalog": "available",
-        "admission": "unproven",
-        "selectable": read,
-        "reasons": [] if read else ["the router did not answer"],
-        "engine": engine,
+        "admission": "not_admitted",
+        "selectable": False,
+        "reasons": [*_UNREAD_SERVER_REASONS, *refusals],
+        "engine": {"engine": "llamacpp", "state": "not_running", "reason": "not_reachable", "door": "local_ai_setup"},
     }
 
 
-def _lane(provider: str, *, read: bool, installed: bool | None = False) -> dict[str, Any]:
+def _lane(
+    provider: str,
+    *,
+    read: bool,
+    installed: bool | None = False,
+    refusals: tuple[str, ...] = (_VERSION_UNREAD,),
+) -> dict[str, Any]:
     models = [
         {"model": name, **({} if installed is None else {"installed": installed})}
         for name in (_HELD, _ABSENT, _UNLISTED)
     ]
-    return {"provider_id": provider, "transport": "api", "health": _health(read=read), "catalog": {"models": models}}
+    health = _health(read=read, refusals=refusals)
+    return {"provider_id": provider, "transport": "api", "health": health, "catalog": {"models": models}}
 
 
 def _hosted() -> dict[str, Any]:
@@ -76,10 +94,44 @@ def test_a_sleeping_server_is_a_ready_lane_holding_what_its_files_hold() -> None
     lane = _relayed(_lane("llamacpp", read=False), _facts(LocalAiServer.DORMANT))
 
     assert lane["health"]["transport"] == "available"
+    assert lane["health"]["admission"] == "unproven"
     assert lane["health"]["selectable"] is True
     assert lane["health"]["engine"] is None
     assert lane["health"]["reasons"] == []
     assert _held(lane) == {_HELD: True, _ABSENT: False, _UNLISTED: "unknown"}
+
+
+@pytest.mark.parametrize("server", [LocalAiServer.DORMANT, LocalAiServer.RUNNING])
+@pytest.mark.parametrize(
+    "refusal",
+    [
+        "binary_out_of_proof_range",
+        "provider lane llamacpp/api has no exact completed-turn proof; evidence from another execution mode is not inherited",
+    ],
+    ids=["refused-version", "refused-proof"],
+)
+def test_a_refusal_beside_the_unread_version_keeps_the_lane_not_admitted_with_its_reasons(
+    server: LocalAiServer, refusal: str
+) -> None:
+    lane = _relayed(_lane("llamacpp", read=False, refusals=(_VERSION_UNREAD, refusal)), _facts(server))
+
+    assert lane["health"]["admission"] == "not_admitted"
+    assert lane["health"]["selectable"] is False
+    assert lane["health"]["reasons"] == [_VERSION_UNREAD, refusal]
+    assert lane["health"]["transport"] == "available"
+
+
+def test_a_server_the_agent_read_whose_version_it_could_not_is_lifted_too() -> None:
+    read = _lane("llamacpp", read=True, installed=True)
+    read["health"] |= {"admission": "not_admitted", "selectable": False, "reasons": [_VERSION_UNREAD]}
+
+    lane = _relayed(read, _facts(LocalAiServer.RUNNING))
+
+    assert (lane["health"]["admission"], lane["health"]["selectable"], lane["health"]["reasons"]) == (
+        "unproven",
+        True,
+        [],
+    )
 
 
 def test_a_running_server_the_agent_read_keeps_its_answer_where_no_file_says_otherwise() -> None:
@@ -105,6 +157,7 @@ def test_a_failed_demand_leaves_the_lane_not_running_with_its_door() -> None:
 
     assert lane["health"] == unread["health"]
     assert lane["health"]["engine"]["state"] == "not_running"
+    assert lane["health"]["admission"] == "not_admitted"
     assert _held(lane) == {_HELD: True, _ABSENT: False, _UNLISTED: "unknown"}
 
 
@@ -202,3 +255,22 @@ def test_a_catalogue_request_carries_the_facts_and_nothing_else() -> None:
     assert AdminRequest.model_validate_json(_json(request)).local_ai is None
     with pytest.raises(ValueError, match="validation error"):
         AdminRequest.model_validate_json(_json(request | {"local_ai": facts | {"door": "local_ai_setup"}}))
+
+
+def test_the_kept_facts_describe_every_later_read_and_a_read_without_facts_keeps_them() -> None:
+    served = ServedLocalAi()
+    document = {"providers": [_lane("llamacpp", read=False), _hosted()]}
+    read = served.over(lambda: document)
+
+    unrelayed = cast(dict[str, Any], read())
+    assert unrelayed["providers"][0]["health"]["transport"] == "unknown"
+
+    served.keep(_facts(LocalAiServer.DORMANT))
+    served.keep(None)
+
+    assert served.facts() == _facts(LocalAiServer.DORMANT)
+    relayed = cast(dict[str, Any], read())
+    assert relayed["providers"][0]["health"]["selectable"] is True
+    assert _held(relayed["providers"][0]) == {_HELD: True, _ABSENT: False, _UNLISTED: "unknown"}
+    assert document["providers"][0] == _lane("llamacpp", read=False)
+    assert served.over(lambda: None)() is None

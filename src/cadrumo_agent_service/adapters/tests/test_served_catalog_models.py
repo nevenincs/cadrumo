@@ -8,8 +8,11 @@ import pytest
 
 from cadrumo_client.contracts.model_runs import ModelRunMediaKind
 
+from ...local_ai_relay import LocalAiFacts, LocalAiModel, LocalAiServer, ServedLocalAi
 from ...providers.application.ports import LiveLaneBackground
+from ...providers.application.tests.synthetic_catalog import sleeping_engine_document
 from ...providers.domain.catalog import BackgroundOption
+from ...providers.domain.record import LocalEngine
 from ..served_catalog_models import ServedCatalogModels
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -288,3 +291,32 @@ def test_a_snapshot_reads_the_document_once_when_first_asked_and_answers_everyth
 
     models.snapshot().lane_background("llamacpp", "api")
     assert len(reads) == 2
+
+
+def test_a_sleeping_server_holds_what_the_managers_files_hold_once_its_facts_are_kept() -> None:
+    document = sleeping_engine_document(LocalEngine.LLAMACPP, "synthetic-held:1", "synthetic-absent:1")
+    served = ServedLocalAi()
+    models = ServedCatalogModels(served.over(lambda: document))
+
+    unrelayed = models.lane_models("llamacpp", "api")
+    assert unrelayed is not None
+    assert [(entry.id, entry.installed) for entry in unrelayed] == [
+        ("synthetic-held:1", None),
+        ("synthetic-absent:1", None),
+    ]
+
+    served.keep(
+        LocalAiFacts(
+            engine=LocalEngine.LLAMACPP,
+            server=LocalAiServer.DORMANT,
+            models=(LocalAiModel(name="synthetic-held:1", stored=True),),
+        )
+    )
+
+    relayed = models.lane_models("llamacpp", "api")
+    assert relayed is not None
+    # A model no fact names stays unknown: the agent did not read the server.
+    assert [(entry.id, entry.installed) for entry in relayed] == [
+        ("synthetic-held:1", True),
+        ("synthetic-absent:1", None),
+    ]
