@@ -1,5 +1,6 @@
 import * as React from "react";
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
+import { useBareClick } from "@/components/ui/bareClick";
 import { cn } from "@/components/ui/cn";
 import { ownEscapeLayer } from "@/components/ui/escapeLayers";
 import { Icon, type IconName } from "@/components/ui/icon";
@@ -55,18 +56,62 @@ function Indicator() {
   );
 }
 
-function DropdownMenu(
-  props: React.ComponentProps<typeof DropdownMenuPrimitive.Root>,
-) {
-  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
+/** Opens or closes the menu a trigger belongs to. */
+const ToggleMenu = React.createContext<(() => void) | null>(null);
+
+function DropdownMenu({
+  open: openProp,
+  defaultOpen = false,
+  onOpenChange,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
+  const [ownOpen, setOwnOpen] = React.useState(defaultOpen);
+  const open = openProp ?? ownOpen;
+  const change = React.useCallback(
+    (next: boolean) => {
+      if (openProp === undefined) setOwnOpen(next);
+      onOpenChange?.(next);
+    },
+    [openProp, onOpenChange],
+  );
+  const toggle = React.useCallback(() => change(!open), [change, open]);
+  return (
+    <ToggleMenu.Provider value={toggle}>
+      <DropdownMenuPrimitive.Root
+        data-slot="dropdown-menu"
+        open={open}
+        onOpenChange={change}
+        {...props}
+      />
+    </ToggleMenu.Provider>
+  );
 }
 
-function DropdownMenuTrigger(
-  props: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>,
-) {
+/**
+ * The button that opens a menu: a press of the pointer, Enter, Space or the
+ * down arrow opens it, and so does a click nothing else started, which is
+ * what an assistive technology's or automation's activation sends (UI
+ * Automation's Invoke, a screen reader's default action), with or without
+ * the window's focus.
+ */
+function DropdownMenuTrigger({
+  onKeyDown,
+  onClick,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
+  const toggle = React.useContext(ToggleMenu);
+  const bare = useBareClick();
   return (
     <DropdownMenuPrimitive.Trigger
       data-slot="dropdown-menu-trigger"
+      onKeyDown={(event) => {
+        bare.onKeyDown(event);
+        onKeyDown?.(event);
+      }}
+      onClick={(event) => {
+        onClick?.(event);
+        if (bare.isBare(event) && !props.disabled) toggle?.();
+      }}
       {...props}
     />
   );
