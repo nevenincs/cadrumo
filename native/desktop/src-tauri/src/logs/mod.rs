@@ -16,7 +16,7 @@ mod host;
 mod manager;
 pub(crate) mod native;
 mod record;
-mod severity;
+pub(crate) mod severity;
 mod tail;
 #[cfg(test)]
 mod tests;

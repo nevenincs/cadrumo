@@ -316,9 +316,7 @@ impl SignIn {
         {
             return Err(failure(ErrorCode::SessionUnavailable).with_reason("person_not_signed_in"));
         }
-        use cadrumo_application::diagnostics::service::{
-            PersonRestoreCause, PersonRestoreOutcome, ServiceFact,
-        };
+        use cadrumo_application::diagnostics::service::{PersonRestoreCause, ServiceFact};
         let mut cause = PersonRestoreCause::NoHeldSession;
         if let Some(held) = cached.upgrade() {
             cause = PersonRestoreCause::HeldSessionEnded;
@@ -343,17 +341,14 @@ impl SignIn {
                 self.resume(profile_id).inspect_err(|failure| {
                     // This real attempt is logged once; returning its cached refusal
                     // to later status readers must not create a diagnostic storm.
-                    self.diagnostics.failure((*failure.error).clone());
+                    restoration::record_refusal(&self.diagnostics, failure);
                 })
             });
             if presented {
-                let outcome = match &attempted {
-                    Ok(_) => PersonRestoreOutcome::Restored,
-                    Err(_) if restoration.refusal(&observed).is_some() => {
-                        PersonRestoreOutcome::Refused
-                    }
-                    Err(_) => PersonRestoreOutcome::Unavailable,
-                };
+                let outcome = restoration::restore_outcome(
+                    attempted.is_ok(),
+                    restoration.refusal(&observed).as_ref(),
+                );
                 self.diagnostics
                     .service(None, ServiceFact::PersonRestore { cause, outcome });
             }
