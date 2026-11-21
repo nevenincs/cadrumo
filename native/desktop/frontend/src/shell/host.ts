@@ -213,7 +213,7 @@ export interface Host {
   /** Cues that a background job of the signed-in profile changed, and the
    * jobs' stored revisions, where this host sends them. Without it the
    * shell shows no background tasks. */
-  readonly backgroundTasks?: import("./backgroundTasks").BackgroundTasksPort;
+  readonly backgroundTasks?: import("./backgroundTasksContract").BackgroundTasksPort;
   /** The signed-in profile's declarations: the list, each one's form and
    * help, its registered modelo operations and the files they read and
    * write, where this host offers them. Without it the shell shows no

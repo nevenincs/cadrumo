@@ -5,8 +5,10 @@
 // raises its revision and cues the window as the desktop host does. Nothing
 // is read or moved on a timer. Everything here is synthetic.
 
-import type { BackgroundTasksPort } from "../shell/backgroundTasks";
-import type { BackgroundTaskCue } from "../shell/backgroundTasksContract";
+import type {
+  BackgroundTaskCue,
+  BackgroundTasksPort,
+} from "../shell/backgroundTasksContract";
 import type {
   JsonObject,
   LedgerErrorDetail,

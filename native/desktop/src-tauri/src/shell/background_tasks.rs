@@ -433,5 +433,66 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
     ]
 }
 
+/// How the window's port receives what a command answers: a channel of
+/// messages it is sent until it ends the subscription, or one read's result.
+#[cfg(test)]
+#[derive(Clone, Copy, Serialize)]
+#[serde(rename_all = "snake_case")]
+enum PortKind {
+    Channel,
+    Read,
+}
+
+/// One method of the window's port: the command it calls, how the answer
+/// comes back and the schema root that answer is.
+#[cfg(test)]
+#[derive(Serialize)]
+struct PortMethod {
+    method: &'static str,
+    description: &'static str,
+    command: &'static str,
+    kind: PortKind,
+    root: &'static str,
+    /// The command that ends a channel's subscription.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    release: Option<&'static str>,
+}
+
+/// The window's port over these commands, written into the schema beside
+/// the types so the window's generated port type is the host's.
+#[cfg(test)]
+#[derive(Serialize)]
+struct Port {
+    name: &'static str,
+    description: &'static str,
+    methods: &'static [PortMethod],
+}
+
+#[cfg(test)]
+const PORT: Port = Port {
+    name: "BackgroundTasksPort",
+    description: "The host's cues and the jobs' stored revisions for the signed-in profile.",
+    methods: &[
+        PortMethod {
+            method: "observe",
+            description: "Calls `listener` with each cue the host sends, until the returned \
+                function unsubscribes. A change before subscribing is not cued: read the \
+                revisions after it.",
+            command: "background_tasks_observe",
+            kind: PortKind::Channel,
+            root: "BackgroundTaskCue",
+            release: Some("background_tasks_unobserve"),
+        },
+        PortMethod {
+            method: "revisions",
+            description: "Every background job's stored revision, read now.",
+            command: "background_tasks_revisions",
+            kind: PortKind::Read,
+            root: "BackgroundTaskRevisions",
+            release: None,
+        },
+    ],
+};
+
 #[cfg(test)]
 mod tests;
