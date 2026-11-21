@@ -1598,6 +1598,8 @@ desktop:
     fullscreen: Pantalla completa
     left: Divideix a l’esquerra
     move: Mou el panell flotant
+    move_hint: Arrossega aquesta nansa per moure el panell flotant, o fes servir les
+      fletxes del teclat.
     reset_layout: Restableix la distribució predeterminada
     reset_layout_description: Només canviarà la distribució de l’espai de treball.
       Es conservaran la pàgina actual, els esborranys i les sessions de terminal.

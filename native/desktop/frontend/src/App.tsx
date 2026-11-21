@@ -793,6 +793,7 @@ export function App({ host }: { host: Host }) {
               copyLogs={logs.copyLogs}
               exportLogs={logs.exportLogs}
               revealLogs={logs.revealLogs}
+              say={say}
               main={docsPane}
             />
             <WindowOverlays

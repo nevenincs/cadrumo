@@ -141,6 +141,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.dock.tab",
         "desktop.dock.close",
         "desktop.dock.move",
+        "desktop.dock.move_hint",
         "desktop.dock.resize",
         "desktop.dock.tabs",
         "desktop.dock.target_left",

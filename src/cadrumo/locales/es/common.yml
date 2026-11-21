@@ -1607,6 +1607,8 @@ desktop:
     fullscreen: Pantalla completa
     left: Dividir a la izquierda
     move: Mover panel flotante
+    move_hint: Arrastra esta asa para mover el panel flotante, o usa las flechas del
+      teclado.
     reset_layout: Restablecer la distribución predeterminada
     reset_layout_description: Solo cambiará la distribución del espacio de trabajo.
       Se conservarán tu página actual, tus borradores y tus sesiones de terminal.

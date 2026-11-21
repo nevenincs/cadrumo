@@ -1202,8 +1202,9 @@
         url.searchParams.delete("q");
       }
       /* replaceState, not pushState: a shareable URL per settled query without
-       * flooding the back button with one entry per keystroke. */
-      window.history.replaceState(null, "", url.toString());
+       * flooding the back button with one entry per keystroke. The entry's
+       * state is kept: the desktop bridge records the entry's place there. */
+      window.history.replaceState(window.history.state, "", url.toString());
     }
 
     var initial = queryFromUrl();

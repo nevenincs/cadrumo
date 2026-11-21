@@ -126,6 +126,7 @@ export function ShellDock({
   copyLogs,
   exportLogs,
   revealLogs,
+  say,
 }: {
   host: Host;
   t: Translate;
@@ -153,6 +154,8 @@ export function ShellDock({
   settledSetups: string | null;
   byId: (id: string) => Action | undefined;
   runAction: (id: string) => void;
+  /** Shows a brief message in the window's toast. */
+  say: (text: string) => void;
   cancelDrag: boolean;
   maximizeControl: (area: Area, labelKey: string) => PaneControl;
   splitControls: PaneControl[];
@@ -274,6 +277,7 @@ export function ShellDock({
   return (
     <DockWorkspace
       onResetLayout={() => runAction("layout.reset")}
+      onNotice={say}
       cancelDrag={cancelDrag}
       layout={docking}
       minimumWidths={dockMinimumWidths}

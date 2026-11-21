@@ -1,10 +1,14 @@
 /**
  * The documentation frame's page history as the window learns it from the
- * page's own reports: each `ready` and `location` names the address it is on.
- * The page runs on another origin, so the window cannot read its history; it
- * keeps its own record instead. A report that follows a Back or Forward the
- * window asked for moves within the record, and any other one is a new page
- * that drops what lay ahead, as a browser's history does.
+ * page's own reports: each `ready` and `location` names the address it is on
+ * and, from a page that says so, the place of its entry in the frame's
+ * history and whether it came back to that entry or made a new one. The page
+ * runs on another origin, so the window cannot read its history; it keeps its
+ * own record instead, which follows the page's report whoever moved it: the
+ * window's Back and Forward, or the page's own (a link, the mouse's back
+ * button, a script). Without a place, a report that follows a Back or Forward
+ * the window asked for moves within the record, and any other one is a new
+ * page that drops what lay ahead, as a browser's history does.
  */
 export type DocsHistory = {
   readonly entries: readonly string[];
@@ -20,9 +24,46 @@ export const NO_DOCS_HISTORY: DocsHistory = {
   pending: null,
 };
 
-/** The page reported that it is on `url`. */
-export function docsVisited(history: DocsHistory, url: string): DocsHistory {
+/** Where a page's history entry stands, as the page reports it. */
+export type DocsPlace = {
+  /** The entry's place in the frame's history, from 0. */
+  readonly entry: number;
+  /** True when the page came back to an entry it already had. */
+  readonly traversed: boolean;
+};
+
+/** A place read from a page's report, or null where it reported none. */
+export function readDocsPlace(
+  entry: unknown,
+  traversed: unknown,
+): DocsPlace | null {
+  return typeof entry === "number" &&
+    Number.isSafeInteger(entry) &&
+    entry >= 0 &&
+    typeof traversed === "boolean"
+    ? { entry, traversed }
+    : null;
+}
+
+/** The page reported that it is on `url`, at `place` where it said. */
+export function docsVisited(
+  history: DocsHistory,
+  url: string,
+  place: DocsPlace | null = null,
+): DocsHistory {
   const { entries, index, pending } = history;
+  if (place) {
+    // Entries before the window first heard of the page (a frame that kept
+    // its history across a reload of the window) are known only to exist.
+    const next = Array.from(
+      {
+        length: Math.max(place.entry + 1, place.traversed ? entries.length : 0),
+      },
+      (_, at) => entries[at] ?? "",
+    );
+    next[place.entry] = url;
+    return { entries: next, index: place.entry, pending: null };
+  }
   if (pending === "back" && index > 0) {
     const next = [...entries];
     next[index - 1] = url;
