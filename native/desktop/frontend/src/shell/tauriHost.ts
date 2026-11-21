@@ -627,6 +627,23 @@ function readable<T>(read: T | null): T {
   return read;
 }
 
+/** Where the agent stands rather than what failed, as a model list, the
+ * local engine or the catalogue read refuses it: each view that lists models
+ * shows it with the step that moves it on, so none of them is an error. */
+const MODEL_LIST_STATES: ReadonlySet<string> = new Set([
+  "agent_signed_out",
+  "agent_service_busy",
+  "agent_service_not_ready",
+  "agent_reconnecting",
+  "agent_catalog_unavailable",
+  "agent_local_models_catalog_unavailable",
+]);
+
+/** The plan of a read that lists models: its states are noted, not reported. */
+function listingModels(plan?: CallPlan): CallPlan {
+  return { ...plan, state: (code) => MODEL_LIST_STATES.has(code) };
+}
+
 /** The agent session and views of the desktop host. */
 function tauriAgent(call: HostCall): {
   agentSession: AgentSession;
@@ -647,15 +664,16 @@ function tauriAgent(call: HostCall): {
           );
         };
       },
-      providerCatalog: (retry) => call("agent_provider_catalog", {}, retry),
-      localModels: () => call("agent_local_models", {}),
+      providerCatalog: (retry) =>
+        call("agent_provider_catalog", {}, listingModels(retry)),
+      localModels: () => call("agent_local_models", {}, listingModels()),
       addLocalModel: (lane, model, expectedRevision) =>
         call("agent_local_model_add", { lane, model, expectedRevision }),
       removeLocalModel: (lane, model, expectedRevision) =>
         call("agent_local_model_remove", { lane, model, expectedRevision }),
       resetLocalModels: (expectedRevision) =>
         call("agent_local_models_reset", { expectedRevision }),
-      localEngine: () => call("agent_local_engine", {}),
+      localEngine: () => call("agent_local_engine", {}, listingModels()),
       chooseLocalEngine: (engine, placement, expectedRevision) =>
         call("agent_local_engine_choose", {
           engine,

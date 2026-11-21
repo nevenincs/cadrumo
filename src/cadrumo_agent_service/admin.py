@@ -22,7 +22,7 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 
 from .host.credential_frame import wipe
 from .host.sign_in_refusal import new_log_ref
-from .local_ai_relay import LocalAiFacts, relay_local_ai
+from .local_ai_relay import LocalAiFacts
 from .providers.application.contracts import SignInMethod
 from .providers.application.ports import ProviderCatalogUnavailableError
 from .providers.application.served_catalog import catalog_nonconformance
@@ -102,6 +102,7 @@ class AdminTarget(Protocol):
         placement: LocalPlacement | None = None,
         task_kind: str | None = None,
         effort: str | None = None,
+        local_ai: LocalAiFacts | None = None,
     ) -> JsonValue:
         """Apply validated metadata and separately framed secret bytes under service authority."""
         ...
@@ -324,11 +325,11 @@ class AdminServer:
             placement=request.placement,
             task_kind=request.task_kind,
             effort=request.effort,
+            local_ai=request.local_ai,
         )
         if request.action != "catalog":
             return answer
-        # The manager owns the local server's state; its facts describe that lane.
-        return _conforming_catalog(relay_local_ai(answer, request.local_ai))
+        return _conforming_catalog(answer)
 
     def close(self) -> None:
         """Close admission and await the bounded current exchange."""
