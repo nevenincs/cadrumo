@@ -2,8 +2,9 @@
 // which movement. The ledger weighs flow, currency and amount, ranks the
 // candidates and says which tie (`ledger.invoice.match`); the window looks
 // the movements and invoices it holds up by id and shows each pair with the
-// evidence it stands on. A suggestion is a proposal the person links, and a
-// link is permanent. Nothing here decides which pair is best.
+// evidence it stands on. A suggestion is a proposal the person links; a
+// saved link can be removed later from the movement. Nothing here decides
+// which pair is best.
 
 import type {
   LedgerCheckProjection,

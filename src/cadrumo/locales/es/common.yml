@@ -1789,7 +1789,7 @@ desktop:
         detach: Separar
         exclude: Excluir
         iva_derive: Calcular el IVA · {category}
-        link: Vincular · permanente
+        link: Vincular
         m210: Renta del modelo 210
         merge: Unir partes
         remove: Eliminar
@@ -1798,6 +1798,7 @@ desktop:
         split: Dividir
         stash: Apartar
         suggestion: Aprobación del modelo
+        unlink: Quitar vínculo con la factura
       approvals: Aprobaciones del modelo
       approve: aprobado por ti
       back: Atrás
@@ -1855,9 +1856,11 @@ desktop:
         currency_differs: 'Moneda distinta: {movement} ↔ {invoice}'
         differ: Sé que difieren
         linked_elsewhere: 'Factura ya vinculada · movimientos: {count}'
-        sure: Vincular estos · permanente
         unjudged: El libro aún no ha comparado este vínculo
         unread: No se ha podido leer la factura
+      links: Vínculos con facturas
+      links_note: Puedes quitar un vínculo más tarde desde la sección Factura del
+        movimiento; el historial conserva ambos.
       mine: Conservar el mío
       mismatch:
         income_category: Categoría de gasto en un ingreso · {count}
@@ -1894,9 +1897,6 @@ desktop:
         nada de esta parte.'
       part_unknown: No hemos podido confirmar esta parte entera. El guardado está
         en pausa.
-      permanent: Permanente
-      permanent_note: Un vínculo no se puede quitar después, ni aquí ni en ningún
-        otro sitio. Marca cada uno del que estés seguro.
       progress: Progreso del guardado
       progress_count: '{done} de {total} guardados'
       read_failed: 'No se ha podido actualizar el libro: no se ha guardado nada'
@@ -1930,7 +1930,7 @@ desktop:
         unchanged: Sin cambios
         unknown: Resultado desconocido
       theirs: Tomar el guardado
-      tick_links: Marca cada vínculo permanente para guardar.
+      tick_differ: Para guardar, marca cada vínculo cuyos dos lados difieren.
       title: Revisar y guardar · {count}
       together: 'Guardados juntos: {count}'
       unknown_note: No hemos podido confirmar que se guardara y no lo intentaremos
@@ -2677,8 +2677,7 @@ desktop:
       keep: Conservarlo
       left_out: 'Omitidos por no ser documentos: {count}'
       link_offer: ¿Vincularla a su movimiento?
-      link_offer_note: '{description} · {date} · {amount} la liquida. Un vínculo es
-        permanente una vez guardado.'
+      link_offer_note: '{description} · {date} · {amount} la liquida.'
       list_hide: Plegar las lecturas
       list_show: Mostrar las lecturas
       media:
@@ -3483,6 +3482,7 @@ desktop:
         restored: Restaurado
         split: Dividido
         stashed: Apartado
+        unlinked: Factura desvinculada
         updated: Actualizado
       file_row: '{file}, fila {row}'
       fix:
@@ -3518,8 +3518,8 @@ desktop:
         group_settles: Liquida este importe
         issued: Emitida
         issued_on: Fecha de emisión
-        link: Vincular · permanente
-        link_staged: Vínculo aún sin guardar · permanente al guardar
+        link: Vincular
+        link_staged: Vínculo aún sin guardar
         linked: Movimientos
         linked_count: '{count} vinculados'
         none: Ninguna factura del catálogo liquida este importe.
@@ -3528,15 +3528,29 @@ desktop:
         partial_hint: Normalmente un movimiento liquida una factura. Vincula ambos
           solo en pagos parciales.
         payment: Pago
-        permanent: 'Un vínculo es permanente: aquí no se puede quitar.'
         pick: Vincular otra factura
         received: Recibida
+        removable: Puedes quitar un vínculo más tarde aquí; el historial conserva
+          ambos.
         rival: '{movement} la liquida igual de bien.'
         show_other: Ver el otro
-        staged: Vínculo con {invoice} aún sin guardar · permanente al guardar
+        staged: Vínculo con {invoice} aún sin guardar
         staged_for: Ya está en tus cambios para {movement}
         taken: '{invoice} ya está en tus cambios para {movement}'
         transfer: Las transferencias entre tus cuentas no tienen factura.
+        unlink: Quitar vínculo
+        unlink_cause:
+          finalized_calculation_reference: Una declaración finalizada usa este movimiento
+            y su vínculo.
+          invoice_changed: Los vínculos de la factura cambiaron desde que la abriste.
+          link_not_found: El movimiento y la factura ya no están vinculados.
+          transaction_changed: El movimiento cambió desde que lo abriste.
+        unlink_next_step:
+          reopen_finalized_calculation: Reabre primero la declaración que lo usa.
+          reopen_invoice: Vuelve a abrir la factura e inténtalo de nuevo.
+          reopen_transaction: Vuelve a abrir el movimiento e inténtalo de nuevo.
+        unlink_pending: El vínculo con {invoice} se quita al guardar
+        unlink_staged: Quitar el vínculo, aún sin guardar
       issue_count: '{count} por corregir'
       last_saved: Último guardado
       lifecycle:
@@ -3880,7 +3894,8 @@ desktop:
         el documento.
       linked: Movimientos vinculados
       linked_count: 'Movimientos vinculados: {count}'
-      links_permanent: 'Un vínculo es permanente: no se puede quitar.'
+      links_removable: Para quitar un vínculo, abre la sección Factura del movimiento;
+        el historial conserva ambos.
       met: cumplido
       needs: Toda factura necesita
       new: Nueva factura
@@ -4047,8 +4062,8 @@ desktop:
       empty: Nada por conciliar
       empty_waiting: 'Sin sugerencias · movimientos que esperan factura: {count}'
       invoice_line: '{number} · {counterparty} · {date} · {payment}'
-      link: Vincular · permanente
-      link_named: Vincular {number} a {description} · permanente
+      link: Vincular
+      link_named: Vincular {number} a {description}
       no_repair:
         cites_another: El movimiento cita otra factura
         invoice_missing: La factura no está en el catálogo
@@ -4059,13 +4074,13 @@ desktop:
       partial: Normalmente un movimiento liquida una factura. Vincula ambos solo si
         son pagos parciales.
       read_failed: No se pudo leer
-      repair: Reparar · permanente
+      repair: Reparar
       repair_staged: Reparación aún sin guardar
       settles: Liquida {amount}
       settles_withheld: Liquida {amount} ({total} − {withheld} de retención)
       show_other: Mostrar {description}
       staged: 'Vínculos aún sin guardar: {count}'
-      staged_toast: Vínculo aún sin guardar · permanente al guardar
+      staged_toast: Vínculo aún sin guardar
       suggestions: Parejas sugeridas
       title: Por conciliar
     maximize: Maximizar el libro

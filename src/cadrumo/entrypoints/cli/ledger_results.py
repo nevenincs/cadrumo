@@ -1163,6 +1163,25 @@ class LedgerLinkResult(OutputSchema):
     actor: str
 
 
+class LedgerUnlinkResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger unlink``.
+
+    ``unlink`` removes the bidirectional relationship a prior ``link``
+    established and carries only the removal's identity metadata: the
+    movement's own invoice link is cleared and the invoice's remaining links
+    are returned, but the movement's other fields never ride on this result.
+    The link's own history entry stays; this result names only the removal.
+    """
+
+    operation: str
+    bucket_id: BucketId
+    transaction_id: TransactionId
+    invoice_id: InvoiceId
+    actor: str
+    invoice_linked_transaction_ids: list[TransactionId] = []
+    bucket_event_ids: list[str] = []
+
+
 # ---------------------------------------------------------------------------
 # Usage-ratios sub-app result schemas
 # ---------------------------------------------------------------------------
@@ -1237,6 +1256,7 @@ __all__ = [
     "LedgerStashResult",
     "LedgerStatusResult",
     "LedgerTransactionLinkFieldPayload",
+    "LedgerUnlinkResult",
     "LedgerUpdateResult",
     "LedgerViewResult",
     "M210IncomeClassificationPayload",

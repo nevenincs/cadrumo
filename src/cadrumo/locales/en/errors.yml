@@ -151,6 +151,7 @@ errors:
     casilla_id: casilla
     casilla_ids: casillas
     casillas: casillas
+    cause: cause
     count: count
     currency: currency
     detail: detail
@@ -1353,6 +1354,7 @@ errors:
     ledger_summary_period_without_span: This period has no calendar date span, so
       the ledger cannot total its records. Instalment periods such as 1P are payment
       events. Use a quarter, a month or 0A.
+    ledger_unlink: 'The invoice link can''t be removed: {cause}.'
     locale_catalogue_capture_not_current: This locale catalogue capture is no longer
       current.
     m145_communication_record_ambiguous: The Modelo 145 communication record id prefix

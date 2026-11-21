@@ -52,6 +52,7 @@ _DIAGNOSTIC_KEYS = frozenset(
         "error_type",
         "rate_kind",
         "divergence",
+        "refusal_code",
     }
 )
 

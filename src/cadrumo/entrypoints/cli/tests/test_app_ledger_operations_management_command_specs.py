@@ -335,6 +335,23 @@ _EXPECTED_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
         ),
     ),
     expected_command(
+        "app_ledger_unlink",
+        "app_ledger",
+        "unlink",
+        "leaf",
+        "cli.ledger.unlink.help",
+        "profile-bound",
+        "cadrumo.entrypoints.cli.ledger_commands:ledger_unlink",
+        expected_result_schema(TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerUnlinkResult", "ledger.unlink"),
+        (
+            expected_argument("transaction_id", "cli.ledger.unlink.id_help", constraint=NON_BLANK_CONSTRAINT_CONTRACT),
+            expected_argument(
+                "invoice_id", "cli.ledger.unlink.invoice_id_help", constraint=NON_BLANK_CONSTRAINT_CONTRACT
+            ),
+            expected_option("actor", "--by", "cli.ledger.unlink.actor_help"),
+        ),
+    ),
+    expected_command(
         "app_ledger_list",
         "app_ledger",
         "list",
@@ -642,6 +659,7 @@ def test_shared_ledger_construction_contracts_are_exact_and_reused() -> None:
     for spec in (
         *(spec for spec in LEDGER_OPERATIONS_COMMAND_SPECS if spec.kind.value == "leaf"),
         management["app_ledger_link"],
+        management["app_ledger_unlink"],
         management["app_ledger_list"],
         management["app_ledger_llm_diagnostics"],
         management["app_ledger_merge"],

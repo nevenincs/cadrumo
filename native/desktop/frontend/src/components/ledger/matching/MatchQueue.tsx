@@ -104,7 +104,7 @@ function LinkButton({
         aria-describedby={described}
         onClick={() => onLink(pair)}
       >
-        <Icon name="lock" size="xs" />
+        <Icon name="link" size="xs" />
         {t("desktop.ledger.matching.link")}
       </Button>
       <span id={described} className="sr-only">
@@ -233,7 +233,7 @@ function MatchItem({
                   if (pair) onLink(pair);
                 }}
               >
-                <Icon name="lock" size="xs" />
+                <Icon name="link" size="xs" />
                 {t("desktop.ledger.matching.link")}
               </Button>
             </div>
@@ -356,7 +356,7 @@ function Inconsistency({
             className="ledger-match-repair"
             onClick={() => onRepair(item)}
           >
-            <Icon name="lock" size="xs" />
+            <Icon name="link" size="xs" />
             {t("desktop.ledger.matching.repair")}
           </Button>
         </div>
@@ -395,7 +395,7 @@ function FailedRead({
  * The "To match" pair queue: each movement's one best invoice, the links
  * the two catalogues disagree about with a staged repair where a link
  * mends them, and the declarations the ledger has moved under. Linking
- * stages a permanent link in the page's changes; nothing is written here.
+ * stages a link in the page's changes; nothing is written here.
  */
 export function MatchQueue({
   port,
@@ -544,7 +544,7 @@ export function MatchQueue({
       <div className="min-h-0 flex-1 overflow-y-auto">
         {staged.rows.size > 0 && (
           <p className="ledger-match-staged flex items-center gap-1 px-3 pb-1 text-sm text-muted-foreground">
-            <Icon name="lock" size="xs" />
+            <Icon name="link" size="xs" />
             {t("desktop.ledger.matching.staged", { count: staged.rows.size })}
           </p>
         )}

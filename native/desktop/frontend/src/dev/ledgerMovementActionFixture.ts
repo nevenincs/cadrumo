@@ -1,15 +1,19 @@
 // The scenario ledger's reads of one movement's lineage and its actions,
 // held to the registered contracts of `ledger.track`,
 // `ledger.history.typed`, `ledger.remove`, the four lifecycle operations,
-// `ledger.split.manual`, `ledger.merge`, `ledger.classify.iva-derive` and
-// `ledger.allocate`. A request its contract would not decode is refused
+// `ledger.split.manual`, `ledger.merge`, `ledger.classify.iva-derive`,
+// `ledger.allocate` and `ledger.unlink`. A request its contract would not decode is refused
 // before anything runs; a movement a finalized revision cites, or one that
 // is not active, is refused as the product refuses it. Results are the flat
 // projections the host passes on. Everything it answers is synthetic.
 
 import type { JsonObject, JsonValue } from "../shell/ledger";
 import type { LedgerParticipationProjection } from "../shell/ledgerMovementCheckContract";
-import type { LedgerRemovalBlockerProjection } from "../shell/ledgerMovementContract";
+import type {
+  InvoiceUnlinkCause,
+  InvoiceUnlinkNextStep,
+  LedgerRemovalBlockerProjection,
+} from "../shell/ledgerMovementContract";
 import {
   SEALED_PERIOD,
   cents,
@@ -71,6 +75,12 @@ const RATES: Record<string, string> = {
   domestic_general: "0.21",
   domestic_reduced: "0.1",
   domestic_super_reduced: "0.04",
+};
+const UNLINK_NEXT_STEP: Record<InvoiceUnlinkCause, InvoiceUnlinkNextStep> = {
+  link_not_found: "reopen_transaction",
+  transaction_changed: "reopen_transaction",
+  invoice_changed: "reopen_invoice",
+  finalized_calculation_reference: "reopen_finalized_calculation",
 };
 const SEALING_REVISION = {
   modelo: "303",
@@ -724,6 +734,110 @@ export function movementActionOperations(ledger: FixtureLedger, tools: Tools) {
     };
   }
 
+  /** The removal of a movement's invoice link, decided as the product
+   * decides it: against the movement's modification time and the invoice's
+   * linked movements as the person saw them, and refused while a finalized
+   * declaration cites the movement. Both sides are cleared and the removal
+   * is recorded in the movement's history. */
+  function unlink(request: JsonObject): JsonObject {
+    only(request, [
+      "transaction_id",
+      "invoice_id",
+      "expected_modified_at",
+      "expected_invoice_linked_transaction_ids",
+      "actor",
+      "output_language",
+    ]);
+    const prefix = text(request.transaction_id)?.toLowerCase();
+    const selector = text(request.invoice_id)?.toLowerCase();
+    const expectedModified = text(request.expected_modified_at);
+    const expectedLinked = request.expected_invoice_linked_transaction_ids;
+    if (
+      !prefix ||
+      prefix.length > 64 ||
+      !selector ||
+      selector.length > 64 ||
+      !expectedModified ||
+      !Array.isArray(expectedLinked) ||
+      !expectedLinked.every((id) => typeof id === "string")
+    )
+      return invalid();
+    const refuse = (
+      cause: InvoiceUnlinkCause,
+      finalized_revisions: LedgerRemovalBlockerProjection[] = [],
+    ): never => {
+      throw new MovementActionStopped("REFUSED_LEDGER_UNLINK", {
+        outcome: "refused",
+        profile_id: profileId,
+        transaction_id: request.transaction_id as string,
+        invoice_id: request.invoice_id as string,
+        actor: null,
+        transaction: null,
+        review_status: null,
+        invoice_linked_transaction_ids: [],
+        bucket_event_ids: [],
+        refusal: {
+          cause,
+          next_step: UNLINK_NEXT_STEP[cause],
+          finalized_revisions: finalized_revisions as unknown as JsonValue,
+        },
+      });
+    };
+    const movements = ledger.movements.filter((movement) =>
+      movement.transaction.transaction_id.startsWith(prefix),
+    );
+    const invoices = ledger.invoices.filter((invoice) =>
+      invoice.invoice_id.startsWith(selector),
+    );
+    if (movements.length !== 1 || invoices.length !== 1)
+      return refuse("link_not_found");
+    const movement = movements[0]!;
+    const invoice = invoices[0]!;
+    const t = movement.transaction;
+    if (
+      t.invoice_id !== invoice.invoice_id &&
+      !invoice.linked_transaction_ids.includes(t.transaction_id)
+    )
+      return refuse("link_not_found");
+    if (t.modified_at !== expectedModified)
+      return refuse("transaction_changed");
+    const sorted = (ids: readonly string[]) => [...ids].sort().join(",");
+    if (
+      sorted(invoice.linked_transaction_ids) !==
+      sorted(expectedLinked as string[])
+    )
+      return refuse("invoice_changed");
+    if (movement.sealed)
+      return refuse("finalized_calculation_reference", [
+        sealingReference(movement),
+      ]);
+    t.invoice_id = null;
+    t.modified_at = now();
+    const remaining = invoice.linked_transaction_ids.filter(
+      (id) => id !== t.transaction_id,
+    );
+    ledger.invoices = ledger.invoices.map((found) =>
+      found === invoice
+        ? { ...invoice, linked_transaction_ids: remaining }
+        : found,
+    );
+    record(t.transaction_id, "ledger.transaction.invoice.unlinked", {
+      invoice_id: invoice.invoice_id,
+    });
+    return {
+      outcome: "unlinked",
+      profile_id: profileId,
+      transaction_id: request.transaction_id as string,
+      invoice_id: invoice.invoice_id,
+      actor: "operator",
+      transaction: projected(movement),
+      review_status: reviewOf(t.business_classification),
+      invoice_linked_transaction_ids: remaining,
+      bucket_event_ids: events().slice(0, 1),
+      refusal: null,
+    };
+  }
+
   /** Records a model suggestion's rejection or approval in the history. */
   function noteReview(id: string, decision: "apply" | "reject", why: string) {
     record(
@@ -749,6 +863,7 @@ export function movementActionOperations(ledger: FixtureLedger, tools: Tools) {
     "ledger.merge": merge,
     "ledger.classify.iva-derive": ivaDerive,
     "ledger.allocate": allocate,
+    "ledger.unlink": unlink,
     ...Object.fromEntries(
       LIFECYCLE_OPERATIONS.map((operation) => [
         operation,

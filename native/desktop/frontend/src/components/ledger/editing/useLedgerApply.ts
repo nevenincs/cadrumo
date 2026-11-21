@@ -312,7 +312,9 @@ export function useLedgerApply({
       changedSinceRead(staged, before, answer.rows),
       staged,
     );
-    const invoices = staged.actions.some((action) => action.kind === "link")
+    const invoices = staged.actions.some(
+      (action) => action.kind === "link" || action.kind === "unlink",
+    )
       ? await readInvoices(port)
       : [];
     const { sealed, unread } = await sealedOf(

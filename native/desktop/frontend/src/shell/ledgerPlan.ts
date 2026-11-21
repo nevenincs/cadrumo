@@ -204,7 +204,6 @@ export type PlanSummary = {
   oneAtATime: number;
   /** About how long the one-at-a-time writes take. */
   seconds: number;
-  permanentLinks: number;
   /** Rows, new movements and actions held back. */
   held: number;
   /** Held-back work by why, to group "297 need a classification". */
@@ -330,6 +329,9 @@ export function splitBulk(
 // ---- Planning ------------------------------------------------------------------
 
 const ACTION_RANK: Record<StagedActionKind, number> = {
+  // An unlink is sent with the movement as the person saw it, so it goes
+  // before any other action that would change the movement.
+  unlink: -1,
   suggestion: 0,
   m210: 0,
   iva_derive: 0,
@@ -371,6 +373,19 @@ function actionStep(action: StagedAction): PlanStep | null {
         request: {
           transaction_id: action.transactionId,
           invoice_id: action.invoiceId,
+        },
+      };
+    case "unlink":
+      return {
+        kind: "action",
+        action,
+        definition: "ledger.unlink",
+        request: {
+          transaction_id: action.transactionId,
+          invoice_id: action.invoiceId,
+          expected_modified_at: action.expectedModifiedAt,
+          expected_invoice_linked_transaction_ids:
+            action.expectedLinkedTransactionIds,
         },
       };
     case "attach_file":
@@ -553,7 +568,10 @@ function checkRow(
   const classifying = actions.filter((action) => CLASSIFYING.has(action.kind));
   const files = actions.filter((action) => action.kind === "attach_file");
   const suggestions = actions.filter((action) => action.kind === "suggestion");
-  const links = actions.filter((action) => action.kind === "link");
+  const links = actions.filter(
+    (action) => action.kind === "link" || action.kind === "unlink",
+  );
+  const unlink = actions.find((action) => action.kind === "unlink");
   if (
     !answer.takes_changes &&
     (edits || suggestions.length || classifying.length || files.length)
@@ -580,6 +598,10 @@ function checkRow(
         : { kind: "action_and_edits", action: first.id },
     );
   }
+  // An unlink is sent with the movement's modification time as the person
+  // saw it, which an edit saved first would change.
+  if (unlink && edits)
+    entry.blockers.push({ kind: "action_and_edits", action: unlink.id });
   // A derivation is judged by the backend (see the served blockers); an
   // allocation still cannot share a movement with other classifying edits.
   const allocation = classifying.find((action) => action.kind === "allocate");
@@ -628,6 +650,7 @@ function checkRow(
       ? [...classifying, ...suggestions, ...structural]
       : []),
     ...(links.length > 1 ? links : []),
+    ...(unlink && suggestions.length ? [unlink, ...suggestions] : []),
   ];
   if (clashing.length)
     entry.blockers.push({
@@ -964,7 +987,6 @@ function summarize(
     actions,
     oneAtATime,
     seconds: oneAtATime * SINGLE_WRITE_SECONDS,
-    permanentLinks: actions.link ?? 0,
     held: held.rows.length + held.drafts.length + held.actions.length,
     blockers,
   };

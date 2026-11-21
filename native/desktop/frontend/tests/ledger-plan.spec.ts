@@ -910,7 +910,6 @@ test("the work is ordered: bulk, single classifications, corrections, adds, then
     newMovements: 1,
     oneAtATime: 8,
     seconds: 24,
-    permanentLinks: 1,
     held: 0,
     actions: { suggestion: 1, link: 1, archive: 1, split: 1, remove: 1 },
   });
@@ -1194,4 +1193,48 @@ test("an allocation still cannot meet classifying edits on its row", () => {
     { ...context, check: recordedCheck(staged(edits), context.rows) },
   );
   expect(blockersOf(plan, A)).toContain("action_and_edits");
+});
+
+test("an invoice unlink is sent first with the movement and the invoice as seen, and meets no edit, link or approval on its movement", () => {
+  const A = hexId("a");
+  const B = hexId("b");
+  const C = hexId("c");
+  const D = hexId("d");
+  const unlink = (id: string, row: string): StagedAction => ({
+    id,
+    kind: "unlink",
+    transactionId: row,
+    invoiceId: "inv-1",
+    expectedModifiedAt: "2026-05-02T10:00:00+00:00",
+    expectedLinkedTransactionIds: [row, D],
+  });
+  const plan = planRecorded(
+    staged({ [B]: { notes: set("x") } }, [
+      { id: "arch", kind: "archive", transactionId: A, reason: "" },
+      unlink("u-a", A),
+      unlink("u-b", B),
+      unlink("u-c", C),
+      { id: "l-c", kind: "link", transactionId: C, invoiceId: "inv-2" },
+    ]),
+    contextOf(business(A), business(B), business(C)),
+  );
+  expect(blockersOf(plan, A)).toEqual([]);
+  expect(plan.entries[1]!.blockers).toEqual([
+    { kind: "action_and_edits", action: "u-b" },
+  ]);
+  expect(plan.entries[2]!.blockers).toEqual([
+    { kind: "actions_conflict", actions: ["u-c", "l-c"] },
+  ]);
+  // The unlink goes before the archive staged ahead of it, since the archive
+  // would change the movement the unlink names as seen.
+  expect(stepKinds(plan)).toEqual(["action:unlink", "action:archive"]);
+  const sent = plan.steps[0] as Extract<PlanStep, { kind: "action" }>;
+  expect(sent.definition).toBe("ledger.unlink");
+  expect(sent.request).toEqual({
+    transaction_id: A,
+    invoice_id: "inv-1",
+    expected_modified_at: "2026-05-02T10:00:00+00:00",
+    expected_invoice_linked_transaction_ids: [A, D],
+  });
+  expect(plan.summary.actions).toEqual({ unlink: 1, archive: 1 });
 });
