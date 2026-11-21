@@ -878,6 +878,41 @@ function pageOpenerExpanded(id) {
   return document.getElementById(id)?.getAttribute("aria-expanded") === "true";
 }
 
+/** Record every change of the opener's expanded state from now on, with
+ * where the focus was, so an opener that opened and closed itself between two
+ * looks is told from one that never opened. */
+function pageWatchOpener(id) {
+  const el = document.getElementById(id);
+  window.__silentWatch?.disconnect();
+  const log = [];
+  const since = performance.now();
+  const focus = () => {
+    const at = document.activeElement;
+    if (!at || at === document.body) return "body";
+    const name = at.getAttribute("aria-label") || at.textContent || "";
+    return `${at.tagName.toLowerCase()}${at.getAttribute("role") ? `[role=${at.getAttribute("role")}]` : ""} "${name.replace(/\s+/g, " ").trim().slice(0, 40)}"`;
+  };
+  const watch = new MutationObserver(() =>
+    log.push({
+      ms: Math.round(performance.now() - since),
+      expanded: el?.getAttribute("aria-expanded"),
+      focus: focus(),
+    }),
+  );
+  if (el)
+    watch.observe(el, { attributes: true, attributeFilter: ["aria-expanded"] });
+  window.__silentWatch = watch;
+  window.__silentWatchLog = log;
+  return !!el;
+}
+
+/** What the watch recorded, and stop watching. */
+function pageWatchResult() {
+  window.__silentWatch?.disconnect();
+  window.__silentWatch = null;
+  return window.__silentWatchLog ?? [];
+}
+
 function pageOpenLayers() {
   return [
     ...document.querySelectorAll(
@@ -1592,6 +1627,7 @@ test(
         const once = `${opener.pane}|${opener.name}|${opener.popup}`;
         if (seen.has(once)) continue;
         seen.add(once);
+        await exec(pageWatchOpener, opener.id);
         const reply = uiaInvoke(opener.id, opener.name);
         const opened =
           reply.invoked &&
@@ -1601,19 +1637,27 @@ test(
             interval: 150,
             soft: true,
           }));
+        const watched = await exec(pageWatchResult);
+        const shut = watched.find(
+          (change, index) =>
+            change.expanded !== "true" &&
+            watched.slice(0, index).some((was) => was.expanded === "true"),
+        );
         const effect = opened
           ? "opened"
           : !reply.found
             ? `not found by UI Automation${reply.error ? `: ${reply.error}` : ""}`
             : !reply.invoked
               ? `not activated: ${reply.error}`
-              : `nothing opened (${reply.defaultAction ? `default action "${reply.defaultAction}"` : "Invoke"})`;
+              : shut
+                ? `opened, then closed itself after ${shut.ms} ms, the focus on ${shut.focus} (${reply.pattern})`
+                : `nothing opened (${reply.pattern})`;
         rows.push({
           view: view.name,
           pane: opener.pane,
           control: opener.name,
           role: `opener (${opener.popup})`,
-          method: reply.defaultAction ? "MSAA default action" : "UIA Invoke",
+          method: "UI Automation",
           effect,
           silent: !opened,
         });
@@ -1659,13 +1703,13 @@ test(
           ? `not found by UI Automation${reply.error ? `: ${reply.error}` : ""}`
           : !reply.invoked
             ? `not activated: ${reply.error}`
-            : `nothing shown (${reply.defaultAction ? `default action "${reply.defaultAction}"` : "Invoke"})`;
+            : `nothing shown (${reply.pattern})`;
       rows.push({
         view: "rail",
         pane: "rail",
         control: page.name,
         role: "rail page",
-        method: reply.defaultAction ? "MSAA default action" : "UIA Invoke",
+        method: "UI Automation",
         effect,
         silent: !shown,
       });
