@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#ledger-classify-queue'
 date: '2026-11-20'
-modified: '2026-11-20'
+modified: '2026-11-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:895e3171635127c19b29c5877509e6d8136c8e0ead5fd03a3ecfa3260ffd8620'
+body_hash: 'sha256:eb192523afc8060db522a7da1b200f7cd30a64a093b4a4d4a3e233c5b2862f66'
 related:
   - "[[2026-11-20-ledger-classify-queue-plan]]"
 ---
@@ -98,6 +98,20 @@ related:
 - `S10` `verify:` `desktop-host-unit-test (1061)` -> `pass`
 - `S10` `verify:` `cargo fmt --check` -> `pass`
 - `S10` `verify:` `desktop-host-unit-clippy` -> `fail`
+- `S11` `A` `native/desktop/frontend/src/shell/backgroundTasks.ts`
+- `S11` `A` `native/desktop/frontend/src/components/shell/BackgroundTasks.tsx`
+- `S11` `A` `native/desktop/frontend/src/components/shell/backgroundTaskWords.ts`
+- `S11` `A` `native/desktop/frontend/src/dev/backgroundTasksFixture.ts`
+- `S11` `A` `native/desktop/frontend/tests/scenarios/background-tasks.spec.ts`
+- `S11` `M` `native/desktop/frontend/src/components/WindowTitlebar.tsx`
+- `S11` `M` `src/cadrumo/locales/es/common.yml`
+- `S11` `verify:` `playwright test tests/scenarios/background-tasks.spec.ts` -> `pass`
+- `S11` `verify:` `pytest dev/locales/tests` -> `pass`
+- `S12` `M` `native/desktop/frontend/src/shell/ledgerWindow.ts`
+- `S12` `M` `native/desktop/frontend/src/components/ledger/movements/MovementCells.tsx`
+- `S12` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsGrid.tsx`
+- `S12` `M` `native/desktop/frontend/src/components/ledger/useLedgerPage.ts`
+- `S12` `verify:` `playwright test tests/scenarios/background-tasks.spec.ts` -> `pass`
 
 ## Notes
 

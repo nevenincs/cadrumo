@@ -29,6 +29,7 @@ import type {
   ProviderSettingsAnswer,
   ProviderSettingsRecord,
 } from "./providerSettingsContract";
+import type { BackgroundTaskCue } from "./backgroundTasksContract";
 import { tauriLedger } from "./tauriLedger";
 import { tauriModelo } from "./tauriModelo";
 import { tauriSedeView } from "./tauriSedeView";
@@ -244,6 +245,25 @@ export function tauriHost(): Host {
         bound("profile_views_operations", { limit, after }),
     },
     ledger: tauriLedger(token, call),
+    backgroundTasks: {
+      async observe(listener) {
+        let active = true;
+        const updates = new Channel<BackgroundTaskCue>();
+        updates.onmessage = (cue) => {
+          if (active) listener(cue);
+        };
+        const subscription = await call("background_tasks_observe", {
+          updates,
+        });
+        return () => {
+          active = false;
+          void call("background_tasks_unobserve", { subscription }).catch(
+            () => undefined,
+          );
+        };
+      },
+      revisions: () => bound("background_tasks_revisions", {}),
+    },
     modelo: tauriModelo(token, call),
     sedeView: tauriSedeView(call),
     attendance: {

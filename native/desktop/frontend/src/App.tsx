@@ -19,6 +19,7 @@ import { ShellDock } from "./components/ShellDock";
 import { WindowOverlays } from "./components/WindowOverlays";
 import { WindowTitlebar } from "./components/WindowTitlebar";
 import { useAbout } from "./shell/about";
+import { useBackgroundTaskSource } from "./shell/backgroundTasks";
 import { viewerPosition } from "./shell/navigation/history";
 import { useViewerHistory } from "./shell/navigation/useViewerHistory";
 import type { Host } from "./shell/host";
@@ -333,6 +334,13 @@ export function App({ host }: { host: Host }) {
     agentBody: navigation.agentBody,
   });
 
+  // The profile's background jobs, shown in the title bar and on the rows
+  // of the Ledger they hold.
+  const backgroundTasks = useBackgroundTaskSource(
+    host.backgroundTasks,
+    host.ledger,
+    reader,
+  );
   const { agentControl, modelList } = useReadingModelPicker(
     host.agentSession,
     openView,
@@ -634,6 +642,7 @@ export function App({ host }: { host: Host }) {
       t={t}
       navigation={nav.runtime}
       provisioning={setup.provisioning}
+      backgroundTasks={backgroundTasks}
     >
       <TooltipProvider>
         <div className="desktop-window flex h-dvh min-w-0 flex-col bg-chrome">
@@ -693,6 +702,7 @@ export function App({ host }: { host: Host }) {
             setAboutOpen={overlays.setAboutOpen}
             setPage={setPage}
             setLayout={setLayout}
+            modelList={modelList}
           />
           <div
             ref={arrangement.workspace}

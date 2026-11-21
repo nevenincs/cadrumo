@@ -21,6 +21,7 @@ import { HOUSEHOLD_SCENARIOS } from "./householdFixture";
 import { BORRADOR_SCENARIOS } from "./borradorFixture";
 import { ELECTION_SCENARIOS } from "./imputationElectionFixture";
 import { LEDGER_SHAPES } from "./ledgerFixture";
+import { JOB_SHAPES } from "./backgroundTasksFixture";
 import { modeloShape } from "./modeloFixture";
 import { findScenario, type Scenario } from "./scenarios";
 import { SETUP_SHAPES } from "./setupFixture";
@@ -158,6 +159,12 @@ function readParams() {
     setup: SETUP_SHAPES.find((shape) => shape === params.get("setup")),
     // How the made-up ledger answers.
     ledger: LEDGER_SHAPES.find((shape) => shape === params.get("ledger")),
+    // The background classification jobs the profile holds.
+    jobs: (params.get("jobs") ?? "")
+      .split(",")
+      .flatMap((shape) =>
+        JOB_SHAPES.filter((known) => known === shape).slice(0, 1),
+      ),
     // What the made-up profile states for the household.
     household: HOUSEHOLD_SCENARIOS.find(
       (state) => state === params.get("household"),
@@ -355,6 +362,7 @@ function Scenarios() {
       readingDefault: initial.readingDefault,
       setup: initial.setup,
       ledger: initial.ledger,
+      jobs: initial.jobs,
       modelo: initial.modelo,
       election: initial.election,
       borrador: initial.borrador,

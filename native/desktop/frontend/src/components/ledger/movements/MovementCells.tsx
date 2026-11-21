@@ -10,6 +10,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useStrings } from "../../../shell/strings";
+import type { RowJobState } from "../../../shell/backgroundTasks";
+import { rowJobWords } from "../../shell/backgroundTaskWords";
 import {
   directionLabel,
   lifecycleLabel,
@@ -51,6 +53,7 @@ export const StatusCell = memo(function StatusCell({
   issues,
   wordy,
   duplicate = false,
+  job = null,
 }: {
   row: LedgerTransactionReviewProjection;
   /** Null while readiness is not measured. */
@@ -58,6 +61,8 @@ export const StatusCell = memo(function StatusCell({
   wordy: boolean;
   /** An import flagged it as a likely duplicate of a stored movement. */
   duplicate?: boolean;
+  /** Where a background classification job stands on it. */
+  job?: RowJobState | null;
 }) {
   const t = useStrings();
   const word = statusWord(row.review_status, issues);
@@ -96,6 +101,7 @@ export const StatusCell = memo(function StatusCell({
         )}
       </span>
       {duplicate && <DuplicateMark />}
+      {job && <JobMark state={job} />}
       {state !== "ACTIVE" &&
         (!wordy && LIFECYCLE_ICONS[state] ? (
           <LifecycleMark state={state} />
@@ -118,6 +124,42 @@ function LifecycleMark({ state }: { state: string }) {
           className="inline-flex items-center text-muted-foreground"
         >
           <Icon name={LIFECYCLE_ICONS[state]!} size="xs" />
+          <span className="sr-only">{name}</span>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{name}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+/** Where a background classification job stands on the movement: being
+ * classified, a proposal ready to review, or failed with its cause. */
+function JobMark({ state }: { state: RowJobState }) {
+  const t = useStrings();
+  const name = rowJobWords(t, state);
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          data-job-state={state.kind}
+          data-job-cause={state.kind === "failed" ? state.cause : undefined}
+          className={cn(
+            "inline-flex items-center",
+            state.kind === "failed" ? "text-warning" : "text-muted-foreground",
+            state.kind === "proposed" && "text-foreground",
+          )}
+        >
+          <Icon
+            name={
+              state.kind === "classifying"
+                ? "loader"
+                : state.kind === "proposed"
+                  ? "agent"
+                  : "alert"
+            }
+            size="xs"
+            className={cn(state.kind === "classifying" && "animate-spin")}
+          />
           <span className="sr-only">{name}</span>
         </span>
       </TooltipTrigger>

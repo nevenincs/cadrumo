@@ -4,7 +4,7 @@
 // moment they ran. A failed read is a failure, never an empty period, and an
 // answer to a read no longer being asked is dropped.
 
-import { useCallback, useEffect, useReducer, useRef } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import {
   ledgerFailure,
   type LedgerFailureCode,
@@ -14,6 +14,7 @@ import {
   type LedgerResult,
 } from "./ledger";
 import type { OutputLanguage } from "./ledgerClassificationContract";
+import type { LedgerClassifyJobProjection } from "./ledgerClassificationJobContract";
 import {
   periodFilters,
   publicPeriod,
@@ -478,6 +479,68 @@ export function useLedgerWindow(
     readMore,
     readAll,
   };
+}
+
+// ---- Background jobs ---------------------------------------------------------
+
+/** What a job says of the window's movements: its revision, and which of
+ * them it has applied or found changed since its proposal, the item states
+ * that follow a change to the ledger itself. */
+export type WindowJobMark = { revision: number; changes: string };
+
+/** The mark of each job that holds a movement of the window. */
+export function windowJobMarks(
+  jobs: readonly LedgerClassifyJobProjection[],
+  ids: ReadonlySet<string>,
+): Map<string, WindowJobMark> {
+  const marks = new Map<string, WindowJobMark>();
+  for (const job of jobs) {
+    const held = job.items.filter((item) => ids.has(item.movement_id));
+    if (held.length === 0) continue;
+    const changes = held
+      .filter((item) => item.state === "applied" || item.state === "stale")
+      .map((item) => `${item.movement_id}:${item.state}`)
+      .sort()
+      .join(",");
+    marks.set(job.job_id, { revision: job.revision, changes });
+  }
+  return marks;
+}
+
+/** Whether a job holding the window's movements reached a newer revision
+ * that applied one of them or found one changed: the window's rows are then
+ * read again. A job first seen, or one whose revision did not rise, asks
+ * for no read. */
+export function jobsChangedWindow(
+  before: ReadonlyMap<string, WindowJobMark>,
+  now: ReadonlyMap<string, WindowJobMark>,
+): boolean {
+  for (const [job, mark] of now) {
+    const held = before.get(job);
+    if (held && mark.revision > held.revision && mark.changes !== held.changes)
+      return true;
+  }
+  return false;
+}
+
+/** Reads the window again when a background job's newer revision says it
+ * changed one of the window's movements in the ledger. */
+export function useJobRereads(
+  jobs: readonly LedgerClassifyJobProjection[],
+  rows: readonly LedgerTransactionReviewProjection[] | null,
+  reread: () => void,
+) {
+  const seen = useRef<ReadonlyMap<string, WindowJobMark>>(new Map());
+  const ids = useMemo(
+    () => new Set((rows ?? []).map((row) => row.transaction.transaction_id)),
+    [rows],
+  );
+  useEffect(() => {
+    const now = windowJobMarks(jobs, ids);
+    const due = jobsChangedWindow(seen.current, now);
+    seen.current = now;
+    if (due) reread();
+  }, [jobs, ids, reread]);
 }
 
 // ---- Readiness ---------------------------------------------------------------

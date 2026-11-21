@@ -17,7 +17,76 @@ DESKTOP_AGENT_ENGINE_HEALTH_KEYS: Final[frozenset[str]] = frozenset(
     }
 )
 
-_PROFILE_AND_ENGINE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS | DESKTOP_AGENT_ENGINE_HEALTH_KEYS
+#: The words of the window's background tasks: the title-bar indicator, each
+#: job's progress, its failures by their served cause, its actions and their
+#: outcomes, and the state a Ledger row shows of the job that holds it.
+DESKTOP_BACKGROUND_TASK_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "desktop.background_tasks.active",
+        "desktop.background_tasks.active_one",
+        "desktop.background_tasks.authorise",
+        "desktop.background_tasks.call_failed",
+        "desktop.background_tasks.call_unknown",
+        "desktop.background_tasks.cancel",
+        "desktop.background_tasks.cause.consent_expired",
+        "desktop.background_tasks.cause.consent_required",
+        "desktop.background_tasks.cause.consent_revoked",
+        "desktop.background_tasks.cause.failed",
+        "desktop.background_tasks.cause.invalid_response",
+        "desktop.background_tasks.cause.lane_changed",
+        "desktop.background_tasks.cause.lane_refused",
+        "desktop.background_tasks.cause.model_unavailable",
+        "desktop.background_tasks.cause.movement_not_found",
+        "desktop.background_tasks.cause.timed_out",
+        "desktop.background_tasks.cause.unknown",
+        "desktop.background_tasks.consent_scope.agent_session",
+        "desktop.background_tasks.consent_scope.once",
+        "desktop.background_tasks.consent_scope.remembered",
+        "desktop.background_tasks.consent_scope_prompt",
+        "desktop.background_tasks.dismiss",
+        "desktop.background_tasks.empty",
+        "desktop.background_tasks.failed",
+        "desktop.background_tasks.failed_one",
+        "desktop.background_tasks.failure_group",
+        "desktop.background_tasks.failures",
+        "desktop.background_tasks.job_title",
+        "desktop.background_tasks.label",
+        "desktop.background_tasks.off_host",
+        "desktop.background_tasks.outcome.authorised",
+        "desktop.background_tasks.outcome.cancelled",
+        "desktop.background_tasks.outcome.cancelling",
+        "desktop.background_tasks.outcome.consent_revoked",
+        "desktop.background_tasks.outcome.dismissed",
+        "desktop.background_tasks.outcome.enqueued",
+        "desktop.background_tasks.outcome.retried",
+        "desktop.background_tasks.progress",
+        "desktop.background_tasks.proposed",
+        "desktop.background_tasks.proposed_one",
+        "desktop.background_tasks.read_failed",
+        "desktop.background_tasks.refused",
+        "desktop.background_tasks.resuming",
+        "desktop.background_tasks.retry",
+        "desktop.background_tasks.row.classifying",
+        "desktop.background_tasks.row.failed",
+        "desktop.background_tasks.row.proposed",
+        "desktop.background_tasks.scope_period",
+        "desktop.background_tasks.scope_selection",
+        "desktop.background_tasks.scope_single",
+        "desktop.background_tasks.status.cancelled",
+        "desktop.background_tasks.status.cancelling",
+        "desktop.background_tasks.status.interrupted",
+        "desktop.background_tasks.status.queued",
+        "desktop.background_tasks.status.running",
+        "desktop.background_tasks.status.settled",
+        "desktop.background_tasks.switch_local",
+        "desktop.background_tasks.switch_local_elsewhere",
+        "desktop.background_tasks.waiting",
+    }
+)
+
+_PROFILE_AND_ENGINE_KEYS: Final[frozenset[str]] = (
+    DESKTOP_PROFILE_INTERFACE_KEYS | DESKTOP_AGENT_ENGINE_HEALTH_KEYS | DESKTOP_BACKGROUND_TASK_KEYS
+)
 
 DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | frozenset(
     {

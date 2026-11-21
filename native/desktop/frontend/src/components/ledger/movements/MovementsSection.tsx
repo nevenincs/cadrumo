@@ -24,6 +24,7 @@ import {
   type MenuEntry,
 } from "../../ContextMenu";
 import type { Action } from "../../../shell/actions";
+import { useBackgroundTasks } from "../../../shell/backgroundTasks";
 import type { LedgerView } from "../../../shell/layout";
 import type { LedgerPort } from "../../../shell/ledger";
 import {
@@ -356,9 +357,11 @@ export function MovementsSection({
     () => rows.some((row) => row.transaction.currency !== "EUR"),
     [rows],
   );
+  // What the background classification jobs show on each movement.
+  const jobRows = useBackgroundTasks().rows;
   const marks = useMemo(
-    () => statusMarks(rows, duplicates),
-    [rows, duplicates],
+    () => statusMarks(rows, duplicates, jobRows),
+    [rows, duplicates, jobRows],
   );
   // The business-use ratios configured for the years of the window's
   // movements, which the Mixed step stages with its share.
@@ -1140,6 +1143,7 @@ export function MovementsSection({
         context={{
           ...columnContext,
           duplicates,
+          jobRows,
           currencySlot,
           statusMarks: marks,
           drafting,

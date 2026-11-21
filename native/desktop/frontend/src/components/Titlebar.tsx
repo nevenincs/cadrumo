@@ -19,9 +19,12 @@ export function Titlebar({
   onFailure,
   guardClose,
   onPresentation,
+  tasks,
 }: {
   host: Host;
   children: ReactNode;
+  /** The background tasks, beside the account. */
+  tasks?: ReactNode;
   onFailure: () => void;
   /** Asks first where closing would drop the window's unsaved work. */
   guardClose?: (proceed: () => void) => void;
@@ -104,6 +107,7 @@ export function Titlebar({
         aria-hidden="true"
         onMouseDown={dragging}
       />
+      {tasks && <div className="titlebar-tasks">{tasks}</div>}
       <div className="titlebar-account">{children}</div>
       {chrome === "custom" && (
         <div className="window-controls">

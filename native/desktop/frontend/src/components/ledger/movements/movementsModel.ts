@@ -145,10 +145,12 @@ export const statusWidth = (density: "compact" | "comfortable", marks = 0) =>
     : COLUMN_SPECS.status.width;
 
 /** How many kinds of mark the movements carry beside their status: the
- * likely-duplicate flag, and a state other than active. */
+ * likely-duplicate flag, a state other than active, and where a background
+ * classification job stands on it. */
 export function statusMarks(
   rows: readonly LedgerTransactionReviewProjection[],
   duplicates: ReadonlySet<string>,
+  jobRows: ReadonlyMap<string, unknown> = new Map(),
 ): number {
   const lifecycle = rows.some(
     (row) => row.transaction.lifecycle_state !== "ACTIVE",
@@ -156,7 +158,8 @@ export function statusMarks(
   const duplicate = rows.some((row) =>
     duplicates.has(row.transaction.transaction_id),
   );
-  return Number(lifecycle) + Number(duplicate);
+  const job = rows.some((row) => jobRows.has(row.transaction.transaction_id));
+  return Number(lifecycle) + Number(duplicate) + Number(job);
 }
 
 /** Columns that are always drawn: the row's selection box. */

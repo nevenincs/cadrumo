@@ -7,6 +7,7 @@
 // bytes of one call. Results and staged edits live in the page's memory
 // only: never in storage, a log line or an error message.
 
+import type { LedgerClassifyJobContracts } from "./ledgerClassificationJobContract";
 import type { LedgerProrrataContracts } from "./ledgerProrrataContract";
 import type { LedgerReadContracts } from "./ledgerReadContract";
 import type {
@@ -658,7 +659,21 @@ export type LedgerDropSignal =
 // Field names are the registered Python contracts' own. A request omits the
 // profile, which the host fills.
 
-export interface LedgerRequests {
+/** A classification job definition's registered request without the
+ * profile, and its result. */
+type LedgerClassifyJobRequests = {
+  [D in keyof LedgerClassifyJobContracts]: Omit<
+    LedgerClassifyJobContracts[D]["request"],
+    "profile_id"
+  >;
+};
+type LedgerClassifyJobResults = {
+  [
+    D in keyof LedgerClassifyJobContracts
+  ]: LedgerClassifyJobContracts[D]["result"];
+};
+
+export interface LedgerRequests extends LedgerClassifyJobRequests {
   "ledger.known-values": Omit<
     LedgerReadContracts["ledger.known-values"]["request"],
     "profile_id"
@@ -853,7 +868,7 @@ export interface LedgerRequests {
   "ledger.reset": LedgerResetWindowRequest;
 }
 
-export interface LedgerResults {
+export interface LedgerResults extends LedgerClassifyJobResults {
   "ledger.known-values": LedgerReadContracts["ledger.known-values"]["result"];
   "ledger.list": LedgerReadContracts["ledger.list"]["result"];
   "ledger.view": LedgerReadContracts["ledger.view"]["result"];

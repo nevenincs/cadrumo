@@ -210,6 +210,10 @@ export interface Host {
    * the person picks for them and the reviews they pause for, where this
    * host offers them. Without it the shell shows no Ledger page. */
   readonly ledger?: import("./ledger").LedgerPort;
+  /** Cues that a background job of the signed-in profile changed, and the
+   * jobs' stored revisions, where this host sends them. Without it the
+   * shell shows no background tasks. */
+  readonly backgroundTasks?: import("./backgroundTasks").BackgroundTasksPort;
   /** The signed-in profile's declarations: the list, each one's form and
    * help, its registered modelo operations and the files they read and
    * write, where this host offers them. Without it the shell shows no

@@ -1290,6 +1290,72 @@ desktop:
     tax_values_note: Includes calculated taxes and return details. Leave this off
       to keep them from the app.
     title: Access keys for other AI apps
+  background_tasks:
+    active: '{count} in progress'
+    active_one: '{count} in progress'
+    authorise: Authorise reading off this computer
+    call_failed: The request got no answer.
+    call_unknown: The request was sent, but whether it took effect is unknown.
+    cancel: Cancel
+    cause:
+      consent_expired: Your consent to read off this computer has expired
+      consent_required: Reading off this computer needs your consent
+      consent_revoked: Your consent to read off this computer was withdrawn
+      failed: Failed without a stated cause
+      invalid_response: The model's answer could not be read
+      lane_changed: The agent now reads with another model
+      lane_refused: The model refused the request
+      model_unavailable: The model could not be reached
+      movement_not_found: The movement is no longer stored
+      timed_out: The model did not answer in time
+      unknown: 'Interrupted: the outcome is unknown'
+    consent_scope:
+      agent_session: For this agent session
+      once: For this job
+      remembered: Until I withdraw it
+    consent_scope_prompt: For how long may it read off this computer?
+    dismiss: Dismiss
+    empty: No background tasks.
+    failed: '{count} failed'
+    failed_one: '{count} failed'
+    failure_group: '{cause} ({count})'
+    failures: Failures by cause
+    job_title: Classifying movements
+    label: Background tasks
+    off_host: read off this computer by {model}
+    outcome:
+      authorised: Authorised. Asking again for the movements that needed it.
+      cancelled: Cancelled.
+      cancelling: 'Cancelling: the movement being asked finishes first.'
+      consent_revoked: Consent withdrawn.
+      dismissed: Dismissed. Its proposals were not applied.
+      enqueued: Queued.
+      retried: Asking again for the failed movements.
+    progress: '{done} of {total} asked'
+    proposed: '{count} proposals ready'
+    proposed_one: '{count} proposal ready'
+    read_failed: The background tasks could not be read. They are read again when
+      the window regains focus or a task changes.
+    refused: The request was refused.
+    resuming: 'Resuming this job: some movements were still to be asked.'
+    retry: Ask again
+    row:
+      classifying: Classifying…
+      failed: 'Classification failed: {cause}'
+      proposed: Proposal ready to review
+    scope_period: Movements from {start} to {end}
+    scope_selection: '{count} movements'
+    scope_single: One movement
+    status:
+      cancelled: Cancelled
+      cancelling: Cancelling
+      interrupted: Interrupted
+      queued: Waiting
+      running: Running
+      settled: Finished
+    switch_local: Use a model on this computer
+    switch_local_elsewhere: Choose a model on this computer in the agent's settings.
+    waiting: 'Waiting: another job is running, and this one starts when it ends.'
   browser:
     acquiring: Cadrumo is signing you in. Click or press a key to take over.
     address: Page address

@@ -1320,6 +1320,73 @@ desktop:
     tax_values_note: A kiszámított adókra és a bevallások adataira is kiterjed. Hagyd
       kikapcsolva, ha nem szeretnéd, hogy az alkalmazás lássa ezeket.
     title: Hozzáférési kulcsok más MI-alkalmazásoknak
+  background_tasks:
+    active: '{count} folyamatban'
+    active_one: '{count} folyamatban'
+    authorise: Számítógépen kívüli olvasás engedélyezése
+    call_failed: A kérésre nem érkezett válasz.
+    call_unknown: A kérés elküldve, de nem tudni, hogy érvényesült-e.
+    cancel: Leállítás
+    cause:
+      consent_expired: Lejárt a hozzájárulásod a számítógépen kívüli olvasáshoz
+      consent_required: A számítógépen kívüli olvasáshoz a hozzájárulásod kell
+      consent_revoked: Visszavontad a hozzájárulásodat a számítógépen kívüli olvasáshoz
+      failed: Megadott ok nélkül sikertelen
+      invalid_response: A modell válaszát nem sikerült beolvasni
+      lane_changed: Az ügynök most egy másik modellel olvas
+      lane_refused: A modell elutasította a kérést
+      model_unavailable: A modell nem érhető el
+      movement_not_found: A tétel már nincs tárolva
+      timed_out: A modell nem válaszolt időben
+      unknown: 'Megszakadt: az eredmény ismeretlen'
+    consent_scope:
+      agent_session: Erre az ügynökmunkamenetre
+      once: Erre a feladatra
+      remembered: Amíg vissza nem vonom
+    consent_scope_prompt: Meddig olvashat ezen a számítógépen kívül?
+    dismiss: Elvetés
+    empty: Nincs háttérfeladat.
+    failed: '{count} sikertelen'
+    failed_one: '{count} sikertelen'
+    failure_group: '{cause} ({count})'
+    failures: Hibák ok szerint
+    job_title: Tételek besorolása
+    label: Háttérfeladatok
+    off_host: 'ezen a számítógépen kívül olvassa: {model}'
+    outcome:
+      authorised: Engedélyezve. Újra lekérdezi azokat a tételeket, amelyekhez ez kellett.
+      cancelled: Leállítva.
+      cancelling: 'Leállítás alatt: előbb befejeződik az éppen lekérdezett tétel.'
+      consent_revoked: Hozzájárulás visszavonva.
+      dismissed: Elvetve. A javaslatai nem lettek alkalmazva.
+      enqueued: Sorba állítva.
+      retried: Újra lekérdezi a sikertelen tételeket.
+    progress: '{total} tételből {done} lekérdezve'
+    proposed: '{count} javaslat kész'
+    proposed_one: '{count} javaslat kész'
+    read_failed: A háttérfeladatokat nem sikerült beolvasni. Újra beolvasásra kerülnek,
+      amikor az ablak visszakapja a fókuszt, vagy egy feladat megváltozik.
+    refused: A kérés el lett utasítva.
+    resuming: 'A feladat folytatódik: még voltak lekérdezendő tételek.'
+    retry: Kérdezd újra
+    row:
+      classifying: Besorolás folyamatban…
+      failed: 'A besorolás sikertelen: {cause}'
+      proposed: Javaslat kész, átnézheted
+    scope_period: Tételek {start} és {end} között
+    scope_selection: '{count} tétel'
+    scope_single: Egy tétel
+    status:
+      cancelled: Leállítva
+      cancelling: Leállítás alatt
+      interrupted: Megszakadt
+      queued: Várakozik
+      running: Fut
+      settled: Befejeződött
+    switch_local: Ezen a számítógépen futó modell használata
+    switch_local_elsewhere: Válassz egy ezen a számítógépen futó modellt az ügynök
+      beállításaiban.
+    waiting: 'Várakozik: egy másik feladat fut, ez akkor indul, amikor az befejeződik.'
   browser:
     acquiring: A Cadrumo bejelentkeztet. Kattints, vagy nyomj meg egy billentyűt,
       hogy átvedd az irányítást.

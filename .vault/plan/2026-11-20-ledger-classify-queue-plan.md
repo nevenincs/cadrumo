@@ -6,9 +6,9 @@ date: '2026-11-20'
 tier: L2
 related:
   - '[[2026-11-20-ledger-classify-queue-adr]]'
-modified: '2026-11-20'
+modified: '2026-11-21'
 body_schema: body-v2
-body_hash: 'sha256:8a5bc8623fdf0d3b91cc64dcc5180264a027e1826319b15e92d2955438cb2cf9'
+body_hash: 'sha256:79553d9ee3b67dd7542741cb3b8ccc55174e6bc150944b120d4e1aba5b7d6817'
 ---
 
 # `ledger-classify-queue` plan
@@ -79,8 +79,8 @@ cadrumo-agent serves task kinds and background effort; the agent service resolve
 Typed revision cue from host to window, background-task indicator, per-row state and per-row agent actions.
 
 - [x] `P04.S10` - Add the background-task cue channel mapping RecordsChanged to a revision read and a typed cue, and drive job runs outside the serial lock; `native/desktop/src-tauri/src/shell/background_tasks.rs, shell/ledger/mod.rs, generated contract`.
-- [ ] `P04.S11` - Add the shell background-task indicator with progress, failures, cancel and retry, re-reading on cue, subscribe and focus; `native/desktop/frontend/src/shell/backgroundTasks.ts, components/shell/BackgroundTasks.tsx, locales`.
-- [ ] `P04.S12` - Show per-row classifying, proposed and failed state in the Libro grid and re-read the ledger window on the cue; `frontend shell/ledgerWindow.ts, components/ledger grid`.
+- [x] `P04.S11` - Add the shell background-task indicator with progress, failures, cancel and retry, re-reading on cue, subscribe and focus; `native/desktop/frontend/src/shell/backgroundTasks.ts, components/shell/BackgroundTasks.tsx, locales`.
+- [x] `P04.S12` - Show per-row classifying, proposed and failed state in the Libro grid and re-read the ledger window on the cue; `frontend shell/ledgerWindow.ts, components/ledger grid`.
 - [ ] `P04.S13` - Add per-row and selection Preguntar al agente actions that enqueue jobs, retire the 20-row loop, and add open in agent conversation; `frontend components/ledger grid and SelectionInspector.tsx, agent panel handoff`.
 
 ### Phase `P05` - Speed
