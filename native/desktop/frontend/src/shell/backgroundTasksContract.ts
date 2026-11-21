@@ -46,3 +46,19 @@ export type BackgroundTaskRevisions = {
   profile_id: string;
   tasks: BackgroundTaskRevision[];
 };
+
+/**
+ * The host's cues and the jobs' stored revisions for the signed-in profile.
+ */
+export type BackgroundTasksPort = {
+  /**
+   * Calls `listener` with each cue the host sends, until the returned function
+   * unsubscribes. A change before subscribing is not cued: read the revisions
+   * after it.
+   */
+  observe(listener: (message: BackgroundTaskCue) => void): Promise<() => void>;
+  /**
+   * Every background job's stored revision, read now.
+   */
+  revisions(): Promise<BackgroundTaskRevisions>;
+};

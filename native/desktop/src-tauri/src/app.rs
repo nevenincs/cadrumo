@@ -33,6 +33,12 @@ impl<R: Runtime> Commands<R> {
     pub fn new(names: &'static [&'static str], handler: Handler<R>) -> Self {
         Self { names, handler }
     }
+
+    /// The command names this module registers.
+    #[cfg(test)]
+    pub fn names(&self) -> &'static [&'static str] {
+        self.names
+    }
 }
 
 macro_rules! commands {
