@@ -18,6 +18,7 @@ import dev.runtime_lifecycle.agent_service_session as session_module
 import dev.runtime_lifecycle.service_admin_channel as process_module
 from cadrumo_agent_service.admin import AdminAction, AdminServer
 from cadrumo_agent_service.host.bounded_read import BoundedRead
+from cadrumo_agent_service.providers.application.tests.served_catalog_documents import served_catalog
 from cadrumo_client.contracts.service_access import ServiceConnected, ServiceLease
 from dev.runtime_lifecycle.caller_owned_root import Programs
 from dev.runtime_lifecycle.packaged_service_process import PackagedServiceProcess
@@ -366,6 +367,8 @@ def test_admin_uses_the_actual_typed_service_request_and_bounded_wire(tmp_path: 
 @pytest.mark.parametrize("action", ["catalog", "status"])
 def test_admin_observes_the_same_bounded_read_after_its_busy_answer(action: AdminAction) -> None:
     expected_action = action
+    # The wire relays a catalogue only as the agent's pinned schema states it.
+    answer: dict[str, Any] = served_catalog() if action == "catalog" else {"providers": []}
 
     class DelayedRead:
         def __init__(self) -> None:
@@ -377,7 +380,7 @@ def test_admin_observes_the_same_bounded_read_after_its_busy_answer(action: Admi
         def compute(self) -> dict[str, Any]:
             self.computations += 1
             assert self.release.wait(timeout=5)
-            return {"providers": []}
+            return answer
 
         def admin(self, action: AdminAction, **_fields: object) -> dict[str, Any]:
             assert action == expected_action
@@ -393,7 +396,7 @@ def test_admin_observes_the_same_bounded_read_after_its_busy_answer(action: Admi
     process = object.__new__(PackagedServiceProcess)
     process._bearer = bearer
     try:
-        assert process.admin(server.port, action) == {"providers": []}
+        assert process.admin(server.port, action) == answer
         assert target.requests >= 2
         assert target.computations == 1
     finally:
