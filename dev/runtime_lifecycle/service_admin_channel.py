@@ -6,7 +6,7 @@ import json
 import socket
 import struct
 import time
-from typing import Any
+from typing import Any, Final
 from uuid import uuid4
 
 from pydantic import JsonValue, TypeAdapter, ValidationError
@@ -28,6 +28,22 @@ _JSON_OBJECT: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValu
 ADMIN_EXCHANGE_SECONDS = 6.0
 
 
+OWNED_SETTINGS_ACTIONS: Final[frozenset[AdminAction]] = frozenset(
+    {
+        "catalog",
+        "status",
+        "provider_lanes",
+        "local_engine",
+        "local_models",
+        "local_engine_choose",
+        "local_model_add",
+        "reading_model_choose",
+        "task_model_choose",
+    }
+)
+"""The window's local-model settings: its reads, and the engine, list, reading and task choices it stores."""
+
+
 def service_admin(
     bearer: bytearray, port: int, action: AdminAction, *, within: float = ADMIN_EXCHANGE_SECONDS, **fields: Any
 ) -> dict[str, JsonValue]:
@@ -38,12 +54,34 @@ def service_admin(
     """
     if action not in {"catalog", "status"}:
         raise AcceptanceError("shared service admin permits catalog and status reads only")
+    return _exchange(bearer, port, _request(action, fields), within=within)
+
+
+def owned_service_settings(
+    bearer: bytearray, port: int, action: AdminAction, *, within: float = ADMIN_EXCHANGE_SECONDS, **fields: Any
+) -> dict[str, JsonValue]:
+    """Read or store the window's local-model settings on a service this caller launched and alone administers.
+
+    The caller is the service's parent: it minted the startup bearer the service authenticates its parent by, as
+    the desktop does, so these are the desktop's own settings requests, each guarded by the ``expected_revision``
+    the caller read. No credential frame and no provider, sign-in or lifecycle action is carried. A ``busy`` answer
+    did nothing and is asked again inside ``within``; every other answer, refusals included, is returned.
+    """
+    if action not in OWNED_SETTINGS_ACTIONS:
+        raise AcceptanceError("owned service settings permit the local-model settings reads and choices only")
+    return _exchange(bearer, port, _request(action, fields), within=within)
+
+
+def _request(action: AdminAction, fields: dict[str, Any]) -> AdminRequest:
     if "secret_bytes" in fields:
-        raise AcceptanceError("shared service admin does not carry credential frames")
+        raise AcceptanceError("service admin does not carry credential frames here")
     try:
-        request = AdminRequest.model_validate({**fields, "version": 1, "request_id": uuid4(), "action": action})
+        return AdminRequest.model_validate({**fields, "version": 1, "request_id": uuid4(), "action": action})
     except ValidationError as error:
         raise AcceptanceError("service admin request failed its typed contract") from error
+
+
+def _exchange(bearer: bytearray, port: int, request: AdminRequest, *, within: float) -> dict[str, JsonValue]:
     require(bool(bearer), "service admin authority has been closed")
     deadline = time.monotonic() + within
     while True:
@@ -64,8 +102,8 @@ def service_admin(
         result = _JSON_OBJECT.validate_python(result, strict=True)
         if result != {"kind": "refused", "code": "busy"}:
             return result
-        # These are reads only. Busy is a completed response whose work
-        # continues; observe it again inside the original exchange budget.
+        # Busy is a completed response that did nothing; observe it again
+        # inside the original exchange budget.
         time.sleep(min(0.05, _admin_remaining(deadline)))
 
 
