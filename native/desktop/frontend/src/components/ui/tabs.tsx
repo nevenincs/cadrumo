@@ -1,6 +1,10 @@
 import * as React from "react";
 import { Tabs as TabsPrimitive } from "radix-ui";
+import { useBareClick } from "@/components/ui/bareClick";
 import { cn } from "@/components/ui/cn";
+
+/** Chooses a tab of the row a trigger belongs to. */
+const ChooseTab = React.createContext<((value: string) => void) | null>(null);
 
 /**
  * A tab row whose chosen tab is underlined in the brand colour. The list is
@@ -10,14 +14,30 @@ import { cn } from "@/components/ui/cn";
  */
 function Tabs({
   className,
+  value: valueProp,
+  defaultValue = "",
+  onValueChange,
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.Root>) {
+  const [ownValue, setOwnValue] = React.useState(defaultValue);
+  const value = valueProp ?? ownValue;
+  const choose = React.useCallback(
+    (next: string) => {
+      if (valueProp === undefined) setOwnValue(next);
+      onValueChange?.(next);
+    },
+    [valueProp, onValueChange],
+  );
   return (
-    <TabsPrimitive.Root
-      data-slot="tabs"
-      className={cn("flex min-h-0 flex-col", className)}
-      {...props}
-    />
+    <ChooseTab.Provider value={choose}>
+      <TabsPrimitive.Root
+        data-slot="tabs"
+        className={cn("flex min-h-0 flex-col", className)}
+        value={value}
+        onValueChange={choose}
+        {...props}
+      />
+    </ChooseTab.Provider>
   );
 }
 
@@ -34,13 +54,36 @@ function TabsList({
   );
 }
 
+/**
+ * A tab: a press of the pointer, Enter, Space or an arrow key chooses it, and
+ * so does a click nothing else started, which is what an assistive
+ * technology's or automation's activation sends (UI Automation's Invoke, a
+ * screen reader's default action), with or without the window's focus.
+ */
 function TabsTrigger({
   className,
+  onKeyDown,
+  onClick,
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
+  const choose = React.useContext(ChooseTab);
+  const bare = useBareClick();
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
+      onKeyDown={(event) => {
+        bare.onKeyDown(event);
+        onKeyDown?.(event);
+      }}
+      onClick={(event) => {
+        onClick?.(event);
+        if (
+          bare.isBare(event) &&
+          !props.disabled &&
+          event.currentTarget.getAttribute("aria-selected") !== "true"
+        )
+          choose?.(props.value);
+      }}
       className={cn(
         "relative inline-flex min-w-control-md cursor-pointer items-center justify-center gap-1.5 px-3 text-base font-medium whitespace-nowrap text-muted-foreground select-none",
         "-outline-offset-2 transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-50",
