@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { moreViewsButton, openRailView } from "../support/railViews";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
 import { agentTurns, ask, settled } from "../support/agent";
@@ -14,7 +15,7 @@ test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });
 
-const railButton = (target: Page) => target.locator('[data-rail="operations"]');
+const railButton = moreViewsButton;
 const operationsPage = (target: Page) => target.locator(".operations-page");
 const runs = (target: Page) =>
   operationsPage(target).locator("[data-operation-run]");
@@ -38,7 +39,7 @@ test("the page opens from the rail, reads once, and lists the runs newest first"
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.operations.title");
   await expect(railButton(target)).toHaveAttribute("aria-pressed", "true");
   await expect(target.locator("#tab-docs")).toHaveText(
     label("desktop.operations.title"),
@@ -75,7 +76,7 @@ test("a run shows its definition as the protocol token it is, with generic words
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.operations.title");
   const succeeded = run(target, "synthetic-run-02");
   await expect(succeeded.locator("[data-operation-definition]")).toHaveText(
     "ledger.classify.bulk",
@@ -120,7 +121,7 @@ test("a settling run and an unknown effect are said as such, and a run still goi
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.operations.title");
   const settling = run(target, "synthetic-run-00");
   await expect(settling).toHaveAttribute("data-lifecycle", "settling");
   await expect(settling).toHaveAttribute("data-effect", "unknown");
@@ -158,7 +159,7 @@ test("a run's page is the register's label and opens the page as a link does", a
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.operations.title");
   const link = run(target, "synthetic-run-02").locator(
     '[data-operation-page="ledger"]',
   );
@@ -173,7 +174,7 @@ test("a page the window does not draw is named by its label and cannot be opened
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.operations.title");
   const undrawn = run(target, "synthetic-run-08");
   await expect(undrawn.locator("[data-operation-page-label]")).toHaveText(
     label("navigation.view.installation.label"),
@@ -190,7 +191,7 @@ test("more runs are read only when asked, after the continuation the page served
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.operations.title");
   await expect(runs(target)).toHaveCount(25);
   expect(await reads(target)).toBe(1);
   await operationsPage(target)
@@ -220,7 +221,7 @@ test("a request for more that fails says so by its code and leaves the list stan
     window.__scenarioOperationsMoreRefused = true;
   });
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.operations.title");
   await operationsPage(target)
     .getByRole("button", { name: label("desktop.operations.show_more") })
     .click();
@@ -253,7 +254,7 @@ test("a history with no runs says so, and is not the standing of a read that fai
 }) => {
   await seedLayout(target);
   await open(target, "empty");
-  await railButton(target).click();
+  await openRailView(target, "desktop.operations.title");
   const page = operationsPage(target);
   await expect(page.locator("[data-operations-empty]")).toHaveText(
     label("desktop.operations.empty"),
@@ -271,7 +272,7 @@ test("a read in flight is told apart from the others", async ({
     window.__scenarioOperationsHeld = true;
   });
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.operations.title");
   const page = operationsPage(target);
   await expect(page.getByRole("status")).toHaveText(
     label("desktop.operations.loading"),
@@ -289,7 +290,7 @@ test("a read that fails says so with its code, is never drawn as no runs and is 
 }) => {
   await seedLayout(target);
   await open(target, "views-refused");
-  await railButton(target).click();
+  await openRailView(target, "desktop.operations.title");
   const failed = operationsPage(target).locator("[data-operations-failed]");
   await expect(failed).toHaveAttribute("data-operations-failed", "timed_out");
   await expect(failed).toHaveText(
@@ -311,7 +312,7 @@ test("a read that fails is read again on request and then shows the runs", async
     window.__scenarioOperationsRefused = true;
   });
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.operations.title");
   await expect(
     operationsPage(target).locator("[data-operations-failed]"),
   ).toBeVisible();
@@ -333,7 +334,7 @@ test("records the journal could not read or attribute are counted and never hidd
     window.__scenarioOperationsDamaged = true;
   });
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.operations.title");
   const page = operationsPage(target);
   await expect(page.locator("[data-operations-unreadable]")).toHaveText(
     label("desktop.operations.unreadable", { count: 2 }),
@@ -352,7 +353,7 @@ test("a run with a value the window has no word for refuses the read", async ({
     window.__scenarioOperationsUnrecognised = true;
   });
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.operations.title");
   await expect(
     operationsPage(target).locator("[data-operations-failed]"),
   ).toHaveAttribute("data-operations-failed", "unavailable");
@@ -364,7 +365,7 @@ test("refresh reads the history again, and only when asked", async ({
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.operations.title");
   await expect(runs(target)).toHaveCount(25);
   expect(await reads(target)).toBe(1);
   await operationsPage(target)
@@ -416,7 +417,7 @@ test("signing out drops the history and asks for a sign-in, reading nothing more
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.operations.title");
   await expect(runs(target)).toHaveCount(25);
   await target.keyboard.press("ControlOrMeta+k");
   await target

@@ -7,6 +7,8 @@ import type { ProvisioningStore } from "../shell/provisioning";
 import type { AccountPhase } from "../shell/signIn";
 import type { Translate } from "../shell/strings";
 import { accountLabel } from "./accountWords";
+import type { IconName } from "@/components/ui/icon";
+import type { OpenMenu } from "./ContextMenu";
 import type { RailItem } from "./Rail";
 
 /** The rail's buttons: the palette, the window's columns and pages, the
@@ -45,6 +47,7 @@ export function railItems({
   panelVisible,
   showSede,
   aeatMenu,
+  openMenu,
   driveUrl,
   errorCount,
   provisioning,
@@ -82,11 +85,49 @@ export function railItems({
   panelVisible: boolean;
   showSede: () => void;
   aeatMenu: RailItem["onMenu"];
+  openMenu: OpenMenu;
   driveUrl: string | null;
   errorCount: number;
   provisioning: ProvisioningStore;
   setupIncomplete: boolean;
 }): { top: RailItem[]; bottom: RailItem[] } {
+  const moreViews: {
+    id: string;
+    icon: IconName;
+    label: string;
+    action: string;
+    shown: boolean;
+  }[] = [
+    ...(host.ledger
+      ? [
+          {
+            id: "withholding",
+            icon: "ledger" as const,
+            label: t("desktop.withholding.title"),
+            action: "view.withholding",
+            shown: withholdingVisible,
+          },
+        ]
+      : []),
+    ...(views
+      ? [
+          {
+            id: "reference",
+            icon: "term" as const,
+            label: t("desktop.reference.title"),
+            action: "view.reference",
+            shown: referenceVisible,
+          },
+          {
+            id: "operations",
+            icon: "clock" as const,
+            label: t("desktop.operations.title"),
+            action: "view.operations",
+            shown: operationsVisible,
+          },
+        ]
+      : []),
+  ];
   const railTop: RailItem[] = [
     {
       id: "search",
@@ -174,35 +215,6 @@ export function railItems({
             pressed: ledgerVisible,
             onClick: () => runAction("view.ledger"),
           } satisfies RailItem,
-          {
-            id: "withholding",
-            icon: "ledger",
-            label: t("desktop.withholding.title"),
-            pressed: withholdingVisible,
-            onClick: () => runAction("view.withholding"),
-          } satisfies RailItem,
-        ]
-      : []),
-    ...(views
-      ? [
-          {
-            id: "reference",
-            icon: "term",
-            label: t("desktop.reference.title"),
-            pressed: referenceVisible,
-            onClick: () => runAction("view.reference"),
-          } satisfies RailItem,
-        ]
-      : []),
-    ...(views
-      ? [
-          {
-            id: "operations",
-            icon: "clock",
-            label: t("desktop.operations.title"),
-            pressed: operationsVisible,
-            onClick: () => runAction("view.operations"),
-          } satisfies RailItem,
         ]
       : []),
     ...(host.modelo
@@ -213,6 +225,30 @@ export function railItems({
             label: t("workspace.declarations.destination.overview"),
             pressed: declarationsVisible,
             onClick: () => runAction("view.declarations"),
+          } satisfies RailItem,
+        ]
+      : []),
+    // The views a person opens less often share one button, whose menu
+    // names each: one button per view no longer fits a short window.
+    ...(moreViews.length > 0
+      ? [
+          {
+            id: "views",
+            icon: "more",
+            label: t("desktop.rail.more_views"),
+            menu: true,
+            pressed: moreViews.some((view) => view.shown),
+            onClick: (at) =>
+              openMenu(
+                moreViews.map((view) => ({
+                  id: view.id,
+                  label: view.label,
+                  icon: view.icon,
+                  enabled: true,
+                  run: () => runAction(view.action),
+                })),
+                at,
+              ),
           } satisfies RailItem,
         ]
       : []),

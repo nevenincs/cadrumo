@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { moreViewsButton, openRailView } from "../support/railViews";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
 import { agentTurns, ask, settled } from "../support/agent";
@@ -16,8 +17,7 @@ test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });
 
-const railButton = (target: Page) =>
-  target.locator('[data-rail="withholding"]');
+const railButton = moreViewsButton;
 const withholdingPage = (target: Page) => target.locator(".withholding-page");
 const block = (target: Page, name: string) =>
   withholdingPage(target).locator(`[data-withholding="${name}"]`);
@@ -37,7 +37,7 @@ test("the page reads the served ejercicio when it is shown and draws the certifi
   await open(target, "signed-in");
   // Nothing is read for a page nobody is looking at.
   expect(await listReads(target)()).toBe(0);
-  await railButton(target).click();
+  await openRailView(target, "desktop.withholding.title");
   await expect(railButton(target)).toHaveAttribute("aria-pressed", "true");
   await expect(target.locator("#tab-docs")).toHaveText(
     label("desktop.withholding.title"),
@@ -87,7 +87,7 @@ test("only the ejercicios the list serves are offered, and choosing one reads it
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.withholding.title");
   await expect(block(target, "records")).toContainText("Empresa Ejemplo SL");
   const served = [fixtureYear - 2, fixtureYear - 1, fixtureYear].map(String);
   await expect(ejercicioSelect(target).locator("option")).toHaveText(served);
@@ -121,7 +121,7 @@ test("a list that did not answer says so with its code and is not drawn as empty
   await target.evaluate(() =>
     window.__scenarioLedger?.nextReads("ledger.retencion_soportada.list", 1),
   );
-  await railButton(target).click();
+  await openRailView(target, "desktop.withholding.title");
   const failed = block(target, "records").locator("[data-withholding-failed]");
   await expect(failed).toHaveAttribute(
     "data-withholding-failed",
@@ -158,7 +158,7 @@ test("a ledger that answers nothing leaves both lists unavailable and offers no 
 }) => {
   await seedLayout(target);
   await open(target, "signed-in", "&ledger=unavailable");
-  await railButton(target).click();
+  await openRailView(target, "desktop.withholding.title");
   for (const name of ["records", "absences"])
     await expect(
       block(target, name).locator("[data-withholding-failed]"),
@@ -174,7 +174,7 @@ test("the page opens the Ledger's withholding register, where the changes are ma
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.withholding.title");
   await expect(block(target, "records")).toContainText("Empresa Ejemplo SL");
   await withholdingPage(target)
     .getByRole("button", { name: label("desktop.withholding.change") })
@@ -208,7 +208,7 @@ for (const language of ["en", "es", "ca", "hu"]) {
   }) => {
     await seedLayout(target);
     await open(target, "signed-in", `&lang=${language}`);
-    await railButton(target).click();
+    await openRailView(target, "desktop.withholding.title", language);
     const page = withholdingPage(target);
     await expect(page).toBeVisible();
     await expect(

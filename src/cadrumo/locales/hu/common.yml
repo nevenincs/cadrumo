@@ -5373,6 +5373,7 @@ desktop:
     label: Munkaterület
     logs: Naplók
     messages: Üzenetek
+    more_views: További nézetek
     python: Python-shell
     search: Keresés
     settings: Beállítások

@@ -5394,6 +5394,7 @@ desktop:
     label: Espai de treball
     logs: Registres
     messages: Missatges
+    more_views: Més vistes
     python: Intèrpret de Python
     search: Cerca
     settings: Configuració
