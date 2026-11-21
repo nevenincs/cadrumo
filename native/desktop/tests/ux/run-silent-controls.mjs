@@ -18,6 +18,7 @@
 // Usage:
 //   node native/desktop/tests/ux/run-silent-controls.mjs --build <CMake binary dir>
 //     [--config Release] [--persona <id>] [--report <file.md>] [--only <rail>[,...]]
+//     [--assistive]   (only the popup openers' UI Automation Invoke test)
 //     [--staged-package <app dir an earlier stage of --build mirrored>
 //      --strings-build <this checkout's CMake binary dir holding its chrome strings>]
 //
@@ -85,6 +86,7 @@ const { values: args } = parseArgs({
     persona: { type: "string", default: "autonomo-electricista" },
     report: { type: "string" },
     only: { type: "string", default: "" },
+    assistive: { type: "boolean", default: false },
     "staged-package": { type: "string" },
     "strings-build": { type: "string" },
   },
@@ -243,7 +245,12 @@ try {
   mkdirSync(dirname(report), { recursive: true });
   const run = spawnSync(
     process.execPath,
-    ["--test", "--test-reporter=spec", spec],
+    [
+      "--test",
+      "--test-reporter=spec",
+      ...(args.assistive ? ["--test-name-pattern=assistive activation"] : []),
+      spec,
+    ],
     {
       cwd: repository,
       stdio: "inherit",

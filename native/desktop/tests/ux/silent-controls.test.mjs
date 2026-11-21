@@ -40,6 +40,12 @@
 // and not pressed. Every file chooser the window asks is answered "cancel"
 // through the automation host's queue, so no OS dialog opens.
 //
+// A second test activates every shown popup opener (a button with
+// aria-haspopup) of every view through UI Automation's Invoke on the host's
+// window (uia-invoke.ps1), with no pointer press, key or WebDriver focus
+// before it, as a screen reader or an automation client does, and fails when
+// the opener is not expanded within the bound.
+//
 // Environment: as window-ux-audit.test.mjs (CADRUMO_PERSONA_WORLD,
 // CADRUMO_PERSONA_HOST, CADRUMO_UX_RUN), plus
 //   CADRUMO_SILENT_REPORT  (optional) path of the markdown table written at
@@ -57,6 +63,7 @@
 // the sign-in form before that, so a session that still ends was ended by
 // something else, and the press after which it ended is named.
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import {
   closeSync,
   existsSync,
@@ -71,6 +78,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { after, before, test } from "node:test";
 import { queuePickerSelection } from "../automation/session.mjs";
 import {
@@ -803,6 +811,38 @@ function pageSettling() {
   return closing || getComputedStyle(document.body).pointerEvents === "none";
 }
 
+/** The shown, enabled popup openers, closed, each given an id UI Automation
+ * finds it by (Chromium exposes the HTML id as the AutomationId). */
+function pageOpeners() {
+  const norm = (t) => (t ?? "").replace(/\s+/g, " ").trim();
+  const out = [];
+  for (const el of document.querySelectorAll(
+    'button[aria-haspopup]:not([aria-haspopup="false"])',
+  )) {
+    if (!el.getClientRects().length) continue;
+    if (getComputedStyle(el).visibility === "hidden") continue;
+    if (el.disabled || el.getAttribute("aria-disabled") === "true") continue;
+    if (el.closest('[inert], [aria-hidden="true"]')) continue;
+    if (el.getAttribute("aria-expanded") === "true") continue;
+    if (!el.id) el.id = `silent-uia-${out.length}-${Date.now()}`;
+    out.push({
+      id: el.id,
+      name: norm(el.getAttribute("aria-label") || el.textContent),
+      popup: el.getAttribute("aria-haspopup"),
+      pane:
+        el
+          .closest("[data-dock-header], header, [data-slot=pane-header]")
+          ?.className?.toString()
+          .split(" ")[0] ?? "",
+    });
+  }
+  return out;
+}
+
+function pageOpenerExpanded(id) {
+  return document.getElementById(id)?.getAttribute("aria-expanded") === "true";
+}
+
 function pageOpenLayers() {
   return [
     ...document.querySelectorAll(
@@ -1473,6 +1513,81 @@ function writeReport() {
     rows.map((r) => JSON.stringify(r)).join("\n") + "\n",
   );
 }
+
+const UIA_INVOKE = fileURLToPath(new URL("./uia-invoke.ps1", import.meta.url));
+
+/** Invoke the control whose AutomationId is `id` in the host's window. */
+function uiaInvoke(id) {
+  const run = spawnSync(
+    "powershell.exe",
+    [
+      "-NoProfile",
+      "-NonInteractive",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      UIA_INVOKE,
+      "-ProcessId",
+      String(win.pid),
+      "-AutomationId",
+      id,
+    ],
+    { encoding: "utf8", timeout: 30_000, windowsHide: true },
+  );
+  try {
+    return JSON.parse(run.stdout.trim().split(/\r?\n/).pop());
+  } catch {
+    return { found: false, error: (run.stderr || run.stdout).slice(0, 200) };
+  }
+}
+
+test(
+  "every popup opener opens on an assistive activation",
+  { timeout: 3600_000, skip: process.platform !== "win32" },
+  async () => {
+    const seen = new Set();
+    const failed = [];
+    await closeLayers();
+    for (const view of await views()) {
+      await settle(view);
+      for (const opener of await exec(pageOpeners)) {
+        const once = `${opener.pane}|${opener.name}|${opener.popup}`;
+        if (seen.has(once)) continue;
+        seen.add(once);
+        const reply = uiaInvoke(opener.id);
+        const opened =
+          reply.invoked &&
+          !!(await waitFor(() => exec(pageOpenerExpanded, opener.id), {
+            timeout: BOUND_MS,
+            what: `${opener.name} to open`,
+            interval: 150,
+            soft: true,
+          }));
+        const effect = opened
+          ? "opened"
+          : !reply.found
+            ? `not found by UI Automation${reply.error ? `: ${reply.error}` : ""}`
+            : !reply.invoked
+              ? `not activated: ${reply.error}`
+              : `nothing opened (${reply.defaultAction ? `default action "${reply.defaultAction}"` : "Invoke"})`;
+        rows.push({
+          view: view.name,
+          pane: opener.pane,
+          control: opener.name,
+          role: `opener (${opener.popup})`,
+          method: reply.defaultAction ? "MSAA default action" : "UIA Invoke",
+          effect,
+          silent: !opened,
+        });
+        if (!opened) failed.push(`${view.name} :: ${opener.name}: ${effect}`);
+        await closeLayers();
+        await settled();
+      }
+    }
+    assert.ok(seen.size > 0, "the audit found no popup opener");
+    assert.deepEqual(failed, [], `${failed.length} opener(s) did not open`);
+  },
+);
 
 test(
   "every enabled control on every view shows an effect",
