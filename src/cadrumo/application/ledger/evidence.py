@@ -53,6 +53,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_serializer
 
+from ...core.document_shape import DocumentShape
 from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TYPE
 from ...core.hashing import content_hash_hex, sha256_hex
@@ -73,6 +74,7 @@ from .evidence_ports import (
     LedgerEvidencePorts,
     RevisionGuardedPurchaseInvoiceEvidenceRepositoryProtocol,
 )
+from .evidence_readability import EvidenceReadability, readable_finding
 from .evidence_shape_admission import require_readable_document_shape
 from .persistence_ports import LedgerPersistenceConflictError
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
@@ -153,6 +155,10 @@ class PurchaseInvoiceEvidence(BaseModel):
     notes: str = ""
     created_at: datetime
     updated_at: datetime
+    # The last check of whether the stored bytes can be read. Absent on a record
+    # written before the check was kept, which therefore reads as never checked;
+    # the field is optional so those records still load under the same schema.
+    readability: EvidenceReadability | None = None
 
     @field_serializer("taxable_base", "iva_rate", "iva_amount", when_used="json")
     def _serialize_decimal(self, value: Decimal | None) -> str | None:
@@ -523,14 +529,15 @@ def _read_readable_evidence_digest(
     ports: LedgerEvidencePorts,
     resolved: Path,
     expected_content_digest: ContentDigest | None,
-) -> ContentDigest:
+) -> tuple[ContentDigest, DocumentShape]:
     """Read the file's bytes once and refuse, before any effect, bytes no reader can read.
 
     The suffix admits a file; only its bytes say what it is. The probe is the
     same capability the read path asks, so a document the reader would refuse is
     never stored as evidence. A caller's planned digest is checked against these
     same bytes. The returned digest names exactly the bytes that were probed,
-    and custody is asked to store only bytes with that digest.
+    and custody is asked to store only bytes with that digest; the returned shape
+    is what the probe recognised in them.
     """
     try:
         data = resolved.read_bytes()
@@ -551,12 +558,12 @@ def _read_readable_evidence_digest(
                 facts={"source_content_matches_planned_digest": False},
             ),
         )
-    require_readable_document_shape(
+    shape = require_readable_document_shape(
         data,
         mime_type=_SUFFIX_MIME[resolved.suffix.lower()],
         probe=ports.document_shape_probe,
     )
-    return digest
+    return digest, shape
 
 
 def _ingest_evidence_attachment(
@@ -568,14 +575,17 @@ def _ingest_evidence_attachment(
     now: datetime,
     actor: str,
     expected_content_digest: ContentDigest | None = None,
-) -> ContentDigest:
-    """Write one admitted, readable evidence file through the application custody port."""
-    probed_digest = _read_readable_evidence_digest(
+) -> tuple[ContentDigest, DocumentShape]:
+    """Write one admitted, readable evidence file through the application custody port.
+
+    Returns the stored content address and the shape its bytes were recognised as.
+    """
+    probed_digest, shape = _read_readable_evidence_digest(
         ports=ports,
         resolved=resolved,
         expected_content_digest=expected_content_digest,
     )
-    return ports.attachment_ingestor.ingest(
+    stored_digest = ports.attachment_ingestor.ingest(
         EvidenceAttachmentIngestRequest(
             bucket_id=bucket_id,
             source_path=resolved,
@@ -586,6 +596,7 @@ def _ingest_evidence_attachment(
             expected_content_digest=probed_digest,
         ),
     )
+    return stored_digest, shape
 
 
 def admit_evidence_file(source_path: str | Path, source_directory: Path | None) -> tuple[Path, MediaKind]:
@@ -617,7 +628,8 @@ def require_readable_evidence_file(
     stores only bytes with the digest it probed.
     """
     resolved, _media_kind = admitted
-    return _read_readable_evidence_digest(ports=ports, resolved=resolved, expected_content_digest=None)
+    digest, _shape = _read_readable_evidence_digest(ports=ports, resolved=resolved, expected_content_digest=None)
+    return digest
 
 
 def ingest_evidence_file(
@@ -633,7 +645,7 @@ def ingest_evidence_file(
     Refuses, before the custody write, bytes that match no readable document shape.
     """
     resolved, media_kind = admitted
-    return _ingest_evidence_attachment(
+    digest, _shape = _ingest_evidence_attachment(
         ports=ports,
         bucket_id=bucket_id,
         resolved=resolved,
@@ -641,6 +653,7 @@ def ingest_evidence_file(
         now=now,
         actor=actor,
     )
+    return digest
 
 
 def _resolve_evidence_source(
@@ -682,6 +695,7 @@ class _EvidenceAddFacts:
     bucket_id: str
     source_path: str
     digest: ContentDigest
+    document_shape: DocumentShape
     media_kind: MediaKind
     supplier: str | None
     invoice_number: str | None
@@ -781,6 +795,11 @@ def _record_for_evidence_add(facts: _EvidenceAddFacts, evidence_id: str) -> Purc
         notes=facts.notes,
         created_at=facts.occurred_at,
         updated_at=facts.occurred_at,
+        readability=readable_finding(
+            shape=facts.document_shape,
+            checked_sha256=facts.digest,
+            checked_at=facts.occurred_at,
+        ),
     )
 
 
@@ -957,7 +976,7 @@ class PurchaseInvoiceEvidenceService:
         # authority. Ledger retains its narrow PDF/image admission, byte-shape
         # refusal, stable source provenance, and evidence-specific audit
         # lifecycle around that custody write.
-        digest = _ingest_evidence_attachment(
+        digest, document_shape = _ingest_evidence_attachment(
             ports=self._ports,
             bucket_id=bucket_id,
             resolved=resolved,
@@ -970,6 +989,7 @@ class PurchaseInvoiceEvidenceService:
             bucket_id=bucket_id,
             source_path=str(source_path),
             digest=digest,
+            document_shape=document_shape,
             media_kind=media_kind,
             supplier=supplier,
             invoice_number=invoice_number,
@@ -1096,6 +1116,82 @@ class PurchaseInvoiceEvidenceService:
         if last_conflict is not None:
             raise last_conflict
         raise AssertionError("evidence update retries exhausted without a revision conflict")
+
+    def record_readability(
+        self,
+        *,
+        bucket_id: str,
+        evidence_id: str,
+        finding: EvidenceReadability,
+        actor: str = "cli",
+    ) -> PurchaseInvoiceEvidenceResult:
+        """Keep one completed byte check on its evidence record.
+
+        The finding replaces any earlier one and stamps ``updated_at`` with the
+        check's instant, in one guarded batch with its
+        ``PURCHASE_INVOICE_EVIDENCE_REPLACED`` event. A finding about other bytes
+        than the record names is refused, so a check can never describe a
+        document it did not open.
+
+        Raises:
+            ``PurchaseInvoiceEvidenceNotFoundError``: if no matching record exists.
+            PurchaseInvoiceEvidenceSnapshotConflictError: if the finding names
+                other bytes than the record's attachment.
+        """
+        evidence_repository, event_repository = _revisioned_mutation_repositories(self._ports)
+        occurred_at = finding.checked_at
+        last_conflict: LedgerPersistenceConflictError | None = None
+        for _attempt in range(_EVIDENCE_MUTATION_ATTEMPTS):
+            snapshot, evidence_revision_id = evidence_repository.load_revisioned(bucket_id=bucket_id)
+            records = list(snapshot)
+            record_index, current = _locate_expected_record(
+                records,
+                bucket_id=bucket_id,
+                evidence_id=evidence_id,
+                expected_current=None,
+            )
+            if current.attachment_id != finding.checked_sha256:
+                raise PurchaseInvoiceEvidenceSnapshotConflictError(
+                    "readability finding names other bytes than the evidence record"
+                )
+            updated = PurchaseInvoiceEvidence.model_validate(
+                {**current.model_dump(), "readability": finding, "updated_at": occurred_at}
+            )
+            records[record_index] = updated
+            payload = {
+                "media_kind": updated.media_kind.value,
+                "mutation_kind": "readability_checked",
+                "readability": finding.state,
+            }
+            if finding.document_shape is not None:
+                payload["document_shape"] = finding.document_shape.value
+            if finding.unreadable_cause is not None:
+                payload["unreadable_cause"] = finding.unreadable_cause.value
+            event = build_bucket_event(
+                bucket_id=bucket_id,
+                event_type=BucketEventType.PURCHASE_INVOICE_EVIDENCE_REPLACED,
+                occurred_at=occurred_at,
+                actor=actor,
+                object_type=BucketEventObjectType.PURCHASE_INVOICE_EVIDENCE,
+                object_id=evidence_id,
+                payload=payload,
+                payload_version=_EVIDENCE_EVENT_PAYLOAD_VERSION,
+            )
+            event_write = bucket_event_history_write(event_repository, (event,))
+            try:
+                evidence_repository.save_if_revision_with_secure_object_writes(
+                    bucket_id=bucket_id,
+                    records=tuple(records),
+                    expected_revision_id=evidence_revision_id,
+                    extra_writes=(event_write,),
+                )
+            except LedgerPersistenceConflictError as exc:
+                last_conflict = exc
+                continue
+            return PurchaseInvoiceEvidenceResult(record=updated, bucket_event_ids=(event.event_id,))
+        if last_conflict is not None:
+            raise last_conflict
+        raise AssertionError("evidence readability retries exhausted without a revision conflict")
 
     def remove(
         self,

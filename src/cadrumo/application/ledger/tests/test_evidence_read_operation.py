@@ -202,7 +202,20 @@ def test_record_projection_preserves_the_cli_json_facts() -> None:
 
     projected = LedgerEvidenceRecordProjection.from_record(record)
 
-    assert projected.model_dump(mode="json") == record.model_dump(mode="json")
+    # The kept readability fact is served flat, as a closed state with its own facts;
+    # a record that never kept one reads as never checked.
+    readability_fields = {"readability", "document_shape", "unreadable_cause", "readability_checked_at"}
+    served = projected.model_dump(mode="json")
+    assert record.readability is None
+    assert {field: served.pop(field) for field in readability_fields} == {
+        "readability": "unchecked",
+        "document_shape": None,
+        "unreadable_cause": None,
+        "readability_checked_at": None,
+    }
+    stored = record.model_dump(mode="json")
+    del stored["readability"]
+    assert served == stored
 
 
 @pytest.mark.parametrize(

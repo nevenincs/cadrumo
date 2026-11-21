@@ -1106,6 +1106,56 @@ export type LedgerPreflightIssueReason =
   | "invoice_recargo_not_declarable";
 
 /**
+ * Why the release was refused, what the person can do, and what blocks it.
+ */
+export type LedgerPurchaseEvidenceReleaseRefusal = {
+  cause: PurchaseEvidenceReleaseCause;
+  next_step: PurchaseEvidenceReleaseNextStep;
+  finalized_revisions: LedgerAttachmentStaleRevisionProjection[];
+  invoice_ids: string[];
+};
+
+/**
+ * Private exact-profile request to release one movement's linked purchase
+ * evidence.
+ *
+ * `expected_purchase_invoice_evidence_id` and `expected_modified_at` are the
+ * evidence and the `modified_at` the person's opened movement showed; a
+ * movement that no longer matches them is refused. `disposition` says whether
+ * the evidence is unlinked (`detach`) or kept on the movement as an ordinary
+ * document (`keep_as_document`).
+ *
+ * The request names no actor: an automation's session is recorded under its
+ * own session label, and a person's under the operation's own label for a
+ * person.
+ *
+ * `output_language` is the language the result's transaction link fields are
+ * named in.
+ */
+export type LedgerPurchaseEvidenceReleaseRequest = {
+  profile_id: string;
+  transaction_id: string;
+  expected_purchase_invoice_evidence_id: string;
+  expected_modified_at: string;
+  disposition: "detach" | "keep_as_document";
+  output_language?: OutputLanguage;
+};
+
+/**
+ * The released movement, or the typed refusal decided before any write.
+ */
+export type LedgerPurchaseEvidenceReleaseResult = {
+  outcome: "updated" | "refused";
+  profile_id: string;
+  disposition: "detach" | "keep_as_document";
+  released_evidence_id: string;
+  transaction: LedgerTransactionProjection | null;
+  review_status: LedgerReviewStatus | null;
+  bucket_event_ids: string[];
+  refusal: LedgerPurchaseEvidenceReleaseRefusal | null;
+};
+
+/**
  * Closed catalogue of ledger `status=` filter values.
  */
 export type LedgerReviewStatus =
@@ -1288,6 +1338,28 @@ export type PublicPeriod = {
 export type PublicScalar = string | number | boolean | PublicDecimal;
 
 /**
+ * Why a release of linked purchase evidence was refused.
+ */
+export type PurchaseEvidenceReleaseCause =
+  | "transaction_not_found"
+  | "no_linked_purchase_evidence"
+  | "transaction_changed"
+  | "transaction_not_editable"
+  | "finalized_calculation_reference"
+  | "evidence_confirmed_into_invoice"
+  | "reference_has_no_stored_document";
+
+/**
+ * What the person can do about a refused release.
+ */
+export type PurchaseEvidenceReleaseNextStep =
+  | "reopen_transaction"
+  | "restore_transaction"
+  | "reopen_finalized_calculation"
+  | "link_movement_to_invoice"
+  | "detach_instead";
+
+/**
  * What the backend's check said about a figure the document states.
  */
 export type StatedFigureVerdict =
@@ -1358,6 +1430,10 @@ export type LedgerInvoiceContracts = {
     request: LedgerLinkRequest;
     result: LedgerLinkOperationResult;
   };
+  "ledger.purchase_evidence.release": {
+    request: LedgerPurchaseEvidenceReleaseRequest;
+    result: LedgerPurchaseEvidenceReleaseResult;
+  };
 };
 
 export type InvoiceAddWindowRequest = Omit<InvoiceAddRequest, "profile_id">;
@@ -1408,3 +1484,8 @@ export type LedgerInvoiceMatchWindowRequest = Omit<
 >;
 
 export type LedgerLinkWindowRequest = Omit<LedgerLinkRequest, "profile_id">;
+
+export type LedgerPurchaseEvidenceReleaseWindowRequest = Omit<
+  LedgerPurchaseEvidenceReleaseRequest,
+  "profile_id"
+>;

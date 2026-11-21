@@ -91,6 +91,7 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....tests.env_scope import ready_clave_settings
+from ....tests.pdf_fixtures import text_pdf_bytes
 from ...adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_filing_action_ports,
@@ -575,7 +576,7 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
             _calculate_irene_revision(profile.repository, operation=operation)
         )
         invoice = tmp_path / "supplier-invoice.pdf"
-        invoice.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
+        invoice.write_bytes(text_pdf_bytes(("synthetic factura",)))
         evidence = PurchaseInvoiceEvidenceService(
             ports=build_ledger_evidence_ports(bucket_id=_BUCKET_ID),
         ).add(bucket_id=_BUCKET_ID, source_path=invoice)
@@ -742,7 +743,7 @@ def test_a_linked_invoice_blocks_until_its_factura_is_stored_then_verifies_and_f
 
         add_attachment(
             AttachmentStore(objects=profile.repository),
-            content=AttachmentBytesContent(data=b"%PDF-1.4 synthetic factura F2026-0042"),
+            content=AttachmentBytesContent(data=text_pdf_bytes(("synthetic factura F2026-0042",))),
             request=AttachmentIngestionRequest(
                 kind=AttachmentKind.INVOICE_PDF,
                 source=AttachmentSource.LOCAL_FILE,
@@ -880,7 +881,7 @@ def test_an_issued_invoice_without_its_copy_warns_until_its_document_is_stored(
 
         add_attachment(
             AttachmentStore(objects=profile.repository),
-            content=AttachmentBytesContent(data=b"%PDF-1.4 synthetic factura V-0001"),
+            content=AttachmentBytesContent(data=text_pdf_bytes(("synthetic factura V-0001",))),
             request=AttachmentIngestionRequest(
                 kind=AttachmentKind.INVOICE_PDF,
                 source=AttachmentSource.LOCAL_FILE,
@@ -950,7 +951,7 @@ def test_a_blocked_verify_is_recoverable_by_attaching_recalculating_and_verifyin
         assert after_block.ledger_filing_evidence is None
 
         invoice = tmp_path / "supplier-invoice.pdf"
-        invoice.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
+        invoice.write_bytes(text_pdf_bytes(("synthetic factura",)))
         evidence = PurchaseInvoiceEvidenceService(
             ports=build_ledger_evidence_ports(bucket_id=_BUCKET_ID),
         ).add(bucket_id=_BUCKET_ID, source_path=invoice)
@@ -1050,7 +1051,7 @@ def test_the_form_offers_the_check_again_once_evidence_is_attached_after_a_block
         assert _next() is ModeloFormNextAction.RESOLVE
 
         invoice = tmp_path / "supplier-invoice.pdf"
-        invoice.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
+        invoice.write_bytes(text_pdf_bytes(("synthetic factura",)))
         evidence = PurchaseInvoiceEvidenceService(
             ports=build_ledger_evidence_ports(bucket_id=_BUCKET_ID),
         ).add(bucket_id=_BUCKET_ID, source_path=invoice)

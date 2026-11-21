@@ -15,8 +15,9 @@ from cadrumo.application.ledger.evidence_input_ports import EvidenceInputPorts
 from cadrumo.core.config import Settings
 from cadrumo.core.document_shape import DocumentShape
 from cadrumo.entrypoints.adapter_composition_work_ports import build_ledger_evidence_ports
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
-PDF_BYTES = b"%PDF-1.4 evidence-input-roundtrip body"
+PDF_BYTES = text_pdf_bytes(("evidence-input-roundtrip body",))
 BUCKET_ID = "30303030-3030-4030-8030-303030303030"
 
 runtime_profile = bucket_scoped_runtime_profile_fixture(BUCKET_ID, autouse=False, name="runtime_profile")

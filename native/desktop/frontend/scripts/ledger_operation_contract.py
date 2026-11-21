@@ -71,6 +71,7 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.invoice.update",
             "ledger.invoice.view",
             "ledger.link",
+            "ledger.purchase_evidence.release",
         ),
     ),
     "document": (
@@ -85,6 +86,7 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.evidence.page",
             "ledger.evidence.remove",
             "ledger.evidence.update",
+            "ledger.evidence.verify",
             "ledger.evidence.view",
         ),
     ),
