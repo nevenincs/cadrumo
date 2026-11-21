@@ -1346,6 +1346,8 @@ errors:
       safely purged. Its operation is unavailable. No edit value was loaded.
     ledger_preflight: Ledger preflight rejected the modelo run because it is not yet
       fileable.
+    ledger_purchase_evidence_release: 'The document can''t be removed from this movement:
+      {cause}.'
     ledger_source_jurisdiction_required: Provide the taxpayer jurisdiction before
       adding this ledger transaction.
     ledger_summary_period_without_span: This period has no calendar date span, so

@@ -133,6 +133,7 @@ function Inspector({
             onOpenInvoice={noop}
             onExport={noop}
             onMakeRule={noop}
+            onWritten={read.reread}
             copy={async () => undefined}
           />
         )}

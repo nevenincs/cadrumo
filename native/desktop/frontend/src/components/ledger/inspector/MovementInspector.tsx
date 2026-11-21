@@ -112,6 +112,7 @@ export function MovementInspector({
   onAction,
   onSplit,
   onSelectCohort,
+  onWritten,
   say,
 }: {
   port: LedgerPort;
@@ -141,6 +142,8 @@ export function MovementInspector({
   onAction: (request: ActionRequest) => void;
   onSplit: (row: LedgerTransactionReviewProjection) => void;
   onSelectCohort: (ids: string[]) => void;
+  /** Reads the window again after a write a section made at once. */
+  onWritten: () => void;
   say: (text: string) => void;
 }) {
   const t = useStrings();
@@ -508,6 +511,7 @@ export function MovementInspector({
             actions={actions}
             onStage={onStage}
             locale={locale}
+            onWritten={onWritten}
             say={say}
           />,
         )}

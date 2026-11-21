@@ -35,6 +35,8 @@ sub-app payload families).
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import NonNegativeInt, field_validator, model_validator
 
 from ...application.ledger.models import IsoDateText
@@ -704,6 +706,17 @@ class LedgerDetachResult(LedgerMutationResult):
     """
 
 
+class LedgerPurchaseEvidenceReleaseResult(LedgerMutationResult):
+    """JSON envelope for ``aeat app ledger evidence release``.
+
+    The single-transaction mutation quintet, plus the evidence the movement no
+    longer links and whether its document stayed on the movement.
+    """
+
+    disposition: Literal["detach", "keep_as_document"]
+    released_evidence_id: str
+
+
 class LedgerArchiveResult(LedgerMutationResult):
     """JSON envelope for ``aeat app ledger archive``."""
 
@@ -1198,6 +1211,7 @@ __all__ = [
     "LedgerListRowPayload",
     "LedgerMergeResult",
     "LedgerMutationResult",
+    "LedgerPurchaseEvidenceReleaseResult",
     "LedgerReadinessIssuePayload",
     "LedgerRemovalBlockerPayload",
     "LedgerRemoveResult",

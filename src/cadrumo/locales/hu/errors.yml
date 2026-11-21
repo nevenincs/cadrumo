@@ -1375,6 +1375,8 @@ errors:
       lett betöltve.
     ledger_preflight: A főkönyvi előzetes ellenőrzés elutasította a bevallás számítását,
       mert az még nem nyújtható be.
+    ledger_purchase_evidence_release: 'Nem tudod levenni a dokumentumot erről a tételről:
+      {cause}.'
     ledger_source_jurisdiction_required: A könyvelési tétel hozzáadása előtt add meg
       az adózó adóügyi joghatóságát.
     ledger_summary_period_without_span: Ez az időszak nem fed le naptári dátumokat,

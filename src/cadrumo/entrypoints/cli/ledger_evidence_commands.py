@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import cast
+from typing import cast, get_args
 from uuid import UUID
 
 import typer
@@ -41,6 +41,7 @@ from ...application.ledger.invoice_evidence_operation_dtos import (
     IvaCategoryResolutionProjectionV1,
     LabelReadingFallbackProjectionV1,
 )
+from ...application.ledger.purchase_evidence_release import PurchaseEvidenceDisposition
 from ...application.operations.public_scalar import PublicDecimal
 from ...core.aggregation import IntracomOperationType
 from ...core.atomic_write import atomic_write_bytes
@@ -61,20 +62,27 @@ from .ledger_business_payloads import (
     EvidencePageResult,
     EvidenceRemoveResult,
     EvidenceUpdateResult,
+    EvidenceVerifyResult,
 )
 from .ledger_evidence_review_commands import parse_finding_resolution
+from .ledger_results import LedgerPurchaseEvidenceReleaseResult, TransactionPayload
 from .operation_ledger_evidence_add import run_ledger_evidence_add
 from .operation_ledger_evidence_followup import (
     run_ledger_evidence_attachment_queue,
     run_ledger_evidence_attachment_view,
 )
-from .operation_ledger_evidence_mutation import run_ledger_evidence_remove, run_ledger_evidence_update
+from .operation_ledger_evidence_mutation import (
+    run_ledger_evidence_remove,
+    run_ledger_evidence_update,
+    run_ledger_evidence_verify,
+)
 from .operation_ledger_evidence_page import run_ledger_evidence_page
 from .operation_ledger_evidence_read import run_ledger_evidence_list, run_ledger_evidence_view
 from .operation_ledger_invoice_evidence import (
     submit_invoice_evidence_confirm,
     submit_invoice_evidence_extract,
 )
+from .operation_ledger_purchase_evidence_release import run_ledger_purchase_evidence_release
 
 
 def _attachment_review_lines(payload: dict[str, object]) -> list[str]:
@@ -298,6 +306,71 @@ def evidence_remove(ctx: typer.Context, evidence_id: str, yes: bool = False) -> 
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
     emit_envelope(
         ctx, command="ledger.evidence.remove", result=EvidenceRemoveResult.model_validate(payload), lines=lines
+    )
+
+
+def evidence_verify(ctx: typer.Context, evidence_id: str) -> None:
+    """Check whether one evidence record's stored file can be read, and keep the finding."""
+    checked = run_ledger_evidence_verify(ctx, evidence_id=evidence_id)
+    payload = dict(checked.record.model_dump(mode="json"))
+    payload["bucket_event_ids"] = list(checked.bucket_event_ids)
+    lines = _evidence_text_lines_payload(payload)
+    lines.extend(
+        (
+            f"readability	{payload['readability']}",
+            f"document_shape	{payload.get('document_shape') or '-'}",
+            f"unreadable_cause	{payload.get('unreadable_cause') or '-'}",
+            f"readability_checked_at	{payload.get('readability_checked_at') or '-'}",
+            f"bucket_event_ids	{','.join(checked.bucket_event_ids)}",
+        )
+    )
+    emit_envelope(
+        ctx, command="ledger.evidence.verify", result=EvidenceVerifyResult.model_validate(payload), lines=lines
+    )
+
+
+def evidence_release(
+    ctx: typer.Context,
+    transaction_id: str,
+    disposition: str,
+    expected_evidence_id: str,
+    expected_modified_at: str,
+) -> None:
+    """Unlink a movement's purchase evidence, or keep its document on the movement as an ordinary one."""
+    if disposition not in get_args(PurchaseEvidenceDisposition):
+        raise bad(tr("cli.app.ledger.evidence.release_disposition_help"))
+    released = run_ledger_purchase_evidence_release(
+        ctx,
+        transaction_id=transaction_id,
+        expected_evidence_id=expected_evidence_id,
+        expected_modified_at=expected_modified_at,
+        disposition=cast(PurchaseEvidenceDisposition, disposition),
+    )
+    result = released.result
+    transaction = TransactionPayload.model_validate_json(released.transaction.model_dump_json())
+    emit_envelope(
+        ctx,
+        command="ledger.purchase_evidence.release",
+        result=LedgerPurchaseEvidenceReleaseResult.model_validate(
+            {
+                "bucket_id": str(result.profile_id),
+                "transaction_id": transaction.transaction_id,
+                "bucket_event_ids": list(result.bucket_event_ids),
+                "review_status": released.review_status,
+                "transaction": transaction.model_dump(mode="json"),
+                "disposition": result.disposition,
+                "released_evidence_id": result.released_evidence_id,
+            }
+        ),
+        lines=[
+            f"{tr('cli.ledger.labels.id')}	{transaction.transaction_id}",
+            f"{tr('cli.ledger.labels.date')}	{transaction.date}",
+            f"{tr('cli.ledger.labels.amount')}	{transaction.amount}",
+            f"{tr('cli.ledger.labels.description')}	{transaction.description}",
+            f"{tr('cli.ledger.labels.review_status')}	{released.review_status}",
+            f"disposition	{result.disposition}",
+            f"released_evidence_id	{result.released_evidence_id}",
+        ],
     )
 
 
@@ -890,8 +963,10 @@ __all__ = [
     "evidence_extract",
     "evidence_list",
     "evidence_page",
+    "evidence_release",
     "evidence_remove",
     "evidence_update",
+    "evidence_verify",
     "evidence_view",
 ]
 

@@ -3393,6 +3393,38 @@ desktop:
           érhetők el.
         purchase_invoice: 'Beszerzési számla · hozzáadva: {date}'
         purchase_linked: Kapcsolt beszerzési bizonylat
+        readability:
+          cause:
+            bytes_readable: Egyik olvasó sem ismeri fel a tárolt fájlt.
+            document_bytes_available: Hiányzik a tárolt fájl.
+          check_named: '{file} ellenőrzése'
+          checked: Dokumentum ellenőrizve
+          gone: Ez a dokumentum már nincs a főkönyvben.
+          unchecked: Még nincs ellenőrizve
+          unreadable: Olvashatatlan
+        release:
+          cause:
+            evidence_confirmed_into_invoice: Ezt a dokumentumot egy olyan számlához
+              erősítették meg, amely nincs ehhez a tételhez kapcsolva.
+            finalized_calculation_reference: Egy lezárt bevallás használja ezt a tételt.
+            no_linked_purchase_evidence: Ehhez a tételhez nincs beszerzési bizonylat
+              kapcsolva, vagy másik van.
+            reference_has_no_stored_document: A kapcsolat egy számlára mutat, nem
+              tárolt dokumentumra.
+            transaction_changed: A tétel megváltozott, mióta megnyitottad.
+            transaction_not_editable: Ez a tétel archivált vagy törölt.
+            transaction_not_found: Ez a tétel már nem létezik.
+          detach: Levétel a tételről
+          detached: A beszerzési bizonylat lekerült a tételről.
+          keep: Megtartás dokumentumként
+          kept: A beszerzési bizonylat mostantól egyszerű dokumentum a tételen.
+          next_step:
+            detach_instead: Inkább bontsd a kapcsolatot.
+            link_movement_to_invoice: Kapcsold a tételt ahhoz a számlához, vagy tartsd
+              meg a dokumentumot a tételen.
+            reopen_finalized_calculation: Előbb nyisd meg újra az ezt használó bevallást.
+            reopen_transaction: Nyisd meg újra a tételt, és próbáld újra.
+            restore_transaction: Előbb állítsd vissza a tételt.
         search: Dokumentumok keresése
       drop: Elvetés
       earlier: Korábbi döntések

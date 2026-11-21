@@ -307,6 +307,15 @@ cli:
           oldala; nyisd meg az ablakban az adatai elolvasásához.
         pull_actor_help: A neved vagy címkéd.
         pull_id_help: A nyilvántartás tranzakciójának azonosítója.
+        release_disposition_help: 'Mi legyen a bizonyítékkal: a detach leválasztja,
+          a keep_as_document egyszerű dokumentumként a tételen hagyja.'
+        release_expected_evidence_id_help: A tételhez kapcsolt beszerzési bizonyíték
+          azonosítója, ahogy az `aeat app ledger view` mutatja.
+        release_expected_modified_at_help: A tétel modified_at értéke, ahogy az `aeat
+          app ledger view` mutatja; ha a tétel azóta megváltozott, a kérés elutasításra
+          kerül.
+        release_help: Leválasztja egy tétel beszerzési számlához tartozó bizonyítékát,
+          vagy egyszerű dokumentumként a tételen hagyja.
         remove_help: Beszerzési számlához tartozó bizonyíték törlése.
         review:
           advised_pending_message: Néhány függőben lévő dokumentum figyelmeztetéseket
@@ -358,6 +367,8 @@ cli:
         supplier_help: Szállító neve.
         taxable_base_help: Számla adóköteles alapja.
         update_help: A beszerzési számlához tartozó bizonyíték adatainak frissítése.
+        verify_help: Ellenőrzi, hogy olvasható-e egy beszerzési számlához tartozó
+          bizonyíték tárolt fájlja, és megőrzi az eredményt.
         view_help: Beszerzési számlához tartozó bizonyíték megjelenítése.
         yes_help: Bizonyíték törlésének megerősítése.
         yes_required: Add meg a --yes kapcsolót a bizonyíték törléséhez.

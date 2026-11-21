@@ -1463,6 +1463,8 @@ errors:
       de edición.
     ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
       porque aún no se puede presentar.
+    ledger_purchase_evidence_release: 'No puedes quitar el documento de este movimiento:
+      {cause}.'
     ledger_source_jurisdiction_required: Indica la jurisdicción fiscal del contribuyente
       antes de añadir este movimiento al libro.
     ledger_summary_period_without_span: Este periodo no abarca fechas del calendario,

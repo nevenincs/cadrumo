@@ -15,6 +15,7 @@ from cadrumo_client.commands.registered_operation_errors import invalid_completi
 
 from ...application.ledger.actions_common import display_decimal
 from ...application.ledger.evidence import PurchaseInvoiceEvidencePatch
+from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceNotFoundError
 from ...application.ledger.evidence_mutation_operation import (
     LEDGER_EVIDENCE_REMOVE_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID,
@@ -25,6 +26,15 @@ from ...application.ledger.evidence_mutation_operation import (
     LedgerEvidenceUpdateProjection,
     LedgerEvidenceUpdateRequest,
 )
+from ...application.ledger.evidence_verify_operation import (
+    LEDGER_EVIDENCE_VERIFY_NOT_FOUND_REFUSAL_CODE,
+    LEDGER_EVIDENCE_VERIFY_OPERATION_DEFINITION_ID,
+    LedgerEvidenceVerifyChecked,
+    LedgerEvidenceVerifyProjection,
+    LedgerEvidenceVerifyRefusal,
+    LedgerEvidenceVerifyRequest,
+)
+from ...application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 
 _UPDATE_FIELD_NAMES = frozenset(
@@ -107,6 +117,61 @@ def run_ledger_evidence_remove(ctx: typer.Context, *, evidence_id: str) -> Ledge
     return projection
 
 
+def run_ledger_evidence_verify(ctx: typer.Context, *, evidence_id: str) -> LedgerEvidenceVerifyChecked:
+    """Check one evidence record's stored bytes and correlate the finding the worker kept.
+
+    Raises:
+        PurchaseInvoiceEvidenceNotFoundError: When the profile holds no record of that id.
+    """
+    client = bound_profile_client(ctx)
+    completed = run_registered_operation(
+        client,
+        LedgerEvidenceVerifyRequest(profile_id=client.profile_id, evidence_id=evidence_id),
+        definition_id=LEDGER_EVIDENCE_VERIFY_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(client.profile_id)),
+        result_type=LedgerEvidenceVerifyProjection,
+        request_version=1,
+        result_version=1,
+        timeout=120,
+        allow_refusal_detail=True,
+    )
+    projection = completed.projection
+    outcome = projection.outcome
+    if isinstance(outcome, LedgerEvidenceVerifyRefusal):
+        if (
+            projection.profile_id != client.profile_id
+            or completed.terminal_condition is not OperationTerminalCondition.REFUSED
+            or completed.refusal_code != LEDGER_EVIDENCE_VERIFY_NOT_FOUND_REFUSAL_CODE
+            or completed.effect is not OperationEffect.NONE
+        ):
+            raise invalid_completion_error(completed)
+        raise PurchaseInvoiceEvidenceNotFoundError(
+            translated_message="errors.refused.refused_ledger_evidence_not_found",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
+                facts={"evidence_record_present": outcome.evidence_record_present},
+            ),
+            context={
+                "operation_id": str(completed.operation_id),
+                "refusal_code": completed.refusal_code,
+                "terminal_condition": completed.terminal_condition.value,
+                "effect": completed.effect.value,
+            },
+        )
+    invalid = (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not OperationEffect.UPDATED
+        or projection.profile_id != client.profile_id
+        or outcome.record.bucket_id != str(client.profile_id)
+        or outcome.record.evidence_id != evidence_id
+        or outcome.record.readability == "unchecked"
+    )
+    if invalid:
+        raise invalid_completion_error(completed)
+    return outcome
+
+
 def _wire_patch_value(value: object) -> object:
     """Render a canonical CLI patch value as stable bounded wire text."""
     if isinstance(value, Decimal):
@@ -136,7 +201,7 @@ def _matches_patch(
     return True
 
 
-__all__ = ["run_ledger_evidence_remove", "run_ledger_evidence_update"]
+__all__ = ["run_ledger_evidence_remove", "run_ledger_evidence_update", "run_ledger_evidence_verify"]
 
 
 def _evidence_update_receipt_invalid(

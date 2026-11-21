@@ -3412,6 +3412,38 @@ desktop:
           de compra vinculado.
         purchase_invoice: Factura de compra · añadida {date}
         purchase_linked: Justificante de compra vinculado
+        readability:
+          cause:
+            bytes_readable: Ningún lector reconoce el archivo guardado.
+            document_bytes_available: Falta el archivo guardado.
+          check_named: Comprobar {file}
+          checked: Documento comprobado
+          gone: Este documento ya no está en el libro.
+          unchecked: Sin comprobar
+          unreadable: Ilegible
+        release:
+          cause:
+            evidence_confirmed_into_invoice: Este documento se confirmó en una factura
+              que este movimiento no tiene vinculada.
+            finalized_calculation_reference: Una declaración finalizada usa este movimiento.
+            no_linked_purchase_evidence: Este movimiento no tiene vinculado ningún
+              justificante de compra, o tiene otro.
+            reference_has_no_stored_document: El vínculo apunta a una factura, no
+              a un documento guardado.
+            transaction_changed: El movimiento cambió desde que lo abriste.
+            transaction_not_editable: Este movimiento está archivado o eliminado.
+            transaction_not_found: Este movimiento ya no existe.
+          detach: Quitar del movimiento
+          detached: Se quitó el justificante de compra del movimiento.
+          keep: Conservar como documento
+          kept: El justificante de compra queda como un documento más del movimiento.
+          next_step:
+            detach_instead: Desvincúlalo en su lugar.
+            link_movement_to_invoice: Vincula el movimiento a esa factura, o conserva
+              el documento en el movimiento.
+            reopen_finalized_calculation: Reabre primero la declaración que lo usa.
+            reopen_transaction: Vuelve a abrir el movimiento e inténtalo de nuevo.
+            restore_transaction: Restaura primero el movimiento.
         search: Buscar documentos
       drop: Descartar
       earlier: Decisiones anteriores
