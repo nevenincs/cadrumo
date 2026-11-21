@@ -219,6 +219,8 @@ export type LocalEngineState = {
   /** The last change's refusal code, if it was refused. */
   refusal: string | null;
   change: (engine: LocalEngine, placement: LocalPlacement) => Promise<boolean>;
+  /** Reads the engine record again. */
+  retry: () => void;
 };
 
 /** The local engine and placement of `host`, read again after any change to
@@ -281,12 +283,17 @@ export function useLocalEngine(host: LocalModelHost | null): LocalEngineState {
     },
     [source, snapshot, busy],
   );
+  const retry = useCallback(() => {
+    setSnapshot({ kind: "loading" });
+    setReads((count) => count + 1);
+  }, []);
   return {
     snapshot,
     value: snapshot.kind === "ready" ? snapshot.value : null,
     busy,
     refusal,
     change,
+    retry,
   };
 }
 

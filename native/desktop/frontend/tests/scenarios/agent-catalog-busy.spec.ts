@@ -11,8 +11,8 @@ import { label } from "../support/strings";
 
 // A service still starting the agent can be too busy to answer its catalog.
 // The column says the agent is still starting, and reads the catalog again
-// when the service publishes the agent's status, so the person gets the
-// choices without doing anything.
+// on a cue: when the service publishes the agent's status, or the person
+// comes back to the window. Nothing asks again on a timer.
 
 test.beforeEach(() => {
   scenarioOnly("The scenario host decides when the service is busy.");
@@ -173,8 +173,8 @@ const catalogReads = (target: Page) =>
       ).length,
   );
 
-/** Two minutes on the page's clock, in steps: each pause is scheduled only
- * once the read before it has been shown. */
+/** Two minutes on the page's clock, in steps, so anything the window had
+ * scheduled would have run. */
 const pass = async (target: Page) => {
   for (let step = 0; step < 12; step++) {
     await target.clock.fastForward("00:10");
@@ -182,7 +182,11 @@ const pass = async (target: Page) => {
   }
 };
 
-test("a catalog the service is still busy with just after the agent is ready loads without a reload", async ({
+/** The person comes back to the window. */
+const comeBack = (target: Page) =>
+  target.evaluate(() => window.dispatchEvent(new Event("focus")));
+
+test("a catalog still busy just after the agent is ready says it is starting and is read again when the person comes back, not on a timer", async ({
   page: target,
 }) => {
   await target.clock.install();
@@ -193,23 +197,23 @@ test("a catalog the service is still busy with just after the agent is ready loa
     label("desktop.agent.service_starting"),
   );
   await expect(starting).toBeVisible();
-  // A long start: the service answers every read busy while the agent starts.
+  // A long start: the busy answer is said, and nothing asks again by itself.
+  await expect.poll(() => catalogReads(target)).toBe(1);
   await pass(target);
-  const beforeReady = await catalogReads(target);
-  expect(beforeReady).toBeGreaterThan(1);
+  expect(await catalogReads(target)).toBe(1);
 
-  // The agent is ready, and the service stays busy for a moment longer.
+  // The agent is ready, and the service stays busy for a moment longer: the
+  // published status is the cue for one read.
   await target.evaluate(() => window.__scenarioAgentPublishStatus?.());
-  await expect.poll(() => catalogReads(target)).toBe(beforeReady + 1);
-  // The ready signal asks once: its busy answer is followed after a pause,
-  // not by a second read in the same busy moment.
-  await target.waitForTimeout(300);
-  expect(await catalogReads(target)).toBe(beforeReady + 1);
+  await expect.poll(() => catalogReads(target)).toBe(2);
+  await pass(target);
+  expect(await catalogReads(target)).toBe(2);
   await expect(starting).toBeVisible();
 
-  // After the pause the service answers, and the choices appear with
-  // nothing asked of the person.
-  await target.clock.fastForward("00:03");
+  // The person comes back to the window: the service answers now, and the
+  // choices appear.
+  await comeBack(target);
+  await expect.poll(() => catalogReads(target)).toBe(3);
   await expect(starting).toHaveCount(0);
   await expect(
     column(target).getByRole("button", {
@@ -221,7 +225,7 @@ test("a catalog the service is still busy with just after the agent is ready loa
   expect(calls).toContain("agentProviderCatalogResolved");
 });
 
-test("a service that stays busy is asked again until it answers, and a person's retry asks at once", async ({
+test("while the service stays busy the settings say the agent is starting in the local AI's place, offering no retry that cannot help", async ({
   page: target,
 }) => {
   await target.clock.install();
@@ -232,18 +236,7 @@ test("a service that stays busy is asked again until it answers, and a person's 
     column(target).getByText(label("desktop.agent.service_starting")),
   ).toBeVisible();
   await pass(target);
-  const first = await catalogReads(target);
-  expect(first).toBeGreaterThan(1);
-  // The service stays busy and publishes nothing: the reads go on, each
-  // after a pause, with no last one.
-  await pass(target);
-  const followed = await catalogReads(target);
-  expect(followed).toBeGreaterThan(first);
-  // No pause outlasts a ten-second step, so most steps ask again.
-  expect(followed - first).toBeGreaterThanOrEqual(6);
-
-  // The person asks again where the failed read is shown: the local
-  // provider's models in the agent settings.
+  const asked = await catalogReads(target);
   await column(target)
     .getByRole("button", { name: label("desktop.agent.settings") })
     .click();
@@ -253,15 +246,18 @@ test("a service that stays busy is asked again until it answers, and a person's 
   await providers
     .locator('li[data-provider="zai"] > details')
     .evaluate((node) => ((node as HTMLDetailsElement).open = true));
-  const asked = await catalogReads(target);
-  await providers
-    .locator('li[data-provider="zai"]')
-    .getByRole("alert")
-    .filter({ hasText: label("desktop.providers.load_failed") })
-    .getByRole("button", { name: label("desktop.agent.retry"), exact: true })
-    .click();
-  // The retry asks at once, without waiting for the next pause to end.
-  await expect.poll(() => catalogReads(target)).toBeGreaterThan(asked);
+  const said = providers
+    .locator('li[data-provider="zai"] [data-model-list-state="starting"]')
+    .first();
+  await expect(said).toContainText(label("desktop.agent.service_starting"));
+  await expect(
+    said.getByRole("button", { name: label("desktop.agent.retry") }),
+  ).toHaveCount(0);
+  // Opening the settings is a cue; the time that passes after it is not.
+  const opened = await catalogReads(target);
+  expect(opened).toBeGreaterThanOrEqual(asked);
+  await pass(target);
+  expect(await catalogReads(target)).toBe(opened);
 });
 
 /** The agent column's catalog hook, mounted alone over a service that
@@ -270,11 +266,9 @@ type CatalogProbe = {
   reads: number;
   busy: boolean;
   kind: string;
-  /** The hook's pending pauses: timers of its pause lengths not yet run or
-   * cleared. */
+  /** Timers the hook left scheduled. */
   pending: Set<number>;
   publish(state: "ready" | "stopped" | "refused"): void;
-  unmount(): void;
 };
 
 const probe = (target: Page) =>
@@ -290,8 +284,6 @@ const mountProbe = (target: Page) =>
       await window.__scenarioModules!.profileViews();
     const hook = await window.__scenarioModules!.agentCatalog();
     const { agent } = await window.__scenarioModules!.localAiReads();
-    const { CATALOG_BUSY_PAUSE_MS, CATALOG_BUSY_PAUSE_CEILING_MS } =
-      await window.__scenarioModules!.catalogReadPolicy();
     const fixture = agent.fixtureAgent({
       say: () => {},
       wait: async () => {},
@@ -309,11 +301,10 @@ const mountProbe = (target: Page) =>
       kind: "unavailable",
       pending: new Set(),
       publish: () => {},
-      unmount: () => {},
     };
     (window as unknown as { __catalogProbe: CatalogProbe }).__catalogProbe =
       held;
-    const pauses = [CATALOG_BUSY_PAUSE_MS, CATALOG_BUSY_PAUSE_CEILING_MS];
+    // Any timer of a second or more the page schedules from here on.
     const setTimer = window.setTimeout.bind(window);
     const clearTimer = window.clearTimeout.bind(window);
     window.setTimeout = ((
@@ -321,7 +312,7 @@ const mountProbe = (target: Page) =>
       delay?: number,
       ...args: unknown[]
     ) => {
-      if (typeof callback !== "function" || !pauses.includes(delay ?? 0))
+      if (typeof callback !== "function" || (delay ?? 0) < 1_000)
         return setTimer(callback, delay, ...args);
       const id = setTimer(() => {
         held.pending.delete(id);
@@ -378,78 +369,52 @@ const mountProbe = (target: Page) =>
     }
     const container = document.createElement("div");
     document.body.append(container);
-    const root = client.createRoot(container);
-    dom.flushSync(() => root.render(react.createElement(Probe)));
-    held.unmount = () => {
-      dom.flushSync(() => root.unmount());
-      container.remove();
-    };
+    dom.flushSync(() =>
+      client.createRoot(container).render(react.createElement(Probe)),
+    );
   });
 
-/** Longer than two of the column's longest pauses, in steps: each pause is
- * scheduled only once the read before it has been shown. */
-const pastTwoPauses = async (target: Page) => {
-  for (let step = 0; step < 4; step++) {
-    await target.clock.fastForward("00:03");
-    await target.waitForTimeout(50);
-  }
-};
+const publish = (target: Page, state: "ready" | "stopped" | "refused") =>
+  target.evaluate((state) => {
+    (
+      window as unknown as { __catalogProbe: CatalogProbe }
+    ).__catalogProbe.publish(state);
+  }, state);
 
-for (const stop of ["loads", "unmounts", "stopped", "refused"] as const)
-  test(`the busy catalog's repeat stops when the ${stop === "loads" ? "catalog loads" : stop === "unmounts" ? "hook unmounts" : `service reports ${stop}`}`, async ({
-    page: target,
-  }) => {
-    await target.clock.install();
-    await target.goto("/scenarios.html?scenario=signed-out&bar=off");
-    await target.waitForFunction(() => Boolean(window.__scenarioModules));
-    await mountProbe(target);
-    await expect.poll(async () => (await probe(target)).kind).toBe("failed");
-    // The repeat runs while the service stays busy.
-    const repeating = (await probe(target)).reads;
-    await target.clock.fastForward("00:05");
+test("a busy catalog schedules nothing and is read again once per published status until it loads", async ({
+  page: target,
+}) => {
+  await target.clock.install();
+  await target.goto("/scenarios.html?scenario=signed-out&bar=off");
+  await target.waitForFunction(() => Boolean(window.__scenarioModules));
+  await mountProbe(target);
+  await expect.poll(async () => (await probe(target)).kind).toBe("failed");
+  await pass(target);
+  expect(await probe(target)).toMatchObject({ reads: 1, pending: 0 });
+
+  // Each publication is one read.
+  await publish(target, "ready");
+  await expect.poll(async () => (await probe(target)).reads).toBe(2);
+  await pass(target);
+  expect(await probe(target)).toMatchObject({ reads: 2, pending: 0 });
+
+  // A service that stopped or refused is not asked at all.
+  for (const state of ["stopped", "refused"] as const) {
+    await publish(target, state);
     await expect
-      .poll(async () => (await probe(target)).reads)
-      .toBeGreaterThan(repeating);
+      .poll(async () => (await probe(target)).kind)
+      .toBe("unavailable");
+    await pass(target);
+    expect(await probe(target)).toMatchObject({ reads: 2, pending: 0 });
+  }
 
-    if (stop === "loads") {
-      await target.evaluate(() => {
-        (
-          window as unknown as { __catalogProbe: CatalogProbe }
-        ).__catalogProbe.busy = false;
-      });
-      await target.clock.fastForward("00:05");
-      await expect.poll(async () => (await probe(target)).kind).toBe("ready");
-    } else if (stop === "unmounts") {
-      await target.evaluate(() => {
-        (
-          window as unknown as { __catalogProbe: CatalogProbe }
-        ).__catalogProbe.unmount();
-      });
-    } else {
-      await target.evaluate((state) => {
-        (
-          window as unknown as { __catalogProbe: CatalogProbe }
-        ).__catalogProbe.publish(state);
-      }, stop);
-      await expect
-        .poll(async () => (await probe(target)).kind)
-        .toBe("unavailable");
-    }
-    // No pause is left behind, and no read follows over two pauses.
-    await expect.poll(async () => (await probe(target)).pending).toBe(0);
-    const stopped = (await probe(target)).reads;
-    await pastTwoPauses(target);
-    expect(await probe(target)).toMatchObject({ reads: stopped, pending: 0 });
-
-    if (stop === "stopped" || stop === "refused") {
-      // A newly published ready status asks again.
-      await target.evaluate(() => {
-        (
-          window as unknown as { __catalogProbe: CatalogProbe }
-        ).__catalogProbe.publish("ready");
-      });
-      await expect
-        .poll(async () => (await probe(target)).reads)
-        .toBeGreaterThan(stopped);
-    }
+  // Ready again, and the service answers.
+  await target.evaluate(() => {
+    (
+      window as unknown as { __catalogProbe: CatalogProbe }
+    ).__catalogProbe.busy = false;
   });
+  await publish(target, "ready");
+  await expect.poll(async () => (await probe(target)).kind).toBe("ready");
+  expect(await probe(target)).toMatchObject({ reads: 3, pending: 0 });
+});

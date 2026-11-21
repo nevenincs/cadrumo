@@ -902,3 +902,110 @@ test("a host without setup cannot offer a model download", async ({
     target.locator(".settings [data-settings-provisioning]"),
   ).toHaveCount(0);
 });
+
+declare global {
+  interface Window {
+    /** The refusal the made-up catalogue read answers, while one is set. */
+    __catalogRefusal?: string | null;
+  }
+}
+
+/** The local AI's element of the setup panel, opened. */
+async function openSetupLocalAi(target: Page) {
+  const setup = target.getByRole("dialog", {
+    name: label("desktop.setup.title"),
+  });
+  const localAi = setup.locator('[data-setup-element="local_ai"]');
+  await localAi
+    .getByRole("button", {
+      name: label("desktop.setup.item.local_ai"),
+      exact: true,
+    })
+    .click();
+  return localAi;
+}
+
+const catalogReads = (target: Page) =>
+  target.evaluate(
+    () =>
+      (window.__scenarioHostCalls ?? []).filter(
+        (call) => call === "agentProviderCatalog",
+      ).length,
+  );
+
+test("while the agent starts, the setup panel's local AI says so in the model list's place, with no retry, and lists the models once it is ready", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&setup=partial&catalog=declared",
+  );
+  const localAi = await openSetupLocalAi(target);
+  const said = localAi.locator("[data-slot=local-models-service]");
+  await expect(said).toContainText(label("desktop.agent.service_starting"));
+  // The model list's place offers no retry; the program's row keeps its own.
+  await expect(
+    said.locator("xpath=..").getByRole("button", {
+      name: label("desktop.agent.retry"),
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  // The published status is the cue.
+  await target.evaluate(() => window.__scenarioAgentPublishStatus?.());
+  await expect(said).toHaveCount(0);
+  await expect(
+    localAi.locator("[data-slot=local-models] li[data-model]"),
+  ).toHaveCount(servedRecommended.length);
+});
+
+for (const [code, words, retry] of [
+  ["agent_signed_out", "desktop.agent.service_signed_out", false],
+  ["agent_catalog_unavailable", "desktop.agent.catalog_unavailable", true],
+] as const)
+  test(`the setup panel's local AI says a catalogue read answering ${code} as where setup stands, not as a failure`, async ({
+    page: target,
+  }) => {
+    await target.addInitScript((code) => {
+      window.__catalogRefusal = code;
+      window.__fixtureProviderCatalogRead = async () => {
+        const refusal = window.__catalogRefusal;
+        if (refusal) throw Object.assign(new Error(refusal), { code: refusal });
+      };
+    }, code);
+    await target.clock.install();
+    await open(target, "partial");
+    const localAi = await openSetupLocalAi(target);
+    const said = localAi.locator("[data-slot=local-models-lanes]");
+    await expect(said).toHaveAttribute("role", "status");
+    await expect(said).toContainText(label(words));
+    await expect(
+      localAi
+        .getByRole("alert")
+        .filter({ hasText: label("desktop.providers.load_failed") }),
+    ).toHaveCount(0);
+    // Nothing asks again on a timer.
+    const asked = await catalogReads(target);
+    for (let step = 0; step < 12; step++) {
+      await target.clock.fastForward("00:10");
+      await target.waitForTimeout(20);
+    }
+    expect(await catalogReads(target)).toBe(asked);
+    await target.evaluate(() => {
+      window.__catalogRefusal = null;
+    });
+    if (retry)
+      await said
+        .getByRole("button", {
+          name: label("desktop.agent.retry"),
+          exact: true,
+        })
+        .click();
+    else {
+      await expect(
+        said.getByRole("button", { name: label("desktop.agent.retry") }),
+      ).toHaveCount(0);
+      await target.evaluate(() => window.dispatchEvent(new Event("focus")));
+    }
+    await expect(
+      localAi.locator("[data-slot=local-models] li[data-model]"),
+    ).toHaveCount(servedRecommended.length);
+  });

@@ -54,6 +54,11 @@ import type { OpenMenu } from "./ContextMenu";
 import { AgentHeader } from "./agent/AgentHeader";
 import type { AgentColumnView, Panel } from "./agent/agentColumnView";
 import { refusalWords, serviceWords } from "./agent/agentRefusalWords";
+import {
+  askedAgain,
+  modelListState,
+  modelListStateWords,
+} from "../shell/modelListState";
 import { agentSending } from "./agent/agentSending";
 import { AgentSettingsPanel } from "./agent/AgentSettingsPanel";
 import { AgentWelcome } from "./agent/AgentWelcome";
@@ -454,6 +459,7 @@ export function AgentColumn({
   const {
     catalog,
     catalogBusy,
+    lists,
     localLanes,
     engines,
     offer,
@@ -872,18 +878,23 @@ export function AgentColumn({
   const laneOffered =
     offer?.providers.some((provider) => provider.selectable) === true;
   const serviceNotice = status ? serviceWords(t, status) : null;
-  // A catalog the service refused as unavailable is said with the reference
-  // of the service's log line, rather than as no providers.
-  const catalogRefused =
-    catalog.kind === "failed" && catalog.code === "agent_catalog_unavailable"
-      ? catalog
-      : null;
+  // A catalog read that did not answer is said, never left blank: where the
+  // person's setup stands, with asking again where that is the way on, or a
+  // fault with its retry. Either is said with the reference of the service's
+  // log line where the refusal carries one.
+  const catalogFailed = catalog.kind === "failed" ? catalog : null;
+  const catalogState = catalogFailed
+    ? modelListState(catalogFailed.code)
+    : null;
+  const catalogAsked =
+    catalogFailed !== null &&
+    (catalogState === null || askedAgain(catalogState));
   const notice = incompatible
     ? t("desktop.agent.service_incompatible")
-    : catalogBusy
-      ? t("desktop.agent.service_starting")
-      : catalogRefused
-        ? refusalWords(t, catalogRefused.code)
+    : catalogState
+      ? modelListStateWords(t, catalogState)
+      : catalogFailed
+        ? refusalWords(t, catalogFailed.code)
         : engineHeld
           ? null
           : noModelHeld
@@ -988,6 +999,7 @@ export function AgentColumn({
                   ? "loading"
                   : "failed"
             }
+            catalogFailure={catalog.kind === "failed" ? catalog.code : null}
             catalog={catalog.kind === "ready" ? catalog.value : null}
             onRetryCatalog={agentCatalog.retry}
             onLocalModelRemoved={agentCatalog.refresh}
@@ -1149,10 +1161,11 @@ export function AgentColumn({
             failure={view.sendFailure}
             fit={view.sendFit}
             notice={notice}
-            logRef={catalogRefused?.logRef}
+            noticeFault={catalogFailed !== null && catalogState === null}
+            logRef={catalogFailed?.logRef}
             engines={engineHeld ? engineNotices : undefined}
             onRetry={
-              catalogRefused
+              catalogAsked
                 ? agentCatalog.retry
                 : status?.state === "refused" && !unsupported && session?.retry
                   ? () => {
@@ -1263,6 +1276,8 @@ export function AgentColumn({
             onDownloadModels={openSettings}
             onRetryCatalog={agentCatalog.refresh}
             onSignIn={openSettings}
+            listsFailure={lists.failure}
+            onRetryLists={lists.retry}
           />
         </div>
       )}

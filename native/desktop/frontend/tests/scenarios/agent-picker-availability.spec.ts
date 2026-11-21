@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
 import {
   agentColumn as column,
+  offeredModels,
   openModelPicker,
   pickWay,
   scenarioOnly,
@@ -11,8 +12,9 @@ import { label } from "../support/strings";
 
 // What the picker offers follows what the service says it has read. A lane
 // the service is still reading, or one whose models could not be read, is
-// held back with the way on, and the column keeps asking until the service
-// has settled it, so the lane becomes choosable without a reload. A choice
+// held back with the way on, and the column asks again on a cue (the person
+// coming back to the window, opening the picker, a published status), never
+// on a timer, so the lane becomes choosable without a reload. A choice
 // the person made survives the lane being held back for a while. Hints about
 // downloading models belong to the lanes whose models are downloaded.
 
@@ -76,6 +78,9 @@ const settle = (target: Page) =>
   target.evaluate(() => {
     window.__fixtureLaneStates = {};
   });
+/** The person comes back to the window. */
+const comeBack = (target: Page) =>
+  target.evaluate(() => window.dispatchEvent(new Event("focus")));
 
 const laneRow = (target: Page, way: string) =>
   target.locator(`[role=option][data-way="${way}"]`);
@@ -109,12 +114,14 @@ test("a lane first served as still being read becomes choosable without a reload
   expect(held.disabled).toBe(true);
   expect(held.text).toContain(label("desktop.agent.lane_no_catalog"));
 
-  // The service settles the lane; the column asks again by itself.
+  // The service settles the lane. Time alone asks nothing; the person
+  // coming back to the window does.
   await settle(target);
   const before = await reads(target);
-  await expect
-    .poll(() => reads(target), { timeout: 20_000 })
-    .toBeGreaterThan(before);
+  await target.waitForTimeout(2_500);
+  expect(await reads(target)).toBe(before);
+  await comeBack(target);
+  await expect.poll(() => reads(target)).toBe(before + 1);
   const settled = await rowState(target, READ);
   expect(settled.disabled).toBe(false);
 });
@@ -127,12 +134,12 @@ test("a lane whose sign-in the service has not yet read is read again until it i
   await expect.poll(() => reads(target)).toBe(1);
   expect((await rowState(target, READ)).disabled).toBe(true);
 
-  // The sign-in has completed: the next read states it, with nothing opened.
+  // The sign-in has completed: the read on the person's return states it,
+  // with nothing opened.
   await settle(target);
   const before = await reads(target);
-  await expect
-    .poll(() => reads(target), { timeout: 20_000 })
-    .toBeGreaterThan(before);
+  await comeBack(target);
+  await expect.poll(() => reads(target)).toBe(before + 1);
   expect((await rowState(target, READ)).disabled).toBe(false);
 });
 
@@ -284,9 +291,8 @@ test("a model the person chose comes back with its lane after the lane is held b
   // It is read again and choosable: the choice is the one made before.
   await settle(target);
   const waited = await reads(target);
-  await expect
-    .poll(() => reads(target), { timeout: 20_000 })
-    .toBeGreaterThan(waited);
+  await comeBack(target);
+  await expect.poll(() => reads(target)).toBe(waited + 1);
   picker = await openModelPicker(target);
   await expect(
     picker.getByRole("button", { name: label("desktop.agent.provider") }),
@@ -297,3 +303,62 @@ test("a model the person chose comes back with its lane after the lane is held b
     model.entry_id,
   );
 });
+
+declare global {
+  interface Window {
+    /** The refusal the made-up list read answers, while one is set. */
+    __listsRefusal?: string | null;
+  }
+}
+
+const listReads = (target: Page) =>
+  target.evaluate(
+    () =>
+      (window.__scenarioHostCalls ?? []).filter(
+        (call) => call === "agentLocalModels",
+      ).length,
+  );
+
+// The person's model lists that cannot be read are said in the picker,
+// never replaced in silence by everything the catalogue lists: a fault with
+// asking again, or where setup stands.
+for (const [code, role, words] of [
+  ["agent_gateway_503", "alert", "desktop.providers.local_models_failed"],
+  [
+    "agent_local_models_catalog_unavailable",
+    "status",
+    "desktop.agent.catalog_unavailable",
+  ],
+] as const)
+  test(`model lists the picker cannot read (${code}) are said there with asking again`, async ({
+    page: target,
+  }) => {
+    await target.addInitScript((code) => {
+      window.__listsRefusal = code;
+      window.__fixtureLocalModelsRead = async () => {
+        const refusal = window.__listsRefusal;
+        if (refusal) throw Object.assign(new Error(refusal), { code: refusal });
+      };
+    }, code);
+    await open(target);
+    const picker = await openModelPicker(target);
+    const said = picker.locator("[data-slot=picker-lists]");
+    await expect(said).toHaveAttribute("role", role);
+    await expect(said).toContainText(label(words));
+    await target.evaluate(() => {
+      window.__listsRefusal = null;
+    });
+    const asked = await listReads(target);
+    await said
+      .getByRole("button", { name: label("desktop.agent.retry"), exact: true })
+      .click();
+    await expect.poll(() => listReads(target)).toBeGreaterThan(asked);
+    await expect(said).toHaveCount(0);
+    // Read, the lists apply again: the local lane offers its list alone,
+    // leaving out the model it serves that nobody put on the list.
+    await pickWay(target, picker, LOCAL);
+    expect(await offeredModels(picker)).toEqual([
+      "synthetic-text:1",
+      "synthetic-vision:1",
+    ]);
+  });

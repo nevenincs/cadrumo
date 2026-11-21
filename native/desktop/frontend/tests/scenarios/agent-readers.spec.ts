@@ -60,8 +60,8 @@ for (const outcome of ["success", "failure"] as const)
           reader,
         );
         react.useLayoutEffect(() => {
-          value = current;
-          commits.push(current?.revision ?? null);
+          value = current.stored;
+          commits.push(current.stored?.revision ?? null);
         });
         return null;
       }

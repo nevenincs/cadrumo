@@ -18,11 +18,6 @@ import {
   startingSelection,
 } from "../src/shell/agentCatalog";
 import type { ServedProviderLane } from "../src/shell/agentCatalogContract";
-import {
-  ACCOUNT_LIST_PAUSE_CEILING_MS,
-  ACCOUNT_LIST_PAUSE_MS,
-  accountListPause,
-} from "../src/shell/catalogReadPolicy";
 import { connectionWords } from "../src/shell/providerConnection";
 
 // How the agent column deduces its choices from cadrumo-agent's provider
@@ -704,18 +699,6 @@ test("a choice the catalog stops offering for a while is offered again, whole, w
   // The choice, held by the column, is the same once the lane returns.
   expect(restoredSelection(choices, [chosen])).toEqual(chosen);
   expect(laneSelection(choices, [chosen], "qwen/api")).toEqual(chosen);
-});
-
-test("the pauses before a catalog still being read is asked again double up to a ceiling", () => {
-  expect(accountListPause(0)).toBe(ACCOUNT_LIST_PAUSE_MS);
-  expect(accountListPause(1)).toBe(2 * ACCOUNT_LIST_PAUSE_MS);
-  expect(accountListPause(2)).toBe(4 * ACCOUNT_LIST_PAUSE_MS);
-  const pauses = Array.from({ length: 12 }, (_, reads) =>
-    accountListPause(reads),
-  );
-  expect(pauses).toEqual([...pauses].sort((a, b) => a - b));
-  expect(Math.max(...pauses)).toBe(ACCOUNT_LIST_PAUSE_CEILING_MS);
-  expect(accountListPause(1_000)).toBe(ACCOUNT_LIST_PAUSE_CEILING_MS);
 });
 
 test("a model is named as the picker names it in its lane, and by its id only where the catalog lists none", () => {
