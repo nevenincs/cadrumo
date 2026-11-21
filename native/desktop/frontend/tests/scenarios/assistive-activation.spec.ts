@@ -94,3 +94,19 @@ test("a click alone chooses a tab, and a press or Enter still does", async ({
   await page.keyboard.press("Enter");
   await expect(tab("documents")).toHaveAttribute("aria-selected", "true");
 });
+
+test("a click alone opens and closes the background tasks", async ({
+  page,
+}) => {
+  await page.goto(
+    "/scenarios.html?scenario=ledger&latency=0&bar=off&jobs=progress",
+  );
+  const trigger = page.locator(".background-tasks-trigger");
+  const panel = page.locator(".background-tasks-panel");
+  await expect(trigger).toBeVisible();
+  await clickOnly(trigger);
+  await expect(panel).toBeVisible();
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await clickOnly(trigger);
+  await expect(panel).toBeHidden();
+});
