@@ -143,6 +143,15 @@ test("a ready local AI whose server is dormant says it starts when a document is
   );
 });
 
+test("an absent local AI whose program is set up names the model it waits for", () => {
+  expect(rowSentence(KEYS, row({ state: "absent", awaits: "model" }))).toBe(
+    "desktop.setup.awaits_model",
+  );
+  expect(rowSentence(KEYS, row({ state: "absent", awaits: null }))).toBe(
+    "desktop.setup.state.absent",
+  );
+});
+
 test("a stale or blocked row says its reason, and a failed row says its failure", () => {
   for (const reason of STALE_REASONS) {
     expect(

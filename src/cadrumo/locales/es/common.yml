@@ -1353,7 +1353,7 @@ desktop:
     active_one: '{count} en curso'
     apply_refusal:
       business_pct_not_applicable: esta clasificación no lleva parte profesional;
-        bórrala y vuelve a aceptar
+        quita esa parte y vuelve a aceptar
       business_pct_required: esta clasificación necesita una parte profesional; escríbela
         y vuelve a aceptar
       category_unavailable: la categoría propuesta no está disponible; elige una a
@@ -3447,7 +3447,7 @@ desktop:
           keep: Conservar como documento
           kept: El justificante de compra queda como un documento más del movimiento.
           next_step:
-            detach_instead: Desvincúlalo en su lugar.
+            detach_instead: Mejor quita el vínculo.
             link_movement_to_invoice: Vincula el movimiento a esa factura, o conserva
               el documento en el movimiento.
             reopen_finalized_calculation: Reabre primero la declaración que lo usa.
@@ -5500,6 +5500,7 @@ desktop:
     approve: Descargar y configurar
     approve_at_least: Descargar al menos {size} y configurar
     approve_size: Descargar {size} y configurar
+    awaits_model: Listo. Descarga un modelo para terminar la configuración.
     blocked:
       hardware: Este ordenador no tiene memoria suficiente para esto.
       needs_person: Espera a que lo apruebes o lo instales tú.

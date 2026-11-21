@@ -362,6 +362,9 @@ enum NoProgram {
 struct Survey {
     reading: Reading,
     entry: Option<PlanEntry>,
+    /// The local AI's program part read present, whatever its models read; never set for
+    /// another item.
+    program_ready: bool,
 }
 
 /// Why one item's setup or removal did not finish.
@@ -1093,7 +1096,11 @@ impl Engine {
             .ok()
             .filter(|_| layout.pinned())
         });
-        Survey { reading, entry }
+        Survey {
+            reading,
+            entry,
+            program_ready: false,
+        }
     }
 
     fn survey_local_ai(&mut self, reinstall: bool) -> Survey {
@@ -1135,6 +1142,7 @@ impl Engine {
             program_observation,
             Some(version),
             &model_observations,
+            selected.is_empty() && models.holds_any(program.engine() == LocalEngine::LlamaCpp),
         );
         for ((part, in_store), observed) in models
             .plan_parts()
@@ -1157,7 +1165,11 @@ impl Engine {
             });
         }
         let entry = PlanEntry::of_parts(ItemId::LocalAi, parts).ok();
-        Survey { reading, entry }
+        Survey {
+            program_ready: program_observation == present,
+            reading,
+            entry,
+        }
     }
 
     /// The row a reading gives `item`, with its running or interrupted setup and the
@@ -1190,6 +1202,10 @@ impl Engine {
         if item == ItemId::LocalAi && row.state == ItemState::Absent && survey.entry.is_none() {
             row.recovery = None;
         }
+        // Absent while its program reads present, the local AI lacks only a model: the
+        // program is set up, and a model downloaded from the person's list is what remains.
+        row.awaits_model =
+            item == ItemId::LocalAi && row.state == ItemState::Absent && survey.program_ready;
         // An unknown item is checked again, not set up, so it states no download.
         if !matches!(row.state, ItemState::Ready | ItemState::Unknown) {
             // An entry that totals only the parts whose size is known would state too little,
@@ -1229,14 +1245,19 @@ impl Engine {
                     step: SetupStep::Verify,
                 });
                 let mut survey = self.survey(item, false);
-                survey.reading = match item {
-                    ItemId::Browser => self.full_browser(cancellation),
+                let full = match item {
+                    ItemId::Browser => self
+                        .full_browser(cancellation)
+                        .map(|reading| (reading, false)),
                     ItemId::LocalAi => self.full_local_ai(),
-                }
-                .unwrap_or(Reading {
-                    mode: CheckMode::Full,
-                    ..survey.reading.clone()
-                });
+                };
+                (survey.reading, survey.program_ready) = full.unwrap_or((
+                    Reading {
+                        mode: CheckMode::Full,
+                        ..survey.reading.clone()
+                    },
+                    survey.program_ready,
+                ));
                 let hosts = match item {
                     ItemId::Browser => network::item_hosts(&self.config.pins, item.as_str()),
                     ItemId::LocalAi => self.local_ai_hosts(),
@@ -1340,8 +1361,9 @@ impl Engine {
     /// answering ready as the packaged build, then for each selected model the router's
     /// list, a load, one generated token and the unload. Without a running server the
     /// server is dormant: the program reads present unless its latest demanded start
-    /// failed, and each model only as its quick check says.
-    fn full_local_ai(&mut self) -> Option<Reading> {
+    /// failed, and each model only as its quick check says. With the reading, whether the
+    /// program part read present.
+    fn full_local_ai(&mut self) -> Option<(Reading, bool)> {
         let hardware = self.hardware();
         let (program, models) = self.local_ai_parts().ok()?;
         let present = Observation::Present;
@@ -1395,11 +1417,17 @@ impl Engine {
                 )
             }
         };
-        Some(local_ai::reading(
-            CheckMode::Full,
-            program_observation,
-            Some(version),
-            &models_observed,
+        let holds_model =
+            selected.is_empty() && models.holds_any(program.engine() == LocalEngine::LlamaCpp);
+        Some((
+            local_ai::reading(
+                CheckMode::Full,
+                program_observation,
+                Some(version),
+                &models_observed,
+                holds_model,
+            ),
+            program_observation == present,
         ))
     }
 
@@ -2100,6 +2128,7 @@ impl Survey {
                 Observation::Blocked(BlockedReason::NotInThisBuild),
             ),
             entry: None,
+            program_ready: false,
         }
     }
 
@@ -2107,6 +2136,7 @@ impl Survey {
         Self {
             reading: Reading::new(CheckMode::Quick, Observation::Unreadable),
             entry: None,
+            program_ready: false,
         }
     }
 }

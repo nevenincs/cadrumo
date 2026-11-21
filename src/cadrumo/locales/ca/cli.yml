@@ -310,8 +310,8 @@ cli:
           dades.
         pull_actor_help: El teu nom o etiqueta.
         pull_id_help: Identificador de transacció dels teus registres.
-        release_disposition_help: 'Què passa amb el justificant: detach el desvincula,
-          keep_as_document en conserva el document al moviment com un més.'
+        release_disposition_help: 'Què passa amb el justificant: `detach` el desvincula,
+          `keep_as_document` en conserva el document al moviment com un més.'
         release_expected_evidence_id_help: L'identificador del justificant de compra
           que vincula el moviment, tal com el mostra `aeat app ledger view`.
         release_expected_modified_at_help: El modified_at del moviment, tal com el

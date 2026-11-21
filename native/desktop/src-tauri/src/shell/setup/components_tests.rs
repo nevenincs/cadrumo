@@ -2330,6 +2330,48 @@ async fn an_unreadable_engine_selection_refuses_the_local_ai_and_leaves_the_brow
     assert_eq!(refusal(components.remove(Removal::Browser).await), Ok(()));
 }
 
+/// The package of `fixture`'s installation, carrying the llama-server program where its
+/// engines look for it.
+#[cfg(windows)]
+fn carrying_llama_server(fixture: &Fixture) -> PathBuf {
+    let package = fixture.root().join("package");
+    let folder = package.join("bin").join("llama");
+    std::fs::create_dir_all(&folder).unwrap();
+    std::fs::write(folder.join("llama-server.exe"), b"llama-server").unwrap();
+    package
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn a_package_carrying_the_llama_server_reads_its_program_set_up_and_a_model_awaited() {
+    let fixture = Fixture::new(Serving::Whole);
+    let package = carrying_llama_server(&fixture);
+    // Nobody chose an engine: the package's llama-server is the default.
+    let admission = Admission::new(Arc::new(Replies::default()), unselected(), package);
+    let components = Components::new(fixture.engines(), Arc::new(admission), Arc::default());
+    components.observe();
+    let snapshot = until(&components, |view| {
+        view.check
+            .as_ref()
+            .is_some_and(|check| check.stage == CheckStage::Done)
+    })
+    .await;
+    let local_ai = snapshot
+        .rows
+        .iter()
+        .find(|row| row.item == "local_ai")
+        .unwrap();
+    assert_eq!(
+        (local_ai.state, local_ai.awaits, local_ai.recovery),
+        (wire::State::Absent, Some(wire::Awaits::Model), None),
+        "the bundled program is set up and only a model remains"
+    );
+    assert_eq!(local_ai.version.as_deref(), Some("b1"));
+    assert_eq!(snapshot.complete, Some(false));
+    let browser = &snapshot.rows[0];
+    assert_eq!((browser.state, browser.awaits), (wire::State::Absent, None));
+}
+
 #[test]
 fn only_a_command_that_names_the_local_ai_or_every_item_reaches_it() {
     assert!(reaches_local_ai(&[]));

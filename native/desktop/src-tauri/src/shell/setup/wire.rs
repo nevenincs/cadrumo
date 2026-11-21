@@ -65,6 +65,14 @@ pub enum Server {
     Dormant,
 }
 
+/// What the local AI still waits for while its row is absent and its program is set up.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Awaits {
+    /// A model downloaded from the person's list.
+    Model,
+}
+
 /// What a removal deletes from this computer.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -382,6 +390,9 @@ pub struct Row {
     pub removals: Vec<Removal>,
     /// What the local AI's server does while it is ready; on no other row or state.
     pub server: Option<Server>,
+    /// What the local AI still waits for while it is absent and its program is set up;
+    /// on no other row or state.
+    pub awaits: Option<Awaits>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -607,6 +618,8 @@ impl Row {
             && (self.failure.is_none() || self.state == State::Failed)
             && (self.server.is_none()
                 || (self.state == State::Ready && self.kind == ItemKind::LocalAi))
+            && (self.awaits.is_none()
+                || (self.state == State::Absent && self.kind == ItemKind::LocalAi))
             && self
                 .removals
                 .iter()
@@ -914,6 +927,7 @@ mod tests {
             "stale_reason": null, "blocked_reason": null, "failure": null, "recovery": "set_up",
             "recovery_action_id": "operator.provision.browser",
             "version": null, "size_bytes": 180000000, "removals": [], "server": null,
+            "awaits": null,
         })
     }
 
@@ -975,8 +989,21 @@ mod tests {
     }
 
     #[test]
+    fn an_absent_local_ai_whose_program_is_set_up_carries_the_model_it_awaits() {
+        let mut awaiting = snapshot();
+        awaiting["rows"][0]["item"] = json!("local_ai");
+        awaiting["rows"][0]["kind"] = json!("local_ai");
+        awaiting["rows"][0]["recovery"] = Value::Null;
+        awaiting["rows"][0]["recovery_action_id"] = Value::Null;
+        awaiting["rows"][0]["awaits"] = json!("model");
+        let shown = parsed(awaiting.clone()).expect("a valid snapshot");
+        assert_eq!(shown.rows[0].awaits, Some(Awaits::Model));
+        assert_eq!(serde_json::to_value(&shown).unwrap(), awaiting);
+    }
+
+    #[test]
     fn a_value_outside_a_closed_set_or_a_bound_is_a_host_failure() {
-        let cases: [Case; 23] = [
+        let cases: [Case; 26] = [
             ("unknown state", |s| s["rows"][0]["state"] = json!("broken")),
             ("a server on another item", |s| {
                 s["rows"][0]["state"] = json!("ready");
@@ -986,6 +1013,22 @@ mod tests {
             }),
             ("unknown server", |s| {
                 s["rows"][0]["server"] = json!("asleep")
+            }),
+            ("a model awaited on another item", |s| {
+                s["rows"][0]["awaits"] = json!("model")
+            }),
+            ("a model awaited by a local AI that is not absent", |s| {
+                s["rows"][0]["item"] = json!("local_ai");
+                s["rows"][0]["kind"] = json!("local_ai");
+                s["rows"][0]["state"] = json!("ready");
+                s["rows"][0]["recovery"] = Value::Null;
+                s["rows"][0]["recovery_action_id"] = Value::Null;
+                s["rows"][0]["awaits"] = json!("model")
+            }),
+            ("unknown awaited part", |s| {
+                s["rows"][0]["item"] = json!("local_ai");
+                s["rows"][0]["kind"] = json!("local_ai");
+                s["rows"][0]["awaits"] = json!("program")
             }),
             ("another item's removal", |s| {
                 s["rows"][0]["removals"] = json!(["local_ai_program"])
