@@ -14,6 +14,8 @@ import type {
 } from "../shell/ledger";
 import type {
   ClassificationItemFailureCause,
+  LedgerClassifyJobApplyItemResult,
+  LedgerClassifyJobApplyRefusal,
   ClassificationItemState,
   ClassificationJobStatus,
   LedgerClassifyJobItemProjection,
@@ -56,6 +58,10 @@ declare global {
       finish(job: string): void;
       /** The proposals applied, as the ledger review would. */
       apply(job: string): void;
+      /** The jobs the window asked for, in order. */
+      enqueued(): string[];
+      /** The next apply of `movement` is refused for `cause`. */
+      refuseApply(movement: string, cause: LedgerClassifyJobApplyRefusal): void;
       /** A cue for the job at `revision`, or its own revision. */
       cue(job: string, revision?: number): void;
       /** A cue naming another profile, at a revision past the job's. */
@@ -178,8 +184,8 @@ function proposal(movement: string, minute: number) {
     movement_revision_id: hex64(`revision:${movement}`),
     classification: "BUSINESS" as const,
     confidence: "0.9",
-    category: null,
-    iva_category: null,
+    category: "gastos_bancarios",
+    iva_category: "domestic_general",
     business_pct: null,
     multiple_components: null,
     proposed_at: at("11", minute % 60),
@@ -289,6 +295,9 @@ export function backgroundTasksFixture(options: {
   }
   const listeners = new Set<(cue: BackgroundTaskCue) => void>();
   const runs: string[] = [];
+  const enqueued: string[] = [];
+  // Applies a scenario asked to be refused, by movement.
+  const applyRefusals = new Map<string, LedgerClassifyJobApplyRefusal>();
   // The job whose run holds the profile: runs do not overlap.
   let running: string | null = null;
   let clock = 0;
@@ -409,6 +418,10 @@ export function backgroundTasksFixture(options: {
         revision: job.revision + 10,
       });
     },
+    enqueued: () => [...enqueued],
+    refuseApply(movement, cause) {
+      applyRefusals.set(movement, cause);
+    },
     observers: () => listeners.size,
     runs: () => [...runs],
   };
@@ -424,6 +437,9 @@ export function backgroundTasksFixture(options: {
     cue: (id, revision) => instances.forEach((each) => each.cue(id, revision)),
     cueOtherProfile: (id) =>
       instances.forEach((each) => each.cueOtherProfile(id)),
+    enqueued: () => [...instances].flatMap((each) => each.enqueued()),
+    refuseApply: (movement, cause) =>
+      instances.forEach((each) => each.refuseApply(movement, cause)),
     observers: () =>
       [...instances].reduce((sum, each) => sum + each.observers(), 0),
     runs: () => [...instances].flatMap((each) => each.runs()),
@@ -519,6 +535,106 @@ export function backgroundTasksFixture(options: {
         return job
           ? settled(operation, { profile_id: LEDGER_FIXTURE_PROFILE_ID, job })
           : refused(operation, "job_not_found", "This job is not stored.");
+      }
+      if (definition === "ledger.classify.job.enqueue") {
+        const movements = Array.isArray(request.movement_ids)
+          ? request.movement_ids.map(String)
+          : [];
+        if (movements.length === 0)
+          return refused(
+            operation,
+            "nothing_to_classify",
+            "No movement was named to classify; select one and ask again.",
+          );
+        clock += 1;
+        const items = movements.map(
+          (movement): LedgerClassifyJobItemProjection => ({
+            movement_id: movement,
+            state: "pending",
+            attempt: 0,
+            failure_cause: null,
+            proposal: null,
+          }),
+        );
+        const job: LedgerClassifyJobProjection = {
+          job_id: hex64(`job:enqueued:${enqueued.length}`),
+          scope: request.scope === "single" ? "single" : "selection",
+          period_start: null,
+          period_end: null,
+          lane: LOCAL_LANE,
+          consent_scope: null,
+          status: "queued",
+          revision: 1,
+          created_at: at("13", enqueued.length % 60),
+          updated_at: at("13", enqueued.length % 60),
+          counts: counts(items),
+          items,
+        };
+        enqueued.push(job.job_id);
+        jobs.set(job.job_id, job);
+        emit(cueOf(job));
+        return settled(operation, {
+          profile_id: LEDGER_FIXTURE_PROFILE_ID,
+          outcome: "enqueued",
+          job,
+        });
+      }
+      if (definition === "ledger.classify.job.apply") {
+        const job = jobs.get(String(request.job_id));
+        if (!job)
+          return refused(operation, "job_not_found", "This job is not stored.");
+        if (request.expected_revision !== job.revision)
+          return refused(
+            operation,
+            "revision_conflict",
+            "The job changed since you read it; it is read again.",
+          );
+        const accepted = Array.isArray(request.accepted)
+          ? (request.accepted as JsonObject[])
+          : [];
+        const results = accepted.map(
+          (entry): LedgerClassifyJobApplyItemResult => {
+            const movement = String(entry.movement_id);
+            const item = job.items.find(
+              (found) => found.movement_id === movement,
+            );
+            const asked = applyRefusals.get(movement);
+            applyRefusals.delete(movement);
+            const refusal: LedgerClassifyJobApplyRefusal | null = !item
+              ? "not_in_job"
+              : item.state !== "proposed" || !item.proposal
+                ? "not_proposed"
+                : item.proposal.movement_revision_id !==
+                    entry.movement_revision_id
+                  ? "stale"
+                  : (asked ?? null);
+            return {
+              movement_id: movement,
+              outcome: refusal === null ? "applied" : "refused",
+              refusal,
+            };
+          },
+        );
+        const applied = new Set(
+          results
+            .filter((result) => result.outcome === "applied")
+            .map((result) => result.movement_id),
+        );
+        const next =
+          applied.size === 0
+            ? job
+            : store(job, {
+                items: job.items.map((item) =>
+                  applied.has(item.movement_id)
+                    ? { ...item, state: "applied" as const }
+                    : item,
+                ),
+              });
+        return settled(operation, {
+          profile_id: LEDGER_FIXTURE_PROFILE_ID,
+          job: next,
+          items: results,
+        });
       }
       if (definition === "ledger.classify.job.run") {
         const job = jobs.get(String(request.job_id));

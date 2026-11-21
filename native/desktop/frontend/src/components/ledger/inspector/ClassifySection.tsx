@@ -56,6 +56,7 @@ import {
   reasonDetail,
 } from "../movements/movementWords";
 import { InspectorField } from "./InspectorField";
+import { MovementJobProposal } from "./JobProposal";
 import { ModelSuggestion } from "./ModelSuggestion";
 import { decidedBy, eventName } from "./inspectorWords";
 import {
@@ -461,6 +462,8 @@ export function ClassifySection({
               : t("desktop.ledger.inspector.ratio_not_needed"))}
         </dd>
       </dl>
+
+      <MovementJobProposal row={row} locked={lock} locale={locale} say={say} />
 
       <ModelSuggestion
         port={port}

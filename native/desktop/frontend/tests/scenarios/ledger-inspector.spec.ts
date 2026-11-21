@@ -817,7 +817,7 @@ test("a review of the movement still open elsewhere is refused in words", async 
   await expect(refusal).not.toContainText("subject_busy");
 });
 
-test("asking the model for each of three movements keeps one review waiting for each, and lets go of those not approved", async ({
+test("asking the agent about three selected movements enqueues one background job over them and holds no review", async ({
   page: target,
 }) => {
   await openLedger(target);
@@ -827,50 +827,35 @@ test("asking the model for each of three movements keeps one review waiting for 
     "FIBRA HOGAR ALBOR",
   ];
   const keys = await Promise.all(texts.map((text) => keyOf(target, text)));
-  const selectThree = async () => {
-    await cellOf(rowOf(target, texts[0]!), "status").click();
-    for (const text of texts.slice(1))
-      await cellOf(rowOf(target, text), "status").click({
-        modifiers: ["Control"],
-      });
-    if (!(await panel(target).isVisible()))
-      await target.keyboard.press("Alt+KeyI");
-    await expect(panel(target).locator(".ledger-selection")).toBeVisible();
-  };
-  await selectThree();
+  await cellOf(rowOf(target, texts[0]!), "status").click();
+  for (const text of texts.slice(1))
+    await cellOf(rowOf(target, text), "status").click({
+      modifiers: ["Control"],
+    });
+  if (!(await panel(target).isVisible()))
+    await target.keyboard.press("Alt+KeyI");
   const selection = panel(target).locator(".ledger-selection");
+  await expect(selection).toBeVisible();
   await selection
     .getByRole("button", {
-      name: label("desktop.ledger.inspector.selection.ask_each"),
+      name: label("desktop.background_tasks.ask_agent"),
     })
     .click();
-  const asked = selection.locator(".ledger-asked");
-  await expect(asked).toContainText(
-    label("desktop.ledger.inspector.selection.asked", { count: 3 }),
+  await expect(selection.locator("[data-notice=changed]")).toHaveText(
+    label("desktop.background_tasks.outcome.enqueued"),
   );
-  await expect(asked.locator("li")).toHaveCount(3);
-  await expect(asked.locator("[data-code]")).toHaveCount(0);
-  expect(await waitingReviews(target)).toEqual([...keys].sort());
-  // Approve the first; closing the selection lets the other two go, and
-  // the staged approval keeps its own.
-  await asked
-    .locator("li")
-    .filter({ hasText: texts[0]! })
-    .getByRole("button", {
-      name: label("desktop.ledger.inspector.model.approve"),
-    })
-    .click();
-  expect(await trayCount(target)).toBe(1);
-  await selection
-    .getByRole("button", {
-      name: label("desktop.ledger.inspector.selection.clear"),
-    })
-    .click();
-  await expect.poll(() => waitingReviews(target)).toEqual([keys[0]]);
-  // Discarding the staged approval from the tray lets its review go too.
-  await tray(target).locator(".ledger-tray-toggle").click();
-  await tray(target).locator(".ledger-tray-discard").click();
-  await expect.poll(() => waitingReviews(target)).toEqual([]);
+  const sent = await target.evaluate(() =>
+    window.__scenarioLedger!.requests("ledger.classify.job.enqueue"),
+  );
+  expect(sent).toHaveLength(1);
+  expect(sent[0]!.scope).toBe("selection");
+  expect([...(sent[0]!.movement_ids as string[])].sort()).toEqual(
+    [...keys].sort(),
+  );
+  // The job asks in the background: no model review is held for any of
+  // them, and nothing is staged until a proposal is accepted.
+  expect(await waitingReviews(target)).toEqual([]);
+  expect(await trayCount(target)).toBe(0);
 });
 
 test("a staged approval left with the page lets its review go", async ({

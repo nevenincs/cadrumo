@@ -1342,6 +1342,22 @@ desktop:
   background_tasks:
     active: '{count} en curs'
     active_one: '{count} en curs'
+    apply_refusal:
+      business_pct_not_applicable: aquesta classificació no porta part professional;
+        esborra-la i torna a acceptar
+      business_pct_required: aquesta classificació necessita una part professional;
+        escriu-la i torna a acceptar
+      category_unavailable: la categoria proposada no està disponible; tria'n una
+        a mà
+      movement_not_found: el moviment ja no està desat
+      not_in_job: el moviment no forma part d'aquesta tasca
+      not_proposed: la tasca ja no té cap proposta per a ell; torna a llegir la tasca
+      rejected: el llibre ha rebutjat el canvi; classifica el moviment a mà
+      stale: el moviment ha canviat després de la proposta; torna a preguntar a l'agent
+    ask_agent: Pregunta a l'agent
+    ask_agent_held: Una tasca en segon pla ja està classificant aquest moviment.
+    ask_agent_none: 'No pots preguntar per cap dels moviments seleccionats: tots són
+      de només lectura o ja s''estan classificant.'
     authorise: Autoritza la lectura fora d'aquest ordinador
     call_failed: La petició no ha obtingut resposta.
     call_unknown: La petició s'ha enviat, però no se sap si ha tingut efecte.
@@ -1373,6 +1389,7 @@ desktop:
     label: Tasques en segon pla
     off_host: llegits fora d'aquest ordinador per {model}
     outcome:
+      applied: 'Aplicades: {applied}. Sense aplicar: {refused}.'
       authorised: Autoritzat. Tornant a preguntar pels moviments que ho necessitaven.
       cancelled: Cancel·lada.
       cancelling: 'Cancel·lant: primer acaba el moviment que s''està consultant.'
@@ -1381,6 +1398,16 @@ desktop:
       enqueued: En cua.
       retried: Tornant a preguntar pels moviments fallits.
     progress: '{done} de {total} consultats'
+    proposal:
+      accept: Accepta
+      apply_marked: Aplica les propostes marcades
+      discard: Descarta
+      discarded: Proposta descartada. Classifica el moviment a mà.
+      item_applied: Aplicada.
+      item_refused: 'Sense aplicar: {cause}'
+      list: 'Propostes de l''agent per revisar: {count}'
+      read_by: llegida en aquest ordinador per {model}
+      title: Proposta de l'agent
     proposed: '{count} propostes a punt'
     proposed_one: '{count} proposta a punt'
     read_failed: No s'han pogut llegir les tasques en segon pla. Es tornen a llegir
@@ -3567,10 +3594,6 @@ desktop:
       sections: Seccions del moviment
       selection:
         actions: Accions
-        approve_all: Aprova les {count} llegides
-        approved_all: 'Aprovacions encara sense desar: {count}'
-        ask_each: Pregunta al model per cada un
-        asked: 'Suggeriments per llegir: {count}'
         body: Moviments seleccionats
         classification: Classificació per a tots
         classify_first: Classifica primer
