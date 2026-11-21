@@ -19,6 +19,7 @@ from .conformance_invoice_intake_support import INVOICE_INTAKE_CONFORMANCE_FAMIL
 from .conformance_ledger_classification_job_support import LEDGER_CLASSIFICATION_JOB_CONFORMANCE_FAMILY
 from .conformance_ledger_classification_support import LEDGER_CLASSIFICATION_CONFORMANCE_FAMILY
 from .conformance_ledger_evidence_automation_support import LEDGER_EVIDENCE_AUTOMATION_CONFORMANCE_FAMILY
+from .conformance_ledger_evidence_check_support import LEDGER_EVIDENCE_CHECK_CONFORMANCE_FAMILY
 from .conformance_ledger_evidence_ingestion_support import LEDGER_EVIDENCE_INGESTION_CONFORMANCE_FAMILY
 from .conformance_ledger_evidence_page_support import LEDGER_EVIDENCE_PAGE_CONFORMANCE_FAMILY
 from .conformance_ledger_export_link_support import LEDGER_EXPORT_LINK_CONFORMANCE_FAMILY
@@ -53,6 +54,7 @@ CONFORMANCE_FAMILIES: tuple[ConformanceFamily, ...] = (
     LEDGER_CLASSIFICATION_CONFORMANCE_FAMILY,
     LEDGER_CLASSIFICATION_JOB_CONFORMANCE_FAMILY,
     LEDGER_EVIDENCE_AUTOMATION_CONFORMANCE_FAMILY,
+    LEDGER_EVIDENCE_CHECK_CONFORMANCE_FAMILY,
     LEDGER_EVIDENCE_INGESTION_CONFORMANCE_FAMILY,
     LEDGER_EVIDENCE_PAGE_CONFORMANCE_FAMILY,
     LEDGER_EXPORT_LINK_CONFORMANCE_FAMILY,

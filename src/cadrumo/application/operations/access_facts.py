@@ -64,6 +64,8 @@ _LOCAL_READS: Final = (
     "ledger.evidence.consent.list",
     "ledger.evidence.list",
     "ledger.evidence.page",
+    # Reads the picked file and probes its bytes in process; it stores nothing and sends nothing.
+    "ledger.evidence.probe",
     "ledger.evidence.query",
     "ledger.evidence.review.list",
     "ledger.evidence.review.summary",
@@ -292,6 +294,7 @@ _LOCAL_WRITES: Final = (
     "ledger.rule.remove",
     "ledger.split.manual",
     "ledger.stash",
+    "ledger.unlink",
     "ledger.update",
     "live.borrador.100.import",
     "modelo.036.record",

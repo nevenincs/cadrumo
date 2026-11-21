@@ -247,6 +247,9 @@ class BucketEventType(StrEnum):
     LEDGER_TRANSACTION_SPLIT = "ledger.transaction.split"
     LEDGER_TRANSACTION_MERGED = "ledger.transaction.merged"
     LEDGER_TRANSACTION_INVOICE_LINKED = "ledger.transaction.invoice.linked"
+    # A link removed by the person. Its own member rather than a deletion of the
+    # linked event: the history keeps that the link existed and when it ended.
+    LEDGER_TRANSACTION_INVOICE_UNLINKED = "ledger.transaction.invoice.unlinked"
     LEDGER_CATALOGUE_RESET = "ledger.catalogue.reset"
     LEDGER_SANITIZATION_COMPLETED = "ledger.sanitization.completed"
     PURCHASE_INVOICE_EVIDENCE_ATTACHED = "purchase_invoice_evidence.attached"

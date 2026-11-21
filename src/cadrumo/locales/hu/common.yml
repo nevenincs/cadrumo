@@ -3389,7 +3389,13 @@ desktop:
             dokumentum.
           label: Csatolás mint
           other: Egyéb dokumentum
+          pending: Válaszd ki, mi ez a fájl ({file}), hogy hozzáadhasd.
+          probe_refused: Ez a fájl nem adható hozzá.
+          probe_unread: Nem sikerült megállapítani, mi ez a fájl; így is választhatsz.
+          probing: A fájl beolvasása folyamatban…
+          proposal: Beszerzési számlának tűnik (elektronikus számla észlelve)
           purchase: Beszerzési számla
+          use_proposal: Ezt választom
         no_free: Nincs más dokumentum a főkönyvben
         none: Nincs dokumentum
         pick_failed: A fájlválasztó nem nyílt meg.

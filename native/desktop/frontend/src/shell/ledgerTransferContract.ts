@@ -3,6 +3,7 @@
 // `node scripts/ledger-operation-contract.mjs`; `--check` fails when it is stale.
 import type { FileToken } from "./ledger";
 import type { TransactionId } from "./ledgerClassificationContract";
+import type { OperationNextStepV1 } from "./ledgerDocumentContract";
 import type {
   ContentDigest,
   PreconditionVerdictSnapshot,
@@ -152,6 +153,7 @@ export type LedgerImportFileRefusal = {
     | "format_not_installed"
     | "statement_account_missing";
   precondition_verdict: PreconditionVerdictSnapshot | null;
+  next_step: OperationNextStepV1 | null;
 };
 
 /**

@@ -40,9 +40,20 @@ export function importOperations(
     transactionOf: (id: string) => FixtureMovement | undefined;
     /** The local AI's program is not set up. */
     readerMissing: boolean;
+    /** The step served where the reading role has no picked model, or null
+     * where a model is picked. */
+    readingStep: JsonObject | null;
   },
 ) {
-  const { now, events, bytesOf, fileOf, transactionOf, readerMissing } = tools;
+  const {
+    now,
+    events,
+    bytesOf,
+    fileOf,
+    transactionOf,
+    readerMissing,
+    readingStep,
+  } = tools;
   /** The movements already in the ledger that a statement's first rows fall
    * on the day and amount of, chosen once from October 2026. */
   let duplicateTargets: FixtureMovement[] | null = null;
@@ -158,12 +169,14 @@ export function importOperations(
         });
         return;
       }
-      // Where the local AI is not set up, a PDF statement, which only the
-      // local AI reads, is refused for it.
-      if (readerMissing && file.name.endsWith(".pdf")) {
+      // Where the local AI is not set up, or no model is picked to read
+      // with, a PDF statement, which only the local AI reads, is refused for
+      // it; a missing choice serves the step that leads to it.
+      if ((readerMissing || readingStep) && file.name.endsWith(".pdf")) {
         refused.push({
           file_name: file.name,
           reason_code: "reader_unavailable",
+          ...(readingStep && !readerMissing ? { next_step: readingStep } : {}),
         });
         return;
       }

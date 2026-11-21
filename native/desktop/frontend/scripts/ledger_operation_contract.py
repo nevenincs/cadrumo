@@ -84,6 +84,7 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.evidence.consent.list",
             "ledger.evidence.list",
             "ledger.evidence.page",
+            "ledger.evidence.probe",
             "ledger.evidence.remove",
             "ledger.evidence.update",
             "ledger.evidence.verify",
@@ -114,6 +115,7 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.restore",
             "ledger.split.manual",
             "ledger.stash",
+            "ledger.unlink",
             "ledger.update",
         ),
     ),
@@ -392,6 +394,7 @@ FIELD_TYPES: dict[str, dict[tuple[str, str], WindowType]] = {
     "document": {
         ("LedgerEvidenceAddRequest", "source_path"): _FILE_TOKEN,
         ("LedgerEvidenceBatchRequest", "sources"): _FILE_TOKEN,
+        ("LedgerEvidenceProbeRequest", "source_path"): _FILE_TOKEN,
     },
     "inventory": {
         ("InventoryEvidenceAddRequest", "source_path"): _FILE_TOKEN,

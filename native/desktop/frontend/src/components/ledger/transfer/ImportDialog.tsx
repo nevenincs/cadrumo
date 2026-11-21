@@ -429,6 +429,7 @@ export function ImportDialog({
             file: item.file,
             reason: read.refusal ?? "source_changed",
             setup: read.refusal ? read.setup : null,
+            step: read.refusal ? read.step : null,
           };
         return {
           ...item,

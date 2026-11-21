@@ -4,8 +4,9 @@ import { label } from "../support/strings";
 
 // The inspector's Documents section over the scenario's ledger: while a
 // movement has no purchase invoice, the person says what a document is
-// before it is staged, so no file becomes the purchase invoice unasked; and
-// the save's result counts and lists that change as the review did.
+// before it is staged, so no file becomes the purchase invoice unasked; a
+// file picked first waits for that choice; and the save's result counts and
+// lists that change as the review did.
 
 const page = (target: Page) => target.locator(".ledger-page");
 const grid = (target: Page) => page(target).getByRole("grid");
@@ -76,25 +77,36 @@ test("Documents asks what a document is before staging it, and never makes a fil
   const attach = section.getByRole("button", {
     name: label("desktop.ledger.inspector.documents.attach_existing"),
   });
-  // Nothing is chosen for the person: both doors wait for a kind.
+  // Nothing is chosen for the person: an existing document waits for a
+  // kind, and a file from this computer waits beside the choice.
   await expect(
     kinds(section).getByRole("radio", { checked: true }),
   ).toHaveCount(0);
-  await expect(addFile(section)).toBeDisabled();
   await expect(attach).toBeDisabled();
   await expect(section).toContainText(
     label("desktop.ledger.inspector.documents.kind.choose"),
   );
+  await addFile(section).click();
+  const pending = section.locator(".ledger-document-pending");
+  await expect(pending).toContainText("ticket-gasolinera-ruta7.jpg");
+  await expect(pending).toHaveAttribute("data-probe", "read");
+  await expect(section).not.toContainText(
+    label("desktop.ledger.inspector.documents.adding_other", {
+      file: "ticket-gasolinera-ruta7.jpg",
+    }),
+  );
 
   await kind(section, "other").click();
-  await addFile(section).click();
   await expect(section).toContainText(
     label("desktop.ledger.inspector.documents.adding_other", {
       file: "ticket-gasolinera-ruta7.jpg",
     }),
   );
+  await expect(pending).toHaveCount(0);
   // The choice served one document: the next one is asked again.
-  await expect(addFile(section)).toBeDisabled();
+  await expect(
+    kinds(section).getByRole("radio", { checked: true }),
+  ).toHaveCount(0);
 
   await kind(section, "purchase").click();
   await addFile(section).click();

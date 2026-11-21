@@ -94,6 +94,15 @@ export type DocumentShape =
   | "unknown";
 
 /**
+ * A document kind the bytes support, with the recognised shape it is derived
+ * from.
+ */
+export type EvidenceKindProposalV1 = {
+  kind: "purchase_invoice";
+  basis: DocumentShape;
+};
+
+/**
  * The document media types a page read can show: drawn as a page, or shown as
  * a structured record.
  */
@@ -356,6 +365,24 @@ export type LedgerEvidencePageRequest = {
   attachment_id?: string | null;
   page?: number;
   max_width?: number;
+};
+
+/**
+ * What the file's bytes were recognised as, and the kind they support, if any.
+ */
+export type LedgerEvidenceProbeProjection = {
+  profile_id: string;
+  document_shape: DocumentShape;
+  kind_proposal: EvidenceKindProposalV1 | null;
+};
+
+/**
+ * Private exact-profile request naming one local file the person picked.
+ */
+export type LedgerEvidenceProbeRequest = {
+  profile_id: string;
+  source_path: FileToken;
+  source_directory: string;
 };
 
 /**
@@ -707,6 +734,10 @@ export type LedgerDocumentContracts = {
     request: LedgerEvidencePageRequest;
     result: LedgerEvidencePageProjection;
   };
+  "ledger.evidence.probe": {
+    request: LedgerEvidenceProbeRequest;
+    result: LedgerEvidenceProbeProjection;
+  };
   "ledger.evidence.remove": {
     request: LedgerEvidenceRemoveRequest;
     result: LedgerEvidenceRemoveProjection;
@@ -758,6 +789,11 @@ export type LedgerEvidenceListWindowRequest = Omit<
 export type LedgerEvidencePageWindowRequest = Omit<
   LedgerEvidencePageRequest,
   "profile_id"
+>;
+
+export type LedgerEvidenceProbeWindowRequest = Omit<
+  LedgerEvidenceProbeRequest,
+  "profile_id" | "source_directory"
 >;
 
 export type LedgerEvidenceRemoveWindowRequest = Omit<

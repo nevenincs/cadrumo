@@ -34,6 +34,7 @@ from ...application.invoices.catalogue_update_operation import InvoiceUpdateResu
 from ...application.ledger.counterparty_operation import LedgerCounterpartyRequest, LedgerCounterpartyResult
 from ...application.ledger.link_operation import LedgerLinkOperationResult, LedgerLinkRequest
 from ...application.ledger.operator_iva_contracts import LedgerOperatorIvaRequest, LedgerOperatorIvaResult
+from ...application.ledger.unlink_operation import LedgerUnlinkRequest, LedgerUnlinkResult
 from ...application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ...application.modelo.reconciliation_import_operation import (
     MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
@@ -172,6 +173,73 @@ def test_ledger_link_records_the_session_label_for_an_automation(
         assert result.projection is not None
         assert result.projection.actor == recorded
         assert _event_actors(profile_id, result.projection.bucket_event_ids) == {recorded}
+
+
+@_FRONTENDS
+def test_ledger_unlink_records_the_session_label_for_an_automation(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection,
+    recorded: str,
+) -> None:
+    """The unlink's result and its audit event name the derived label, not the typed one."""
+    link_host = _session_host("ledger.link", frontend)
+    unlink_host = _session_host("ledger.unlink", frontend)
+
+    def session_host(identity: OperationIdentity) -> OperationExecutionCaller:
+        return (link_host if identity.definition_id == "ledger.link" else unlink_host)(identity)
+
+    with conformance.conformance_operation_runtime(
+        tmp_path / "runtime",
+        cleanup=conformance.OperationRuntimeCloseWitness(),
+        execution_caller_reader=session_host,
+    ) as (driver, registry, profile_id):
+        link_definition = {item.definition_id: item for item in registry.definitions}["ledger.link"]
+        preparation = conformance.prepare_family_case(
+            link_definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
+        )
+        assert preparation is not None
+        assert isinstance(preparation.request, LedgerLinkRequest)
+        linked_submission, linked = asyncio.run(
+            driver.run(definition_id="ledger.link", subject_ref=preparation.subject_ref, payload=preparation.request)
+        )
+        assert linked.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        link = conformance.resolve_result_projection(
+            driver,
+            registry,
+            definition_id="ledger.link",
+            operation_id=linked_submission.receipt.operation_id,
+            terminal_revision=linked.projection.revision,
+            projection_type=LedgerLinkOperationResult,
+        )
+        assert link.projection is not None
+        request = LedgerUnlinkRequest(
+            profile_id=profile_id,
+            transaction_id=link.projection.transaction_id,
+            invoice_id=link.invoice_id,
+            expected_modified_at=link.projection.transaction.modified_at,
+            expected_invoice_linked_transaction_ids=(link.projection.transaction_id,),
+            actor=_TYPED_ACTOR,
+        )
+
+        submitted, observed = asyncio.run(
+            driver.run(definition_id="ledger.unlink", subject_ref=preparation.subject_ref, payload=request)
+        )
+
+        assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        result = conformance.resolve_result_projection(
+            driver,
+            registry,
+            definition_id="ledger.unlink",
+            operation_id=submitted.receipt.operation_id,
+            terminal_revision=observed.projection.revision,
+            projection_type=LedgerUnlinkResult,
+        )
+        assert result.outcome == "unlinked"
+        assert result.transaction is not None
+        assert result.transaction.invoice_id is None
+        assert result.actor == recorded
+        assert _event_actors(profile_id, result.bucket_event_ids) == {recorded}
 
 
 @_FRONTENDS

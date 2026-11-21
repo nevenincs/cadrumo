@@ -15,7 +15,7 @@ import type { LedgerImportResultProjection } from "../../../shell/ledgerTransfer
 import type { InvoiceKind } from "../../../shell/ledgerInvoiceContract";
 import type { Translate } from "../../../shell/strings";
 import { formatSize } from "../../../shared/numbers";
-import { SetupOffer } from "../../setup/SetupOffer";
+import { ReaderRemedy } from "./ReaderRemedy";
 import { FileRow } from "./ImportFileRow";
 import {
   NO_ACCOUNT,
@@ -170,9 +170,18 @@ export function ImportBankPreview({
                 refused
               >
                 <span className="text-sm">
-                  {importRefusal(t, preview.reason, preview.setup ?? null)}
+                  {importRefusal(
+                    t,
+                    preview.reason,
+                    preview.setup ?? null,
+                    preview.step ?? null,
+                  )}
                 </span>
-                <SetupOffer action={preview.setup ?? null} className="mt-1" />
+                <ReaderRemedy
+                  setup={preview.setup ?? null}
+                  step={preview.step ?? null}
+                  className="mt-1"
+                />
               </FileRow>
             );
           if (preview.kind === "failed")

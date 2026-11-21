@@ -3336,7 +3336,13 @@ desktop:
             document.
           label: Attach as
           other: Other document
+          pending: Choose what {file} is to add it.
+          probe_refused: This file cannot be added.
+          probe_unread: Could not read what this file is; you can still choose.
+          probing: Reading what this file is…
+          proposal: Looks like a purchase invoice (electronic invoice detected)
           purchase: Purchase invoice
+          use_proposal: Use this
         no_free: No other document in the ledger
         none: No documents
         pick_failed: The file dialog did not open.

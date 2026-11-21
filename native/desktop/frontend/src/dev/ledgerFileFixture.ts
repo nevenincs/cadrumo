@@ -37,6 +37,36 @@ export const PICKABLE: Record<Exclude<FilePurpose, "export">, string[]> = {
     "factura-estudio-lumen.xml",
   ],
 };
+/** What the add's bytes probe finds in each made-up document: a structured
+ * e-invoice, a PDF with a text layer, or an image. A name not listed is read
+ * by its kind. */
+export const DOCUMENT_SHAPES: Readonly<Record<string, string>> = {
+  "ticket-gasolinera-ruta7.jpg": "image",
+  "factura-papeleria-trazo.pdf": "pdf_text_layer",
+  "factura-estudio-lumen.xml": "xml_ubl",
+};
+/** The shapes that carry one structured invoice, which the probe offers as
+ * a purchase invoice. */
+export const STRUCTURED_SHAPES: ReadonlySet<string> = new Set([
+  "xml_cii",
+  "xml_ubl",
+  "xml_facturae",
+  "pdf_embedded_xml",
+]);
+/** What the add's probe finds in the made-up document `name`, and the
+ * purchase invoice a structured e-invoice is offered as. */
+export function probedDocument(name: string) {
+  const kind = name.split(".").pop()?.toLowerCase() ?? "";
+  const shape =
+    DOCUMENT_SHAPES[name] ??
+    (kind === "xml" ? "xml_ubl" : kind === "pdf" ? "pdf_text_layer" : "image");
+  return {
+    document_shape: shape,
+    kind_proposal: STRUCTURED_SHAPES.has(shape)
+      ? { kind: "purchase_invoice", basis: shape }
+      : null,
+  };
+}
 /** What each made-up statement holds: the own account its rows name, if
  * any, how many rows it has, how many fall on the day and amount of a
  * movement already in the ledger, and whether its dates leave a gap. A name

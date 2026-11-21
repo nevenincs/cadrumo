@@ -46,6 +46,7 @@ LEDGER_HISTORY_EVENT_TYPES: Final[tuple[BucketEventType, ...]] = (
     BucketEventType.LEDGER_TRANSACTION_SPLIT,
     BucketEventType.LEDGER_TRANSACTION_MERGED,
     BucketEventType.LEDGER_TRANSACTION_INVOICE_LINKED,
+    BucketEventType.LEDGER_TRANSACTION_INVOICE_UNLINKED,
 )
 
 #: Evidence events anchored on their own object, naming the transaction only in

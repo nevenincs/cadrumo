@@ -55,6 +55,27 @@ def link_invoice(catalogue: TransactionCatalogue, transaction_id: str, invoice_i
     return _replace_transaction(catalogue, updated_transaction)
 
 
+def unlink_invoice(catalogue: TransactionCatalogue, transaction_id: str) -> TransactionCatalogue:
+    """Return a new catalogue with one transaction's invoice reference cleared.
+
+    Args:
+        catalogue: Source catalogue.
+        transaction_id: Stable transaction identifier to update.
+
+    Returns:
+        A fresh immutable :class:`TransactionCatalogue` whose transaction names no
+        invoice. A transaction that names none is returned value-equal.
+    """
+    transaction = _require_transaction(catalogue, transaction_id)
+    if transaction.invoice_id is None:
+        return catalogue
+    updated_transaction = _validate_transaction_update(
+        {**transaction.model_dump(mode="python"), "invoice_id": None},
+        context=f"invalid invoice unlink for transaction: {transaction_id}",
+    )
+    return _replace_transaction(catalogue, updated_transaction)
+
+
 def set_classification(
     catalogue: TransactionCatalogue,
     transaction_id: str,

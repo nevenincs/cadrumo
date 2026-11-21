@@ -50,8 +50,10 @@ from ....application.ledger.import_operation import (
 from ....application.ledger.statement_reading import bind_statement_reader_factory
 from ....application.operations.error_detail import served_words_language
 from ....application.operations.frontend_requests import OperationObservationSuccessV1
+from ....application.operations.next_step import OperationChooseReadingModelStepV1
 from ....application.operations.registry import OperationRegistry
 from ....application.operator_actions.served_actions import serve_precondition_verdict
+from ....core.i18n.render import tr
 from ....core.model_roles import ModelRole
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -158,6 +160,14 @@ def _assert_names_no_action(refusal: LedgerImportFileRefusal, role: ModelRole) -
     _assert_carries_the_refusal(refusal, role, ModelRunRefusalCode.MODEL_NOT_INSTALLED)
     assert refusal.precondition_verdict is not None
     assert refusal.precondition_verdict.to_verdict().action is None
+    assert refusal.next_step is None, "only a role with no picked model is led to the model choice"
+
+
+def _assert_leads_to_the_model_choice(refusal: LedgerImportFileRefusal) -> None:
+    assert isinstance(refusal.next_step, OperationChooseReadingModelStepV1)
+    assert refusal.next_step.words == tr(
+        "application.ledger.evidence.next_step.choose_reading_model", locale=served_words_language().value
+    )
 
 
 def test_a_folder_imports_its_readable_statement_and_refuses_the_export_it_needs_a_model_for(
@@ -245,9 +255,38 @@ def test_an_export_whose_role_has_no_selection_settles_with_its_typed_refusal(
     verdict = refusal.precondition_verdict.to_verdict()
     assert verdict.action is None, "no selection action is registered, so none is named"
     assert verdict.evidence[0].values["role_selection_required"] is True
+    _assert_leads_to_the_model_choice(refusal)
+    assert service.runs == []
+
+
+def test_a_pdf_statement_whose_reader_role_has_no_selection_leads_to_the_model_choice(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    del operation
+    with (
+        _agent_refusing(ModelRunRefusalCode.NO_SELECTION) as service,
+        _production_readers(),
+        conformance.conformance_operation_runtime(
+            tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
+        ) as (driver, registry, profile_id),
+    ):
+        effect, result = _settle_import(
+            driver, registry, profile_id, files=(_PDF_STATEMENT,), provider=LedgerProviderID.PDF
+        )
+
+    assert effect is OperationEffect.NONE
+    (refusal,) = result.refused_files
+    _assert_carries_the_refusal(refusal, ModelRole.TEXT_EXTRACTION, ModelRunRefusalCode.NO_SELECTION)
+    _assert_leads_to_the_model_choice(refusal)
     assert service.runs == []
 
 
 def test_a_file_refusal_carries_a_verdict_exactly_when_its_reader_was_unavailable() -> None:
     with pytest.raises(ValueError, match="exactly when its reader was unavailable"):
         LedgerImportFileRefusal(file_name="statement.csv", reason_code="reader_unavailable")
+    with pytest.raises(ValueError, match="serves a step only when its reader was unavailable"):
+        LedgerImportFileRefusal(
+            file_name="statement.csv",
+            reason_code="transaction_validation",
+            next_step=OperationChooseReadingModelStepV1(words="Choose a model"),
+        )

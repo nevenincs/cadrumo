@@ -58,6 +58,7 @@ import {
   type Spec,
 } from "./ledgerEvidenceSeed";
 import { InvoiceRequestInvalid, InvoiceStopped } from "./ledgerInvoiceFixture";
+import { probedDocument } from "./ledgerFileFixture";
 import { fixtureDay, fixtureInstant } from "@/dev/fixtureDates";
 
 declare global {
@@ -159,6 +160,11 @@ const noReadingModel = (language: string) => {
     step: { kind: "choose_reading_model" as const, words: steps[served]! },
   };
 };
+
+/** The step the backend serves where a reading role has no picked model, in
+ * `language`: what a statement only the local AI reads is refused with. */
+export const readingModelStep = (language: string) =>
+  noReadingModel(language).step;
 
 /** A label reading that stood because no model is picked to fill the rest. */
 const withoutModel = (
@@ -660,6 +666,12 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
         : { kind: "refused", evidence_record_present: false },
     };
   }
+  /** What a picked file is before it is added, as the add's probe finds it. */
+  const probe = (request: JsonObject): JsonObject => ({
+    profile_id: profileId,
+    ...probedDocument(tools.fileOf(request.source_path).name),
+  });
+
   function add(request: JsonObject): JsonObject {
     const file = tools.fileOf(request.source_path);
     const key = text(request.idempotency_key);
@@ -1457,6 +1469,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       "ledger.evidence.attachment_queue": attachmentQueue,
       "ledger.evidence.attachment_view": attachmentView,
       "ledger.evidence.page": page,
+      "ledger.evidence.probe": probe,
       "ledger.evidence.consent.list": consentList,
       "ledger.check": check,
     } satisfies Record<string, (request: JsonObject) => JsonObject>,
