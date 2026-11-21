@@ -7,6 +7,11 @@ writes these itself, so their schema is the host's: ``src-tauri/src/shell/backgr
 which a host unit test keeps equal to the serde types that serialize them. Every field the host's schema
 requires is always written; one it does not require may be left out of the wire.
 
+The schema's ``x-cadrumo-port`` section is the host's port over those commands, which the same test
+keeps equal to the commands it registers: the port's name and, per method, the command it calls,
+whether the answer comes on a channel or as one read's result, and the schema root it carries. The
+module's port type is written from it, so the window implements the host's port, not a copy of it.
+
 ``scripts/background-tasks-contract.mjs`` drives this module and formats what it writes; run that, not
 this. This module writes one JSON object to standard output: the repository's TypeScript module bound
 as ``bound``, which the driver refuses a longer formatted module by, and the unformatted source as
@@ -17,10 +22,11 @@ from __future__ import annotations
 
 import json
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Final, cast
 
-from dev.fixture_projections.typescript_wire_types import TypeScriptWriter, reach, refs, ts_name
+from dev.fixture_projections.typescript_wire_types import TypeScriptWriter, jsdoc, reach, refs, ts_name
 from dev.quality.typescript_module_size import MAX_PHYSICAL_LINES
 
 SCHEMA: Final = Path(__file__).resolve().parents[2] / "src-tauri" / "src" / "shell" / "background_tasks.schema.json"
@@ -49,20 +55,52 @@ def nullable_unions(node: object) -> object:
     return {key: value for key, value in rest.items() if key in ("description", "title")} | {"anyOf": members}
 
 
-def host_definitions() -> tuple[list[str], dict[str, Any]]:
-    """The schema's roots and its definitions, each list of types written as a union."""
+def host_definitions() -> tuple[list[str], dict[str, Any], dict[str, Any]]:
+    """The schema's roots, its definitions (each list of types written as a union) and its port section."""
     document = json.loads(SCHEMA.read_text(encoding="utf-8"))
     defs = cast(dict[str, Any], nullable_unions(document["$defs"]))
     named = {name for node in defs.values() for name in refs(node)}
     unknown = sorted(named - set(defs))
     if unknown:
         raise SystemExit(f"the host's schema names definitions it does not define: {unknown}")
-    return list(document["roots"]), defs
+    port = cast(dict[str, Any], document["x-cadrumo-port"])
+    answered = [method["root"] for method in port["methods"]]
+    if answered != list(document["roots"]):
+        raise SystemExit(f"the host's port answers {answered}, but the schema's roots are {document['roots']}")
+    return list(document["roots"]), defs, port
+
+
+_PORT_KINDS: Final = frozenset({"channel", "read"})
+"""How a port method receives its answer: subscribed to a channel, or as one read's result."""
+
+
+def port_definition(port: Mapping[str, Any], defs: Mapping[str, Any], writer: TypeScriptWriter) -> str:
+    """The exported port type over the host's commands, one method per entry of the schema's port section.
+
+    A ``channel`` method subscribes a listener to the messages the host sends and resolves to the function
+    that ends the subscription; a ``read`` method resolves to the command's result.
+    """
+    lines = jsdoc(port.get("description"), indent="")
+    lines.append(f"export type {port['name']} = {{")
+    for method in port["methods"]:
+        name, kind, root = method["method"], method["kind"], method["root"]
+        if kind not in _PORT_KINDS:
+            raise SystemExit(f"the host's port method {name} has an unknown kind: {kind}")
+        if root not in defs:
+            raise SystemExit(f"the host's port method {name} answers {root}, which the schema does not define")
+        answer = writer.type_of({"$ref": f"#/$defs/{root}"})
+        lines.extend(jsdoc(method.get("description"), indent="  "))
+        if kind == "channel":
+            lines.append(f"  {name}(listener: (message: {answer}) => void): Promise<() => void>;")
+        else:
+            lines.append(f"  {name}(): Promise<{answer}>;")
+    lines.append("};")
+    return "\n".join(lines)
 
 
 def render() -> str:
     """The generated background-task contract module, before the frontend's formatter writes it."""
-    roots, defs = host_definitions()
+    roots, defs, port = host_definitions()
     omittable = {
         name: frozenset(node["properties"]) - frozenset(node.get("required", ()))
         for name, node in defs.items()
@@ -70,7 +108,8 @@ def render() -> str:
     }
     writer = TypeScriptWriter(defs, sent_only=set(), omittable=omittable)
     names = sorted((name for name in reach(defs, roots) if not writer.inlined(name)), key=ts_name)
-    return _HEADER + "\n" + "\n\n".join(writer.definition(name) for name in names) + "\n"
+    definitions = [*(writer.definition(name) for name in names), port_definition(port, defs, writer)]
+    return _HEADER + "\n" + "\n\n".join(definitions) + "\n"
 
 
 def main() -> None:

@@ -248,11 +248,44 @@ fn schema() -> String {
     generator.subschema_for::<BackgroundTaskCue>();
     generator.subschema_for::<BackgroundTaskRevisions>();
     let definitions = generator.take_definitions(true);
+    let roots: Vec<&str> = PORT.methods.iter().map(|method| method.root).collect();
+    for root in &roots {
+        assert!(
+            definitions.contains_key(*root),
+            "the port answers {root}, which the schema does not define"
+        );
+    }
     let document = json!({
-        "roots": ["BackgroundTaskCue", "BackgroundTaskRevisions"],
+        "roots": roots,
         "$defs": definitions,
+        "x-cadrumo-port": PORT,
     });
     serde_json::to_string_pretty(&document).unwrap() + "\n"
+}
+
+#[test]
+fn every_command_the_port_calls_is_registered() {
+    let registered = commands::<tauri::test::MockRuntime>().names();
+    for method in PORT.methods {
+        for command in std::iter::once(method.command).chain(method.release) {
+            assert!(
+                registered.contains(&command),
+                "the port's {} calls {command}, which is not registered",
+                method.method
+            );
+        }
+    }
+    let called: Vec<&str> = PORT
+        .methods
+        .iter()
+        .flat_map(|method| std::iter::once(method.command).chain(method.release))
+        .collect();
+    for command in registered {
+        assert!(
+            called.contains(command),
+            "{command} is registered but the port calls it from no method"
+        );
+    }
 }
 
 #[test]
