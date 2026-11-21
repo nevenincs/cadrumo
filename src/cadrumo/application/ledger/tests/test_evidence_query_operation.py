@@ -328,6 +328,10 @@ def test_the_query_result_declares_a_file_name_and_no_path_field() -> None:
         "notes",
         "created_at",
         "updated_at",
+        "readability",
+        "document_shape",
+        "unreadable_cause",
+        "readability_checked_at",
     }
 
 

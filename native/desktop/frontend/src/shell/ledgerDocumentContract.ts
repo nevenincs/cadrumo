@@ -75,6 +75,25 @@ export type ConsentedDispatchProjection = {
 };
 
 /**
+ * What a resolved evidence document actually is, by content.
+ *
+ * Members are ordered from most to least exactly readable. The three `XML_*`
+ * members and `PDF_EMBEDDED_XML` all carry a structured record; everything
+ * below them requires text extraction or a model.
+ */
+export type DocumentShape =
+  | "xml_cii"
+  | "xml_ubl"
+  | "xml_facturae"
+  | "pdf_embedded_xml"
+  | "xml_aeat_sii"
+  | "xml_aeat_verifactu"
+  | "pdf_text_layer"
+  | "pdf_scan"
+  | "image"
+  | "unknown";
+
+/**
  * The document media types a page read can show: drawn as a page, or shown as
  * a structured record.
  */
@@ -127,6 +146,13 @@ export type EvidenceStructuredLineV1 = {
  */
 export type EvidenceStructuredValueKind =
   "text" | "date" | "amount" | "rate_percent" | "quantity";
+
+/**
+ * Why a check found a record's bytes unreadable, in the read path's refusal
+ * vocabulary.
+ */
+export type EvidenceUnreadableCause =
+  "ledger.evidence.bytes_readable" | "ledger.evidence.document_bytes_available";
 
 /**
  * Why the model did not fill the fields a partial label reading left unread.
@@ -350,6 +376,10 @@ export type LedgerEvidenceRecordProjection = {
   notes: string;
   created_at: string;
   updated_at: string;
+  readability: "readable" | "unreadable" | "unchecked";
+  document_shape: DocumentShape | null;
+  unreadable_cause: EvidenceUnreadableCause | null;
+  readability_checked_at: string | null;
   source_path: string;
 };
 
@@ -422,6 +452,39 @@ export type LedgerEvidenceUpdateRequest = {
     | "iva_amount"
     | "notes"
   )[];
+};
+
+/**
+ * The record as kept after the check, carrying its readability finding.
+ */
+export type LedgerEvidenceVerifyChecked = {
+  kind: "checked";
+  record: LedgerEvidenceRecordProjection;
+  bucket_event_ids: string[];
+};
+
+/**
+ * Exact-profile checked record or the finite missing-reference refusal.
+ */
+export type LedgerEvidenceVerifyProjection = {
+  profile_id: string;
+  outcome: LedgerEvidenceVerifyChecked | LedgerEvidenceVerifyRefusal;
+};
+
+/**
+ * Only the static missing-reference fact crosses the refusal detail door.
+ */
+export type LedgerEvidenceVerifyRefusal = {
+  kind: "refused";
+  evidence_record_present: false;
+};
+
+/**
+ * Private exact-profile request to check one evidence record's stored bytes.
+ */
+export type LedgerEvidenceVerifyRequest = {
+  profile_id: string;
+  evidence_id: string;
 };
 
 /**
@@ -652,6 +715,10 @@ export type LedgerDocumentContracts = {
     request: LedgerEvidenceUpdateRequest;
     result: LedgerEvidenceUpdateProjection;
   };
+  "ledger.evidence.verify": {
+    request: LedgerEvidenceVerifyRequest;
+    result: LedgerEvidenceVerifyProjection;
+  };
   "ledger.evidence.view": {
     request: LedgerEvidenceViewRequest;
     result: LedgerEvidenceViewProjection;
@@ -700,6 +767,11 @@ export type LedgerEvidenceRemoveWindowRequest = Omit<
 
 export type LedgerEvidenceUpdateWindowRequest = Omit<
   LedgerEvidenceUpdateRequest,
+  "profile_id"
+>;
+
+export type LedgerEvidenceVerifyWindowRequest = Omit<
+  LedgerEvidenceVerifyRequest,
   "profile_id"
 >;
 

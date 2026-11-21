@@ -42,7 +42,7 @@ if TYPE_CHECKING:
     from ..application.diagnostics_ports import DiagnosticsPorts
     from ..application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
     from ..application.ledger.column_roles import ColumnRoleMappingPort, ColumnRoleReaderUnavailable
-    from ..application.ledger.evidence_ports import LedgerEvidencePorts
+    from ..application.ledger.evidence_ports import LedgerEvidencePorts, LedgerEvidenceVerifyPorts
     from ..application.ledger.statement_reading import StatementReaderPort
     from ..application.live.expedientes_ports import ExpedientesPorts
     from ..application.modelo.amendment_action_ports import AmendmentActionPorts
@@ -502,6 +502,31 @@ def build_ledger_evidence_ports(*, bucket_id: str) -> LedgerEvidencePorts:
         attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=objects)),
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
         document_shape_probe=probe_document_shape,
+    )
+
+
+def build_ledger_evidence_verify_ports(*, bucket_id: str) -> LedgerEvidenceVerifyPorts:
+    """Compose the evidence bundle and a byte reader over the same profile custody."""
+    from ..adapters.inbound.einvoice.shape import probe_document_shape
+    from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ..adapters.persistence.profile.purchase_invoice_evidence import (
+        LedgerEvidenceAttachmentIngestor,
+        LedgerEvidenceRepositoryAdapter,
+    )
+    from ..adapters.persistence.storage.attachment import AttachmentStore
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ..application.ledger.evidence_ports import LedgerEvidencePorts, LedgerEvidenceVerifyPorts
+
+    objects = secure_object_repository_for_bucket(bucket_id.strip())
+    store = AttachmentStore(objects=objects)
+    return LedgerEvidenceVerifyPorts(
+        evidence=LedgerEvidencePorts(
+            evidence_repository=LedgerEvidenceRepositoryAdapter(objects=objects),
+            attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=store),
+            bucket_event_repository=BucketEventHistoryRepository(objects=objects),
+            document_shape_probe=probe_document_shape,
+        ),
+        attachment_store=store,
     )
 
 

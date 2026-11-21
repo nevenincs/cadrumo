@@ -426,6 +426,14 @@
         "path": []
       }
     },
+    "ledger.evidence.verify": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.evidence.view": {
       "may_write": false,
       "review": false,
@@ -923,6 +931,14 @@
       }
     },
     "ledger.prorrata.settle_sector": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.purchase_evidence.release": {
       "may_write": true,
       "review": false,
       "subject": {
