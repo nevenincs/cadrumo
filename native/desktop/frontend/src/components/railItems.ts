@@ -8,6 +8,7 @@ import type { AccountPhase } from "../shell/signIn";
 import type { Translate } from "../shell/strings";
 import { accountLabel } from "./accountWords";
 import type { IconName } from "@/components/ui/icon";
+import type { ShownMenu } from "../shell/useWindowOverlays";
 import type { OpenMenu } from "./ContextMenu";
 import type { RailItem } from "./Rail";
 
@@ -48,6 +49,7 @@ export function railItems({
   showSede,
   aeatMenu,
   openMenu,
+  shownMenu,
   driveUrl,
   errorCount,
   provisioning,
@@ -86,6 +88,7 @@ export function railItems({
   showSede: () => void;
   aeatMenu: RailItem["onMenu"];
   openMenu: OpenMenu;
+  shownMenu: ShownMenu | null;
   driveUrl: string | null;
   errorCount: number;
   provisioning: ProvisioningStore;
@@ -238,6 +241,14 @@ export function railItems({
             label: t("desktop.rail.more_views"),
             menu: true,
             pressed: moreViews.some((view) => view.shown),
+            // Open while the menu shown is this button's own.
+            expanded:
+              shownMenu !== null &&
+              shownMenu.items.length === moreViews.length &&
+              shownMenu.items.every(
+                (item, index) =>
+                  "id" in item && item.id === moreViews[index]?.id,
+              ),
             onClick: (at) =>
               openMenu(
                 moreViews.map((view) => ({
