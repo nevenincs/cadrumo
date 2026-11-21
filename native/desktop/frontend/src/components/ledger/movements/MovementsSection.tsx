@@ -25,6 +25,8 @@ import {
 } from "../../ContextMenu";
 import type { Action } from "../../../shell/actions";
 import { useBackgroundTasks } from "../../../shell/backgroundTasks";
+import { jobNoticeText } from "../../shell/backgroundTaskWords";
+import { lockText } from "../editing/editingWords";
 import type { LedgerView } from "../../../shell/layout";
 import type { LedgerPort } from "../../../shell/ledger";
 import {
@@ -358,7 +360,8 @@ export function MovementsSection({
     [rows],
   );
   // What the background classification jobs show on each movement.
-  const jobRows = useBackgroundTasks().rows;
+  const backgroundTasks = useBackgroundTasks();
+  const jobRows = backgroundTasks.rows;
   const marks = useMemo(
     () => statusMarks(rows, duplicates, jobRows),
     [rows, duplicates, jobRows],
@@ -907,6 +910,30 @@ export function MovementsSection({
     column: string | null;
   } | null>(null);
   const overviewRow = overview ? byId.get(overview.key) : undefined;
+  /** Why the agent cannot be asked about one stored movement, or null
+   * where it can: it takes no changes, or a job is classifying it. */
+  const askRefusal = (id: string): string | null => {
+    const state = byId.get(id)?.transaction.lifecycle_state;
+    if (state === undefined) return t("desktop.ledger.apply.reading");
+    if (!takesChanges(state))
+      return lockText(t, { kind: "not_active", lifecycle: state });
+    return jobRows.get(id)?.kind === "classifying"
+      ? t("desktop.background_tasks.ask_agent_held")
+      : null;
+  };
+  /** Asks the agent about the movement, or about every selected movement
+   * it can be asked about where the movement is part of the selection. */
+  const askAgent = (key: string) => {
+    const several = selected.has(key) && selected.size > 1;
+    const ids = several
+      ? [...selected].filter((id) => askRefusal(id) === null)
+      : [key];
+    void backgroundTasks
+      .enqueue(several ? "selection" : "single", ids)
+      .then((notice) => {
+        if (notice) setToast(jobNoticeText(t, notice));
+      });
+  };
   const openMenu = (key: string, column: string | null, at: MenuAnchor) => {
     const group = groups?.find((entry) => entry.key === key);
     const ids = group ? group.rows.map(idOf) : null;
@@ -924,6 +951,10 @@ export function MovementsSection({
         duplicate: duplicates.has(key),
         makeRule: !!onMakeRule,
         overview: byId.has(key),
+        askAgent:
+          backgroundTasks.offered && byId.has(key)
+            ? { refusal: askRefusal(key) }
+            : null,
         classifyEnabled: (kind) =>
           classifyAvailability(
             kind,
@@ -935,6 +966,7 @@ export function MovementsSection({
         if (chosen === "revert.cell" && column)
           edit.revertCell(key, column as ColumnId);
         else if (chosen === "revert.movement") edit.revertMovement(key);
+        else if (chosen === "ask_agent") askAgent(key);
         else if (chosen === "overview")
           // Opened once the menu has handed the focus back to the grid.
           window.requestAnimationFrame(() => setOverview({ key, column }));

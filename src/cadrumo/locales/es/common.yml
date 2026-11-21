@@ -1351,6 +1351,22 @@ desktop:
   background_tasks:
     active: '{count} en curso'
     active_one: '{count} en curso'
+    apply_refusal:
+      business_pct_not_applicable: esta clasificación no lleva parte profesional;
+        bórrala y vuelve a aceptar
+      business_pct_required: esta clasificación necesita una parte profesional; escríbela
+        y vuelve a aceptar
+      category_unavailable: la categoría propuesta no está disponible; elige una a
+        mano
+      movement_not_found: el movimiento ya no está guardado
+      not_in_job: el movimiento no forma parte de esta tarea
+      not_proposed: la tarea ya no tiene una propuesta para él; vuelve a leer la tarea
+      rejected: el libro rechazó el cambio; clasifica el movimiento a mano
+      stale: el movimiento cambió después de la propuesta; vuelve a preguntar al agente
+    ask_agent: Preguntar al agente
+    ask_agent_held: Una tarea en segundo plano ya está clasificando este movimiento.
+    ask_agent_none: 'No puedes preguntar por ninguno de los movimientos seleccionados:
+      todos son de solo lectura o ya se están clasificando.'
     authorise: Autorizar la lectura fuera de este ordenador
     call_failed: La petición no ha obtenido respuesta.
     call_unknown: La petición se ha enviado, pero no se sabe si ha surtido efecto.
@@ -1382,6 +1398,7 @@ desktop:
     label: Tareas en segundo plano
     off_host: leídos fuera de este ordenador por {model}
     outcome:
+      applied: 'Aplicadas: {applied}. Sin aplicar: {refused}.'
       authorised: Autorizado. Volviendo a preguntar por los movimientos que lo necesitaban.
       cancelled: Cancelada.
       cancelling: 'Cancelando: primero termina el movimiento que se está consultando.'
@@ -1390,6 +1407,16 @@ desktop:
       enqueued: En cola.
       retried: Volviendo a preguntar por los movimientos fallidos.
     progress: '{done} de {total} consultados'
+    proposal:
+      accept: Aceptar
+      apply_marked: Aplicar las propuestas marcadas
+      discard: Descartar
+      discarded: Propuesta descartada. Clasifica el movimiento a mano.
+      item_applied: Aplicada.
+      item_refused: 'Sin aplicar: {cause}'
+      list: 'Propuestas del agente por revisar: {count}'
+      read_by: leída en este ordenador por {model}
+      title: Propuesta del agente
     proposed: '{count} propuestas listas'
     proposed_one: '{count} propuesta lista'
     read_failed: No se han podido leer las tareas en segundo plano. Se vuelven a leer
@@ -3572,10 +3599,6 @@ desktop:
       sections: Secciones del movimiento
       selection:
         actions: Acciones
-        approve_all: Aprobar las {count} leídas
-        approved_all: 'Aprobaciones aún sin guardar: {count}'
-        ask_each: Preguntar al modelo por cada uno
-        asked: 'Sugerencias para leer: {count}'
         body: Movimientos seleccionados
         classification: Clasificación para todos
         classify_first: Clasificar primero

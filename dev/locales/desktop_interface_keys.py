@@ -19,11 +19,23 @@ DESKTOP_AGENT_ENGINE_HEALTH_KEYS: Final[frozenset[str]] = frozenset(
 
 #: The words of the window's background tasks: the title-bar indicator, each
 #: job's progress, its failures by their served cause, its actions and their
-#: outcomes, and the state a Ledger row shows of the job that holds it.
+#: outcomes, the state a Ledger row shows of the job that holds it, the ask
+#: for a new job, and the review of a job's proposals.
 DESKTOP_BACKGROUND_TASK_KEYS: Final[frozenset[str]] = frozenset(
     {
         "desktop.background_tasks.active",
         "desktop.background_tasks.active_one",
+        "desktop.background_tasks.apply_refusal.business_pct_not_applicable",
+        "desktop.background_tasks.apply_refusal.business_pct_required",
+        "desktop.background_tasks.apply_refusal.category_unavailable",
+        "desktop.background_tasks.apply_refusal.movement_not_found",
+        "desktop.background_tasks.apply_refusal.not_in_job",
+        "desktop.background_tasks.apply_refusal.not_proposed",
+        "desktop.background_tasks.apply_refusal.rejected",
+        "desktop.background_tasks.apply_refusal.stale",
+        "desktop.background_tasks.ask_agent",
+        "desktop.background_tasks.ask_agent_held",
+        "desktop.background_tasks.ask_agent_none",
         "desktop.background_tasks.authorise",
         "desktop.background_tasks.call_failed",
         "desktop.background_tasks.call_unknown",
@@ -52,6 +64,7 @@ DESKTOP_BACKGROUND_TASK_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.background_tasks.job_title",
         "desktop.background_tasks.label",
         "desktop.background_tasks.off_host",
+        "desktop.background_tasks.outcome.applied",
         "desktop.background_tasks.outcome.authorised",
         "desktop.background_tasks.outcome.cancelled",
         "desktop.background_tasks.outcome.cancelling",
@@ -60,6 +73,15 @@ DESKTOP_BACKGROUND_TASK_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.background_tasks.outcome.enqueued",
         "desktop.background_tasks.outcome.retried",
         "desktop.background_tasks.progress",
+        "desktop.background_tasks.proposal.accept",
+        "desktop.background_tasks.proposal.apply_marked",
+        "desktop.background_tasks.proposal.discard",
+        "desktop.background_tasks.proposal.discarded",
+        "desktop.background_tasks.proposal.item_applied",
+        "desktop.background_tasks.proposal.item_refused",
+        "desktop.background_tasks.proposal.list",
+        "desktop.background_tasks.proposal.read_by",
+        "desktop.background_tasks.proposal.title",
         "desktop.background_tasks.proposed",
         "desktop.background_tasks.proposed_one",
         "desktop.background_tasks.read_failed",

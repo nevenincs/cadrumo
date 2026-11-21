@@ -21,6 +21,9 @@ export type MenuAction = {
   label: string;
   /** A disabled item is shown but can never be chosen. */
   enabled: boolean;
+  /** What the item says under its label: for a disabled one, why it
+   * cannot be chosen. */
+  description?: string;
   icon?: IconName;
   /** The chord that does the same, taken from the declaration that binds it,
    * the registry's or the page's own, so that a shortcut shown is one a key
@@ -101,9 +104,23 @@ export function ContextMenu({
               key={item.id}
               icon={item.icon}
               disabled={!item.enabled}
+              title={item.description}
+              aria-description={item.description}
               onSelect={() => choose(item.id)}
             >
-              {item.label}
+              {item.description ? (
+                <span className="grid min-w-0">
+                  <span>{item.label}</span>
+                  <span
+                    data-description
+                    className="text-xs whitespace-normal text-muted-foreground"
+                  >
+                    {item.description}
+                  </span>
+                </span>
+              ) : (
+                item.label
+              )}
               {item.chord && <DropdownMenuShortcut chord={item.chord} />}
             </DropdownMenuItem>
           ),
