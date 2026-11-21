@@ -158,6 +158,7 @@ errors:
     casilla_id: casilla
     casilla_ids: casillas
     casillas: casillas
+    cause: causa
     count: recuento
     currency: moneda
     detail: detalle
@@ -1470,6 +1471,7 @@ errors:
     ledger_summary_period_without_span: Este periodo no abarca fechas del calendario,
       así que el registro no puede totalizar sus movimientos. Los periodos de pago
       fraccionado como 1P son plazos de pago. Usa un trimestre, un mes o 0A.
+    ledger_unlink: 'No puedes quitar el vínculo de la factura: {cause}.'
     locale_catalogue_capture_not_current: Esta captura del catálogo de idiomas ya
       no está vigente.
     m145_communication_record_ambiguous: El prefijo del id de registro de comunicación

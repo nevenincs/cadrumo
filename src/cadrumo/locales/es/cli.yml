@@ -4220,6 +4220,23 @@ cli:
     track:
       help: Mostrar el historial de eventos de un movimiento de tus registros
       transaction_id_help: Id del movimiento a inspeccionar
+    unlink:
+      actor_help: Tu etiqueta, registrada en los eventos del bucket.
+      errors:
+        finalized_calculation_reference: Un cálculo finalizado cita este movimiento,
+          y el vínculo forma parte de lo que selló. Reabre o rectifica primero el
+          cálculo finalizado.
+        invoice_changed: Los vínculos de la factura cambiaron después de que la abrieras.
+          Reabre la factura para ver sus vínculos actuales.
+        link_not_found: Ni el movimiento ni la factura se citan entre sí. Reabre el
+          movimiento para ver su vínculo actual.
+        transaction_changed: El movimiento cambió después de que lo abrieras. Reabre
+          el movimiento para ver su vínculo actual.
+      help: Quita el vínculo de un movimiento con una factura; el historial conserva
+        ambos
+      id_help: Id del movimiento (SHA-256 o prefijo inequívoco).
+      invoice_id_help: Id de factura (o prefijo inequívoco) que se desvinculará de
+        la transacción.
     update:
       account_help: Vincula la entrada a esta cuenta bancaria propia, por su id (p.
         ej. acc-01).

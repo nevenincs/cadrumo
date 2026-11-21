@@ -56,6 +56,7 @@ ERROR_CONTEXT_LABEL_KEYS: Final[tuple[str, ...]] = (
     "casilla_id",
     "casilla_ids",
     "casillas",
+    "cause",
     "count",
     "currency",
     "detail",

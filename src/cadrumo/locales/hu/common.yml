@@ -1758,7 +1758,7 @@ desktop:
         detach: Leválasztás
         exclude: Kizárás
         iva_derive: IVA kiszámítása · {category}
-        link: Összekapcsolás · végleges
+        link: Összekapcsolás
         m210: 210-es modell jövedelme
         merge: Részek egyesítése
         remove: Eltávolítás
@@ -1767,6 +1767,7 @@ desktop:
         split: Felosztás
         stash: Félretevés
         suggestion: Modell-jóváhagyás
+        unlink: Számlakapcsolat eltávolítása
       approvals: Modell-jóváhagyások
       approve: általad jóváhagyva
       back: Vissza
@@ -1824,9 +1825,11 @@ desktop:
         currency_differs: 'Eltérő pénznem: {movement} ↔ {invoice}'
         differ: Tudom, hogy eltérnek
         linked_elsewhere: 'A számla már kapcsolódik · tételek: {count}'
-        sure: Összekapcsolás · végleges
         unjudged: A főkönyv még nem vetette össze ezt a kapcsolatot
         unread: A számla nem olvasható
+      links: Számlakapcsolatok
+      links_note: Egy kapcsolatot később a tétel Számla részében eltávolíthatsz; az
+        előzmények mindkettőt megőrzik.
       mine: Az enyém marad
       mismatch:
         income_category: Kiadási kategória bevételen · {count}
@@ -1862,9 +1865,6 @@ desktop:
       part_refused: 'Nincs mentve: a könyv mentés közben megváltozott. Ebből a részből
         semmi sem mentődött.'
       part_unknown: Ezt a részt egészében nem tudtuk megerősíteni. A mentés szünetel.
-      permanent: Végleges
-      permanent_note: Egy kapcsolat később sem itt, sem máshol nem szüntethető meg.
-        Jelöld be mindegyiket, amelyikben biztos vagy.
       progress: Mentés állapota
       progress_count: '{done} / {total} mentés'
       read_failed: 'A könyvet nem sikerült frissíteni: semmi sem lett mentve'
@@ -1899,7 +1899,8 @@ desktop:
         unchanged: Változatlan
         unknown: Ismeretlen eredmény
       theirs: A mentettet veszem
-      tick_links: Mentéshez jelöld be az összes végleges kapcsolatot.
+      tick_differ: Mentéshez jelöld be azokat a kapcsolatokat, amelyek két oldala
+        eltér.
       title: Áttekintés és mentés · {count}
       together: 'Együtt mentve: {count}'
       unknown_note: Nem tudtuk megerősíteni, hogy mentődött, és magunktól nem próbáljuk
@@ -2658,8 +2659,7 @@ desktop:
       keep: Megtartás
       left_out: 'Kihagyva, nem dokumentum: {count}'
       link_offer: Összekapcsolod a tételével?
-      link_offer_note: '{description} · {date} · {amount} kiegyenlíti. A kapcsolás
-        mentés után végleges.'
+      link_offer_note: '{description} · {date} · {amount} kiegyenlíti.'
       list_hide: Olvasatok összecsukása
       list_show: Olvasatok megjelenítése
       media:
@@ -3464,6 +3464,7 @@ desktop:
         restored: Visszaállítva
         split: Felosztva
         stashed: Félretéve
+        unlinked: Számla leválasztva
         updated: Frissítve
       file_row: '{file}, {row}. sor'
       fix:
@@ -3499,8 +3500,8 @@ desktop:
         group_settles: Ezt az összeget rendezi
         issued: Kiállított
         issued_on: Kiállítás dátuma
-        link: Összekapcsolás · végleges
-        link_staged: Az összekapcsolás még nincs mentve · mentés után végleges
+        link: Összekapcsolás
+        link_staged: Az összekapcsolás még nincs mentve
         linked: Tételek
         linked_count: '{count} összekapcsolva'
         none: A katalógusban egy számla sem rendezi ezt az összeget.
@@ -3509,15 +3510,29 @@ desktop:
         partial_hint: Általában egy tétel egy számlát rendez. Csak részfizetésnél
           kapcsold össze mindkettőt.
         payment: Fizetés
-        permanent: 'Az összekapcsolás végleges: itt nem bontható.'
         pick: Másik számla összekapcsolása
         received: Beérkezett
+        removable: Egy kapcsolatot később itt eltávolíthatsz; az előzmények mindkettőt
+          megőrzik.
         rival: '{movement} ugyanúgy rendezi.'
         show_other: A másik mutatása
-        staged: 'Összekapcsolás ezzel: {invoice} · még nincs mentve, mentés után végleges'
+        staged: 'Összekapcsolás ezzel: {invoice} · még nincs mentve'
         staged_for: 'A változtatásaid között szerepel ehhez: {movement}'
         taken: '{invoice} már szerepel a változtatásaid között ehhez: {movement}'
         transfer: A saját számláid közötti átvezetésnek nincs számlája.
+        unlink: Kapcsolat eltávolítása
+        unlink_cause:
+          finalized_calculation_reference: Egy lezárt bevallás használja ezt a tételt
+            és a kapcsolatát.
+          invoice_changed: A számla kapcsolatai megváltoztak, mióta megnyitottad.
+          link_not_found: A tétel és a számla már nincs összekapcsolva.
+          transaction_changed: A tétel megváltozott, mióta megnyitottad.
+        unlink_next_step:
+          reopen_finalized_calculation: Előbb nyisd meg újra az ezt használó bevallást.
+          reopen_invoice: Nyisd meg újra a számlát, és próbáld újra.
+          reopen_transaction: Nyisd meg újra a tételt, és próbáld újra.
+        unlink_pending: 'A kapcsolat ezzel: {invoice} mentéskor megszűnik'
+        unlink_staged: A kapcsolat eltávolítása még nincs mentve
       issue_count: '{count} javítandó'
       last_saved: Utoljára mentve
       lifecycle:
@@ -3857,7 +3872,8 @@ desktop:
         nyomtatott értéket adod meg.
       linked: Kapcsolt tételek
       linked_count: 'Kapcsolt tételek: {count}'
-      links_permanent: 'A kapcsolat végleges: nem távolítható el.'
+      links_removable: Kapcsolat eltávolításához nyisd meg a tétel Számla részét;
+        az előzmények mindkettőt megőrzik.
       met: teljesül
       needs: Minden számlához kell
       new: Új számla
@@ -4022,8 +4038,8 @@ desktop:
       empty: Nincs párosítandó tétel
       empty_waiting: 'Nincs javaslat · számlára váró mozgások: {count}'
       invoice_line: '{number} · {counterparty} · {date} · {payment}'
-      link: Összekapcsolás · végleges
-      link_named: '{number} összekapcsolása ezzel: {description} · végleges'
+      link: Összekapcsolás
+      link_named: '{number} összekapcsolása ezzel: {description}'
       no_repair:
         cites_another: A tétel másik számlára hivatkozik
         invoice_missing: A számla nincs a katalógusban
@@ -4034,13 +4050,13 @@ desktop:
       partial: Általában egy tétel egy számlát egyenlít ki. Csak részfizetésnél kapcsold
         össze mindkettőt.
       read_failed: Nem sikerült beolvasni
-      repair: Javítás · végleges
+      repair: Javítás
       repair_staged: A javítás még nincs mentve
       settles: 'Kiegyenlít: {amount}'
       settles_withheld: 'Kiegyenlít: {amount} ({total} − {withheld} retención)'
       show_other: 'Megjelenítés: {description}'
       staged: 'Még nem mentett összekapcsolások: {count}'
-      staged_toast: Az összekapcsolás még nincs mentve · mentés után végleges
+      staged_toast: Az összekapcsolás még nincs mentve
       suggestions: Javasolt párok
       title: Párosítandó
     maximize: Napló teljes méretben

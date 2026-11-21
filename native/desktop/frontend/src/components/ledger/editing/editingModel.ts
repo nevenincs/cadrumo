@@ -934,18 +934,18 @@ export function askedConflicts(
   return asked;
 }
 
-// ---- Permanent links -----------------------------------------------------------
+// ---- Invoice links ---------------------------------------------------------------
 
 /** Why a staged link may join the wrong pair, as the ledger states it: the
- * review asks for a second tick for any of them. */
+ * review asks for a tick for any of them. */
 export type LinkMismatch = LedgerInvoiceMatchMismatch;
 
 // ---- Ticks and outcomes ------------------------------------------------------
 
-export type LinkTicks = Record<string, { sure: boolean; differ: boolean }>;
+export type LinkTicks = Record<string, { differ: boolean }>;
 
-/** Whether every permanent link to be sent is ticked, and a second time
- * where its two sides differ. */
+/** Whether every link to be sent has been judged by the ledger, and is
+ * ticked where its two sides differ. */
 export function linksReady(
   links: readonly {
     id: string;
@@ -957,7 +957,6 @@ export function linksReady(
   return links.every(
     (link) =>
       link.mismatches !== null &&
-      ticks[link.id]?.sure === true &&
       (link.mismatches.length === 0 || ticks[link.id]?.differ === true),
   );
 }

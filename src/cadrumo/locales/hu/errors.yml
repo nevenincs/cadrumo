@@ -159,6 +159,7 @@ errors:
     casilla_id: rovat
     casilla_ids: rovatok
     casillas: rovatok
+    cause: ok
     count: darabszám
     currency: pénznem
     detail: részlet
@@ -1383,6 +1384,7 @@ errors:
       ezért a nyilvántartás nem tudja összesíteni a tételeit. Az olyan részletfizetési
       időszakok, mint az 1P, fizetési események. Használj negyedévet, hónapot vagy
       0A-t.
+    ledger_unlink: 'Nem tudod levenni a számla kapcsolatát: {cause}.'
     locale_catalogue_capture_not_current: Ez a nyelvi katalógus rögzítés már nem érvényes.
     m145_communication_record_ambiguous: A Modelo 145 kommunikációs rekord azonosítójának
       előtagja több rekorddal egyezik.

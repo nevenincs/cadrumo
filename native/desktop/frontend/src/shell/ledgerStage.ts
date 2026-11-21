@@ -77,6 +77,17 @@ export type StagedAction =
   | { id: string; kind: LifecycleAction; transactionId: string; reason: string }
   | { id: string; kind: "link"; transactionId: string; invoiceId: string }
   | {
+      /** The removal of the movement's link to an invoice, sent with the
+       * movement's modification time and the invoice's linked movements as
+       * the person saw them, so a record changed since is refused. */
+      id: string;
+      kind: "unlink";
+      transactionId: string;
+      invoiceId: string;
+      expectedModifiedAt: string;
+      expectedLinkedTransactionIds: string[];
+    }
+  | {
       id: string;
       kind: "attach";
       transactionId: string;

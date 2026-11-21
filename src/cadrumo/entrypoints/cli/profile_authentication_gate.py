@@ -213,6 +213,7 @@ PROFILE_CONNECTION_KEYS = frozenset(
         "app_ledger_import",
         "app_ledger_export",
         "app_ledger_link",
+        "app_ledger_unlink",
         "app_ledger_add",
         "app_ledger_allocate",
         "app_ledger_classify",

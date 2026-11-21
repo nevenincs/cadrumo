@@ -22,6 +22,7 @@ import { useStrings, type Translate } from "../../../shell/strings";
 import type { ChangeGroup } from "./editingModel";
 import { fieldName, valueText } from "./editingWords";
 import { titleOf } from "./reviewLabels";
+import { unlinkRefusalOf, unlinkRefusalText } from "../matching/unlinkWords";
 import { WindowedList } from "./WindowedList";
 import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
 
@@ -100,6 +101,9 @@ function refusalWords(
 ): string {
   if (outcome.reason === "precondition_failed")
     return t("desktop.ledger.apply.refusal.changed_elsewhere");
+  // A refused link removal serves its cause and next step as tokens.
+  const unlink = unlinkRefusalOf(outcome.detail);
+  if (unlink) return unlinkRefusalText(t, unlink);
   return outcome.messages[0] ?? t("desktop.ledger.apply.refusal.other");
 }
 

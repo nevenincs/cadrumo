@@ -4165,6 +4165,23 @@ cli:
     track:
       help: Egyetlen tranzakció eseménytörténetének megjelenítése a nyilvántartásban.
       transaction_id_help: A vizsgálandó tranzakció azonosítója.
+    unlink:
+      actor_help: A címkéd, amelyet a bucket-eseményekhez rögzítünk.
+      errors:
+        finalized_calculation_reference: Egy lezárt számítás hivatkozik erre a tételre,
+          és a kapcsolat része annak, amit lezárt. Előbb nyisd meg vagy módosítsd
+          a lezárt számítást.
+        invoice_changed: A számla kapcsolatai megváltoztak, mióta megnyitottad. Nyisd
+          meg újra a számlát, hogy lásd a jelenlegi kapcsolatait.
+        link_not_found: A tétel és a számla már nem hivatkozik egymásra. Nyisd meg
+          újra a tételt, hogy lásd a jelenlegi kapcsolatát.
+        transaction_changed: A tétel megváltozott, mióta megnyitottad. Nyisd meg újra
+          a tételt, hogy lásd a jelenlegi kapcsolatát.
+      help: Eltávolítja a tétel és a számla kapcsolatát; az előzmények mindkettőt
+        megőrzik
+      id_help: Tranzakcióazonosító (SHA-256 vagy egyértelmű előtag).
+      invoice_id_help: A tranzakcióról leválasztandó számla azonosítója (vagy egyértelmű
+        előtag).
     update:
       account_help: A bejegyzés hozzárendelése ehhez a saját bankszámlához, azonosítója
         szerint (pl. acc-01).

@@ -979,6 +979,11 @@ export function resolveUnknown(
               row.transaction.invoice_id === action.invoiceId,
             );
             break;
+          case "unlink":
+            resolution = verdict(
+              row.transaction.invoice_id !== action.invoiceId,
+            );
+            break;
           case "attach":
             resolution = verdict(
               action.attachmentIds.every((id) =>

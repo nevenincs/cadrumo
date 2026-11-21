@@ -3930,6 +3930,21 @@ cli:
     track:
       help: Show the event history for one transaction in your records
       transaction_id_help: Id of the transaction to inspect
+    unlink:
+      actor_help: Your label, recorded on bucket events.
+      errors:
+        finalized_calculation_reference: A finalized calculation cites this movement,
+          and the link is part of what it sealed. Reopen or amend the finalized calculation
+          first.
+        invoice_changed: The invoice's links changed after you opened it. Reopen the
+          invoice to see its current links.
+        link_not_found: Neither the movement nor the invoice cites the other anymore.
+          Reopen the movement to see its current link.
+        transaction_changed: The movement changed after you opened it. Reopen the
+          movement to see its current link.
+      help: Remove a movement's link to an invoice; the history keeps both
+      id_help: Transaction id (SHA-256 or unambiguous prefix).
+      invoice_id_help: Invoice id (or unambiguous prefix) to unlink from the transaction.
     update:
       account_help: Bind the entry to this own bank account, by its id (e.g. acc-01).
       accrual_date_help: New date the income or expense accrues for Renta under LIRPF

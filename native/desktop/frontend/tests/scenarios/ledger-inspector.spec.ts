@@ -13,7 +13,7 @@ const scenarioYear = fixtureYear;
 // inspector of one movement, with its jump index, sections and actions,
 // and of several, with fields set for all. Every change it makes is staged
 // into the page's tray; the model's suggestion is answered bound to the
-// review the page read, a link is permanent and guarded, a split's last
+// review the page read, a link is guarded and can be removed later, a split's last
 // part takes the remainder, and a removal is previewed by the ledger first.
 
 const engine = readFileSync(
@@ -877,7 +877,7 @@ test("a staged approval left with the page lets its review go", async ({
   await expect.poll(() => waitingReviews(target)).toEqual([]);
 });
 
-test("a link is permanent, and an invoice staged for one movement is held for every other", async ({
+test("a link can be removed later, and an invoice staged for one movement is held for every other", async ({
   page: target,
 }) => {
   await openLedger(target);
@@ -889,7 +889,7 @@ test("a link is permanent, and an invoice staged for one movement is held for ev
   );
   const section = body(target).locator("[data-section-body=invoice]");
   await expect(section).toContainText(
-    label("desktop.ledger.inspector.invoice.permanent"),
+    label("desktop.ledger.inspector.invoice.removable"),
   );
   await section
     .getByRole("button", {

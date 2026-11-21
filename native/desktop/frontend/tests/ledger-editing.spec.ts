@@ -526,7 +526,7 @@ test("a change elsewhere asks only when it touched a field the person changed", 
   ).toEqual([]);
 });
 
-test("a permanent link needs a second tick for what the ledger found against it, and waits for the ledger to say", () => {
+test("a link whose two sides differ needs a tick for what the ledger found against it, and waits for the ledger to say", () => {
   const none = { difference: null, movement: null, invoice: null, count: null };
   const found: LedgerInvoiceMatchMismatch[] = [
     { ...none, kind: "amount", difference: { decimal: "1476.20" } },
@@ -538,24 +538,16 @@ test("a permanent link needs a second tick for what the ledger found against it,
   ];
   // With no judgement yet nothing is ready, however many ticks are given.
   expect(
-    linksReady([{ id: "u", mismatches: null }], {
-      u: { sure: true, differ: true },
-    }),
+    linksReady([{ id: "u", mismatches: null }], { u: { differ: true } }),
   ).toBe(false);
   expect(
-    linksReady([{ id: "f", mismatches: foreign }], {
-      f: { sure: true, differ: false },
-    }),
+    linksReady([{ id: "f", mismatches: foreign }], { f: { differ: false } }),
   ).toBe(false);
   const links = [{ id: "l", mismatches: found }];
   expect(linksReady(links, {})).toBe(false);
-  expect(linksReady(links, { l: { sure: true, differ: false } })).toBe(false);
-  expect(linksReady(links, { l: { sure: true, differ: true } })).toBe(true);
-  expect(
-    linksReady([{ id: "m", mismatches: [] }], {
-      m: { sure: true, differ: false },
-    }),
-  ).toBe(true);
+  expect(linksReady(links, { l: { differ: true } })).toBe(true);
+  // A link whose two sides agree asks for nothing: it can be removed later.
+  expect(linksReady([{ id: "m", mismatches: [] }], {})).toBe(true);
 });
 
 test("a Mixed model approval without a share is held, never saved so", () => {
