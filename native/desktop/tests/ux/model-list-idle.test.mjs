@@ -6,9 +6,11 @@
 //
 // MLI-01 signs in and finds the setup summary naming the local AI's state and
 // its next step (the program ready and a model to download).
-// MLI-02 puts the setup panel away, leaves the window alone for the idle
-// window, and asserts that the host logged no WARNING or ERROR line in it and
-// that the window asked for the local model list at most once.
+// MLI-02 puts the setup panel away and waits until the window has made no
+// agent call for QUIET_MS (the panels' own opening reads, at most SETTLE_MS),
+// then leaves the window alone for the idle window and asserts that the host
+// logged no WARNING or ERROR line in it and that the window did not ask for
+// the local model list again.
 //
 // Environment: as ./silent-controls.test.mjs (CADRUMO_PERSONA_WORLD,
 // CADRUMO_PERSONA_HOST, CADRUMO_CMAKE_BINARY_DIR, CADRUMO_BUILD_CONFIG,
@@ -44,6 +46,8 @@ import { callsSince, pageTimeInvokes } from "./ux-calls.mjs";
 import { dismissSetup } from "./ux-nav.mjs";
 
 const IDLE_MS = Number(process.env.CADRUMO_MODEL_LIST_IDLE_MS ?? 300_000);
+const QUIET_MS = 20_000;
+const SETTLE_MS = 120_000;
 const LOG_READ_LIMIT = 4 << 20;
 /** A log line at WARNING or above, in the host's text or JSON records. */
 const RAISED =
@@ -151,9 +155,36 @@ test("MLI-01 the setup summary names the local AI's state and its next step", as
   );
 });
 
-test("MLI-02 the idle window logs no WARNING or ERROR and reads the local models at most once", async () => {
+/** The agent calls made since `since`, with when each started. */
+async function agentCalls(since) {
+  return (await callsSince(since))
+    .filter((call) => call.cmd.startsWith("agent_"))
+    .map((call) => `${call.cmd}@${call.startMs}`);
+}
+
+test("MLI-02 the idle window logs no WARNING or ERROR and reads no model list again", async () => {
   await dismissSetup();
-  await sleep(2_000);
+  const closed = Date.now();
+  let settled = null;
+  while (Date.now() - closed < SETTLE_MS) {
+    await sleep(1_000);
+    const last = (await callsSince(closed))
+      .filter((call) => call.cmd.startsWith("agent_"))
+      .reduce(
+        (latest, call) => Math.max(latest, closed + call.startMs),
+        closed,
+      );
+    if (Date.now() - last >= QUIET_MS) {
+      settled = Date.now();
+      break;
+    }
+  }
+  const opening = await agentCalls(closed);
+  assert.ok(
+    settled,
+    `the window kept asking for agent data for ${SETTLE_MS} ms after the setup panel closed: ${opening.join(", ")}`,
+  );
+  const visibility = await exec(() => document.visibilityState);
   const fromLogs = logSizes();
   const since = Date.now();
   await sleep(IDLE_MS);
@@ -169,6 +200,9 @@ test("MLI-02 the idle window logs no WARNING or ERROR and reads the local models
     raised,
     raised_since_launch: sinceLaunch,
     local_model_reads: localModels.length,
+    model_list_starts: await agentCalls(since),
+    opening_agent_calls: opening,
+    visibility,
     calls_by_command: Object.fromEntries(
       [...new Set(calls.map((call) => call.cmd))].map((command) => [
         command,
@@ -181,8 +215,9 @@ test("MLI-02 the idle window logs no WARNING or ERROR and reads the local models
     [],
     `${raised.length} WARNING/ERROR line(s) while idle`,
   );
-  assert.ok(
-    localModels.length <= 1,
+  assert.equal(
+    localModels.length,
+    0,
     `the local model list was read ${localModels.length} times while idle`,
   );
 });

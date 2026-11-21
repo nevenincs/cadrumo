@@ -861,12 +861,13 @@ function pageRailPages() {
   return out;
 }
 
-/** The id the Settings rail button is reached by, given one if it has none. */
+/** The id and name the Settings rail button is reached by, given an id if
+ * it has none. */
 function pageSettingsRail() {
   const el = document.querySelector('button[data-rail="settings"]');
   if (!el) return null;
   if (!el.id) el.id = "silent-rail-settings";
-  return el.id;
+  return { id: el.id, name: (el.getAttribute("aria-label") ?? "").trim() };
 }
 
 function pageRailPressed(id) {
@@ -1550,8 +1551,10 @@ function writeReport() {
 
 const UIA_INVOKE = fileURLToPath(new URL("./uia-invoke.ps1", import.meta.url));
 
-/** Invoke the control whose AutomationId is `id` in the host's window. */
-function uiaInvoke(id) {
+/** Activate the control whose AutomationId is `id` in the host's window;
+ * an id the page gave the control after UI Automation first read it does not
+ * reach the tree, so the one control named `name` is taken then. */
+function uiaInvoke(id, name) {
   const run = spawnSync(
     "powershell.exe",
     [
@@ -1565,6 +1568,7 @@ function uiaInvoke(id) {
       String(win.pid),
       "-AutomationId",
       id,
+      ...(name ? ["-Name", name] : []),
     ],
     { encoding: "utf8", timeout: 30_000, windowsHide: true },
   );
@@ -1588,7 +1592,7 @@ test(
         const once = `${opener.pane}|${opener.name}|${opener.popup}`;
         if (seen.has(once)) continue;
         seen.add(once);
-        const reply = uiaInvoke(opener.id);
+        const reply = uiaInvoke(opener.id, opener.name);
         const opened =
           reply.invoked &&
           !!(await waitFor(() => exec(pageOpenerExpanded, opener.id), {
@@ -1635,12 +1639,12 @@ test(
       // The first press after a dialog was put away is the one that was lost.
       const settings = await exec(pageSettingsRail);
       if (settings) {
-        uiaInvoke(settings);
+        uiaInvoke(settings.id, settings.name);
         await sleep(300);
         await closeLayers();
         await settled();
       }
-      const reply = uiaInvoke(page.id);
+      const reply = uiaInvoke(page.id, page.name);
       const shown =
         reply.invoked &&
         !!(await waitFor(() => exec(pageRailPressed, page.id), {
