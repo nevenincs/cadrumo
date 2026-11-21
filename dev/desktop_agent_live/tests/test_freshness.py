@@ -34,6 +34,12 @@ class _Stage:
         self.package = self.build / "stage" / "Debug" / "app"
         self.records: dict[str, dict[str, Any]] = {}
         self.edited: dict[str, list[str]] = {}
+        # Both hosts built from one tree: the inputs they share hold the same content.
+        shared = {"native/desktop/src-tauri/src/agent/local_models.rs": "a" * 64, "@toolchain": "b" * 64}
+        self.inputs: dict[str, dict[str, str]] = {
+            "desktop": {**shared, "@embeds/desktop": "c" * 64},
+            "desktop-test-host": {**shared, "@embeds/test-host": "d" * 64},
+        }
         for index, component in enumerate(STAGED_COMPONENTS):
             artifact = _write(self.package / f"{component}.bin", at=_BUILT)
             artifact.write_bytes(component.encode())
@@ -56,6 +62,7 @@ class _Stage:
             "Debug",
             read_record=lambda _build, component: self.records.get(component),
             changed_inputs=lambda _build, component: self.edited.get(component, []),
+            read_inputs=lambda _build, component: self.inputs.get(component),
         )
 
 
@@ -117,3 +124,20 @@ def test_the_test_host_is_judged_by_its_own_record(tmp_path: Path) -> None:
     assert stage.verdict().refusals == [
         "desktop-test-host has no build record; rebuild with: just build-native Debug desktop-packaged-host"
     ]
+
+
+def test_a_test_host_built_from_other_sources_than_the_staged_desktop_is_refused(tmp_path: Path) -> None:
+    # The staged desktop was rebuilt from a newer host source; the test host was left from before.
+    stage = _Stage(tmp_path)
+    stage.inputs["desktop"]["native/desktop/src-tauri/src/agent/local_models.rs"] = "e" * 64
+    assert stage.verdict().refusals == [
+        "desktop-test-host was built from other sources than the staged desktop (1 shared inputs differ, "
+        "first native/desktop/src-tauri/src/agent/local_models.rs); "
+        "rebuild with: just build-native Debug desktop-packaged-host"
+    ]
+
+
+def test_inputs_only_one_host_lists_do_not_refuse(tmp_path: Path) -> None:
+    stage = _Stage(tmp_path)
+    stage.inputs["desktop-test-host"]["native/desktop/src-tauri/src/automation.rs"] = "f" * 64
+    assert stage.verdict().refusals == []
