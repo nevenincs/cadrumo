@@ -18,7 +18,7 @@
 // Usage:
 //   node native/desktop/tests/ux/run-silent-controls.mjs --build <CMake binary dir>
 //     [--config Release] [--persona <id>] [--report <file.md>] [--only <rail>[,...]]
-//     [--assistive]   (only the popup openers' UI Automation Invoke test)
+//     [--assistive]   (only the UI Automation activation tests: popup openers, rail pages)
 //     [--staged-package <app dir an earlier stage of --build mirrored>
 //      --strings-build <this checkout's CMake binary dir holding its chrome strings>]
 //
