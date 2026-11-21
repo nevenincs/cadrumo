@@ -32,6 +32,8 @@ export type TaskKindRow = {
 export type TaskModelOption = {
   id: string;
   name: string;
+  /** False where the catalog says this computer does not hold the model. */
+  installed: boolean;
   /** The effort levels a background run on the lane can ask this model for,
    * lowest first; empty where the lane takes no effort or the model states
    * none. */
@@ -42,6 +44,9 @@ export type TaskModelOption = {
 export type TaskLaneOption = {
   /** The catalogue lane id the service stores. */
   id: string;
+  /** The provider and the way into it, as the model picker keys them. */
+  provider: string;
+  way: string;
   name: string;
   models: TaskModelOption[];
 };
@@ -76,8 +81,9 @@ const takesEffort = (lane: ServedProviderLane) =>
  * The lanes a task kind can run on, each with the models it offers: a lane
  * the running agent serves that lists its models and takes a background
  * request's text. A lane on this computer offers the models on its list, as
- * the model picker does; a lane the person writes models for lists none, so
- * it is not one. While the agent starts, nothing can be chosen.
+ * the model picker does. A lane can offer none yet (signed out, its list
+ * empty): it is still served, so the settings can say what it waits on, but
+ * nothing on it can be chosen. While the agent starts, nothing is served.
  */
 export function taskLanes(
   answer: ServedCatalogAnswer,
@@ -107,15 +113,25 @@ export function taskLanes(
         ? laneModelList(catalogued, addedTo(lists, id)).map(({ model }) => ({
             id: model.id,
             name: model.name,
+            installed: model.installed !== false,
             efforts: effortsOf(model.id),
           }))
         : []
       : served.map((entry) => ({
           id: entry.model,
           name: entry.display_name,
+          installed: entry.installed !== false,
           efforts: effortsOf(entry.model),
         }));
-    return models.length > 0 ? [{ id, name: lane.display_name, models }] : [];
+    return [
+      {
+        id,
+        provider: lane.provider_id,
+        way: `${lane.provider_id}/${lane.transport}`,
+        name: lane.display_name,
+        models,
+      },
+    ];
   });
 }
 

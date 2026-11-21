@@ -20,6 +20,7 @@ import { heldModel, startingSelection } from "../../shell/agentCatalog";
 import { described, labelled } from "../../shell/compose";
 import { connectionWords } from "../../shell/providerConnection";
 import { useStrings } from "../../shell/strings";
+import { ModelListNotice } from "./ModelListNotice";
 import { ProviderSelect } from "./ProviderSelect";
 import type { AgentSelection, ModelOption, ProviderOption } from "./types";
 
@@ -47,6 +48,8 @@ export function AgentSettingsPopover({
   onDownloadModels,
   onRetryCatalog,
   onSignIn,
+  listsFailure = null,
+  onRetryLists,
 }: {
   providers: readonly ProviderOption[];
   /** Each way's models, by way id. */
@@ -73,6 +76,12 @@ export function AgentSettingsPopover({
   onRetryCatalog?: () => void;
   /** Opens the settings where a lane that is signed out is signed in. */
   onSignIn?: () => void;
+  /** Why the person's model lists could not be read: until they are, a lane
+   * on this computer offers what the catalog lists rather than the person's
+   * list, which is said here. Null once they are read. */
+  listsFailure?: string | null;
+  /** Reads the person's model lists again. */
+  onRetryLists?: () => void;
 }) {
   const t = useStrings();
   const [open, setOpen] = useState(false);
@@ -277,6 +286,14 @@ export function AgentSettingsPopover({
           )}
           {model?.description && (
             <FieldDescription>{model.description}</FieldDescription>
+          )}
+          {listsFailure !== null && (
+            <ModelListNotice
+              code={listsFailure}
+              fault={t("desktop.providers.local_models_failed")}
+              onRetry={onRetryLists}
+              slot="picker-lists"
+            />
           )}
           {download && (
             <div className="grid justify-items-start gap-1.5">

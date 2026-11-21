@@ -79,6 +79,7 @@ export function AgentSettingsPanel({
   engines,
   localProviderId,
   catalogStatus,
+  catalogFailure = null,
   catalog,
   onRetryCatalog,
   onLocalModelRemoved,
@@ -110,6 +111,8 @@ export function AgentSettingsPanel({
   /** The provider lane on this computer, the local AI. */
   localProviderId: string | undefined;
   catalogStatus: "ready" | "loading" | "failed";
+  /** The refusal the catalogue read answered, while it is failed. */
+  catalogFailure?: string | null;
   /** The catalogue the agent serves, once read: the kinds of task it runs
    * and what each can run with. */
   catalog: ServedCatalogAnswer | null;
@@ -118,6 +121,26 @@ export function AgentSettingsPanel({
 }) {
   const t = useStrings();
   const searchId = useId();
+  const panel = useRef<HTMLDivElement>(null);
+  // The way on for a lane a task cannot run on yet is in that provider's
+  // own settings above: they are opened and brought into view.
+  const showProvider = (provider: string) => {
+    const group = [
+      ...(panel.current?.querySelectorAll<HTMLElement>("li[data-provider]") ??
+        []),
+    ].find((held) => held.dataset.provider === provider);
+    if (!group) return;
+    for (
+      let open = group.closest("details");
+      open;
+      open = open.parentElement?.closest("details") ?? null
+    )
+      open.open = true;
+    const details = group.querySelector("details");
+    if (details) details.open = true;
+    group.scrollIntoView({ block: "nearest" });
+    group.querySelector<HTMLElement>("summary")?.focus();
+  };
   const query = settingsQuery.trim().toLocaleLowerCase();
   const titleMatches = (title: string) =>
     Boolean(query) && title.toLocaleLowerCase().includes(query);
@@ -144,7 +167,7 @@ export function AgentSettingsPanel({
       accessMatches ||
       access.read.kind === "loading");
   return (
-    <div className="grid gap-6 p-3">
+    <div ref={panel} className="grid gap-6 p-3">
       <Field>
         <FieldLabel htmlFor={searchId}>
           {t("desktop.settings.agent_search")}
@@ -200,6 +223,7 @@ export function AgentSettingsPanel({
                             key={lane.id}
                             lanes={listed ? [listed] : []}
                             status={catalogStatus}
+                            failure={catalogFailure}
                             onRetry={onRetryCatalog}
                             host={localModelHost}
                             locale={locale}
@@ -210,6 +234,7 @@ export function AgentSettingsPanel({
                             key={lane.id}
                             lane={listed}
                             laneStatus={catalogStatus}
+                            laneFailure={catalogFailure}
                             onRetryLane={onRetryCatalog}
                             host={localModelHost}
                             locale={locale}
@@ -283,7 +308,9 @@ export function AgentSettingsPanel({
             host={localModelHost}
             catalog={catalog}
             catalogStatus={catalogStatus}
+            catalogFailure={catalogFailure}
             onRetryCatalog={onRetryCatalog}
+            onShowProvider={providerSettings ? showProvider : undefined}
           />
         </SettingsDisclosure>
       )}

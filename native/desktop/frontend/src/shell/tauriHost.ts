@@ -21,6 +21,7 @@ import type { AgentViews } from "./agentViews";
 import type { AeatSignInStage } from "./aeatSyncPrepare";
 import type { Host } from "./host";
 import type { CallPlan, HostCall } from "./hostCall";
+import { modelListState } from "./modelListState";
 import { hostCall, observedInvoke } from "./hostCall";
 import { refuseIfEnded, sessionBound } from "./sessionGate";
 import type { ProviderSettings } from "./providerSettings";
@@ -627,21 +628,9 @@ function readable<T>(read: T | null): T {
   return read;
 }
 
-/** Where the agent stands rather than what failed, as a model list, the
- * local engine or the catalogue read refuses it: each view that lists models
- * shows it with the step that moves it on, so none of them is an error. */
-const MODEL_LIST_STATES: ReadonlySet<string> = new Set([
-  "agent_signed_out",
-  "agent_service_busy",
-  "agent_service_not_ready",
-  "agent_reconnecting",
-  "agent_catalog_unavailable",
-  "agent_local_models_catalog_unavailable",
-]);
-
 /** The plan of a read that lists models: its states are noted, not reported. */
 function listingModels(plan?: CallPlan): CallPlan {
-  return { ...plan, state: (code) => MODEL_LIST_STATES.has(code) };
+  return { ...plan, state: (code) => modelListState(code) !== null };
 }
 
 /** The agent session and views of the desktop host. */

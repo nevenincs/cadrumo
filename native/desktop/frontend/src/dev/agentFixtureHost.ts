@@ -168,8 +168,12 @@ declare global {
     __fixtureAgentSession?: AgentSession;
     /** The same session's read projections, for controlled transport delays. */
     __fixtureAgentViews?: AgentViews;
-    /** Intercepts list reads inside the method, including bound host copies. */
-    __fixtureLocalModelsRead?: () => Promise<void>;
+    /** Intercepts list reads inside the method, including bound host copies;
+     * a record it returns is answered in place of the stored one. */
+    __fixtureLocalModelsRead?: () => Promise<LocalModelListStatus | void>;
+    /** Intercepts catalogue and engine reads; a refusal thrown answers them. */
+    __fixtureProviderCatalogRead?: () => Promise<void>;
+    __fixtureLocalEngineRead?: () => Promise<void>;
     /** Holds an engine or placement change inside the method, after the
      * revision is checked and before the record is written. */
     __fixtureLocalEngineChange?: () => Promise<void>;
@@ -955,6 +959,7 @@ export function fixtureAgent({
       say("agentProviderCatalog");
       await check();
       if (catalogBusy) throw coded("agent_service_busy");
+      await window.__fixtureProviderCatalogRead?.();
       const refused = fixtureCatalogRefusal(catalog);
       if (refused) throw refused;
       say("agentProviderCatalogResolved");
@@ -997,8 +1002,8 @@ export function fixtureAgent({
     async localModels() {
       say("agentLocalModels");
       await check();
-      await window.__fixtureLocalModelsRead?.();
-      return listSnapshot();
+      const answered = await window.__fixtureLocalModelsRead?.();
+      return answered ?? listSnapshot();
     },
     async addLocalModel(lane, model, expectedRevision) {
       say(`agentLocalModelAdd ${model}`);
@@ -1039,6 +1044,7 @@ export function fixtureAgent({
     async localEngine() {
       say("agentLocalEngine");
       await check();
+      await window.__fixtureLocalEngineRead?.();
       return engineSnapshot();
     },
     async chooseLocalEngine(chosen, placement, expectedRevision) {

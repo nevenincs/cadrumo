@@ -237,3 +237,53 @@ test("a choice among the served ones is sent as that token", async ({
     .poll(async () => await calls(target))
     .toContain(`agentLocalEngineChoose ollama auto ${read}`);
 });
+
+declare global {
+  interface Window {
+    /** The refusal the made-up engine read answers, while one is set. */
+    __engineRefusal?: string | null;
+  }
+}
+
+// An engine read that does not answer is said where the choice would be,
+// never left out without a word: where setup stands, or a fault with asking
+// again.
+for (const [code, role, words, retry] of [
+  ["agent_gateway_503", "alert", "desktop.agent.read_failed", true],
+  [
+    "agent_service_not_ready",
+    "status",
+    "desktop.agent.service_starting",
+    false,
+  ],
+] as const)
+  test(`an engine read answering ${code} is said in the choice's place`, async ({
+    page: target,
+  }) => {
+    await target.addInitScript((code) => {
+      window.__engineRefusal = code;
+      window.__fixtureLocalEngineRead = async () => {
+        const refusal = window.__engineRefusal;
+        if (refusal) throw Object.assign(new Error(refusal), { code: refusal });
+      };
+    }, code);
+    await open(target);
+    await openSettings(target);
+    const said = settings(target).locator("[data-slot=local-engine-read]");
+    await expect(said).toHaveAttribute("role", role);
+    await expect(said).toContainText(label(words));
+    await expect(engineGroup(target)).toHaveCount(0);
+    const again = said.getByRole("button", {
+      name: label("desktop.agent.retry"),
+      exact: true,
+    });
+    await expect(again).toHaveCount(retry ? 1 : 0);
+    await target.evaluate(() => {
+      window.__engineRefusal = null;
+    });
+    // A fault is asked again by the person; a state, on their return.
+    if (retry) await again.click();
+    else await target.evaluate(() => window.dispatchEvent(new Event("focus")));
+    await expect(said).toHaveCount(0);
+    await expect(engineGroup(target)).toBeVisible();
+  });

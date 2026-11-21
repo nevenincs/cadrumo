@@ -203,71 +203,73 @@ test("an accepted provider status supersedes an older read and still permits ref
 });
 
 // Exercise the production Local AI hook with the same catalogs and settings
-// hosts as the shell; only admission timing and obsolete responses are controlled.
-for (const recovery of [
-  "agent_service_busy",
-  "agent_reconnecting",
-  "published",
-])
-  test(`Local AI catalog recovers ${recovery} without manual Retry`, async ({
+// hosts as the shell; only admission timing and obsolete responses are
+// controlled. A catalogue read that answers where setup stands is said as
+// that state and read again on its cue (a published status, or the person
+// coming back to the window), never on a timer.
+for (const recovery of ["agent_service_busy", "agent_reconnecting"])
+  for (const cue of ["published", "returned"] as const)
+    test(`Local AI catalog answering ${recovery} waits without a timer and is read again when ${cue}`, async ({
+      page,
+    }) => {
+      await page.goto("/scenarios.html?scenario=signed-out&bar=off");
+      await page.waitForFunction(() => Boolean(window.__scenarioModules));
+      const result = await localAiProbe(page, { recovery, cue });
+      expect(result).toEqual({
+        waited: { status: "failed", failure: recovery, catalog: 1 },
+        status: "ready",
+        lanes: SERVED,
+        catalog: 2,
+        settings: 1,
+        beforeAdmission: 0,
+        pauses: [],
+      });
+    });
+
+// A provider status that answers busy is the host not having admitted the
+// service yet: the agent starting. It is said so and read again on the cue,
+// once per cue, and nothing waits on a timer; a read still out when the cue
+// comes takes it as soon as it ends.
+for (const settingsMode of ["returned", "published", "inflight", "stays-busy"])
+  test(`Local AI settings answering busy, ${settingsMode}`, async ({
     page,
   }) => {
     await page.goto("/scenarios.html?scenario=signed-out&bar=off");
     await page.waitForFunction(() => Boolean(window.__scenarioModules));
-    const result = await localAiProbe(page, { recovery });
-    expect(result).toEqual({
-      status: "ready",
-      lanes: SERVED,
-      catalog: 2,
-      settings: 1,
-      beforeAdmission: 0,
-    });
-  });
-
-// A status-host busy rejection represents the native bounded collector
-// returning busy; exercise the real hook's outer collection and owner fences.
-for (const settingsMode of [
-  "recover",
-  "published",
-  "inflight",
-  "exhaustion",
-  "shared",
-])
-  test(`Local AI collects settings busy: ${settingsMode}`, async ({ page }) => {
-    await page.goto("/scenarios.html?scenario=signed-out&bar=off");
-    await page.waitForFunction(() => Boolean(window.__scenarioModules));
     const result = await localAiProbe(page, { settingsMode });
-    const exhausted =
-      settingsMode === "exhaustion" || settingsMode === "shared";
+    const inflight = settingsMode === "inflight";
+    const stays = settingsMode === "stays-busy";
     expect(result).toEqual({
-      status: exhausted ? "failed" : "ready",
-      lanes: exhausted ? [] : SERVED,
-      catalog: settingsMode === "shared" ? 3 : 1,
-      settings: settingsMode === "exhaustion" ? 4 : 2,
-      pauses: exhausted ? [2_000, 4_000, 8_000] : [2_000],
+      waited: inflight
+        ? { status: "ready", failure: null, settings: 2 }
+        : { status: "failed", failure: "agent_service_busy", settings: 1 },
+      cued: {
+        status: stays ? "failed" : "ready",
+        settings: stays ? 4 : 2,
+        catalog: 1,
+      },
+      pauses: [],
       beforeAdmission: 0,
       maxPendingSettings: 1,
-      readsWhilePending: settingsMode === "inflight" ? 1 : 0,
-      readsAfterPublication: ["published", "inflight"].includes(settingsMode)
-        ? 2
-        : 0,
-      extraAfterWake: 0,
-      queuedAfterWake: 0,
+      readsWhilePending: inflight ? 1 : 0,
       retried: "ready",
     });
   });
 
-for (const settingsRefusal of [
-  "not_signed_in",
-  "profile_locked",
-  "catalog_unavailable",
-  "runtime_unavailable",
-  "agent_service_busy",
-  "agent_reconnecting",
-  "timeout",
-  "unknown",
-])
-  test(`Local AI does not replay settings ${settingsRefusal}`, async ({
+// A settings refusal that is a fault is said with its retry and never asked
+// again by itself; one that answers where setup stands is asked again once
+// on each published status. None waits on a timer.
+for (const [settingsRefusal, replayed] of [
+  ["not_signed_in", false],
+  ["profile_locked", false],
+  ["catalog_unavailable", false],
+  ["runtime_unavailable", false],
+  ["timeout", false],
+  ["unknown", false],
+  ["agent_service_busy", true],
+  ["agent_reconnecting", true],
+] as const)
+  test(`Local AI settings refused ${settingsRefusal} is ${replayed ? "asked again on each publication" : "not replayed"}`, async ({
     page,
   }) => {
     await page.goto("/scenarios.html?scenario=signed-out&bar=off");
@@ -275,17 +277,12 @@ for (const settingsRefusal of [
     expect(
       await localAiProbe(page, { settingsMode: "refusal", settingsRefusal }),
     ).toEqual({
-      status: "failed",
-      lanes: [],
-      catalog: 1,
-      settings: 1,
+      waited: { status: "failed", failure: settingsRefusal, settings: 1 },
+      cued: { status: "failed", settings: replayed ? 4 : 1, catalog: 1 },
       pauses: [],
       beforeAdmission: 0,
       maxPendingSettings: 1,
       readsWhilePending: 0,
-      readsAfterPublication: 0,
-      extraAfterWake: 0,
-      queuedAfterWake: 0,
       retried: "ready",
     });
   });
@@ -317,8 +314,11 @@ test("Local AI asks nothing while the agent starts and reads once it runs", asyn
   });
 });
 
+// A catalogue that stays busy is asked again once per published status, with
+// no budget a timer spends; a fault is never asked again by itself. Either
+// can be asked again by the person.
 for (const refusal of ["agent_service_busy", "agent_service_failed"])
-  test(`Local AI catalog bounds ${refusal} recovery and permits explicit Retry`, async ({
+  test(`Local AI catalog refused ${refusal} is asked again only on its cue, and on the person's Retry`, async ({
     page,
   }) => {
     await page.goto("/scenarios.html?scenario=signed-out&bar=off");
@@ -326,9 +326,9 @@ for (const refusal of ["agent_service_busy", "agent_service_failed"])
     const result = await localAiProbe(page, { refusal });
     expect(result).toEqual({
       status: "failed",
-      catalog: refusal === "agent_service_busy" ? 4 : 1,
+      catalog: 1,
       settings: 0,
-      afterPublications: refusal === "agent_service_busy" ? 4 : 1,
+      afterPublications: refusal === "agent_service_busy" ? 7 : 1,
       retried: "ready",
     });
   });
@@ -387,6 +387,7 @@ async function localAiProbe(
   page: import("@playwright/test").Page,
   options: {
     recovery?: string;
+    cue?: "published" | "returned";
     refusal?: string;
     transition?: string;
     stage?: string;
@@ -429,7 +430,9 @@ async function localAiProbe(
       ...args: unknown[]
     ) => {
       if (
-        (options.settingsMode || options.stage === "settings-wait-busy") &&
+        (options.settingsMode ||
+          options.recovery ||
+          options.stage === "settings-wait-busy") &&
         delay !== undefined &&
         delay >= 2_000
       ) {
@@ -446,8 +449,7 @@ async function localAiProbe(
         delay !== undefined && delay >= 2_000
           ? delay /
               (options.stage === "busy" ||
-              options.stage === "settings-wait-busy" ||
-              options.recovery === "published"
+              options.stage === "settings-wait-busy"
                 ? 10
                 : 200)
           : delay,
@@ -501,7 +503,6 @@ async function localAiProbe(
             });
           if (
             (options.stage === "busy" && catalogs === 1) ||
-            (options.settingsMode === "shared" && !succeed && catalogs <= 2) ||
             (!succeed &&
               (options.refusal || (options.recovery && catalogs === 1)))
           )
@@ -544,9 +545,7 @@ async function localAiProbe(
                 });
               if (
                 settings === 1 ||
-                ["exhaustion", "shared", "refusal"].includes(
-                  options.settingsMode,
-                )
+                ["stays-busy", "refusal"].includes(options.settingsMode)
               )
                 throw { code: options.settingsRefusal ?? "busy" };
             }
@@ -689,56 +688,63 @@ async function localAiProbe(
           readsWhilePending = settings;
           release!();
           await settle();
+        }
+        await advance();
+        const waited = {
+          status: view.status,
+          failure: view.failure,
+          settings,
+        };
+        if (options.settingsMode === "returned") {
+          window.dispatchEvent(new Event("focus"));
+          await settle();
         } else if (options.settingsMode === "published") {
           publish();
           await settle();
-        }
-        const readsAfterPublication = ["published", "inflight"].includes(
-          options.settingsMode,
-        )
-          ? settings
-          : 0;
-        // Drive only the hook's retry timers, leaving React scheduling real.
-        for (let i = 0; i < 10 && queued.size > 0; i++) {
-          queued.values().next().value!();
-          await settle();
-        }
-        const status = view.status,
-          shown = view.lanes.map((lane) => lane.id),
-          count = settings,
-          catalog = catalogs,
-          spentPauses = [...pauses];
-        for (let i = 0; i < 6; i++) {
-          publish();
-          await settle();
-        }
-        const extraAfterWake = settings + catalogs - count - catalog;
-        const queuedAfterWake = queued.size;
+        } else if (options.settingsMode !== "inflight")
+          for (let i = 0; i < 3; i++) {
+            publish();
+            await settle();
+          }
+        const cued = { status: view.status, settings, catalog: catalogs };
         succeed = true;
         dom.flushSync(() => view.retry());
         await settle();
         return {
-          status,
-          lanes: shown,
-          catalog,
-          settings: count,
-          pauses: spentPauses,
+          waited,
+          cued,
+          pauses: [...pauses],
           beforeAdmission,
           maxPendingSettings,
           readsWhilePending,
-          readsAfterPublication,
-          extraAfterWake,
-          queuedAfterWake,
           retried: view.status,
         };
       }
-      if (options.recovery === "published") {
-        publish();
+      if (options.recovery) {
         await advance();
-      } else await advance();
+        const waited = {
+          status: view.status,
+          failure: view.failure,
+          catalog: catalogs,
+        };
+        if (options.cue === "returned")
+          window.dispatchEvent(new Event("focus"));
+        else publish();
+        await settle();
+        return {
+          waited,
+          status: view.status,
+          lanes: view.lanes.map((lane) => lane.id),
+          catalog: catalogs,
+          settings,
+          beforeAdmission,
+          pauses: [...pauses],
+        };
+      }
+      await advance();
       if (options.refusal) {
-        // Exhaust all 2/4/8-second retries, then prove status events cannot
-        // restart an exhausted (or permanent) failure.
+        // Time alone asks nothing again; each published status asks a state
+        // once, and a fault never.
         await advance();
         await advance();
         const status = view.status,
