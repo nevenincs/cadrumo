@@ -197,6 +197,15 @@ desktop:
     models_to_download: Algunos modelos aún no están en este equipo. Descárgalos en
       los ajustes de la IA local.
     more_files: +{count} más
+    movement_dismiss: Descartar
+    movement_shared: Al enviarlo, lo compartes con {provider}, que lo lee fuera de
+      este equipo.
+    movement_staged: '{name} contiene este movimiento tal como lo registra el Libro:
+      sus fechas, importe, contraparte, descripción, clasificación y estado de revisión.
+      No se envía nada hasta que pulses Enviar.'
+    movement_storing: Añadiendo el movimiento a la conversación…
+    movement_unavailable: El agente aún no puede recibir un movimiento aquí.
+    movement_unreadable: No se ha podido leer el movimiento del Libro.
     new_conversation: Nueva conversación
     no_installed_model: Todavía no hay ningún modelo de IA descargado. Descarga uno
       para empezar.

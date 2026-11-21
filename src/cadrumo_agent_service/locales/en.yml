@@ -192,6 +192,15 @@ desktop:
     models_to_download: Some models aren't on this computer yet. Download them in
       the local AI settings.
     more_files: +{count} more
+    movement_dismiss: Dismiss
+    movement_shared: Sending it shares it with {provider}, which reads it off this
+      computer.
+    movement_staged: '{name} holds this movement as the Ledger records it: its dates,
+      amount, counterparty, description, classification and review state. Nothing
+      is sent until you press Send.'
+    movement_storing: Adding the movement to the conversation…
+    movement_unavailable: The agent can't take a movement here yet.
+    movement_unreadable: The movement couldn't be read from the Ledger.
     new_conversation: New conversation
     no_installed_model: No AI model is downloaded yet. Download one to start.
     no_models: No models to choose from

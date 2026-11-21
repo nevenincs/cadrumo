@@ -16,7 +16,7 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{
     fs::File,
-    io::{self, Read},
+    io::{self, Cursor, Read},
     path::{Path, PathBuf},
     sync::atomic::{AtomicU64, Ordering},
 };
@@ -129,14 +129,12 @@ pub struct Queued {
     path: PathBuf,
 }
 
-/// A file's name and size where the policy takes it, else why not.
-pub fn admit(path: &Path, policy: &Policy) -> Result<(String, u64), &'static str> {
-    let name = path
-        .file_name()
-        .and_then(|name| name.to_str())
-        // The storage takes no name that starts with a dot.
-        .filter(|name| plain_name(name) && !name.starts_with('.'))
-        .ok_or("agent_attachment_name_refused")?;
+/// Whether the policy takes a file of this name, else why not.
+fn admit_name(name: &str, policy: &Policy) -> Result<(), &'static str> {
+    // The storage takes no name that starts with a dot.
+    if !plain_name(name) || name.starts_with('.') {
+        return Err("agent_attachment_name_refused");
+    }
     let extension = Path::new(name)
         .extension()
         .and_then(|e| e.to_str())
@@ -145,6 +143,16 @@ pub fn admit(path: &Path, policy: &Policy) -> Result<(String, u64), &'static str
     if !policy.extensions.contains(&extension) {
         return Err("agent_attachment_format_refused");
     }
+    Ok(())
+}
+
+/// A file's name and size where the policy takes it, else why not.
+pub fn admit(path: &Path, policy: &Policy) -> Result<(String, u64), &'static str> {
+    let name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or("agent_attachment_name_refused")?;
+    admit_name(name, policy)?;
     let metadata = std::fs::metadata(path).map_err(|_| "agent_attachment_unreadable")?;
     if !metadata.is_file() {
         return Err("agent_attachment_unreadable");
@@ -302,6 +310,38 @@ fn send_one(
         report: &report,
     };
     let stored = client.upload(conversation, &file.name, &mut body, file.size, &sha256)?;
+    document_record(&stored)
+}
+
+/// The length and digest of bytes the host made itself, once the policy takes
+/// them under `name`, else why not: checked as a picked file is.
+pub fn admit_made(name: &str, bytes: &[u8], policy: &Policy) -> Result<(u64, String), Refused> {
+    let refused = |code: &str| Refused::new(code.to_owned());
+    admit_name(name, policy).map_err(refused)?;
+    let length = bytes.len() as u64;
+    if length == 0 {
+        return Err(refused("agent_attachment_unreadable"));
+    }
+    if length > policy.max_file_bytes {
+        return Err(refused("agent_attachment_too_large"));
+    }
+    let sha256 =
+        sha256_of(&mut Cursor::new(bytes)).map_err(|_| refused("agent_attachment_unreadable"))?;
+    Ok((length, sha256))
+}
+
+/// Stores bytes the host made itself under `name` in the conversation's own
+/// storage, from memory, as a picked file is stored: its digest first, then
+/// exactly those bytes. Answers the record the agent keeps of it.
+pub fn store_made(
+    client: &Client,
+    conversation: &str,
+    name: &str,
+    bytes: &[u8],
+    policy: &Policy,
+) -> Result<Value, Refused> {
+    let (length, sha256) = admit_made(name, bytes, policy)?;
+    let stored = client.upload(conversation, name, &mut Cursor::new(bytes), length, &sha256)?;
     document_record(&stored)
 }
 
@@ -465,6 +505,45 @@ mod tests {
         }
         assert_eq!(lane_picks(None), None);
         std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn bytes_the_host_made_are_checked_and_digested_as_a_file_is() {
+        let policy = policy_of(&json!({"max_file_bytes": 8,
+            "formats": [{"media_type": "application/json", "extensions": [".json"]}]}))
+        .unwrap();
+        assert_eq!(
+            admit_made("movimiento.json", b"abc", &policy).unwrap(),
+            (
+                3,
+                "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad".to_owned()
+            )
+        );
+        for (name, bytes, code) in [
+            (
+                "movimiento.json",
+                &b"123456789"[..],
+                "agent_attachment_too_large",
+            ),
+            (
+                "movimiento.txt",
+                &b"abc"[..],
+                "agent_attachment_format_refused",
+            ),
+            (
+                ".movimiento.json",
+                &b"abc"[..],
+                "agent_attachment_name_refused",
+            ),
+            ("a/b.json", &b"abc"[..], "agent_attachment_name_refused"),
+            ("movimiento.json", &b""[..], "agent_attachment_unreadable"),
+        ] {
+            assert_eq!(
+                admit_made(name, bytes, &policy).unwrap_err().code,
+                code,
+                "{name}"
+            );
+        }
     }
 
     #[test]

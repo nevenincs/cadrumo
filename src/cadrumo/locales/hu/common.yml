@@ -4040,6 +4040,7 @@ desktop:
     no_rate: Nincs árfolyam
     no_rate_detail: 'Erre a napra nincs árfolyam: az EUR-érték nem ismert, és nem
       nulla.'
+    open_in_agent: Megnyitás az ügynökkel folytatott beszélgetésben
     overview:
       close: Áttekintés bezárása
       group:

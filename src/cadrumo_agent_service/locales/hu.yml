@@ -194,6 +194,15 @@ desktop:
     models_to_download: Néhány modell még nincs ezen a gépen. Töltsd le őket a helyi
       MI beállításaiban.
     more_files: +{count} további
+    movement_dismiss: Elvetés
+    movement_shared: Ha elküldöd, megosztod a(z) {provider} szolgáltatóval, amely
+      ezen a gépen kívül olvassa.
+    movement_staged: 'A(z) {name} ezt a tételt tartalmazza úgy, ahogy a Napló rögzíti:
+      a dátumait, az összegét, a partnerét, a leírását, a besorolását és az ellenőrzési
+      állapotát. Semmi sem megy el, amíg meg nem nyomod a Küldés gombot.'
+    movement_storing: A tétel hozzáadása a beszélgetéshez…
+    movement_unavailable: Az ügynök itt még nem tud tételt fogadni.
+    movement_unreadable: Nem sikerült beolvasni a tételt a Naplóból.
     new_conversation: Új beszélgetés
     no_installed_model: Még nincs letöltött MI-modell. A kezdéshez tölts le egyet.
     no_models: Nincs választható modell

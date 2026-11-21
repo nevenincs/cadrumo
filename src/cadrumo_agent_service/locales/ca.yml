@@ -197,6 +197,15 @@ desktop:
     models_to_download: Alguns models encara no són en aquest ordinador. Baixa'ls
       als ajustos de la IA local.
     more_files: +{count} més
+    movement_dismiss: Descarta
+    movement_shared: En enviar-lo, el comparteixes amb {provider}, que el llegeix
+      fora d'aquest ordinador.
+    movement_staged: '{name} conté aquest moviment tal com el registra el Llibre:
+      les dates, l''import, la contrapart, la descripció, la classificació i l''estat
+      de revisió. No s''envia res fins que no premis Envia.'
+    movement_storing: S'està afegint el moviment a la conversa…
+    movement_unavailable: L'agent encara no pot rebre un moviment aquí.
+    movement_unreadable: No s'ha pogut llegir el moviment del Llibre.
     new_conversation: Conversa nova
     no_installed_model: Encara no hi ha cap model d'IA baixat. Baixa'n un per començar.
     no_models: No hi ha models per triar

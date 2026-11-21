@@ -4065,6 +4065,7 @@ desktop:
     no_rate: Sin tipo de cambio
     no_rate_detail: 'No hay tipo de cambio para esta fecha: el valor en EUR no se
       conoce y no es cero.'
+    open_in_agent: Abrir en una conversación con el agente
     overview:
       close: Cerrar el resumen
       group:

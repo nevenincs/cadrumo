@@ -59,6 +59,7 @@ DESKTOP_LEDGER_CATALOGUE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.matching.title",
         "desktop.ledger.maximize",
         "desktop.ledger.movements_count",
+        "desktop.ledger.open_in_agent",
         "desktop.ledger.overview.close",
         "desktop.ledger.overview.group.amounts",
         "desktop.ledger.overview.group.links",

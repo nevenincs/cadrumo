@@ -3985,6 +3985,7 @@ desktop:
     no_rate: No rate
     no_rate_detail: 'No exchange rate for this date: the EUR value is not known, and
       it is not zero.'
+    open_in_agent: Open in a conversation with the agent
     overview:
       close: Close the overview
       group:

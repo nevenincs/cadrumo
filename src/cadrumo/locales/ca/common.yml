@@ -4060,6 +4060,7 @@ desktop:
     no_rate: Sense tipus de canvi
     no_rate_detail: 'No hi ha tipus de canvi per a aquesta data: el valor en EUR no
       es coneix i no és zero.'
+    open_in_agent: Obre en una conversa amb l'agent
     overview:
       close: Tanca el resum
       group:

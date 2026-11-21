@@ -532,6 +532,7 @@ export const FIXTURE_ATTACHMENT_POLICY: AttachmentPolicyResponse = {
     { media_type: "text/csv", extensions: [".csv"] },
     { media_type: "application/xml", extensions: [".xml"] },
     { media_type: "text/plain", extensions: [".txt"] },
+    { media_type: "application/json", extensions: [".json"] },
   ],
 };
 

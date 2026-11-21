@@ -1,11 +1,13 @@
 import { useMemo, useRef } from "react";
 import type { AgentColumnControl } from "../components/AgentColumn";
+import type { AgentHandoff } from "./agentHandoff";
 import type { ModelList } from "./agentModelList";
 import type { Host } from "./host";
 import type { useNavigator } from "./navigation/useNavigator";
 
 /** The model documents are read with is picked in the agent column's model
- * picker; a page beside a reading with no model leads to the picker. */
+ * picker; a page beside a reading with no model leads to the picker. A page
+ * that hands one of its records to a conversation leads to the column too. */
 export function useReadingModelPicker(
   agentSession: Host["agentSession"],
   openView: ReturnType<typeof useNavigator>["openView"],
@@ -23,5 +25,17 @@ export function useReadingModelPicker(
         : null,
     [agentSession, openView],
   );
-  return { agentControl, modelList };
+  const agentHandoff = useMemo<AgentHandoff | null>(
+    () =>
+      agentSession?.attachLedgerMovement
+        ? {
+            openMovement: (transactionId) => {
+              openView("agent");
+              agentControl.current?.attachMovement(transactionId);
+            },
+          }
+        : null,
+    [agentSession, openView],
+  );
+  return { agentControl, modelList, agentHandoff };
 }
