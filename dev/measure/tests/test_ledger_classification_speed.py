@@ -77,6 +77,7 @@ from ..ledger_classification_speed import (
     output_directory,
     parse_arguments,
     prerequisite_absence,
+    presented_context,
     preset_text,
     require_scratch_outside_git,
     router_id,
@@ -524,6 +525,17 @@ def test_lane_selection_refuses_a_catalogue_without_a_llamacpp_lane() -> None:
         lane_model(catalog, None)
     with pytest.raises(AcceptanceError):
         lane_model({"kind": "refused", "code": "catalog_unavailable"}, None)
+
+
+def test_presented_context_is_the_catalogue_context_and_never_above_it() -> None:
+    assert presented_context(None, 8192, "synthetic-text:4b") == 8192
+    assert presented_context(4096, 8192, "synthetic-text:4b") == 4096
+    assert presented_context(None, 4096, "synthetic-text:8b") == 4096
+    for requested in (8193, 16384, 0, -1):
+        with pytest.raises(AcceptanceError):
+            presented_context(requested, 8192, "synthetic-text:4b")
+    with pytest.raises(AcceptanceError):
+        presented_context(4096, None, "other:1b")
 
 
 def test_preset_names_the_model_by_digest_and_pins_cpu_only_when_asked(tmp_path: Path) -> None:

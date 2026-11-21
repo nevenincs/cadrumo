@@ -109,8 +109,6 @@ _DEFAULT_NAMESPACE: Final = "library"
 _ENGINE_PROVIDER: Final = LocalEngine.LLAMACPP.value
 _OUTPUTS: Final = "ledger-classification-speed"
 _HEALTH_SECONDS: Final = 120.0
-MAX_CONTEXT: Final = 16384
-"""The largest context this measurement loads a model with."""
 
 _PROMPT_EVAL: Final = re.compile(r"prompt eval time =\s*([\d.]+) ms /\s*(\d+) tokens")
 _EVAL: Final = re.compile(r"(?<!prompt )eval time =\s*([\d.]+) ms /\s*(\d+) (?:tokens|runs)")
@@ -243,6 +241,19 @@ class Presented:
     name: str
     weights: Path
     context: int
+
+
+def presented_context(requested: int | None, recorded: int | None, model: str) -> int:
+    """Return the context the router presents ``model`` with: ``requested``, or else ``recorded``.
+
+    The catalogue's recorded context is the ceiling, as for the runtime manager's preset; a
+    model the catalogue records no context for is not presented, and a larger request is refused.
+    """
+    if recorded is None:
+        raise AcceptanceError(f"the agent catalogue records no llama.cpp context for {model}")
+    if requested is not None and not 0 < requested <= recorded:
+        raise AcceptanceError(f"--context {requested} is outside 1..{recorded}, the context recorded for {model}")
+    return requested or recorded
 
 
 def run_record_count(lines: Sequence[str]) -> int:
@@ -766,7 +777,7 @@ def _measure_on(
         catalog = session.catalog()
         (outputs / "catalog.json").write_text(json.dumps(catalog, indent=2), encoding="utf-8")
         lane, model, context = lane_model(catalog, arguments.model)
-        context = min(arguments.context or context or MAX_CONTEXT, MAX_CONTEXT)
+        context = presented_context(arguments.context, context, model)
         presented = Presented(name=model, weights=model_weights(store, model), context=context)
         document["lane"] = {"provider": lane, "model": model, "context": context}
         if arguments.inspect:
@@ -886,7 +897,7 @@ def parse_arguments(argv: Sequence[str] | None = None) -> _Arguments:
     )
     parser.add_argument("--model-store", default=str(Path.home() / ".ollama" / "models"))
     parser.add_argument("--model", default=None, help="model to present; default: the lane's recommended text model")
-    parser.add_argument("--context", type=int, default=None, help=f"context size, at most {MAX_CONTEXT}")
+    parser.add_argument("--context", type=int, default=None, help="context size, at most the catalogue's")
     parser.add_argument("--count", type=int, default=1)
     parser.add_argument("--out", required=True)
     parser.add_argument("--mode", choices=("classification", "saturated"), default="classification")
