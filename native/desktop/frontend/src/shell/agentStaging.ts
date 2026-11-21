@@ -99,6 +99,9 @@ export type StagedDocuments = {
   namedFor: (conversationId: string | null) => AgentDocumentRecord[];
   /** Names a stored document for the next message. */
   name: (document: AgentDocumentRecord) => void;
+  /** Names a stored document for the next message of `conversationId`,
+   * which may be one the column has only just started. */
+  nameIn: (conversationId: string, document: AgentDocumentRecord) => void;
   /** Takes a staged file away, or all of them. An upload taken away is not
    * named when it is stored. */
   remove: (id: string | null) => void;
@@ -160,6 +163,11 @@ export function useStagedDocuments({
       })),
     [conversationId],
   );
+  const nameIn = (id: string, document: AgentDocumentRecord) =>
+    update.current(id, (held) => ({
+      ...held,
+      documents: withNamed(held.documents, document),
+    }));
   const remove = (id: string | null) =>
     update.current(conversationId, (held) =>
       id === null
@@ -270,6 +278,7 @@ export function useStagedDocuments({
     staged,
     namedFor: (id) => (own(staging, id) ? staging.documents : []),
     name,
+    nameIn,
     remove,
     sent,
     ...(attach ? { attach } : {}),

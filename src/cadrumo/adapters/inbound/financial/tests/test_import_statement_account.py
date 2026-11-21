@@ -354,17 +354,7 @@ def test_an_ofx_statement_without_its_extra_is_a_per_file_refusal(
     assert result.imported == 0
 
 
-@pytest.mark.parametrize(
-    "options",
-    [
-        {"dry_run": True},
-        {"own_account_id": "acc-01"},
-    ],
-    ids=["dry-run", "chosen-account"],
-)
-def test_registering_the_statement_account_is_refused_with_a_preview_or_a_chosen_account(
-    options: dict[str, object],
-) -> None:
+def test_registering_the_statement_account_is_refused_with_a_chosen_account() -> None:
     with pytest.raises(ValidationError):
         LedgerImportRequest.model_validate(
             {
@@ -372,9 +362,67 @@ def test_registering_the_statement_account_is_refused_with_a_preview_or_a_chosen
                 "files": (_BBVA,),
                 "provider": LedgerProviderID.CSV,
                 "register_statement_account": _REGISTRATION,
-                **options,
+                "own_account_id": "acc-01",
             }
         )
+
+
+def test_a_registering_preview_counts_the_import_that_registering_writes_and_registers_nothing(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Rows stored with no account are new rows once bound, so a preview read with no account would say none are."""
+    profile = _Profile(_Register(_IBAN_OTHER))
+    _import(profile, operation, _BBVA)
+
+    unbound = _import(profile, operation, _BBVA, dry_run=True)
+    preview = _import(profile, operation, _BBVA, dry_run=True, register_statement_account=_REGISTRATION)
+
+    assert (unbound.imported, unbound.skipped) == (0, 12)
+    assert (preview.imported, preview.skipped, preview.likely_duplicates) == (12, 0, 12)
+    assert preview.registered_own_account_id is None
+    assert preview.settled_effect is OperationEffect.NONE
+    assert [(item.own_account_id, item.registrable) for item in preview.statement_accounts] == [(None, True)]
+    assert len(profile.register.load().accounts) == 1
+    assert _IBAN_BBVA not in preview.model_dump_json()
+
+    written = _import(
+        profile,
+        operation,
+        _BBVA,
+        register_statement_account=_REGISTRATION,
+        expected_source_sha256=tuple(item.sha256 for item in preview.source_digests),
+    )
+
+    assert written.registered_own_account_id == "acc-02"
+    # A preview names no imported row, but it names the duplicates by the ids the write gives them.
+    assert [ref.transaction_id for ref in written.likely_duplicate_transaction_refs] == [
+        ref.transaction_id for ref in preview.likely_duplicate_transaction_refs
+    ]
+    assert (written.imported, written.skipped) == (preview.imported, preview.skipped)
+
+
+def test_a_registering_preview_of_a_registered_statement_account_binds_to_it(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    profile = _Profile(_Register(_IBAN_BBVA))
+    _import(profile, operation, _BBVA)
+
+    preview = _import(profile, operation, _BBVA, dry_run=True, register_statement_account=_REGISTRATION)
+
+    assert (preview.imported, preview.skipped) == (0, 12)
+    assert len(profile.register.load().accounts) == 1
+
+
+def test_a_registering_preview_of_a_statement_that_names_no_account_is_refused_for_it(
+    operation: PinnedAuthorityOperation, tmp_path: Path
+) -> None:
+    path = tmp_path / "no-account.csv"
+    path.write_text(_NO_ACCOUNT_CSV, encoding="utf-8")
+    profile = _Profile(_Register())
+
+    preview = _import(profile, operation, path, dry_run=True, register_statement_account=_REGISTRATION)
+
+    assert [item.reason_code for item in preview.refused_files] == ["statement_account_missing"]
 
 
 def test_registering_the_statement_account_takes_exactly_one_file(tmp_path: Path) -> None:

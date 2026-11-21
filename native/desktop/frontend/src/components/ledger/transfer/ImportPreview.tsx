@@ -97,6 +97,7 @@ export function ImportBankPreview({
   choices,
   reading,
   onChoose,
+  onAddAccount,
   shown,
   nothingNew,
 }: {
@@ -109,6 +110,8 @@ export function ImportBankPreview({
   choices: Record<string, AccountKey>;
   reading: Set<string>;
   onChoose(preview: ReadPreview, account: AccountKey): void;
+  /** Leaves the import for the person's own accounts, to add one by hand. */
+  onAddAccount(): void;
   shown(preview: ReadPreview): LedgerImportResultProjection;
   nothingNew: boolean;
 }) {
@@ -260,12 +263,30 @@ export function ImportBankPreview({
                     </option>
                   </NativeSelect>
                 ) : (
-                  <span id={select} className="font-medium">
-                    {t("desktop.ledger.import.no_account")}
-                    <span className="ml-2 text-xs font-normal text-muted-foreground">
-                      {t(`desktop.ledger.import.account_${fact.kind}`)}
+                  <>
+                    <span id={select} className="font-medium">
+                      {t("desktop.ledger.import.no_account")}
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        {t(`desktop.ledger.import.account_${fact.kind}`)}
+                      </span>
                     </span>
-                  </span>
+                    {/* No registered account can take these rows: the way to
+                        one is to add it, by hand, among the own accounts. */}
+                    <Button
+                      variant="link"
+                      size="xs"
+                      aria-describedby={`${select}-add`}
+                      onClick={onAddAccount}
+                    >
+                      {t("desktop.ledger.import.account_add")}
+                    </Button>
+                    <span
+                      id={`${select}-add`}
+                      className="text-xs text-muted-foreground"
+                    >
+                      {t("desktop.ledger.import.account_add_note")}
+                    </span>
+                  </>
                 )}
                 {fact.kind === "detected" && (
                   <span

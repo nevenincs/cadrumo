@@ -762,6 +762,20 @@ export function scenarioHost(
     ...(options.readingDefault
       ? { readingDefault: options.readingDefault }
       : {}),
+    // A movement is handed over as the ledger's movement read serves it,
+    // refused with the words that read served where it refuses.
+    readMovement: async (transactionId) => {
+      const outcome = await ledger.submit("ledger.view", {
+        transaction_prefix: transactionId,
+      });
+      if (outcome.kind === "settled") return outcome.result;
+      const words =
+        outcome.kind === "refused" ? outcome.detail?.refusal_words : undefined;
+      throw Object.assign(new Error("agent_movement_unreadable"), {
+        code: "agent_movement_unreadable",
+        ...(typeof words === "string" ? { refusal_words: words } : {}),
+      });
+    },
   });
   agentEngine = selectedEngine;
   // Every host this page made publishes, as one service would for each.

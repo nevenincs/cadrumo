@@ -710,6 +710,11 @@ function tauriAgent(call: HostCall): {
           ...(dropId ? { dropId } : {}),
         });
       },
+      attachLedgerMovement: (conversationId, transactionId) =>
+        call("agent_attach_ledger_movement", {
+          conversationId,
+          transactionId,
+        }),
       async observeDrops(listener) {
         let active = true;
         const updates = new Channel<AgentDropSignal>();

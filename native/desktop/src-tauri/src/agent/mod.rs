@@ -12,6 +12,7 @@ mod dropping;
 mod gateway;
 mod launcher;
 pub(crate) mod local_models;
+mod movement;
 pub(crate) mod person;
 #[cfg(windows)]
 mod provider_login;
@@ -599,6 +600,7 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_documents,
         agent_documents_remove,
         agent_attach,
+        agent_attach_ledger_movement,
         agent_attachment_policy,
         agent_drop_observe,
         agent_drop_unobserve,
@@ -1571,6 +1573,37 @@ async fn agent_attach<R: Runtime>(
         Ok(picked)
     })
     .await
+}
+
+/// Stores one Libro movement in the conversation's own storage: what the
+/// registered `ledger.view` read serves of it for the signed-in profile,
+/// unchanged as JSON, checked against the storage's policy and sent from
+/// memory with its digest. It answers the record a message can name, which
+/// the column stages; nothing reaches a model until the person sends that
+/// message. No file is written and no path is involved.
+#[tauri::command]
+async fn agent_attach_ledger_movement(
+    host: State<'_, Arc<AgentHost>>,
+    ledger: State<'_, Arc<crate::shell::ledger::LedgerHost>>,
+    conversation_id: String,
+    transaction_id: String,
+) -> std::result::Result<Value, movement::MovementRefused> {
+    if !gateway::run_id(&conversation_id) || !movement::handle(&transaction_id) {
+        return Err(Refused::new("agent_invalid_request".to_owned()).into());
+    }
+    let served = ledger
+        .movement(&transaction_id)
+        .await
+        .map_err(movement::ledger_refusal)?;
+    let (name, bytes) = movement::attachment(&served)?;
+    drop(served);
+    Ok(blocking(&host, move |host| {
+        let gateway = Session::gateway(&host.supervisor)?;
+        let client = gateway::Client::new(&gateway);
+        let policy = upload::policy_of(&client.attachment_policy()?)?;
+        upload::store_made(&client, &conversation_id, &name, &bytes, &policy)
+    })
+    .await?)
 }
 
 /// Watches native drags without exposing file paths to the webview.

@@ -119,13 +119,11 @@ export function importOperations(
     const dryRun = request.dry_run === true;
     const verify = request.verify === true;
     // The label and holding to register the statement's own account with: only
-    // an import that writes one file, with no account chosen.
+    // an import of one file, with no account chosen. A dry run registers
+    // nothing and binds the rows to the id the account would be given.
     const registration = (request.register_statement_account ??
       null) as JsonObject | null;
-    if (
-      registration !== null &&
-      (dryRun || account !== null || chosen.length !== 1)
-    )
+    if (registration !== null && (account !== null || chosen.length !== 1))
       return invalid();
     let registered: string | null = null;
     const statements: JsonObject[] = [];
@@ -203,16 +201,13 @@ export function importOperations(
         });
         return;
       }
-      if (mask !== null)
-        statements.push({
-          file_index: index,
-          masked_iban: mask,
-          own_account_id: held?.own_account_id ?? null,
-          registrable: held === undefined,
-        });
-      if (registration !== null && held === undefined) {
+      const nextId = `acc-${String(ledger.accounts.length + 1).padStart(2, "0")}`;
+      let provisional: string | null = null;
+      if (registration !== null && held === undefined && dryRun)
+        provisional = nextId;
+      else if (registration !== null && held === undefined) {
         held = {
-          own_account_id: `acc-${String(ledger.accounts.length + 1).padStart(2, "0")}`,
+          own_account_id: nextId,
           label: text(registration.label) ?? mask!,
           holding:
             registration.holding === "cotitular" ? "cotitular" : "titular",
@@ -228,7 +223,15 @@ export function importOperations(
         ledger.accounts.push(held);
         registered = held.own_account_id;
       }
-      const bound = account ?? held?.own_account_id ?? null;
+      // Read against the register as it stands after any registration.
+      if (mask !== null)
+        statements.push({
+          file_index: index,
+          masked_iban: mask,
+          own_account_id: held?.own_account_id ?? null,
+          registrable: held === undefined,
+        });
+      const bound = account ?? held?.own_account_id ?? provisional;
       const read = statementRows(file.name, bound).filter(
         (row) => !span || (row.date >= span[0] && row.date <= span[1]),
       );

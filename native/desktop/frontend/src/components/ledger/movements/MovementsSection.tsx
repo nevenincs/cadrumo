@@ -118,6 +118,7 @@ import { useClassifyCommand } from "./useClassifyCommand";
 import { useMovementColumns } from "./useMovementColumns";
 import { useMovementGroupRows } from "./MovementGroupRows";
 import { useFocusTarget } from "../../../shell/navigation/hooks";
+import { useAgentHandoff } from "../../../shell/agentHandoff";
 import { RowRevealNotice, useRowReveal, type LinkedRow } from "../RowReveal";
 import { movementHiding, withoutHiding } from "./movementReveal";
 import type { MovementsView } from "./useMovementsView";
@@ -361,6 +362,7 @@ export function MovementsSection({
   );
   // What the background classification jobs show on each movement.
   const backgroundTasks = useBackgroundTasks();
+  const agentHandoff = useAgentHandoff();
   const jobRows = backgroundTasks.rows;
   const marks = useMemo(
     () => statusMarks(rows, duplicates, jobRows),
@@ -955,6 +957,7 @@ export function MovementsSection({
           backgroundTasks.offered && byId.has(key)
             ? { refusal: askRefusal(key) }
             : null,
+        openInAgent: agentHandoff !== null,
         classifyEnabled: (kind) =>
           classifyAvailability(
             kind,
@@ -967,6 +970,7 @@ export function MovementsSection({
           edit.revertCell(key, column as ColumnId);
         else if (chosen === "revert.movement") edit.revertMovement(key);
         else if (chosen === "ask_agent") askAgent(key);
+        else if (chosen === "open_in_agent") agentHandoff?.openMovement(key);
         else if (chosen === "overview")
           // Opened once the menu has handed the focus back to the grid.
           window.requestAnimationFrame(() => setOverview({ key, column }));

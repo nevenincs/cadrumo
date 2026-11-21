@@ -8,7 +8,7 @@ related:
   - '[[2026-11-20-ledger-classify-queue-adr]]'
 modified: '2026-11-21'
 body_schema: body-v2
-body_hash: 'sha256:90b9cf0bb33dd1a9782f3e8bea706f8724e120fbdc7a15df38261da2dbe10cb9'
+body_hash: 'sha256:0049e1159e96e4a28284230b70dce2ff3202f5c5b86655288751814e3ada5449'
 ---
 
 # `ledger-classify-queue` plan
@@ -82,7 +82,7 @@ Typed revision cue from host to window, background-task indicator, per-row state
 - [x] `P04.S11` - Add the shell background-task indicator with progress, failures, cancel and retry, re-reading on cue, subscribe and focus; `native/desktop/frontend/src/shell/backgroundTasks.ts, components/shell/BackgroundTasks.tsx, locales`.
 - [x] `P04.S12` - Show per-row classifying, proposed and failed state in the Libro grid and re-read the ledger window on the cue; `frontend shell/ledgerWindow.ts, components/ledger grid`.
 - [x] `P04.S13` - Add per-row and selection Preguntar al agente actions that enqueue jobs, retire the 20-row loop, and review and apply job proposals per movement in the inspector (open in agent conversation moved to S16); `frontend components/ledger grid and SelectionInspector.tsx, agent panel handoff`.
-- [ ] `P04.S16` - Hand a movement to the agent panel as a conversation attachment the person sends: a host command builds a redacted movement summary and stores it from memory through the gateway upload, and a shell handoff names it in the agent column's staging; `native/desktop/src-tauri/src/agent/upload.rs, agent/mod.rs, frontend shell/agentStaging.ts, components/AgentColumn.tsx, components/ledger movements menu`.
+- [x] `P04.S16` - Hand a movement to the agent panel as a conversation attachment the person sends: a host command builds a redacted movement summary and stores it from memory through the gateway upload, and a shell handoff names it in the agent column's staging; `native/desktop/src-tauri/src/agent/upload.rs, agent/mod.rs, frontend shell/agentStaging.ts, components/AgentColumn.tsx, components/ledger movements menu`.
 
 ### Phase `P05` - Speed
 

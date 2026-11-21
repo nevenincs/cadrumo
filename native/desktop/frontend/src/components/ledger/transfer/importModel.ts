@@ -5,7 +5,9 @@
 // either way names that account. A statement also says which account it
 // names, by its mask: a registered one binds the file without any probe, and
 // one that is not registered can be registered by the import itself, from the
-// statement's own number. The apply then sends each file alone with the
+// statement's own number, which the preview reads as one more dry run: rows
+// bound to an account are other rows than the same rows bound to none. The
+// apply then sends each file alone with the
 // account chosen for it and the digest its preview read, so a file that
 // changed since is refused rather than imported. An invoice book is read
 // once in a preview that gives each column a role, which the person can
@@ -182,10 +184,21 @@ export type BankFilePreview =
     }
   | { kind: "failed"; file: PickedFile; code: string };
 
+/** The registration a preview and an apply send for `account`: the statement's own
+ * account, labelled by its mask, which the person can rename in Accounts. */
+const registrationOf = (
+  account: AccountKey,
+  statement: StatementAccount | null,
+) =>
+  account === REGISTER_ACCOUNT && statement
+    ? { label: statement.masked, holding: REGISTERED_HOLDING }
+    : null;
+
 const dryRun = (
   file: PickedFile,
   account: AccountKey,
   options: BankOptions,
+  statement: StatementAccount | null = null,
 ): LedgerRequest<"ledger.import"> => ({
   files: [file.token],
   provider: options.provider,
@@ -193,6 +206,7 @@ const dryRun = (
   verify: options.verify,
   period: options.period,
   own_account_id: ownAccountOf(account),
+  register_statement_account: registrationOf(account, statement),
 });
 
 /** The own account a request names for a choice: none for no account and for
@@ -266,8 +280,22 @@ export async function previewBankFile(
     preview.probed = true;
     return preview;
   }
-  if (named?.registrable) {
-    preview.byAccount[REGISTER_ACCOUNT] = base.result;
+  if (named?.registrable && preview.statement) {
+    // Registering binds the rows to the new account, so what it brings in
+    // is its own dry run, not the one read with no account.
+    const read = await previewForAccount(
+      port,
+      file,
+      options,
+      REGISTER_ACCOUNT,
+      preview.statement,
+    );
+    if (read.kind !== "read") return { kind: "failed", file, code: read.code };
+    if (read.refusal === "source_changed" || read.digest !== digest)
+      return { kind: "refused", file, reason: "source_changed" };
+    if (read.refusal)
+      return { kind: "refused", file, reason: read.refusal, setup: read.setup };
+    preview.byAccount[REGISTER_ACCOUNT] = read.result;
     preview.mismatched = accounts.map((account) => account.id);
     preview.probed = true;
     return preview;
@@ -297,12 +325,14 @@ export async function previewBankFile(
   return preview;
 }
 
-/** One dry run of `file` bound to `account`. */
+/** One dry run of `file` bound to `account`; registering the account
+ * `statement` names where `account` is `REGISTER_ACCOUNT`. */
 export async function previewForAccount(
   port: LedgerPort,
   file: PickedFile,
   options: BankOptions,
   account: AccountKey,
+  statement: StatementAccount | null = null,
 ): Promise<
   | {
       kind: "read";
@@ -316,7 +346,7 @@ export async function previewForAccount(
   const read = await attempt(
     port,
     "ledger.import",
-    dryRun(file, account, options),
+    dryRun(file, account, options, statement),
     false,
   );
   if (read.kind !== "settled")
@@ -407,16 +437,6 @@ export type BankApplyFile = {
   /** The account the file's statement names, where it names one. */
   statement: StatementAccount | null;
 };
-
-/** The registration an apply sends for `account`: the statement's own
- * account, labelled by its mask, which the person can rename in Accounts. */
-const registrationOf = (
-  account: AccountKey,
-  statement: StatementAccount | null,
-) =>
-  account === REGISTER_ACCOUNT && statement
-    ? { label: statement.masked, holding: REGISTERED_HOLDING }
-    : null;
 
 /** Imports each file alone, exactly as previewed, one after another. */
 export async function applyBank(

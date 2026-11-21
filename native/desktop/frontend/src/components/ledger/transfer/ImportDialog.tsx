@@ -32,6 +32,7 @@ import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import {
   ACCOUNT_PROBE_LIMIT,
   NO_ACCOUNT,
+  REGISTER_ACCOUNT,
   accountFact,
   accountFor,
   applyBank,
@@ -135,6 +136,7 @@ export function ImportDialog({
   onWritten,
   onShowImported,
   onShowDocuments,
+  onShowAccounts,
   onCloseAutoFocus,
 }: {
   port: LedgerPort;
@@ -148,6 +150,8 @@ export function ImportDialog({
   onWritten(): void;
   onShowImported: ShowImportBatch;
   onShowDocuments(): void;
+  /** Opens the person's own accounts, where one is added by hand. */
+  onShowAccounts(): void;
   /** Where the focus goes once the dialog has gone. */
   onCloseAutoFocus?: (event: Event) => void;
 }) {
@@ -388,8 +392,12 @@ export function ImportDialog({
     );
   const shown = (preview: ReadPreview) =>
     shownResult(preview, accountOf(preview));
+  // A file is sent where it brings rows in, or where the person chose to
+  // register the account it names, which is a write of its own.
   const sendable = readPreviews.filter(
-    (preview) => preview.digest !== null && shown(preview).imported > 0,
+    (preview) =>
+      preview.digest !== null &&
+      (shown(preview).imported > 0 || accountOf(preview) === REGISTER_ACCOUNT),
   );
   const missingAccount = sendable.some(
     (preview) => accountOf(preview) === undefined,
@@ -704,6 +712,10 @@ export function ImportDialog({
           choices={choices}
           reading={reading}
           onChoose={(preview, account) => void chooseAccount(preview, account)}
+          onAddAccount={() => {
+            onShowAccounts();
+            onClose();
+          }}
           shown={shown}
           nothingNew={nothingNew}
         />
