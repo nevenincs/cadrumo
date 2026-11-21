@@ -13,6 +13,7 @@ import io
 import json
 import logging
 import socket
+import tempfile
 import threading
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
@@ -20,8 +21,10 @@ from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, override
+from uuid import uuid4
 
 import pytest
+from pydantic import BaseModel, JsonValue, TypeAdapter
 
 from cadrumo.core.errors.error_codes import (
     ErrorCategory,
@@ -33,26 +36,49 @@ from cadrumo.core.json_contract import emit_json_success
 from cadrumo.core.logging import LOG_FILE_FORMAT
 from cadrumo.entrypoints.cli.ledger_llm_payloads import LedgerClassifyLlmSuggestResult
 from cadrumo.entrypoints.cli.ledger_results import LedgerListResult, LedgerListRowPayload
+from cadrumo_agent_service.admin import AdminAction, AdminServer
+from cadrumo_agent_service.providers.application.contracts import LocalEngineStatus, LocalModelListStatus
+from cadrumo_agent_service.providers.application.local_model_list import LocalModelListService
 from cadrumo_agent_service.providers.application.served_catalog import catalog_nonconformance
+from cadrumo_agent_service.providers.application.tests.memory_store import MemoryLocalModelListStore
+from cadrumo_agent_service.providers.application.tests.synthetic_catalog import (
+    KEYLESS_TEXT_MODEL,
+    ProvidedProviderCatalogSource,
+    StaticLiveModels,
+    UnavailableCatalogSource,
+    engine_catalog,
+)
+from cadrumo_agent_service.providers.domain.record import ListedModel, LocalEngine, LocalPlacement
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from dev.paths import REPO_ROOT
+from cadrumo_client.contracts.model_runs import ModelRunTaskKind
+from dev.desktop_agent_live.disposable_root import enclosing_git_project
+from dev.paths import REPO_ROOT, TEMP_ROOT
+from dev.runtime_lifecycle.agent_service_session import AgentServiceSession
 from dev.runtime_lifecycle.caller_owned_root import AcceptanceError, parse_envelope
+from dev.runtime_lifecycle.service_admin_channel import owned_service_settings, service_admin
 
 from .. import ledger_classification_speed as harness
 from ..ledger_classification_speed import (
     PREREQUISITE_ABSENT,
     PrerequisiteAbsentError,
     Presented,
+    ScratchInGitProjectError,
     ServerFacts,
     ServerLog,
+    SetupNotAppliedError,
+    SetupStepRefusedError,
+    apply_window_settings,
     classify_flags,
+    default_scratch_parent,
     distribution,
     lane_model,
     measure_ledger,
     model_weights,
+    output_directory,
     parse_arguments,
     prerequisite_absence,
     preset_text,
+    require_scratch_outside_git,
     router_id,
     run_record_count,
     summarise,
@@ -727,11 +753,13 @@ def test_listing_identifiers_are_read_once_each_in_order() -> None:
 # --- command line and prerequisites -----------------------------------------------------------------
 
 
-def test_argument_defaults_keep_scratch_under_the_worktree_tmp() -> None:
+def test_argument_defaults_put_the_disposable_root_outside_every_git_project() -> None:
     arguments = parse_arguments(["--out", "result.json"])
     scratch = Path(arguments.scratch)
-    assert scratch.parent == REPO_ROOT / ".tmp" / "ledger-classification-speed"
-    assert datetime.strptime(scratch.name, "%Y%m%dT%H%M%S")
+    assert scratch == default_scratch_parent()
+    # The agent's own rule: no directory at or above the root may hold ``.git``.
+    assert enclosing_git_project(scratch) is None
+    assert datetime.strptime(arguments.stamp, "%Y%m%dT%H%M%S")
     assert Path(arguments.package) == REPO_ROOT / "build" / "windows-x64" / "stage" / "Release" / "app"
     assert Path(arguments.model_store) == Path.home() / ".ollama" / "models"
     assert (arguments.count, arguments.mode, arguments.seed, arguments.budget_seconds) == (
@@ -741,11 +769,58 @@ def test_argument_defaults_keep_scratch_under_the_worktree_tmp() -> None:
         1200.0,
     )
     assert (arguments.model, arguments.context, arguments.cpu_only, arguments.inspect) == (None, None, False, False)
-    assert arguments.admin_steps("llamacpp_api", "synthetic-text:4b") == [
-        ("local_engine_choose", {"engine": "llamacpp"}),
-        ("reading_model_choose", {"provider": "llamacpp_api", "model": "synthetic-text:4b"}),
-    ]
-    assert parse_arguments(["--out", "x", "--no-select"]).admin_steps("llamacpp_api", "m") == []
+    assert (arguments.select, arguments.placement) == (True, LocalPlacement.AUTO)
+    assert parse_arguments(["--out", "x", "--cpu-only"]).placement is LocalPlacement.CPU_ONLY
+    assert parse_arguments(["--out", "x", "--no-select"]).select is False
+
+
+def test_the_default_scratch_is_the_account_temporary_folder_not_a_temp_variable(tmp_path: Path) -> None:
+    # A test run points TEMP into the checkout; the account folder does not follow it.
+    assert default_scratch_parent({"LOCALAPPDATA": str(tmp_path)}) == tmp_path / "Temp"
+    assert default_scratch_parent({}) == Path(tempfile.gettempdir())
+
+
+def test_a_scratch_inside_a_git_project_is_refused_by_the_agents_rule(tmp_path: Path) -> None:
+    checkout = tmp_path / "checkout"
+    (checkout / ".git").mkdir(parents=True)
+    worktree = tmp_path / "worktree"
+    worktree.mkdir()
+    (worktree / ".git").write_text("gitdir: elsewhere\n", encoding="utf-8")
+    for inside in (checkout, checkout / "not" / "yet" / "made", worktree / ".tmp"):
+        with pytest.raises(ScratchInGitProjectError, match="inside the Git project"):
+            require_scratch_outside_git(inside)
+    with pytest.raises(PrerequisiteAbsentError):
+        require_scratch_outside_git(REPO_ROOT / ".tmp" / "ledger-classification-speed")
+
+
+def test_a_scratch_inside_a_git_project_exits_three_before_anything_starts(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = tmp_path / "models"
+    (store / "manifests").mkdir(parents=True)
+    package = _package(tmp_path, llama=True)
+    (tmp_path / "project" / ".git").mkdir(parents=True)
+    inside = tmp_path / "project" / "scratch"
+
+    def must_not_start(arguments: Any) -> dict[str, Any]:
+        raise AssertionError("a refused scratch must stop the run before it starts")
+
+    monkeypatch.setattr(harness, "measure", must_not_start)
+    code, said = _main(capsys, "--package", str(package), "--model-store", str(store), "--scratch", str(inside))
+    assert code == PREREQUISITE_ABSENT
+    assert said["error"] == "ScratchInGitProjectError"
+    assert str(tmp_path / "project") in said["absent"]
+    assert not inside.exists()
+
+
+def test_outputs_stay_below_the_worktree_tmp() -> None:
+    stamp = f"test-{uuid4().hex}"
+    outputs = output_directory(stamp)
+    try:
+        assert outputs == TEMP_ROOT / "ledger-classification-speed" / stamp
+        assert outputs.is_dir() and outputs.resolve().is_relative_to(REPO_ROOT.resolve() / ".tmp")
+    finally:
+        outputs.rmdir()
 
 
 def test_out_is_required_and_mode_is_closed(capsys: pytest.CaptureFixture[str]) -> None:
@@ -861,3 +936,188 @@ def test_health_wait_fails_when_nothing_answers_within_the_bound() -> None:
         address = f"127.0.0.1:{probe.getsockname()[1]}"
     with pytest.raises(AcceptanceError, match="did not answer /health"):
         wait_healthy(address, 0.3)
+
+
+# --- the window's settings, through the real admin wire and the real model list service ---------------
+
+
+_JSON_OBJECT: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
+_LANE = f"{LocalEngine.LLAMACPP.value}_api"
+"""The synthetic catalogue's keyless llama.cpp lane."""
+
+
+class _WindowSettingsService:
+    """The agent service's dispatch of the window's settings actions, onto the real model list service.
+
+    It maps each validated request the admin server hands on to the same
+    ``LocalModelListService`` call the service makes and answers the result's
+    JSON, as the service does; the store is the in-memory one that keeps the
+    secure store's revision contract.
+    """
+
+    def __init__(self, models: LocalModelListService) -> None:
+        self._models = models
+
+    def admin(self, action: AdminAction, **fields: Any) -> JsonValue:
+        answer = self._answer(action, fields)
+        if answer is None:
+            return {"kind": "refused", "code": "invalid_request"}
+        return _JSON_OBJECT.validate_python(answer.model_dump(mode="json"))
+
+    def _answer(self, action: AdminAction, fields: dict[str, Any]) -> BaseModel | None:
+        models = self._models
+        revision = fields.get("expected_revision")
+        lane, model = fields.get("provider"), fields.get("model")
+        if action == "local_engine":
+            return models.engine_status()
+        if action == "local_models":
+            return models.status()
+        if revision is None:
+            return None
+        if action == "local_engine_choose":
+            return models.choose_engine(
+                LocalEngine(fields["engine"]), LocalPlacement(fields["placement"]), expected_revision=revision
+            )
+        if lane is None or model is None:
+            return None
+        if action == "local_model_add":
+            return models.add(lane, model=model, expected_revision=revision)
+        if action == "reading_model_choose":
+            return models.choose_reading(lane, model=model, expected_revision=revision)
+        if action == "task_model_choose":
+            listed = ListedModel(lane=lane, model=model)
+            return models.choose_task(
+                fields["task_kind"], model=listed, effort=fields.get("effort"), expected_revision=revision
+            )
+        return None
+
+
+@pytest.fixture
+def settings_service() -> Iterator[tuple[LocalModelListService, Any]]:
+    """The model list service behind the real admin server, and the harness's owned settings exchange to it."""
+    models = LocalModelListService(
+        store=MemoryLocalModelListStore(),
+        catalog_source=ProvidedProviderCatalogSource(engine_catalog()),
+        live_models=StaticLiveModels(),
+        default_engine=LocalEngine.LLAMACPP,
+    )
+    bearer = bytearray(b"synthetic-parent-admin-authority")
+    server = AdminServer(_WindowSettingsService(models), bearer=bearer)
+
+    def exchange(action: AdminAction, /, **fields: Any) -> dict[str, Any]:
+        return owned_service_settings(bearer, server.port, action, **fields)
+
+    try:
+        yield models, exchange
+    finally:
+        server.close()
+        bearer[:] = bytes(len(bearer))
+
+
+def test_window_settings_store_engine_list_reading_and_classification_model_at_each_read_revision(
+    settings_service: tuple[LocalModelListService, Any],
+) -> None:
+    models, exchange = settings_service
+    before = models.engine_status()
+    assert isinstance(before, LocalEngineStatus) and not before.chosen
+
+    replies = apply_window_settings(exchange, lane=_LANE, model=KEYLESS_TEXT_MODEL, placement=LocalPlacement.CPU_ONLY)
+
+    assert list(replies) == [
+        "local_engine",
+        "local_engine_choose",
+        "local_model_add",
+        "reading_model_choose",
+        "task_model_choose",
+    ]
+    engine = models.engine_status()
+    assert isinstance(engine, LocalEngineStatus)
+    assert (engine.chosen, engine.engine, engine.placement) == (True, LocalEngine.LLAMACPP, LocalPlacement.CPU_ONLY)
+    listed = models.status()
+    assert isinstance(listed, LocalModelListStatus)
+    assert listed.reading is not None and (listed.reading.lane, listed.reading.model) == (_LANE, KEYLESS_TEXT_MODEL)
+    assert [(task.task_kind, task.lane, task.model, task.effort) for task in listed.tasks] == [
+        (ModelRunTaskKind.CLASSIFICATION.value, _LANE, KEYLESS_TEXT_MODEL, None)
+    ]
+    # Each guarded step carried the revision the step before it answered.
+    revisions = [replies[step]["revision"] for step in replies]
+    assert revisions[-1] == listed.revision
+    assert revisions[0] != revisions[1]
+
+    # Asking again stores nothing new and still answers every step.
+    again = apply_window_settings(exchange, lane=_LANE, model=KEYLESS_TEXT_MODEL, placement=LocalPlacement.CPU_ONLY)
+    assert again["task_model_choose"] == replies["task_model_choose"]
+
+
+def test_a_setting_changed_between_steps_is_a_named_revision_refusal(
+    settings_service: tuple[LocalModelListService, Any],
+) -> None:
+    models, exchange = settings_service
+
+    def with_a_concurrent_edit(action: AdminAction, /, **fields: Any) -> dict[str, Any]:
+        if action == "reading_model_choose":
+            # Someone else stores a list change after the harness read its revision.
+            current = models.status()
+            assert isinstance(current, LocalModelListStatus)
+            models.add(_LANE, model="custom-model:test", expected_revision=current.revision)
+        return exchange(action, **fields)
+
+    with pytest.raises(SetupStepRefusedError, match="reading_model_choose refused: revision_conflict") as refused:
+        apply_window_settings(
+            with_a_concurrent_edit, lane=_LANE, model=KEYLESS_TEXT_MODEL, placement=LocalPlacement.AUTO
+        )
+    assert (refused.value.step, refused.value.code) == ("reading_model_choose", "revision_conflict")
+    listed = models.status()
+    assert isinstance(listed, LocalModelListStatus) and listed.tasks == ()
+
+
+def test_an_unknown_lane_or_an_unreadable_catalogue_is_a_named_refusal(
+    settings_service: tuple[LocalModelListService, Any],
+) -> None:
+    _models, exchange = settings_service
+    with pytest.raises(SetupStepRefusedError, match="local_model_add refused: unknown"):
+        apply_window_settings(exchange, lane="no_such_lane", model=KEYLESS_TEXT_MODEL, placement=LocalPlacement.AUTO)
+
+    models = LocalModelListService(
+        store=MemoryLocalModelListStore(),
+        catalog_source=UnavailableCatalogSource(),
+        live_models=StaticLiveModels(),
+        default_engine=LocalEngine.LLAMACPP,
+    )
+    bearer = bytearray(b"synthetic-parent-admin-authority")
+    server = AdminServer(_WindowSettingsService(models), bearer=bearer)
+    try:
+        with pytest.raises(SetupStepRefusedError, match="local_model_add refused: catalog_unavailable"):
+            apply_window_settings(
+                lambda action, /, **fields: owned_service_settings(bearer, server.port, action, **fields),
+                lane=_LANE,
+                model=KEYLESS_TEXT_MODEL,
+                placement=LocalPlacement.AUTO,
+            )
+    finally:
+        server.close()
+
+
+def test_an_answer_outside_the_settings_contract_is_named_not_applied() -> None:
+    def departing(action: AdminAction, /, **fields: Any) -> dict[str, Any]:
+        return {"engine": "llamacpp"}
+
+    with pytest.raises(SetupNotAppliedError, match="local_engine answered outside its contract"):
+        apply_window_settings(departing, lane=_LANE, model=KEYLESS_TEXT_MODEL, placement=LocalPlacement.AUTO)
+
+
+def test_the_owned_channel_carries_only_settings_and_the_shared_one_stays_read_only() -> None:
+    bearer = bytearray(b"synthetic-parent-admin-authority")
+    for action in ("set", "auth", "sign_in", "start", "stop", "local_models_reset", "console_environment"):
+        with pytest.raises(AcceptanceError, match="local-model settings reads and choices only"):
+            owned_service_settings(bearer, 1, action)
+    with pytest.raises(AcceptanceError, match="credential frames"):
+        owned_service_settings(bearer, 1, "local_engine", secret_bytes=8)
+    for action in ("local_engine_choose", "reading_model_choose", "task_model_choose", "local_model_add"):
+        with pytest.raises(AcceptanceError, match="permits catalog and status reads only"):
+            service_admin(bearer, 1, action)
+
+    shared = object.__new__(AgentServiceSession)
+    shared._owned = False
+    with pytest.raises(AcceptanceError, match="shared agent service session does not change"):
+        shared.settings("local_engine")

@@ -24,7 +24,12 @@ from ..overview.calendar_models import (
     OverviewPeriodState,
 )
 from ..overview.home import (
-    HOME_ACTION_REASON_CODES,
+    HOME_REASON_BLOCKED_DEPENDENCY,
+    HOME_REASON_BLOCKED_EVIDENCE,
+    HOME_REASON_BLOCKED_REVIEW,
+    HOME_REASON_DECLARATION_NEEDS_REVIEW,
+    HOME_REASON_EVIDENCE_MISSING,
+    HOME_REASON_LEDGER_CLASSIFICATION_PENDING,
     HomeAccountSession,
     HomeAvailability,
     HomeDeclarationResume,
@@ -175,7 +180,14 @@ def test_served_words_differ_between_the_supported_languages() -> None:
 
 def test_the_closed_reason_codes_all_have_words_in_every_language() -> None:
     for language in _LANGUAGES:
-        for code in HOME_ACTION_REASON_CODES:
+        for code in (
+            HOME_REASON_BLOCKED_DEPENDENCY,
+            HOME_REASON_BLOCKED_EVIDENCE,
+            HOME_REASON_BLOCKED_REVIEW,
+            HOME_REASON_DECLARATION_NEEDS_REVIEW,
+            HOME_REASON_EVIDENCE_MISSING,
+            HOME_REASON_LEDGER_CLASSIFICATION_PENDING,
+        ):
             action = HomeNextAction(rank=0, action=declare_next_action("operator.ledger.classify"), reason_code=code)
             served = serve_home_projection(_projection(actions=(action,)), language)
             _said(served.actions[0].reason_words)

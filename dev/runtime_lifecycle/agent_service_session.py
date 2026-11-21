@@ -58,6 +58,7 @@ class AgentServiceSession:
         agent_event: Mapping[str, Any],
         setup_counts: Mapping[str, int],
         timings: Mapping[str, float],
+        owned: bool = False,
     ) -> None:
         """Retain the exact runtime, person, service and setup evidence."""
         self.programs = programs
@@ -75,6 +76,7 @@ class AgentServiceSession:
         self.agent_event = dict(agent_event)
         self.setup_counts = dict(setup_counts)
         self.timings = dict(timings)
+        self._owned = owned
 
     @property
     def first_refusal_code(self) -> str | None:
@@ -94,10 +96,23 @@ class AgentServiceSession:
 
     def admin(self, action: AdminAction, **fields: Any) -> dict[str, JsonValue]:
         """Request a typed public catalog or service status projection."""
+        return self._service.admin(self._admin_port(), action, **fields)
+
+    def settings(self, action: AdminAction, **fields: Any) -> dict[str, JsonValue]:
+        """Read or store the window's local-model settings, on a session its caller owns alone.
+
+        A shared session serves many tests, so none of them may change what the
+        others read: only a session started with ``owned=True`` carries settings.
+        """
+        if not self._owned:
+            raise AcceptanceError("a shared agent service session does not change local-model settings")
+        return self._service.settings(self._admin_port(), action, **fields)
+
+    def _admin_port(self) -> int:
         port = self.service_ready.get("admin_port")
         if type(port) is not int or not 0 < port <= 65535:
             raise AcceptanceError("service admin endpoint is invalid")
-        return self._service.admin(port, action, **fields)
+        return port
 
     def catalog(self) -> dict[str, JsonValue]:
         """Read the service's currently available provider catalog."""
@@ -129,12 +144,15 @@ def agent_service_session(
     scratch: Path,
     *,
     external_bin_dirs: tuple[Path, ...] = (),
+    owned: bool = False,
 ) -> Generator[AgentServiceSession]:
     """Start the runtime first, then create one profile, holder and admitted service.
 
     The service's first typed ``agent_ready`` or ``refused`` event is retained
     for the suite. A provider refusal is observable and does not prevent
     structural service tests from using catalog or status administration.
+    ``owned`` marks a session one caller alone uses, which may then store the
+    window's local-model settings as the service's parent.
     """
     package = package.resolve(strict=True)
     scratch.mkdir(parents=True, exist_ok=True)
@@ -245,6 +263,7 @@ def agent_service_session(
             agent_event=agent_event,
             setup_counts=counts,
             timings=timings,
+            owned=owned,
         )
 
 

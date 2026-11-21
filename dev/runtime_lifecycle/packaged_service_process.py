@@ -33,7 +33,7 @@ from .caller_owned_root import (
     AcceptanceError,
     require,
 )
-from .service_admin_channel import service_admin
+from .service_admin_channel import owned_service_settings, service_admin
 
 _JSON_OBJECT: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
 _SERVICE_STOP_SECONDS = 20.0
@@ -231,6 +231,10 @@ class PackagedServiceProcess:
     def admin(self, port: int, action: AdminAction, **fields: Any) -> dict[str, JsonValue]:
         """Use the bounded parent-administration protocol for public reads."""
         return service_admin(self._bearer, port, action, **fields)
+
+    def settings(self, port: int, action: AdminAction, **fields: Any) -> dict[str, JsonValue]:
+        """Read or store the window's local-model settings as this service's parent, which minted its bearer."""
+        return owned_service_settings(self._bearer, port, action, **fields)
 
     def close(self) -> None:
         """Close service stdin, settle its tree, and close every pipe and job handle."""

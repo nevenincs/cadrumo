@@ -1,4 +1,4 @@
-"""Measure how fast the ledger classifies movements with a local model, through the built package.
+r"""Measure how fast the ledger classifies movements with a local model, through the built package.
 
 One run stands up a disposable product root from a built native package, the
 way the runtime lifecycle harness does: the packaged runtime, a synthetic
@@ -25,10 +25,33 @@ the server's prompt and generation times. The product log's run records give
 the number of model runs the reader completed. A fixed command without a model
 call measures the command line's own cost on the same root.
 
+Before asking, the run stores the settings the window stores when a person
+picks the local model, through the service's parent administration, which the
+run holds as the window does because it launched the service with the bearer
+the service authenticates its parent by: the local engine (llama.cpp, at the
+placement ``--cpu-only`` names), the model on the lane's list, the model
+documents are read with, and the model the ``classification`` task kind runs
+with, which a classification run reads before the reading model. Each choice
+carries the revision the step before it read, and a refused or unapplied step
+ends the run with a named error. ``--no-select`` leaves the settings as the
+service starts them.
+
+The disposable product root (runtime storage, the agent's hosted root and the
+llama-server home) lies outside every Git project, because the bundled
+cadrumo-agent refuses a hosted root inside one (``hosted_root_in_git_project``):
+a fresh ``cadrumo-e2e-<random>`` directory below ``--scratch``, which defaults
+to the account's own temporary folder (``%LOCALAPPDATA%\Temp``, else the
+interpreter's temporary directory). A ``--scratch`` inside a Git project is
+refused before anything starts. The root is removed at the end without
+following links, and only that exactly named directory. The outputs a person
+reads afterwards, the served catalogue, the settings replies, the synthetic
+statement and the router log, go below the worktree's ``.tmp/`` instead, beside
+``--out``.
+
 Exit 0 means every phase ran and the JSON was written; per-movement refusals
 are counted in it, not raised. Exit 1 names a setup failure. Exit 3 means a
 prerequisite is absent: the package, its llama-server, the model store or the
-model in it.
+model in it, or a ``--scratch`` inside a Git project.
 """
 
 from __future__ import annotations
@@ -43,6 +66,7 @@ import random
 import re
 import statistics
 import sys
+import tempfile
 import time
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import ExitStack, contextmanager
@@ -55,14 +79,26 @@ from urllib.error import URLError
 from urllib.request import urlopen
 
 import psutil
+from pydantic import BaseModel, JsonValue, ValidationError
 
 from cadrumo.core.config_runtime_fields import LLAMA_SERVER_ADDRESS
 from cadrumo_agent_service.admin import AdminAction
+from cadrumo_agent_service.providers.application.contracts import (
+    LocalEngineStatus,
+    LocalModelListEntry,
+    LocalModelListStatus,
+    ProviderSettingsRefusal,
+    TaskModelEntry,
+)
+from cadrumo_agent_service.providers.domain.record import LocalEngine, LocalPlacement
+from cadrumo_client.contracts.model_runs import ModelRunTaskKind
 from cadrumo_client.transport.windows_process import WindowsProcessScope, unreturned_windows_process_scope
-from dev.paths import REPO_ROOT
+from dev.desktop_agent_live.disposable_root import create_root, enclosing_git_project, remove_root
+from dev.paths import REPO_ROOT, TEMP_ROOT
 from dev.runtime_lifecycle.agent_service_session import AgentServiceSession, agent_service_session
 from dev.runtime_lifecycle.caller_owned_root import AcceptanceError
 from dev.runtime_lifecycle.proof_support import supported_filing_year
+from dev.temporary_output import prepare_temp_root
 
 PREREQUISITE_ABSENT: Final = 3
 _LLAMA_FOLDER: Final = Path("bin") / "llama"
@@ -70,7 +106,8 @@ LLAMA_EXECUTABLE: Final = "llama-server.exe" if sys.platform == "win32" else "ll
 _MODEL_MEDIA_TYPE: Final = "application/vnd.ollama.image.model"
 _DEFAULT_REGISTRY: Final = "registry.ollama.ai"
 _DEFAULT_NAMESPACE: Final = "library"
-_ENGINE_PROVIDER: Final = "llamacpp"
+_ENGINE_PROVIDER: Final = LocalEngine.LLAMACPP.value
+_OUTPUTS: Final = "ledger-classification-speed"
 _HEALTH_SECONDS: Final = 120.0
 MAX_CONTEXT: Final = 16384
 """The largest context this measurement loads a model with."""
@@ -106,6 +143,32 @@ _INCOME: Final = (
 
 class PrerequisiteAbsentError(Exception):
     """A prerequisite of the measurement is not on this machine: the run cannot start, it did not fail."""
+
+
+class ScratchInGitProjectError(PrerequisiteAbsentError):
+    """``--scratch`` lies inside a Git project, where the bundled agent refuses its hosted root."""
+
+
+class SetupStepRefusedError(AcceptanceError):
+    """The agent service refused one of the window's settings steps; ``code`` is its typed refusal."""
+
+    def __init__(self, step: str, code: str) -> None:
+        """Name the step and the service's refusal code."""
+        super().__init__(f"setup step {step} refused: {code}")
+        self.step = step
+        self.code = code
+
+
+class SetupNotAppliedError(AcceptanceError):
+    """A settings step answered, but outside its contract or without the setting it was asked to store."""
+
+
+class SettingsExchange(Protocol):
+    """One parent-administration settings request on the measured service: its action, fields and answer."""
+
+    def __call__(self, action: AdminAction, /, **fields: Any) -> dict[str, JsonValue]:
+        """Send ``action`` with ``fields`` and return the service's typed result."""
+        ...
 
 
 class TimedCli(Protocol):
@@ -224,10 +287,15 @@ def preset_text(presented: Presented, *, cpu_only: bool) -> str:
 
 
 @contextmanager
-def llama_router(package: Path, scratch: Path, presented: Presented, *, cpu_only: bool) -> Generator[ServerLog]:
-    """Run the package's llama-server as the manager runs it, contained in a kill-on-close job."""
+def llama_router(
+    package: Path, root: Path, log_path: Path, presented: Presented, *, cpu_only: bool
+) -> Generator[ServerLog]:
+    """Run the package's llama-server as the manager runs it, contained in a kill-on-close job.
+
+    Its home lies in the disposable ``root``; its standard error is kept at ``log_path``.
+    """
     executable = (package / _LLAMA_FOLDER / LLAMA_EXECUTABLE).resolve(strict=True)
-    home = scratch / "llama-server"
+    home = root / "llama-server"
     for folder in (home / "AppData" / "Roaming", home / "AppData" / "Local", home / "tmp", home / "cache"):
         folder.mkdir(parents=True, exist_ok=True)
     preset = home / "models.ini"
@@ -247,7 +315,7 @@ def llama_router(package: Path, scratch: Path, presented: Presented, *, cpu_only
         *("--host", host, "--port", port, "--models-preset", str(preset)),
         *("--models-max", "1", "--no-models-autoload"),
     )
-    log = ServerLog(scratch / "llama-server.log")
+    log = ServerLog(log_path)
     try:
         scope = WindowsProcessScope()
     except BaseException as error:
@@ -473,7 +541,7 @@ def measure_ledger(
     cli: TimedCli,
     log: ServerLog,
     product_root: Path,
-    scratch: Path,
+    outputs: Path,
     *,
     count: int,
     year: int,
@@ -488,7 +556,7 @@ def measure_ledger(
     """
     fields: dict[str, Any] = {}
     rows = synthetic_movements(count, year, seed=seed)
-    statement = scratch / "synthetic-statement.csv"
+    statement = outputs / "synthetic-statement.csv"
     write_statement(statement, rows)
     seconds, code, envelope = cli("app", "ledger", "import", "--file", str(statement), "--provider", "csv")
     timings["import_seconds"] = seconds
@@ -539,26 +607,155 @@ def measure_ledger(
     return fields
 
 
+def _refusal_code(reply: Mapping[str, JsonValue]) -> str | None:
+    """The typed refusal code of a settings answer: the admin wire's ``refused`` or the settings refusal."""
+    if reply.get("kind") == "refused":
+        return str(reply.get("code"))
+    if set(reply) == {"code"}:
+        try:
+            return ProviderSettingsRefusal.model_validate_json(json.dumps(reply)).code.value
+        except ValidationError:
+            return str(reply["code"])
+    return None
+
+
+def _settings_answer[Answer: BaseModel](step: str, reply: Mapping[str, JsonValue], contract: type[Answer]) -> Answer:
+    """Read one settings answer through the service's own result model, or name the refusal."""
+    code = _refusal_code(reply)
+    if code is not None:
+        raise SetupStepRefusedError(step, code)
+    # A computed field is served but is no input of the model.
+    stated = {key: value for key, value in reply.items() if key not in contract.model_computed_fields}
+    try:
+        return contract.model_validate_json(json.dumps(stated))
+    except ValidationError as error:
+        raise SetupNotAppliedError(f"setup step {step} answered outside its contract") from error
+
+
+def apply_window_settings(
+    settings: SettingsExchange, *, lane: str, model: str, placement: LocalPlacement
+) -> dict[str, dict[str, JsonValue]]:
+    """Store the settings the window stores for a local model, each at the revision the step before read.
+
+    The engine read gives the record's revision; then the engine and placement,
+    the model on ``lane``'s list (a recommended or already added one is kept as
+    it is), the model documents are read with, and the model the classification
+    task kind runs with are stored in turn. Returns each step's answer by step.
+    """
+    replies: dict[str, dict[str, JsonValue]] = {}
+
+    def step[Answer: BaseModel](action: AdminAction, contract: type[Answer], **fields: Any) -> Answer:
+        reply = settings(action, **fields)
+        replies[action] = reply
+        return _settings_answer(action, reply, contract)
+
+    engine = step("local_engine", LocalEngineStatus)
+    if engine.unreadable:
+        raise SetupNotAppliedError("setup step local_engine read an unreadable model list record")
+    chosen = step(
+        "local_engine_choose",
+        LocalEngineStatus,
+        engine=LocalEngine.LLAMACPP,
+        placement=placement,
+        expected_revision=engine.revision,
+    )
+    if (chosen.engine, chosen.placement, chosen.chosen) != (LocalEngine.LLAMACPP, placement, True):
+        raise SetupNotAppliedError(f"setup step local_engine_choose left {chosen.engine} at {chosen.placement}")
+    listed = step(
+        "local_model_add", LocalModelListStatus, provider=lane, model=model, expected_revision=chosen.revision
+    )
+    reading = step(
+        "reading_model_choose", LocalModelListStatus, provider=lane, model=model, expected_revision=listed.revision
+    )
+    wanted = LocalModelListEntry(lane=lane, model=model)
+    if reading.reading != wanted:
+        raise SetupNotAppliedError(
+            f"setup step reading_model_choose reads with {reading.reading} ({reading.reading_source.value})"
+        )
+    kind = ModelRunTaskKind.CLASSIFICATION.value
+    tasked = step(
+        "task_model_choose",
+        LocalModelListStatus,
+        task_kind=kind,
+        provider=lane,
+        model=model,
+        expected_revision=reading.revision,
+    )
+    if TaskModelEntry(task_kind=kind, lane=lane, model=model, effort=None) not in tasked.tasks:
+        raise SetupNotAppliedError(f"setup step task_model_choose stored no {kind} setting for {lane} {model}")
+    return replies
+
+
+def default_scratch_parent(environment: Mapping[str, str] | None = None) -> Path:
+    r"""The account's own temporary folder, ``%LOCALAPPDATA%\Temp``, else the interpreter's temporary directory.
+
+    The account folder comes first because a development shell or test run may
+    point ``TEMP`` into the checkout, where the agent refuses its hosted root.
+    """
+    local = (os.environ if environment is None else environment).get("LOCALAPPDATA", "").strip()
+    return Path(local) / "Temp" if local else Path(tempfile.gettempdir())
+
+
+def require_scratch_outside_git(parent: Path) -> None:
+    """Refuse a ``--scratch`` inside a Git project, by the rule the agent judges its hosted root with."""
+    project = enclosing_git_project(parent.absolute())
+    if project is not None:
+        raise ScratchInGitProjectError(
+            f"--scratch {parent} is inside the Git project {project}; the bundled agent refuses a hosted root "
+            "there, so the disposable root must lie outside every Git project"
+        )
+
+
+def output_directory(stamp: str) -> Path:
+    """The run's outputs below the worktree's ``.tmp/``, created."""
+    return prepare_temp_root(override=TEMP_ROOT / _OUTPUTS / stamp)
+
+
 def measure(arguments: _Arguments) -> dict[str, Any]:
     """Run the whole measurement and return its JSON document."""
     package = Path(arguments.package).resolve(strict=True)
-    scratch = Path(arguments.scratch).resolve()
-    scratch.mkdir(parents=True, exist_ok=True)
+    parent = Path(arguments.scratch).absolute()
+    require_scratch_outside_git(parent)
+    parent.mkdir(parents=True, exist_ok=True)
+    outputs = output_directory(arguments.stamp)
     store = Path(arguments.model_store).expanduser().resolve(strict=True)
     year = supported_filing_year()
     document: dict[str, Any] = {
         "started_at": datetime.now(UTC).isoformat(),
         "package": str(package),
+        "outputs": str(outputs),
         "machine": _machine(),
         "count": arguments.count,
         "mode": arguments.mode,
-        "placement": "cpu_only" if arguments.cpu_only else "auto",
+        "placement": arguments.placement.value,
         "booking_year": year,
     }
+    root = create_root(parent)
+    try:
+        _measure_on(arguments, document, package, root, outputs, store, year)
+    finally:
+        left = remove_root(root, parent)
+        document["disposable_root_left"] = left
+        if left:
+            print(json.dumps({"disposable_root_left": left}), file=sys.stderr, flush=True)
+    document["finished_at"] = datetime.now(UTC).isoformat()
+    return document
+
+
+def _measure_on(
+    arguments: _Arguments,
+    document: dict[str, Any],
+    package: Path,
+    root: Path,
+    outputs: Path,
+    store: Path,
+    year: int,
+) -> None:
+    """Stand up the session on ``root``, apply the settings and measure, filling ``document``."""
     timings: dict[str, float] = {}
     phase = time.perf_counter()
     with ExitStack() as stack:
-        session = stack.enter_context(agent_service_session(package, scratch / "session"))
+        session = stack.enter_context(agent_service_session(package, root / "session", owned=True))
         timings["session_setup_seconds"] = time.perf_counter() - phase
         document["session_timings"] = session.timings
         document["agent_event"] = {
@@ -567,29 +764,42 @@ def measure(arguments: _Arguments) -> dict[str, Any]:
         if session.first_refusal_code is not None:
             raise AcceptanceError(f"agent service refused the agent: {session.first_refusal_code}")
         catalog = session.catalog()
-        (scratch / "catalog.json").write_text(json.dumps(catalog, indent=2), encoding="utf-8")
+        (outputs / "catalog.json").write_text(json.dumps(catalog, indent=2), encoding="utf-8")
         lane, model, context = lane_model(catalog, arguments.model)
         context = min(arguments.context or context or MAX_CONTEXT, MAX_CONTEXT)
         presented = Presented(name=model, weights=model_weights(store, model), context=context)
         document["lane"] = {"provider": lane, "model": model, "context": context}
         if arguments.inspect:
-            for action in ("status", "local_models", "local_engine", "provider_lanes"):
-                (scratch / f"{action}.json").write_text(json.dumps(session.admin(action), indent=2), encoding="utf-8")
-            return document
+            (outputs / "status.json").write_text(json.dumps(session.status(), indent=2), encoding="utf-8")
+            for action in ("local_models", "local_engine", "provider_lanes"):
+                reply = session.settings(action)
+                (outputs / f"{action}.json").write_text(json.dumps(reply, indent=2), encoding="utf-8")
+            return
 
         phase = time.perf_counter()
-        log = stack.enter_context(llama_router(package, scratch, presented, cpu_only=arguments.cpu_only))
+        log = stack.enter_context(
+            llama_router(package, root, outputs / "llama-server.log", presented, cpu_only=arguments.cpu_only)
+        )
         timings["llama_server_health_seconds"] = time.perf_counter() - phase
-        for action, fields in arguments.admin_steps(lane, model):
-            reply = session.admin(action, **fields)
-            (scratch / f"admin-{action}.json").write_text(json.dumps(reply, indent=2), encoding="utf-8")
+        if arguments.select:
+            phase = time.perf_counter()
+            try:
+                replies = apply_window_settings(session.settings, lane=lane, model=model, placement=arguments.placement)
+            finally:
+                timings["settings_seconds"] = time.perf_counter() - phase
+            (outputs / "settings.json").write_text(json.dumps(replies, indent=2), encoding="utf-8")
+            document["settings"] = {
+                "reading": replies["reading_model_choose"].get("reading"),
+                "reading_source": replies["reading_model_choose"].get("reading_source"),
+                "tasks": replies["task_model_choose"].get("tasks"),
+            }
 
         document.update(
             measure_ledger(
                 session_cli(session),
                 log,
                 session.root,
-                scratch,
+                outputs,
                 count=arguments.count,
                 year=year,
                 seed=arguments.seed,
@@ -600,8 +810,6 @@ def measure(arguments: _Arguments) -> dict[str, Any]:
         )
         document["timings"] = {key: round(value, 3) for key, value in timings.items()}
         document["summary"] = summarise(document["items"])
-    document["finished_at"] = datetime.now(UTC).isoformat()
-    return document
 
 
 def summarise(items: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
@@ -657,23 +865,25 @@ class _Arguments(argparse.Namespace):
     inspect: bool
     budget_seconds: float
     select: bool
+    stamp: str
 
-    def admin_steps(self, lane: str, model: str) -> list[tuple[AdminAction, dict[str, Any]]]:
-        """The window's settings the run applies before asking: engine, then the reading model."""
-        if not self.select:
-            return []
-        return [
-            ("local_engine_choose", {"engine": "llamacpp"}),
-            ("reading_model_choose", {"provider": lane, "model": model}),
-        ]
+    @property
+    def placement(self) -> LocalPlacement:
+        """Where the run asks the local engine to run the model: the processor only with ``--cpu-only``."""
+        return LocalPlacement.CPU_ONLY if self.cpu_only else LocalPlacement.AUTO
 
 
 def parse_arguments(argv: Sequence[str] | None = None) -> _Arguments:
     """Parse the command line."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S")
+    parser.set_defaults(stamp=stamp)
     parser.add_argument("--package", default=str(REPO_ROOT / "build" / "windows-x64" / "stage" / "Release" / "app"))
-    parser.add_argument("--scratch", default=str(REPO_ROOT / ".tmp" / "ledger-classification-speed" / stamp))
+    parser.add_argument(
+        "--scratch",
+        default=str(default_scratch_parent()),
+        help="where the disposable product root is made; outside every Git project",
+    )
     parser.add_argument("--model-store", default=str(Path.home() / ".ollama" / "models"))
     parser.add_argument("--model", default=None, help="model to present; default: the lane's recommended text model")
     parser.add_argument("--context", type=int, default=None, help=f"context size, at most {MAX_CONTEXT}")
@@ -706,6 +916,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     absent = prerequisite_absence(Path(arguments.package), Path(arguments.model_store).expanduser())
     if absent is not None:
         print(json.dumps({"absent": absent}), file=sys.stderr)
+        return PREREQUISITE_ABSENT
+    try:
+        require_scratch_outside_git(Path(arguments.scratch))
+    except ScratchInGitProjectError as error:
+        print(json.dumps({"absent": str(error), "error": type(error).__name__}), file=sys.stderr)
         return PREREQUISITE_ABSENT
     try:
         document = measure(arguments)
