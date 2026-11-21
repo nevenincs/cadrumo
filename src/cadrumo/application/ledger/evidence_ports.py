@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from ...core.identity.digest import ContentDigest
 from ...core.secure_object_write import SecureObjectWrite
+from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from .evidence_input_ports import EvidenceDocumentShapeProbe
 
@@ -114,11 +115,33 @@ class LedgerEvidencePortsFactory(Protocol):
         ...
 
 
+@dataclass(frozen=True, slots=True)
+class LedgerEvidenceVerifyPorts:
+    """Authorities for checking one evidence record's stored bytes and keeping the finding.
+
+    ``attachment_store`` reads the bytes the record names; ``evidence`` keeps the
+    finding. Both are bound to the same profile custody.
+    """
+
+    evidence: LedgerEvidencePorts
+    attachment_store: AttachmentStoreProtocol
+
+
+class LedgerEvidenceVerifyPortsFactory(Protocol):
+    """Construct the evidence check bundle for one profile bucket."""
+
+    def __call__(self, *, bucket_id: str) -> LedgerEvidenceVerifyPorts:
+        """Return the evidence check capabilities bound to ``bucket_id``."""
+        ...
+
+
 __all__ = [
     "EvidenceAttachmentIngestRequest",
     "EvidenceAttachmentIngestorProtocol",
     "LedgerEvidencePorts",
     "LedgerEvidencePortsFactory",
+    "LedgerEvidenceVerifyPorts",
+    "LedgerEvidenceVerifyPortsFactory",
     "ProfileBoundEvidenceAttachmentIngestorProtocol",
     "PurchaseInvoiceEvidenceRepositoryProtocol",
     "RevisionGuardedPurchaseInvoiceEvidenceRepositoryProtocol",

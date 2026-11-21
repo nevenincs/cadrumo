@@ -188,7 +188,8 @@ def test_every_caller_supplied_field_is_covered_by_the_conflict_comparison() -> 
     through -- which is the failure mode a hand-kept list always eventually has.
 
     Identity, provenance and lifecycle fields are excluded because the caller
-    does not re-supply them on an add; they are outcomes, not inputs.
+    does not re-supply them on an add; they are outcomes, not inputs. So is the
+    readability finding, which the probe of the stored bytes produces.
     """
     import inspect
 
@@ -203,6 +204,7 @@ def test_every_caller_supplied_field_is_covered_by_the_conflict_comparison() -> 
         "updated_at",
         "linked_invoice_ids",
         "linked_transaction_ids",
+        "readability",
     }
     caller_supplied = set(PurchaseInvoiceEvidence.model_fields) - not_caller_supplied
     source = inspect.getsource(divergent_evidence_fields)

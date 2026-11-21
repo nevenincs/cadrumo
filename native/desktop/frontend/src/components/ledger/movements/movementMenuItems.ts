@@ -14,6 +14,8 @@ import { CLASSIFY_CHORDS } from "./useClassifyChords";
  * act on the group, which the chords, acting on the selection, do not: only
  * a movement's items show them. A new movement takes no classify item, and
  * a movement an import flagged as a likely duplicate offers its archiving.
+ * A stored movement offers to ask the agent, over the selection it is part
+ * of, saying why where it cannot.
  */
 export function movementMenuItems({
   t,
@@ -26,6 +28,7 @@ export function movementMenuItems({
   makeRule,
   classifyEnabled,
   overview = false,
+  askAgent = null,
 }: {
   t: Translate;
   /** The group's movements, where the menu is a group header's. */
@@ -46,6 +49,9 @@ export function movementMenuItems({
   classifyEnabled: (kind: ClassifyKind) => boolean;
   /** The row is a stored movement, which has an overview. */
   overview?: boolean;
+  /** Why the agent cannot be asked about the row, or null where it can;
+   * the item is left out where this is not given. */
+  askAgent?: { refusal: string | null } | null;
 }): MenuEntry[] {
   const classifyItems = (): MenuEntry[] =>
     CLASSIFY_KINDS.map((kind) => ({
@@ -69,6 +75,19 @@ export function movementMenuItems({
         ]
       : []),
     ...(draft ? [] : classifyItems()),
+    ...(askAgent && !ids && !draft
+      ? [
+          {
+            id: "ask_agent",
+            label: t("desktop.background_tasks.ask_agent"),
+            icon: "agent" as const,
+            enabled: askAgent.refusal === null,
+            ...(askAgent.refusal === null
+              ? {}
+              : { description: askAgent.refusal }),
+          },
+        ]
+      : []),
     ...(ids
       ? []
       : [

@@ -759,6 +759,20 @@ def compose_ledger_evidence_read_operation(inputs: OperationCompositionInputs) -
     )
 
 
+def compose_ledger_evidence_verify_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose ledger evidence verify operation."""
+    from ..application.ledger.evidence_verify_operation import (
+        build_ledger_evidence_verify_definition,
+        build_ledger_evidence_verify_registration,
+    )
+    from .adapter_composition_work_ports import build_ledger_evidence_verify_ports
+
+    definition = build_ledger_evidence_verify_definition(
+        build_ledger_evidence_verify_ports, execution_caller_reader=inputs.execution_caller_reader
+    )
+    return built((definition,), (build_ledger_evidence_verify_registration(definition),))
+
+
 def compose_ledger_evidence_mutation_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose ledger evidence mutation operation."""
     from ..application.ledger.evidence_mutation_operation import (
@@ -847,6 +861,19 @@ def compose_ledger_attachment_mutation_operation(inputs: OperationCompositionInp
     attach = build_ledger_attach_definition(actions, execution_caller_reader=caller)
     detach = build_ledger_detach_definition(actions, execution_caller_reader=caller)
     return built((attach, detach), (build_ledger_attach_registration(attach), build_ledger_detach_registration(detach)))
+
+
+def compose_ledger_purchase_evidence_release_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose ledger purchase evidence release operation."""
+    from ..application.ledger.purchase_evidence_release_operation import (
+        build_ledger_purchase_evidence_release_definition,
+        build_ledger_purchase_evidence_release_registration,
+    )
+
+    definition = build_ledger_purchase_evidence_release_definition(
+        inputs.ledger_actions(), execution_caller_reader=inputs.execution_caller_reader
+    )
+    return built((definition,), (build_ledger_purchase_evidence_release_registration(definition),))
 
 
 def compose_ledger_lifecycle_mutation_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:

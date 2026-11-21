@@ -62,7 +62,7 @@ const FIELD_SUBJECTS: [(&str, &[&str]); 1] = [("ledger.classify.review", &["tran
 /// classification job's run asks a model about each of its movements.
 const BACKGROUND: [&str; 1] = ["ledger.classify.job.run"];
 
-const ADMITTED: [(&str, Kind); 145] = [
+const ADMITTED: [(&str, Kind); 147] = [
     ("ledger.actividad-asset.acquisition-candidates", Read),
     ("ledger.actividad-asset.claim", Write),
     ("ledger.actividad-asset.correct", Write),
@@ -116,6 +116,7 @@ const ADMITTED: [(&str, Kind); 145] = [
     ("ledger.evidence.review.summary", Read),
     ("ledger.evidence.review.view", Read),
     ("ledger.evidence.update", Write),
+    ("ledger.evidence.verify", Write),
     ("ledger.evidence.view", Read),
     ("ledger.exclude", Write),
     ("ledger.export", Write),
@@ -179,6 +180,7 @@ const ADMITTED: [(&str, Kind); 145] = [
     ("ledger.prorrata.seed", Write),
     ("ledger.prorrata.seed_sector", Write),
     ("ledger.prorrata.settle_sector", Write),
+    ("ledger.purchase_evidence.release", Write),
     ("ledger.ratios.eligible", Read),
     ("ledger.ratios.list", Read),
     ("ledger.ratios.set", Write),

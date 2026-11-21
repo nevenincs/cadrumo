@@ -52,6 +52,7 @@ from ....domain.attachments.models import Attachment
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import InvoiceKind
+from ....tests.pdf_fixtures import text_pdf_bytes
 from ...adapter_composition_work_ports import build_ledger_evidence_ports
 from ...invoice_inspection_composition import build_invoice_inspection_read_ports
 
@@ -60,7 +61,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _BUCKET = "d0c5d0c5-0000-4000-8000-0000000000d0"
 _FOLDER = "carpeta-privada-proveedor"
 _FILE_NAME = "factura-proveedor-0042.pdf"
-_PDF = b"%PDF-1.4\n% synthetic factura F-0042\n%%EOF\n"
+_PDF = text_pdf_bytes(("synthetic factura F-0042",))
 
 
 @pytest.fixture

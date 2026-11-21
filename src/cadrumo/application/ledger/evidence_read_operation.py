@@ -19,6 +19,7 @@ from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTE
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.document_shape import DocumentShape
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
@@ -54,6 +55,7 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
 from .evidence_errors import PurchaseInvoiceEvidenceNotFoundError
 from .evidence_ports import LedgerEvidencePortsFactory
+from .evidence_readability import EvidenceReadabilityState, EvidenceUnreadableCause
 from .read_access import resolve_ledger_request_read_access
 
 LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID = "ledger.evidence.list"
@@ -117,12 +119,33 @@ class _LedgerEvidenceRecordFacts(BaseModel):
     notes: _Notes = ""
     created_at: datetime
     updated_at: datetime
+    readability: EvidenceReadabilityState = "unchecked"
+    """Whether the stored bytes were found readable, unreadable or never checked; read from the record, not probed."""
+    document_shape: DocumentShape | None = None
+    """The recognised document shape when the bytes were found readable."""
+    unreadable_cause: EvidenceUnreadableCause | None = None
+    """Why the bytes were found unreadable, in the read path's refusal vocabulary."""
+    readability_checked_at: datetime | None = None
+    """When the stored bytes were last checked."""
 
     @field_validator("created_at", "updated_at")
     @classmethod
     @pydantic_validation_boundary
     def _timestamps_are_utc(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
+
+    @model_validator(mode="after")
+    def _readability_carries_its_own_facts(self) -> _LedgerEvidenceRecordFacts:
+        checked = self.readability_checked_at is not None
+        if self.readability == "unchecked":
+            consistent = not checked and self.document_shape is None and self.unreadable_cause is None
+        elif self.readability == "readable":
+            consistent = checked and self.document_shape is not None and self.unreadable_cause is None
+        else:
+            consistent = checked and self.document_shape is None and self.unreadable_cause is not None
+        if not consistent:
+            raise ValueError("evidence readability does not carry exactly its own facts")
+        return self
 
 
 class LedgerEvidenceRecordProjection(_LedgerEvidenceRecordFacts):
@@ -156,6 +179,7 @@ class LedgerEvidenceRecordProjection(_LedgerEvidenceRecordFacts):
             validate_utc_aware(record.updated_at)
         except CoreValidationError:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from None
+        finding = record.readability
         return cls(
             evidence_id=record.evidence_id,
             bucket_id=record.bucket_id,
@@ -172,6 +196,10 @@ class LedgerEvidenceRecordProjection(_LedgerEvidenceRecordFacts):
             notes=record.notes,
             created_at=record.created_at,
             updated_at=record.updated_at,
+            readability="unchecked" if finding is None else finding.state,
+            document_shape=None if finding is None else finding.document_shape,
+            unreadable_cause=None if finding is None else finding.unreadable_cause,
+            readability_checked_at=None if finding is None else finding.checked_at,
         )
 
 
@@ -199,6 +227,10 @@ class LedgerEvidenceAutomationRecordProjection(_LedgerEvidenceRecordFacts):
             notes=record.notes,
             created_at=record.created_at,
             updated_at=record.updated_at,
+            readability=record.readability,
+            document_shape=record.document_shape,
+            unreadable_cause=record.unreadable_cause,
+            readability_checked_at=record.readability_checked_at,
         )
 
 

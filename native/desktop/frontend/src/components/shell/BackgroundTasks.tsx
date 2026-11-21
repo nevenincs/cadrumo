@@ -21,13 +21,11 @@ import {
 import type {
   ClassificationConsentScope,
   ClassificationJobStatus,
-  LedgerClassifyJobChangeResult,
   LedgerClassifyJobProjection,
 } from "../../shell/ledgerClassificationJobContract";
-import type { LedgerFailureCode } from "../../shell/ledger";
 import { countWords, useStrings, type Translate } from "../../shell/strings";
 import { ConsentRemedies } from "../ledger/inspector/ConsentRemedies";
-import { FAILURE_WORDS } from "./backgroundTaskWords";
+import { FAILURE_WORDS, jobNoticeText } from "./backgroundTaskWords";
 import type { ConsentStep } from "../ledger/inspector/modelRefusal";
 
 /** The words of each status a shown job can have. */
@@ -43,18 +41,6 @@ const STATUS_WORDS: Record<
   cancelled: "desktop.background_tasks.status.cancelled",
 };
 
-/** The words of what each change to a job came to. */
-const OUTCOME_WORDS: Record<LedgerClassifyJobChangeResult["outcome"], string> =
-  {
-    enqueued: "desktop.background_tasks.outcome.enqueued",
-    cancelled: "desktop.background_tasks.outcome.cancelled",
-    cancelling: "desktop.background_tasks.outcome.cancelling",
-    retried: "desktop.background_tasks.outcome.retried",
-    dismissed: "desktop.background_tasks.outcome.dismissed",
-    authorised: "desktop.background_tasks.outcome.authorised",
-    consent_revoked: "desktop.background_tasks.outcome.consent_revoked",
-  };
-
 const SCOPE_WORDS: Record<ClassificationConsentScope, string> = {
   once: "desktop.background_tasks.consent_scope.once",
   agent_session: "desktop.background_tasks.consent_scope.agent_session",
@@ -66,13 +52,6 @@ const SCOPES: readonly ClassificationConsentScope[] = [
   "agent_session",
   "remembered",
 ];
-
-const callFailure = (t: Translate, code: LedgerFailureCode) =>
-  t(
-    code === "unknown"
-      ? "desktop.background_tasks.call_unknown"
-      : "desktop.background_tasks.call_failed",
-  );
 
 /** What a job is over: one movement, a selection, or a period. */
 function scopeWords(
@@ -153,12 +132,15 @@ function ScopeChoice({
   );
 }
 
-function NoticeLine({
+/** What one action on a job, or an ask for a new one, came to: the
+ * served words and next step of a refusal, or the outcome's own words. */
+export function NoticeLine({
   notice,
   onAuthorise,
 }: {
   notice: JobNotice;
-  onAuthorise: () => void;
+  /** The door that records an off-host grant, where the surface has one. */
+  onAuthorise?: () => void;
 }) {
   const t = useStrings();
   if (notice.kind === "refused") {
@@ -167,9 +149,7 @@ function NoticeLine({
     return (
       <div className="grid gap-1.5" data-notice="refused">
         <span role="status" className="text-sm">
-          {notice.words ??
-            notice.step?.words ??
-            t("desktop.background_tasks.refused")}
+          {jobNoticeText(t, notice)}
         </span>
         {step && <ConsentRemedies step={step} onAuthorise={onAuthorise} />}
       </div>
@@ -181,13 +161,7 @@ function NoticeLine({
       data-notice={notice.kind}
       className="text-sm text-muted-foreground"
     >
-      {notice.kind === "resuming"
-        ? t("desktop.background_tasks.resuming")
-        : notice.kind === "waiting"
-          ? t("desktop.background_tasks.waiting")
-          : notice.kind === "changed"
-            ? t(OUTCOME_WORDS[notice.outcome])
-            : callFailure(t, notice.code)}
+      {jobNoticeText(t, notice)}
     </span>
   );
 }
@@ -414,6 +388,12 @@ export function BackgroundTasks() {
             {t("desktop.background_tasks.outcome.dismissed")}
           </span>
         )}
+        {tasks.enqueueNotice !== null &&
+          tasks.enqueueNotice.kind !== "changed" && (
+            <div className="background-tasks-enqueue border-b border-border px-3 py-2">
+              <NoticeLine notice={tasks.enqueueNotice} />
+            </div>
+          )}
         {tasks.readFailure !== null && (
           <span
             role="alert"

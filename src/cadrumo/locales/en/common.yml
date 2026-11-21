@@ -1293,6 +1293,22 @@ desktop:
   background_tasks:
     active: '{count} in progress'
     active_one: '{count} in progress'
+    apply_refusal:
+      business_pct_not_applicable: this classification takes no business share; clear
+        it and accept again
+      business_pct_required: this classification needs a business share; enter it
+        and accept again
+      category_unavailable: the proposed category is not available; choose one by
+        hand
+      movement_not_found: the movement is no longer stored
+      not_in_job: the movement is not part of this job
+      not_proposed: the job no longer holds a proposal for it; read the job again
+      rejected: the ledger refused the change; classify the movement by hand
+      stale: the movement changed after the proposal was made; ask the agent again
+    ask_agent: Ask the agent
+    ask_agent_held: A background job is already classifying this movement.
+    ask_agent_none: 'None of the selected movements can be asked about: each is read-only
+      or already being classified.'
     authorise: Authorise reading off this computer
     call_failed: The request got no answer.
     call_unknown: The request was sent, but whether it took effect is unknown.
@@ -1324,6 +1340,7 @@ desktop:
     label: Background tasks
     off_host: read off this computer by {model}
     outcome:
+      applied: 'Applied: {applied}. Not applied: {refused}.'
       authorised: Authorised. Asking again for the movements that needed it.
       cancelled: Cancelled.
       cancelling: 'Cancelling: the movement being asked finishes first.'
@@ -1332,6 +1349,16 @@ desktop:
       enqueued: Queued.
       retried: Asking again for the failed movements.
     progress: '{done} of {total} asked'
+    proposal:
+      accept: Accept
+      apply_marked: Apply the marked proposals
+      discard: Discard
+      discarded: Proposal discarded. Classify the movement by hand.
+      item_applied: Applied.
+      item_refused: 'Not applied: {cause}'
+      list: 'Agent proposals to review: {count}'
+      read_by: read on this computer by {model}
+      title: Agent proposal
     proposed: '{count} proposals ready'
     proposed_one: '{count} proposal ready'
     read_failed: The background tasks could not be read. They are read again when
@@ -3497,10 +3524,6 @@ desktop:
       sections: Movement sections
       selection:
         actions: Actions
-        approve_all: Approve {count} read
-        approved_all: 'Approvals not saved yet: {count}'
-        ask_each: Ask the model for each
-        asked: 'Suggestions to read: {count}'
         body: Selected movements
         classification: Classification for all
         classify_first: Classify first

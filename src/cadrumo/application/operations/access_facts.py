@@ -234,6 +234,8 @@ _LOCAL_WRITES: Final = (
     "ledger.evidence.add",
     "ledger.evidence.remove",
     "ledger.evidence.update",
+    # The check decrypts the stored bytes and probes them in process; it reads no file and sends nothing.
+    "ledger.evidence.verify",
     "ledger.exclude",
     "ledger.export",
     "ledger.inventory.closing-authority.record",
@@ -275,6 +277,7 @@ _LOCAL_WRITES: Final = (
     "ledger.prorrata.seed",
     "ledger.prorrata.seed_sector",
     "ledger.prorrata.settle_sector",
+    "ledger.purchase_evidence.release",
     "ledger.ratios.set",
     "ledger.ratios.unset",
     "ledger.remove",

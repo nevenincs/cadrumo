@@ -35,8 +35,12 @@ import {
 import type {
   ClassificationConsentScope,
   ClassificationItemFailureCause,
+  ClassificationJobScopeKind,
   ClassificationJobStatus,
+  LedgerClassifyJobAcceptedProposal,
+  LedgerClassifyJobApplyItemResult,
   LedgerClassifyJobChangeResult,
+  LedgerClassifyJobItemProjection,
   LedgerClassifyJobProjection,
 } from "./ledgerClassificationJobContract";
 import type { OperationNextStepV1 } from "./ledgerDocumentContract";
@@ -156,6 +160,28 @@ export function rowJobStates(
   return rows;
 }
 
+/** The job and item that hold `movement`'s proposal, where a job holds
+ * one: the newest job deciding, as the row's mark does. */
+export function proposalOf(
+  jobs: readonly LedgerClassifyJobProjection[],
+  rows: ReadonlyMap<string, RowJobState>,
+  movement: string,
+): {
+  job: LedgerClassifyJobProjection;
+  item: LedgerClassifyJobItemProjection & {
+    proposal: NonNullable<LedgerClassifyJobItemProjection["proposal"]>;
+  };
+} | null {
+  const state = rows.get(movement);
+  if (state?.kind !== "proposed") return null;
+  const job = jobs.find((held) => held.job_id === state.job);
+  const item = job?.items.find(
+    (found) => found.movement_id === movement && found.state === "proposed",
+  );
+  if (!job || !item?.proposal) return null;
+  return { job, item: { ...item, proposal: item.proposal } };
+}
+
 /** What a person's action on a job, or its run, came to. */
 export type JobNotice =
   /** The window ran a job it found left with movements to ask. */
@@ -170,10 +196,19 @@ export type JobNotice =
       words: string | null;
       step: OperationNextStepV1 | null;
     }
+  /** The accepted proposals were applied, or some refused with their
+   * cause. */
+  | { kind: "applied"; applied: number; refused: number }
   /** The call did not answer. */
   | { kind: "failed"; code: LedgerFailureCode };
 
-export type JobAction = "cancel" | "retry" | "dismiss" | "authorise";
+export type JobAction = "cancel" | "retry" | "dismiss" | "authorise" | "apply";
+
+/** What the person can ask a new job over: one movement or a selection. */
+export type EnqueueScope = Extract<
+  ClassificationJobScopeKind,
+  "single" | "selection"
+>;
 
 /** The jobs as the window holds them, and what it is doing to each. */
 export type BackgroundTasks = {
@@ -194,6 +229,24 @@ export type BackgroundTasks = {
     job: LedgerClassifyJobProjection,
     scope: ClassificationConsentScope,
   ): void;
+  /** Asks for a new job over `movements` and starts its run; answers what
+   * the ask came to, or null where the window no longer holds the
+   * profile. */
+  enqueue(
+    scope: EnqueueScope,
+    movements: readonly string[],
+  ): Promise<JobNotice | null>;
+  /** Whether an ask for a new job is in flight. */
+  enqueueing: boolean;
+  /** What the last ask for a new job came to, until another is asked. */
+  enqueueNotice: JobNotice | null;
+  /** Applies the proposals the person accepted, at the job's revision. */
+  apply(
+    job: LedgerClassifyJobProjection,
+    accepted: readonly LedgerClassifyJobAcceptedProposal[],
+  ): void;
+  /** What became of each movement's accepted proposal in its last apply. */
+  applied: ReadonlyMap<string, LedgerClassifyJobApplyItemResult>;
   /** What each movement shows of the jobs. */
   rows: ReadonlyMap<string, RowJobState>;
 };
@@ -206,6 +259,11 @@ const NOT_OFFERED: BackgroundTasks = {
   busy: new Map(),
   act: () => undefined,
   authorise: () => undefined,
+  enqueue: () => Promise.resolve(null),
+  enqueueing: false,
+  enqueueNotice: null,
+  apply: () => undefined,
+  applied: new Map(),
   rows: new Map(),
 };
 
@@ -268,6 +326,11 @@ export function useBackgroundTaskSource(
   const [busy, setBusy] = useState<ReadonlyMap<string, JobAction>>(
     () => new Map(),
   );
+  const [enqueueing, setEnqueueing] = useState(false);
+  const [enqueueNotice, setEnqueueNotice] = useState<JobNotice | null>(null);
+  const [applied, setApplied] = useState<
+    ReadonlyMap<string, LedgerClassifyJobApplyItemResult>
+  >(() => new Map());
   // What the subscription of the current profile reads with; replaced
   // whole when the profile or the ports change.
   const session = useRef<{
@@ -291,6 +354,9 @@ export function useBackgroundTaskSource(
     setJobs(new Map());
     setNotices(new Map());
     setBusy(new Map());
+    setEnqueueing(false);
+    setEnqueueNotice(null);
+    setApplied(new Map());
     setReadFailure(null);
     if (!tasks || !ledger || reader === null) return;
     const held = new Map<string, number>();
@@ -616,6 +682,108 @@ export function useBackgroundTaskSource(
     [ledger, change],
   );
 
+  const enqueue = useCallback(
+    async (
+      scope: EnqueueScope,
+      movements: readonly string[],
+    ): Promise<JobNotice | null> => {
+      const owner = session.current;
+      if (!owner || !ledger) return null;
+      setEnqueueing(true);
+      setEnqueueNotice(null);
+      let notice: JobNotice;
+      try {
+        const outcome = await ledger.submit("ledger.classify.job.enqueue", {
+          scope,
+          movement_ids: [...movements],
+        });
+        if (!owner.active) return null;
+        if (outcome.kind === "settled") {
+          const job = outcome.result.job;
+          owner.adopt(job);
+          notice = { kind: "changed", outcome: outcome.result.outcome };
+          notify(job.job_id, notice);
+          // The new job's movements need a run to ask them; a run another
+          // job holds makes this one wait, and says so.
+          owner.startRun(job.job_id, false);
+        } else
+          notice = unsettledNotice(outcome) ?? {
+            kind: "failed",
+            code: "unknown",
+          };
+      } catch (error) {
+        notice = { kind: "failed", code: ledgerFailure(error).code };
+      }
+      if (!owner.active) return null;
+      setEnqueueing(false);
+      setEnqueueNotice(notice);
+      return notice;
+    },
+    [ledger, notify],
+  );
+
+  const apply = useCallback(
+    (
+      job: LedgerClassifyJobProjection,
+      accepted: readonly LedgerClassifyJobAcceptedProposal[],
+    ) => {
+      const owner = session.current;
+      if (!owner || !ledger || accepted.length === 0) return;
+      setBusy((current) => new Map(current).set(job.job_id, "apply"));
+      notify(job.job_id, null);
+      void ledger
+        .submit("ledger.classify.job.apply", {
+          job_id: job.job_id,
+          expected_revision: job.revision,
+          accepted: [...accepted],
+        })
+        .then(
+          (outcome) => {
+            if (!owner.active) return;
+            if (outcome.kind === "settled") {
+              const { items } = outcome.result;
+              owner.adopt(outcome.result.job);
+              setApplied((current) => {
+                const next = new Map(current);
+                for (const item of items) next.set(item.movement_id, item);
+                return next;
+              });
+              const refused = items.filter(
+                (item) => item.outcome === "refused",
+              ).length;
+              notify(job.job_id, {
+                kind: "applied",
+                applied: items.length - refused,
+                refused,
+              });
+              // A movement changed since its proposal: the job is read
+              // again for what it holds now.
+              if (items.some((item) => item.refusal === "stale"))
+                owner.refresh();
+              return;
+            }
+            notify(
+              job.job_id,
+              unsettledNotice(outcome) ?? { kind: "failed", code: "unknown" },
+            );
+            // A refusal may come of a job that changed since it was read.
+            if (outcome.kind === "refused") owner.refresh();
+          },
+          (error: unknown) => {
+            if (owner.active)
+              notify(job.job_id, {
+                kind: "failed",
+                code: ledgerFailure(error).code,
+              });
+          },
+        )
+        .finally(() => {
+          if (owner.active) settle(job.job_id);
+        });
+    },
+    [ledger, notify, settle],
+  );
+
   return useMemo(() => {
     const list = [...jobs.values()].sort((left, right) =>
       right.created_at.localeCompare(left.created_at),
@@ -628,7 +796,27 @@ export function useBackgroundTaskSource(
       busy,
       act,
       authorise,
+      enqueue,
+      enqueueing,
+      enqueueNotice,
+      apply,
+      applied,
       rows: rowJobStates(list),
     };
-  }, [tasks, ledger, reader, jobs, readFailure, notices, busy, act, authorise]);
+  }, [
+    tasks,
+    ledger,
+    reader,
+    jobs,
+    readFailure,
+    notices,
+    busy,
+    act,
+    authorise,
+    enqueue,
+    enqueueing,
+    enqueueNotice,
+    apply,
+    applied,
+  ]);
 }

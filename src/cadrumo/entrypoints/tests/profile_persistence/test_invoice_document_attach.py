@@ -35,12 +35,13 @@ from ....application.tests.operation_host_fakes import (
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva.schema import InvoiceKind
+from ....tests.pdf_fixtures import text_pdf_bytes
 from ...adapter_composition_work_ports import build_ledger_evidence_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET = "a77ac400-0000-4000-8000-0000000000a7"
-_PDF = b"%PDF-1.4\n% synthetic factura F2026-0042\n%%EOF\n"
+_PDF = text_pdf_bytes(("synthetic factura F2026-0042",))
 
 
 @pytest.fixture

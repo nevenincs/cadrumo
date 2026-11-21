@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useId, useMemo, useState } from "react";
 import { PercentEditor } from "@/components/editors/PercentEditor";
 import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
@@ -20,18 +13,16 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { counted, facts, listed } from "@/shell/compose";
 import {
-  ledgerFailure,
-  type LedgerPort,
-  type LedgerReview,
-} from "../../../shell/ledger";
-import type { LedgerLlmReviewProjection } from "../../../shell/ledgerMovementCheckContract";
+  useBackgroundTasks,
+  type JobNotice,
+} from "../../../shell/backgroundTasks";
+import type { LedgerPort } from "../../../shell/ledger";
 import {
   CLASSIFY_KINDS,
   type ClassifyKind,
   type OpenRuleFromSelection,
 } from "../../../shell/ledgerCommands";
 import { parseFractionPercent, percentOf } from "../../../shell/ledgerGrammar";
-import { askReview, releaseReview } from "../../../shell/ledgerApply";
 import { planApply, SINGLE_WRITE_SECONDS } from "../../../shell/ledgerPlan";
 import {
   isDecidedClassification,
@@ -68,11 +59,9 @@ import {
   LIFECYCLE_KINDS,
   commonValue,
   completeCohort,
-  needsShare,
   noneClassified,
   selectionCounts,
   setForAll,
-  suggestionWrites,
   type CommonValue,
   type SetForAllField,
 } from "./inspectorModel";
@@ -81,15 +70,10 @@ import {
   irpfCategoryOptions,
   ivaCategoryOptions,
   lifecycleName,
-  modelFailureText,
   skipName,
 } from "./inspectorWords";
-import { ConsentRemedies } from "./ConsentRemedies";
-import {
-  consentStepOf,
-  modelRefusalOfOutcome,
-  type ModelRefusal,
-} from "./modelRefusal";
+import { SelectionJobProposals } from "./JobProposal";
+import { NoticeLine } from "../../shell/BackgroundTasks";
 import { useLedgerRead } from "./useInspectorReads";
 import {
   useFieldSuggestions,
@@ -124,9 +108,6 @@ const COMMON_FIELDS: readonly (readonly [
   ["own_account_id", (row) => row.own_account_id],
   ["group_label", (row) => row.group_label],
 ];
-/** The most movements one "ask the model for each" asks about. */
-const ASK_EACH_MAX = 20;
-
 type Held = {
   field: SetForAllField;
   value: string;
@@ -134,14 +115,6 @@ type Held = {
   writes: number;
   seconds: number;
   done: string;
-};
-type Asked = {
-  id: string;
-  review: LedgerReview<LedgerLlmReviewProjection> | null;
-  /** The runtime's code, or `no_review` or `refused` where it gave none. */
-  failed: string | null;
-  /** The sentence and step the backend served for the refusal, where it did. */
-  refusal?: ModelRefusal | null;
 };
 
 /**
@@ -232,61 +205,13 @@ export function SelectionInspector({
   const groups = useFieldSuggestions("group");
   const [notes, setNotes] = useState("");
   const [held, setHeld] = useState<Held | null>(null);
-  const [asked, setAsked] = useState<Asked[] | null>(null);
-  const [asking, setAsking] = useState(false);
+  const tasks = useBackgroundTasks();
+  // What the last ask for a job over this selection came to.
+  const [askNotice, setAskNotice] = useState<JobNotice | null>(null);
 
-  // "Ask the model for each" keeps one review waiting per movement until
-  // it is approved or let go. The ones not staged are cancelled when the
-  // list is asked again or the inspector closes; a staged one is the
-  // stage's, which lets it go when its answer is dropped, and it leaves
-  // the list then, since its review is no longer there to answer.
-  const portRef = useRef(port);
-  const holding = useRef<Asked[]>([]);
-  const stagedReviews = useRef<ReadonlySet<string>>(new Set());
-  const askTurn = useRef(0);
   const mostParts = useTextLimit("split_parts");
   const groupLimit = useTextLimit("group_label");
   const textLimit = useTextLimit("entry_text");
-  useEffect(() => {
-    portRef.current = port;
-  }, [port]);
-  const stagedNow = useMemo(
-    () =>
-      new Set(
-        stage.content.actions.flatMap((action) =>
-          action.kind === "suggestion" ? [action.operationId] : [],
-        ),
-      ),
-    [stage.content.actions],
-  );
-  useEffect(() => {
-    const before = stagedReviews.current;
-    stagedReviews.current = stagedNow;
-    const gone = (entry: Asked) =>
-      entry.review !== null &&
-      before.has(entry.review.operation_id) &&
-      !stagedNow.has(entry.review.operation_id);
-    if (!holding.current.some(gone)) return;
-    holding.current = holding.current.filter((entry) => !gone(entry));
-    setAsked(holding.current);
-  }, [stagedNow]);
-  const letGo = useCallback(() => {
-    for (const entry of holding.current)
-      if (entry.review && !stagedReviews.current.has(entry.review.operation_id))
-        void releaseReview(
-          portRef.current,
-          entry.review.operation_id,
-          entry.id,
-        );
-    holding.current = [];
-  }, []);
-  useEffect(
-    () => () => {
-      askTurn.current += 1;
-      letGo();
-    },
-    [letGo],
-  );
 
   // A complete split cohort can be merged: the history of one part names
   // its siblings.
@@ -464,94 +389,20 @@ export function SelectionInspector({
   };
 
   const { held: paused } = useWritePause();
-  async function askEach() {
-    // Each ask runs the registered review, a write the page's pause holds.
-    if (paused !== null) return;
-    const turn = (askTurn.current += 1);
-    // Asked again, the reviews the list held and nobody staged are let go.
-    letGo();
-    setAsked(null);
-    // A movement whose answer is staged already holds its review.
-    const answered = new Set(
-      content.actions.flatMap((action) =>
-        action.kind === "suggestion" ? [action.transactionId] : [],
-      ),
-    );
-    const targets = ids
-      .filter((id) => visible.has(id))
-      .filter((id) => {
-        const state = rows.get(id)?.transaction.lifecycle_state;
-        return state !== undefined && takesChanges(state);
-      })
-      .filter((id) => !answered.has(id))
-      .slice(0, ASK_EACH_MAX);
-    setAsking(true);
-    holding.current = [];
-    for (const id of targets) {
-      let operation: string | null = null;
-      let entry: Asked;
-      try {
-        const outcome = await askReview(port, "ledger.classify.review", {
-          transaction_id: id,
-          mode: "classification",
-          origin: "classify_llm_apply",
-        });
-        if (outcome.kind === "review" || outcome.kind === "running")
-          operation = outcome.operation_id;
-        if (outcome.kind !== "review")
-          entry = {
-            id,
-            review: null,
-            failed:
-              outcome.kind === "refused"
-                ? (outcome.reason ?? "refused")
-                : "no_review",
-            refusal: modelRefusalOfOutcome(outcome),
-          };
-        else
-          entry = {
-            id,
-            review: await port.review<LedgerLlmReviewProjection>(
-              outcome.operation_id,
-            ),
-            failed: null,
-          };
-      } catch (error) {
-        const failure = ledgerFailure(error);
-        entry = { id, review: null, failed: failure.reason ?? failure.code };
-      }
-      // A review the list cannot show, or that came back after the list
-      // was let go, is cancelled at once.
-      if (operation && (entry.review === null || turn !== askTurn.current))
-        void releaseReview(port, operation, id);
-      if (turn !== askTurn.current) return;
-      holding.current = [...holding.current, entry];
-      setAsked(holding.current);
-    }
-    setAsking(false);
-  }
-  const approve = (entry: Asked) => {
-    if (!entry.review) return;
-    onStage({
-      type: "stage_action",
-      action: {
-        id: `suggestion:${entry.id}`,
-        kind: "suggestion",
-        transactionId: entry.id,
-        operationId: entry.review.operation_id,
-        reviewDigest: entry.review.review_digest,
-        decision: "apply",
-        reason: "",
-        writes: suggestionWrites(entry.review.review.suggestion),
-      },
-    });
-  };
-  const approvable = (asked ?? []).filter(
-    (entry) =>
-      entry.review !== null &&
-      !needsShare(entry.review.review.suggestion) &&
-      !content.actions.some((action) => action.id === `suggestion:${entry.id}`),
+  // The selected movements the agent can be asked about: those shown that
+  // take changes and that no job is classifying already.
+  const askable = ids.filter(
+    (id) =>
+      visible.has(id) &&
+      takesChanges(rows.get(id)?.transaction.lifecycle_state ?? "") &&
+      tasks.rows.get(id)?.kind !== "classifying",
   );
+  const askAgent = () => {
+    // The job's ask is a write the page's pause holds.
+    if (paused !== null || askable.length === 0) return;
+    setAskNotice(null);
+    void tasks.enqueue("selection", askable).then(setAskNotice);
+  };
 
   return (
     <div className="ledger-selection flex min-h-0 flex-1 flex-col">
@@ -886,11 +737,22 @@ export function SelectionInspector({
               <Button
                 variant="outline"
                 size="sm"
-                disabled={blocked || asking}
-                onClick={() => void askEach()}
+                data-action="ask_agent"
+                disabled={
+                  blocked ||
+                  !tasks.offered ||
+                  tasks.enqueueing ||
+                  askable.length === 0
+                }
+                aria-description={
+                  askable.length === 0
+                    ? t("desktop.background_tasks.ask_agent_none")
+                    : undefined
+                }
+                onClick={askAgent}
               >
-                {asking ? <Spinner /> : <Icon name="agent" />}
-                {t("desktop.ledger.inspector.selection.ask_each")}
+                {tasks.enqueueing ? <Spinner /> : <Icon name="agent" />}
+                {t("desktop.background_tasks.ask_agent")}
               </Button>
             </WriteHold>
             <Button
@@ -923,123 +785,20 @@ export function SelectionInspector({
               </Button>
             )}
           </div>
-          {asked && (
-            <div className="ledger-asked grid gap-2">
-              <p className="text-sm">
-                {t("desktop.ledger.inspector.selection.asked", {
-                  count: asked.filter((entry) => entry.review).length,
-                })}
-              </p>
-              <ul className="grid gap-1.5">
-                {asked.map((entry) => {
-                  const row = rows.get(entry.id);
-                  const suggestion = entry.review?.review.suggestion;
-                  const stagedAnswer = content.actions.some(
-                    (action) => action.id === `suggestion:${entry.id}`,
-                  );
-                  return (
-                    <li
-                      key={entry.id}
-                      className="grid gap-1 rounded-md bg-accent p-2 text-sm"
-                    >
-                      <span className="font-medium break-words">
-                        {row?.transaction.description ?? entry.id.slice(0, 12)}
-                      </span>
-                      {suggestion ? (
-                        <span>
-                          {facts(
-                            t,
-                            suggestionWrites(suggestion)
-                              .filter((write) => !write.derived)
-                              .map((write) =>
-                                valueText(t, locale, write.field, write.value),
-                              ),
-                          )}
-                        </span>
-                      ) : (
-                        entry.failed !== null && (
-                          <AskedFailure
-                            code={entry.failed}
-                            refusal={entry.refusal}
-                          />
-                        )
-                      )}
-                      <span className="flex flex-wrap gap-2">
-                        {suggestion &&
-                          !needsShare(suggestion) &&
-                          !stagedAnswer && (
-                            <Button
-                              variant="outline"
-                              size="xs"
-                              onClick={() => approve(entry)}
-                            >
-                              {t("desktop.ledger.inspector.model.approve")}
-                            </Button>
-                          )}
-                        {stagedAnswer && (
-                          <span className="text-xs">
-                            {t(
-                              "desktop.ledger.inspector.model.approval_staged",
-                            )}
-                          </span>
-                        )}
-                        {suggestion && needsShare(suggestion) && (
-                          <span className="text-xs">
-                            {t("desktop.ledger.inspector.model.share_needed")}
-                          </span>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="xs"
-                          onClick={() => onShow(entry.id)}
-                        >
-                          {t("desktop.ledger.inspector.show")}
-                        </Button>
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-              {approvable.length > 1 && (
-                <Button
-                  size="sm"
-                  className="w-fit"
-                  onClick={() => {
-                    approvable.forEach(approve);
-                    say(
-                      t("desktop.ledger.inspector.selection.approved_all", {
-                        count: approvable.length,
-                      }),
-                    );
-                  }}
-                >
-                  {t("desktop.ledger.inspector.selection.approve_all", {
-                    count: approvable.length,
-                  })}
-                </Button>
-              )}
-            </div>
+          {askable.length === 0 && !blocked && (
+            <p className="text-xs text-muted-foreground" data-ask-agent-none>
+              {t("desktop.background_tasks.ask_agent_none")}
+            </p>
           )}
+          {askNotice && <NoticeLine notice={askNotice} />}
+          <SelectionJobProposals
+            ids={ids}
+            rows={rows}
+            locale={locale}
+            onShow={onShow}
+          />
         </section>
       </div>
     </div>
-  );
-}
-
-/** Why the model gave nothing to read for one movement, in words. */
-function AskedFailure({
-  code,
-  refusal,
-}: {
-  code: string;
-  refusal?: ModelRefusal | null;
-}) {
-  const t = useStrings();
-  const consent = consentStepOf(refusal);
-  return (
-    <span className="grid gap-0.5" data-code={code}>
-      {refusal?.words ?? modelFailureText(t, code)}
-      {consent !== null && <ConsentRemedies step={consent} />}
-    </span>
   );
 }

@@ -1323,6 +1323,21 @@ desktop:
   background_tasks:
     active: '{count} folyamatban'
     active_one: '{count} folyamatban'
+    apply_refusal:
+      business_pct_not_applicable: ehhez a besoroláshoz nem tartozik üzleti arány;
+        töröld, és fogadd el újra
+      business_pct_required: ehhez a besoroláshoz üzleti arány kell; add meg, és fogadd
+        el újra
+      category_unavailable: a javasolt kategória nem érhető el; válassz egyet kézzel
+      movement_not_found: a tétel már nincs tárolva
+      not_in_job: a tétel nem része ennek a feladatnak
+      not_proposed: a feladatban már nincs javaslat hozzá; olvasd be újra a feladatot
+      rejected: a főkönyv elutasította a változtatást; sorold be a tételt kézzel
+      stale: a tétel a javaslat óta megváltozott; kérdezd meg újra az ügynököt
+    ask_agent: Kérdezd meg az ügynököt
+    ask_agent_held: Egy háttérfeladat már besorolja ezt a tételt.
+    ask_agent_none: 'A kijelölt tételek egyikéről sem kérdezhetsz: mind csak olvasható,
+      vagy már besorolás alatt áll.'
     authorise: Számítógépen kívüli olvasás engedélyezése
     call_failed: A kérésre nem érkezett válasz.
     call_unknown: A kérés elküldve, de nem tudni, hogy érvényesült-e.
@@ -1354,6 +1369,7 @@ desktop:
     label: Háttérfeladatok
     off_host: 'ezen a számítógépen kívül olvassa: {model}'
     outcome:
+      applied: 'Alkalmazva: {applied}. Nem alkalmazva: {refused}.'
       authorised: Engedélyezve. Újra lekérdezi azokat a tételeket, amelyekhez ez kellett.
       cancelled: Leállítva.
       cancelling: 'Leállítás alatt: előbb befejeződik az éppen lekérdezett tétel.'
@@ -1362,6 +1378,16 @@ desktop:
       enqueued: Sorba állítva.
       retried: Újra lekérdezi a sikertelen tételeket.
     progress: '{total} tételből {done} lekérdezve'
+    proposal:
+      accept: Elfogadás
+      apply_marked: A megjelölt javaslatok alkalmazása
+      discard: Elvetés
+      discarded: Javaslat elvetve. Sorold be a tételt kézzel.
+      item_applied: Alkalmazva.
+      item_refused: 'Nem alkalmazva: {cause}'
+      list: 'Átnézendő ügynöki javaslatok: {count}'
+      read_by: 'ezen a számítógépen olvasta: {model}'
+      title: Az ügynök javaslata
     proposed: '{count} javaslat kész'
     proposed_one: '{count} javaslat kész'
     read_failed: A háttérfeladatokat nem sikerült beolvasni. Újra beolvasásra kerülnek,
@@ -3553,10 +3579,6 @@ desktop:
       sections: A tétel szakaszai
       selection:
         actions: Műveletek
-        approve_all: '{count} elolvasott jóváhagyása'
-        approved_all: 'Még nem mentett jóváhagyások: {count}'
-        ask_each: Kérdezd a modellt egyenként
-        asked: 'Elolvasandó javaslatok: {count}'
         body: Kijelölt tételek
         classification: Besorolás mindegyiknek
         classify_first: Előbb besorolás
