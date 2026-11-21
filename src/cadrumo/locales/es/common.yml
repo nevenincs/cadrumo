@@ -3408,7 +3408,13 @@ desktop:
           choose: Elige primero si es la factura de compra del movimiento u otro documento.
           label: Adjuntar como
           other: Otro documento
+          pending: Elige qué es {file} para añadirlo.
+          probe_refused: Este archivo no se puede añadir.
+          probe_unread: No se ha podido leer qué es este archivo; puedes elegir igualmente.
+          probing: Leyendo qué es este archivo…
+          proposal: Parece una factura de compra (factura electrónica detectada)
           purchase: Factura de compra
+          use_proposal: Usar esta
         no_free: No hay otro documento en el libro
         none: Sin documentos
         pick_failed: No se abrió el diálogo de archivos.
@@ -5556,7 +5562,7 @@ desktop:
     progress_label: Progreso de {name}
     rail_busy: Configurando los componentes
     rail_incomplete: La configuración no ha terminado
-    ready_dormant: Listo. Se pone en marcha cuando se lee un documento.
+    ready_dormant: Todo listo. Se pone en marcha cuando se lee un documento.
     refused_browser_not_removed: Cadrumo no ha podido quitar el navegador. Compruébalo
       de nuevo e inténtalo otra vez.
     refused_busy: Ya hay una configuración en curso en otro sitio. Espera a que termine.
@@ -5603,7 +5609,7 @@ desktop:
       blocked: Ahora mismo no se puede configurar.
       failed: La configuración no ha terminado.
       provisioning: Configurándose ahora.
-      ready: Listo.
+      ready: Todo listo.
       stale: Funciona, pero necesita una actualización.
       unknown: Cadrumo no ha podido comprobarlo ahora.
       verifying: Comprobando que funciona.

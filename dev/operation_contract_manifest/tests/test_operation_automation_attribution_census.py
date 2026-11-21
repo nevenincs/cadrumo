@@ -158,6 +158,7 @@ _RECORDS_THE_SESSION_LABEL: Mapping[str, _Proof] = {
         _ACTOR, _ACTOR_LABELS, "test_operator_iva_derivation_records_the_session_label_for_an_automation"
     ),
     "ledger.link": _Proof(_ACTOR, _ACTOR_LABELS, "test_ledger_link_records_the_session_label_for_an_automation"),
+    "ledger.unlink": _Proof(_ACTOR, _ACTOR_LABELS, "test_ledger_unlink_records_the_session_label_for_an_automation"),
     "ledger.counterparty": _Proof(
         frozenset({"asserted_by"}),
         _ACTOR_LABELS,

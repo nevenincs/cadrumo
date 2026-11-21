@@ -30,7 +30,10 @@ import type {
   LedgerImportResultProjection,
   LedgerProviderID,
 } from "../../../shell/ledgerTransferContract";
-import type { LedgerEvidenceBatchProjection } from "../../../shell/ledgerDocumentContract";
+import type {
+  LedgerEvidenceBatchProjection,
+  OperationNextStepV1,
+} from "../../../shell/ledgerDocumentContract";
 import type { InvoiceImportProjection } from "../../../shell/ledgerInvoiceContract";
 import type {
   InvoiceKind,
@@ -181,6 +184,8 @@ export type BankFilePreview =
       reason: LedgerImportFileRefusal["reason_code"];
       /** The setup action the file's refusal names, if any. */
       setup?: string | null;
+      /** The step the backend served for the refusal, if any. */
+      step?: OperationNextStepV1 | null;
     }
   | { kind: "failed"; file: PickedFile; code: string };
 
@@ -221,13 +226,14 @@ const rowIds = (result: LedgerImportResultProjection) =>
     .sort()
     .join(",");
 
-/** The file's own refusal, the setup action it names, and its digest in
- * one dry run's answer. */
+/** The file's own refusal, the setup action it names, the step the backend
+ * served for it, and its digest in one dry run's answer. */
 function readOf(result: LedgerImportResultProjection) {
   const refused = result.refused_files[0] ?? null;
   return {
     refusal: refused?.reason_code ?? null,
     setup: provisionActionOf(refused),
+    step: refused?.next_step ?? null,
     digest: result.source_digests[0]?.sha256 ?? null,
   };
 }
@@ -251,8 +257,8 @@ export async function previewBankFile(
     return { kind: "failed", file, code: base.reason ?? base.code };
   if (base.kind === "refused")
     return { kind: "failed", file, code: base.reason ?? "refused" };
-  const { refusal, setup, digest } = readOf(base.result);
-  if (refusal) return { kind: "refused", file, reason: refusal, setup };
+  const { refusal, setup, step, digest } = readOf(base.result);
+  if (refusal) return { kind: "refused", file, reason: refusal, setup, step };
   const named =
     base.result.statement_accounts.find((item) => item.file_index === 0) ??
     null;
@@ -294,7 +300,13 @@ export async function previewBankFile(
     if (read.refusal === "source_changed" || read.digest !== digest)
       return { kind: "refused", file, reason: "source_changed" };
     if (read.refusal)
-      return { kind: "refused", file, reason: read.refusal, setup: read.setup };
+      return {
+        kind: "refused",
+        file,
+        reason: read.refusal,
+        setup: read.setup,
+        step: read.step,
+      };
     preview.byAccount[REGISTER_ACCOUNT] = read.result;
     preview.mismatched = accounts.map((account) => account.id);
     preview.probed = true;
@@ -312,7 +324,13 @@ export async function previewBankFile(
     if (read.refusal === "source_changed" || read.digest !== digest)
       return { kind: "refused", file, reason: "source_changed" };
     if (read.refusal)
-      return { kind: "refused", file, reason: read.refusal, setup: read.setup };
+      return {
+        kind: "refused",
+        file,
+        reason: read.refusal,
+        setup: read.setup,
+        step: read.step,
+      };
     preview.byAccount[account.id] = read.result;
     if (
       preview.detected === null &&
@@ -339,6 +357,7 @@ export async function previewForAccount(
       result: LedgerImportResultProjection;
       refusal: LedgerImportFileRefusal["reason_code"] | null;
       setup: string | null;
+      step: OperationNextStepV1 | null;
       digest: string | null;
     }
   | { kind: "failed"; code: string }
@@ -406,6 +425,8 @@ export type BankApplied =
       reason: LedgerImportFileRefusal["reason_code"] | string;
       /** The setup action the file's refusal names, if any. */
       setup?: string | null;
+      /** The step the backend served for the refusal, if any. */
+      step?: OperationNextStepV1 | null;
     }
   /** Its bytes are not those the preview read: preview it again. */
   | { kind: "changed"; file: PickedFile }
@@ -479,6 +500,7 @@ export async function applyBank(
                 file,
                 reason: refusal,
                 setup: provisionActionOf(refused),
+                step: refused?.next_step ?? null,
               }
             : { kind: "imported", file, result: sent.result },
       );

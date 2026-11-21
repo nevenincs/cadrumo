@@ -23,6 +23,8 @@ import type {
   LedgerEvidenceListProjection,
   LedgerEvidencePageWindowRequest,
   LedgerEvidencePageProjection,
+  LedgerEvidenceProbeWindowRequest,
+  LedgerEvidenceProbeProjection,
   LedgerEvidenceAddProjection,
   LedgerEvidenceRemoveWindowRequest,
   LedgerEvidenceUpdateWindowRequest,
@@ -95,6 +97,8 @@ import type {
   LedgerRemoveOperationResult,
   LedgerSplitWindowRequest,
   LedgerSplitOperationResult,
+  LedgerUnlinkWindowRequest,
+  LedgerUnlinkResult,
 } from "./ledgerMovementContract";
 import type {
   LedgerTrackProjection,
@@ -246,6 +250,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.evidence.extract",
   "ledger.evidence.list",
   "ledger.evidence.page",
+  "ledger.evidence.probe",
   "ledger.evidence.query",
   "ledger.evidence.remove",
   "ledger.evidence.review.list",
@@ -344,6 +349,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.stash",
   "ledger.status",
   "ledger.track",
+  "ledger.unlink",
   "ledger.update",
   "ledger.view",
 ] as const;
@@ -739,9 +745,11 @@ export interface LedgerRequests extends LedgerClassifyJobRequests {
   "ledger.evidence.attachment_queue": Record<string, never>;
   "ledger.evidence.attachment_view": LedgerEvidenceAttachmentViewWindowRequest;
   "ledger.evidence.page": LedgerEvidencePageWindowRequest;
+  "ledger.evidence.probe": LedgerEvidenceProbeWindowRequest;
   "ledger.evidence.consent.list": Record<string, never>;
   "ledger.evidence.verify": LedgerEvidenceVerifyWindowRequest;
   "ledger.link": LedgerLinkWindowRequest;
+  "ledger.unlink": LedgerUnlinkWindowRequest;
   "ledger.attach": LedgerAttachWindowRequest;
   "ledger.detach": LedgerDetachWindowRequest;
   "ledger.purchase_evidence.release": LedgerPurchaseEvidenceReleaseWindowRequest;
@@ -914,9 +922,11 @@ export interface LedgerResults extends LedgerClassifyJobResults {
   "ledger.evidence.attachment_queue": LedgerEvidenceAttachmentQueueProjection;
   "ledger.evidence.attachment_view": LedgerEvidenceAttachmentViewProjection;
   "ledger.evidence.page": LedgerEvidencePageProjection;
+  "ledger.evidence.probe": LedgerEvidenceProbeProjection;
   "ledger.evidence.consent.list": LedgerEvidenceConsentListProjection;
   "ledger.evidence.verify": LedgerEvidenceVerifyProjection;
   "ledger.link": LedgerLinkOperationResult;
+  "ledger.unlink": LedgerUnlinkResult;
   "ledger.attach": LedgerAttachmentOperationResult;
   "ledger.detach": LedgerAttachmentOperationResult;
   "ledger.purchase_evidence.release": LedgerPurchaseEvidenceReleaseResult;

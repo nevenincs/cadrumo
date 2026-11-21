@@ -3,7 +3,7 @@
 Exposes pure-function service operations over an
 :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`: lookup
 (:func:`suggest_reconciliations`), in-memory linking
-(:func:`link_transaction`), reconciliation suggestions
+(:func:`link_transaction`) and unlinking (:func:`unlink_transaction`), reconciliation suggestions
 (:func:`suggest_reconciliations`), and bidirectional consistency checks
 (:func:`verify_link_consistency`). Operations that span both the invoice
 catalogue and the :class:`TransactionCatalogue` accept each as an
@@ -176,6 +176,40 @@ def link_transaction(
     try:
         updated_invoice = Invoice.model_validate(
             {**invoice.model_dump(mode="python"), "linked_transaction_ids": updated_ids},
+        )
+    except ValidationError as exc:
+        raise InvoiceLinkError(
+            translated_message="errors.error.error_financial_invoices_invoice_link",
+            context={"invoice_id": invoice_id, "link_update_error_type": type(exc).__name__},
+        ) from exc
+    return _replace_invoice(catalogue, updated_invoice)
+
+
+def unlink_transaction(
+    catalogue: InvoiceCatalogue,
+    invoice_id: str,
+    transaction_id: str,
+) -> InvoiceCatalogue:
+    """Return a new catalogue with ``transaction_id`` removed from ``invoice_id``'s links.
+
+    Args:
+        catalogue: Source catalogue.
+        invoice_id: Invoice identifier to update.
+        transaction_id: Transaction identifier to remove from the invoice's
+            ``linked_transaction_ids`` tuple; the remaining links keep their order.
+
+    Returns:
+        A fresh immutable :class:`InvoiceCatalogue`. An invoice that does not list
+        the transaction is returned value-equal.
+    """
+    invoice = _require_invoice(catalogue, invoice_id)
+    normalized_tx = transaction_id.strip().lower()
+    if normalized_tx not in invoice.linked_transaction_ids:
+        return catalogue
+    remaining = tuple(item for item in invoice.linked_transaction_ids if item != normalized_tx)
+    try:
+        updated_invoice = Invoice.model_validate(
+            {**invoice.model_dump(mode="python"), "linked_transaction_ids": remaining},
         )
     except ValidationError as exc:
         raise InvoiceLinkError(

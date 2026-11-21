@@ -7,6 +7,7 @@ import type {
   LedgerProviderID,
 } from "../../../shell/ledgerTransferContract";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
+import type { OperationNextStepV1 } from "../../../shell/ledgerDocumentContract";
 import type { Translate } from "../../../shell/strings";
 
 const IMPORT_REFUSALS = new Set([
@@ -23,14 +24,16 @@ const IMPORT_REFUSALS = new Set([
 
 /** Why a file was not imported, in plain words; a code the page does not
  * know is named as it came, after a general sentence. A file only the local
- * AI reads says the local AI is not ready where `setup` names its setup, and
- * that it cannot read the file on this computer where nothing does. */
+ * AI reads says the local AI is not ready where `setup` names its setup or
+ * the backend served a `step` that lets it read, and that the picked model
+ * is not available where neither does. */
 export function importRefusal(
   t: Translate,
   reason: string,
   setup: string | null = null,
+  step: OperationNextStepV1 | null = null,
 ): string {
-  if (reason === "reader_unavailable" && setup === null)
+  if (reason === "reader_unavailable" && setup === null && step === null)
     return t("desktop.ledger.import.refusal.reader_unavailable_here");
   return IMPORT_REFUSALS.has(reason)
     ? t(`desktop.ledger.import.refusal.${reason}`)

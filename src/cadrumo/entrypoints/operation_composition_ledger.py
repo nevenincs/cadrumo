@@ -404,6 +404,17 @@ def compose_ledger_link_operation(inputs: OperationCompositionInputs) -> Operati
     return built((definition,), (build_ledger_link_registration(definition),))
 
 
+def compose_ledger_unlink_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose ledger unlink operation."""
+    from ..application.ledger.unlink_operation import build_ledger_unlink_definition, build_ledger_unlink_registration
+    from .ledger_export_link_operation_composition import build_ledger_export_link_operation_ports
+
+    definition = build_ledger_unlink_definition(
+        build_ledger_export_link_operation_ports, execution_caller_reader=inputs.execution_caller_reader
+    )
+    return built((definition,), (build_ledger_unlink_registration(definition),))
+
+
 def compose_ledger_import_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose ledger import operation."""
     from ..application.exchange_rate_provider import exchange_rate_provider
@@ -731,6 +742,19 @@ def compose_ledger_evidence_page_operation(inputs: OperationCompositionInputs) -
     del inputs
     definition = build_ledger_evidence_page_definition(build_ledger_evidence_page_operation_ports())
     return built((definition,), (build_ledger_evidence_page_registration(definition),))
+
+
+def compose_ledger_evidence_probe_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose ledger evidence probe operation."""
+    del inputs
+    from ..application.ledger.evidence_probe_operation import (
+        build_ledger_evidence_probe_definition,
+        build_ledger_evidence_probe_registration,
+    )
+    from .adapter_composition_work_ports import build_ledger_evidence_ports
+
+    definition = build_ledger_evidence_probe_definition(build_ledger_evidence_ports)
+    return built((definition,), (build_ledger_evidence_probe_registration(definition),))
 
 
 def compose_ledger_evidence_read_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:

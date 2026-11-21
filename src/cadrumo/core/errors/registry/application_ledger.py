@@ -990,6 +990,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.ledger.invoice_unlink.InvoiceUnlinkRefusedError",
+        ErrorCode(
+            code="REFUSED_LEDGER_UNLINK",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_validation_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.ledger.actions_classification.ClassificationRuleSearchRefusedError",
         ErrorCode(
             code="REFUSED_CLASSIFICATION_RULE_SEARCH",

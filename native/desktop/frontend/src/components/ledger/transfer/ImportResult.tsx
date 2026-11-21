@@ -18,6 +18,7 @@ import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";
 import { listOf } from "../../../shared/lists";
 import { SetupOffer } from "../../setup/SetupOffer";
+import { ReaderRemedy } from "./ReaderRemedy";
 import { FileRow } from "./ImportFileRow";
 import {
   readExisting,
@@ -290,13 +291,22 @@ export function ImportResultStep({
                     : item.kind === "changed"
                       ? importRefusal(t, "source_changed")
                       : item.kind === "refused"
-                        ? importRefusal(t, item.reason, item.setup ?? null)
+                        ? importRefusal(
+                            t,
+                            item.reason,
+                            item.setup ?? null,
+                            item.step ?? null,
+                          )
                         : item.kind === "unknown"
                           ? t("desktop.ledger.import.file_unknown")
                           : t("desktop.ledger.import.file_not_sent")}
               </span>
               {item.kind === "refused" && (
-                <SetupOffer action={item.setup ?? null} className="mt-1" />
+                <ReaderRemedy
+                  setup={item.setup ?? null}
+                  step={item.step ?? null}
+                  className="mt-1"
+                />
               )}
               {item.kind === "imported" &&
                 item.result.registered_own_account_id !== null && (

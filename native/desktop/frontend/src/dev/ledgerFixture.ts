@@ -52,7 +52,7 @@ import {
   money,
 } from "./fixtures/ledger";
 import { ledgerClassOf } from "./ledgerClassesFixture";
-import { evidenceOperations } from "./ledgerEvidenceFixture";
+import { evidenceOperations, readingModelStep } from "./ledgerEvidenceFixture";
 import { purchaseReleaseOperations } from "./ledgerPurchaseReleaseFixture";
 import {
   invoiceOperations,
@@ -169,6 +169,9 @@ declare global {
     /** File transport hooks also reached through copied host methods. */
     __fixtureLedgerFiles?: {
       picked?: (picks: FilePicks) => Promise<FilePicks>;
+      /** The names a dialog offers for `purpose`, in place of the made-up
+       * computer's own list. */
+      offered?: (purpose: FilePurpose) => string[] | undefined;
       forgotten?: (tokens: FileToken[]) => void;
       /** The extensions a dialog or a drop was asked to offer, null where
        * the page left the host its full list. */
@@ -473,6 +476,10 @@ export function ledgerFixture(options: Options): LedgerPort {
       fileOf,
       transactionOf,
       readerMissing: shape === "reader_missing",
+      readingStep:
+        shape === "no_reading_model"
+          ? readingModelStep(options.language ?? "en")
+          : null,
     },
   );
 
@@ -1221,7 +1228,8 @@ export function ledgerFixture(options: Options): LedgerPort {
       say(`ledger pickFiles ${purpose} ${pick}`);
       window.__fixtureLedgerFiles?.asked?.(purpose, kinds);
       await answer();
-      const offered = PICKABLE[purpose];
+      const offered =
+        window.__fixtureLedgerFiles?.offered?.(purpose) ?? PICKABLE[purpose];
       const picks = take(
         pick === "file" ? offered.slice(0, 1) : offered,
         purpose,

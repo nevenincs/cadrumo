@@ -632,6 +632,21 @@ def require_readable_evidence_file(
     return digest
 
 
+def readable_evidence_file_shape(
+    *,
+    ports: LedgerEvidencePorts,
+    admitted: tuple[Path, MediaKind],
+) -> DocumentShape:
+    """Return the document shape the probe recognises in an admitted file, refusing it as an add would.
+
+    The same read and probe as :func:`require_readable_evidence_file`, for a
+    caller that asks what a file is before anything is stored.
+    """
+    resolved, _media_kind = admitted
+    _digest, shape = _read_readable_evidence_digest(ports=ports, resolved=resolved, expected_content_digest=None)
+    return shape
+
+
 def ingest_evidence_file(
     *,
     ports: LedgerEvidencePorts,

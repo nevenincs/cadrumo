@@ -273,6 +273,7 @@ export type BucketEventType =
   | "ledger.transaction.split"
   | "ledger.transaction.merged"
   | "ledger.transaction.invoice.linked"
+  | "ledger.transaction.invoice.unlinked"
   | "ledger.catalogue.reset"
   | "ledger.sanitization.completed"
   | "purchase_invoice_evidence.attached"

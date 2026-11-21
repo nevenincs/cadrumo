@@ -3405,7 +3405,13 @@ desktop:
           choose: Tria primer si és la factura de compra del moviment o un altre document.
           label: Adjunta com a
           other: Un altre document
+          pending: Tria què és {file} per afegir-lo.
+          probe_refused: Aquest fitxer no es pot afegir.
+          probe_unread: No s'ha pogut llegir què és aquest fitxer; pots triar igualment.
+          probing: Llegint què és aquest fitxer…
+          proposal: Sembla una factura de compra (factura electrònica detectada)
           purchase: Factura de compra
+          use_proposal: Fes servir aquesta
         no_free: No hi ha cap altre document al llibre
         none: Sense documents
         pick_failed: No s'ha obert el diàleg de fitxers.

@@ -8,6 +8,7 @@ import type {
 } from "./ledgerClassificationContract";
 import type {
   CalculationRevisionId,
+  LedgerAttachmentStaleRevisionProjection,
   LedgerReviewStatus,
   LedgerTransactionProjection,
   WorkUnitId,
@@ -38,6 +39,21 @@ export type BulkClassifyResult = {
   failures: BulkClassifyFailure[];
   bucket_event_ids: string[];
 };
+
+/**
+ * Why removing a movement's invoice link was refused.
+ */
+export type InvoiceUnlinkCause =
+  | "link_not_found"
+  | "transaction_changed"
+  | "invoice_changed"
+  | "finalized_calculation_reference";
+
+/**
+ * What the person can do about a refused unlink.
+ */
+export type InvoiceUnlinkNextStep =
+  "reopen_transaction" | "reopen_invoice" | "reopen_finalized_calculation";
 
 /**
  * Bounded successful add receipt or a refusal proven before the write call.
@@ -521,6 +537,61 @@ export type LedgerSplitRequest = {
 };
 
 /**
+ * Why the unlink was refused, what the person can do, and what blocks it.
+ */
+export type LedgerUnlinkRefusal = {
+  cause: InvoiceUnlinkCause;
+  next_step: InvoiceUnlinkNextStep;
+  finalized_revisions: LedgerAttachmentStaleRevisionProjection[];
+};
+
+/**
+ * Private exact-profile request to remove one movement's link to one invoice.
+ *
+ * `transaction_id` is the movement's id or an unambiguous prefix and
+ * `invoice_id` the invoice's id or an unambiguous prefix.
+ * `expected_modified_at` is the `modified_at` the person's opened movement
+ * showed and `expected_invoice_linked_transaction_ids` the movements the
+ * opened invoice listed; a movement or invoice that no longer matches them is
+ * refused.
+ *
+ * `actor` is recorded as sent for a person's session. An automation's session
+ * is recorded under its own session label, whatever the request carries.
+ *
+ * `output_language` is the language the result's transaction link fields are
+ * named in.
+ */
+export type LedgerUnlinkRequest = {
+  profile_id: string;
+  transaction_id: string;
+  invoice_id: string;
+  expected_modified_at: string;
+  expected_invoice_linked_transaction_ids: string[];
+  actor?: string | null;
+  output_language?: OutputLanguage;
+};
+
+/**
+ * The unlinked movement and the invoice's remaining links, or the typed
+ * refusal.
+ *
+ * `invoice_id` is the selector the person supplied for a refusal and the one
+ * resolved invoice id for a completed unlink.
+ */
+export type LedgerUnlinkResult = {
+  outcome: "unlinked" | "refused";
+  profile_id: string;
+  transaction_id: string;
+  invoice_id: string;
+  actor: string | null;
+  transaction: LedgerTransactionProjection | null;
+  review_status: LedgerReviewStatus | null;
+  invoice_linked_transaction_ids: string[];
+  bucket_event_ids: string[];
+  refusal: LedgerUnlinkRefusal | null;
+};
+
+/**
  * Bounded success projection or field-safe update validation refusal.
  */
 export type LedgerUpdateOperationResult = {
@@ -659,6 +730,7 @@ export type LedgerMovementContracts = {
     request: LedgerLifecycleMutationRequest;
     result: LedgerLifecycleOperationResult;
   };
+  "ledger.unlink": { request: LedgerUnlinkRequest; result: LedgerUnlinkResult };
   "ledger.update": {
     request: LedgerUpdateRequest;
     result: LedgerUpdateOperationResult;
@@ -697,6 +769,8 @@ export type LedgerOperatorIvaWindowRequest = Omit<
 export type LedgerRemoveWindowRequest = Omit<LedgerRemoveRequest, "profile_id">;
 
 export type LedgerSplitWindowRequest = Omit<LedgerSplitRequest, "profile_id">;
+
+export type LedgerUnlinkWindowRequest = Omit<LedgerUnlinkRequest, "profile_id">;
 
 export type LedgerUpdateWindowRequest = Omit<LedgerUpdateRequest, "profile_id">;
 

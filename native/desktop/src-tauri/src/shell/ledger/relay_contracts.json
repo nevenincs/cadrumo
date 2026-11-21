@@ -378,6 +378,14 @@
         "path": []
       }
     },
+    "ledger.evidence.probe": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.evidence.query": {
       "may_write": false,
       "review": false,
@@ -1156,6 +1164,14 @@
     },
     "ledger.track": {
       "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.unlink": {
+      "may_write": true,
       "review": false,
       "subject": {
         "kind": "profile",

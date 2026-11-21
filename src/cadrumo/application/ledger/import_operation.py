@@ -35,8 +35,10 @@ from ...domain.transactions.own_accounts import (
 )
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.error_detail import served_words_language
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.next_step import OperationNextStepV1
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
@@ -64,6 +66,7 @@ from .own_account_operation import LEDGER_OWN_ACCOUNT_LABEL_MAX, LedgerOwnAccoun
 from .own_account_ports import OwnAccountRepositoryProtocol
 from .protocols import BucketEventHistoryCoCommitWriterProtocol, TransactionCatalogueCoCommitWriterProtocol
 from .read_access import resolve_ledger_request_access
+from .reading_model_refusal import model_run_refusal_code, reader_refusal_next_step
 
 _FILE_NAME_MAX_LENGTH = 255
 
@@ -221,11 +224,17 @@ class LedgerImportFileRefusal(BaseModel):
     naming the local AI setup when setting it up lets the file be read. One
     file of a folder can need it while the others import, so it rides on the
     file rather than refusing the operation."""
+    next_step: OperationNextStepV1 | None = None
+    """Only for ``reader_unavailable``: the step that lets the file be read, where
+    the verdict states one, worded in the worker's language. A role with no
+    picked reading model leads to choosing one."""
 
     @model_validator(mode="after")
     def _verdict_only_for_reader(self) -> LedgerImportFileRefusal:
         if (self.reason_code == "reader_unavailable") != (self.precondition_verdict is not None):
             raise ValueError("a ledger import file refusal carries a verdict exactly when its reader was unavailable")
+        if self.next_step is not None and self.reason_code != "reader_unavailable":
+            raise ValueError("a ledger import file refusal serves a step only when its reader was unavailable")
         return self
 
 
@@ -607,10 +616,14 @@ def _prepare_import_file(
         prepared = prepare_ledger_source_import(command, ports=ports.import_ports, own_accounts=own_accounts)
     except LedgerImportReaderUnavailableError as exc:
         verdict = exc.terminal_precondition_verdict
+        if verdict is None:
+            return LedgerImportFileRefusal(file_name=_safe_file_name(path), reason_code="transaction_validation")
+        wording = reader_refusal_next_step(model_run_refusal_code(verdict))
         return LedgerImportFileRefusal(
             file_name=_safe_file_name(path),
-            reason_code="transaction_validation" if verdict is None else "reader_unavailable",
-            precondition_verdict=None if verdict is None else PreconditionVerdictSnapshot.from_verdict(verdict),
+            reason_code="reader_unavailable",
+            precondition_verdict=PreconditionVerdictSnapshot.from_verdict(verdict),
+            next_step=None if wording is None else wording(served_words_language()),
         )
     except MissingOptionalExtraError:
         return LedgerImportFileRefusal(file_name=_safe_file_name(path), reason_code="format_not_installed")
