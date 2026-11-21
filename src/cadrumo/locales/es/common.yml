@@ -5406,6 +5406,7 @@ desktop:
     label: Espacio de trabajo
     logs: Registros
     messages: Mensajes
+    more_views: Más vistas
     python: Intérprete de Python
     search: Buscar
     settings: Ajustes

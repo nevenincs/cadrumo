@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { moreViewsButton, openRailView } from "../support/railViews";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
 import { agentTurns, ask, settled } from "../support/agent";
@@ -17,7 +18,7 @@ test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });
 
-const railButton = (target: Page) => target.locator('[data-rail="reference"]');
+const railButton = moreViewsButton;
 const referencePage = (target: Page) => target.locator(".reference-page");
 const field = (target: Page) =>
   referencePage(target).getByRole("searchbox", {
@@ -43,7 +44,7 @@ test("nothing is searched until the person asks, and the page says its answers a
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.reference.title");
   await expect(railButton(target)).toHaveAttribute("aria-pressed", "true");
   await expect(target.locator("#tab-docs")).toHaveText(
     label("desktop.reference.title"),
@@ -71,7 +72,7 @@ test("a search draws the served passages, sources and terminology", async ({
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.reference.title");
   // Pressing Enter in the field asks as the button does.
   await field(target).fill("  synthetic query  ");
   await field(target).press("Enter");
@@ -104,7 +105,7 @@ test("an exact citation draws its served verbatim evidence", async ({
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.reference.title");
   await ask_(target, CITATION_QUERY);
   const citation = referencePage(target).locator('[data-reference="citation"]');
   await expect(citation).toContainText(CITATION_QUERY);
@@ -127,7 +128,7 @@ test("a search that matches nothing says so, and is not the standing of a search
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.reference.title");
   await ask_(target, NO_MATCH_QUERY);
   const page = referencePage(target);
   await expect(page.locator("[data-reference-empty]")).toHaveText(
@@ -145,7 +146,7 @@ test("a search in flight is told apart from the others and cannot be asked twice
     window.__scenarioReferenceHeld = true;
   });
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.reference.title");
   await ask_(target, "synthetic");
   const page = referencePage(target);
   await expect(page.locator("[data-reference-searching]")).toHaveText(
@@ -171,7 +172,7 @@ test("a search that fails says so with its code, is never drawn as no result and
     window.__scenarioReferenceRefused = true;
   });
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.reference.title");
   await ask_(target, "synthetic");
   const failed = referencePage(target).locator("[data-reference-failed]");
   await expect(failed).toHaveAttribute("data-reference-failed", "timed_out");
@@ -205,14 +206,14 @@ test("the typed text stays when the page is shown again, with its answer", async
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.reference.title");
   await ask_(target, "synthetic");
   await expect(
     referencePage(target).locator("[data-reference-hit]").first(),
   ).toBeVisible();
   await target.locator('[data-rail="home"]').click();
   await expect(referencePage(target)).toHaveCount(0);
-  await railButton(target).click();
+  await openRailView(target, "desktop.reference.title");
   await expect(field(target)).toHaveValue("synthetic");
   await expect(
     referencePage(target).locator("[data-reference-hit]").first(),
@@ -264,7 +265,7 @@ test("signing out drops what was found and asks for a sign-in, searching nothing
 }) => {
   await seedLayout(target);
   await open(target, "signed-in");
-  await railButton(target).click();
+  await openRailView(target, "desktop.reference.title");
   await ask_(target, "synthetic");
   await expect(
     referencePage(target).locator("[data-reference-hit]").first(),

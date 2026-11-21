@@ -839,6 +839,40 @@ function pageOpeners() {
   return out;
 }
 
+/** The rail buttons that show a page of the window (not a column, which is
+ * dragged, nor a surface, which expands): each reports aria-pressed. */
+function pageRailPages() {
+  const out = [];
+  for (const el of document.querySelectorAll(
+    "button[data-rail][aria-pressed]",
+  )) {
+    if (!el.getClientRects().length) continue;
+    if (el.disabled || el.getAttribute("aria-disabled") === "true") continue;
+    if (el.getAttribute("draggable") === "true") continue;
+    if (el.hasAttribute("aria-expanded")) continue;
+    if (!el.id) el.id = `silent-rail-${el.getAttribute("data-rail")}`;
+    out.push({
+      id: el.id,
+      rail: el.getAttribute("data-rail"),
+      name: (el.getAttribute("aria-label") ?? "").trim(),
+      pressed: el.getAttribute("aria-pressed") === "true",
+    });
+  }
+  return out;
+}
+
+/** The id the Settings rail button is reached by, given one if it has none. */
+function pageSettingsRail() {
+  const el = document.querySelector('button[data-rail="settings"]');
+  if (!el) return null;
+  if (!el.id) el.id = "silent-rail-settings";
+  return el.id;
+}
+
+function pageRailPressed(id) {
+  return document.getElementById(id)?.getAttribute("aria-pressed") === "true";
+}
+
 function pageOpenerExpanded(id) {
   return document.getElementById(id)?.getAttribute("aria-expanded") === "true";
 }
@@ -1586,6 +1620,55 @@ test(
     }
     assert.ok(seen.size > 0, "the audit found no popup opener");
     assert.deepEqual(failed, [], `${failed.length} opener(s) did not open`);
+  },
+);
+
+test(
+  "every rail page opens on one assistive activation after a dialog closed",
+  { timeout: 3600_000, skip: process.platform !== "win32" },
+  async () => {
+    const failed = [];
+    await closeLayers();
+    await settled();
+    const pages = (await exec(pageRailPages)).filter((page) => !page.pressed);
+    for (const page of pages) {
+      // The first press after a dialog was put away is the one that was lost.
+      const settings = await exec(pageSettingsRail);
+      if (settings) {
+        uiaInvoke(settings);
+        await sleep(300);
+        await closeLayers();
+        await settled();
+      }
+      const reply = uiaInvoke(page.id);
+      const shown =
+        reply.invoked &&
+        !!(await waitFor(() => exec(pageRailPressed, page.id), {
+          timeout: BOUND_MS,
+          what: `${page.name} to show`,
+          interval: 150,
+          soft: true,
+        }));
+      const effect = shown
+        ? "shown"
+        : !reply.found
+          ? `not found by UI Automation${reply.error ? `: ${reply.error}` : ""}`
+          : !reply.invoked
+            ? `not activated: ${reply.error}`
+            : `nothing shown (${reply.defaultAction ? `default action "${reply.defaultAction}"` : "Invoke"})`;
+      rows.push({
+        view: "rail",
+        pane: "rail",
+        control: page.name,
+        role: "rail page",
+        method: reply.defaultAction ? "MSAA default action" : "UIA Invoke",
+        effect,
+        silent: !shown,
+      });
+      if (!shown) failed.push(`${page.name}: ${effect}`);
+    }
+    assert.ok(pages.length > 0, "the audit found no rail page");
+    assert.deepEqual(failed, [], `${failed.length} rail page(s) did not show`);
   },
 );
 

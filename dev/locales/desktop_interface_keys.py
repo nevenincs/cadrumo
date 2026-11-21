@@ -1248,6 +1248,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.rail.label",
         "desktop.rail.logs",
         "desktop.rail.messages",
+        "desktop.rail.more_views",
         "desktop.rail.python",
         "desktop.rail.search",
         "desktop.rail.settings",
