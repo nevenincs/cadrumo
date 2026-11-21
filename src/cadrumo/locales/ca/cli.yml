@@ -4195,6 +4195,23 @@ cli:
     track:
       help: Mostrar l'historial d'esdeveniments d'un moviment dels teus registres
       transaction_id_help: Id del moviment a inspeccionar
+    unlink:
+      actor_help: La teva etiqueta, registrada als esdeveniments del bucket.
+      errors:
+        finalized_calculation_reference: Un càlcul finalitzat cita aquest moviment,
+          i el vincle forma part del que va segellar. Reobre o esmena primer el càlcul
+          finalitzat.
+        invoice_changed: Els vincles de la factura han canviat des que la vas obrir.
+          Reobre la factura per veure els seus vincles actuals.
+        link_not_found: Ni el moviment ni la factura es citen mútuament. Reobre el
+          moviment per veure el seu vincle actual.
+        transaction_changed: El moviment ha canviat des que el vas obrir. Reobre el
+          moviment per veure el seu vincle actual.
+      help: Treu el vincle d'un moviment amb una factura; l'historial conserva tots
+        dos
+      id_help: Id del moviment (SHA-256 o prefix inequívoc).
+      invoice_id_help: Id de factura (o prefix inequívoc) que es desvincularà de la
+        transacció.
     update:
       account_help: Vincula l'entrada a aquest compte bancari propi, pel seu id (p.
         ex. acc-01).

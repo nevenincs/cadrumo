@@ -160,6 +160,7 @@ errors:
     casilla_id: casella
     casilla_ids: caselles
     casillas: caselles
+    cause: causa
     count: recompte
     currency: moneda
     detail: detall
@@ -1491,6 +1492,7 @@ errors:
       així que el registre no pot totalitzar els seus moviments. Els períodes de pagament
       fraccionat com 1P són terminis de pagament. Fes servir un trimestre, un mes
       o 0A.
+    ledger_unlink: 'No pots treure el vincle de la factura: {cause}.'
     locale_catalogue_capture_not_current: Aquesta captura del catàleg d'idiomes ja
       no és vigent.
     m145_communication_record_ambiguous: El prefix de l'id de registre de comunicació

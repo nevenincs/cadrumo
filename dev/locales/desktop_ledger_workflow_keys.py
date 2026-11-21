@@ -4,6 +4,10 @@ from typing import Final
 
 DESKTOP_LEDGER_WORKFLOW_KEYS: Final[frozenset[str]] = frozenset(
     {
+        "desktop.ledger.apply.action.unlink",
+        "desktop.ledger.apply.links",
+        "desktop.ledger.apply.links_note",
+        "desktop.ledger.apply.tick_differ",
         "desktop.ledger.section.assets",
         "desktop.ledger.export.cancel",
         "desktop.ledger.export.change_file",
@@ -319,7 +323,6 @@ DESKTOP_LEDGER_WORKFLOW_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.apply.link.currency_differs",
         "desktop.ledger.apply.link.differ",
         "desktop.ledger.apply.link.linked_elsewhere",
-        "desktop.ledger.apply.link.sure",
         "desktop.ledger.apply.link.unjudged",
         "desktop.ledger.apply.link.unread",
         "desktop.ledger.apply.mine",
@@ -345,8 +348,6 @@ DESKTOP_LEDGER_WORKFLOW_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.apply.outcomes",
         "desktop.ledger.apply.part_refused",
         "desktop.ledger.apply.part_unknown",
-        "desktop.ledger.apply.permanent",
-        "desktop.ledger.apply.permanent_note",
         "desktop.ledger.apply.progress",
         "desktop.ledger.apply.progress_count",
         "desktop.ledger.apply.read_failed",
@@ -375,7 +376,6 @@ DESKTOP_LEDGER_WORKFLOW_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.apply.tally.unchanged",
         "desktop.ledger.apply.tally.unknown",
         "desktop.ledger.apply.theirs",
-        "desktop.ledger.apply.tick_links",
         "desktop.ledger.apply.title",
         "desktop.ledger.apply.together",
         "desktop.ledger.apply.unknown_note",

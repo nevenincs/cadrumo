@@ -241,7 +241,7 @@ function incomeWithCategory(check: StagedCheck | null): string[] {
     .map((answer) => answer.transaction_id);
 }
 
-// ---- Permanent links -------------------------------------------------------
+// ---- Invoice links -----------------------------------------------------------
 
 function mismatchText(t: Translate, locale: string, mismatch: LinkMismatch) {
   switch (mismatch.kind) {
@@ -273,22 +273,48 @@ function mismatchText(t: Translate, locale: string, mismatch: LinkMismatch) {
 const judgementOf = (judgement: LedgerInvoiceMatchJudgement | undefined) =>
   judgement?.found ? judgement.mismatches : null;
 
-function PermanentLinks({
+/** One side of a link: the movement or the invoice, in a few facts. */
+type LinkSides = {
+  id: string;
+  row: LedgerTransactionReviewProjection | undefined;
+  invoice: CatalogueInvoiceSnapshot | undefined;
+  invoiceId: string;
+};
+
+function sidesText(t: Translate, locale: string, link: LinkSides): string {
+  const transaction = link.row?.transaction;
+  return `${facts(t, [
+    transaction && valueText(t, locale, "amount", transaction.amount),
+    transaction?.counterparty || transaction?.description,
+    transaction && valueText(t, locale, "booked_date", transaction.date),
+  ])} ↔ ${
+    link.invoice
+      ? facts(t, [
+          link.invoice.invoice_number,
+          valueText(t, locale, "amount", link.invoice.grand_total.decimal),
+          link.invoice.counterparty_name,
+          valueText(t, locale, "booked_date", link.invoice.issued_at),
+        ])
+      : link.invoiceId
+  }`;
+}
+
+/** The links to be saved, each with what the ledger found against it, and
+ * the links to be removed, each with both of its sides. */
+function LinkChanges({
   links,
+  unlinks,
   locale,
   ticks,
   onTicks,
   onRereadInvoices,
   onRetryJudgement,
 }: {
-  links: {
-    id: string;
-    row: LedgerTransactionReviewProjection | undefined;
-    invoice: CatalogueInvoiceSnapshot | undefined;
-    invoiceId: string;
+  links: (LinkSides & {
     /** What the ledger found against the link; null until it has said. */
     mismatches: readonly LinkMismatch[] | null;
-  }[];
+  })[];
+  unlinks: LinkSides[];
   locale: string;
   ticks: LinkTicks;
   onTicks: (ticks: LinkTicks) => void;
@@ -298,48 +324,25 @@ function PermanentLinks({
   onRetryJudgement: () => void;
 }) {
   const t = useStrings();
-  if (!links.length) return null;
+  if (!links.length && !unlinks.length) return null;
   return (
     <section
-      className="ledger-permanent grid gap-3 rounded-lg bg-muted p-3"
-      aria-labelledby="ledger-permanent-heading"
+      className="ledger-links grid gap-3 rounded-lg bg-muted p-3"
+      aria-labelledby="ledger-links-heading"
     >
       <h3
-        id="ledger-permanent-heading"
+        id="ledger-links-heading"
         className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
       >
-        <Icon name="lock" size="xs" />
-        {t("desktop.ledger.apply.permanent")}
+        <Icon name="link" size="xs" />
+        {t("desktop.ledger.apply.links")}
       </h3>
-      <p className="text-sm">{t("desktop.ledger.apply.permanent_note")}</p>
+      <p className="text-sm">{t("desktop.ledger.apply.links_note")}</p>
       {links.map((link) => {
-        const tick = ticks[link.id] ?? { sure: false, differ: false };
-        const transaction = link.row?.transaction;
+        const tick = ticks[link.id] ?? { differ: false };
         return (
           <div key={link.id} data-link={link.id} className="grid gap-1.5">
-            <p className="text-sm">
-              {facts(t, [
-                transaction &&
-                  valueText(t, locale, "amount", transaction.amount),
-                transaction?.counterparty || transaction?.description,
-                transaction &&
-                  valueText(t, locale, "booked_date", transaction.date),
-              ])}
-              {" ↔ "}
-              {link.invoice
-                ? facts(t, [
-                    link.invoice.invoice_number,
-                    valueText(
-                      t,
-                      locale,
-                      "amount",
-                      link.invoice.grand_total.decimal,
-                    ),
-                    link.invoice.counterparty_name,
-                    valueText(t, locale, "booked_date", link.invoice.issued_at),
-                  ])
-                : link.invoiceId}
-            </p>
+            <p className="text-sm">{sidesText(t, locale, link)}</p>
             {!link.invoice && (
               <p
                 role="alert"
@@ -375,48 +378,47 @@ function PermanentLinks({
               </p>
             )}
             {link.mismatches && link.mismatches.length > 0 && (
-              <ul className="flex flex-wrap gap-1.5">
-                {link.mismatches.map((mismatch) => (
-                  <li key={mismatch.kind}>
-                    <Badge variant="warning">
-                      {mismatchText(t, locale, mismatch)}
-                    </Badge>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox
-                className="ledger-link-sure"
-                checked={tick.sure}
-                disabled={!link.invoice || link.mismatches === null}
-                onChange={(event) =>
-                  onTicks({
-                    ...ticks,
-                    [link.id]: { ...tick, sure: event.target.checked },
-                  })
-                }
-              />
-              {t("desktop.ledger.apply.link.sure")}
-            </label>
-            {link.mismatches && link.mismatches.length > 0 && (
-              <label className="flex items-center gap-2 text-sm">
-                <Checkbox
-                  className="ledger-link-differ"
-                  checked={tick.differ}
-                  onChange={(event) =>
-                    onTicks({
-                      ...ticks,
-                      [link.id]: { ...tick, differ: event.target.checked },
-                    })
-                  }
-                />
-                {t("desktop.ledger.apply.link.differ")}
-              </label>
+              <>
+                <ul className="flex flex-wrap gap-1.5">
+                  {link.mismatches.map((mismatch) => (
+                    <li key={mismatch.kind}>
+                      <Badge variant="warning">
+                        {mismatchText(t, locale, mismatch)}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    className="ledger-link-differ"
+                    checked={tick.differ}
+                    onChange={(event) =>
+                      onTicks({
+                        ...ticks,
+                        [link.id]: { differ: event.target.checked },
+                      })
+                    }
+                  />
+                  {t("desktop.ledger.apply.link.differ")}
+                </label>
+              </>
             )}
           </div>
         );
       })}
+      {unlinks.map((unlink) => (
+        <div
+          key={unlink.id}
+          data-unlink={unlink.id}
+          className="flex flex-wrap items-center gap-1.5"
+        >
+          <Badge variant="neutral">
+            <Icon name="unlinked" size="xs" />
+            {t("desktop.ledger.apply.action.unlink")}
+          </Badge>
+          <p className="text-sm">{sidesText(t, locale, unlink)}</p>
+        </div>
+      ))}
     </section>
   );
 }
@@ -685,7 +687,7 @@ function MovementList({
 /**
  * The review and apply of everything staged on the page. It leads with one
  * line of counts in the page's unit, then what needs the person first,
- * permanent links, model approvals, a summary by kind of change and the
+ * invoice links and their removals, model approvals, a summary by kind of change and the
  * list of movements, the plan in plain words with its operations under
  * Technical details; then the apply with each part's progress and every
  * row's outcome.
@@ -767,6 +769,13 @@ export function ReviewDialog({
         : [],
     [plan],
   );
+  const unlinkSteps = plan
+    ? plan.steps.flatMap((step) =>
+        step.kind === "action" && step.action.kind === "unlink"
+          ? [step.action]
+          : [],
+      )
+    : [];
   // The ledger states where each link's two sides differ; the window judges
   // nothing, and a link not yet judged is held.
   const judging = useInvoiceMatches(
@@ -907,6 +916,14 @@ export function ReviewDialog({
         ),
       };
     });
+    const unlinks = unlinkSteps.map((action) => ({
+      id: action.id,
+      row: rows.get(action.transactionId),
+      invoice: state.invoices?.find(
+        (found) => found.invoice_id === action.invoiceId,
+      ),
+      invoiceId: action.invoiceId,
+    }));
     // A link whose invoice could not be read is held until it is read.
     const unread = links.some((link) => !link.invoice);
     const unjudged = links.some((link) => link.mismatches === null);
@@ -956,8 +973,9 @@ export function ReviewDialog({
           locks={state.phase === "ready" ? state.locks : null}
           locale={locale}
         />
-        <PermanentLinks
+        <LinkChanges
           links={links}
+          unlinks={unlinks}
           locale={locale}
           ticks={ticks}
           onTicks={setTicks}
@@ -1021,7 +1039,7 @@ export function ReviewDialog({
               : unjudged
                 ? t("desktop.ledger.apply.link.unjudged")
                 : !ready
-                  ? t("desktop.ledger.apply.tick_links")
+                  ? t("desktop.ledger.apply.tick_differ")
                   : held
                     ? t("desktop.ledger.apply.held_note", { count: held })
                     : ""}

@@ -26,6 +26,7 @@ from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from ...application.ledger.classify_result_contracts import (
     LedgerClassifyOperationResult,
 )
+from ...application.ledger.invoice_unlink import InvoiceUnlinkCause, InvoiceUnlinkRefusedError
 from ...application.ledger.ledger_add_contracts import LedgerAddOperationResult
 from ...application.ledger.models import (
     ManualLedgerTransactionPatch,
@@ -792,6 +793,64 @@ def ledger_link(
         ctx,
         command="ledger.link",
         result=LedgerLinkResult.model_validate(payload),
+        lines=lines,
+    )
+
+
+def _unlink_refusal(error: InvoiceUnlinkRefusedError) -> typer.BadParameter:
+    """Map the closed worker refusal cause to its operator message and next step."""
+    cause = error.cause
+    if cause is InvoiceUnlinkCause.LINK_NOT_FOUND:
+        return bad(tr("cli.ledger.unlink.errors.link_not_found"))
+    if cause is InvoiceUnlinkCause.TRANSACTION_CHANGED:
+        return bad(tr("cli.ledger.unlink.errors.transaction_changed"))
+    if cause is InvoiceUnlinkCause.INVOICE_CHANGED:
+        return bad(tr("cli.ledger.unlink.errors.invoice_changed"))
+    return bad(tr("cli.ledger.unlink.errors.finalized_calculation_reference"))
+
+
+def ledger_unlink(
+    ctx: typer.Context,
+    transaction_id: str,
+    invoice_id: str,
+    actor: str | None = None,
+) -> None:
+    """Remove a transaction's link to one reconciliation-catalogue invoice; the history keeps both."""
+    from .operation_ledger_unlink import unlink_ledger_invoice_for_cli
+
+    try:
+        unlinked = unlink_ledger_invoice_for_cli(
+            ctx,
+            transaction_id=transaction_id,
+            invoice_id=invoice_id,
+            actor=actor,
+        )
+    except InvoiceUnlinkRefusedError as refusal:
+        raise _unlink_refusal(refusal) from refusal
+
+    result = unlinked.result
+    payload = {
+        "operation": "ledger.unlink",
+        "bucket_id": str(result.profile_id),
+        "transaction_id": result.transaction_id,
+        "invoice_id": result.invoice_id,
+        "actor": result.actor,
+        "invoice_linked_transaction_ids": list(result.invoice_linked_transaction_ids),
+        "bucket_event_ids": list(result.bucket_event_ids),
+    }
+    lines = [
+        "operation\tledger.unlink",
+        f"bucket\t{result.profile_id}",
+        f"transaction_id\t{result.transaction_id}",
+        f"actor\t{result.actor}",
+        f"invoice_id\t{result.invoice_id}",
+    ]
+    from .ledger_results import LedgerUnlinkResult
+
+    emit_envelope(
+        ctx,
+        command="ledger.unlink",
+        result=LedgerUnlinkResult.model_validate(payload),
         lines=lines,
     )
 

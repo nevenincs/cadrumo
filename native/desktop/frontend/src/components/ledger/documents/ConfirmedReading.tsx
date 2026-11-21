@@ -127,14 +127,14 @@ export function ConfirmedReading({
         </Alert>
       )}
       {linkStaged ? (
-        <Alert icon={<Icon name="lock" />} className="ledger-draft-link-staged">
+        <Alert icon={<Icon name="link" />} className="ledger-draft-link-staged">
           {t("desktop.ledger.matching.staged_toast")}
         </Alert>
       ) : nearby ? (
         <Alert icon={<Icon name="link" />} className="ledger-draft-no-match">
           <AlertTitle>{t("desktop.ledger.documents.no_movement")}</AlertTitle>
           <AlertDescription className="grid gap-2">
-            <span>{t("desktop.ledger.inspector.invoice.permanent")}</span>
+            <span>{t("desktop.ledger.invoices.links_removable")}</span>
             <Combobox
               label={t("desktop.ledger.documents.find_movement")}
               value={null}
@@ -205,7 +205,7 @@ export function ConfirmedReading({
                     onLinkStaged();
                   }}
                 >
-                  <Icon name="lock" size="xs" />
+                  <Icon name="link" size="xs" />
                   {t("desktop.ledger.matching.link")}
                 </Button>
               </span>

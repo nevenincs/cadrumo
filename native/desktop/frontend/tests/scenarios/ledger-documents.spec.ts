@@ -175,7 +175,7 @@ test("a clean reading is confirmed only with a kind and a country, then offers i
     made.lastIndexOf("ledger ledger.evidence.confirm"),
   );
 
-  // The movement that settles it is offered as a permanent link.
+  // The movement that settles it is offered as a link.
   const offer = done.locator(".ledger-draft-link-offer");
   await expect(offer).toContainText("DOMESTIKA CURSO LETTERING");
   // The confirm button is gone: its link is the next step.
@@ -916,7 +916,7 @@ test("the ticket stays on screen beside the question it is needed for, and after
   expect((await list.boundingBox())!.width).toBeGreaterThan(rail.width * 3);
 });
 
-test("a confirmed ticket no movement settles offers the movements near its day, and stages a permanent link", async ({
+test("a confirmed ticket no movement settles offers the movements near its day, and stages a link", async ({
   page: target,
 }) => {
   await openDocuments(target);

@@ -348,7 +348,7 @@ export function StoredInvoice({
           })}
         </p>
         <p className="text-xs text-muted-foreground">
-          {t("desktop.ledger.invoices.links_permanent")}
+          {t("desktop.ledger.invoices.links_removable")}
         </p>
       </EditorSection>
     </>

@@ -25,6 +25,7 @@ import {
   type MatchPair,
 } from "../matching/matchingModel";
 import { chipText, invoiceLine, settlesText } from "../matching/matchingWords";
+import { stageUnlink } from "../matching/unlinkWords";
 import type { InspectorRead } from "./useInspectorReads";
 import { formatAmount } from "../../../shared/numbers";
 import { formatDay } from "../../../shared/dateFormats";
@@ -33,9 +34,10 @@ import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerRea
 /**
  * The inspector's Invoice section: the invoice the movement is linked to,
  * or its one best suggestion with the evidence it stands on, a chooser when
- * candidates tie, and a picker for any other invoice. A link is permanent:
- * it cannot be removed here, so every link button says so, and staging one
- * takes its invoice from every other movement's suggestions.
+ * candidates tie, and a picker for any other invoice. Staging a link takes
+ * its invoice from every other movement's suggestions. A saved link can be
+ * removed here: the removal is staged with the movement and the invoice as
+ * shown, and the history keeps both the link and its removal.
  */
 export function InvoiceSection({
   port,
@@ -106,6 +108,10 @@ export function InvoiceSection({
     (action): action is Extract<StagedAction, { kind: "link" }> =>
       action.kind === "link",
   );
+  const unlinking = actions.find(
+    (action): action is Extract<StagedAction, { kind: "unlink" }> =>
+      action.kind === "unlink",
+  );
   const byId = useMemo(
     () =>
       new Map(rows.map((entry) => [entry.transaction.transaction_id, entry])),
@@ -165,10 +171,9 @@ export function InvoiceSection({
       </p>
     );
 
-  const permanent = (
-    <p className="flex items-center gap-1 text-xs text-muted-foreground">
-      <Icon name="lock" size="xs" />
-      {t("desktop.ledger.inspector.invoice.permanent")}
+  const removable = (
+    <p className="text-xs text-muted-foreground">
+      {t("desktop.ledger.inspector.invoice.removable")}
     </p>
   );
 
@@ -216,14 +221,29 @@ export function InvoiceSection({
                 })}
               </dd>
             </dl>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-fit"
-              onClick={() => onOpenInvoice(invoice.invoice_id)}
-            >
-              {t("desktop.ledger.inspector.invoice.open")}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onOpenInvoice(invoice.invoice_id)}
+              >
+                {t("desktop.ledger.inspector.invoice.open")}
+              </Button>
+              {!unlinking && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ledger-invoice-unlink"
+                  onClick={() => {
+                    onStage(stageUnlink(tx, invoice));
+                    say(t("desktop.ledger.inspector.invoice.unlink_staged"));
+                  }}
+                >
+                  <Icon name="unlinked" />
+                  {t("desktop.ledger.inspector.invoice.unlink")}
+                </Button>
+              )}
+            </div>
           </div>
         ) : (
           <p className="text-sm">
@@ -232,7 +252,31 @@ export function InvoiceSection({
               : t("desktop.ledger.loading")}
           </p>
         )}
-        {permanent}
+        {unlinking && (
+          <Alert
+            icon={<Icon name="unlinked" />}
+            role="status"
+            className="ledger-invoice-unlinking"
+          >
+            <span className="grid gap-1">
+              {t("desktop.ledger.inspector.invoice.unlink_pending", {
+                invoice: invoice
+                  ? seriesAndNumber(invoice)
+                  : unlinking.invoiceId.slice(0, 12),
+              })}
+              <Button
+                variant="link"
+                size="xs"
+                className="w-fit"
+                onClick={() =>
+                  onStage({ type: "drop_action", id: unlinking.id })
+                }
+              >
+                {t("desktop.ledger.inspector.drop")}
+              </Button>
+            </span>
+          </Alert>
+        )}
       </div>
     );
   }
@@ -464,7 +508,7 @@ export function InvoiceSection({
           </Button>
         </Combobox>
       )}
-      {permanent}
+      {removable}
     </div>
   );
 }

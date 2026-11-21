@@ -87,6 +87,7 @@ export const LEDGER_WRITES: readonly string[] = [
   "ledger.rule.remove",
   "ledger.split.manual",
   "ledger.stash",
+  "ledger.unlink",
   "ledger.update",
 ];
 

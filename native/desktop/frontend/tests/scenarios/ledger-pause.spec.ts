@@ -9,9 +9,8 @@ const scenarioYear = fixtureYear;
 // The Ledger page's one write pause over the scenario's ledger: a write
 // whose outcome was not seen holds every write on the page, in any
 // section, until the person re-reads; a saved write whose answer was lost
-// is said as saved; the review of a permanent link holds a link whose
-// invoice it could not read, and asks a second tick for one in another
-// currency; and the movements a finalized declaration seals are counted
+// is said as saved; the review of a link holds a link whose invoice it
+// could not read, and asks a tick for one in another currency; and the movements a finalized declaration seals are counted
 // as skipped.
 
 const page = (target: Page) => target.locator(".ledger-page");
@@ -111,7 +110,7 @@ async function inspect(target: Page, text: string) {
   );
 }
 
-/** Stages a permanent link from `movement` to the invoice numbered
+/** Stages a link from `movement` to the invoice numbered
  * `invoice`, through the inspector's picker. */
 async function stageLink(target: Page, movement: string, invoice: string) {
   await inspect(target, movement);
@@ -336,27 +335,27 @@ test("a link whose invoice could not be read is held until it is read again", as
   await stageLink(target, "PAPELERIA TRAZO", "INV-88412");
   await ledgerControls.nextReads(target, "ledger.invoice.list", 1);
   await openReview(target);
-  const link = review(target).locator(".ledger-permanent");
+  const link = review(target).locator(".ledger-links");
   await expect(link.locator(".ledger-link-unread")).toContainText(
     label("desktop.ledger.apply.link.unread"),
   );
-  await expect(link.locator(".ledger-link-sure")).toBeDisabled();
   const save = review(target).locator(".ledger-apply-save");
   await expect(save).toHaveAttribute("aria-disabled", "true");
   await link.locator(".ledger-link-reread").click();
   await expect(link.locator(".ledger-link-unread")).toHaveCount(0);
   await expect(link).toContainText("INV-88412");
-  await expect(link.locator(".ledger-link-sure")).toBeEnabled();
+  // Read again, the link is judged, and its other currency asks a tick.
+  await expect(link.locator(".ledger-link-differ")).toBeEnabled();
 });
 
-test("a link to an invoice in another currency names it and needs the second tick", async ({
+test("a link to an invoice in another currency names it and needs its tick", async ({
   page: target,
 }) => {
   await openLedger(target);
   // The movement is in euros; INV-88412 is in dollars.
   await stageLink(target, "PAPELERIA TRAZO", "INV-88412");
   await openReview(target);
-  const link = review(target).locator(".ledger-permanent");
+  const link = review(target).locator(".ledger-links");
   await expect(link).toContainText(
     label("desktop.ledger.apply.link.currency_differs", {
       movement: "EUR",
@@ -364,7 +363,6 @@ test("a link to an invoice in another currency names it and needs the second tic
     }),
   );
   const save = review(target).locator(".ledger-apply-save");
-  await link.locator(".ledger-link-sure").check();
   await expect(save).toHaveAttribute("aria-disabled", "true");
   await link.locator(".ledger-link-differ").check();
   await expect(save).not.toHaveAttribute("aria-disabled", "true");

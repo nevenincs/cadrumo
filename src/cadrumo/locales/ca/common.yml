@@ -1780,7 +1780,7 @@ desktop:
         detach: Separa
         exclude: Exclou
         iva_derive: Calcula l'IVA · {category}
-        link: Vincula · permanent
+        link: Vincula
         m210: Renda del model 210
         merge: Uneix parts
         remove: Elimina
@@ -1789,6 +1789,7 @@ desktop:
         split: Divideix
         stash: Aparta
         suggestion: Aprovació del model
+        unlink: Treu el vincle amb la factura
       approvals: Aprovacions del model
       approve: aprovat per tu
       back: Enrere
@@ -1846,9 +1847,11 @@ desktop:
         currency_differs: 'Moneda diferent: {movement} ↔ {invoice}'
         differ: Sé que difereixen
         linked_elsewhere: 'Factura ja vinculada · moviments: {count}'
-        sure: Vincula aquests · permanent
         unjudged: El llibre encara no ha comparat aquest vincle
         unread: No s'ha pogut llegir la factura
+      links: Vincles amb factures
+      links_note: Pots treure un vincle més tard des de la secció Factura del moviment;
+        l'historial conserva tots dos.
       mine: Conserva el meu
       mismatch:
         income_category: Categoria de despesa en un ingrés · {count}
@@ -1885,9 +1888,6 @@ desktop:
         res d''aquesta part.'
       part_unknown: No hem pogut confirmar aquesta part sencera. El desament està
         en pausa.
-      permanent: Permanent
-      permanent_note: Un vincle no es pot treure després, ni aquí ni enlloc. Marca
-        cadascun del qual estiguis segur.
       progress: Progrés del desament
       progress_count: '{done} de {total} desaments'
       read_failed: 'No s''ha pogut actualitzar el llibre: no s''ha desat res'
@@ -1922,7 +1922,7 @@ desktop:
         unchanged: Sense canvis
         unknown: Resultat desconegut
       theirs: Pren el desat
-      tick_links: Marca cada vincle permanent per desar.
+      tick_differ: Per desar, marca cada vincle els dos costats del qual difereixen.
       title: Revisa i desa · {count}
       together: 'Desats junts: {count}'
       unknown_note: No hem pogut confirmar que s'hagi desat i no ho tornarem a provar
@@ -2677,8 +2677,7 @@ desktop:
       keep: Conserva'l
       left_out: 'Omesos per no ser documents: {count}'
       link_offer: La vincules al seu moviment?
-      link_offer_note: '{description} · {date} · {amount} la liquida. Un vincle és
-        permanent un cop desat.'
+      link_offer_note: '{description} · {date} · {amount} la liquida.'
       list_hide: Plega les lectures
       list_show: Mostra les lectures
       media:
@@ -3481,6 +3480,7 @@ desktop:
         restored: Restaurat
         split: Dividit
         stashed: Apartat
+        unlinked: Factura desvinculada
         updated: Actualitzat
       file_row: '{file}, fila {row}'
       fix:
@@ -3516,8 +3516,8 @@ desktop:
         group_settles: Liquida aquest import
         issued: Emesa
         issued_on: Data d'emissió
-        link: Vincula · permanent
-        link_staged: Vincle encara sense desar · permanent en desar
+        link: Vincula
+        link_staged: Vincle encara sense desar
         linked: Moviments
         linked_count: '{count} vinculats'
         none: Cap factura del catàleg liquida aquest import.
@@ -3526,15 +3526,29 @@ desktop:
         partial_hint: Normalment un moviment liquida una factura. Vincula'ls només
           en pagaments parcials.
         payment: Pagament
-        permanent: 'Un vincle és permanent: aquí no es pot treure.'
         pick: Vincula una altra factura
         received: Rebuda
+        removable: Pots treure un vincle més tard aquí; l'historial conserva tots
+          dos.
         rival: '{movement} la liquida igual de bé.'
         show_other: Mostra l'altre
-        staged: Vincle amb {invoice} encara sense desar · permanent en desar
+        staged: Vincle amb {invoice} encara sense desar
         staged_for: Ja és als teus canvis per a {movement}
         taken: '{invoice} ja és als teus canvis per a {movement}'
         transfer: Les transferències entre els teus comptes no tenen factura.
+        unlink: Treu el vincle
+        unlink_cause:
+          finalized_calculation_reference: Una declaració finalitzada fa servir aquest
+            moviment i el seu vincle.
+          invoice_changed: Els vincles de la factura han canviat des que l'has oberta.
+          link_not_found: El moviment i la factura ja no estan vinculats.
+          transaction_changed: El moviment ha canviat des que l'has obert.
+        unlink_next_step:
+          reopen_finalized_calculation: Reobre primer la declaració que el fa servir.
+          reopen_invoice: Torna a obrir la factura i torna-ho a provar.
+          reopen_transaction: Torna a obrir el moviment i torna-ho a provar.
+        unlink_pending: El vincle amb {invoice} es treu en desar
+        unlink_staged: Treure el vincle, encara sense desar
       issue_count: '{count} per corregir'
       last_saved: Últim desat
       lifecycle:
@@ -3875,7 +3889,8 @@ desktop:
         el document.
       linked: Moviments vinculats
       linked_count: 'Moviments vinculats: {count}'
-      links_permanent: 'Un vincle és permanent: no es pot treure.'
+      links_removable: Per treure un vincle, obre la secció Factura del moviment;
+        l'historial conserva tots dos.
       met: complert
       needs: Tota factura necessita
       new: Factura nova
@@ -4042,8 +4057,8 @@ desktop:
       empty: Res per conciliar
       empty_waiting: 'Sense suggeriments · moviments que esperen factura: {count}'
       invoice_line: '{number} · {counterparty} · {date} · {payment}'
-      link: Vincula · permanent
-      link_named: Vincula {number} a {description} · permanent
+      link: Vincula
+      link_named: Vincula {number} a {description}
       no_repair:
         cites_another: El moviment cita una altra factura
         invoice_missing: La factura no és al catàleg
@@ -4054,13 +4069,13 @@ desktop:
       partial: Normalment un moviment liquida una factura. Vincula'ls tots dos només
         si són pagaments parcials.
       read_failed: No s'ha pogut llegir
-      repair: Repara · permanent
+      repair: Repara
       repair_staged: Reparació encara sense desar
       settles: Liquida {amount}
       settles_withheld: Liquida {amount} ({total} − {withheld} de retenció)
       show_other: Mostra {description}
       staged: 'Vincles encara sense desar: {count}'
-      staged_toast: Vincle encara sense desar · permanent en desar
+      staged_toast: Vincle encara sense desar
       suggestions: Parelles suggerides
       title: Per conciliar
     maximize: Maximitza el llibre

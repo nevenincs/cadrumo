@@ -113,6 +113,8 @@ const EVENT_KEYS: Record<string, string> = {
   "ledger.transaction.split": "desktop.ledger.inspector.event.split",
   "ledger.transaction.merged": "desktop.ledger.inspector.event.merged",
   "ledger.transaction.invoice.linked": "desktop.ledger.inspector.event.linked",
+  "ledger.transaction.invoice.unlinked":
+    "desktop.ledger.inspector.event.unlinked",
   "ledger.transaction.correction.applied":
     "desktop.ledger.inspector.event.corrected",
   "purchase_invoice_evidence.attached":

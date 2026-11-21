@@ -1721,7 +1721,7 @@ desktop:
         detach: Detach
         exclude: Exclude
         iva_derive: Work out IVA · {category}
-        link: Link · permanent
+        link: Link
         m210: Modelo 210 income
         merge: Merge parts
         remove: Remove
@@ -1730,6 +1730,7 @@ desktop:
         split: Split
         stash: Set aside
         suggestion: Model approval
+        unlink: Remove invoice link
       approvals: Model approvals
       approve: approved by you
       back: Back
@@ -1786,9 +1787,11 @@ desktop:
         currency_differs: 'Different currency: {movement} ↔ {invoice}'
         differ: I know they differ
         linked_elsewhere: 'Invoice also linked · movements: {count}'
-        sure: Link these · permanent
         unjudged: The ledger has not compared this link yet
         unread: Invoice could not be read
+      links: Invoice links
+      links_note: You can remove a link later from the movement's Invoice section;
+        its history keeps both.
       mine: Keep mine
       mismatch:
         income_category: Expense category on income · {count}
@@ -1821,9 +1824,6 @@ desktop:
       part_refused: 'Not saved: the ledger changed while saving. Nothing in this part
         was saved.'
       part_unknown: We couldn't confirm this part as a whole. Saving is paused.
-      permanent: Permanent
-      permanent_note: A link cannot be removed later, here or anywhere else. Tick
-        each one you are sure of.
       progress: Saving progress
       progress_count: '{done} of {total} saves'
       read_failed: 'The ledger could not be refreshed: nothing was saved'
@@ -1857,7 +1857,7 @@ desktop:
         unchanged: Unchanged
         unknown: Outcome unknown
       theirs: Take theirs
-      tick_links: Tick each permanent link to save.
+      tick_differ: Tick each link whose two sides differ to save.
       title: Review and save · {count}
       together: 'Saved together: {count}'
       unknown_note: We couldn't confirm this saved, and we won't try again on our
@@ -2613,8 +2613,7 @@ desktop:
       keep: Keep it
       left_out: 'Left out, not a document: {count}'
       link_offer: Link it to its movement?
-      link_offer_note: '{description} · {date} · {amount} settles it. A link is permanent
-        once saved.'
+      link_offer_note: '{description} · {date} · {amount} settles it.'
       list_hide: Fold the readings
       list_show: Show the readings
       media:
@@ -3410,6 +3409,7 @@ desktop:
         restored: Restored
         split: Split
         stashed: Set aside
+        unlinked: Invoice unlinked
         updated: Updated
       file_row: '{file}, row {row}'
       fix:
@@ -3445,8 +3445,8 @@ desktop:
         group_settles: Settles this amount
         issued: Issued
         issued_on: Issued on
-        link: Link · permanent
-        link_staged: Link not saved yet · permanent once saved
+        link: Link
+        link_staged: Link not saved yet
         linked: Movements
         linked_count: '{count} linked'
         none: No invoice in the catalogue settles this amount.
@@ -3455,15 +3455,28 @@ desktop:
         partial_hint: Usually one movement settles one invoice. Link both only for
           partial payments.
         payment: Payment
-        permanent: 'A link is permanent: it cannot be removed here.'
         pick: Link another invoice
         received: Received
+        removable: You can remove a link later here; the history keeps both.
         rival: '{movement} settles it equally well.'
         show_other: Show the other
-        staged: Link to {invoice} not saved yet · permanent once saved
+        staged: Link to {invoice} not saved yet
         staged_for: Already in your changes for {movement}
         taken: '{invoice} is already in your changes for {movement}'
         transfer: Transfers between your own accounts have no invoice.
+        unlink: Remove link
+        unlink_cause:
+          finalized_calculation_reference: A finished declaration uses this movement
+            and its link.
+          invoice_changed: The invoice's links changed since you opened it.
+          link_not_found: The movement and the invoice are no longer linked.
+          transaction_changed: The movement changed since you opened it.
+        unlink_next_step:
+          reopen_finalized_calculation: Reopen the declaration that uses it first.
+          reopen_invoice: Open the invoice again and retry.
+          reopen_transaction: Open the movement again and retry.
+        unlink_pending: The link to {invoice} is removed when you save
+        unlink_staged: Link removal not saved yet
       issue_count: '{count} to fix'
       last_saved: Last saved
       lifecycle:
@@ -3801,7 +3814,8 @@ desktop:
         prints.
       linked: Linked movements
       linked_count: 'Linked movements: {count}'
-      links_permanent: 'A link is permanent: it can''t be removed.'
+      links_removable: To remove a link, open the movement's Invoice section; the
+        history keeps both.
       met: met
       needs: Every invoice needs
       new: New invoice
@@ -3967,8 +3981,8 @@ desktop:
       empty: Nothing to match
       empty_waiting: 'No suggestions · movements waiting for an invoice: {count}'
       invoice_line: '{number} · {counterparty} · {date} · {payment}'
-      link: Link · permanent
-      link_named: Link {number} to {description} · permanent
+      link: Link
+      link_named: Link {number} to {description}
       no_repair:
         cites_another: The movement cites another invoice
         invoice_missing: The invoice is not in the catalogue
@@ -3979,13 +3993,13 @@ desktop:
       partial: Usually one movement settles one invoice. Link both only for partial
         payments.
       read_failed: Could not read
-      repair: Repair · permanent
+      repair: Repair
       repair_staged: Repair not saved yet
       settles: Settles {amount}
       settles_withheld: Settles {amount} ({total} − {withheld} withholding tax)
       show_other: Show {description}
       staged: 'Links not saved yet: {count}'
-      staged_toast: Link not saved yet · permanent once saved
+      staged_toast: Link not saved yet
       suggestions: Suggested pairs
       title: To match
     maximize: Maximize the ledger
