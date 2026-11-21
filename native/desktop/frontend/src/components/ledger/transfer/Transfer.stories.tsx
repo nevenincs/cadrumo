@@ -117,6 +117,7 @@ function Import({ shape, locale }: ImportArgs) {
       onWritten={noop}
       onShowImported={noop}
       onShowDocuments={noop}
+      onShowAccounts={noop}
     />
   );
 }

@@ -482,6 +482,81 @@ test("a statement naming an account no one registered offers to register it, and
   await expect(bound.locator("option:checked")).toHaveText(/ES\*\*1332/);
 });
 
+test("registering a statement's account is previewed as the rows it binds, the result says it registered, and a pick of no account stays possible", async ({
+  page: target,
+}) => {
+  await openEmptyLedger(target);
+  // The statement imported once with no account: its rows are in the ledger
+  // unbound.
+  const first = await openImport(target);
+  await target.evaluate((name) => window.__scenarioLedger!.drop([name]), BBVA);
+  await button(first, "desktop.ledger.import.preview").click();
+  await fileRow(first, BBVA)
+    .getByRole("combobox", { name: label("desktop.ledger.import.account") })
+    .selectOption({ label: label("desktop.ledger.import.no_account") });
+  await button(first, "desktop.ledger.import.apply_files", {
+    count: 1,
+  }).click();
+  await expect(fileRow(first, BBVA)).toContainText(
+    label("desktop.ledger.import.file_imported", { fresh: 7, skipped: 0 }),
+  );
+  await button(first, "desktop.ledger.import.done").click();
+
+  // Again: registering binds the rows to the new account, so they are new
+  // rows beside the unbound ones, each a likely duplicate of its twin.
+  const dialog = await openImport(target);
+  await target.evaluate((name) => window.__scenarioLedger!.drop([name]), BBVA);
+  await button(dialog, "desktop.ledger.import.preview").click();
+  const row = fileRow(dialog, BBVA);
+  const account = row.getByRole("combobox", {
+    name: label("desktop.ledger.import.account"),
+  });
+  await expect(account.locator("option:checked")).toHaveText(
+    label("desktop.ledger.import.account_register", { account: "ES**1332" }),
+  );
+  await expect(row).toContainText(
+    label("desktop.ledger.import.file_counts", {
+      rows: 7,
+      fresh: 7,
+      skipped: 0,
+    }),
+  );
+  await expect(
+    row.getByRole("button", {
+      name: label("desktop.ledger.import.duplicates_chip", { count: 7 }),
+    }),
+  ).toBeVisible();
+  // With no account the same rows are all in the ledger already.
+  await account.selectOption({
+    label: label("desktop.ledger.import.no_account"),
+  });
+  await expect(row).toContainText(
+    label("desktop.ledger.import.file_counts", {
+      rows: 7,
+      fresh: 0,
+      skipped: 7,
+    }),
+  );
+  await expect(
+    button(dialog, "desktop.ledger.import.nothing_new"),
+  ).toBeDisabled();
+  // Registering is chosen again and sent, and the result says so.
+  await account.selectOption({
+    label: label("desktop.ledger.import.account_register", {
+      account: "ES**1332",
+    }),
+  });
+  await button(dialog, "desktop.ledger.import.apply_files", {
+    count: 1,
+  }).click();
+  await expect(row).toContainText(
+    label("desktop.ledger.import.file_imported", { fresh: 7, skipped: 0 }),
+  );
+  await expect(row).toContainText(
+    label("desktop.ledger.import.account_registered", { account: "ES**1332" }),
+  );
+});
+
 test("a statement with no account to register keeps the explicit choice, and a failed preview says why", async ({
   page: target,
 }) => {
@@ -500,6 +575,23 @@ test("a statement with no account to register keeps the explicit choice, and a f
   await expect(fileRow(dialog, BROKEN)).toContainText(
     `${label("desktop.ledger.import.preview_failed")} ${label("desktop.ledger.import.failure.other")}`,
   );
+  // With no account to choose, the way to one is offered and says where it
+  // leads: the own accounts, where one is added by hand.
+  const add = button(
+    fileRow(dialog, STUDIO),
+    "desktop.ledger.import.account_add",
+  );
+  await expect(add).toHaveAccessibleDescription(
+    label("desktop.ledger.import.account_add_note"),
+  );
+  await add.click();
+  await expect(dialog).toBeHidden();
+  await expect(
+    target.getByRole("tab", {
+      name: label("desktop.ledger.registers.area.accounts"),
+      selected: true,
+    }),
+  ).toBeVisible();
 });
 
 test("a file already fully in the ledger is not sent, and the result still counts and lists it", async ({

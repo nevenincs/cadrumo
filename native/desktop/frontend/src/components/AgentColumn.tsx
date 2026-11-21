@@ -21,6 +21,11 @@ import {
 import { acceptedExtensions, DocumentLister } from "../shell/agentDocuments";
 import { useDocumentInventory } from "../shell/agentDocumentInventory";
 import { useStagedDocuments } from "../shell/agentStaging";
+import {
+  MovementNotice,
+  movementRefusalWords,
+  type HandedMovement,
+} from "./agent/MovementNotice";
 import { useAgentDrops } from "../shell/agentDrops";
 import { DropOverlay } from "./agent/DropOverlay";
 import { StagedAttachmentsDialog } from "./agent/StagedAttachmentsDialog";
@@ -105,6 +110,9 @@ const NEW_CONVERSATION = {
 export type AgentColumnControl = {
   /** Shows the conversation with the model picker open. */
   openModelPicker(): void;
+  /** Stages the Libro movement `transactionId` on the next message of the
+   * conversation shown, starting one where none is: nothing is sent. */
+  attachMovement(transactionId: string): void;
 };
 
 /**
@@ -343,12 +351,20 @@ export function AgentColumn({
     setView((held) => ({ ...held, panel: "none" }));
     setPickerRequests((count) => count + 1);
   }, []);
+  // The movement a page handed over, staged as it is stored; the handle
+  // stays the same while what it does follows the column.
+  const attachMovementNow = useRef<(transactionId: string) => void>(() => {});
+  const attachMovement = useCallback(
+    (transactionId: string) => attachMovementNow.current(transactionId),
+    [],
+  );
   useImperativeHandle(
     control,
     () => ({
       openModelPicker,
+      attachMovement,
     }),
-    [openModelPicker],
+    [openModelPicker, attachMovement],
   );
   const { localModelHost, readingHost, listChanges, engineChanges } =
     useLocalModelHosts(session, ready);
@@ -615,16 +631,17 @@ export function AgentColumn({
     [serviceReadable, session],
   );
   const attachmentPolicy = useAgentRead(readAttachmentPolicy);
+  const maxFileBytes =
+    attachmentPolicy.kind === "ready"
+      ? attachmentPolicy.value.max_file_bytes
+      : null;
   const staging = useStagedDocuments({
     reader,
     conversationId,
     session,
     filterLabel: t("desktop.agent.attach_filter"),
     t,
-    maxFileBytes:
-      attachmentPolicy.kind === "ready"
-        ? attachmentPolicy.value.max_file_bytes
-        : null,
+    maxFileBytes,
     onStored: () => setDocumentsVersion((held) => held + 1),
   });
   const documents = useDocumentInventory({
@@ -704,6 +721,73 @@ export function AgentColumn({
           if (failure) change({ sendFailure: failure });
         }
       : undefined;
+
+  // A movement handed over from the Libro: stored in the conversation's own
+  // storage and named for its next message, which the person sends or not.
+  const [movement, setMovement] = useState<HandedMovement | null>(null);
+  attachMovementNow.current = (transactionId: string) => {
+    const store = session?.attachLedgerMovement?.bind(session);
+    const at = { reader, conversation: conversationId };
+    if (!store || !session || reader === null) {
+      setMovement({
+        ...at,
+        kind: "refused",
+        words: t("desktop.agent.movement_unavailable"),
+      });
+      return;
+    }
+    setMovement({ ...at, kind: "storing" });
+    change({ panel: "none", sendFailure: null });
+    void (async () => {
+      let id = conversationId;
+      try {
+        if (id === null) {
+          id = (await session.startConversation()).id;
+          started(id);
+        }
+      } catch (error) {
+        setMovement({
+          ...at,
+          kind: "refused",
+          words: refusalWords(t, failureCode(error)),
+        });
+        return;
+      }
+      const into = { reader, conversation: id };
+      try {
+        const document = await store(id, transactionId);
+        staging.nameIn(id, document);
+        setDocumentsVersion((held) => held + 1);
+        setMovement({ ...into, kind: "staged", name: document.name });
+      } catch (error) {
+        setMovement({
+          ...into,
+          kind: "refused",
+          words: movementRefusalWords(t, error, maxFileBytes),
+        });
+      }
+    })();
+  };
+  const movementShown =
+    movement !== null &&
+    movement.reader === reader &&
+    movement.conversation === conversationId &&
+    (movement.kind !== "staged" ||
+      staging.staged.some((held) => held.id === `stored:${movement.name}`))
+      ? movement
+      : null;
+  // Who reads what is sent: a lane that needs nothing is a server on this
+  // computer, any other is its provider's.
+  const selectedProvider = offer?.providers.find(
+    (provider) => provider.id === selection?.providerId,
+  );
+  const selectedWay = selectedProvider?.ways.find(
+    (way) => way.id === selection?.wayId,
+  );
+  const sharedWith =
+    selectedProvider && selectedWay && selectedWay.authKind !== "none"
+      ? selectedProvider.name
+      : null;
 
   const dropping = useAgentDrops({
     session,
@@ -1126,6 +1210,13 @@ export function AgentColumn({
               if (view.carryFrom !== null) open(view.carryFrom);
             }}
           />
+          {movementShown && (
+            <MovementNotice
+              shown={movementShown}
+              sharedWith={sharedWith}
+              onDismiss={() => setMovement(null)}
+            />
+          )}
           <Composer
             key={view.draft.key}
             defaultDraft={view.draft.text}

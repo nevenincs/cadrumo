@@ -43,6 +43,7 @@ import type {
 import type {
   AgentConversationRecord,
   AgentDocumentPage,
+  AgentDocumentRecord,
   AgentDocumentsQuery,
 } from "../shell/agentViews";
 import type {
@@ -1181,6 +1182,14 @@ export interface HostCommands {
       dropId?: string;
     }>;
     result: AgentUploadPick[];
+  };
+  /** Stores the Libro movement the ledger's movement read serves for the
+   * signed-in profile in the conversation's storage, as JSON from memory,
+   * and answers its record; it sends nothing to a model. A refusal carries
+   * `code` and, from a ledger refusal, `refusal_words`. */
+  agent_attach_ledger_movement: {
+    args: Authorized<{ conversationId: string; transactionId: string }>;
+    result: AgentDocumentRecord;
   };
   agent_drop_observe: {
     args: Authorized<{ updates: Channel<AgentDropSignal> }>;

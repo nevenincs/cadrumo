@@ -450,6 +450,16 @@ export interface AgentSession {
     onEvent: (event: AgentUploadEvent) => void,
     dropId?: string,
   ): Promise<AgentUploadPick[]>;
+  /** Stores one Libro movement in the conversation's storage: what the
+   * ledger's movement read serves of it for the signed-in profile, as JSON,
+   * checked against the storage's policy like a picked file. It answers the
+   * record a message can name; nothing reaches a model until a message that
+   * names it is sent. A refusal rejects with its `code` and, where the
+   * ledger read served one, its `refusal_words`. */
+  attachLedgerMovement?(
+    conversationId: string,
+    transactionId: string,
+  ): Promise<AgentDocumentRecord>;
   /** Watches native drops while the agent column accepts attachments.
    * Cleanup cannot remove a newer observer. */
   observeDrops?(

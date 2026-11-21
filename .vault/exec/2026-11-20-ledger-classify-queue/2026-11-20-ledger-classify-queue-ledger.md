@@ -5,7 +5,7 @@ tags:
 date: '2026-11-20'
 modified: '2026-11-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:19a0eb33b066e86572a4d5a198b800c8c2d9b2fd1da589369faadeceb4f2ca9d'
+body_hash: 'sha256:c995f4a2e0bcc00dfd7b1918d99fd4f9f760ebeef9a3445c01880daf88fb3b63'
 related:
   - "[[2026-11-20-ledger-classify-queue-plan]]"
 ---
@@ -121,6 +121,15 @@ related:
 - `S13` `M` `native/desktop/frontend/tests/scenarios/ledger-inspector.spec.ts`
 - `S13` `verify:` `playwright test background-tasks-ask.spec.ts background-tasks.spec.ts` -> `pass`
 - `S13` `verify:` `playwright test tests/scenarios/ledger*` -> `pass`
+- `S16` `A` `native/desktop/src-tauri/src/agent/movement.rs`
+- `S16` `A` `native/desktop/frontend/src/shell/agentHandoff.ts`
+- `S16` `A` `native/desktop/frontend/src/components/agent/MovementNotice.tsx`
+- `S16` `A` `native/desktop/frontend/tests/scenarios/ledger-movement-agent.spec.ts`
+- `S16` `M` `native/desktop/src-tauri/src/agent/upload.rs`
+- `S16` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S16` `verify:` `playwright test ledger-movement-agent.spec.ts` -> `pass`
+- `S16` `verify:` `desktop-host-unit-test agent::movement` -> `pass`
+- `S16` `verify:` `desktop-host-unit-clippy` -> `pass`
 
 ## Notes
 

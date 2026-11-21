@@ -3070,6 +3070,9 @@ desktop:
         documents: PDF, PNG, JPG, TIFF, WEBP, HEIC, or Facturae, UBL or CII XML ·
           folders inside a folder are not read
       account: Account
+      account_add: Add an own account
+      account_add_note: Closes the import and opens Registers › Own accounts. Import
+        the file again once the account is added.
       account_choose: Choose the account…
       account_detected: detected from the file
       account_later: The preview shows which account each file belongs to.
@@ -3077,6 +3080,7 @@ desktop:
       account_no_accounts: no accounts registered
       account_register: Register {account} as my own account (holder)
       account_register_note: Rename it later in your accounts.
+      account_registered: Registered {account} as your own account.
       account_unregistered: the file names an account that isn't registered
       any_date: Any date. Rows outside a chosen period are left out.
       apply_book: Import the book
@@ -3985,6 +3989,7 @@ desktop:
     no_rate: No rate
     no_rate_detail: 'No exchange rate for this date: the EUR value is not known, and
       it is not zero.'
+    open_in_agent: Open in a conversation with the agent
     overview:
       close: Close the overview
       group:

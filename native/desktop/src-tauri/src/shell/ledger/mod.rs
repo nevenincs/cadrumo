@@ -135,6 +135,8 @@ const OWN_ACCOUNT_SECRETS: [&str; 6] = [
     "bank_country_code",
 ];
 const OWN_ACCOUNT: &str = "ledger.own_account";
+/// The read a movement is handed to a conversation from.
+const VIEW: &str = "ledger.view";
 
 fn failure(code: &'static str) -> Failure {
     Failure::new(code)
@@ -511,6 +513,31 @@ impl LedgerHost {
             runs.push(follow);
         }
         settle::still_held(&self.profile, &person, standing?, definition.mutation()).await
+    }
+    /// What the registered `ledger.view` read serves of one movement for the
+    /// window's signed-in profile, unchanged: the facts a conversation is
+    /// handed when the person opens the movement there. A refusal keeps the
+    /// sentence the application served for it.
+    pub(crate) async fn movement(&self, transaction: &str) -> Result<Value> {
+        let definition = admitted(VIEW).ok_or_else(protocol)?;
+        match self
+            .relay(
+                definition,
+                Wiped(json!({ "transaction_prefix": transaction })),
+            )
+            .await?
+        {
+            Outcome::Settled { result, .. } => Ok(result),
+            Outcome::Refused { reason, detail, .. } => Err(Failure {
+                reason,
+                refusal_words: detail
+                    .as_ref()
+                    .and_then(|detail| detail["refusal_words"].as_str())
+                    .map(str::to_owned),
+                ..failure("refused")
+            }),
+            Outcome::Review { .. } | Outcome::Running { .. } => Err(protocol()),
+        }
     }
     /// Tokens for what the person dropped on the page that takes drops.
     fn dropped(self: &Arc<Self>, event: &tauri::DragDropEvent) {

@@ -84,6 +84,7 @@ import {
   requested,
 } from "./agentFixtureAsks";
 import { atState, toolCall, toolTitle } from "./agentFixtureTools";
+import { fixtureMovementAttach } from "./agentFixtureMovement";
 import {
   AUTHENTICATION_REQUIRED,
   BUSY_ELSEWHERE,
@@ -210,6 +211,7 @@ export function fixtureAgent({
   engineChoices,
   localEngine,
   readingDefault,
+  readMovement,
 }: {
   say: (call: string) => void;
   wait: () => Promise<void>;
@@ -245,6 +247,8 @@ export function fixtureAgent({
   /** The installed model the service serves as the one documents are read
    * with while no choice is stored; where left out, none stands in. */
   readingDefault?: { lane: string; model: string };
+  /** The ledger's movement read, where a movement can be handed over. */
+  readMovement?: (transactionId: string) => Promise<object>;
 }): {
   agent: AgentViews;
   session: AgentSession;
@@ -1174,6 +1178,7 @@ export function fixtureAgent({
             await check();
             return FIXTURE_ATTACHMENT_POLICY;
           },
+          ...fixtureMovementAttach(say, check, storage, readMovement),
           async attach(conversationId, filterLabel, onEvent, dropId) {
             say(`agentAttach ${conversationId} ${filterLabel}`);
             if (dropId) say(`agentAttachDrop ${conversationId} ${dropId}`);

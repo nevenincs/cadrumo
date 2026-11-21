@@ -35,6 +35,7 @@ import {
   type StageEvent,
   type StageState,
 } from "../../../shell/ledgerStage";
+import { useAgentHandoff } from "../../../shell/agentHandoff";
 import { useStrings } from "../../../shell/strings";
 import {
   directionLabel,
@@ -147,6 +148,7 @@ export function MovementInspector({
   say: (text: string) => void;
 }) {
   const t = useStrings();
+  const agentHandoff = useAgentHandoff();
   const tx = row.transaction;
   const id = tx.transaction_id;
   const key = `${id}:${generation}`;
@@ -381,6 +383,17 @@ export function MovementInspector({
                 >
                   {t("desktop.ledger.duplicate.archive")}…
                 </DropdownMenuItem>
+              )}
+              {agentHandoff && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    icon="agent"
+                    onSelect={() => agentHandoff.openMovement(id)}
+                  >
+                    {t("desktop.ledger.open_in_agent")}
+                  </DropdownMenuItem>
+                </>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem

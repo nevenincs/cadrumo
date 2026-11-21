@@ -15,7 +15,8 @@ import { CLASSIFY_CHORDS } from "./useClassifyChords";
  * a movement's items show them. A new movement takes no classify item, and
  * a movement an import flagged as a likely duplicate offers its archiving.
  * A stored movement offers to ask the agent, over the selection it is part
- * of, saying why where it cannot.
+ * of, saying why where it cannot, and to open it in a conversation with
+ * the agent, where the window offers that.
  */
 export function movementMenuItems({
   t,
@@ -29,6 +30,7 @@ export function movementMenuItems({
   classifyEnabled,
   overview = false,
   askAgent = null,
+  openInAgent = false,
 }: {
   t: Translate;
   /** The group's movements, where the menu is a group header's. */
@@ -52,6 +54,9 @@ export function movementMenuItems({
   /** Why the agent cannot be asked about the row, or null where it can;
    * the item is left out where this is not given. */
   askAgent?: { refusal: string | null } | null;
+  /** The window can stage the stored movement in a conversation with the
+   * agent. */
+  openInAgent?: boolean;
 }): MenuEntry[] {
   const classifyItems = (): MenuEntry[] =>
     CLASSIFY_KINDS.map((kind) => ({
@@ -85,6 +90,16 @@ export function movementMenuItems({
             ...(askAgent.refusal === null
               ? {}
               : { description: askAgent.refusal }),
+          },
+        ]
+      : []),
+    ...(openInAgent && overview && !ids && !draft
+      ? [
+          {
+            id: "open_in_agent",
+            label: t("desktop.ledger.open_in_agent"),
+            icon: "agent" as const,
+            enabled: true,
           },
         ]
       : []),

@@ -160,9 +160,11 @@ class LedgerImportRequest(BaseModel):
     file's bytes, so an entry that is a directory is refused when paired with one."""
     register_statement_account: LedgerImportAccountRegistration | None = None
     """Register the account the one named file's statement names as an own account, then
-    bind the file's rows to it. Only an import that writes takes it, for one file, with no
-    own account chosen: the account is the statement's, not the operator's choice. A
-    statement that names a registered account is bound to it and registers nothing."""
+    bind the file's rows to it. It takes one file, with no own account chosen: the account
+    is the statement's, not the operator's choice. A dry run registers nothing and binds the
+    rows to the identity the register would give the account, so its preview is the import
+    the same request writes. A statement that names a registered account is bound to it and
+    registers nothing."""
 
     @model_validator(mode="after")
     def _one_digest_per_file(self) -> LedgerImportRequest:
@@ -174,8 +176,6 @@ class LedgerImportRequest(BaseModel):
     def _registration_is_for_one_written_file(self) -> LedgerImportRequest:
         if self.register_statement_account is None:
             return self
-        if self.dry_run:
-            raise ValueError("a statement account is registered only by an import that writes")
         if self.own_account_id is not None:
             raise ValueError("a statement account is registered only when no own account is chosen")
         if len(self.files) != 1:
@@ -734,16 +734,22 @@ def _register_statement_account(
     """Bind ``prepared`` to the account its statement names, registering the account when it has none.
 
     Returns the prepared import with its rows bound and the id of an account this call added, or
-    ``None`` when the account could not be registered, in which case nothing was written.
+    ``None`` when the account could not be registered, in which case nothing was written. A dry
+    run writes nothing: it binds the rows to the identity the register would assign next, which
+    is part of every row's transaction id and duplicate fingerprint, so the preview counts what
+    registering would import rather than what importing with no account would.
     """
     registration = payload.register_statement_account
     statement_account = prepared.source.statement_account
     if registration is None or statement_account is None:
         return prepared, None
-    fact = describe_statement_account(prepared, ports.own_accounts.load())
+    register = ports.own_accounts.load()
+    fact = describe_statement_account(prepared, register)
     if fact is not None and fact.own_account_id is not None:
         # Registered since staging, by this operator elsewhere: the statement names that account.
         return bind_prepared_import_to_own_account(prepared, fact.own_account_id), None
+    if payload.dry_run:
+        return bind_prepared_import_to_own_account(prepared, register.next_account_id()), None
     try:
         with validating_governed_facts(ports.operation):
             added = apply_own_account_request(

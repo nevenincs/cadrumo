@@ -341,7 +341,7 @@ export function App({ host }: { host: Host }) {
     host.ledger,
     reader,
   );
-  const { agentControl, modelList } = useReadingModelPicker(
+  const { agentControl, modelList, agentHandoff } = useReadingModelPicker(
     host.agentSession,
     openView,
   );
@@ -597,6 +597,7 @@ export function App({ host }: { host: Host }) {
       closePage={closePage}
       routedLedger={setup.routedLedger}
       modelList={modelList}
+      agentHandoff={agentHandoff}
       changeLedgerView={changeLedgerView}
       changeProfileView={arrangement.changeProfileView}
       contribute={overlays.contribute}

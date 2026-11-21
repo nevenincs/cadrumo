@@ -7,6 +7,7 @@ import {
 import { EmptyState } from "@/components/ui/empty";
 import type { DocsLanguage } from "../ipc/environment";
 import type { Action } from "../shell/actions";
+import { AgentHandoffContext, type AgentHandoff } from "../shell/agentHandoff";
 import { ModelListContext, type ModelList } from "../shell/agentModelList";
 import { ProfileStepContext } from "../shell/profileStepDoor";
 import type { useFilingCalendar } from "../shell/calendar";
@@ -112,6 +113,7 @@ export function MainPane({
   closePage,
   routedLedger,
   modelList,
+  agentHandoff = null,
   changeLedgerView,
   changeProfileView,
   contribute,
@@ -212,6 +214,8 @@ export function MainPane({
   closePage: () => void;
   routedLedger: ReturnType<typeof useWindowSetup>["routedLedger"];
   modelList: ModelList | null;
+  /** The way the Libro hands a movement to the agent column. */
+  agentHandoff?: AgentHandoff | null;
   changeLedgerView: (update: (current: LedgerView) => LedgerView) => void;
   changeProfileView: (update: (current: ProfileView) => ProfileView) => void;
   contribute: (actions: (() => Action[]) | null) => void;
@@ -379,53 +383,55 @@ export function MainPane({
         />
       ) : ledgerOn && routedLedger ? (
         <ModelListContext.Provider value={modelList}>
-          {/* The door a refusal here names for the profile, as the declarations
+          <AgentHandoffContext.Provider value={agentHandoff}>
+            {/* The door a refusal here names for the profile, as the declarations
               page offers it: only a window with a profile page, signed in. */}
-          <ProfileStepContext.Provider
-            value={signedIn && host.userProfile ? askProfileStep : null}
-          >
-            <LedgerPage
-              key={reader ?? ""}
-              port={routedLedger}
-              reader={reader}
-              withheld={
-                <SignedOut
-                  account={account}
-                  lead={t("desktop.ledger.signed_out")}
-                  quiet
-                  onSignIn={askSignIn}
-                />
-              }
-              locale={locale}
-              shown={firstPaneShown}
-              page={ledgerPage}
-              view={layout.ledgerView}
-              onViewChange={changeLedgerView}
-              memory={ledgerMemory}
-              contribute={contribute}
-              copy={(text) => host.writeClipboard(text)}
-              paste={() => host.readClipboard()}
-              onOpenLink={openLink}
-              onFloor={setLedgerFloor}
-              pane={{
-                title: t("desktop.ledger.title"),
-                onToggleMaximize: () => toggleMaximize("docs"),
-                controls: [
-                  maximizeControl("docs", "desktop.ledger.maximize"),
-                  ...splitControls.map((control) => ({
-                    ...control,
-                    yields: true,
-                  })),
-                  {
-                    id: "close",
-                    icon: "close",
-                    label: t("desktop.ledger.close"),
-                    run: closePage,
-                  },
-                ],
-              }}
-            />
-          </ProfileStepContext.Provider>
+            <ProfileStepContext.Provider
+              value={signedIn && host.userProfile ? askProfileStep : null}
+            >
+              <LedgerPage
+                key={reader ?? ""}
+                port={routedLedger}
+                reader={reader}
+                withheld={
+                  <SignedOut
+                    account={account}
+                    lead={t("desktop.ledger.signed_out")}
+                    quiet
+                    onSignIn={askSignIn}
+                  />
+                }
+                locale={locale}
+                shown={firstPaneShown}
+                page={ledgerPage}
+                view={layout.ledgerView}
+                onViewChange={changeLedgerView}
+                memory={ledgerMemory}
+                contribute={contribute}
+                copy={(text) => host.writeClipboard(text)}
+                paste={() => host.readClipboard()}
+                onOpenLink={openLink}
+                onFloor={setLedgerFloor}
+                pane={{
+                  title: t("desktop.ledger.title"),
+                  onToggleMaximize: () => toggleMaximize("docs"),
+                  controls: [
+                    maximizeControl("docs", "desktop.ledger.maximize"),
+                    ...splitControls.map((control) => ({
+                      ...control,
+                      yields: true,
+                    })),
+                    {
+                      id: "close",
+                      icon: "close",
+                      label: t("desktop.ledger.close"),
+                      run: closePage,
+                    },
+                  ],
+                }}
+              />
+            </ProfileStepContext.Provider>
+          </AgentHandoffContext.Provider>
         </ModelListContext.Provider>
       ) : null}
       {browserMounted && host.sedeView && (
