@@ -18,6 +18,10 @@ import type {
 import type { ManagerStatus, SignInSignal, SignInStatus } from "../ipc/account";
 import { censoFixture } from "./censoFixture";
 import { ledgerFixture, type LedgerShape } from "./ledgerFixture";
+import {
+  backgroundTasksFixture,
+  type JobShape,
+} from "./backgroundTasksFixture";
 import { borradorFixture, type BorradorScenario } from "./borradorFixture";
 import { modeloFixture, type ModeloShape } from "./modeloFixture";
 import { translator } from "../shell/strings";
@@ -169,6 +173,8 @@ export type ScenarioHostOptions = {
   setup?: SetupShape | null;
   /** How the made-up ledger answers, over the scenario's own shape. */
   ledger?: LedgerShape | null;
+  /** The background classification jobs the made-up profile holds. */
+  jobs?: readonly JobShape[];
   /** How the made-up declarations answer. */
   modelo?: ModeloShape | null;
   /** What the made-up profile states for the imputation election; where it
@@ -688,8 +694,16 @@ export function scenarioHost(
     },
   };
 
+  // The profile's background jobs, answered through its ledger's job
+  // definitions and cued on their own channel.
+  const jobs = backgroundTasksFixture({
+    say,
+    signedIn,
+    shapes: options.jobs ?? [],
+  });
   // The profile's ledger goes with its views, as the agent does.
   const ledger = ledgerFixture({
+    jobs,
     say,
     wait: () => wait(options.latencyMs),
     signedIn,
@@ -1051,6 +1065,7 @@ export function scenarioHost(
       : {
           views,
           ledger,
+          backgroundTasks: jobs.port,
           modelo,
           aeatSync: aeatSyncFixture(scenario.aeatSync ?? "mixed", say, () =>
             aeatSyncRun.begin(aeatUpdate.run ?? "done"),

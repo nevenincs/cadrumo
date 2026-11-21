@@ -34,8 +34,10 @@ import {
 import {
   readinessSnapshot,
   shownRows,
+  useJobRereads,
   useLedgerWindow,
 } from "../../shell/ledgerWindow";
+import { useBackgroundTasks } from "../../shell/backgroundTasks";
 import { useLedgerYears } from "../../shell/ledgerYears";
 import { useStrings } from "../../shell/strings";
 import type { LedgerHeaderAction, SectionCount } from "./LedgerHeader";
@@ -158,6 +160,14 @@ export function useLedgerPage({
     period,
     movementsShown && periodResolved,
     windowScope(period === null, movements, locale as OutputLanguage),
+  );
+  // A background job that applied or found changed a movement the window
+  // shows reads the window again, once per newer revision.
+  const backgroundJobs = useBackgroundTasks().jobs;
+  useJobRereads(
+    backgroundJobs,
+    periodWindow ? (shownRows(periodWindow)?.rows ?? null) : null,
+    reread,
   );
   // What is staged lives here, with the page, so it stays while a section
   // is put away and goes with the profile.

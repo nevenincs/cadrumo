@@ -53,6 +53,8 @@ import {
 import { formatAmount, formatPercent } from "../../../shared/numbers";
 import { formatDay, formatTime } from "../../../shared/dateFormats";
 import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
+import type { RowJobState } from "../../../shell/backgroundTasks";
+import { rowJobWords } from "../../shell/backgroundTaskWords";
 
 /** What staged editing adds to the columns: each one's editor and why a
  * cell takes none, what a cell draws while a change is staged on it, and
@@ -107,6 +109,8 @@ export type ColumnContext = {
   accounts: readonly { id: string; label: string }[] | null;
   /** Movements an import flagged as likely duplicates. */
   duplicates?: ReadonlySet<string>;
+  /** Where a background classification job stands on each movement. */
+  jobRows?: ReadonlyMap<string, RowJobState>;
   /** Some shown movement is not in euros: amounts keep a currency slot. */
   currencySlot?: boolean;
   /** How many kinds of mark the movements carry beside their status. */
@@ -203,6 +207,7 @@ function movementColumns(
         }
         wordy={context.density === "comfortable" && !cell?.narrowed}
         duplicate={context.duplicates?.has(id(row)) ?? false}
+        job={context.jobRows?.get(id(row)) ?? null}
       />
     ),
     date: missingOr("date", (row) => (
@@ -434,6 +439,7 @@ export function MovementsGrid({
     const reasons = context.readiness.issues.get(key) ?? [];
     const counted = context.readiness.checked ? reasons.length : null;
     const word = statusWord(row.review_status, counted);
+    const job = context.jobRows?.get(key);
     return facts(t, [
       statusLabel(t, word, counted),
       reasons.length
@@ -452,6 +458,7 @@ export function MovementsGrid({
       context.duplicates?.has(key)
         ? t("desktop.ledger.import_issue.duplicate")
         : "",
+      job ? rowJobWords(t, job) : "",
       edited ?? "",
     ]);
   };

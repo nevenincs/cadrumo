@@ -1348,6 +1348,72 @@ desktop:
     tax_values_note: Incluye los impuestos calculados y los datos de las declaraciones.
       Déjalo desactivado para que la aplicación no los vea.
     title: Claves de acceso para otras aplicaciones de IA
+  background_tasks:
+    active: '{count} en curso'
+    active_one: '{count} en curso'
+    authorise: Autorizar la lectura fuera de este ordenador
+    call_failed: La petición no ha obtenido respuesta.
+    call_unknown: La petición se ha enviado, pero no se sabe si ha surtido efecto.
+    cancel: Cancelar
+    cause:
+      consent_expired: Tu consentimiento para leer fuera de este ordenador ha caducado
+      consent_required: Leer fuera de este ordenador necesita tu consentimiento
+      consent_revoked: Has retirado tu consentimiento para leer fuera de este ordenador
+      failed: Ha fallado sin una causa indicada
+      invalid_response: No se ha podido leer la respuesta del modelo
+      lane_changed: El agente ahora lee con otro modelo
+      lane_refused: El modelo ha rechazado la petición
+      model_unavailable: No se ha podido contactar con el modelo
+      movement_not_found: El movimiento ya no está guardado
+      timed_out: El modelo no ha respondido a tiempo
+      unknown: 'Interrumpido: el resultado es desconocido'
+    consent_scope:
+      agent_session: Para esta sesión del agente
+      once: Para esta tarea
+      remembered: Hasta que lo retire
+    consent_scope_prompt: ¿Durante cuánto tiempo puede leer fuera de este ordenador?
+    dismiss: Descartar
+    empty: No hay tareas en segundo plano.
+    failed: '{count} fallidos'
+    failed_one: '{count} fallido'
+    failure_group: '{cause} ({count})'
+    failures: Fallos por causa
+    job_title: Clasificando movimientos
+    label: Tareas en segundo plano
+    off_host: leídos fuera de este ordenador por {model}
+    outcome:
+      authorised: Autorizado. Volviendo a preguntar por los movimientos que lo necesitaban.
+      cancelled: Cancelada.
+      cancelling: 'Cancelando: primero termina el movimiento que se está consultando.'
+      consent_revoked: Consentimiento retirado.
+      dismissed: Descartada. Sus propuestas no se han aplicado.
+      enqueued: En cola.
+      retried: Volviendo a preguntar por los movimientos fallidos.
+    progress: '{done} de {total} consultados'
+    proposed: '{count} propuestas listas'
+    proposed_one: '{count} propuesta lista'
+    read_failed: No se han podido leer las tareas en segundo plano. Se vuelven a leer
+      cuando la ventana recupera el foco o cambia una tarea.
+    refused: Se ha rechazado la petición.
+    resuming: 'Reanudando esta tarea: aún quedaban movimientos por consultar.'
+    retry: Volver a preguntar
+    row:
+      classifying: Clasificando…
+      failed: 'La clasificación ha fallado: {cause}'
+      proposed: Propuesta lista para revisar
+    scope_period: Movimientos del {start} al {end}
+    scope_selection: '{count} movimientos'
+    scope_single: Un movimiento
+    status:
+      cancelled: Cancelada
+      cancelling: Cancelando
+      interrupted: Interrumpida
+      queued: En espera
+      running: En curso
+      settled: Terminada
+    switch_local: Usar un modelo de este ordenador
+    switch_local_elsewhere: Elige un modelo de este ordenador en los ajustes del agente.
+    waiting: 'En espera: hay otra tarea en curso, y esta empieza cuando termine.'
   browser:
     acquiring: Cadrumo está iniciando tu sesión. Haz clic o pulsa una tecla para tomar
       el control.

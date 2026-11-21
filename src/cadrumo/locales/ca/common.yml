@@ -1339,6 +1339,73 @@ desktop:
     tax_values_note: Inclou els impostos calculats i les dades de les declaracions.
       Deixa-ho desactivat perquè l’aplicació no els vegi.
     title: Claus d’accés per a altres aplicacions d’IA
+  background_tasks:
+    active: '{count} en curs'
+    active_one: '{count} en curs'
+    authorise: Autoritza la lectura fora d'aquest ordinador
+    call_failed: La petició no ha obtingut resposta.
+    call_unknown: La petició s'ha enviat, però no se sap si ha tingut efecte.
+    cancel: Cancel·la
+    cause:
+      consent_expired: El teu consentiment per llegir fora d'aquest ordinador ha caducat
+      consent_required: Llegir fora d'aquest ordinador necessita el teu consentiment
+      consent_revoked: Has retirat el teu consentiment per llegir fora d'aquest ordinador
+      failed: Ha fallat sense una causa indicada
+      invalid_response: No s'ha pogut llegir la resposta del model
+      lane_changed: L'agent ara llegeix amb un altre model
+      lane_refused: El model ha rebutjat la petició
+      model_unavailable: No s'ha pogut contactar amb el model
+      movement_not_found: El moviment ja no està desat
+      timed_out: El model no ha respost a temps
+      unknown: 'Interromput: el resultat és desconegut'
+    consent_scope:
+      agent_session: Per a aquesta sessió de l'agent
+      once: Per a aquesta tasca
+      remembered: Fins que el retiri
+    consent_scope_prompt: Durant quant de temps pot llegir fora d'aquest ordinador?
+    dismiss: Descarta
+    empty: No hi ha tasques en segon pla.
+    failed: '{count} fallits'
+    failed_one: '{count} fallit'
+    failure_group: '{cause} ({count})'
+    failures: Errors per causa
+    job_title: Classificant moviments
+    label: Tasques en segon pla
+    off_host: llegits fora d'aquest ordinador per {model}
+    outcome:
+      authorised: Autoritzat. Tornant a preguntar pels moviments que ho necessitaven.
+      cancelled: Cancel·lada.
+      cancelling: 'Cancel·lant: primer acaba el moviment que s''està consultant.'
+      consent_revoked: Consentiment retirat.
+      dismissed: Descartada. Les seves propostes no s'han aplicat.
+      enqueued: En cua.
+      retried: Tornant a preguntar pels moviments fallits.
+    progress: '{done} de {total} consultats'
+    proposed: '{count} propostes a punt'
+    proposed_one: '{count} proposta a punt'
+    read_failed: No s'han pogut llegir les tasques en segon pla. Es tornen a llegir
+      quan la finestra recupera el focus o canvia una tasca.
+    refused: S'ha rebutjat la petició.
+    resuming: 'Reprenent aquesta tasca: encara quedaven moviments per consultar.'
+    retry: Torna a preguntar
+    row:
+      classifying: Classificant…
+      failed: 'La classificació ha fallat: {cause}'
+      proposed: Proposta a punt per revisar
+    scope_period: Moviments del {start} al {end}
+    scope_selection: '{count} moviments'
+    scope_single: Un moviment
+    status:
+      cancelled: Cancel·lada
+      cancelling: Cancel·lant
+      interrupted: Interrompuda
+      queued: En espera
+      running: En curs
+      settled: Acabada
+    switch_local: Fes servir un model d'aquest ordinador
+    switch_local_elsewhere: Tria un model d'aquest ordinador a la configuració de
+      l'agent.
+    waiting: 'En espera: hi ha una altra tasca en curs, i aquesta comença quan acabi.'
   browser:
     acquiring: Cadrumo està iniciant la teva sessió. Fes clic o prem una tecla per
       prendre'n el control.

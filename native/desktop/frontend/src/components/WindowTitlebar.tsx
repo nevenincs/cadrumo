@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { AboutState } from "../shell/about";
+import { ModelListContext, type ModelList } from "../shell/agentModelList";
 import type { Host } from "../shell/host";
 import type { Layout } from "../shell/layout";
 import type { useNavigator } from "../shell/navigation/useNavigator";
@@ -9,13 +10,15 @@ import type { useFullscreen } from "../shell/useFullscreen";
 import type { useSignInFlow } from "../shell/useSignInFlow";
 import type { useWindowSetup } from "../shell/useWindowSetup";
 import { AccountMenu } from "./AccountMenu";
+import { BackgroundTasks } from "./shell/BackgroundTasks";
 import { GoogleAccount } from "./GoogleAccount";
 import { Titlebar } from "./Titlebar";
 
 type Flag = Dispatch<SetStateAction<boolean>>;
 
-/** The window's title bar and the account menu it carries: signing in,
- * the profile, the Google account, the profiles and About. */
+/** The window's title bar, the background tasks and the account menu it
+ * carries: signing in, the profile, the Google account, the profiles and
+ * About. */
 export function WindowTitlebar({
   host,
   t,
@@ -30,6 +33,7 @@ export function WindowTitlebar({
   setAboutOpen,
   setPage,
   setLayout,
+  modelList,
 }: {
   host: Host;
   t: Translate;
@@ -44,6 +48,8 @@ export function WindowTitlebar({
   setAboutOpen: Flag;
   setPage: (next: Layout["page"]) => void;
   setLayout: Dispatch<SetStateAction<Layout>>;
+  /** Where a background task's consent remedy leads to a local model. */
+  modelList: ModelList | null;
 }) {
   const {
     signedIn,
@@ -61,6 +67,11 @@ export function WindowTitlebar({
       onPresentation={fullscreen.observe}
       guardClose={(proceed) => guardNavigation({ kind: "close" }, proceed)}
       onFailure={() => say(t("desktop.titlebar.failed"))}
+      tasks={
+        <ModelListContext.Provider value={modelList}>
+          <BackgroundTasks />
+        </ModelListContext.Provider>
+      }
     >
       <AccountMenu
         account={account}

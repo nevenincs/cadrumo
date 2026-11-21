@@ -8,6 +8,7 @@
 // with the digest of the review the page read. What it answers is design and
 // test evidence only. Its call lines name a definition, never a value.
 
+import type { BackgroundTasksFixture } from "./backgroundTasksFixture";
 import { answerInvoiceDuplicate } from "./ledgerDuplicateFixture";
 import { answerRuleTrial } from "./ledgerRuleTrialFixture";
 import { answerInvoiceMatch } from "./ledgerInvoiceMatchFixture";
@@ -225,6 +226,8 @@ type Options = {
   shape: LedgerShape;
   /** The language the backend words a refusal in; English when not given. */
   language?: string;
+  /** The background classification jobs the job definitions answer from. */
+  jobs?: BackgroundTasksFixture;
 };
 
 export function ledgerFixture(options: Options): LedgerPort {
@@ -878,6 +881,14 @@ export function ledgerFixture(options: Options): LedgerPort {
     if (failing > 0) {
       failingReads.set(definition, failing - 1);
       return reject("unavailable");
+    }
+    if (definition.startsWith("ledger.classify.job.") && options.jobs) {
+      const operation = nextOperation();
+      const outcome = options.jobs.submit(definition, request, operation);
+      if (outcome) {
+        outcomes.set(operation, outcome);
+        return outcome;
+      }
     }
     // A second review of a subject one already holds is refused before it
     // is submitted, as the runtime's lease refuses it.
