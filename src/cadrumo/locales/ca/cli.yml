@@ -310,6 +310,15 @@ cli:
           dades.
         pull_actor_help: El teu nom o etiqueta.
         pull_id_help: Identificador de transacció dels teus registres.
+        release_disposition_help: 'Què passa amb el justificant: detach el desvincula,
+          keep_as_document en conserva el document al moviment com un més.'
+        release_expected_evidence_id_help: L'identificador del justificant de compra
+          que vincula el moviment, tal com el mostra `aeat app ledger view`.
+        release_expected_modified_at_help: El modified_at del moviment, tal com el
+          mostra `aeat app ledger view`; si el moviment ha canviat des d'aleshores,
+          es rebutja.
+        release_help: Desvincula el justificant de factura de compra d'un moviment,
+          o conserva'n el document al moviment com un més
         remove_help: Elimina un justificant de factura de compra
         review:
           advised_pending_message: Alguns documents pendents porten avisos. No bloquegen
@@ -360,6 +369,8 @@ cli:
         supplier_help: Nom del proveïdor
         taxable_base_help: Base imposable de la factura
         update_help: Actualitza les dades d'un justificant de factura de compra
+        verify_help: Comprova si es pot llegir el fitxer desat d'un justificant de
+          factura de compra i desa'n el resultat
         view_help: Mostra un justificant de factura de compra
         yes_help: Confirma l'eliminació del justificant
         yes_required: Has de passar --yes per eliminar un justificant

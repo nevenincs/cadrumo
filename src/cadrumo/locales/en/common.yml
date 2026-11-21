@@ -3339,6 +3339,38 @@ desktop:
         purchase_details_unavailable: The linked purchase evidence details are unavailable.
         purchase_invoice: Purchase invoice · added {date}
         purchase_linked: Purchase invoice evidence linked
+        readability:
+          cause:
+            bytes_readable: No reader recognises the stored file.
+            document_bytes_available: The stored file is missing.
+          check_named: Check {file}
+          checked: Document checked
+          gone: This document is no longer in the ledger.
+          unchecked: Not checked yet
+          unreadable: Unreadable
+        release:
+          cause:
+            evidence_confirmed_into_invoice: This document was confirmed into an invoice
+              this movement isn't linked to.
+            finalized_calculation_reference: A finished declaration uses this movement.
+            no_linked_purchase_evidence: This movement has no purchase document linked,
+              or a different one.
+            reference_has_no_stored_document: The link names an invoice, not a stored
+              document.
+            transaction_changed: The movement changed since you opened it.
+            transaction_not_editable: This movement is archived or removed.
+            transaction_not_found: This movement no longer exists.
+          detach: Remove from movement
+          detached: The purchase document was removed from the movement.
+          keep: Keep as a document
+          kept: The purchase document is now an ordinary document on the movement.
+          next_step:
+            detach_instead: Unlink it instead.
+            link_movement_to_invoice: Link the movement to that invoice, or keep the
+              document on the movement.
+            reopen_finalized_calculation: Reopen the declaration that uses it first.
+            reopen_transaction: Open the movement again and retry.
+            restore_transaction: Restore the movement first.
         search: Search documents
       drop: Drop it
       earlier: Earlier decisions

@@ -23,7 +23,7 @@ Consumers import these schemas from this defining module.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import AfterValidator, NonNegativeInt, field_validator
 
@@ -399,6 +399,10 @@ class EvidenceRecordPayload(OutputSchema):
     notes: str = ""
     created_at: str
     updated_at: str
+    readability: Literal["readable", "unreadable", "unchecked"] = "unchecked"
+    document_shape: str | None = None
+    unreadable_cause: str | None = None
+    readability_checked_at: str | None = None
     bucket_event_ids: list[str] = []
 
 
@@ -416,6 +420,10 @@ class EvidenceUpdateResult(EvidenceRecordPayload):
 
 class EvidenceRemoveResult(EvidenceRecordPayload):
     """JSON envelope for ``aeat app ledger evidence remove``."""
+
+
+class EvidenceVerifyResult(EvidenceRecordPayload):
+    """JSON envelope for ``aeat app ledger evidence verify``: the record with the finding the check kept."""
 
 
 class EvidenceListResult(OutputSchema):

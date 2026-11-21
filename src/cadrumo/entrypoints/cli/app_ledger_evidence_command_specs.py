@@ -49,6 +49,9 @@ from .app_ledger_command_spec_support import (
     required_text_option,
 )
 
+RELEASE_DISPOSITIONS: tuple[str, ...] = ("detach", "keep_as_document")
+"""The release dispositions the ``ledger.purchase_evidence.release`` request names, as its wire tokens."""
+
 LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
         "app_ledger_evidence_add",
@@ -441,6 +444,44 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
+        "app_ledger_evidence_release",
+        "app_ledger_evidence",
+        "release",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.ledger.evidence.release_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        parameters=(
+            required_text_argument("transaction_id", "cli.ledger.detach.id_help", non_blank=True),
+            OptionSpec(
+                name="disposition",
+                declarations=("--disposition",),
+                value=ValueContract(DeferredTarget("builtins", "str"), choices=RELEASE_DISPOSITIONS),
+                default=ParameterDefault.required(),
+                help_key=TranslationKey("cli.app.ledger.evidence.release_disposition_help"),
+            ),
+            required_text_option(
+                "expected_evidence_id",
+                ("--expected-evidence-id",),
+                "cli.app.ledger.evidence.release_expected_evidence_id_help",
+                non_blank=True,
+            ),
+            required_text_option(
+                "expected_modified_at",
+                ("--expected-modified-at",),
+                "cli.app.ledger.evidence.release_expected_modified_at_help",
+                non_blank=True,
+            ),
+        ),
+        policy=POLICY_4,
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_commands", "evidence_release", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".ledger_results", "LedgerPurchaseEvidenceReleaseResult", __package__),
+            identity="ledger.purchase_evidence.release",
+        ),
+    ),
+    CommandSpec(
         "app_ledger_evidence_remove",
         "app_ledger_evidence",
         "remove",
@@ -575,6 +616,23 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
+        "app_ledger_evidence_verify",
+        "app_ledger_evidence",
+        "verify",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.ledger.evidence.verify_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        parameters=(required_text_argument("evidence_id", "cli.app.ledger.evidence.evidence_id_help", non_blank=True),),
+        policy=POLICY_4,
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_commands", "evidence_verify", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".ledger_business_payloads", "EvidenceVerifyResult", __package__),
+            identity="ledger.evidence.verify",
+        ),
+    ),
+    CommandSpec(
         "app_ledger_evidence_view",
         "app_ledger_evidence",
         "view",
@@ -593,6 +651,6 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     ),
 )
 
-__all__ = ["LEDGER_EVIDENCE_COMMAND_SPECS"]
+__all__ = ["LEDGER_EVIDENCE_COMMAND_SPECS", "RELEASE_DISPOSITIONS"]
 """Authored CommandSpec declarations for the ledger evidence surface."""
 """Authored CommandSpec declarations for the ledger evidence surface."""

@@ -291,6 +291,14 @@ cli:
           page to draw; open it in the window to read its facts.
         pull_actor_help: Your name or label.
         pull_id_help: Transaction id in your records.
+        release_disposition_help: 'What becomes of the evidence: detach unlinks it,
+          keep_as_document keeps its document on the movement as an ordinary one.'
+        release_expected_evidence_id_help: The purchase invoice evidence id the movement
+          links, as `aeat app ledger view` shows it.
+        release_expected_modified_at_help: The movement's modified_at, as `aeat app
+          ledger view` shows it; a movement changed since is refused.
+        release_help: Unlink a movement's purchase invoice evidence, or keep its document
+          on the movement as an ordinary one
         remove_help: Delete purchase invoice evidence
         review:
           advised_pending_message: Some pending documents carry advisories. These
@@ -337,6 +345,8 @@ cli:
         supplier_help: Supplier name
         taxable_base_help: Invoice taxable base
         update_help: Update purchase invoice evidence details
+        verify_help: Check whether the stored file of purchase invoice evidence can
+          be read, and keep the finding
         view_help: Show purchase invoice evidence
         yes_help: Confirm deleting the evidence
         yes_required: Pass --yes to delete evidence

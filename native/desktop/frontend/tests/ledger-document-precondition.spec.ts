@@ -32,6 +32,10 @@ const record: LedgerEvidenceRecordProjection = {
   notes: "",
   created_at: "2026-10-15T09:00:00Z",
   updated_at: "2026-10-15T09:00:00Z",
+  readability: "unchecked",
+  document_shape: null,
+  unreadable_cause: null,
+  readability_checked_at: null,
   source_path: "C:/Documentos/factura-trazo.pdf",
 };
 const row: EvidenceReviewQueueRowProjection = {

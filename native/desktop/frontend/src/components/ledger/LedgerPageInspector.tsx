@@ -32,6 +32,7 @@ export function LedgerPageInspector({
     editing,
     openRuleFromSelection,
     inspectorShown,
+    reread,
   } = model;
   return (
     <>
@@ -85,6 +86,7 @@ export function LedgerPageInspector({
           }}
           onExport={() => setTransfer("export")}
           onMakeRule={openRuleFromSelection}
+          onWritten={reread}
           copy={copy}
         />
       )}

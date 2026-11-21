@@ -53,6 +53,7 @@ import {
 } from "./fixtures/ledger";
 import { ledgerClassOf } from "./ledgerClassesFixture";
 import { evidenceOperations } from "./ledgerEvidenceFixture";
+import { purchaseReleaseOperations } from "./ledgerPurchaseReleaseFixture";
 import {
   invoiceOperations,
   InvoiceRequestInvalid,
@@ -627,6 +628,11 @@ export function ledgerFixture(options: Options): LedgerPort {
     missingPostcode: shape === "missing_postcode",
     language: options.language ?? "en",
   });
+  const releaseWork = purchaseReleaseOperations(ledger, {
+    profileId: LEDGER_FIXTURE_PROFILE_ID,
+    events,
+    now,
+  });
   const reads: Partial<
     Record<LedgerDefinitionId, (request: JsonObject) => JsonObject>
   > = {
@@ -740,6 +746,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     "ledger.evidence.batch": addDocuments,
     ...invoiceWork.writes,
     ...evidenceWork.writes,
+    ...releaseWork.writes,
     ...movementWork.writes,
     ...setupWork.writes,
     "ledger.remove": movementWork.remove,
