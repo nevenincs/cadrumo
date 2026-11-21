@@ -2,6 +2,7 @@
 //! presence remains independent; no receipt or profile is changed here.
 use super::{failure, watch::Observed, wire};
 use cadrumo_application::{
+    diagnostics::{Diagnostics, service::PersonRestoreOutcome},
     error::application::{ApplicationError, ChildRefusal, ErrorCode},
     runtime_client::{refusal::Refusal, stored_proof::ResumeRefusal},
 };
@@ -38,6 +39,9 @@ pub(super) struct Failed {
     pub error: Box<ApplicationError>,
     pub refusal: wire::Refusal,
     terminal: bool,
+    /// The stored sign-in lapsed, idle or past its lifetime: a normal state in
+    /// which the person signs in again, never a failure.
+    lapsed: bool,
 }
 
 impl Failed {
@@ -83,6 +87,7 @@ impl Failed {
                         retry_after_seconds: None,
                     },
                     terminal: true,
+                    lapsed: public == "RECEIPT_EXPIRED",
                 }
             }
         }
@@ -98,6 +103,7 @@ impl Failed {
                 | Refusal::Io(_)
         );
         let original_code = refusal.code().to_owned();
+        let lapsed = original_code == "session_expired";
         let public = wire::sign_in_refusal(
             refusal.code(),
             refusal.sign_in_reason(),
@@ -129,6 +135,7 @@ impl Failed {
             error: Box::new(error),
             refusal: public,
             terminal,
+            lapsed,
         }
     }
 
@@ -140,7 +147,27 @@ impl Failed {
                 retry_after_seconds: None,
             },
             terminal: false,
+            lapsed: false,
         }
+    }
+}
+
+/// Records one real presentation's refusal. A lapsed sign-in is a normal
+/// state that the restore outcome alone records; anything else is a failure.
+pub(super) fn record_refusal(diagnostics: &Diagnostics, refused: &Failed) {
+    if !refused.lapsed {
+        diagnostics.failure((*refused.error).clone());
+    }
+}
+
+/// How one real presentation ended, given its result and the refusal the
+/// restoration now holds for the same observation.
+pub(super) fn restore_outcome(restored: bool, refusal: Option<&Failed>) -> PersonRestoreOutcome {
+    match refusal {
+        _ if restored => PersonRestoreOutcome::Restored,
+        Some(refused) if refused.lapsed => PersonRestoreOutcome::Expired,
+        Some(_) => PersonRestoreOutcome::Refused,
+        None => PersonRestoreOutcome::Unavailable,
     }
 }
 
@@ -584,6 +611,86 @@ mod tests {
         changed.profile_id = Some("other-profile".into());
         assert!(restoration.refusal(&changed).is_none());
     }
+    /// The levels one real presentation leaves in the native log: its refusal
+    /// record, if any, and its restore outcome.
+    fn presentation_levels(refused: &Failed) -> Vec<crate::logs::Level> {
+        use cadrumo_application::diagnostics::service::{PersonRestoreCause, ServiceFact};
+        let diagnostics = Diagnostics::default();
+        record_refusal(&diagnostics, refused);
+        let mut restoration = Restoration::default();
+        let observed = observed();
+        restoration.failed(&observed, refused.clone());
+        diagnostics.service(
+            None,
+            ServiceFact::PersonRestore {
+                cause: PersonRestoreCause::HeldSessionEnded,
+                outcome: restore_outcome(false, restoration.refusal(&observed).as_ref()),
+            },
+        );
+        diagnostics
+            .snapshot(u64::MAX)
+            .events
+            .iter()
+            .map(crate::logs::severity::level)
+            .collect()
+    }
+
+    #[test]
+    fn a_lapsed_sign_in_is_a_typed_state_with_no_error_record() {
+        use crate::logs::Level;
+        for lapsed in [
+            Failed::resume(ResumeRefusal::Receipt("expired_idle".into())),
+            Failed::resume(ResumeRefusal::Receipt("expired_absolute".into())),
+            Failed::runtime(Refusal::denied("session_expired")),
+        ] {
+            assert_eq!(presentation_levels(&lapsed), [Level::Info]);
+            let diagnostics = Diagnostics::default();
+            record_refusal(&diagnostics, &lapsed);
+            assert!(diagnostics.snapshot(u64::MAX).events.is_empty());
+            assert_eq!(
+                restore_outcome(false, Some(&lapsed)),
+                PersonRestoreOutcome::Expired
+            );
+        }
+        // The window still receives its typed sign-in-again state.
+        let idle = Failed::resume(ResumeRefusal::Receipt("expired_idle".into()));
+        assert_eq!(idle.refusal.code, "RECEIPT_EXPIRED");
+        assert!(idle.terminal);
+    }
+
+    #[test]
+    fn a_genuine_restoration_failure_still_logs_an_error() {
+        use crate::logs::Level;
+        for (failed, outcome) in [
+            (
+                Failed::resume(ResumeRefusal::Receipt("tampered".into())),
+                PersonRestoreOutcome::Refused,
+            ),
+            (
+                Failed::resume(ResumeRefusal::Receipt("custody_changed".into())),
+                PersonRestoreOutcome::Refused,
+            ),
+            (
+                Failed::runtime(Refusal::Io(std::io::ErrorKind::BrokenPipe.into())),
+                PersonRestoreOutcome::Unavailable,
+            ),
+            (
+                Failed::runtime(Refusal::Unavailable),
+                PersonRestoreOutcome::Unavailable,
+            ),
+        ] {
+            assert_eq!(presentation_levels(&failed), [Level::Error, Level::Info]);
+            let mut restoration = Restoration::default();
+            let observed = observed();
+            restoration.failed(&observed, failed);
+            assert_eq!(
+                restore_outcome(false, restoration.refusal(&observed).as_ref()),
+                outcome
+            );
+        }
+        assert_eq!(restore_outcome(true, None), PersonRestoreOutcome::Restored);
+    }
+
     #[test]
     fn diagnostics_keep_closed_receipt_and_runtime_codes_without_payloads() {
         let receipt = Failed::resume(ResumeRefusal::Receipt("tampered".into()));

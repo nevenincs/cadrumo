@@ -140,8 +140,11 @@ pub enum PersonRestoreCause {
 pub enum PersonRestoreOutcome {
     /// The runtime admitted a person session from the stored sign-in.
     Restored,
-    /// The stored sign-in was refused for good, such as after an idle lapse;
-    /// the person signs in again.
+    /// The stored sign-in lapsed, idle or past its lifetime. A normal state,
+    /// not a failure: the person signs in again.
+    Expired,
+    /// The stored sign-in was refused for good for another reason, such as a
+    /// tampered or missing receipt; the person signs in again.
     Refused,
     /// The attempt did not settle, and may be tried again.
     Unavailable,
