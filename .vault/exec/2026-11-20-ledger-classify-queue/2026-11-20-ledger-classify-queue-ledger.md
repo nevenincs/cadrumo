@@ -5,7 +5,7 @@ tags:
 date: '2026-11-20'
 modified: '2026-11-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:eb192523afc8060db522a7da1b200f7cd30a64a093b4a4d4a3e233c5b2862f66'
+body_hash: 'sha256:19a0eb33b066e86572a4d5a198b800c8c2d9b2fd1da589369faadeceb4f2ca9d'
 related:
   - "[[2026-11-20-ledger-classify-queue-plan]]"
 ---
@@ -112,6 +112,15 @@ related:
 - `S12` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsGrid.tsx`
 - `S12` `M` `native/desktop/frontend/src/components/ledger/useLedgerPage.ts`
 - `S12` `verify:` `playwright test tests/scenarios/background-tasks.spec.ts` -> `pass`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/inspector/JobProposal.tsx`
+- `S13` `A` `native/desktop/frontend/tests/scenarios/background-tasks-ask.spec.ts`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/inspector/SelectionInspector.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/movements/movementMenuItems.ts`
+- `S13` `M` `native/desktop/frontend/src/shell/backgroundTasks.ts`
+- `S13` `M` `native/desktop/frontend/src/components/ContextMenu.tsx`
+- `S13` `M` `native/desktop/frontend/tests/scenarios/ledger-inspector.spec.ts`
+- `S13` `verify:` `playwright test background-tasks-ask.spec.ts background-tasks.spec.ts` -> `pass`
+- `S13` `verify:` `playwright test tests/scenarios/ledger*` -> `pass`
 
 ## Notes
 
@@ -121,3 +130,4 @@ related:
 - `S05` Tests written after code; defect-injection check done instead of fail-first. Off-host jobs refuse until S06.
 - `S06` Tests written alongside code; defect injection substituted for fail-first. Apply commits per movement then the job once (non-atomic; re-apply refused as stale).
 - `S10` clippy fails only on pre-existing `large_enum_variant` at agent/stream.rs:308 (tui 24e08b0f29). Gaps: no mid-run progress for runs started outside this window; auto-resume on profile open undecided (S11); list read returns whole jobs, limit 50.
+- `S13` tests written after the code; fail-first not observed (no stash/reset); Descartar hides a proposal in the window only, the job contract has no reject
