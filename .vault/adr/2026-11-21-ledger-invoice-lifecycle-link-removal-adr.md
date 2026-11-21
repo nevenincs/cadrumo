@@ -5,7 +5,7 @@ tags:
 date: '2026-11-21'
 modified: '2026-11-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:e2c5187d3121a2988eeca91057f0a87721bd764c1ed4f7fad6b2d8608d763ca9'
+body_hash: 'sha256:26b0c1929dbff6a1630654a71f37573521639ee6635c4f46a3e70e3a08206c25'
 related:
   - "[[2026-09-24-ledger-invoice-lifecycle-adr]]"
   - "[[2026-10-23-desktop-ledger-editor-adr]]"
@@ -13,9 +13,9 @@ related:
   - '[[2026-09-24-ledger-invoice-lifecycle-research]]'
 ---
 
-# `ledger-invoice-lifecycle` adr: `Ledger invoice links are removable` | (**status:** `proposed`)
+# `ledger-invoice-lifecycle` adr: `Ledger invoice links are removable` | (**status:** `accepted`)
 
-Proposed 2026-11-21. Implementation proceeds on PRIME's explicit instruction of 2026-11-21, relaying the operator's standing order; this record stays proposed until the operator accepts it.
+Proposed 2026-11-21; accepted 2026-11-21 by PRIME on the operator's standing order of 2026-11-20 that every fact is hand-editable, which this decision applies to invoice links.
 
 ## Problem Statement
 
