@@ -136,6 +136,11 @@ export type CallPlan = {
    * and offers the next step for: the person is told what to do, and
    * nothing failed. */
   answered?(code: string): boolean;
+  /** Whether a refusal with this code reports where the person's setup or
+   * session stands (the service still starting, signed out, the agent not
+   * there yet), which the calling view shows with the step that moves it
+   * on. Such a refusal is a state, not a fault: it is noted at INFO. */
+  state?(code: string): boolean;
   /** Whether the window learned that the signed-in session ended after the
    * call was made. Nothing is left that wants its answer, so its refusal is
    * noted like any refusal for an ended session. */
@@ -172,10 +177,12 @@ function rejectionLevel(
   code: string | null,
   recorded: string | null,
   plan: CallPlan | undefined,
-): "DEBUG" | "WARNING" | "ERROR" {
+): "DEBUG" | "INFO" | "WARNING" | "ERROR" {
   if (code === null || recorded === null) return "ERROR";
+  const state = plan?.state?.(code) === true;
   if (plan?.retryable?.(code) && plan.scheduled?.())
-    return plan.expected?.() ? "DEBUG" : "WARNING";
+    return plan.expected?.() ? "DEBUG" : state ? "INFO" : "WARNING";
+  if (state) return "INFO";
   if (plan?.answered?.(code)) return "WARNING";
   return REFUSAL_LEVEL[recorded] ?? "ERROR";
 }
