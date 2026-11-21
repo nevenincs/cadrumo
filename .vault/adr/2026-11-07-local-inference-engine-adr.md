@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#local-inference-engine'
 date: '2026-11-07'
-modified: '2026-11-11'
+modified: '2026-11-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:b28ba4cb48dfec3480fb6562edbb37d222d65ffbb2902a825e64ad9fef77a43a'
+body_hash: 'sha256:a27bbb446fa0ffa4c509b27a1770bbb0435691a278c81522eae4bfcf516dfd8e'
 related:
   - "[[2026-11-07-local-inference-engine-research]]"
   - "[[2026-10-24-rust-component-provisioning-adr]]"
@@ -125,7 +125,7 @@ Accepted text that this record leaves unchanged:
 Accepted sentences that contradict this decision, with the amendment each needs. This record flags them for approval together with it. It does not apply them.
 
 1. `2026-10-18-dependency-provisioning-unified-setup-adr` D1, second bullet. Current: "`local_ai` is the Ollama program plus the one model a desktop download names from the person's local model list; the program and that model are its parts, never items of their own." Proposed: "`local_ai` is the selected local engine's program plus the one model a desktop download names from the person's local model list; the program and that model are its parts, never items of their own. The packaged llama-server program is part of the installation and is never downloaded (`2026-11-07-local-inference-engine-adr` D2)." Reason: without this change, the D11 hard requirement would require the Ollama program under the default engine.
-2. `2026-10-24-rust-component-provisioning-adr` constraint 3. Current: "The `local_ai` item is the Ollama program, plus the one model a desktop download names; a setup, check, verification or removal that names no download is the program alone." Proposed: "The `local_ai` item is the selected local engine's program, plus the one model a desktop download names; a setup, check, verification or removal that names no download is the program alone. The packaged llama-server program reads ready from the installation and is never downloaded."
+2. `2026-10-24-rust-component-provisioning-adr` constraint 3. Current: "The `local_ai` item is the Ollama program, plus the one model a desktop download names; a setup, check, verification or removal that names no download is the program alone." Proposed: "The `local_ai` item is the selected local engine's program, plus the one model a desktop download names; a setup, check, verification or removal that names no download is the program alone. The packaged llama-server program reads ready from the installation and is never downloaded." Applied 2026-11-07, then amended again on 2026-11-21: a check that names no download reads the local AI ready only when its program is present and a model the selected engine can run is stored whole, and otherwise names the model it awaits; the binding text is in that record's amendment of 2026-11-21.
 3. `2026-10-24-rust-component-provisioning-adr` constraint 8.
    - Current: "Rust pulls the model a desktop download names, through the pull endpoint of the server the manager supervises, with byte progress." Proposed: "Rust fetches the model a desktop download names from its registry or declared source itself, with byte progress. It verifies each layer's SHA-256 and writes the Ollama store layout, and no local model server runs to acquire the model."
    - "its pull progress follows the totals the server streams" becomes "its progress follows the sizes the fetched manifest declares".
