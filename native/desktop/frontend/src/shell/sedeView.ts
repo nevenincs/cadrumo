@@ -11,6 +11,7 @@ import type {
   SedeViewVerb,
   SedeClipboardAction,
 } from "../ipc/sedeViewMessages";
+import type { CallPlan } from "./hostCall";
 
 /** The panel's size in CSS pixels, and the device pixel ratio. */
 export type SedeViewSize = {
@@ -55,21 +56,15 @@ export type SedeViewSession = {
   close(): Promise<void>;
 };
 
-/** The caller's wait on a previous view: whether it asks again after a
- * `conflict`, and whether the wait is still the one it expects. */
-export type SedeViewHandover = {
-  scheduled(): boolean;
-  expected(): boolean;
-};
-
 export type SedeViewPort = {
   /** Opens the view at the panel's size. The host refuses `conflict` while
-   * the previous view is still publishing its session; `handover` says how
-   * the caller waits on it. */
+   * the previous view is still publishing its session; `handover` is the
+   * part of the call's plan the caller owns: whether it asks again after a
+   * `conflict`, and whether the wait is still the one it expects. */
   open(
     size: SedeViewSize,
     listener: (event: SedeViewEvent) => void,
-    handover?: SedeViewHandover,
+    handover?: Pick<CallPlan, "scheduled" | "expected">,
   ): Promise<SedeViewSession>;
 };
 
