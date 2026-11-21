@@ -60,6 +60,7 @@ export function ContextMenu({
   // A press elsewhere closes the menu and keeps what it pressed: focus is
   // not taken back from it.
   const pressedElsewhere = useRef(false);
+  const content = useRef<HTMLDivElement>(null);
   return (
     <DropdownMenu
       open
@@ -78,6 +79,7 @@ export function ContextMenu({
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent
+        ref={content}
         aria-label={label}
         align="start"
         sideOffset={0}
@@ -88,9 +90,15 @@ export function ContextMenu({
           event.preventDefault();
           // A press in the documentation frame closes the menu without
           // being reported as a press outside; the frame has focus by then.
+          // A choice that opened a view has sent focus there: it is kept.
+          const active = document.activeElement;
+          const sentElsewhere =
+            active instanceof HTMLElement &&
+            active !== document.body &&
+            !content.current?.contains(active);
           if (
             !pressedElsewhere.current &&
-            !(document.activeElement instanceof HTMLIFrameElement) &&
+            !sentElsewhere &&
             returnTo instanceof HTMLElement
           )
             returnTo.focus();

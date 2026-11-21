@@ -440,15 +440,14 @@ test("a file made before a conflicting edit stays out of date until its export h
   // The hold names the action that lifts it; resolving what blocks is done
   // on the check.
   expect(read.header.export_hold.action).toBe("resolve");
-  await target
-    .getByRole("tabpanel")
-    .getByRole("button", {
-      name: label(
-        `workspace.modelo.next_button.${read.header.export_hold.action}`,
-      ),
-      exact: true,
-    })
-    .click();
+  // The header offers the same step; this is the hold's own link.
+  const lift = target.locator(
+    `[data-hold-action="${read.header.export_hold.action}"]`,
+  );
+  await expect(lift).toHaveAccessibleName(
+    label(`workspace.modelo.next_button.${read.header.export_hold.action}`),
+  );
+  await lift.click();
   await expect(tab(target, "workspace.modelo.step.review")).toHaveAttribute(
     "aria-selected",
     "true",

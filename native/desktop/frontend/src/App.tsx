@@ -534,6 +534,8 @@ export function App({ host }: { host: Host }) {
     panelVisible,
     showSede,
     aeatMenu,
+    openMenu: overlays.openMenu,
+    shownMenu: overlays.menu,
     driveUrl: setup.driveUrl,
     errorCount: logs.errorCount,
     provisioning: setup.provisioning,

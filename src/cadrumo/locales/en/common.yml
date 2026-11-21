@@ -5312,6 +5312,7 @@ desktop:
     label: Workspace
     logs: Logs
     messages: Messages
+    more_views: More views
     python: Python shell
     search: Search
     settings: Settings

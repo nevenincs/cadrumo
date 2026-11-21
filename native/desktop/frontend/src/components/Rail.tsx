@@ -33,7 +33,10 @@ export type RailItem = {
   heldBy?: string;
   /** Starts a new cluster: a divider is drawn before this item. */
   divided?: boolean;
-  onClick: () => void;
+  /** The item opens a menu of choices rather than doing one thing. */
+  menu?: boolean;
+  /** Given the button's edge, where a menu the item opens is anchored. */
+  onClick: (at: MenuAnchor) => void;
   /** Asks for the item's own menu, at the pointer or by the menu key at the
    * button's edge. */
   onMenu?: (at: MenuAnchor) => void;
@@ -55,7 +58,13 @@ function RailButton({ item }: { item: RailItem }) {
           aria-pressed={item.pressed}
           aria-disabled={item.heldBy ? true : undefined}
           aria-expanded={item.expanded}
-          aria-haspopup={item.expanded === undefined ? undefined : "dialog"}
+          aria-haspopup={
+            item.menu
+              ? "menu"
+              : item.expanded === undefined
+                ? undefined
+                : "dialog"
+          }
           // A locale-independent handle for drivers outside the shell.
           data-rail={item.id}
           draggable={!item.heldBy && item.dockPane !== undefined}
@@ -70,7 +79,18 @@ function RailButton({ item }: { item: RailItem }) {
                 }
               : undefined
           }
-          onClick={item.heldBy ? undefined : item.onClick}
+          onClick={
+            item.heldBy
+              ? undefined
+              : (event) => {
+                  const button = event.currentTarget.getBoundingClientRect();
+                  item.onClick({
+                    x: button.right,
+                    y: button.top,
+                    height: button.height,
+                  });
+                }
+          }
           onContextMenu={
             item.onMenu
               ? (event) => {
@@ -91,7 +111,7 @@ function RailButton({ item }: { item: RailItem }) {
           // The chosen item carries a bar on the rail's edge as well as its
           // surface, so the choice does not rest on a tint alone. A button
           // whose surface is open is marked the same way.
-          className="relative before:absolute before:inset-y-2 before:-left-1.5 before:w-0.5 before:rounded-xs before:bg-brand before:opacity-0 before:transition-opacity aria-expanded:bg-selected aria-expanded:text-accent-foreground aria-expanded:before:opacity-100 aria-pressed:before:opacity-100"
+          className="relative rail-compact:size-control-md before:absolute before:inset-y-2 before:-left-1.5 before:w-0.5 before:rounded-xs before:bg-brand before:opacity-0 before:transition-opacity aria-expanded:bg-selected aria-expanded:text-accent-foreground aria-expanded:before:opacity-100 aria-pressed:before:opacity-100"
         >
           <Icon name={item.icon} size="lg" />
           {item.badge ? (
@@ -144,8 +164,8 @@ function RailButton({ item }: { item: RailItem }) {
  * The icon rail: a vertical toolbar. It is one tab stop; the arrow keys,
  * Home and End move within it. Every item is named by its tooltip, which
  * also shows its shortcut. In a window under 48rem high the buttons close
- * up (no gaps, tighter dividers) so that all of them, Settings and the panel
- * toggle included, stay inside it; only a window too short even then makes
+ * up (no gaps, tighter dividers, the least size a button keeps) so that all
+ * of them, Settings and the panel toggle included, stay inside it; only a window too short even then makes
  * the rail scroll inside itself: it never makes the window taller.
  */
 export function Rail({
