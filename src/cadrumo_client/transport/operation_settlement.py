@@ -128,6 +128,23 @@ def start_and_await_terminal(
     )
     if not isinstance(started, OperationAcknowledged) or started.operation_id != operation_id:
         raise RefusalError(RefusalCode.INVALID_FRAME)
+    return await_terminal(client, pinned, operation_id, contract=contract, subject_ref=subject_ref, deadline=deadline)
+
+
+def await_terminal(
+    client: FrontendClient,
+    pinned: PinnedConnection,
+    operation_id: OperationId,
+    *,
+    contract: OperationPublicDefinitionContractV1,
+    subject_ref: str,
+    deadline: float,
+) -> OperationPublicProjectionV1:
+    """Observe an operation's canonical state on each cue until it is terminal, starting nothing.
+
+    The pinned identity must hold before every observation, and each observed
+    state must name this operation, definition, subject and exact contract.
+    """
     with OperationChanges(client) as changes:
         while True:
             remaining_budget(deadline)
