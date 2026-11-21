@@ -1,11 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import {
-  accountListPause,
-  CATALOG_BUSY_QUIET_MS,
-  catalogBusyPause,
-  catalogReadBusy,
-  catalogReadRetry,
-} from "../../shell/catalogReadPolicy";
+import { catalogReadBusy } from "../../shell/catalogReadPolicy";
 import {
   catalogChoices,
   catalogStillReading,
@@ -24,7 +18,8 @@ import type {
 } from "../../shell/agentSession";
 import type { ServedCatalogAnswer } from "../../shell/agentCatalogContract";
 import { useAgentRead } from "../../shell/agentViews";
-import { catalogLanes } from "../../shell/localModelLanes";
+import { addedTo, catalogLanes } from "../../shell/localModelLanes";
+import { modelListState, useWindowReturn } from "../../shell/modelListState";
 import {
   useReadingModel,
   type ReadingModelHost,
@@ -82,30 +77,18 @@ export function useAgentCatalog({
   const ready = status?.state === "ready";
   const starting = status?.state === "starting";
   const [catalogRetry, setCatalogRetry] = useState(0);
-  // The status the service last published, the one the newest catalog read
-  // was asked under, and the pauses taken since a read was asked under it.
+  // The status the service last published, and the one the newest catalog
+  // read was asked under, so a publication that already caused a read does
+  // not cause a second one.
   const published = useRef(status);
   useLayoutEffect(() => {
     published.current = status;
   }, [status]);
   const askedUnder = useRef(status);
-  const busyPauses = useRef(0);
-  // The busy wait the column is in: the service state it began under, when
-  // its first busy refusal came, and whether its outliving the quiet bound
-  // was noted. Busy refusals within the bound are the start the column
-  // expects; the first one past it is noted once as a warning.
-  const busyWait = useRef<{
-    under: AgentServiceStatus["state"];
-    since: number;
-    noted: boolean;
-  } | null>(null);
-  // Whether a read is wanted, so a busy refusal is followed by another.
-  const reading = useRef(false);
   // Reads asked for by anything but an opening of the settings, which an
   // answer asked before them cannot serve.
   const [catalogAgain, setCatalogAgain] = useState(0);
-  const [busyReads, setBusyReads] = useState(0);
-  const freshness = catalogAgain + settingsChanges + busyReads;
+  const freshness = catalogAgain + settingsChanges;
   const fresh = useRef(freshness);
   useLayoutEffect(() => {
     fresh.current = freshness;
@@ -123,31 +106,10 @@ export function useAgentCatalog({
     return reader !== null && (ready || starting) && session
       ? () => {
           if (out && out.fresh === fresh.current) return out.promise;
-          // A read asked under a newly published status starts its pauses
-          // afresh.
-          if (askedUnder.current !== published.current) {
-            askedUnder.current = published.current;
-            busyPauses.current = 0;
-          }
-          // The wait is keyed by the service's state rather than by each
-          // publication, so a repeated notice of the same state does not
-          // start it afresh.
-          const under = published.current?.state ?? "starting";
-          const expected = () => {
-            const now = performance.now();
-            let wait = busyWait.current;
-            if (wait?.under !== under) {
-              wait = { under, since: now, noted: false };
-              busyWait.current = wait;
-            }
-            if (wait.noted || now - wait.since < CATALOG_BUSY_QUIET_MS)
-              return true;
-            wait.noted = true;
-            return false;
-          };
-          const promise = session.providerCatalog(
-            catalogReadRetry(() => reading.current, expected),
-          );
+          askedUnder.current = published.current;
+          // A refusal that says where setup stands is noted as that state:
+          // nothing is scheduled after it, and the next cue reads again.
+          const promise = session.providerCatalog();
           const mine = { promise, fresh: fresh.current };
           out = mine;
           const settled = () => {
@@ -158,17 +120,11 @@ export function useAgentCatalog({
         }
       : null;
   }, [catalogRequest]);
-  useLayoutEffect(() => {
-    reading.current = readCatalog !== null;
-    return () => {
-      reading.current = false;
-    };
-  }, [readCatalog]);
-  // Setup, provider settings and a busy answer ask for the catalog
+  // Setup, provider settings and the cues of a wait ask for the catalog
   // independently; an opening joins a read still out.
   const catalog = useAgentRead(
     readCatalog,
-    catalogAgain + settingsChanges + busyReads + opened + pickerOpened,
+    catalogAgain + settingsChanges + opened + pickerOpened,
   );
   // A settled setup may have downloaded a model: what the catalog says this
   // computer holds is read again.
@@ -188,66 +144,25 @@ export function useAgentCatalog({
     [catalog],
   );
   // A service still busy starting the agent, or still busy just after it
-  // became ready, answers the catalog late. The column says the agent is
-  // still starting and asks again: at once when the service published a
-  // status after the busy read was asked, and otherwise after a pause that
-  // grows to a ceiling, until the service answers. A read the published
-  // status already caused is not repeated at once, so two reads never land
-  // back to back in the same busy moment. A session the runtime keeps
+  // became ready, answers the catalog late; a session the runtime keeps
   // suspended is the same wait: it is not a sign-out and it comes back.
   const catalogBusy =
     catalog.kind === "failed" && catalogReadBusy(catalog.code);
-  // The repeat stops when the catalog loads, when no read is wanted because
-  // the service reports it stopped or refused, or the profile is gone, and
-  // when the hook unmounts: each ends with the cleanup clearing the pending
-  // pause, and nothing schedules another. Only a newly published status or
-  // the person's retry asks again after that.
-  const followBusy = catalogBusy && readCatalog !== null;
-  useEffect(() => {
-    if (catalog.kind === "ready") busyPauses.current = 0;
-    // An answer, or a refusal that waiting does not cure, ends the busy wait.
-    if (
-      catalog.kind === "ready" ||
-      (catalog.kind === "failed" && !catalogReadBusy(catalog.code))
-    )
-      busyWait.current = null;
-    if (!followBusy) return;
-    if (askedUnder.current !== status) {
-      setBusyReads((count) => count + 1);
-      return;
-    }
-    const pause = catalogBusyPause(busyPauses.current);
-    busyPauses.current += 1;
-    const again = window.setTimeout(
-      () => setBusyReads((count) => count + 1),
-      pause,
-    );
-    return () => window.clearTimeout(again);
-  }, [catalog, followBusy, status]);
-  // A cold read answers a lane's packaged model list as stale, or a lane's
-  // sign-in or catalog as not yet known, while the service is still reading
-  // it; the settled answer is served on a later read. So the catalog is read
-  // again, after pauses that grow to a ceiling, for as long as the served
-  // catalog says some lane is still being read. The count starts afresh for a
-  // new reader and once nothing is being read, and the pending pause is
-  // cleared when the catalog changes or the hook unmounts.
-  const accountReads = useRef({ reader, count: 0 });
-  if (accountReads.current.reader !== reader)
-    accountReads.current = { reader, count: 0 };
+  // A catalog that answered where setup stands, or that says the service is
+  // still reading some lane (a packaged model list in place of the
+  // account's, a sign-in or catalog not yet known), waits on a cue: a status
+  // the service publishes, the person coming back to the window, opening the
+  // picker or the settings, or a setup they ran. No timer asks again.
   const stillReading =
     catalog.kind === "ready" && catalogStillReading(catalog.value);
+  const catalogWaits =
+    readCatalog !== null &&
+    ((catalog.kind === "failed" && modelListState(catalog.code) !== null) ||
+      stillReading);
   useEffect(() => {
-    const reads = accountReads.current;
-    if (!stillReading) {
-      reads.count = 0;
-      return;
-    }
-    const again = window.setTimeout(() => {
-      reads.count += 1;
+    if (catalogWaits && askedUnder.current !== status)
       setCatalogAgain((count) => count + 1);
-    }, accountListPause(reads.count));
-    return () => window.clearTimeout(again);
-  }, [stillReading, catalog, reader]);
+  }, [catalogWaits, status]);
   // What the next message runs with: what the person chose while this
   // conversation is shown, else what the conversation last ran with, else the
   // profile's last choice, each only where the catalog still offers it.
@@ -260,11 +175,30 @@ export function useAgentCatalog({
     model: string;
   } | null>(null);
   // Read only where the catalog is: a profile is signed in and the agent runs.
-  const stored = useReadingModel(
+  const lists = useReadingModel(
     readCatalog ? readingHost : null,
     rememberedRecord,
-    catalogAgain + settingsChanges + opened + listChanges,
+    catalogAgain + settingsChanges + opened + pickerOpened + listChanges,
     reader,
+  );
+  const { stored, retry: retryLists } = lists;
+  const listsWait =
+    lists.failure !== null && modelListState(lists.failure) !== null;
+  // Lists that answered where setup stands are read again once the service
+  // publishes a status after that answer.
+  const listsSeen = useRef(status);
+  useEffect(() => {
+    if (listsWait && listsSeen.current !== status) retryLists();
+    listsSeen.current = status;
+  }, [listsWait, status, retryLists]);
+  // The person coming back to the window is a cue for whatever still waits.
+  useWindowReturn(
+    catalogWaits || listsWait
+      ? () => {
+          if (catalogWaits) setCatalogAgain((count) => count + 1);
+          else retryLists();
+        }
+      : null,
   );
   const offer = useMemo(() => {
     if (catalog.kind !== "ready") return null;
@@ -273,12 +207,7 @@ export function useAgentCatalog({
         ? null
         : {
             lanes: stored.local_lanes,
-            added: (lane: string) =>
-              !stored.unreadable
-                ? stored.models
-                    .filter((entry) => entry.lane === lane)
-                    .map((entry) => entry.model)
-                : [],
+            added: (lane: string) => addedTo(stored, lane),
           };
     return catalogChoices(t, catalog.value, lists);
   }, [catalog, t, stored]);
@@ -338,18 +267,18 @@ export function useAgentCatalog({
   return {
     catalog,
     catalogBusy,
+    /** Why the person's lists could not be read, which the picker says in
+     * place of offering the local lanes' lists, and the way to read them
+     * again; null once they are read. */
+    lists: { failure: lists.failure, retry: retryLists },
     localLanes,
     engines,
     offer,
     selection,
     provider,
     remember,
-    /** Reads the catalog again after a failed read, at once, and starts the
-     * pauses before any busy re-read afresh. */
-    retry: () => {
-      busyPauses.current = 0;
-      setCatalogRetry((count) => count + 1);
-    },
+    /** Reads the catalog again after a failed read, at once. */
+    retry: () => setCatalogRetry((count) => count + 1),
     /** Reads the catalog again: what this computer holds changed. */
     refresh: () => setCatalogAgain((count) => count + 1),
   };

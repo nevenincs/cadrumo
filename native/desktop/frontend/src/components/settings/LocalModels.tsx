@@ -44,6 +44,8 @@ import {
   type StepProgress,
 } from "../setup/ProvisioningRow";
 import { refusalWords } from "../setup/setupWords";
+import { ModelListNotice } from "../agent/ModelListNotice";
+import { modelListState, useWindowReturn } from "../../shell/modelListState";
 
 /** A licence's name, with its SPDX identifier where that adds to it. The
  * pairing is one catalogue sentence, so no punctuation is composed here. */
@@ -298,6 +300,17 @@ function Choice<T extends string>({
 function LocalEngineChoice({ engine }: { engine: LocalEngineState }) {
   const t = useStrings();
   const value = engine.value;
+  // A read that did not answer is said, as where setup stands or as a
+  // fault, rather than leaving the engine choice out without a word.
+  if (engine.snapshot.kind === "failed")
+    return (
+      <ModelListNotice
+        code={engine.snapshot.code}
+        fault={t("desktop.agent.read_failed")}
+        onRetry={engine.retry}
+        slot="local-engine-read"
+      />
+    );
   if (!value || value.unreadable) return null;
   const { engine: running, placement: placed, choices } = value;
   if (running === null || placed === null) return null;
@@ -410,6 +423,7 @@ export function LocalModels({
   locale,
   onRemoved,
   laneStatus = "ready",
+  laneFailure = null,
   onRetryLane,
 }: {
   lane: CatalogLane | null;
@@ -422,12 +436,30 @@ export function LocalModels({
   onRemoved?: () => void;
   /** Whether the catalogue supplying this lane has answered. */
   laneStatus?: "loading" | "failed" | "ready";
+  /** The refusal the catalogue answered, while `laneStatus` is failed. */
+  laneFailure?: string | null;
   onRetryLane?: () => void;
 }) {
   const t = useStrings();
   const store = useProvisioning();
   const engine = useLocalEngine(host);
   const { snapshot, retry, busy, outcomes, change } = useLocalModels(host);
+  // A list or engine read that answered where setup stands is read again
+  // when the person comes back to the window.
+  const listWaits =
+    snapshot.kind === "failed" && modelListState(snapshot.code) !== null;
+  const engineWaits =
+    withEngine &&
+    engine.snapshot.kind === "failed" &&
+    modelListState(engine.snapshot.code) !== null;
+  useWindowReturn(
+    listWaits || engineWaits
+      ? () => {
+          if (listWaits) retry();
+          if (engineWaits) engine.retry();
+        }
+      : null,
+  );
   // Downloading and removing are setup's: offered only where this window
   // offers setup, and a download waits while the local AI sets up.
   const localAi = store.localAiRow;
@@ -610,15 +642,12 @@ export function LocalModels({
           {t("desktop.providers.local_models_loading")}
         </p>
       ) : laneStatus === "failed" ? (
-        <p role="alert" className="flex items-start gap-2 text-sm">
-          <Icon name="alert" className="mt-0.5 text-destructive" />
-          <span>{t("desktop.providers.load_failed")}</span>
-          {onRetryLane && (
-            <Button variant="outline" size="sm" onClick={onRetryLane}>
-              {t("desktop.agent.retry")}
-            </Button>
-          )}
-        </p>
+        <ModelListNotice
+          code={laneFailure ?? ""}
+          fault={t("desktop.providers.load_failed")}
+          onRetry={onRetryLane}
+          slot="local-models-lane"
+        />
       ) : !lane ? (
         <p className="text-sm text-muted-foreground">
           {t("desktop.providers.local_models_none")}
@@ -628,13 +657,12 @@ export function LocalModels({
           {t("desktop.providers.local_models_loading")}
         </p>
       ) : snapshot.kind === "failed" ? (
-        <p role="alert" className="flex items-start gap-2 text-sm">
-          <Icon name="alert" className="mt-0.5 text-destructive" />
-          <span>{t("desktop.providers.local_models_failed")}</span>
-          <Button variant="outline" size="sm" onClick={retry}>
-            {t("desktop.agent.retry")}
-          </Button>
-        </p>
+        <ModelListNotice
+          code={snapshot.code}
+          fault={t("desktop.providers.local_models_failed")}
+          onRetry={retry}
+          slot="local-models-read"
+        />
       ) : (
         <>
           {!readable && (

@@ -1,4 +1,11 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { failureCode } from "../errors";
 import type {
   LocalModelListEntry,
@@ -21,6 +28,16 @@ export type ReadingModelHost = {
   ) => Promise<LocalModelListStatus>;
 };
 
+/** The stored lists and reading model as read, with the refusal of the last
+ * read where it did not answer, and the way to read them again. */
+export type ReadingModelRead = {
+  /** Null until a read answers, or where the host offers none. */
+  stored: LocalModelListStatus | null;
+  /** The refusal of the newest read, null once one answers. */
+  failure: string | null;
+  retry: () => void;
+};
+
 const same = (a: LocalModelListEntry | null, b: LocalModelListEntry | null) =>
   a !== null && b !== null && a.lane === b.lane && a.model === b.model;
 
@@ -28,15 +45,16 @@ const same = (a: LocalModelListEntry | null, b: LocalModelListEntry | null) =>
  * The stored lists and reading model, kept naming `wanted`: the model the
  * person selected, by catalogue lane id. Each wanted model is stored at most
  * once per revision read, so a refusal is not retried in a loop; a revision
- * another change moved is read again first. Null until the first read
- * answers, or where the host offers none.
+ * another change moved is read again first. A read that does not answer is
+ * kept as its refusal, which the picker says, rather than left as if nothing
+ * had been asked.
  */
 export function useReadingModel(
   host: ReadingModelHost | null,
   wanted: LocalModelListEntry | null,
   refreshVersion: number,
   reader: string | null,
-): LocalModelListStatus | null {
+): ReadingModelRead {
   const owner = useMemo(
     () => ({ host, reader, tried: new Set<string>() }),
     [host, reader],
@@ -46,6 +64,10 @@ export function useReadingModel(
     value: LocalModelListStatus;
   } | null>(null);
   const stored = held?.owner === owner ? held.value : null;
+  const [refused, setRefused] = useState<{
+    owner: typeof owner;
+    code: string;
+  } | null>(null);
   const [reads, setReads] = useState(0);
   const generation = useRef(0);
   useLayoutEffect(
@@ -61,10 +83,14 @@ export function useReadingModel(
     const mine = generation.current;
     host.read().then(
       (value) => {
-        if (current && mine === generation.current) setHeld({ owner, value });
+        if (current && mine === generation.current) {
+          setHeld({ owner, value });
+          setRefused(null);
+        }
       },
-      () => {
-        // Nothing read: the picker offers what the catalog lists.
+      (error: unknown) => {
+        if (current && mine === generation.current)
+          setRefused({ owner, code: failureCode(error) });
       },
     );
     return () => {
@@ -97,5 +123,10 @@ export function useReadingModel(
       },
     );
   }, [owner, stored, wantedLane, wantedModel]);
-  return host && reader !== null ? stored : null;
+  const offered = host !== null && reader !== null;
+  return {
+    stored: offered ? stored : null,
+    failure: offered && refused?.owner === owner ? refused.code : null,
+    retry: useCallback(() => setReads((count) => count + 1), []),
+  };
 }

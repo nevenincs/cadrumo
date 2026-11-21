@@ -67,7 +67,7 @@ function LocalAiElement({
   const settled = run?.stage === "settled" ? run.operation_id : null;
   const [reads, setReads] = useState({ settled, count: 0 });
   if (reads.settled !== settled) setReads({ settled, count: reads.count + 1 });
-  const { lanes, host, status, retry } = useLocalAiLanes(
+  const { lanes, host, status, failure, service, retry } = useLocalAiLanes(
     localAi,
     expanded,
     reads.count,
@@ -101,6 +101,8 @@ function LocalAiElement({
           <LocalAi
             lanes={lanes}
             status={status}
+            failure={failure}
+            service={service}
             onRetry={retry}
             host={host}
             locale={locale}

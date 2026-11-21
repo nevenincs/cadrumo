@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
-import { scenarioOnly } from "../support/agent";
+import { scenarioOnly, worded } from "../support/agent";
 import { label } from "../support/strings";
 
 // What each kind of background task runs with, set in the agent's settings:
@@ -153,3 +153,143 @@ test("a refused change says so and leaves the stored setting", async ({
   );
   expect(await storedTasks(target)).toEqual([]);
 });
+
+const openSettings = async (target: Page) => {
+  await target
+    .locator(".pane-agent")
+    .getByRole("button", { name: label("desktop.agent.settings") })
+    .click();
+  await expect(section(target)).toBeVisible();
+};
+
+test("a record of the lists that cannot be read says why and offers the reset, after which a model can be set", async ({
+  page: target,
+}) => {
+  await target.addInitScript(() => {
+    // The record stays unreadable until the person resets it.
+    window.__fixtureLocalModelsRead = async () => {
+      if (
+        (window.__scenarioHostCalls ?? []).some((call) =>
+          call.startsWith("agentLocalModelsReset"),
+        )
+      )
+        return;
+      return {
+        unreadable: true,
+        models: [],
+        reading: null,
+        reading_source: "none",
+        tasks: [],
+        local_lanes: [],
+        revision: "0".repeat(64),
+      };
+    };
+  });
+  await open(target);
+  await openSettings(target);
+  const said = section(target).locator("[data-slot=task-models-unreadable]");
+  await expect(said.getByRole("alert")).toHaveText(
+    label("desktop.providers.local_models_unreadable"),
+  );
+  const [first] = kinds;
+  if (!first) throw new Error("The made-up catalogue serves no task kind.");
+  const model = row(target, first.id).getByLabel(
+    label("desktop.providers.task_model_model", { task: first.display_name }),
+  );
+  await expect(model).toBeDisabled();
+  await said
+    .getByRole("button", {
+      name: label("desktop.providers.local_models_reset"),
+    })
+    .click();
+  await expect(said).toHaveCount(0);
+  await expect(model).toBeEnabled();
+});
+
+test("model lists that answer where setup stands are said as that state, with asking again where that helps", async ({
+  page: target,
+}) => {
+  await target.addInitScript(() => {
+    window.__taskListsRefused = true;
+    window.__fixtureLocalModelsRead = async () => {
+      if (!window.__taskListsRefused) return;
+      throw Object.assign(new Error("agent_local_models_catalog_unavailable"), {
+        code: "agent_local_models_catalog_unavailable",
+      });
+    };
+  });
+  await open(target);
+  await target
+    .locator(".pane-agent")
+    .getByRole("button", { name: label("desktop.agent.settings") })
+    .click();
+  const said = section(target).locator("[data-slot=task-models-lists]");
+  await expect(said).toHaveAttribute("role", "status");
+  await expect(said).toContainText(label("desktop.agent.catalog_unavailable"));
+  await target.evaluate(() => {
+    window.__taskListsRefused = false;
+  });
+  await said
+    .getByRole("button", { name: label("desktop.agent.retry"), exact: true })
+    .click();
+  await expect(said).toHaveCount(0);
+  await expect(section(target).locator("[data-task-kind]")).toHaveCount(
+    kinds.length,
+  );
+});
+
+test("a lane a task cannot run on yet says why with the picker's step, and a model not on this computer cannot be set", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&setup=ready&models=none&catalog=hosted-signed-out",
+  );
+  await openSettings(target);
+  const held = section(target).locator("[data-slot=task-models-held]");
+  // The local lane holds none of its models yet: downloading one is the step.
+  const local = held.locator('[data-held-lane="zai_api"]');
+  await expect(local).toContainText(
+    label("desktop.agent.lane_no_installed_model"),
+  );
+  // A signed-out lane is signed in to in its provider's settings.
+  const signedOut = held.locator('[data-held-lane="kimi_cli"]');
+  await expect(signedOut).toContainText(label("desktop.agent.lane_signed_out"));
+  const [first] = kinds;
+  if (!first) throw new Error("The made-up catalogue serves no task kind.");
+  const model = row(target, first.id).getByLabel(
+    label("desktop.providers.task_model_model", { task: first.display_name }),
+  );
+  const absent = model.locator(
+    'optgroup[data-lane="zai_api"] option[data-installed="false"]',
+  );
+  await expect(absent.first()).toBeDisabled();
+  await expect(absent.first()).toHaveText(
+    worded("desktop.agent.model_not_installed"),
+  );
+  const providerDetails = (provider: string) =>
+    target
+      .locator(".pane-agent")
+      .locator(`li[data-provider="${provider}"] > details`);
+  await expect(providerDetails("kimi")).not.toHaveAttribute("open");
+  await signedOut
+    .getByRole("button", { name: label("desktop.providers.sign_in_action") })
+    .click();
+  await expect(providerDetails("kimi")).toHaveAttribute("open");
+  await local
+    .getByRole("button", { name: label("desktop.agent.download_models") })
+    .click();
+  await expect(providerDetails("zai")).toHaveAttribute("open");
+  await expect(
+    target
+      .locator(".pane-agent")
+      .locator('li[data-provider="zai"] [data-slot=local-models]')
+      .first(),
+  ).toBeInViewport();
+});
+
+declare global {
+  interface Window {
+    /** Whether the made-up list read refuses, while set. */
+    __taskListsRefused?: boolean;
+  }
+}

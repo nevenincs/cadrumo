@@ -26,6 +26,7 @@ export function ColumnNotice({
   failure,
   fit = null,
   notice,
+  noticeFault = false,
   logRef,
   engines,
   onRetry,
@@ -39,6 +40,8 @@ export function ColumnNotice({
   /** The context sizes the refusal stated, said with its code. */
   fit?: ContextFit | null;
   notice: string | null;
+  /** `notice` says a fault rather than where setup stands. */
+  noticeFault?: boolean;
   /** The reference of the log line that says why, said with `notice`. */
   logRef?: string;
   /** The local engines that do not run, said in place of `notice`. */
@@ -98,10 +101,13 @@ export function ColumnNotice({
   ) : (
     notice && (
       <p
-        role="status"
+        role={noticeFault ? "alert" : "status"}
         className="flex items-start gap-2 text-sm text-muted-foreground"
       >
-        <Icon name="info" className="mt-0.5" />
+        <Icon
+          name={noticeFault ? "alert" : "info"}
+          className={noticeFault ? "mt-0.5 text-destructive" : "mt-0.5"}
+        />
         <span className="grid justify-items-start gap-1.5">
           {notice}
           {logRef && (

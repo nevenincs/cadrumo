@@ -111,6 +111,8 @@ export function Composer({
   onDownloadModels,
   onRetryCatalog,
   onSignIn,
+  listsFailure = null,
+  onRetryLists,
   onRemoveAttachment,
   onRemoveAllAttachments,
   onShowAllAttachments,
@@ -148,6 +150,11 @@ export function Composer({
   onRetryCatalog?: () => void;
   /** Opens the settings where a lane that is signed out is signed in. */
   onSignIn?: () => void;
+  /** Why the person's model lists could not be read, which the picker says;
+   * null once they are. */
+  listsFailure?: string | null;
+  /** Reads the person's model lists again. */
+  onRetryLists?: () => void;
   onRemoveAttachment?: (id: string) => void;
   onRemoveAllAttachments?: () => void;
   onShowAllAttachments?: () => void;
@@ -330,6 +337,8 @@ export function Composer({
               onDownloadModels={onDownloadModels}
               onRetryCatalog={onRetryCatalog}
               onSignIn={onSignIn}
+              listsFailure={listsFailure}
+              onRetryLists={onRetryLists}
             >
               {settingsButton}
             </AgentSettingsPopover>

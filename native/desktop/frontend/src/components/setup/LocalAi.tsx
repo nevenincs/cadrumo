@@ -1,9 +1,10 @@
 import { useState } from "react";
+import type { AgentServiceStatus } from "../../shell/agentSession";
 import type { CatalogLane } from "../../shell/localModelLanes";
-import { Alert } from "../ui/alert";
-import { Button } from "../ui/button";
 import { Icon } from "../ui/icon";
 import { Spinner } from "../ui/spinner";
+import { serviceWords } from "../agent/agentRefusalWords";
+import { ModelListNotice } from "../agent/ModelListNotice";
 import {
   ReviewClaimContext,
   type LocalModelHost,
@@ -21,7 +22,9 @@ import { ProvisioningRow } from "./ProvisioningRow";
 // the lane on this computer render this same component. The program is this
 // installation's; the model list is the signed-in person's, so while nobody
 // is signed in it says that a sign-in is needed, and the removal that takes
-// the listed models with it is not offered.
+// the listed models with it is not offered. While the agent does not serve
+// the list, or its read answers where setup stands, that is said in the
+// list's place; only a fault offers asking again.
 
 export function LocalAi({
   lanes,
@@ -30,6 +33,8 @@ export function LocalAi({
   onRemoved,
   signedOut = false,
   status = "ready",
+  failure = null,
+  service = null,
   onRetry,
 }: {
   /** The keyless lanes whose model lists are shown; none says no lane on
@@ -44,6 +49,10 @@ export function LocalAi({
   /** Nobody is signed in, so there is no person's model list to show. */
   signedOut?: boolean;
   status?: "loading" | "failed" | "ready";
+  /** The refusal the lanes' read answered, while `status` is failed. */
+  failure?: string | null;
+  /** The agent service's status while it does not serve the list. */
+  service?: AgentServiceStatus | null;
   onRetry?: () => void;
 }) {
   const t = useStrings();
@@ -88,11 +97,20 @@ export function LocalAi({
           {t("desktop.setup.models_signed_out")}
         </p>
       ) : (
-        host && (
+        (host || service) && (
           // Linked to the program above by the rule beside it: the models are
           // what the program runs.
           <div className={row ? "ml-3 grid gap-3 border-l pl-3" : "grid gap-3"}>
-            {status === "loading" ? (
+            {service ? (
+              <p
+                role="status"
+                data-slot="local-models-service"
+                className="flex items-start gap-2 text-sm text-muted-foreground"
+              >
+                <Icon name="info" className="mt-0.5" />
+                <span>{serviceWords(t, service)}</span>
+              </p>
+            ) : !host ? null : status === "loading" ? (
               <p
                 role="status"
                 className="flex items-center gap-2 text-sm text-muted-foreground"
@@ -101,14 +119,12 @@ export function LocalAi({
                 <span>{t("desktop.providers.local_models_loading")}</span>
               </p>
             ) : status === "failed" ? (
-              <Alert role="alert" icon={<Icon name="alert" />}>
-                <span>{t("desktop.providers.load_failed")}</span>
-                {onRetry && (
-                  <Button size="sm" variant="outline" onClick={onRetry}>
-                    {t("desktop.agent.retry")}
-                  </Button>
-                )}
-              </Alert>
+              <ModelListNotice
+                code={failure ?? ""}
+                fault={t("desktop.providers.load_failed")}
+                onRetry={onRetry}
+                slot="local-models-lanes"
+              />
             ) : (
               <ReviewClaimContext.Provider value={setClaimed}>
                 {(lanes.length > 0 ? lanes : [null]).map((lane, index) => (

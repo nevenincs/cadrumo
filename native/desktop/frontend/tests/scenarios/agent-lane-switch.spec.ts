@@ -444,32 +444,41 @@ test("a lane the agent cannot read moves the message to a new conversation that 
   await expect(notice(target, "carried")).toBeVisible();
 });
 
+// The account's model list is published by the service after the packaged
+// one; the window does not poll for it. It reads the catalogue again when
+// the person comes back to the window, opens the picker, or the service
+// publishes a status, and stops once the account's list is served.
 test.describe("a catalog that still shows the packaged model list", () => {
-  test.describe.configure({ timeout: 60_000 });
-
   const resolved = async (target: Page) =>
     (await calls(target)).filter(
       (call) => call === "agentProviderCatalogResolved",
     ).length;
+  const comeBack = (target: Page) =>
+    target.evaluate(() => window.dispatchEvent(new Event("focus")));
 
-  test("is read again after a pause, and stops once the account's list is served", async ({
+  test("is not read again on a timer, and is read again when the person comes back", async ({
     page: target,
   }) => {
     await target.addInitScript(() => {
       window.__fixtureCatalogStaleReads = 1;
     });
+    await target.clock.install();
     await open(target);
     await expect.poll(() => resolved(target)).toBe(1);
-    // Not at once: the pause is about two seconds.
-    await target.waitForTimeout(1_000);
+    for (let step = 0; step < 12; step++) {
+      await target.clock.fastForward("00:10");
+      await target.waitForTimeout(20);
+    }
     expect(await resolved(target)).toBe(1);
-    await expect.poll(() => resolved(target), { timeout: 10_000 }).toBe(2);
-    // The second answer is the account's: no third read follows.
-    await target.waitForTimeout(3_000);
+    await comeBack(target);
+    await expect.poll(() => resolved(target)).toBe(2);
+    // The second answer is the account's: coming back again asks nothing.
+    await comeBack(target);
+    await target.waitForTimeout(500);
     expect(await resolved(target)).toBe(2);
   });
 
-  test("keeps being read while it is stale, after pauses that grow", async ({
+  test("is read again once on each published status while it is stale", async ({
     page: target,
   }) => {
     await target.addInitScript(() => {
@@ -477,11 +486,11 @@ test.describe("a catalog that still shows the packaged model list", () => {
     });
     await open(target);
     await expect.poll(() => resolved(target)).toBe(1);
-    // The pauses are about two, four and eight seconds, then sixteen: the
-    // fourth read is not before the first three pauses have passed.
-    await expect.poll(() => resolved(target), { timeout: 20_000 }).toBe(4);
-    await target.waitForTimeout(5_000);
+    for (const read of [2, 3, 4]) {
+      await target.evaluate(() => window.__scenarioAgentPublishStatus?.());
+      await expect.poll(() => resolved(target)).toBe(read);
+    }
+    await target.waitForTimeout(500);
     expect(await resolved(target)).toBe(4);
-    await expect.poll(() => resolved(target), { timeout: 30_000 }).toBe(5);
   });
 });

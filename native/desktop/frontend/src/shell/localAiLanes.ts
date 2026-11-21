@@ -7,16 +7,11 @@ import {
   useState,
 } from "react";
 import type { ServedCatalogAnswer } from "./agentCatalogContract";
-import type { AgentSession } from "./agentSession";
+import type { AgentServiceStatus, AgentSession } from "./agentSession";
 import { failureCode } from "../errors";
 import type { AgentRead } from "./agentViews";
-import {
-  CATALOG_BUSY_RETRIES,
-  CATALOG_BUSY_PAUSE_MS,
-  catalogReadBusy,
-  catalogReadRetry,
-} from "./catalogReadPolicy";
 import { useAgentStatus } from "./agentLive";
+import { modelListState, useWindowReturn } from "./modelListState";
 import { catalogLanes, type CatalogLane } from "./localModelLanes";
 import { localModelHostOf, type LocalModelHost } from "./localModels";
 import type { ProviderSettings } from "./providerSettings";
@@ -38,13 +33,20 @@ export type LocalAiLanes = {
   lanes: CatalogLane[];
   host: LocalModelHost | null;
   status: "loading" | "failed" | "ready";
+  /** The refusal the lanes' read answered, while `status` is failed. */
+  failure: string | null;
+  /** The agent service's status while it does not serve the lanes, which
+   * is said in their place; null while it serves them or is not known. */
+  service: AgentServiceStatus | null;
   retry: () => void;
 };
 
 /**
  * The keyless lanes of `source` and the person's lists of them, read while
  * `active`. A change of `again` reads the catalog again, as after a setup
- * that may have downloaded a model.
+ * that may have downloaded a model. A read that answers where setup stands
+ * is read again on the next status the service publishes, or when the person
+ * comes back to the window; nothing asks again on a timer.
  */
 export function useLocalAiLanes(
   source: LocalAiSource | null,
@@ -126,39 +128,32 @@ export function useLocalAiLanes(
     const mineWork = { ended: false };
     work.current = mineWork;
     let alive = true;
-    let attempts = 0;
-    let timer: number | undefined;
     const current = () => alive && mine === generation.current;
     const put = (read: AgentRead<CatalogLane[]>) => {
       if (current()) setState({ for: request, read });
     };
-    const retryBusy = (
+    // A state is said and waited on: the next publication or return to the
+    // window resumes the read. A fault is said with its retry.
+    const refused = (
       code: string,
-      busy: boolean,
       atRead: typeof published.current,
-      collect: () => Promise<void>,
+      resume: () => Promise<void>,
     ) => {
       if (!current()) return;
-      if (!busy || attempts >= CATALOG_BUSY_RETRIES) {
-        put({ kind: "failed", code });
-        return;
-      }
-      const pause = CATALOG_BUSY_PAUSE_MS * 2 ** attempts;
-      attempts += 1;
-      const resume = () => {
-        if (!current() || wake.current !== resume) return;
-        void collect();
+      put({ kind: "failed", code });
+      if (modelListState(code) === null) return;
+      const wakeUp = () => {
+        if (!current() || wake.current !== wakeUp) return;
+        wake.current = null;
+        void resume();
       };
-      wake.current = resume;
-      timer = window.setTimeout(resume, pause);
-      // A publication during this read is also a recovery signal. Both
-      // publications and fallback timers spend the same bounded budget.
-      if (atRead !== published.current) resume();
+      wake.current = wakeUp;
+      // A status published while the read was out is already its cue.
+      if (atRead !== published.current) wakeUp();
     };
     const collectSettings = async (catalog: ServedCatalogAnswer) => {
       if (!current()) return;
       wake.current = null;
-      window.clearTimeout(timer);
       const atRead = published.current;
       try {
         const settings = await providerSettings.status({
@@ -175,9 +170,9 @@ export function useLocalAiLanes(
         });
       } catch (error) {
         const code = failureCode(error);
-        // Only an explicit busy refusal permits collecting the native cold
-        // status probe under this owner and admitted catalog.
-        retryBusy(code, code === "busy", atRead, () =>
+        // The provider status answers busy while the host has not admitted
+        // the service yet: that is the agent starting.
+        refused(code === "busy" ? "agent_service_busy" : code, atRead, () =>
           collectSettings(catalog),
         );
       }
@@ -185,25 +180,16 @@ export function useLocalAiLanes(
     const collect = async () => {
       if (!current()) return;
       wake.current = null;
-      window.clearTimeout(timer);
       const atRead = published.current;
       let catalog;
       try {
-        // Each busy read the lanes follow is part of the wait they expect;
-        // the one they give up on is the failure.
-        catalog = await session.providerCatalog(
-          catalogReadRetry(
-            () => current() && attempts < CATALOG_BUSY_RETRIES,
-            () => true,
-          ),
-        );
+        catalog = await session.providerCatalog();
       } catch (error) {
-        const code = failureCode(error);
-        retryBusy(code, catalogReadBusy(code), atRead, collect);
+        refused(failureCode(error), atRead, collect);
         return;
       }
       // Catalog admission precedes the independent provider-status probe;
-      // neither a busy catalog nor a retired read may start that probe.
+      // neither a refused catalog nor a retired read may start that probe.
       if (current()) await collectSettings(catalog);
     };
     put({ kind: "loading" });
@@ -211,10 +197,11 @@ export function useLocalAiLanes(
     return () => {
       if (work.current === mineWork) work.current = null;
       alive = false;
-      window.clearTimeout(timer);
       wake.current = null;
     };
   }, [request, available]);
+  // A publication after a read that answered a state is its cue, and so is
+  // the person coming back to the window.
   useEffect(() => {
     wake.current?.();
   }, [status]);
@@ -227,6 +214,8 @@ export function useLocalAiLanes(
               ? "loading"
               : "unavailable",
         };
+  const waiting = read.kind === "failed" && modelListState(read.code) !== null;
+  useWindowReturn(waiting ? () => wake.current?.() : null);
   const retry = useCallback(() => setRetries((count) => count + 1), []);
   const host = useMemo(
     (): LocalModelHost | null =>
@@ -246,6 +235,11 @@ export function useLocalAiLanes(
         : read.kind === "loading"
           ? "loading"
           : "failed",
+    failure: read.kind === "failed" ? read.code : null,
+    service:
+      active && reader !== null && status !== null && status.state !== "ready"
+        ? status
+        : null,
     retry,
   };
 }
