@@ -3409,7 +3409,7 @@ desktop:
         restored: Restored
         split: Split
         stashed: Set aside
-        unlinked: Invoice unlinked
+        unlinked: Invoice link removed
         updated: Updated
       file_row: '{file}, row {row}'
       fix:
