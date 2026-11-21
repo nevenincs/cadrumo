@@ -52,6 +52,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final, TypeIs
 
 from cadrumo.tests.module_target_inventory import load_all_target_sets
+from dev.first_party_source import is_test_source
 from dev.paths import REPO_ROOT, UTF_8
 
 if TYPE_CHECKING:
@@ -435,7 +436,7 @@ def scan_repository(root: Path = REPO_ROOT, trees: Sequence[str] = GOVERNED_TREE
     sites: list[Site] = []
     for tree in trees:
         for path in sorted((root / tree).rglob("*.py")):
-            if "tests" in path.relative_to(root / tree).parts:
+            if is_test_source(path, root=root / tree):
                 continue
             module, _ = _module_name(path)
             module_object = _imported(module)

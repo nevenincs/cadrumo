@@ -31,7 +31,7 @@ from ..observation import (
     prepare_inherited_journals,
 )
 
-pytestmark = [pytest.mark.hex_core]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _WORKTREE = Path(__file__).resolve().parents[3]
 _PYTHON_PATH = "PYTHONPATH"

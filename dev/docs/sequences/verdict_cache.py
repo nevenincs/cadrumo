@@ -59,7 +59,7 @@ from dev.dependency_observation.observation import (
     static_import_closure,
     unobserved,
 )
-from dev.first_party_source import PRODUCT_SOURCE_ROOTS
+from dev.first_party_source import DEVELOPMENT_TOOLING, PRODUCT_SOURCE_ROOTS
 from dev.locales.write_guard import LOCK_FILENAME
 from dev.paths import REPO_ROOT
 
@@ -232,7 +232,7 @@ def engine_import_closure(repo_root: Path = REPO_ROOT) -> tuple[str, ...]:
                     prune_directories=("tests", *_PRUNED),
                 )
             )
-    development = repo_root / "dev"
+    development = repo_root / DEVELOPMENT_TOOLING
     tooling = repo_root / _AUTHORITY_TOOLING
 
     def admit(path: Path) -> bool:
@@ -253,7 +253,7 @@ def authority_compiler_closure(repo_root: Path = REPO_ROOT) -> tuple[str, ...]:
     """
     tooling = repo_root / _AUTHORITY_TOOLING
     source = repo_root / "src"
-    development = repo_root / "dev"
+    development = repo_root / DEVELOPMENT_TOOLING
 
     def admit(path: Path) -> bool:
         return path.is_relative_to(source) or path.is_relative_to(development)

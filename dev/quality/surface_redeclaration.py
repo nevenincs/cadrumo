@@ -70,6 +70,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Final
 
+from dev.first_party_source import MCP_PACKAGE, is_test_source
 from dev.paths import REPO_ROOT
 from dev.source_tree import repository_files
 
@@ -87,7 +88,7 @@ TUI_ROOT: Final[str] = "src/cadrumo/entrypoints/tui"
 ENTRYPOINT_ROOTS: Final[tuple[str, ...]] = (
     "src/cadrumo/entrypoints/tui",
     "src/cadrumo/entrypoints/cli",
-    "src/cadrumo_mcp",
+    MCP_PACKAGE,
 )
 CANONICAL_ROOTS: Final[tuple[str, ...]] = ("src/cadrumo/core", "src/cadrumo/application")
 
@@ -111,16 +112,11 @@ _LOOKUPS: Final[frozenset[str]] = frozenset({"get", "index"})
 _ORDERING_CALLS: Final[frozenset[str]] = frozenset({"sorted", "min", "max"})
 
 
-def _is_test_python(relative: str) -> bool:
-    parts = PurePosixPath(relative).parts
-    return "tests" in parts or PurePosixPath(relative).name.startswith("test_")
-
-
 def _python_modules(root: Path, bases: Iterable[str]) -> list[str]:
     return [
         relative
         for relative in repository_files(root, under=tuple(bases))
-        if relative.endswith(".py") and not _is_test_python(relative)
+        if relative.endswith(".py") and not is_test_source(relative)
     ]
 
 
