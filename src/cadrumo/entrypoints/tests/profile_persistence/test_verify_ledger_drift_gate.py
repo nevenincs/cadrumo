@@ -82,6 +82,7 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 from cadrumo.tests.env_scope import ready_clave_settings
 
 from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from ....tests.pdf_fixtures import text_pdf_bytes
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -145,7 +146,7 @@ def _row(tx_repo: TransactionCatalogueRepository, transaction_id: str) -> Transa
 
 def _write_invoice(tmp_path: Path) -> Path:
     invoice = tmp_path / "supplier-invoice.pdf"
-    invoice.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
+    invoice.write_bytes(text_pdf_bytes(("synthetic factura",)))
     return invoice
 
 
