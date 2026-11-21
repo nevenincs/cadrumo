@@ -11,6 +11,7 @@ import {
   LEDGER_FIXTURE_PROFILE_ID,
   money,
   movementId,
+  readableFile,
 } from "./fixtures/ledger";
 import {
   BOOK_REFUSALS,
@@ -557,6 +558,7 @@ export function importOperations(
           notes: "",
           created_at: at,
           updated_at: at,
+          ...readableFile(image ? "image" : "pdf", at),
           source_path: file.name,
         });
       }

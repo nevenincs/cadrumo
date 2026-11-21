@@ -1483,6 +1483,8 @@ errors:
       valor d’edició.
     ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
       model perquè encara no es pot presentar.
+    ledger_purchase_evidence_release: 'No pots treure el document d''aquest moviment:
+      {cause}.'
     ledger_source_jurisdiction_required: Indica la jurisdicció fiscal del contribuent
       abans d'afegir aquest moviment al llibre.
     ledger_summary_period_without_span: Aquest període no abasta dates del calendari,

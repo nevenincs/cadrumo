@@ -22,6 +22,7 @@ import {
   type DocumentRole,
 } from "./movementDocuments";
 import type { LedgerTransactionReviewProjection } from "../../../shell/ledgerReadContract";
+import { DocumentReadability, PurchaseRelease } from "./EvidenceDoors";
 
 type DocumentAction = Extract<
   StagedAction,
@@ -30,12 +31,15 @@ type DocumentAction = Extract<
 
 /**
  * The inspector's Documents section: the movement's purchase invoice and
- * other attachments. Only supplementary attachments can be detached; the
- * purchase evidence reference is immutable. An existing document
+ * other attachments, each with what the ledger found about its stored file.
+ * Supplementary attachments are detached through the staged changes; the
+ * purchase evidence is released at once, unlinked or kept as an ordinary
+ * document, against the movement as it was read. An existing document
  * to attach, and a document from this computer to add and attach. While the
  * movement has no purchase invoice, the person says what a document is
  * before it is staged: nothing makes a file the purchase invoice unasked. A
- * missing document is shown with the ledger's advice. Every change is staged.
+ * missing document is shown with the ledger's advice. Every other change
+ * is staged.
  */
 export function DocumentsSection({
   port,
@@ -45,6 +49,7 @@ export function DocumentsSection({
   actions,
   onStage,
   locale,
+  onWritten,
   say,
 }: {
   port: LedgerPort;
@@ -55,6 +60,8 @@ export function DocumentsSection({
   actions: readonly StagedAction[];
   onStage: (event: StageEvent) => void;
   locale: string;
+  /** Reads the movement and its documents again after a write that saved. */
+  onWritten: () => void;
   say: (text: string) => void;
 }) {
   const t = useStrings();
@@ -93,8 +100,10 @@ export function DocumentsSection({
       action.kind === "detach" ? action.attachmentIds : [],
     ),
   );
+  const recordOf = (attachment: string) =>
+    records.find((found) => found.attachment_id === attachment);
   const nameOf = (attachment: string) => {
-    const record = records.find((found) => found.attachment_id === attachment);
+    const record = recordOf(attachment);
     return record ? fileName(record.source_path) : attachment.slice(0, 12);
   };
   const needsEvidence = answer?.evidence_advised ?? false;
@@ -186,37 +195,63 @@ export function DocumentsSection({
                       "desktop.ledger.inspector.documents.purchase_details_unavailable",
                     )}
             </span>
+            {linked && (
+              <DocumentReadability
+                port={port}
+                record={linked}
+                onWritten={onWritten}
+                say={say}
+              />
+            )}
+            <PurchaseRelease
+              port={port}
+              transaction={tx}
+              locked={lock !== null}
+              onWritten={onWritten}
+              say={say}
+            />
           </span>
         </div>
       )}
       {documents.supplementary.length > 0 ? (
         <ul className="ledger-attachments grid gap-1">
-          {documents.supplementary.map((attachment) => (
-            <li key={attachment} className="flex items-center gap-2 text-sm">
-              <Icon name="page" />
-              <span className="min-w-0 flex-1 break-words">
-                {nameOf(attachment)}
-              </span>
-              {detaching.has(attachment) ? (
-                <span className="text-xs">
-                  {t("desktop.ledger.inspector.documents.detach_pending")}
-                </span>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  disabled={lock !== null}
-                  aria-label={t(
-                    "desktop.ledger.inspector.documents.detach_named",
-                    { file: nameOf(attachment) },
+          {documents.supplementary.map((attachment) => {
+            const record = recordOf(attachment);
+            return (
+              <li key={attachment} className="flex items-start gap-2 text-sm">
+                <Icon name="page" />
+                <span className="grid min-w-0 flex-1">
+                  <span className="break-words">{nameOf(attachment)}</span>
+                  {record && (
+                    <DocumentReadability
+                      port={port}
+                      record={record}
+                      onWritten={onWritten}
+                      say={say}
+                    />
                   )}
-                  onClick={() => detach(attachment)}
-                >
-                  {t("desktop.ledger.inspector.documents.detach")}
-                </Button>
-              )}
-            </li>
-          ))}
+                </span>
+                {detaching.has(attachment) ? (
+                  <span className="text-xs">
+                    {t("desktop.ledger.inspector.documents.detach_pending")}
+                  </span>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    disabled={lock !== null}
+                    aria-label={t(
+                      "desktop.ledger.inspector.documents.detach_named",
+                      { file: nameOf(attachment) },
+                    )}
+                    onClick={() => detach(attachment)}
+                  >
+                    {t("desktop.ledger.inspector.documents.detach")}
+                  </Button>
+                )}
+              </li>
+            );
+          })}
         </ul>
       ) : purchase ? null : needsEvidence ? (
         <Alert icon={<Icon name="info" />}>

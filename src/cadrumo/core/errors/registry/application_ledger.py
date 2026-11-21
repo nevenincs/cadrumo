@@ -983,9 +983,10 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_LEDGER_PURCHASE_EVIDENCE_RELEASE",
             category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_cli_validation_boundary",
+            message_key="errors.refused.ledger_purchase_evidence_release",
             retryable=False,
             runbook_id=None,
+            public_message_from_registry=True,
         ),
     ),
     (

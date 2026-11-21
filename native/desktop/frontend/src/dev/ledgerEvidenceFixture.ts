@@ -27,10 +27,11 @@ import type {
   OutputLanguage,
 } from "../shell/ledgerInvoiceContract";
 import type { JsonObject, JsonValue } from "../shell/ledger";
-import type {
-  FixtureEvidence,
-  FixtureLedger,
-  FixtureMovement,
+import {
+  readableFile,
+  type FixtureEvidence,
+  type FixtureLedger,
+  type FixtureMovement,
 } from "./fixtures/ledger";
 import {
   DOCUMENT_PAGE,
@@ -51,6 +52,7 @@ import {
   EMPTY_DRAFT,
   fallbackReading,
   read,
+  storedFile,
   ticketPage,
   type SeedBlocker,
   type Spec,
@@ -543,6 +545,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
         notes: "",
         created_at: fixtureInstant(10, 20, "10:00:00Z"),
         updated_at: fixtureInstant(10, 20, "10:00:00Z"),
+        ...storedFile(spec, fixtureInstant(10, 20, "10:00:00Z")),
         source_path: spec.name,
       };
       ledger.evidence.push(record);
@@ -708,6 +711,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       ...facts,
       created_at: at,
       updated_at: at,
+      ...readableFile(kind === "pdf" || kind === "xml" ? "pdf" : "image", at),
       source_path: file.name,
     };
     ledger.evidence.push(record);
@@ -940,6 +944,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
           notes: "",
           created_at: now(),
           updated_at: now(),
+          ...readableFile("pdf", now()),
           source_path: "factura-adjunta.pdf",
         }),
       };

@@ -8,6 +8,7 @@ import type {
   LedgerTransactionProjection,
 } from "../../shell/ledgerInvoiceContract";
 import type { PublicDecimal } from "../../shell/ledgerInvoiceContract";
+import type { LedgerEvidenceRecordProjection } from "../../shell/ledgerDocumentContract";
 import { exampleInvoices } from "./ledgerInvoices";
 import { settlementOf } from "../ledgerSettlement";
 import { fixtureDay, fixtureInstant, fixtureYear } from "@/dev/fixtureDates";
@@ -56,8 +57,21 @@ export type FixtureEvidence = {
   notes: string;
   created_at: string;
   updated_at: string;
+  readability: LedgerEvidenceRecordProjection["readability"];
+  document_shape: LedgerEvidenceRecordProjection["document_shape"];
+  unreadable_cause: LedgerEvidenceRecordProjection["unreadable_cause"];
+  readability_checked_at: string | null;
   source_path: string;
 };
+/** What the bytes probe finds for a stored file of `media` that a reader
+ * recognises, checked at `at`. */
+export const readableFile = (media: "pdf" | "image", at: string) => ({
+  readability: "readable" as const,
+  document_shape:
+    media === "pdf" ? ("pdf_text_layer" as const) : ("image" as const),
+  unreadable_cause: null,
+  readability_checked_at: at,
+});
 export type FixtureRule = {
   rule_id: string;
   description_pattern: string;
@@ -787,6 +801,7 @@ export function fixtureLedger(
           notes: "",
           created_at: stamp(day(month, 2), 30),
           updated_at: stamp(day(month, 2), 30),
+          ...readableFile(scanned ? "image" : "pdf", stamp(day(month, 2), 30)),
           source_path: `coworking-ribera-${FIXTURE_YEAR}-${String(month).padStart(2, "0")}.${scanned ? "jpg" : "pdf"}`,
         });
       }

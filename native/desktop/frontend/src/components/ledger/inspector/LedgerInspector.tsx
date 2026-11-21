@@ -47,6 +47,7 @@ export function LedgerInspector({
   onOpenInvoice,
   onExport,
   onMakeRule,
+  onWritten,
   copy,
 }: {
   port: LedgerPort;
@@ -75,6 +76,8 @@ export function LedgerInspector({
   onOpenInvoice: (invoiceId: string) => void;
   onExport?: () => void;
   onMakeRule?: OpenRuleFromSelection;
+  /** Reads the window again after a write the inspector made at once. */
+  onWritten: () => void;
   copy: (text: string) => Promise<void>;
 }) {
   const t = useStrings();
@@ -158,6 +161,7 @@ export function LedgerInspector({
         onAction={setAction}
         onSplit={setSplitting}
         onSelectCohort={(cohort) => onSelection(new Set(cohort))}
+        onWritten={onWritten}
         say={setToast}
       />
     );

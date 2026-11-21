@@ -18,6 +18,7 @@ import type {
 } from "../shell/ledgerInvoiceContract";
 import type { PublicDecimal } from "../shell/ledgerInvoiceContract";
 import { fixtureDay, fixtureInstant } from "@/dev/fixtureDates";
+import { readableFile } from "./fixtures/ledger";
 
 export const decimal = (value: string | null): PublicDecimal | null =>
   value === null ? null : { decimal: value };
@@ -124,7 +125,29 @@ export type Spec = {
   total: string;
   provenance: FieldProvenanceProjectionV1[];
   blockers?: SeedBlocker[];
+  /** What the bytes probe found for the stored file, where a reader did not
+   * recognise it or it was stored before the probe ran; read otherwise. */
+  stored?: "unreadable" | "unchecked";
 };
+
+/** What the ledger keeps about `spec`'s stored file, as found at `at`. */
+export function storedFile(spec: Spec, at: string) {
+  if (spec.stored === "unchecked")
+    return {
+      readability: "unchecked" as const,
+      document_shape: null,
+      unreadable_cause: null,
+      readability_checked_at: null,
+    };
+  if (spec.stored === "unreadable")
+    return {
+      readability: "unreadable" as const,
+      document_shape: null,
+      unreadable_cause: "ledger.evidence.bytes_readable" as const,
+      readability_checked_at: at,
+    };
+  return readableFile(spec.media, at);
+}
 
 /** A finding the seed raises: its reason, the sentence that explains it and
  * the values that sentence quotes, worded by the fixture from the backend's
@@ -202,6 +225,7 @@ export const DOCUMENTS: Spec[] = [
   {
     name: "ticket-plenoil-1015.jpg",
     media: "image",
+    stored: "unreadable",
     kind: null,
     party: "Plenoil SL",
     taxId: null,
@@ -250,6 +274,7 @@ export const DOCUMENTS: Spec[] = [
   {
     name: "factura-arroyo-2026-10.pdf",
     media: "pdf",
+    stored: "unchecked",
     kind: "received",
     party: "Arroyo Asesores SL",
     taxId: "B98000013",

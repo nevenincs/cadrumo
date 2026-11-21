@@ -3409,6 +3409,39 @@ desktop:
           de compra vinculat.
         purchase_invoice: Factura de compra · afegida {date}
         purchase_linked: Justificant de compra vinculat
+        readability:
+          cause:
+            bytes_readable: Cap lector reconeix el fitxer desat.
+            document_bytes_available: Falta el fitxer desat.
+          check_named: Comprova {file}
+          checked: Document comprovat
+          gone: Aquest document ja no és al llibre.
+          unchecked: Sense comprovar
+          unreadable: Il·legible
+        release:
+          cause:
+            evidence_confirmed_into_invoice: Aquest document es va confirmar en una
+              factura que aquest moviment no té vinculada.
+            finalized_calculation_reference: Una declaració finalitzada fa servir
+              aquest moviment.
+            no_linked_purchase_evidence: Aquest moviment no té cap justificant de
+              compra vinculat, o en té un altre.
+            reference_has_no_stored_document: L'enllaç apunta a una factura, no a
+              un document desat.
+            transaction_changed: El moviment ha canviat des que l'has obert.
+            transaction_not_editable: Aquest moviment està arxivat o eliminat.
+            transaction_not_found: Aquest moviment ja no existeix.
+          detach: Treu del moviment
+          detached: S'ha tret el justificant de compra del moviment.
+          keep: Conserva com a document
+          kept: El justificant de compra queda com un document més del moviment.
+          next_step:
+            detach_instead: Desvincula'l en lloc d'això.
+            link_movement_to_invoice: Vincula el moviment a aquesta factura, o conserva
+              el document al moviment.
+            reopen_finalized_calculation: Reobre primer la declaració que el fa servir.
+            reopen_transaction: Torna a obrir el moviment i torna-ho a provar.
+            restore_transaction: Restaura primer el moviment.
         search: Cerca documents
       drop: Descarta
       earlier: Decisions anteriors

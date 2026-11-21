@@ -30,6 +30,8 @@ import type {
   LedgerEvidenceViewProjection,
   LedgerEvidenceUpdateProjection,
   LedgerEvidenceRemoveProjection,
+  LedgerEvidenceVerifyWindowRequest,
+  LedgerEvidenceVerifyProjection,
 } from "./ledgerDocumentContract";
 import type {
   LedgerEvidenceConfirmWindowRequest,
@@ -69,6 +71,8 @@ import type {
   LedgerInvoiceMatchResult,
   LedgerLinkWindowRequest,
   LedgerLinkOperationResult,
+  LedgerPurchaseEvidenceReleaseWindowRequest,
+  LedgerPurchaseEvidenceReleaseResult,
 } from "./ledgerInvoiceContract";
 import type {
   LedgerUpdateWindowRequest,
@@ -736,9 +740,11 @@ export interface LedgerRequests extends LedgerClassifyJobRequests {
   "ledger.evidence.attachment_view": LedgerEvidenceAttachmentViewWindowRequest;
   "ledger.evidence.page": LedgerEvidencePageWindowRequest;
   "ledger.evidence.consent.list": Record<string, never>;
+  "ledger.evidence.verify": LedgerEvidenceVerifyWindowRequest;
   "ledger.link": LedgerLinkWindowRequest;
   "ledger.attach": LedgerAttachWindowRequest;
   "ledger.detach": LedgerDetachWindowRequest;
+  "ledger.purchase_evidence.release": LedgerPurchaseEvidenceReleaseWindowRequest;
   "ledger.check": LedgerCheckWindowRequest;
   "ledger.split.review": LedgerLlmReviewWindowRequest;
   "ledger.track": LedgerTrackWindowRequest;
@@ -909,9 +915,11 @@ export interface LedgerResults extends LedgerClassifyJobResults {
   "ledger.evidence.attachment_view": LedgerEvidenceAttachmentViewProjection;
   "ledger.evidence.page": LedgerEvidencePageProjection;
   "ledger.evidence.consent.list": LedgerEvidenceConsentListProjection;
+  "ledger.evidence.verify": LedgerEvidenceVerifyProjection;
   "ledger.link": LedgerLinkOperationResult;
   "ledger.attach": LedgerAttachmentOperationResult;
   "ledger.detach": LedgerAttachmentOperationResult;
+  "ledger.purchase_evidence.release": LedgerPurchaseEvidenceReleaseResult;
   "ledger.check": LedgerCheckProjection;
   "ledger.track": LedgerTrackProjection;
   "ledger.history.typed": LedgerHistoryTypedProjection;
