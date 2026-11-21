@@ -96,10 +96,18 @@ export type SetupRow = {
   /** What the local AI's server does while it is ready: dormant, it starts
    * when a document is read. Null, or absent, on every other row and state. */
   server?: SetupServer | null;
+  /** What the local AI still waits for while it is absent and its program is
+   * set up: a model downloaded from the person's list. Null, or absent, on
+   * every other row and state. */
+  awaits?: SetupAwaits | null;
 };
 
 /** What the local AI's server does while its row is ready. */
 export type SetupServer = "dormant";
+
+/** What the local AI waits for while its row is absent and its program is
+ * set up. */
+export type SetupAwaits = "model";
 
 /** A status read or a full check this window started. A settled check has
  * already replaced `rows`; a failed one leaves the earlier rows, except a

@@ -5478,6 +5478,7 @@ desktop:
     approve: Baixa i configura
     approve_at_least: Baixa almenys {size} i configura
     approve_size: Baixa {size} i configura
+    awaits_model: A punt. Descarrega un model per acabar la configuració.
     blocked:
       hardware: Aquest ordinador no té prou memòria per a això.
       needs_person: Espera que ho aprovis o que ho instal·lis tu.

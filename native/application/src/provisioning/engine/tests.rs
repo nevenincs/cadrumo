@@ -1616,6 +1616,61 @@ fn with_llama_cpp_selected_and_no_model_selected_nothing_is_ready_or_set_up() {
 }
 
 #[test]
+fn a_status_read_naming_no_model_reads_the_store_for_a_model_to_run() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+
+    // Nothing stored: the packaged llama-server reads present, the row is absent, and what
+    // remains is a model, which the row serves apart from a missing program.
+    let mut world = World::llama_cpp(&text, &vision);
+    world.selection.clear();
+    for report in [world.status(), world.verify(&[ItemId::LocalAi])] {
+        let local_ai = row(&report, ItemId::LocalAi);
+        assert_eq!(local_ai.state, ItemState::Absent, "{:?}", report.mode);
+        assert!(local_ai.awaits_model, "{:?}", report.mode);
+        assert_eq!(
+            serde_json::to_value(local_ai).unwrap()["awaits"],
+            "model",
+            "{:?}",
+            report.mode
+        );
+    }
+    assert!(
+        !row(&world.status(), ItemId::Browser).awaits_model,
+        "the browser never awaits a model"
+    );
+
+    // A model stored whole by an earlier download: a later status read, which names no
+    // model, reads the local AI ready and awaiting nothing, quick or full, and starts no
+    // server.
+    let mut stored = World::llama_cpp(&text, &vision);
+    let (done, _) = stored.set_up_local_ai_reviewed();
+    assert_eq!(done.report.outcome, Outcome::Completed, "{:?}", done.report);
+    stored.selection.clear();
+    for report in [stored.status(), stored.verify(&[ItemId::LocalAi])] {
+        let local_ai = row(&report, ItemId::LocalAi);
+        assert_eq!(local_ai.state, ItemState::Ready, "{:?}", report.mode);
+        assert!(!local_ai.awaits_model, "{:?}", report.mode);
+        assert!(local_ai.dormant, "{:?}", report.mode);
+    }
+    assert!(stored.router_requests().is_empty());
+
+    // Ollama selected and its program not downloaded: the program is what is missing,
+    // whatever the store holds, so the row awaits no model.
+    let mut ollama = World::local_ai(&text, &vision);
+    ollama.selection.clear();
+    let local_ai = row(&ollama.status(), ItemId::LocalAi).clone();
+    assert_eq!(local_ai.state, ItemState::Absent);
+    assert!(!local_ai.awaits_model);
+    assert!(
+        serde_json::to_value(&local_ai)
+            .unwrap()
+            .get("awaits")
+            .is_none()
+    );
+}
+
+#[test]
 fn the_selected_engine_alone_decides_the_program_part_and_the_server_checked() {
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);

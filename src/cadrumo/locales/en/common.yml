@@ -5375,6 +5375,7 @@ desktop:
     approve: Download and set up
     approve_at_least: Download at least {size} and set up
     approve_size: Download {size} and set up
+    awaits_model: Ready. Download a model to finish setting up.
     blocked:
       hardware: This computer does not have enough memory for this.
       needs_person: Waiting for you to approve it, or to install it yourself.

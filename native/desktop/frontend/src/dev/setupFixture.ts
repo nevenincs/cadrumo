@@ -83,6 +83,15 @@ export const SETUP_SHAPES = [
   /** Everything is set up, and the local AI's server sleeps until a document
    * is read: the local AI reads ready, starting when it is needed. */
   "dormant",
+  /** The browser is ready, and the local AI's program came with Cadrumo, as
+   * the bundled llama.cpp does, with no model downloaded yet: the local AI
+   * reads absent, offers no action of its own, and names the model it waits
+   * for, which the person's model list beside it downloads. */
+  "model_needed",
+  /** As `model_needed`, with a model an earlier download stored: the status
+   * read finds it in the models folder, so the local AI reads ready, its
+   * server sleeping until a document is read, and waits for nothing. */
+  "model_stored",
   /** The browser is ready, and the local AI's server failed a start a read
    * demanded: it reads not running and offers to try again. */
   "start_failed",
@@ -230,6 +239,7 @@ function readied(held: SetupRow): SetupRow {
     recovery: null,
     recovery_action_id: null,
     version: "1.0",
+    awaits: null,
   };
 }
 
@@ -260,6 +270,7 @@ function failed(held: SetupRow, failure: SetupFailureCategory): SetupRow {
   const recovery = RECOVERY[failure];
   return {
     ...held,
+    awaits: null,
     state: failure === "offline" ? "blocked" : "failed",
     blocked_reason: failure === "offline" ? "offline" : null,
     failure: failure === "offline" ? null : failure,
@@ -314,6 +325,27 @@ function shaped(shape: SetupShape): Seed[] {
     case "dormant":
       all.forEach((seed) => (seed.row = readied(seed.row)));
       set("local_ai", (held) => ({ ...held, server: "dormant" }));
+      break;
+    case "model_needed":
+      set("browser", readied);
+      // As the host serves it: the program reads present from the package,
+      // so nothing here sets it up and no size is stated.
+      set("local_ai", (held) => ({
+        ...held,
+        recovery: null,
+        recovery_action_id: null,
+        version: "b1",
+        size_bytes: null,
+        awaits: "model",
+      }));
+      break;
+    case "model_stored":
+      set("browser", readied);
+      set("local_ai", (held) => ({
+        ...readied(held),
+        version: "b1",
+        server: "dormant",
+      }));
       break;
     case "start_failed":
       set("browser", readied);
@@ -424,7 +456,9 @@ export function setupFixture({
     shape === "start_unreported" ||
     shape === "google_signed_out" ||
     shape === "partial" ||
-    shape === "hardware";
+    shape === "hardware" ||
+    shape === "model_needed" ||
+    shape === "model_stored";
 
   const rows = () => items.map((seed) => served(seed.row));
   // Signed out there is no profile, so no Google sign-in either; signed in
@@ -799,6 +833,7 @@ export function setupFixture({
       seed.row = {
         ...seed.row,
         state: "provisioning",
+        awaits: null,
         recovery: null,
         recovery_action_id: null,
       };

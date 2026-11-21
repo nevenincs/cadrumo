@@ -5485,6 +5485,7 @@ desktop:
     approve: Descargar y configurar
     approve_at_least: Descargar al menos {size} y configurar
     approve_size: Descargar {size} y configurar
+    awaits_model: Listo. Descarga un modelo para terminar la configuración.
     blocked:
       hardware: Este ordenador no tiene memoria suficiente para esto.
       needs_person: Espera a que lo apruebes o lo instales tú.

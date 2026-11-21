@@ -232,6 +232,10 @@ pub struct StatusRow {
     /// The local AI is ready and its server dormant: no server runs, and it starts when a
     /// document is read. Never set for another item or state.
     pub dormant: bool,
+    /// The local AI is absent while its program reads present: the program is set up, and
+    /// what remains is a model downloaded from the person's list. Never set for another
+    /// item or state.
+    pub awaits_model: bool,
 }
 
 /// What a removal a row offers deletes from this computer.
@@ -278,6 +282,9 @@ impl Serialize for StatusRow {
         map.serialize_entry("removals", &self.removals)?;
         if self.dormant {
             map.serialize_entry("server", "dormant")?;
+        }
+        if self.awaits_model {
+            map.serialize_entry("awaits", "model")?;
         }
         map.end()
     }
@@ -326,6 +333,7 @@ pub fn derive_row(
         recovery: recovery_for(state),
         removals: removals_for(declaration.id, state),
         dormant: false,
+        awaits_model: false,
     }
 }
 

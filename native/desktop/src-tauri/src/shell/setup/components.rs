@@ -1599,6 +1599,7 @@ fn row(row: &StatusRow) -> wire::Row {
         version: row.version.clone(),
         size_bytes: row.size_estimate_bytes,
         server: row.dormant.then_some(wire::Server::Dormant),
+        awaits: row.awaits_model.then_some(wire::Awaits::Model),
         removals: row
             .removals
             .iter()

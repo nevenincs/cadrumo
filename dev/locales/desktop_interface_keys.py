@@ -1334,6 +1334,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.setup.approve",
         "desktop.setup.approve_at_least",
         "desktop.setup.approve_size",
+        "desktop.setup.awaits_model",
         "desktop.setup.cancel",
         "desktop.setup.cancelling",
         "desktop.setup.checking",

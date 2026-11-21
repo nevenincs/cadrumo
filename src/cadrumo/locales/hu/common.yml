@@ -5457,6 +5457,7 @@ desktop:
     approve: Letöltés és beállítás
     approve_at_least: Legalább {size} letöltése és beállítás
     approve_size: '{size} letöltése és beállítás'
+    awaits_model: Kész. A beállítás befejezéséhez tölts le egy modellt.
     blocked:
       hardware: Ebben a számítógépben nincs elég memória ehhez.
       needs_person: Arra vár, hogy jóváhagyd, vagy magad telepítsd.

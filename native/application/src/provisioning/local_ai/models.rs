@@ -881,6 +881,59 @@ impl Models {
         })
     }
 
+    /// Whether the models folder holds at least one model stored whole: a manifest whose
+    /// config and layers are all stored at their stated sizes. With `presentable`, as for
+    /// llama.cpp, the model also needs a recorded llama.cpp context, without which the router
+    /// can never present it. Files only: no server is asked and nothing is fetched. A folder
+    /// that cannot be read, or a link anywhere in it, holds nothing this check counts.
+    pub fn holds_any(&self, presentable: bool) -> bool {
+        let manifests = self.root.join("manifests");
+        if filesystem::refuse_links(&manifests).is_err() {
+            return false;
+        }
+        let mut pending = vec![manifests.clone()];
+        while let Some(folder) = pending.pop() {
+            let Ok(entries) = std::fs::read_dir(&folder) else {
+                continue;
+            };
+            for entry in entries.flatten() {
+                let path = entry.path();
+                let Ok(meta) = std::fs::symlink_metadata(&path) else {
+                    continue;
+                };
+                if filesystem::refuse_metadata_links(&meta).is_err() {
+                    continue;
+                }
+                if meta.is_dir() {
+                    pending.push(path);
+                    continue;
+                }
+                let stored = filesystem::bounded_bytes(&path, MANIFEST_BYTES_LIMIT)
+                    .ok()
+                    .and_then(|bytes| serde_json::from_slice::<Manifest>(&bytes).ok())
+                    .is_some_and(|manifest| {
+                        std::iter::once(&manifest.config)
+                            .chain(&manifest.layers)
+                            .all(|layer| blob_stored(&self.root, layer))
+                    });
+                let runnable = !presentable
+                    || path.strip_prefix(&manifests).is_ok_and(|place| {
+                        filesystem::bounded_bytes(
+                            &context_record_path(&self.root, place),
+                            CONTEXT_BYTES_LIMIT,
+                        )
+                        .ok()
+                        .and_then(|bytes| serde_json::from_slice::<ContextRecord>(&bytes).ok())
+                        .is_some_and(|record| record.schema == CONTEXT_SCHEMA)
+                    });
+                if stored && runnable {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
     /// What the models folder holds for `name`.
     fn installed(&self, name: &ModelName) -> Observation {
         let path = name.manifest_path(&self.root);

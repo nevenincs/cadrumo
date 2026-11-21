@@ -136,6 +136,8 @@ export function rowSentence(t: Translate, row: SetupRow): string {
     return failureWords(t, row.failure);
   if (row.state === "ready" && row.server === "dormant")
     return t("desktop.setup.ready_dormant");
+  if (row.state === "absent" && row.awaits === "model")
+    return t("desktop.setup.awaits_model");
   return wordsFor(t, STATE_SENTENCE, row.state, STATE_SENTENCE.unknown);
 }
 

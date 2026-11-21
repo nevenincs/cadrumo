@@ -91,12 +91,15 @@ pub enum Placement {
 }
 
 /// The local AI's one reading from its program's observation and version and each selected
-/// model's observation, the worst of them deciding.
+/// model's observation, the worst of them deciding. With no model selected, as in a status
+/// read, which names no download, `holds_model` decides instead: whether the models folder
+/// already holds a model the selected engine can run.
 pub fn reading(
     mode: CheckMode,
     program: Observation,
     version: Option<String>,
     models: &[Observation],
+    holds_model: bool,
 ) -> Reading {
     let program = Reading {
         mode,
@@ -108,9 +111,10 @@ pub fn reading(
         .map(|observation| Reading::new(mode, *observation))
         .collect();
     let mut reading = Reading::worst_of_parts(mode, &program, &models);
-    // With no model selected the program has nothing to run, so the local AI is not
-    // ready whatever its program reads.
-    if models.is_empty() && reading.observation == Observation::Present {
+    // With no model selected and none stored the program has nothing to run, so the local
+    // AI is not ready whatever its program reads. A selected model that is missing is
+    // decided above, by the worst of the parts.
+    if models.is_empty() && !holds_model && reading.observation == Observation::Present {
         reading.observation = Observation::Absent;
     }
     reading

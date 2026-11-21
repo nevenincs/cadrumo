@@ -951,7 +951,7 @@ fn the_full_check_looks_the_model_up_in_the_servers_list_and_generates_one_token
 fn the_local_ai_reads_as_the_worst_of_its_program_and_models() {
     let version = Some("0.40.10".to_owned());
     let read = |program, models: &[Observation]| {
-        reading(CheckMode::Quick, program, version.clone(), models).observation
+        reading(CheckMode::Quick, program, version.clone(), models, false).observation
     };
     let older = Observation::Differs {
         stale: StaleReason::ProgramTooOld,
@@ -962,6 +962,20 @@ fn the_local_ai_reads_as_the_worst_of_its_program_and_models() {
         Observation::Absent,
         "with no model selected the program has nothing to run"
     );
+    let stored = |program, models: &[Observation]| {
+        reading(CheckMode::Quick, program, version.clone(), models, true).observation
+    };
+    assert_eq!(
+        stored(PRESENT, &[]),
+        PRESENT,
+        "with no model selected, a model stored whole gives the program something to run"
+    );
+    assert_eq!(
+        stored(PRESENT, &[Observation::Absent]),
+        Observation::Absent,
+        "a selected model that is missing is not ready, whatever else is stored"
+    );
+    assert_eq!(stored(Observation::Absent, &[]), Observation::Absent);
     assert_eq!(read(older, &[PRESENT]), older);
     assert_eq!(read(older, &[Observation::Absent]), Observation::Absent);
     assert_eq!(
@@ -972,9 +986,48 @@ fn the_local_ai_reads_as_the_worst_of_its_program_and_models() {
         Observation::Blocked(BlockedReason::Hardware)
     );
     assert_eq!(
-        reading(CheckMode::Full, PRESENT, version.clone(), &[PRESENT]).version,
+        reading(CheckMode::Full, PRESENT, version.clone(), &[PRESENT], false).version,
         version
     );
+}
+
+#[test]
+fn the_folder_holds_a_model_only_once_one_is_stored_whole_and_for_llama_cpp_presentable() {
+    let fixture = fixture();
+    let root = fixture.models_root();
+    let unselected = Models::new(LocalModels::default(), root.clone());
+    assert!(
+        !unselected.holds_any(false),
+        "an empty folder holds nothing"
+    );
+    assert!(!unselected.holds_any(true));
+
+    // A manifest whose layers are not all stored is a download that never finished.
+    fixture.text.write(&root, TEXT);
+    let (_, last) = fixture.text.blobs.last().unwrap();
+    let last_path = root
+        .join("blobs")
+        .join(format!("sha256-{}", Sha256Digest::of(last).as_str()));
+    fs::remove_file(&last_path).unwrap();
+    assert!(
+        !unselected.holds_any(false),
+        "a partial model is not stored"
+    );
+
+    // Stored whole, Ollama can run it; llama.cpp needs its recorded context as well.
+    fs::write(&last_path, last).unwrap();
+    assert!(unselected.holds_any(false));
+    assert!(
+        !unselected.holds_any(true),
+        "without a recorded context the router can never present it"
+    );
+    record_context(
+        &root,
+        &ModelName::parse(TEXT).unwrap(),
+        NonZeroU32::new(4096).unwrap(),
+    )
+    .unwrap();
+    assert!(unselected.holds_any(true));
 }
 
 #[test]
