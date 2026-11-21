@@ -458,6 +458,41 @@ def _assert_submission_refusals(clients: _WorkbenchClients, profile_id: UUID) ->
     assert api_denied.code is AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
 
 
+def _assert_generation_waits_out_a_busy_profile(clients: _WorkbenchClients, profile_id: UUID) -> None:
+    """A generation asked for while another session's holds the profile waits for it, then reads its own.
+
+    The window and the terminal beside it are two sessions of one person; the
+    one that asks second is not refused because the first is still generating.
+    """
+    deadline = time.monotonic() + 60
+    held = clients.human_raw.operation(_submit_request(clients.human.session_id, profile_id), deadline=deadline)
+    assert isinstance(held, OperationSubmitted)
+    busy = clients.second_raw.operation(_submit_request(clients.second.session_id, profile_id), deadline=deadline)
+    assert isinstance(busy, AccessRefusal)
+    assert busy.code is AccessDenialCode.SUBJECT_BUSY
+    assert busy.holder_operation_id == held.receipt.operation_id
+    with ThreadPoolExecutor(max_workers=1) as reader:
+        waiting = reader.submit(read_workbench_generation, clients.second, output_language=OutputLanguage.ES)
+        # A refusal would have ended the read by now; it waits on the holder instead.
+        time.sleep(2)
+        assert not waiting.done()
+        started = clients.human_raw.operation(
+            OperationControl(
+                action="operation_start",
+                request_id=uuid4(),
+                profile_id=profile_id,
+                session_id=clients.human.session_id,
+                operation_id=held.receipt.operation_id,
+            ),
+            deadline=deadline,
+        )
+        assert isinstance(started, OperationAcknowledged)
+        generation = waiting.result(timeout=90)
+    assert isinstance(generation, WorkbenchGenerationV1)
+    assert generation.home.projection is not None
+    assert generation.home.projection.account.profile_label == "Enrollment tests"
+
+
 def _assert_result_access(
     clients: _WorkbenchClients, profile_id: UUID
 ) -> tuple[OperationResultPage, OperationSchemaIdentityV1, ContentDigest]:
@@ -732,6 +767,7 @@ def _assert_workbench_flow(
     """Run the ordered phases that read, verify and finally lock the workbench."""
     _assert_submission_refusals(clients, profile_id)
     owner_page, schema, digest = _assert_result_access(clients, profile_id)
+    _assert_generation_waits_out_a_busy_profile(clients, profile_id)
     _assert_native_generation(clients.human, profile_id, work_unit_id, schema, digest)
 
     root = _workbench_root(clients.human)
