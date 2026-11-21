@@ -127,6 +127,8 @@ export function LedgerPageDialogs({
             );
           }}
           onShowDocuments={() => setSection("documents")}
+          // Registers opens on the own accounts.
+          onShowAccounts={() => setSection("registers")}
           onCloseAutoFocus={returnTransferFocus}
         />
       )}

@@ -298,6 +298,19 @@ export function ImportResultStep({
               {item.kind === "refused" && (
                 <SetupOffer action={item.setup ?? null} className="mt-1" />
               )}
+              {item.kind === "imported" &&
+                item.result.registered_own_account_id !== null && (
+                  <span className="text-sm text-muted-foreground">
+                    {t("desktop.ledger.import.account_registered", {
+                      account:
+                        item.result.statement_accounts.find(
+                          (named) =>
+                            named.own_account_id ===
+                            item.result.registered_own_account_id,
+                        )?.masked_iban ?? "",
+                    })}
+                  </span>
+                )}
             </FileRow>
           ))}
         </ul>

@@ -3119,6 +3119,9 @@ desktop:
         documents: PDF, PNG, JPG, TIFF, WEBP, HEIC vagy Facturae, UBL, CII XML · a
           mappán belüli mappákat nem olvassa
       account: Számla
+      account_add: Saját számla felvétele
+      account_add_note: Bezárja az importálást, és megnyitja a Nyilvántartások › Saját
+        számlák részt. A számla felvétele után importáld újra a fájlt.
       account_choose: Válaszd ki a számlát…
       account_detected: a fájlból felismerve
       account_later: Az előnézetben látod, melyik számlához tartozik az egyes fájl.
@@ -3126,6 +3129,7 @@ desktop:
       account_no_accounts: nincs nyilvántartott számla
       account_register: '{account} felvétele saját számlaként (számlatulajdonos)'
       account_register_note: A nevét később módosíthatod a számláid között.
+      account_registered: '{account} felvéve saját számlaként.'
       account_unregistered: a fájl nem nyilvántartott számlát nevez meg
       any_date: Bármilyen dátum. A választott időszakon kívüli sorok kimaradnak.
       apply_book: Könyv importálása

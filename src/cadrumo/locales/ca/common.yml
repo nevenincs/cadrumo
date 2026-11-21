@@ -3136,6 +3136,9 @@ desktop:
         documents: PDF, PNG, JPG, TIFF, WEBP, HEIC o XML Facturae, UBL o CII · no
           es llegeixen les carpetes de dins
       account: Compte
+      account_add: Afegir un compte propi
+      account_add_note: Tanca la importació i obre Registres › Comptes propis. Quan
+        hagis afegit el compte, torna a importar el fitxer.
       account_choose: Tria el compte…
       account_detected: detectat al fitxer
       account_later: La previsualització mostra a quin compte pertany cada fitxer.
@@ -3143,6 +3146,7 @@ desktop:
       account_no_accounts: no hi ha comptes registrats
       account_register: Registrar {account} com a compte propi (titular)
       account_register_note: Podràs canviar-ne el nom més endavant als teus comptes.
+      account_registered: '{account} registrat com a compte propi.'
       account_unregistered: el fitxer indica un compte no registrat
       any_date: Qualsevol data. Les files fora del període triat s'ometen.
       apply_book: Importa el llibre

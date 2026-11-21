@@ -3139,6 +3139,9 @@ desktop:
         documents: PDF, PNG, JPG, TIFF, WEBP, HEIC o XML Facturae, UBL o CII · no
           se leen las carpetas de dentro
       account: Cuenta
+      account_add: Añadir una cuenta propia
+      account_add_note: Cierra la importación y abre Registros › Cuentas propias.
+        Cuando hayas añadido la cuenta, vuelve a importar el archivo.
       account_choose: Elige la cuenta…
       account_detected: detectada en el archivo
       account_later: La vista previa muestra a qué cuenta pertenece cada archivo.
@@ -3146,6 +3149,7 @@ desktop:
       account_no_accounts: no hay cuentas registradas
       account_register: Registrar {account} como cuenta propia (titular)
       account_register_note: Podrás cambiarle el nombre más tarde en tus cuentas.
+      account_registered: '{account} registrada como cuenta propia.'
       account_unregistered: el archivo indica una cuenta no registrada
       any_date: Cualquier fecha. Las filas fuera del periodo elegido se omiten.
       apply_book: Importar el libro
