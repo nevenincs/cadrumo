@@ -17,6 +17,7 @@ from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
+from ...domain.buckets.event import BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.transactions.errors import TransactionIdPrefixError, TransactionNotFoundError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -56,6 +57,9 @@ from .transaction_projection import LedgerTransactionProjection
 LEDGER_PURCHASE_EVIDENCE_RELEASE_OPERATION_DEFINITION_ID = "ledger.purchase_evidence.release"
 LEDGER_PURCHASE_EVIDENCE_RELEASE_REFUSAL_CODE = "REFUSED_LEDGER_PURCHASE_EVIDENCE_RELEASE"
 _PERSON_FRONTEND_ACTOR = "cli"
+# A release changes only the movement's evidence slot and, to keep the document,
+# adds one attachment, so the manual-update writer records at most these events.
+_RELEASE_EVENT_TYPES = (BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED, BucketEventType.ATTACHMENT_LINKED)
 
 _TransactionPrefix = Annotated[str, Field(min_length=1, max_length=64)]
 _EvidenceId = Annotated[str, Field(min_length=1, max_length=64)]
@@ -138,7 +142,7 @@ class LedgerPurchaseEvidenceReleaseResult(BaseModel):
     released_evidence_id: _EvidenceId
     transaction: LedgerTransactionProjection | None = None
     review_status: LedgerReviewStatus | None = None
-    bucket_event_ids: Annotated[tuple[_EventId, ...], Field(max_length=4)] = ()
+    bucket_event_ids: Annotated[tuple[_EventId, ...], Field(max_length=len(_RELEASE_EVENT_TYPES))] = ()
     refusal: LedgerPurchaseEvidenceReleaseRefusal | None = None
 
     @model_validator(mode="after")
