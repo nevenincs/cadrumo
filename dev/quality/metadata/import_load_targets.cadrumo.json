@@ -1536,6 +1536,7 @@
         "cadrumo.application.modelo.profile_derived_facts",
         "cadrumo.application.modelo.profile_drift_gate",
         "cadrumo.application.modelo.profile_export_binding",
+        "cadrumo.application.modelo.profile_fact_input",
         "cadrumo.application.modelo.profile_maternidad_meses",
         "cadrumo.application.modelo.profile_minimo_ascendientes",
         "cadrumo.application.modelo.profile_read_recording",
