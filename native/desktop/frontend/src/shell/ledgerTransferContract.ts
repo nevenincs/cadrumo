@@ -4,11 +4,8 @@
 import type { FileToken } from "./ledger";
 import type { TransactionId } from "./ledgerClassificationContract";
 import type { OperationNextStepV1 } from "./ledgerDocumentContract";
-import type {
-  ContentDigest,
-  PreconditionVerdictSnapshot,
-  PublicPeriod,
-} from "./ledgerInvoiceContract";
+import type { ContentDigest, PublicPeriod } from "./ledgerInvoiceContract";
+import type { PreconditionVerdictSnapshot } from "./ledgerInvoiceImportContract";
 import type { OwnAccountHolding } from "./ledgerOwnAccountContract";
 
 /**

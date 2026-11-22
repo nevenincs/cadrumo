@@ -414,6 +414,10 @@ _M200_ACCOUNTING_LEDGER_DIRECTIONS = frozenset(
 
 
 _LEDGER_PREFLIGHT_NEED_KEY = "application.modelo.errors.ledger_preflight_need"
+#: The sentence that lists the fields a ledger hold says the record is missing.
+_LEDGER_PREFLIGHT_MISSING_FACTS_KEY = "application.modelo.errors.ledger_preflight_missing_facts"
+#: One key per field a ledger hold can name as missing, keyed on the field name.
+_LEDGER_PREFLIGHT_MISSING_FACT_KEY = "application.modelo.errors.ledger_preflight_missing_fact"
 
 
 def _movement_words(movement: Transaction, language: OutputLanguage) -> dict[str, str]:
@@ -479,15 +483,38 @@ def _first_blocking_issue(
 
 
 def _hold_context(
-    reason: str, period: Period, movement: Transaction | None, language: OutputLanguage
+    issue: LedgerPreflightIssue, period: Period, movement: Transaction | None, language: OutputLanguage
 ) -> dict[str, str]:
     context = {
-        "need": tr(f"{_LEDGER_PREFLIGHT_NEED_KEY}.{reason}", locale=language.value),
+        "need": _hold_need_words(issue, language),
         "period": period_words(period, language),
     }
     if movement is not None:
         context.update(_movement_words(movement, language))
     return context
+
+
+def _hold_need_words(issue: LedgerPreflightIssue, language: OutputLanguage) -> str:
+    """What the period lacks, with the fields the record is missing named after it.
+
+    An issue that names absent fields -- today the facts a factura
+    rectificativa states -- extends its own sentence with them, each worded
+    through its own key, so the person is told which fields to open rather than
+    only that the family is blocked. An issue naming none keeps its sentence
+    exactly as it was.
+    """
+    need = tr(f"{_LEDGER_PREFLIGHT_NEED_KEY}.{issue.reason.value}", locale=language.value)
+    if not issue.missing_facts:
+        return need
+    facts = ", ".join(
+        tr(f"{_LEDGER_PREFLIGHT_MISSING_FACT_KEY}.{fact}", locale=language.value) for fact in issue.missing_facts
+    )
+    clause = tr(_LEDGER_PREFLIGHT_MISSING_FACTS_KEY, locale=language.value, facts=facts)
+    # Joined with a semicolon, not a full stop: the need sentence is itself
+    # embedded in the ledger-hold line, which supplies the terminal period, so
+    # the clause continues that one sentence rather than starting a second one
+    # mid-line.
+    return f"{need}; {clause}"
 
 
 def ledger_preflight_hold(
@@ -537,7 +564,7 @@ def ledger_preflight_hold(
         if first_issue.transaction_id == "__period__"
         else transaction_repository.load_by_ids({first_issue.transaction_id}).get(first_issue.transaction_id)
     )
-    context = _hold_context(first_issue.reason.value, report.period, movement, language)
+    context = _hold_context(first_issue, report.period, movement, language)
     return LedgerPreflightHold(
         reason=first_issue.reason.value,
         issue_transaction_id=first_issue.transaction_id,

@@ -1065,6 +1065,9 @@ application:
         counterparty_tax_id_required_by_category: Una factura simplificada d'aquesta
           categoria d'IVA necessita el NIF de la contrapart.
         currency_invalid: No és un codi de moneda ISO 4217 de tres lletres.
+        document_received_before_issued: Una rectificativa no es pot rebre abans d'expedir-se.
+        document_received_on_only_on_received: La data de recepció indica quan vas
+          rebre la rectificativa, per això una factura emesa no en porta.
         intra_community_spanish_identification: Un lliurament intracomunitari exempt
           no pot indicar un adquirent que compra amb un NIF-IVA espanyol.
         invoice_class_undeclared: El registre no declara aquesta classe de factura.
@@ -1093,6 +1096,8 @@ application:
           del Modelo 349.
         other_invoice_rule: El llibre rebutjaria aquesta factura per una altra regla.
           Comprova'n les dades amb el document.
+        rectification_fact_not_allowed: Només una factura rectificativa indica aquesta
+          dada de rectificació.
         rectified_invoice_not_allowed: Només una factura rectificativa indica la factura
           que rectifica.
         rectified_invoice_required: Una factura rectificativa ha d'indicar la factura
@@ -3200,6 +3205,12 @@ application:
         No s''ha desat res.'
       ledger_preflight_blocked_period: 'No es pot calcular %{period}: %{need}. No
         s''ha desat res.'
+      ledger_preflight_missing_fact:
+        document_received_on: quan la vas rebre
+        rectification_cause: per què rectifica l'operació
+        rectification_direction: si minora o augmenta els imports
+        rectification_method: com expressa els seus imports
+      ledger_preflight_missing_facts: encara no indica %{facts}
       ledger_preflight_need:
         anomaly_non_declarable_iva_category: la seva categoria d'IVA no es declara
           en cap model

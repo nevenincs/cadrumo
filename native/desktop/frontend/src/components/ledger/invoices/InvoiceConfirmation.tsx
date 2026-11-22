@@ -32,6 +32,10 @@ const FIELD_LABELS: Record<InvoiceUpdateField, string> = {
   series: "series",
   invoice_class: "invoice_class",
   rectifies_invoice_number: "rectifies_invoice_number",
+  rectification_method: "rectification_method",
+  rectification_cause: "rectification_cause",
+  rectification_direction: "rectification_direction",
+  document_received_on: "document_received_on",
   payment_id: "payment_id",
   declared_fx_rate: "fx_rate",
 };

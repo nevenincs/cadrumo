@@ -92,6 +92,12 @@ Touch points:
 
 Hypotheses that may change inside these constraints: whether the repercutido-side modification flow lives as new keys on fact 0085 or as its own fact; whether the elections are stored on the invoice or on the Modelo work unit; and whether the casilla 14/15 operator contribution keeps its present edit shape or becomes an attested named contribution under `2026-08-24-modelo-edit-contract-adr`.
 
+Implementation choices recorded on 2026-11-22 (slice 1), inside the constraints above:
+- The method, cause and direction vocabularies extend the invoice legal classification catalogue (fact 0141) at its single 2013-01-01 variant, as `invoice_class` does, because RD 1619/2012 art. 15.5 and the art. 80 grounds hold from that date.
+- The closed cause vocabulary is the art. 80 apartados that are modification grounds (`art_80_uno_1`, `art_80_uno_2`, `art_80_dos`, `art_80_tres`, `art_80_cuatro`, `art_80_seis`) plus `error_fundado_de_derecho` and `otra_modificacion`. Cinco is excluded because it governs Tres and Cuatro rather than stating a cause; Siete is excluded because it states regulatory conditions.
+- The tokens are lowercase snake case, as written in this record.
+- The new coherence rules apply at write admission only, so a stored record still opens for correction.
+
 ## Rationale
 
 The knockout is that the document states what the return needs and the record cannot hold it. RD 1619/2012 art. 15.5 fixes the two readings of a rectificativa's figures, so the method is the only fact that says what the stated amounts mean. LIVA 89.Cinco and 114.Dos put three different periods on three different causes, so the side and the cause are the only facts that place the modification. And 89.Cinco and 114.Dos.1 hand the taxpayer a real choice, which an application may record but may never make. Deriving any of them, from the class, from a payment's direction or from the period being calculated, produces a filed figure the law does not support and the operator never stated.

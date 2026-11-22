@@ -193,6 +193,13 @@ class CatalogueInvoiceSnapshot(BaseModel):
     operation_date_role: str | None
     iva_category: str | None
     rectifies_invoice_number: str | None
+    #: The facts a factura rectificativa states, served as the stable tokens
+    #: the registry declares. A surface renders the words for a token it is
+    #: served; it holds no cause, method or direction list of its own.
+    rectification_method: str | None
+    rectification_cause: str | None
+    rectification_direction: str | None
+    document_received_on: date | None
     fx_rate: PublicDecimal | None
     fx_rate_date: date | None
     fx_rate_source: NonEmptyStr | None
@@ -249,6 +256,14 @@ class CatalogueInvoiceSnapshot(BaseModel):
             operation_date_role=str(invoice.operation_date_role) if invoice.operation_date_role is not None else None,
             iva_category=str(invoice.iva_category) if invoice.iva_category is not None else None,
             rectifies_invoice_number=invoice.rectifies_invoice_number,
+            rectification_method=(
+                str(invoice.rectification_method) if invoice.rectification_method is not None else None
+            ),
+            rectification_cause=str(invoice.rectification_cause) if invoice.rectification_cause is not None else None,
+            rectification_direction=(
+                str(invoice.rectification_direction) if invoice.rectification_direction is not None else None
+            ),
+            document_received_on=invoice.document_received_on,
             fx_rate=_optional_decimal(invoice.fx_rate),
             fx_rate_date=invoice.fx_rate_date,
             fx_rate_source=invoice.fx_rate_source,

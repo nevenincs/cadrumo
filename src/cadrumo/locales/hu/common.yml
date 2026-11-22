@@ -3327,7 +3327,9 @@ desktop:
         counterparty_nif: A másik fél adószáma
         country_code: Ország
         currency: Pénznem
+        document_received_on: Átvétel dátuma
         fx_rate: Árfolyam
+        invoice_class: Számla osztálya
         invoice_date: Számla kelte
         invoice_number: Számlaszám
         iva_category: IVA-kategória
@@ -3335,8 +3337,13 @@ desktop:
         notes: Megjegyzések
         operation_type: Modelo 349 kulcs
         recargo_amount: Egyenértékűségi pótdíj
+        rectification_cause: Helyesbítés jogalapja
+        rectification_direction: Helyesbítés iránya
+        rectification_method: Helyesbítés módja
+        rectifies_invoice_number: Helyesbített számla
         retencion_amount: Retención összege
         retencion_rate: Retención kulcsa
+        series: Sorozat
         taxable_base: Adóalap
         unmapped: Nincs használatban
       role_source:
@@ -3832,6 +3839,7 @@ desktop:
         counterparty_name: Partner neve
         counterparty_tax_id: Adószám (NIF)
         currency: Pénznem
+        document_received_on: A dokumentum átvételének dátuma
         fx_rate: Árfolyam
         invoice_class: Típus
         invoice_number: Számlaszám
@@ -3846,6 +3854,9 @@ desktop:
         payment_status: Fizetés
         printed_total: Nyomtatott végösszeg
         recargo: Egyenértékűségi pótdíj
+        rectification_cause: Helyesbítés jogalapja
+        rectification_direction: Helyesbítés iránya
+        rectification_method: Helyesbítés módja
         rectifies_invoice_number: Helyesbített számla
         referencia: Kataszteri hivatkozás
         retention_amount: Retención összege

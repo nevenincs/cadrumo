@@ -28,7 +28,7 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.invoice_legal_classification import invoice_class_rectificativa
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ....domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
+from ....domain.invoices.enums import PaymentStatus, RectificationFact, resolve_iva_rate_token
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.models import TransactionCatalogue
@@ -159,9 +159,31 @@ def test_a_rectificativa_blocks_the_period_with_a_door_to_the_invoice(year: int,
     assert side.source.observations == ()
     assert side.source.findings == (
         InvoiceIvaFinding(
-            reason=InvoiceIvaFindingReason.RECTIFICATIVA_MODIFICATION_UNMODELLED, invoice_id=invoice.invoice_id
+            reason=InvoiceIvaFindingReason.RECTIFICATIVA_MODIFICATION_UNMODELLED,
+            invoice_id=invoice.invoice_id,
+            missing_rectification_facts=_EXPECTED_MISSING_FACTS[kind],
         ),
     )
+
+
+#: What a rectificativa stating none of its facts is missing, per side. The two
+#: lists differ by exactly the reception date, which LIVA art. 114.Dos makes the
+#: recipient's period and which an issued document never states. Enumerated here
+#: rather than read back from the production helper, so a change to the per-side
+#: fact set has to be stated twice before this passes.
+_EXPECTED_MISSING_FACTS = {
+    InvoiceKind.ISSUED: (
+        RectificationFact.RECTIFICATION_METHOD,
+        RectificationFact.RECTIFICATION_CAUSE,
+        RectificationFact.RECTIFICATION_DIRECTION,
+    ),
+    InvoiceKind.RECEIVED: (
+        RectificationFact.RECTIFICATION_METHOD,
+        RectificationFact.RECTIFICATION_CAUSE,
+        RectificationFact.RECTIFICATION_DIRECTION,
+        RectificationFact.DOCUMENT_RECEIVED_ON,
+    ),
+}
 
 
 def test_the_ledger_reports_the_reason_calculation_refuses() -> None:

@@ -119,6 +119,14 @@ class InvoiceWizardRequest(BaseModel):
     invoice_class: _Text | None = None
     series: _Text | None = None
     rectifies_invoice_number: _Text | None = None
+    #: The facts a factura rectificativa states, as raw text like every other
+    #: field here: the wizard accumulates each grammar refusal rather than
+    #: stopping at the first, so a mistyped cause and a mistyped date are both
+    #: reported in one pass.
+    rectification_method: _Text | None = None
+    rectification_cause: _Text | None = None
+    rectification_direction: _Text | None = None
+    document_received_on: _Text | None = None
     recargo_amount: _Text | None = None
 
 

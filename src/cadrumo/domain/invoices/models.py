@@ -61,6 +61,10 @@ from .enums import (
     InvoiceOperationDateRole,
     IvaRate,
     PaymentStatus,
+    RectificationCause,
+    RectificationDirection,
+    RectificationFact,
+    RectificationMethod,
     advance_payment_received_role,
     default_invoice_class,
     invoice_class_rectificativa,
@@ -97,6 +101,7 @@ from .rule_findings import (
     lease_kind_finding,
     operation_date_role_finding,
     raise_first_rule_finding,
+    rectification_fact_rule_findings,
 )
 from .validation_pass import answer_once, invoice_validation_pass
 
@@ -475,6 +480,31 @@ class Invoice(BaseModel):
     recargo_amount: Decimal | None = None
     suplido_amount: Decimal | None = None
     rectifies_invoice_number: str | None = Field(default=None, min_length=1)
+    # The four facts a factura rectificativa states that no other invoice does,
+    # each operator supplied and none derived. RD 1619/2012 art. 15.5 permits
+    # two readings of the figures a rectificativa prints, so
+    # `rectification_method` is what says whether `base_total` and the lines
+    # ARE the modification or the figures as they stand AFTER it -- the same
+    # amounts mean two different modifications under the two methods.
+    # `rectification_cause` is the ground, which is what places the
+    # modification in a period: LIVA art. 89.Cinco and art. 114.Dos put three
+    # different periods on three different grounds, so the cause is never
+    # inferable from the class, the dates or an amount.
+    # `rectification_direction` carries the economic sense while the totals
+    # stay non-negative magnitudes, exactly as a ledger movement's direction
+    # does; the sign is applied where the modification is projected.
+    # `document_received_on` is when the RECIPIENT received the document, which
+    # art. 114.Dos makes the period for most received-side rectifications. It
+    # is a received-side fact only: an issued rectificativa states no reception.
+    #
+    # All four stay optional, and a rectificativa missing one is admitted here
+    # rather than refused. The document's facts arrive over time, and refusing
+    # the record would leave the person with nowhere to put the half they have;
+    # the declaration refuses instead, naming what is still absent.
+    rectification_method: RectificationMethod | None = None
+    rectification_cause: RectificationCause | None = None
+    rectification_direction: RectificationDirection | None = None
+    document_received_on: date | None = None
     payment_id: str | None = None
     fx_rate: Decimal | None = None
     fx_rate_date: date | None = None
@@ -990,6 +1020,58 @@ class Invoice(BaseModel):
                 category=self.iva_category,
                 tax_id_missing=self.counterparty_tax_id is None,
                 effective_date=self.issued_at,
+            )
+        )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_rectification_fact_coherence(self, info: ValidationInfo) -> Self:
+        """Refuse rectification facts the document cannot be stating.
+
+        The four facts answer questions only a factura rectificativa raises --
+        which of RD 1619/2012 art. 15.5's two readings its figures carry, on
+        which LIVA art. 80 or art. 89 ground, in which direction, and when the
+        recipient received it -- so on any other class each one asserts a
+        correction the invoice's own class denies, exactly as a stray
+        ``rectifies_invoice_number`` does in
+        :meth:`_validate_invoice_class_consistency`.
+
+        ``document_received_on`` is narrower still. It records the RECIPIENT's
+        reception, which LIVA art. 114.Dos makes the period of most
+        received-side rectifications, and :attr:`kind` decides who the
+        recipient is: on a RECEIVED invoice it is the filer, on an ISSUED one
+        it is the counterparty, whose reception this record never observed. A
+        date on an issued rectificativa would therefore manufacture the one
+        fact art. 24.1 RIVA makes the issuer prove by remittance. And a
+        reception before :attr:`issued_at` is not a tight window, it is
+        impossible: the document cannot arrive before it exists.
+
+        A rectificativa that states NONE of the facts is admitted, which is
+        the point of recording them as four optional facts rather than one
+        required group. The person records the document as it reaches them and
+        completes it afterwards; the Modelo 303 declaration is what refuses,
+        naming each absent fact for the invoice's side
+        (:func:`~cadrumo.domain.invoices.rectification.missing_rectification_facts`).
+        Nothing is defaulted on the way.
+
+        Scoped to write admission (:data:`INVOICE_WRITE_ADMISSION`) for the
+        reason :meth:`_validate_m349_clave_agrees_with_the_iva_category`
+        states. No record stored before these fields existed can carry one, so
+        nothing is stranded today; the gate is what keeps a record written by a
+        path these rules later tighten openable by the edit that corrects it,
+        instead of locking the catalogue that holds it.
+        """
+        if not _admits_written_record(info):
+            return self
+        rectificativa = self.invoice_class == answer_once(invoice_class_rectificativa, effective_date=self.issued_at)
+        raise_first_rule_finding(
+            rectification_fact_rule_findings(
+                rectificativa=rectificativa,
+                issued=self.kind is InvoiceKind.ISSUED,
+                stated_facts=tuple(fact.value for fact in RectificationFact if getattr(self, fact.value) is not None),
+                issued_at=self.issued_at,
+                document_received_on=self.document_received_on,
             )
         )
         return self

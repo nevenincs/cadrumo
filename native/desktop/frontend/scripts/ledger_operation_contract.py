@@ -63,7 +63,6 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.invoice.add",
             "ledger.invoice.attach_document",
             "ledger.invoice.duplicate",
-            "ledger.invoice.import",
             "ledger.invoice.list",
             "ledger.invoice.match",
             "ledger.invoice.preview",
@@ -73,6 +72,10 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.link",
             "ledger.purchase_evidence.release",
         ),
+    ),
+    "invoiceImport": (
+        "LedgerInvoiceImportContracts",
+        ("ledger.invoice.import",),
     ),
     "document": (
         "LedgerDocumentContracts",
@@ -262,14 +265,31 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
 #: they are written; a family's types are in the first of these that reaches them.
 EARLIER: dict[str, tuple[str, ...]] = {
     "classificationJob": ("classification",),
-    "document": ("invoice",),
-    "documentReview": ("invoice", "document"),
-    "movement": ("classification", "invoice", "document", "documentReview"),
-    "movementCheck": ("classification", "invoice", "document", "documentReview", "movement"),
-    "inventory": ("classification", "invoice", "document", "documentReview", "movement", "movementCheck"),
+    "invoiceImport": ("invoice",),
+    "document": ("invoice", "invoiceImport"),
+    "documentReview": ("invoice", "invoiceImport", "document"),
+    "movement": ("classification", "invoice", "invoiceImport", "document", "documentReview"),
+    "movementCheck": (
+        "classification",
+        "invoice",
+        "invoiceImport",
+        "document",
+        "documentReview",
+        "movement",
+    ),
+    "inventory": (
+        "classification",
+        "invoice",
+        "invoiceImport",
+        "document",
+        "documentReview",
+        "movement",
+        "movementCheck",
+    ),
     "activityAsset": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -279,6 +299,7 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "activityAssetRead": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -289,6 +310,7 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "entry": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -300,6 +322,7 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "read": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -312,6 +335,7 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "prorrata": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -325,6 +349,7 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "withholding": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -339,6 +364,7 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "capitalGoods": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -354,6 +380,7 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "ownAccount": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -370,6 +397,7 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "transfer": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -392,6 +420,8 @@ _FILE_TOKEN = WindowType("FileToken", "./ledger")
 FIELD_TYPES: dict[str, dict[tuple[str, str], WindowType]] = {
     "invoice": {
         ("InvoiceDocumentAttachRequest", "source_path"): _FILE_TOKEN,
+    },
+    "invoiceImport": {
         ("InvoiceImportRequest", "source_path"): _FILE_TOKEN,
     },
     "document": {

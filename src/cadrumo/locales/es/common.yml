@@ -3345,7 +3345,9 @@ desktop:
         counterparty_nif: NIF de la otra parte
         country_code: País
         currency: Moneda
+        document_received_on: Fecha de recepción
         fx_rate: Tipo de cambio
+        invoice_class: Clase de factura
         invoice_date: Fecha de la factura
         invoice_number: Número de factura
         iva_category: Categoría de IVA
@@ -3353,8 +3355,13 @@ desktop:
         notes: Notas
         operation_type: Clave del modelo 349
         recargo_amount: Recargo de equivalencia
+        rectification_cause: Causa de rectificación
+        rectification_direction: Sentido de la rectificación
+        rectification_method: Método de rectificación
+        rectifies_invoice_number: Factura rectificada
         retencion_amount: Importe de la retención
         retencion_rate: Tipo de retención
+        series: Serie
         taxable_base: Base imponible
         unmapped: Sin usar
       role_source:
@@ -3853,6 +3860,7 @@ desktop:
         counterparty_name: Contraparte
         counterparty_tax_id: NIF
         currency: Moneda
+        document_received_on: Fecha de recepción del documento
         fx_rate: Tipo de cambio
         invoice_class: Clase
         invoice_number: Número
@@ -3867,6 +3875,9 @@ desktop:
         payment_status: Pago
         printed_total: Total impreso
         recargo: Recargo de equivalencia
+        rectification_cause: Causa de la rectificación
+        rectification_direction: Sentido de la rectificación
+        rectification_method: Método de rectificación
         rectifies_invoice_number: Factura que rectifica
         referencia: Referencia catastral
         retention_amount: Importe de la retención
