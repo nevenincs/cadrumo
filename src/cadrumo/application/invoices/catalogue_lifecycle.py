@@ -273,10 +273,17 @@ def _admitted_correction(
     if declared_fx_rate is not None:
         from .catalogue_creation import declared_fx_conversion_fields
 
+        # The CORRECTED devengo date, not the stored one: a correction that
+        # states the operation date and the rate together is one statement, and
+        # stamping the rate against the date being replaced would date the
+        # operator's own attestation to a devengo they just said was wrong.
+        # ``issued_at`` is an identity field no patch can reach, so the fallback
+        # is always the stored one.
+        operation_date = patch.operation_date if "operation_date" in patch.model_fields_set else existing.operation_date
         payload.update(
             declared_fx_conversion_fields(
                 currency=existing.currency,
-                issued_at=existing.issued_at,
+                devengo_date=operation_date or existing.issued_at,
                 declared_fx_rate=declared_fx_rate,
             )
         )

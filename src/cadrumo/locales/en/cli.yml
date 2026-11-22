@@ -449,9 +449,11 @@ cli:
           out of euro totals until a rate is added. State the rate with app ledger
           invoice update --fx-rate.
         fx_rate_help: 'Exchange rate of a foreign invoice: the euro value of one unit
-          of its currency at the invoice date, for example 0.9250 (LIVA art. 79.Once:
-          the Banco de España rate in force, or the latest ECB rate). It replaces
-          the published rate and is recorded as stated by you. Refused for a EUR invoice.'
+          of its currency at the devengo, which is the operation date when you record
+          one and otherwise the invoice date, for example 0.9250 (LIVA art. 79.Once:
+          the Banco de España rate in force at the devengo, or the latest ECB rate).
+          It replaces the published rate and is recorded as stated by you. Refused
+          for a EUR invoice.'
         group_help: Business invoice records (issued or received)
         import_all_refused: 'bulk invoice import failed: every row was refused; no
           invoices were created'

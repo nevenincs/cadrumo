@@ -50,6 +50,7 @@ from cadrumo.core.errors.error_codes import (
 )
 from cadrumo.core.json_contract import emit_json_success
 from cadrumo.core.logging import LOG_FILE_FORMAT
+from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.domain.transactions.classification_job import (
     ClassificationConsentScope,
@@ -82,6 +83,7 @@ from cadrumo_agent_service.providers.application.tests.synthetic_catalog import 
 )
 from cadrumo_agent_service.providers.domain.record import ListedModel, LocalEngine, LocalPlacement
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.commands.sign_in_refusal_projection import session_refusal_context, session_refusal_translation_key
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.model_runs import ModelRunTaskKind
@@ -1373,6 +1375,64 @@ def test_a_command_refused_because_the_sign_in_ended_runs_again_once_after_signi
     assert (seconds, code) == (30.0, 0)
     assert (engine.calls, engine.refused, keeper.renewed) == (2, 1, 1)
     assert [renewal["cause"] for renewal in kept.renewals] == [ProfileSessionRefusalReason.EXPIRED_IDLE.value]
+
+
+def _running_operation_refusal(code: str) -> dict[str, Any]:
+    """The envelope a running operation answers with when the runtime refuses it part way for ``code``."""
+    error = submitted_operation_error(
+        "a" * 64, code, terminal_condition=OperationTerminalCondition.REFUSED, effect=OperationEffect.UPDATED
+    )
+    return parse_envelope("", render_error_json(error, command="ledger.classify.job.run"))
+
+
+def test_a_running_operation_refused_because_its_session_was_retired_is_a_sign_in_that_ended() -> None:
+    assert sign_in_ended(_running_operation_refusal("authentication_required")) == "authentication_required"
+    assert sign_in_ended(_running_operation_refusal("profile_mismatch")) is None
+
+
+class _RetiredRun:
+    """A job run that works until the sign-in ends, is refused then, and carries on from where it stopped."""
+
+    def __init__(self, clock: list[datetime], keeper: _Keeper, *, work_seconds: float) -> None:
+        self.clock = clock
+        self.keeper = keeper
+        self.left = work_seconds
+        self.calls = 0
+
+    def __call__(self, *arguments: str) -> tuple[float, int, dict[str, Any]]:
+        self.calls += 1
+        available = max(0.0, (self.keeper.ends - self.clock[0]).total_seconds())
+        done = min(self.left, available)
+        self.left -= done
+        self.clock[0] += timedelta(seconds=done)
+        if self.left > 0:
+            return done, 2, _running_operation_refusal("authentication_required")
+        return done, 0, {"status": "success", "result": {}}
+
+
+def test_a_long_run_whose_sign_in_ends_part_way_is_resumed_after_each_renewal_and_timed_in_full() -> None:
+    clock = [datetime(_YEAR, 3, 1, 9, tzinfo=UTC)]
+    keeper = _Keeper(clock, window=timedelta(minutes=14))
+    run = _RetiredRun(clock, keeper, work_seconds=40 * 60.0)
+    kept = KeptSignInCli(run, keeper, clock=lambda: clock[0], margin_seconds=120.0)
+
+    seconds, code, _envelope = kept.run(run, "run", "{}", "3600", longest=False, resume=True)
+
+    # 40 minutes of work in 14-minute sign-ins: refused twice, resumed twice, every attempt's work counted.
+    assert (code, seconds, run.calls, run.left) == (0, 40 * 60.0, 3, 0.0)
+    assert [renewal["cause"] for renewal in kept.renewals] == ["authentication_required"] * 2
+
+
+def test_a_long_run_refused_for_another_reason_is_not_resumed() -> None:
+    clock = [datetime(_YEAR, 3, 1, 9, tzinfo=UTC)]
+    keeper = _Keeper(clock, window=timedelta(minutes=14))
+
+    def refused(*_arguments: str) -> tuple[float, int, dict[str, Any]]:
+        return 1.0, 2, _running_operation_refusal("profile_mismatch")
+
+    kept = KeptSignInCli(refused, keeper, clock=lambda: clock[0], margin_seconds=120.0)
+    seconds, code, _envelope = kept.run(refused, "run", "{}", "3600", longest=False, resume=True)
+    assert (seconds, code, kept.renewals) == (1.0, 2, [])
 
 
 def test_a_sign_in_without_a_deadline_is_never_renewed_ahead() -> None:

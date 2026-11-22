@@ -106,6 +106,7 @@ function pageLedger(synthetic) {
       description: text(row.querySelector("[data-column=description]")),
       amount: text(row.querySelector("[data-column=amount]")),
       category: text(row.querySelector("[data-column=category]")),
+      direction: text(row.querySelector("[data-column=direction]")),
       selected: row.getAttribute("aria-selected") === "true",
       synthetic: text(row.querySelector("[data-column=description]")).includes(
         synthetic,
@@ -451,6 +452,44 @@ async function stageCategory(count, key) {
   await shownWithin(".ledger-tray", `the tray with ${count} staged`, 10_000);
 }
 
+/** Archive `keys` through the selection's Archive action: stage, review, save. */
+async function archiveRows(keys) {
+  await selectKeys(keys);
+  await ensurePanel();
+  assert(
+    await clickText("aside.ledger-panel", "button", [
+      `${label("desktop.ledger.inspector.action.archive")}…`,
+    ]),
+    "no Archive… for the selection",
+  );
+  await shownWithin(".ledger-action-dialog", "the archive dialog", 10_000);
+  await sleep(300);
+  await typeKeys("Prueba sintetica");
+  const submit = ".ledger-action-dialog button[type=submit]";
+  await waitFor(
+    () =>
+      exec((selector) => {
+        const button = document.querySelector(selector);
+        return !!button && !button.disabled;
+      }, submit),
+    { timeout: 10_000, what: "the archive to be stageable" },
+  );
+  await pressOrFail(submit, "the archive's stage button");
+  await waitFor(async () => !(await exec(pageShown, ".ledger-action-dialog")), {
+    timeout: 10_000,
+    what: "the archive dialog to close",
+  });
+  await shownWithin(".ledger-tray", "the tray with the archive", 10_000);
+  // A lifecycle change is saved by its own operation, not the batch, so its
+  // review shows no batch counts.
+  await pressOrFail(".ledger-tray .ledger-tray-review", "the tray's review");
+  await shownWithin(".ledger-review", "the archive's review");
+  const saved = await saveAndWait();
+  await done();
+  await escape();
+  return { rows: keys.length, saved };
+}
+
 async function ensurePanel() {
   if (await exec(pageShown, "aside.ledger-panel")) return;
   await win.browser.keys(["", "i"]);
@@ -537,8 +576,13 @@ const savedSmall = { keys: [], before: [] };
 
 test("LBE-02 one category for ten movements is previewed per row, saved as one batch and reported per row", async () => {
   await resetGrid();
+  // A spending category is asked only of outgoing movements; the dialog
+  // says how many others it leaves out.
   const rows = (await allRows()).filter(
-    (row) => !row.synthetic && row.category !== label(CATEGORY),
+    (row) =>
+      !row.synthetic &&
+      row.direction === label("desktop.ledger.direction.outgoing") &&
+      row.category !== label(CATEGORY),
   );
   assert(rows.length >= SMALL, `only ${rows.length} persona movements shown`);
   const chosen = rows.slice(0, SMALL);
@@ -580,19 +624,35 @@ test("LBE-03 the saved batch is undone by a new batch that writes each earlier v
   const counts = await exec(pageText, ".ledger-review .ledger-batch-counts");
   const saved = await saveAndWait();
   await done();
-  const after = (await allRows()).filter((row) =>
-    savedSmall.keys.includes(row.key),
-  );
-  const restored = savedSmall.keys.every(
-    (key, at) =>
-      after.find((row) => row.key === key)?.category === savedSmall.before[at],
-  );
+  // The grid shows the saved values once the ledger is read again.
+  let after = [];
+  const restored = !!(await waitFor(
+    async () => {
+      after = (await allRows()).filter((row) =>
+        savedSmall.keys.includes(row.key),
+      );
+      return savedSmall.keys.every(
+        (key, at) =>
+          after.find((row) => row.key === key)?.category ===
+          savedSmall.before[at],
+      );
+    },
+    { timeout: 30_000, what: "the earlier categories back", soft: true },
+  ));
   record({
     case: "LBE-03",
     rows: SMALL,
     undo_preview: counts,
     saved,
     restored,
+    differing: restored
+      ? []
+      : savedSmall.keys.flatMap((key, at) => {
+          const now = after.find((row) => row.key === key)?.category;
+          return now === savedSmall.before[at]
+            ? []
+            : [{ before: savedSmall.before[at], now: now ?? null }];
+        }),
     screenshot: await shot("lbe-03-undone"),
   });
   assert.equal(
@@ -630,10 +690,34 @@ test("LBE-04 one contact for every synthetic movement is previewed and saved as 
     'aside.ledger-panel .ledger-selection input[id$="-counterparty"]',
   );
   await field.setValue(CONTACT);
-  const stage = await win.browser.$(
-    'aside.ledger-panel .ledger-selection form:has(input[id$="-counterparty"]) button[type="submit"]',
+  const STAGE =
+    'aside.ledger-panel .ledger-selection form:has(input[id$="-counterparty"]) button[type="submit"]';
+  // The page reads whether a finalized declaration seals each selected
+  // movement before it lets a change reach it.
+  const sealedSince = Date.now();
+  const takes = await waitFor(
+    () =>
+      exec((selector) => {
+        const button = document.querySelector(selector);
+        return !!button && !button.disabled;
+      }, STAGE),
+    {
+      timeout: ANSWER_MS,
+      what: "the contact to reach the selection",
+      soft: true,
+    },
   );
-  await stage.click();
+  const sealedReadMs = Date.now() - sealedSince;
+  if (!takes) {
+    const path = await shot("lbe-04-contact-held");
+    assert.fail(
+      `the contact reaches no movement after ${sealedReadMs} ms (screenshot ${path}): ${await exec(pageText, "aside.ledger-panel .ledger-selection")}`.slice(
+        0,
+        900,
+      ),
+    );
+  }
+  await (await win.browser.$(STAGE)).click();
   await shownWithin(".ledger-tray", "the tray", 20_000);
   const preview = await reviewAndPreview();
   const previewShot = await shot("lbe-04-preview");
@@ -643,6 +727,7 @@ test("LBE-04 one contact for every synthetic movement is previewed and saved as 
   record({
     case: "LBE-04",
     rows: extra.count,
+    sealed_read_ms: sealedReadMs,
     preview,
     saved,
     screenshots: [previewShot, savedShot],
@@ -669,15 +754,28 @@ test("LBE-05 properties copied from one movement are pasted onto a selection, an
     .filter(
       (row) =>
         !row.synthetic &&
+        row.direction === label("desktop.ledger.direction.outgoing") &&
         row.key !== source.key &&
         row.category !== source.category,
     )
     .slice(0, 2);
   const synthetic = rows.filter((row) => row.synthetic).slice(0, 3);
+  // Two movements archived first: the batch refuses a change to a movement
+  // that is not active, and says why on its row.
+  const archived = rows
+    .filter(
+      (row) =>
+        !row.synthetic &&
+        row.direction === label("desktop.ledger.direction.outgoing") &&
+        row.key !== source.key &&
+        !persona.some((other) => other.key === row.key),
+    )
+    .slice(0, 2);
   assert(
-    persona.length === 2 && synthetic.length === 3,
+    persona.length === 2 && synthetic.length === 3 && archived.length === 2,
     "too few targets shown",
   );
+  const archive = await archiveRows(archived.map((row) => row.key));
 
   await pressOrFail("[data-column=status]", "the source row", source.key);
   await ensurePanel();
@@ -717,7 +815,7 @@ test("LBE-05 properties copied from one movement are pasted onto a selection, an
     },
   );
 
-  const targets = [...persona, ...synthetic].map((row) => row.key);
+  const targets = [...persona, ...synthetic, ...archived].map((row) => row.key);
   await selectKeys(targets);
   const since = Date.now();
   await pressOrFail(
@@ -767,13 +865,27 @@ test("LBE-05 properties copied from one movement are pasted onto a selection, an
     );
   }
   const stagedShot = await shot("lbe-05-pasted");
+  // What the paste staged is saved as one batch, which also leaves the tray
+  // empty for signing out.
+  await escape();
+  const applied = await reviewAndPreview();
+  const savedPaste = await saveAndWait();
+  const savedPasteShot = await shot("lbe-05-paste-saved");
+  await done();
+  await sleep(1000);
+  const trayLeft = await exec(pageText, ".ledger-tray");
+  const trayShot = trayLeft ? await shot("lbe-05-tray-left") : null;
   record({
     case: "LBE-05",
+    archive,
     source: source.category,
     targets: targets.length,
     preview,
     staged,
-    screenshots: [previewShot, stagedShot],
+    applied,
+    saved: savedPaste,
+    tray_left: trayLeft,
+    screenshots: [previewShot, stagedShot, savedPasteShot, trayShot],
   });
   assert(
     preview.value?.includes(source.category),
@@ -792,5 +904,5 @@ test("LBE-05 properties copied from one movement are pasted onto a selection, an
     staged.slice(0, persona.length).every(Boolean),
     "a persona movement the preview accepted was not staged",
   );
-  await escape();
+  assert.equal(trayLeft, null, `the save left staged changes: ${trayLeft}`);
 });

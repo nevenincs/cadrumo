@@ -416,6 +416,8 @@ errors:
     error_workflow: S'ha produït un error en el flux de treball.
     error_workflow_component: Un component del flux de treball ha llançat una excepció
       inesperada.
+    ledger_category_needs_business_classification: 'Una categoria de despesa necessita
+      una classificació empresarial: classifica primer aquest moviment.'
     ledger_gross_above_cash_needs_withholding_category: La base i l'IVA declarats
       sumen més que el diner que s'ha mogut; aquesta diferència és una retenció d'IRPF
       i no s'ha declarat cap categoria d'IRPF.
