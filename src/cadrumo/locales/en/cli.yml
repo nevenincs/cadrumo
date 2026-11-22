@@ -1190,6 +1190,9 @@ cli:
         label_tax_domain: Tax domain
         label_title: Title
         modelo_help: Tax form code (e.g. 303, 130, 100)
+        no_edition_covers_date: No edition of modelo %{modelo} covers filing year
+          %{year} period %{period} on %{date}. The period token is valid; choose an
+          --as-of date inside that period's validity and filing window, or omit --as-of.
         period_error: 'Error in the modelo definitions: %{message}'
         period_help: 'Period code used to pick the version of the official form: 0A
           annual, 1T-4T quarters, 01-12 months; for censo modelos (036): alta (registration),

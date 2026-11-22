@@ -35,7 +35,12 @@ from ...core.period import Period
 from ...core.presentation_marks import flag_mark
 from ...core.tax_domain import TaxDomain
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from ...domain.calculations.registry.errors import (
+    EjercicioOrdenNotYetPublishedError,
+    NoRevisionForPeriodError,
+    RegistrySnapshotError,
+    RegistryValidationError,
+)
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from . import modelo_discovery_rendering
 from .common import active_bucket_id_or_refuse, emit_envelope
@@ -165,10 +170,24 @@ def describe_modelo(
 ) -> None:
     """Describe the registry revision selected for one modelo."""
     operation = authority_operation(ctx)
+    as_of_date = _as_of(as_of)
     try:
-        result = catalogue.describe_modelo(modelo, year=year, period=period, as_of=_as_of(as_of), operation=operation)
+        result = catalogue.describe_modelo(modelo, year=year, period=period, as_of=as_of_date, operation=operation)
     except ReferenceQueryError as error:
         raise _command_error(error) from error
+    except NoRevisionForPeriodError as exc:
+        # The token composed with the year is declared; what is missing is an edition on this date.
+        if as_of_date is not None and not isinstance(exc, EjercicioOrdenNotYetPublishedError):
+            raise CliRefusedBoundaryError(
+                translated_message="cli.app.modelo.describe.no_edition_covers_date",
+                context={
+                    "modelo": modelo,
+                    "year": exc.filing_year,
+                    "period": exc.period,
+                    "date": as_of_date.isoformat(),
+                },
+            ) from exc
+        raise deps.bad_parameter_from_error(exc) from exc
     except (ValueError, RegistrySnapshotError, RegistryValidationError) as exc:
         message = str(exc)
         if period is not None and "period" in message.lower():
