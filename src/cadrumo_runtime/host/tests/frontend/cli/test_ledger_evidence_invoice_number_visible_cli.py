@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.env_scope import scoped_cwd
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .ledger_ux_support import invoke, ledger_ux_bucket_session
 
@@ -37,7 +38,7 @@ def _result(arguments: list[str]) -> dict[str, object]:
 
 
 def test_evidence_add_view_list_and_update_show_the_invoice_number_as_recorded(tmp_path: Path) -> None:
-    (tmp_path / "factura.pdf").write_bytes(b"%PDF-1.4 synthetic evidence")
+    (tmp_path / "factura.pdf").write_bytes(text_pdf_bytes(("synthetic evidence",)))
     with scoped_cwd(tmp_path):
         added = _result(["add", "factura.pdf", "--supplier", "Acme SL", "--invoice-number", _INVOICE_NUMBER])
         evidence_id = str(added["evidence_id"])
