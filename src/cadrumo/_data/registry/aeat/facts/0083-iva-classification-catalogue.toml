@@ -21,7 +21,7 @@ required_text = ["Modelo 303"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
-  { key = "rule_order", value = "R01_construction_reverse_charge,R02_waste_reverse_charge,R03_electronics_reverse_charge,R04_immovable_property_exempt,R05_domestic_at_rate_tier,R10_intra_community_supply,R11_intra_community_acquisition,R12_services_b2b_eu_outbound,R13_services_b2b_eu_inbound,R15_distance_sales_b2c,R16_external_scheme_services,R17_oss_union_goods_distance_sale,R18_oss_union_goods_interface_facilitated,R19_oss_union_services,R20_export_goods,R21_import_goods,R22_services_outbound_b2b,R25_services_outbound_b2c_art_69_dos,R24_services_outbound_b2c_at_rate_tier,R23_ioss_distance_sale_low_value,R30_canarias_ceuta_melilla,R99_fallthrough" },
+  { key = "rule_order", value = "R01_construction_reverse_charge,R02_waste_reverse_charge,R03_electronics_reverse_charge,R04_immovable_property_exempt,R05_domestic_at_rate_tier,R10_intra_community_supply,R11_intra_community_acquisition,R12_services_b2b_eu_outbound,R13_services_b2b_eu_inbound,R26_services_b2b_non_tai_inbound,R15_distance_sales_b2c,R16_external_scheme_services,R17_oss_union_goods_distance_sale,R18_oss_union_goods_interface_facilitated,R19_oss_union_services,R20_export_goods,R21_import_goods,R22_services_outbound_b2b,R25_services_outbound_b2c_art_69_dos,R24_services_outbound_b2c_at_rate_tier,R23_ioss_distance_sale_low_value,R30_canarias_ceuta_melilla,R99_fallthrough" },
   { key = "rate_categories.general", value = "domestic_general" },
   { key = "rate_categories.reduced", value = "domestic_reduced" },
   { key = "rate_categories.super_reduced", value = "domestic_super_reduced" },
@@ -190,6 +190,12 @@ entries = [
   { key = "rule.R13_services_b2b_eu_inbound.consumes", value = "territorial_establishment,iva_identification_state" },
   { key = "rule.R13_services_b2b_eu_inbound.label", value = "EU inbound B2B services" },
   { key = "rule.R13_services_b2b_eu_inbound.legal_refs", value = "ley-37-1992:art-84" },
+  { key = "rule.R26_services_b2b_non_tai_inbound.priority", value = "22" },
+  { key = "rule.R26_services_b2b_non_tai_inbound.predicate", value = "issuer=outside_comunidad;customer=es_mainland;status=b2b_registered,b2b_not_registered;kind=services_general;direction=received" },
+  { key = "rule.R26_services_b2b_non_tai_inbound.category", value = "domestic_reverse_charge" },
+  { key = "rule.R26_services_b2b_non_tai_inbound.consumes", value = "territorial_establishment" },
+  { key = "rule.R26_services_b2b_non_tai_inbound.label", value = "Inbound B2B services from a supplier outside the Community" },
+  { key = "rule.R26_services_b2b_non_tai_inbound.legal_refs", value = "ley-37-1992:art-69,ley-37-1992:art-84" },
   { key = "rule.R15_distance_sales_b2c.priority", value = "10" },
   { key = "rule.R15_distance_sales_b2c.predicate", value = "issuer=es_mainland;customer=eu_member;status=b2c;kind=goods;direction=issued" },
   { key = "rule.R15_distance_sales_b2c.category", value = "domestic_not_subject" },

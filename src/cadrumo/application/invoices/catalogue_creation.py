@@ -31,6 +31,7 @@ from decimal import Decimal
 from pydantic import BaseModel
 
 from ...core.aggregation import IntracomOperationType
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
 from ...core.parsing.codes import normalise_iso_4217_currency
@@ -42,7 +43,8 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.temporal import select_revision_metadata_for_year
-from ...domain.currency.service import resolve_fx_conversion_stamp
+from ...domain.currency.models import FxConversionStamp
+from ...domain.currency.service import declared_fx_conversion_stamp, resolve_fx_conversion_stamp
 from ...domain.invoices.business_premises import BusinessPremisesLease
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import (
@@ -360,24 +362,75 @@ def _apply_operator_asserted_invoice_facts(
         invoice_payload["retention_amount"] = format(retention_amount, "f")
 
 
+def require_declarable_fx_rate(*, currency: str, declared_fx_rate: Decimal) -> None:
+    """Refuse an exchange rate the operator cannot state for this invoice.
+
+    A euro invoice converts nothing, so a rate on it would assert a conversion
+    that never happened. A rate must be strictly positive: the stored euro
+    figure is ``amount * rate``, and a zero or negative rate would erase or
+    reverse the operation.
+
+    Raises:
+        InvoiceValidationError: For a euro invoice or a rate that is not above zero.
+    """
+    if currency == DEFAULT_CURRENCY:
+        raise InvoiceValidationError(
+            "a EUR invoice takes no exchange rate",
+            translated_message="application.invoices.creation.errors.declared_fx_rate_on_euro_invoice",
+            context={"fx_rate": format(declared_fx_rate, "f")},
+        )
+    if not declared_fx_rate.is_finite() or declared_fx_rate <= Decimal(0):
+        raise InvoiceValidationError(
+            "the declared exchange rate must be greater than zero",
+            translated_message="application.invoices.creation.errors.declared_fx_rate_not_positive",
+            context={"fx_rate": format(declared_fx_rate, "f")},
+        )
+
+
+def _fx_stamp_fields(fx_stamp: FxConversionStamp) -> dict[str, object]:
+    return {
+        "fx_rate": format(fx_stamp.rate, "f"),
+        "fx_rate_date": fx_stamp.rate_date.isoformat(),
+        "fx_rate_source": fx_stamp.source,
+        "fx_rate_observation_date": (
+            None if fx_stamp.observation_date is None else fx_stamp.observation_date.isoformat()
+        ),
+    }
+
+
+def declared_fx_conversion_fields(*, currency: str, issued_at: date, declared_fx_rate: Decimal) -> dict[str, object]:
+    """Return the invoice fields that stamp an operator-declared exchange rate.
+
+    The rate is taken at the invoice's own date, the date the provider policy
+    reads a published rate at, and names the operator as its source. Every
+    stamp field is returned, the empty observation date included, so applying
+    them to a stored record replaces any earlier stamp whole.
+
+    Raises:
+        InvoiceValidationError: For a euro invoice or a rate that is not above zero.
+    """
+    require_declarable_fx_rate(currency=currency, declared_fx_rate=declared_fx_rate)
+    return _fx_stamp_fields(declared_fx_conversion_stamp(rate=declared_fx_rate, on_date=issued_at))
+
+
 def _apply_fx_conversion_stamp(
     invoice_payload: dict[str, object],
     *,
     currency: str,
     issued_at: date,
     rate_provider: CatalogueInvoiceRateProviderPort,
+    declared_fx_rate: Decimal | None,
 ) -> None:
+    if declared_fx_rate is not None:
+        require_declarable_fx_rate(currency=currency, declared_fx_rate=declared_fx_rate)
     fx_stamp = resolve_fx_conversion_stamp(
         currency=currency,
         on_date=issued_at,
         rate_provider=rate_provider,
+        declared_rate=declared_fx_rate,
     )
     if fx_stamp is not None:
-        invoice_payload["fx_rate"] = format(fx_stamp.rate, "f")
-        invoice_payload["fx_rate_date"] = fx_stamp.rate_date.isoformat()
-        invoice_payload["fx_rate_source"] = fx_stamp.source
-        if fx_stamp.observation_date is not None:
-            invoice_payload["fx_rate_observation_date"] = fx_stamp.observation_date.isoformat()
+        invoice_payload.update(_fx_stamp_fields(fx_stamp))
 
 
 def build_catalogue_invoice(
@@ -406,6 +459,7 @@ def build_catalogue_invoice(
     suplido_amount: Decimal | None = None,
     business_premises_lease: BusinessPremisesLease | None = None,
     lines: Sequence[InvoiceLine] | None = None,
+    declared_fx_rate: Decimal | None = None,
     rate_provider: CatalogueInvoiceRateProviderPort,
     operation: PinnedAuthorityOperation | None = None,
 ) -> Invoice:
@@ -457,6 +511,12 @@ def build_catalogue_invoice(
     lease of a local de negocio and, when known, the premises' situación and
     referencia catastral (RD 1065/2007 art. 34.1.d), which Modelo 347 relates
     in its own declarado and inmueble records.
+
+    ``declared_fx_rate`` is the euro value of one unit of a foreign
+    ``currency`` that the operator states was in force at the invoice date
+    (LIVA art. 79.Once). It wins over ``rate_provider`` and is stamped with the
+    operator-declared source; it is refused for a euro invoice and for a rate
+    that is not above zero.
     """
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
@@ -485,6 +545,7 @@ def build_catalogue_invoice(
                 suplido_amount=suplido_amount,
                 business_premises_lease=business_premises_lease,
                 lines=lines,
+                declared_fx_rate=declared_fx_rate,
                 rate_provider=rate_provider,
                 operation=indexed_operation,
             )
@@ -514,6 +575,7 @@ def build_catalogue_invoice(
         suplido_amount=suplido_amount,
         business_premises_lease=business_premises_lease,
         lines=lines,
+        declared_fx_rate=declared_fx_rate,
         rate_provider=rate_provider,
         operation=operation,
     )
@@ -545,6 +607,7 @@ def _build_pinned_catalogue_invoice(
     suplido_amount: Decimal | None = None,
     business_premises_lease: BusinessPremisesLease | None = None,
     lines: Sequence[InvoiceLine] | None = None,
+    declared_fx_rate: Decimal | None = None,
     rate_provider: CatalogueInvoiceRateProviderPort,
     operation: PinnedAuthorityOperation,
 ) -> Invoice:
@@ -633,6 +696,7 @@ def _build_pinned_catalogue_invoice(
             currency=currency,
             issued_at=issued_at,
             rate_provider=rate_provider,
+            declared_fx_rate=declared_fx_rate,
         )
         return Invoice.model_validate(invoice_payload, context=INVOICE_WRITE_ADMISSION)
 
@@ -690,4 +754,6 @@ __all__ = [
     "build_catalogue_invoice",
     "build_catalogue_invoice_event",
     "create_catalogue_invoice",
+    "declared_fx_conversion_fields",
+    "require_declarable_fx_rate",
 ]

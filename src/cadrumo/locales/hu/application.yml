@@ -972,6 +972,10 @@ application:
           .xlsx, .xlsm vagy .xls kiterjesztésűnek kell lennie (kapott: {extension}).'
     creation:
       errors:
+        declared_fx_rate_not_positive: A(z) %{fx_rate} árfolyamnak nullánál nagyobbnak
+          kell lennie.
+        declared_fx_rate_on_euro_invoice: 'Az euróban kiállított számlához nem tartozik
+          árfolyam: töröld az árfolyamot, vagy javítsd a számla pénznemét.'
         duplicate_invoice: 'A katalógusban már létezik azonos azonosságú számla: %{invoice_id}.'
         intracom_operation_type_required: 'A Közösségen belüli termékértékesítésnek
           meg kell adnia a Modelo 349 műveleti kulcsát: a kategória önmagában nem
@@ -2518,6 +2522,11 @@ application:
         {invoice} számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz,
         de az adószámából (NIF) nem derül ki, hogy a kiállító IRPF vagy társasági
         adó (Impuesto sobre Sociedades) alá tartozik. Ellenőrizd a számla adószámát.
+      withholding_invoice_rent_rate_unrecognised: A(z) {counterparty} által kiállított
+        {invoice} számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz
+        egy bérleti díjra, amely sem az általános bérleti levonási kulcsnak, sem a
+        Ceutára és Melillára vonatkozó kulcsnak nem felel meg a számla napján. Ellenőrizd
+        a számla alapját és levonását.
     calc_diagnostic_words:
       household_leaf:
         apellidos_nombre: vezetéknév és keresztnév
@@ -3163,6 +3172,14 @@ application:
         invoice_recargo_split_unresolved: 'egy kiállított számla több áfakulcsra egyetlen
           kiegyenlítő pótlékot (recargo de equivalencia) tartalmaz, amely eltér az
           egyes kulcsok pótlékának összegétől: javítsd a számla pótlékát'
+        invoice_rectificativa_modification_unmodelled: 'a helyesbítő számla (factura
+          rectificativa) egyik áfakulcs-sorban sem szerepel: add meg az adóalapját
+          és az adóját a megfelelő előjellel a Modelo 303 14. és 15. mezőjében, ha
+          te állítottad ki, vagy a 40. és 41. mezőjében, ha te kaptad'
+        invoice_used_goods_margin_unmodelled: 'a használt cikkek különleges rendszerében
+          (régimen especial de los bienes usados) végzett értékesítés árrésalapját
+          (art. 137) a program nem számítja ki: add meg magad az árrés adóalapját
+          és adóját a Modelo 303 kulcsához tartozó fizetendő áfa (devengado) mezőiben'
         linked_movement_contradicts_invoice: az adóalapja vagy az IVA-összege eltér
           a kifizetett számláétól
         missing_business_classification: még nincs besorolva üzleti, magán vagy vegyes

@@ -34,7 +34,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, model_validator
 
 from ...core.aggregation import IntracomOperationType
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -199,6 +199,13 @@ class CatalogueInvoicePatch(BaseModel):
     An operator who genuinely must change an identity field removes the record
     and creates it again -- which the remove verb already guards, refusing to
     delete an invoice that still carries links.
+
+    ``declared_fx_rate`` is not a stored field: it is the exchange rate the
+    operator states for a foreign invoice, which replaces the record's whole
+    conversion stamp with an operator-declared one. It is what repairs an
+    invoice left unconverted because no rate was published for it. It cannot
+    be selected without a rate, since clearing a stamp would only hide the
+    euro value again.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -216,6 +223,13 @@ class CatalogueInvoicePatch(BaseModel):
     invoice_class: InvoiceClass | None = None
     rectifies_invoice_number: str | None = None
     payment_id: str | None = None
+    declared_fx_rate: Decimal | None = None
+
+    @model_validator(mode="after")
+    def _declared_rate_is_stated(self) -> CatalogueInvoicePatch:
+        if "declared_fx_rate" in self.model_fields_set and self.declared_fx_rate is None:
+            raise ValueError("declared_fx_rate must state a rate; a conversion stamp cannot be cleared")
+        return self
 
 
 class CatalogueInvoiceUpdateResult(BaseModel):
@@ -253,8 +267,19 @@ def _admitted_correction(
             context={"invoice_id": existing.invoice_id},
         )
 
+    declared_fx_rate = changes.pop("declared_fx_rate", None)
     payload = existing.model_dump()
     payload.update(changes)
+    if declared_fx_rate is not None:
+        from .catalogue_creation import declared_fx_conversion_fields
+
+        payload.update(
+            declared_fx_conversion_fields(
+                currency=existing.currency,
+                issued_at=existing.issued_at,
+                declared_fx_rate=declared_fx_rate,
+            )
+        )
     # Carried explicitly, not by accident: the links are why this aggregate
     # is the reconciliation authority, and an update that dropped them would
     # sever a bidirectional binding the operator never asked to break.

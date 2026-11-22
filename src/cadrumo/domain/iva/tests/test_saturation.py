@@ -74,6 +74,7 @@ _NON_DERIVABLE_CATEGORIES = [
     IvaCategory("recargo_equivalencia"),
     IvaCategory("regimen_simplificado"),
     IvaCategory("reagp_compensation"),
+    IvaCategory("special_regime_used_goods"),
     IvaCategory("operacion_no_sujeta"),
     IvaCategory("erroneous_invoice"),
     IvaCategory("unknown"),

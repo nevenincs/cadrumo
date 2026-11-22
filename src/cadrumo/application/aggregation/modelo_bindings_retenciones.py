@@ -449,6 +449,9 @@ _FINDING_SENTENCES = {
     ReceivedInvoiceWithholdingFindingKind.RATE_UNRECOGNISED: (
         CalculationNoteSentence.WITHHOLDING_INVOICE_RATE_UNRECOGNISED
     ),
+    ReceivedInvoiceWithholdingFindingKind.RENT_RATE_UNRECOGNISED: (
+        CalculationNoteSentence.WITHHOLDING_INVOICE_RENT_RATE_UNRECOGNISED
+    ),
     ReceivedInvoiceWithholdingFindingKind.INVOICE_INCOMPLETE: CalculationNoteSentence.WITHHOLDING_INVOICE_INCOMPLETE,
 }
 """The sentence that states each reason a received invoice's retención reaches no declaration."""

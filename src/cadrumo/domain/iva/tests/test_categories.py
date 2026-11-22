@@ -22,7 +22,7 @@ _ON_DATE = date(2025, 1, 1)
 
 
 def test_iva_category_has_every_named_member(operation: PinnedAuthorityOperation) -> None:
-    """:class:`IvaCategory` must carry exactly the 18 declared members.
+    """:class:`IvaCategory` must carry exactly the declared members.
 
     ``DOMESTIC_REVERSE_CHARGE`` exists to disambiguate
     *inversión del sujeto pasivo* on domestic transactions
@@ -49,6 +49,7 @@ def test_iva_category_has_every_named_member(operation: PinnedAuthorityOperation
         "recargo_equivalencia",
         "regimen_simplificado",
         "reagp_compensation",
+        "special_regime_used_goods",
         "erroneous_invoice",
         "unknown",
     }

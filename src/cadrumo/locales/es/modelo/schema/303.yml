@@ -227,6 +227,9 @@ modelo:
           iva-autoconsumo-promotor-super-reducido-base:
             label: Base imponible del autoconsumo del promotor inmobiliario al tipo
               super-reducido (4%) (parte de la casilla oficial 01)
+          iva-base-autorepercutida-interior-devengado:
+            label: Base imponible IVA autorepercutida en operaciones interiores con
+              inversión del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 12)
           iva-base-autorepercutida-intracomunitaria-devengado:
             help: Suma la base imponible autorrepercutida devengada en adquisiciones
               intracomunitarias.

@@ -255,7 +255,7 @@ aggregation:
         como pagada si el anticipo cubre todo el precio.
       invoice_line_currency_unconverted: Una línea de factura está denominada en moneda
         extranjera sin tipo de cambio a euros resuelto, por lo que no puede declararse
-        en este modelo.
+        en este modelo. Indica el tipo de cambio de la factura para convertirla.
       unsupported_period: Periodo de modelo no soportado para los totales de tus registros.
   oss_ioss:
     errors:
@@ -3345,10 +3345,14 @@ desktop:
         counterparty_nif: NIF de la otra parte
         country_code: País
         currency: Moneda
+        fx_rate: Tipo de cambio
         invoice_date: Fecha de la factura
         invoice_number: Número de factura
+        iva_category: Categoría de IVA
         iva_rate: Tipo de IVA
         notes: Notas
+        operation_type: Clave del modelo 349
+        recargo_amount: Recargo de equivalencia
         retencion_amount: Importe de la retención
         retencion_rate: Tipo de retención
         taxable_base: Base imponible
@@ -3849,6 +3853,7 @@ desktop:
         counterparty_name: Contraparte
         counterparty_tax_id: NIF
         currency: Moneda
+        fx_rate: Tipo de cambio
         invoice_class: Clase
         invoice_number: Número
         issued_at: Fecha de emisión
@@ -4057,6 +4062,7 @@ desktop:
       reagp_compensation: Compensación REAGP
       recargo_equivalencia: Recargo de equivalencia
       regimen_simplificado: Régimen simplificado
+      special_regime_used_goods: Régimen especial de los bienes usados (REBU)
       unknown: Desconocida
     leave:
       cancel: Cancelar
@@ -4384,6 +4390,8 @@ desktop:
       invoice_deduction_family_unresolved: Deducción
       invoice_recargo_not_declarable: Recargo
       invoice_recargo_split_unresolved: Recargo
+      invoice_rectificativa_modification_unmodelled: Rectificativa
+      invoice_used_goods_margin_unmodelled: Bienes usados
       linked_movement_contradicts_invoice: Factura
       missing_business_classification: Clasificación
       missing_category: Categoría
@@ -4413,6 +4421,10 @@ desktop:
       invoice_recargo_not_declarable: El recargo no es el tipo legal sobre su base
       invoice_recargo_split_unresolved: El recargo no se reparte entre sus tipos de
         IVA
+      invoice_rectificativa_modification_unmodelled: Indica la rectificación con su
+        signo en las casillas 14/15 o 40/41
+      invoice_used_goods_margin_unmodelled: Indica la base del margen y su cuota en
+        las casillas de IVA devengado de su tipo
       linked_movement_contradicts_invoice: No coincide con su factura
       missing_business_classification: Falta la clasificación
       missing_category: Falta la categoría
@@ -4454,6 +4466,9 @@ desktop:
         no coincide con ningún tipo de retención de actividades.'
       received_invoice_recipient_unknown: 'Aún no se declara: el NIF de quien emite
         no muestra si tributa por IRPF o por el Impuesto sobre Sociedades.'
+      received_invoice_rent_rate_unrecognised: 'Aún no se declara: la retención del
+        alquiler no coincide ni con el tipo general de retención sobre alquileres
+        ni con el de Ceuta y Melilla para la fecha.'
     retry: Reintentar
     reveal:
       dismiss: Descartar el aviso

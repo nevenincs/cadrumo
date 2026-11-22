@@ -7,6 +7,7 @@ import json
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
 from types import SimpleNamespace
 from typing import Never, cast
 from uuid import UUID, uuid4
@@ -24,9 +25,11 @@ from ....core.operations import (
     profile_operation_subject,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.authority_lease_support import private_authority_lease
+from ....domain.currency.service import OPERATOR_DECLARED_RATE_SOURCE
 from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
-from ....domain.iva.schema import InvoiceKind
+from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -748,3 +751,79 @@ def test_the_worker_refuses_a_situacion_outside_the_record_design() -> None:
     assert request.business_premises_lease is not None
     with pytest.raises(ValidationError):
         request.business_premises_lease.to_domain()
+
+
+def _foreign_request(*, currency: str, declared_fx_rate: str | None) -> InvoiceAddRequest:
+    with private_authority_lease() as authority_operation:
+        issued_at = date(authority_operation.supported_filing_years().horizon, 4, 15)
+    return _request(
+        counterparty_name="Synthetic overseas supplier",
+        counterparty_tax_id="DE811907980",
+        counterparty_country="DE",
+        issued_at=issued_at,
+        taxable_base=PublicDecimal(decimal="1000.00"),
+        iva_rate=None,
+        currency=currency,
+        declared_fx_rate=None if declared_fx_rate is None else PublicDecimal(decimal=declared_fx_rate),
+    )
+
+
+def test_a_declared_rate_reaches_the_stored_invoice_as_the_operators(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The one add operation every frontend submits stamps the stated rate, not a provider's."""
+    context, ports = _execute_add(_foreign_request(currency="USD", declared_fx_rate="0.9250"), monkeypatch)
+
+    assert context.operands.value is not None
+    result = context.operands.value.result
+    assert result.outcome == "created"
+    assert result.euro_value_pending is False
+    (stored,) = tuple(ports.invoice_repository.load())
+    assert stored.fx_rate == Decimal("0.9250")
+    assert stored.fx_rate_source == OPERATOR_DECLARED_RATE_SOURCE
+    assert stored.base_total_eur == Decimal("925.00")
+
+
+def test_without_a_declared_rate_an_unpublished_rate_leaves_the_euro_value_pending(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    context, ports = _execute_add(_foreign_request(currency="USD", declared_fx_rate=None), monkeypatch)
+
+    assert context.operands.value is not None
+    assert context.operands.value.result.euro_value_pending is True
+    (stored,) = tuple(ports.invoice_repository.load())
+    assert (stored.fx_rate, stored.fx_rate_source) == (None, None)
+
+
+@pytest.mark.parametrize(("currency", "declared"), [("EUR", "0.9250"), ("USD", "0"), ("USD", "-0.9250")])
+def test_a_rate_that_cannot_be_declared_is_an_invalid_invoice_refusal_with_no_write(
+    currency: str, declared: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    context, ports = _execute_add(_foreign_request(currency=currency, declared_fx_rate=declared), monkeypatch)
+
+    assert context.events.effects == []
+    assert context.operands.value is not None
+    result = context.operands.value.result
+    assert (result.outcome, result.validation_code) == ("validation_error", "invalid_invoice")
+    assert result.refusal_words is not None
+    assert len(ports.invoice_repository.load()) == 0
+
+
+def test_an_issued_used_goods_margin_invoice_is_stored_under_its_stated_category(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The add operation admits the régimen especial de los bienes usados as the invoice's IVA category."""
+    context, ports = _execute_add(
+        _request(
+            kind=InvoiceKind.ISSUED,
+            issued_at=date(filing_year_envelope().horizon, 4, 15),
+            taxable_base=PublicDecimal(decimal="1500.00"),
+            iva_rate=None,
+            iva_category="special_regime_used_goods",
+        ),
+        monkeypatch,
+    )
+
+    assert context.operands.value is not None
+    assert context.operands.value.result.outcome == "created"
+    (stored,) = ports.invoice_repository.load().values()
+    assert stored.iva_category == IvaCategory("special_regime_used_goods")
+    assert (stored.base_total, stored.iva_total) == (Decimal("1500.00"), Decimal("0.00"))

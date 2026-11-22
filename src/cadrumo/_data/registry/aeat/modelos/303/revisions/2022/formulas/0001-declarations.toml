@@ -539,6 +539,24 @@ required_text = ["modelo 303"]
 [revisions.2022.formulas.expression]
 casilla_id = "iva.autorepercutido.intracomunitaria.devengado"
 
+# Box [12] projects the domestic inversion del sujeto pasivo base, the base of
+# the same rows box [13] states the cuota of. The 2022 diseno prints the row as
+# "Otras operaciones con inversion del sujeto pasivo (excepto. adq. intracom) -
+# Base imponible [12]" (campo 36), unchanged in every later design.
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-12-projection"
+target_casilla_id = "12"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+casilla_id = "iva.autorepercutido.interior.devengado.base"
+
 # Box [13] projects the domestic inversion del sujeto pasivo cuota, the summand
 # modelo-303-iva-cuota-devengada-total already adds on this revision. The 2022
 # diseno prints the row as "Otras operaciones con inversion del sujeto pasivo

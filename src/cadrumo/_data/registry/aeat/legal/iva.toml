@@ -2701,6 +2701,81 @@ required_text = [
     "en posesión del documento emitido por ellos mismos",
 ]
 
+[legal."ley-37-1992:art-135"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a135"
+document_id = "BOE-A-1992-28740"
+article = "135"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a135"
+published_at = 1992-12-29
+effective_from = 1995-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-22
+reviewed_by = "agent-review"
+notes = "Artículo 135 LIVA: ámbito del régimen especial de los bienes usados, objetos de arte, antigüedades y objetos de colección. El revendedor lo aplica a las entregas que enumera el apartado Uno y, según el apartado Dos, puede aplicar el régimen general a cualquiera de ellas, de modo que el régimen se elige operación por operación."
+required_text = [
+    "Régimen especial de los bienes usados, objetos de arte, antigüedades y objetos de colección",
+    "podrán aplicar a cualquiera de las operaciones enumeradas en el mismo el régimen general del impuesto",
+]
+
+[legal."ley-37-1992:art-137"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a137"
+document_id = "BOE-A-1992-28740"
+article = "137"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a137"
+published_at = 1992-12-29
+effective_from = 1995-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-22
+reviewed_by = "agent-review"
+notes = "Artículo 137 LIVA: base imponible del régimen especial de los bienes usados. La base es el margen de beneficio de cada operación, minorado en la cuota de IVA correspondiente a dicho margen; el margen es la diferencia entre el precio de venta y el precio de compra, ambos con el IVA incluido."
+required_text = [
+    "estará constituida por el margen de beneficio de cada operación aplicado por el sujeto pasivo revendedor, minorado en la cuota del Impuesto sobre el Valor Añadido correspondiente a dicho margen",
+    "se considerará margen de beneficio la diferencia entre el precio de venta y el precio de compra del bien",
+]
+
+[legal."ley-37-1992:art-138"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a138"
+document_id = "BOE-A-1992-28740"
+article = "138"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a138"
+published_at = 1992-12-29
+effective_from = 1995-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-22
+reviewed_by = "agent-review"
+notes = "Artículo 138 LIVA: repercusión del impuesto en el régimen especial de los bienes usados. La factura no consigna separadamente la cuota repercutida, que se entiende comprendida en el precio total, y el adquirente no puede deducir la cuota soportada en una entrega a la que el revendedor aplicó el régimen especial."
+required_text = [
+    "los sujetos pasivos no podrán consignar separadamente la cuota repercutida, debiendo entenderse ésta comprendida en el precio total de la operación",
+    "No serán deducibles las cuotas soportadas por los adquirentes de bienes usados, objetos de arte, antigüedades u objetos de colección",
+]
+
+[legal."ley-37-1992:art-139"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a139"
+document_id = "BOE-A-1992-28740"
+article = "139"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a139"
+published_at = 1992-12-29
+effective_from = 1995-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-22
+reviewed_by = "agent-review"
+notes = "Artículo 139 LIVA: deducciones en el régimen especial de los bienes usados. El revendedor no deduce las cuotas soportadas en la adquisición o importación de los bienes que transmite con aplicación del régimen especial."
+required_text = [
+    "Los sujetos pasivos revendedores no podrán deducir las cuotas del Impuesto soportadas o satisfechas por la adquisición o importación de bienes",
+]
+
 [legal."rd-596-2016"]
 evidence_tier = "legal_authority"
 authority = "boe"

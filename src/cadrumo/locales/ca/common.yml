@@ -251,7 +251,7 @@ aggregation:
         aquesta com a pagada si la bestreta cobreix tot el preu.
       invoice_line_currency_unconverted: Una línia de factura està denominada en moneda
         estrangera sense tipus de canvi a euros resolt, per la qual cosa no es pot
-        declarar en aquest model.
+        declarar en aquest model. Indica el tipus de canvi de la factura per convertir-la.
       unsupported_period: Període de model no admès per als totals dels teus registres.
   oss_ioss:
     errors:
@@ -3342,10 +3342,14 @@ desktop:
         counterparty_nif: NIF de l'altra part
         country_code: País
         currency: Moneda
+        fx_rate: Tipus de canvi
         invoice_date: Data de la factura
         invoice_number: Número de factura
+        iva_category: Categoria d'IVA
         iva_rate: Tipus d'IVA
         notes: Notes
+        operation_type: Clau del model 349
+        recargo_amount: Recàrrec d'equivalència
         retencion_amount: Import de la retenció
         retencion_rate: Tipus de retenció
         taxable_base: Base imposable
@@ -3844,6 +3848,7 @@ desktop:
         counterparty_name: Contrapart
         counterparty_tax_id: NIF
         currency: Moneda
+        fx_rate: Tipus de canvi
         invoice_class: Classe
         invoice_number: Número
         issued_at: Data d'emissió
@@ -4052,6 +4057,7 @@ desktop:
       reagp_compensation: Compensació REAGP
       recargo_equivalencia: Recàrrec d'equivalència
       regimen_simplificado: Règim simplificat
+      special_regime_used_goods: Règim especial dels béns usats (REBU)
       unknown: Desconeguda
     leave:
       cancel: Cancel·la
@@ -4379,6 +4385,8 @@ desktop:
       invoice_deduction_family_unresolved: Deducció
       invoice_recargo_not_declarable: Recàrrec
       invoice_recargo_split_unresolved: Recàrrec
+      invoice_rectificativa_modification_unmodelled: Rectificativa
+      invoice_used_goods_margin_unmodelled: Béns usats
       linked_movement_contradicts_invoice: Factura
       missing_business_classification: Classificació
       missing_category: Categoria
@@ -4409,6 +4417,10 @@ desktop:
         base
       invoice_recargo_split_unresolved: El recàrrec no es reparteix entre els seus
         tipus d'IVA
+      invoice_rectificativa_modification_unmodelled: Indica la rectificació amb el
+        seu signe a les caselles 14/15 o 40/41
+      invoice_used_goods_margin_unmodelled: Indica la base del marge i la seva quota
+        a les caselles d'IVA meritat del seu tipus
       linked_movement_contradicts_invoice: No coincideix amb la seva factura
       missing_business_classification: Falta la classificació
       missing_category: Falta la categoria
@@ -4449,6 +4461,9 @@ desktop:
         factura no coincideix amb cap tipus de retenció d''activitats.'
       received_invoice_recipient_unknown: 'Encara no es declara: el NIF de qui emet
         no mostra si tributa per IRPF o per l''Impost sobre Societats.'
+      received_invoice_rent_rate_unrecognised: 'Encara no es declara: la retenció
+        del lloguer no coincideix ni amb el tipus general de retenció sobre lloguers
+        ni amb el de Ceuta i Melilla per a la data.'
     retry: Torna-ho a provar
     reveal:
       dismiss: Descarta l’avís

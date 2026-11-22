@@ -29,6 +29,7 @@ from .app_ledger_command_spec_policies import (
 )
 from .app_ledger_command_spec_support import option_from_application_contract
 from .app_ledger_invoice_common_command_parameters import (
+    DECLARED_FX_RATE_OPTION,
     INVOICE_INTAKE_WIZARD_CORE_OPTIONS,
     INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS,
     INVOICE_LIFECYCLE_METADATA_OPTIONS,
@@ -281,6 +282,7 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             option_from_application_contract(NOTES_INPUT, None),
             OPTIONAL_IVA_CATEGORY_OPTION,
             *INVOICE_LIFECYCLE_METADATA_OPTIONS,
+            DECLARED_FX_RATE_OPTION,
         ),
         policy=POLICY_4,
         handler=LazyBinding.available(
