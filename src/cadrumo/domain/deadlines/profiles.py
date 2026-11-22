@@ -76,6 +76,7 @@ def taxpayer_profile_from_mapping(
     *,
     tax_id_default: str,
     iva_regime_default: IVARegime | None = None,
+    withhold_unanswered_iva_block: bool = False,
 ) -> TaxpayerProfile:
     """Build an :class:`TaxpayerProfile` from a profile-values mapping.
 
@@ -87,6 +88,16 @@ def taxpayer_profile_from_mapping(
     ``NO_APLICA`` for natural persons without economic-activity income
     and to ``iva_regime_default`` for profiles that still require an
     IVA regime declaration.
+
+    A claimed Modelo IVA block that still leaves one of its required facts
+    unanswered is refused, because a calculation or filing built on it would
+    have to guess the answer. A read model that must still show everything the
+    answered facts decide passes ``withhold_unanswered_iva_block``: the
+    unanswered paths are then named in
+    :attr:`TaxpayerProfile.iva_block_unanswered_paths`, an unanswered yes/no
+    fact stays ``None`` in the block, and a block missing its territory or
+    composition is left out, so the consumer can report what depends on them
+    as undetermined instead of failing whole.
     """
     iva_regime_default = default_iva_regime() if iva_regime_default is None else require_iva_regime(iva_regime_default)
     canonical, padded = _canonicalize_and_pad(values, tax_id_default=tax_id_default)
@@ -96,6 +107,7 @@ def taxpayer_profile_from_mapping(
         typed,
         tax_id_default=tax_id_default,
         iva_regime_default=iva_regime_default,
+        withhold_unanswered_iva_block=withhold_unanswered_iva_block,
     )
 
 
@@ -206,6 +218,7 @@ class _ProfileObligationFields(TypedDict):
 
 class _ProfileRelationshipFields(TypedDict):
     iva: ModeloIVAProfile | None
+    iva_block_unanswered_paths: tuple[str, ...]
     cross_period_group_member_rosters: tuple[CrossPeriodGroupMemberRoster, ...]
     enrollment: ModeloEnrollment
 
@@ -263,6 +276,7 @@ def _build_taxpayer_profile(
     *,
     tax_id_default: str,
     iva_regime_default: IVARegime,
+    withhold_unanswered_iva_block: bool,
 ) -> TaxpayerProfile:
     """Assemble the profile from ordered, domain-specific field families."""
     return TaxpayerProfile(
@@ -275,7 +289,11 @@ def _build_taxpayer_profile(
         **_resolve_profile_withholding_fields(typed),
         **_objective_estimation_fields(canonical),
         **_resolve_profile_obligation_fields(typed),
-        **_resolve_profile_relationship_fields(canonical, typed),
+        **_resolve_profile_relationship_fields(
+            canonical,
+            typed,
+            withhold_unanswered_iva_block=withhold_unanswered_iva_block,
+        ),
         **_resolve_profile_activity_fields(canonical),
         **_resolve_profile_establishment_fields(canonical),
         **_resolve_profile_regime_fields(canonical, typed),
@@ -367,10 +385,14 @@ def _resolve_profile_obligation_fields(typed: SetupAnswers) -> _ProfileObligatio
 def _resolve_profile_relationship_fields(
     canonical: Mapping[str, str],
     typed: SetupAnswers,
+    *,
+    withhold_unanswered_iva_block: bool,
 ) -> _ProfileRelationshipFields:
     """Resolve IVA detail, grouped rosters, and enrollment facts."""
+    unanswered = modelo_iva_unanswered_paths(canonical) if withhold_unanswered_iva_block else ()
     return {
-        "iva": _resolve_modelo_iva_profile(canonical, typed),
+        "iva": _resolve_modelo_iva_profile(canonical, typed, unanswered=unanswered),
+        "iva_block_unanswered_paths": unanswered,
         "cross_period_group_member_rosters": _parse_cross_period_group_member_rosters(canonical),
         "enrollment": ModeloEnrollment(
             large_company=_declared_bool(typed.enrollment_large_company),
@@ -558,6 +580,15 @@ def modelo_iva_profile_required_paths(values: Mapping[str, object]) -> tuple[str
     return MODELO_IVA_BLOCK_REQUIRED_PATHS
 
 
+def modelo_iva_unanswered_paths(values: Mapping[str, object]) -> tuple[str, ...]:
+    """Return the paths a claimed Modelo IVA block obliges ``values`` to carry but leaves unanswered.
+
+    In :data:`MODELO_IVA_BLOCK_REQUIRED_PATHS` order; empty when the block is
+    unclaimed or complete.
+    """
+    return tuple(path for path in modelo_iva_profile_required_paths(values) if not _declared(values.get(path)))
+
+
 def iva_regime_owes_m303_regime_composition(regime: str) -> bool:
     """Report whether a filer declaring ``regime`` and no composition still owes the Modelo 303 composition.
 
@@ -652,10 +683,26 @@ def _resolve_m303_regime_composition(
         ) from exc
 
 
-def _resolve_modelo_iva_profile(canonical: Mapping[str, str], typed: SetupAnswers) -> ModeloIVAProfile | None:
-    """Build an IVA block only when a block-owned fact is explicitly present."""
+def _resolve_modelo_iva_profile(
+    canonical: Mapping[str, str],
+    typed: SetupAnswers,
+    *,
+    unanswered: tuple[str, ...] = (),
+) -> ModeloIVAProfile | None:
+    """Build an IVA block only when a block-owned fact is explicitly present.
+
+    ``unanswered`` names the required paths a read projection admits as
+    unanswered. A yes/no fact among them stays ``None``; the territory or the
+    composition among them leaves no block to build.
+    """
     if not profile_claims_modelo_iva_block(canonical):
         return None
+    if not set(unanswered) <= set(_MODELO_IVA_REQUIRED_BOOL_PATHS):
+        return None
+
+    def required_yes_no(value: object, *, path: str) -> bool | None:
+        return None if path in unanswered else _required_iva_bool(value, path=path)
+
     composition = _resolve_m303_regime_composition(canonical, typed)
     return ModeloIVAProfile(
         tax_territory=_resolve_m303_tax_territory(typed.tax_residence_jurisdiction_scope),
@@ -665,19 +712,19 @@ def _resolve_modelo_iva_profile(canonical: Mapping[str, str], typed: SetupAnswer
         group_member_enrolled=_declared_bool(typed.iva_group_member_enrolled),
         group_dominant_entity_enrolled=_declared_bool(typed.iva_group_dominant_entity_enrolled),
         sii_enrolled=_declared_bool(typed.iva_sii_enrolled),
-        redeme_enrolled=_required_iva_bool(typed.iva_redeme_enrolled, path="iva.redeme_enrolled"),
+        redeme_enrolled=required_yes_no(typed.iva_redeme_enrolled, path="iva.redeme_enrolled"),
         intracommunity_operations_exceed_50000_eur=_declared_bool(
             typed.iva_intracommunity_operations_exceed_50000_eur,
         ),
-        cash_accounting_regime_enrolled=_required_iva_bool(
+        cash_accounting_regime_enrolled=required_yes_no(
             typed.iva_cash_accounting_regime_enrolled,
             path="iva.cash_accounting_regime_enrolled",
         ),
-        voluntary_sii_enrolled=_required_iva_bool(
+        voluntary_sii_enrolled=required_yes_no(
             typed.iva_voluntary_sii_enrolled,
             path="iva.voluntary_sii_enrolled",
         ),
-        hydrocarbon_deposit_advance_payment_deduction_entitled=_required_iva_bool(
+        hydrocarbon_deposit_advance_payment_deduction_entitled=required_yes_no(
             typed.iva_hydrocarbon_deposit_advance_payment_deduction_entitled,
             path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
         ),
