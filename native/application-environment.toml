@@ -68,6 +68,12 @@ CADRUMO_PROXY_URL = { kind = "text", role = "pass" }
 CADRUMO_PROXY_USERNAME = { kind = "text", role = "pass" }
 CADRUMO_PROXY_BYPASS = { kind = "text", role = "pass" }
 
+# The deployment's evidence posture: its off-host opt-in and its gestor bar. They are
+# set in the environment the runtime and the agent service start in; the runtime passes
+# them to the profile workers, which decide every off-host evidence read and grant.
+CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED = { kind = "boolean", role = "pass" }
+CADRUMO_EVIDENCE_GESTOR_MODE = { kind = "boolean", role = "pass" }
+
 TEMP = { kind = "directory", role = "pin" }
 TMP = { kind = "directory", role = "pin" }
 TMPDIR = { kind = "directory", role = "pin" }
@@ -407,7 +413,13 @@ base = "groups"
 base_groups = ["system", "session", "terminal", "display", "network"]
 pins = true
 operator = ["presentation", "remote", "package"]
-pass = ["CADRUMO_PROXY_URL", "CADRUMO_PROXY_USERNAME", "CADRUMO_PROXY_BYPASS"]
+pass = [
+  "CADRUMO_PROXY_URL",
+  "CADRUMO_PROXY_USERNAME",
+  "CADRUMO_PROXY_BYPASS",
+  "CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED",
+  "CADRUMO_EVIDENCE_GESTOR_MODE",
+]
 slots = [{ name = "CADRUMO_PROFILE_ROOT", required = false }]
 path = "package"
 
@@ -442,12 +454,15 @@ base_groups = ["system", "session", "display", "network"]
 pins = true
 # The desktop reads the active profile's identity through this image's sign-in
 # status command; the reveal opt-in un-redacts only opaque profile/bucket ids.
-# It passes the operator's proxy on to the profile workers that run setup.
+# It passes the operator's proxy on to the profile workers that run setup, and the
+# deployment's evidence posture to the profile workers that decide off-host reads.
 pass = [
   "CADRUMO_CLI_REVEAL_IDENTIFIERS",
   "CADRUMO_PROXY_URL",
   "CADRUMO_PROXY_USERNAME",
   "CADRUMO_PROXY_BYPASS",
+  "CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED",
+  "CADRUMO_EVIDENCE_GESTOR_MODE",
 ]
 path = "package"
 
@@ -457,6 +472,8 @@ base = "groups"
 base_groups = ["system", "session", "display", "network"]
 pins = true
 operator = ["presentation", "package"]
+# The service reads the deployment's evidence posture to decide a profile's off-host eligibility.
+pass = ["CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED", "CADRUMO_EVIDENCE_GESTOR_MODE"]
 fixed = [
   { name = "CADRUMO_PACKAGE_AGENT_EXECUTABLE", image = "cadrumo-agent" },
   { name = "CADRUMO_PACKAGE_RELAY_EXECUTABLE", image = "cadrumo-mcp" },
