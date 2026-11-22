@@ -1345,6 +1345,8 @@ errors:
       read it again before saving.
     financial_edit_journal_purge: This legacy financial edit journal could not be
       safely purged. Its operation is unavailable. No edit value was loaded.
+    ledger_batch_plan_changed: The movements changed since you reviewed this edit;
+      review it again before saving.
     ledger_preflight: Ledger preflight rejected the modelo run because it is not yet
       fileable.
     ledger_purchase_evidence_release: 'The document can''t be removed from this movement:

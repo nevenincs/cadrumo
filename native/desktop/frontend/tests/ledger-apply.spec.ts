@@ -24,7 +24,14 @@ import {
   outcomeTally,
   stageTally,
 } from "../src/components/ledger/editing/editingModel";
-import type { LedgerPlan } from "../src/shell/ledgerPlan";
+import {
+  batchRequests,
+  bulkRequest,
+  withReviewedDigests,
+  type BulkRow,
+  type LedgerPlan,
+  type PlanStep,
+} from "../src/shell/ledgerPlan";
 import {
   EMPTY_STAGE,
   newDraft,
@@ -137,17 +144,35 @@ const added = (id: string, written = true): FakeAnswer => ({
 const linked: FakeAnswer = {
   settle: { outcome: "linked", result: { transaction_id: NEW_A } },
 };
+/** A bulk part setting the category on `ids`, as the plan cuts one. */
+const bulkPart = (ids: string[], part: number, parts: number): PlanStep => {
+  const rows: BulkRow[] = ids.map((id) => ({
+    transactionId: id,
+    fields: ["category_id"],
+    cells: {
+      transaction_id: id,
+      classification: "BUSINESS",
+      category_id: "telefono",
+    },
+  }));
+  return { kind: "bulk", part, parts, rows, request: bulkRequest(rows) };
+};
 const definitionOf = (call: Call) =>
   call.kind === "submit" ? call.definition : "answer";
 
 /** Plans `content` against the rows and runs it, answering each call by
- * definition from `answers` in turn. */
+ * definition from `answers` in turn. Each batch part is bound to a digest
+ * as if its preview had been shown. */
 async function apply(
   content: StagedContent,
   rows: Map<string, LedgerTransactionReviewProjection>,
   answers: Record<string, FakeAnswer[]>,
 ): Promise<{ plan: LedgerPlan; report: ApplyReport; calls: Call[] }> {
-  const plan = planRecorded(content, { rows });
+  const planned = planRecorded(content, { rows });
+  const plan = withReviewedDigests(
+    planned,
+    batchRequests(planned).map(() => "d".repeat(64)),
+  );
   const { port, calls } = fakePort((call) => {
     const queue = answers[definitionOf(call)];
     const next = queue?.shift();
@@ -338,10 +363,10 @@ test("an unknown outcome pauses every later write and nothing is sent again", as
     content,
     rowsOf(business(A), movement(B), business(C)),
     {
-      "ledger.update": [
+      "ledger.update.batch": [
         { fail: { code: "unknown", operation_id: "op-77" } },
-        updated(B, B),
       ],
+      "ledger.update": [updated(A, A)],
     },
   );
   expect(calls).toHaveLength(1);
@@ -360,7 +385,7 @@ test("an unknown outcome pauses every later write and nothing is sent again", as
     drafts: [draft.key],
     actions: ["link"],
   });
-  expect(report.reread).toEqual([A]);
+  expect(report.reread).toEqual([B]);
 });
 
 test("a running or waiting write was not observed to settle: it is unknown", async () => {
@@ -370,7 +395,7 @@ test("a running or waiting write was not observed to settle: it is unknown", asy
     actions: [],
   };
   const { report } = await apply(content, rowsOf(business(A)), {
-    "ledger.classify.bulk": [
+    "ledger.update.batch": [
       {
         outcome: {
           kind: "running",
@@ -430,13 +455,16 @@ test("a bulk part saves row by row: failed rows stay staged, the rest are settle
     actions: [],
   };
   const rows = rowsOf(business(A), business(B), business(C));
-  const { report } = await apply(content, rows, {
-    "ledger.classify.bulk": [
-      bulkResult(3, 1, [
-        { row_index: 1, transaction_id: B, reason: "Categoría desconocida." },
-      ]),
-    ],
-  });
+  // A property-only row would go in a batch edit; the bulk carries rows
+  // with what a batch cannot, so its part is made here.
+  const part0 = bulkPart([A, B, C], 1, 1);
+  const plan = { ...planRecorded(content, { rows }), steps: [part0] };
+  const { port } = fakePort(() =>
+    bulkResult(3, 1, [
+      { row_index: 1, transaction_id: B, reason: "Categoría desconocida." },
+    ]),
+  );
+  const report = await runPlan(port, plan);
   const part = report.steps[0]!;
   // One saved, one skipped: the counts do not say which.
   expect(part.outcome).toEqual({ kind: "settled" });
@@ -468,9 +496,11 @@ test("a part refused whole saves nothing, keeps every row and stops the parts af
     actions: [],
   };
   const rows = rowsOf(...ids.map((id) => business(id)));
-  // A bound small enough for one row per part.
-  const plan = planRecorded(content, { rows, payloadLimit: 160 });
-  expect(plan.steps.filter((step) => step.kind === "bulk")).toHaveLength(4);
+  // One row per part, as a small bound cuts a bulk.
+  const plan = {
+    ...planRecorded(content, { rows }),
+    steps: ids.map((id, at) => bulkPart([id], at + 1, ids.length)),
+  };
   const { port, calls } = fakePort((_, at) =>
     at === 0 ? bulkResult(1, 1) : { refuse: "REFUSED_LEDGER_REVISION_CHANGED" },
   );
@@ -554,7 +584,10 @@ test("a replayed add is unchanged, and a saved-but-unread write pauses but is no
   ).toEqual([]);
 
   const content: StagedContent = {
-    rows: { [A]: { notes: set("x") }, [B]: { notes: set("y") } },
+    rows: {
+      [A]: { description: set("x") },
+      [B]: { description: set("y") },
+    },
     drafts: [],
     actions: [],
   };
@@ -563,7 +596,7 @@ test("a replayed add is unchanged, and a saved-but-unread write pauses but is no
   });
   expect(unread.report.paused).toEqual({ index: 0, operationId: "op-5" });
   expect(keepAfterApply(content, unread.report).rows).toEqual({
-    [B]: ["notes"],
+    [B]: ["description"],
   });
 });
 

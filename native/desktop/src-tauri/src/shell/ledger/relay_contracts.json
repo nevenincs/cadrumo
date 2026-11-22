@@ -1186,6 +1186,22 @@
         "path": []
       }
     },
+    "ledger.update.batch": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.update.batch.preview": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.view": {
       "may_write": false,
       "review": false,

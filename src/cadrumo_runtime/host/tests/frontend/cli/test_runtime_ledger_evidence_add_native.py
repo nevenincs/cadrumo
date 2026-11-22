@@ -17,6 +17,7 @@ from cadrumo.application.user_profile.login_session import authenticate_profile_
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.tests.cli_envelope import unwrap_cli_result
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     RuntimeFailureObservation,
     native_cli_profile_scope,
@@ -46,7 +47,7 @@ def test_native_exact_profile_evidence_add_replay_and_readback(
     (caller / "invoices").mkdir(parents=True)
     source_path = "invoices/native-invoice.pdf"
     invoice = caller / source_path
-    invoice_bytes = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
+    invoice_bytes = text_pdf_bytes(("Factura native-invoice",))
     invoice.write_bytes(invoice_bytes)
     expected_digest = sha256(invoice_bytes).hexdigest()
     monkeypatch.chdir(caller)

@@ -251,6 +251,9 @@ modelo:
           iva-autoconsumo-promotor-super-reducido-base:
             label: Az ingatlanfejlesztő önfogyasztásának adóalapja szupercsökkentett
               kulccsal (4%) (a hivatalos 01. rovat része)
+          iva-base-autorepercutida-interior-devengado:
+            label: Keletkezett fordított adózású ÁFA adóalapja belföldi ügyleteknél
+              (LIVA 84. cikk Uno.2.; hivatalos 12. rovat)
           iva-base-autorepercutida-intracomunitaria-devengado:
             help: Adja össze a Közösségen belüli beszerzések után önszámlázással keletkezett
               adóalapot.

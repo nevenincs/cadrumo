@@ -34,6 +34,7 @@ from cadrumo.domain.calculations.registry.cnae_classification import cnae_classi
 from cadrumo.domain.calculations.registry.renta_codes_catalogue import ue_eea_country_codes
 from cadrumo.domain.iva.establishment import catalogued_country_codes
 from cadrumo.domain.user_profile.schema import ProfileFieldCodeList
+from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo_client.transport.frontend_client_contracts import ProfileViewCollection
 
 from .....frontend.tui.profile.overview_client import profile_overview_from_client_view
@@ -42,11 +43,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _PASSWORD = "runtime-overview-test-passphrase"  # noqa: S105 - isolated test credential
 
 
-def _register() -> UUID:
+def _register(*facts: UserProfileFact) -> UUID:
     with bundled_indexed_authority().operation() as authority:
         created = register_profile_with_credentials(
             label="Stored profile label",
             passphrase=_PASSWORD,
+            facts=facts,
             profile_create_context=authority.profile_create_context(),
             profile_decode_context=authority.profile_decode_context(),
         )
@@ -120,7 +122,8 @@ def test_empty_profile_overview_uses_fewer_bounded_reads(tmp_path: Path) -> None
 
 def test_real_encrypted_overview_pages_round_trip_every_field(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register()
+        # The principal CNAE classification is offered only to a legal entity.
+        profile_id = _register(UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"))
         with bundled_indexed_authority().operation() as authority:
             repository = ProfileRecordRepository.for_current_session(
                 profile_id, profile_decode_context=authority.profile_decode_context()

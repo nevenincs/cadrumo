@@ -23,6 +23,7 @@ from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthor
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from dev.acceptance.installed_cli import (
     CommandEvidence,
     InstalledCli,
@@ -168,7 +169,7 @@ def run_iva_m303_cli_journey(
             resources.enter_context(runtime_scope)
         artifact_root.mkdir(parents=True, exist_ok=True)
         artifact = artifact_root / "synthetic-purchase.pdf"
-        artifact.write_bytes(b"%PDF-1.4\n% synthetic acceptance purchase evidence\n")
+        artifact.write_bytes(text_pdf_bytes(("synthetic acceptance purchase evidence",)))
 
         cli = InstalledCli(
             executable,

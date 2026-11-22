@@ -865,7 +865,7 @@ def _undetermined_calendar_entry(item: UndeterminedObligation) -> SuppressedCale
         adjusted_closes_on=item.closes_on,
         verdict=ApplicabilityVerdict.INCOMPLETE,
         reason=" ".join(
-            tr(_question_locale_key(path)) for path in item.deciding_paths if _question_locale_key(path) is not None
+            tr(key) for key in (_question_locale_key(path) for path in item.deciding_paths) if key is not None
         )
         or tr(_UNDETERMINED_IVA_WINDOW_REASON_KEY),
         actions=(declare_next_action(_PROFILE_EDIT_ACTION_ID),),

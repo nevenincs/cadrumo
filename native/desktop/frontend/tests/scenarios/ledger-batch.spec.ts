@@ -60,7 +60,10 @@ async function openReview(target: Page) {
 }
 
 async function save(target: Page) {
-  await review(target).locator(".ledger-apply-save").click();
+  // Saving waits until the ledger has said what the batch edit would do.
+  const button = review(target).locator(".ledger-apply-save");
+  await expect(button).not.toHaveAttribute("aria-disabled", "true");
+  await button.click();
   await expect(review(target).locator(".ledger-apply-done")).toBeVisible({
     timeout: 20_000,
   });

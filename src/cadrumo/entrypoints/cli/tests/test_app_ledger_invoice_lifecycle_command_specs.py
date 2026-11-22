@@ -8,6 +8,7 @@ from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 
 from ..app_ledger_invoice_common_command_parameters import (
     BUSINESS_PREMISES_LEASE_OPTIONS,
+    DECLARED_FX_RATE_OPTION,
     INVOICE_INTAKE_WIZARD_CORE_OPTIONS,
     INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS,
     INVOICE_LIFECYCLE_METADATA_OPTIONS,
@@ -205,6 +206,7 @@ _EXPECTED_PARAMETERS = {
         _option("referencia_catastral", "builtins:str", None, "cli.app.ledger.invoice.referencia_catastral_help"),
         _option("line", "builtins:str", (), "cli.app.ledger.invoice.line_help", multiple=True),
         _option("notes", "builtins:str", "", None),
+        _option("fx_rate", "builtins:str", None, "cli.app.ledger.invoice.fx_rate_help"),
     ),
     "app_ledger_invoice_remove": (
         _argument("invoice_id", "builtins:str", "cli.app.ledger.invoice.invoice_id_help"),
@@ -240,6 +242,7 @@ _EXPECTED_PARAMETERS = {
             None,
             "cli.app.ledger.invoice.rectifies_help",
         ),
+        _option("fx_rate", "builtins:str", None, "cli.app.ledger.invoice.fx_rate_help"),
     ),
     "app_ledger_invoice_view": (_argument("invoice_id", "builtins:str", "cli.app.ledger.invoice.invoice_id_help"),),
     "app_ledger_invoice_wizard": (
@@ -356,6 +359,7 @@ def test_shared_immutable_parameters_preserve_distinct_command_facts() -> None:
     assert add.parameters[16] is wizard.parameters[16] is INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[0]
     assert add.parameters[18:21] == BUSINESS_PREMISES_LEASE_OPTIONS
     assert add.parameters[22] is wizard.parameters[18] is INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[1]
+    assert add.parameters[23] is update.parameters[12] is DECLARED_FX_RATE_OPTION
 
     update_notes = update.parameters[3]
     wizard_notes = wizard.parameters[-1]

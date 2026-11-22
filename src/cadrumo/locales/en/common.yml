@@ -238,6 +238,7 @@ aggregation:
         covers the whole price.
       invoice_line_currency_unconverted: An invoice line is denominated in a foreign
         currency with no resolved euro rate, so it cannot be declared on this modelo.
+        State the invoice's exchange rate to convert it.
       unsupported_period: Unsupported modelo period for totals from your records.
   oss_ioss:
     errors:
@@ -1812,6 +1813,8 @@ desktop:
         not_sent_paused: 'Not sent: saving is paused because we couldn''t confirm
           an earlier save. It''s still in your changes.'
         not_sent_stopped: 'Not sent: your session ended. It''s still in your changes.'
+        not_sent_unreviewed: 'Not sent: the ledger had not said what it would do.
+          Review again.'
         refused: 'Not saved: {reason} · still in your changes'
         saved_unread: Saved, but we can't show it yet. Refresh to see it.
         settled: Saved or already so
@@ -1830,7 +1833,11 @@ desktop:
       reading: Refreshing the ledger…
       refusal:
         changed_elsewhere: changed elsewhere
+        changed_since_seen: changed since you saw it
+        not_found: no longer exists
         other: the ledger didn't accept it
+        plan_changed: what the ledger would do changed since you reviewed it; review
+          again
       reject: 'rejected: {reason}'
       rows: Changes by movement
       save: Save {count}
@@ -1842,6 +1849,7 @@ desktop:
       shown: '{shown} of {total}'
       step:
         add: New movement · {movement}
+        batch: 'Part {part} of {parts} · edited together: {count}'
         bulk: 'Part {part} of {parts} · saved together: {count}'
       stopped: 'Your session ended: what was not sent is still in your changes'
       summary: Summary
@@ -2163,6 +2171,33 @@ desktop:
       year_estimated: '{year} (estimated)'
       year_estimated_note: 'These figures are estimates: there are no official tables
         for this year yet.'
+    batch:
+      cause:
+        invalid: the ledger does not accept this value
+        not_active: only an active movement can be changed
+        sealed: a filed declaration cites it
+      count:
+        applied: 'To change: {count}'
+        conflict: 'Changed since you saw them: {count}'
+        refused: 'Refused: {count}'
+        unchanged: 'Already so: {count}'
+      preview_failed: The ledger did not say what it would do, so nothing can be saved
+        together yet
+      preview_title: What the ledger will do
+      previewing: Asking the ledger what it will do…
+      row:
+        applied: Will change
+        unchanged: Already holds these values
+      save_waits: Saving waits until the ledger says what it will do
+      undo: Undo
+      undo_nothing: Nothing saved here can be written back
+      undo_unread: 'Not in the refreshed ledger, so not undone: {count}'
+      unwritten: Movements that will not change
+      written:
+        applied: 'Changed: {count}'
+        conflict: 'Changed since you saw them: {count}'
+        refused: 'Refused: {count}'
+        unchanged: 'Already so: {count}'
     capital:
       art108: Eligible under art. 108
       column:
@@ -3239,10 +3274,14 @@ desktop:
         counterparty_nif: Tax ID of the other party
         country_code: Country
         currency: Currency
+        fx_rate: Exchange rate
         invoice_date: Invoice date
         invoice_number: Invoice number
+        iva_category: IVA category
         iva_rate: IVA rate
         notes: Notes
+        operation_type: Modelo 349 key
+        recargo_amount: Equivalence surcharge
         retencion_amount: Withholding amount
         retencion_rate: Withholding rate
         taxable_base: Taxable base
@@ -3735,6 +3774,7 @@ desktop:
         counterparty_name: Counterparty
         counterparty_tax_id: Tax ID (NIF)
         currency: Currency
+        fx_rate: Exchange rate
         invoice_class: Class
         invoice_number: Number
         issued_at: Issue date
@@ -3941,6 +3981,7 @@ desktop:
       reagp_compensation: REAGP compensation
       recargo_equivalencia: Equivalence surcharge
       regimen_simplificado: Régimen simplificado
+      special_regime_used_goods: Used goods margin scheme (REBU)
       unknown: Unknown
     leave:
       cancel: Cancel
@@ -4086,6 +4127,34 @@ desktop:
       years_supported: Years you can read
       years_with_movements_or_invoices: Years with movements or invoices
     position: Row {row} of {count}
+    properties:
+      changes_on: changes on {count}
+      cleared: cleared
+      copied: 'Properties copied: {count}'
+      copy: Copy ({count})
+      copy_description: Choose what to copy from {movement}. Nothing changes until
+        you paste.
+      copy_first: Copy the properties of one movement first
+      copy_open: Copy properties
+      copy_title: Copy properties
+      first_refusal: 'First not changed: {movement} · {cause}'
+      group:
+        classification: Classification
+        counterparty: Counterparty
+        group: Group
+        irpf: IRPF
+        iva: IVA
+        notes: Notes
+      held: 'Properties copied: {count}'
+      none_shown: None of the selected movements is shown
+      none_ticked: Tick at least one property
+      nothing_to_paste: Pasting would change none of these movements
+      paste: Paste ({count})
+      paste_description: The ledger says what pasting would do to each movement. Paste
+        adds it to your changes; nothing is saved until you review and save.
+      paste_open: Paste properties ({count})
+      paste_title: 'Paste properties · movements: {count}'
+      unread: 'Not read on this page, so left out: {count}'
     prorrata:
       action:
         declare_gross: Declare a gross cuota
@@ -4237,6 +4306,8 @@ desktop:
       invoice_deduction_family_unresolved: Deduction
       invoice_recargo_not_declarable: Surcharge
       invoice_recargo_split_unresolved: Surcharge
+      invoice_rectificativa_modification_unmodelled: Rectificativa
+      invoice_used_goods_margin_unmodelled: Used goods
       linked_movement_contradicts_invoice: Invoice
       missing_business_classification: Classification
       missing_category: Category
@@ -4267,6 +4338,10 @@ desktop:
       invoice_recargo_not_declarable: The surcharge is not the legal rate on its base
       invoice_recargo_split_unresolved: The surcharge does not divide between its
         VAT rates
+      invoice_rectificativa_modification_unmodelled: Enter the correction with its
+        sign in casillas 14/15 or 40/41
+      invoice_used_goods_margin_unmodelled: Enter the margin base and its cuota in
+        the devengado casillas for its rate
       linked_movement_contradicts_invoice: Differs from its invoice
       missing_business_classification: Classification missing
       missing_category: Category missing
@@ -4306,6 +4381,9 @@ desktop:
         matches no activity withholding rate.'
       received_invoice_recipient_unknown: 'Not declared yet: the issuer''s NIF does
         not show whether it pays IRPF or Impuesto sobre Sociedades.'
+      received_invoice_rent_rate_unrecognised: 'Not declared yet: the rent withholding
+        matches neither the general rent withholding rate nor the Ceuta/Melilla rate
+        for the date.'
     retry: Retry
     reveal:
       dismiss: Dismiss

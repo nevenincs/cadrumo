@@ -476,6 +476,12 @@ cli:
         euro_rate_unavailable_message: No s'ha trobat cap tipus de canvi a euros per
           a {currency} el {date}, així que la factura s'ha registrat sense valor en
           euros i queda fora dels totals en euros fins que s'hi afegeixi un tipus.
+          Indica el tipus amb app ledger invoice update --fx-rate.
+        fx_rate_help: 'Tipus de canvi d''una factura en moneda estrangera: el valor
+          en euros d''una unitat de la seva moneda en la data de la factura, per exemple
+          0.9250 (LIVA art. 79.Once: el tipus vigent del Banc d''Espanya o l''últim
+          del BCE). Substitueix el tipus publicat i es registra com a declarat per
+          tu. Es rebutja en una factura en EUR.'
         group_help: Registres de factures de negoci (emeses o rebudes)
         import_all_refused: 'importació massiva de factures fallida: totes les files
           van ser rebutjades; no es va crear cap factura'
@@ -488,8 +494,13 @@ cli:
           necessita la columna.
         import_file_help: Camí a un fitxer CSV o XLSX amb files de factures (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, i opcionalment
-          iva_rate/retencion_amount/retencion_rate/currency/country_code/notes). Un
-          retencion_rate només s'accepta juntament amb el seu retencion_amount.
+          iva_rate/iva_category/operation_type/retencion_amount/retencion_rate/recargo_amount/currency/fx_rate/country_code/notes).
+          Un retencion_rate només s'accepta juntament amb el seu retencion_amount.
+          Un fx_rate és el valor en euros d'una unitat de la moneda de la fila i es
+          rebutja en una fila en EUR. Un iva_category ha de ser una categoria que
+          el registre declari per a la data de la factura; un operation_type és la
+          clau del model 349, i una fila que només indiqui la clau pren la categoria
+          que aquesta declara.
         import_help: Crea factures del catàleg en lot des d'un fitxer CSV o XLSX.
         import_unmapped_columns: 'columnes no importades perquè cap camp de factura
           hi va coincidir: {columns}'

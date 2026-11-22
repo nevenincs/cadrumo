@@ -110,7 +110,7 @@ function stepName(
   content: StagedContent,
 ): string {
   const ids =
-    step.kind === "bulk"
+    step.kind === "bulk" || step.kind === "batch"
       ? step.rows.map((row) => row.transactionId)
       : step.kind === "classify" || step.kind === "update"
         ? [step.transactionId]
@@ -243,6 +243,7 @@ function sameJson(left: unknown, right: unknown): boolean {
 export function stepFields(step: PlanStep): Map<string, StageFieldName[]> {
   switch (step.kind) {
     case "bulk":
+    case "batch":
       return new Map(step.rows.map((row) => [row.transactionId, row.fields]));
     case "classify":
     case "update":

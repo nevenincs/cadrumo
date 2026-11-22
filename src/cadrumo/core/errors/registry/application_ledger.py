@@ -990,6 +990,17 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.ledger.batch_update.LedgerBatchPlanChangedError",
+        ErrorCode(
+            code="REFUSED_LEDGER_BATCH_PLAN_CHANGED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.ledger_batch_plan_changed",
+            retryable=False,
+            runbook_id=None,
+            public_message_from_registry=True,
+        ),
+    ),
+    (
         "cadrumo.application.ledger.invoice_unlink.InvoiceUnlinkRefusedError",
         ErrorCode(
             code="REFUSED_LEDGER_UNLINK",

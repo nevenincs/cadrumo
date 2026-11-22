@@ -198,6 +198,9 @@ class InvoiceAddRequest(BaseModel):
     recargo_amount: PublicDecimal | None = None
     business_premises_lease: InvoiceAddBusinessPremisesLease | None = None
     lines: tuple[InvoiceAddLine, ...] = ()
+    #: The euro value of one unit of ``currency`` the operator states was in
+    #: force at the invoice date; it wins over the published rate.
+    declared_fx_rate: PublicDecimal | None = None
 
     @model_validator(mode="after")
     def _line_input_shape(self) -> InvoiceAddRequest:

@@ -972,6 +972,10 @@ application:
           .xlsx, .xlsm vagy .xls kiterjesztésűnek kell lennie (kapott: {extension}).'
     creation:
       errors:
+        declared_fx_rate_not_positive: A(z) %{fx_rate} árfolyamnak nullánál nagyobbnak
+          kell lennie.
+        declared_fx_rate_on_euro_invoice: 'Az euróban kiállított számlához nem tartozik
+          árfolyam: töröld az árfolyamot, vagy javítsd a számla pénznemét.'
         duplicate_invoice: 'A katalógusban már létezik azonos azonosságú számla: %{invoice_id}.'
         intracom_operation_type_required: 'A Közösségen belüli termékértékesítésnek
           meg kell adnia a Modelo 349 műveleti kulcsát: a kategória önmagában nem
@@ -2518,6 +2522,11 @@ application:
         {invoice} számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz,
         de az adószámából (NIF) nem derül ki, hogy a kiállító IRPF vagy társasági
         adó (Impuesto sobre Sociedades) alá tartozik. Ellenőrizd a számla adószámát.
+      withholding_invoice_rent_rate_unrecognised: A(z) {counterparty} által kiállított
+        {invoice} számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz
+        egy bérleti díjra, amely sem az általános bérleti levonási kulcsnak, sem a
+        Ceutára és Melillára vonatkozó kulcsnak nem felel meg a számla napján. Ellenőrizd
+        a számla alapját és levonását.
     calc_diagnostic_words:
       household_leaf:
         apellidos_nombre: vezetéknév és keresztnév
@@ -3163,6 +3172,14 @@ application:
         invoice_recargo_split_unresolved: 'egy kiállított számla több áfakulcsra egyetlen
           kiegyenlítő pótlékot (recargo de equivalencia) tartalmaz, amely eltér az
           egyes kulcsok pótlékának összegétől: javítsd a számla pótlékát'
+        invoice_rectificativa_modification_unmodelled: 'a helyesbítő számla (factura
+          rectificativa) egyik áfakulcs-sorban sem szerepel: add meg az adóalapját
+          és az adóját a megfelelő előjellel a Modelo 303 14. és 15. mezőjében, ha
+          te állítottad ki, vagy a 40. és 41. mezőjében, ha te kaptad'
+        invoice_used_goods_margin_unmodelled: 'a használt cikkek különleges rendszerében
+          (régimen especial de los bienes usados) végzett értékesítés árrésalapját
+          (art. 137) a program nem számítja ki: add meg magad az árrés adóalapját
+          és adóját a Modelo 303 kulcsához tartozó fizetendő áfa (devengado) mezőiben'
         linked_movement_contradicts_invoice: az adóalapja vagy az IVA-összege eltér
           a kifizetett számláétól
         missing_business_classification: még nincs besorolva üzleti, magán vagy vegyes
@@ -3701,6 +3718,10 @@ application:
         (rendimientos del trabajo) tartalmaz a DT 12.ª szerinti küszöb felett, ezért
         a(z) [%{reduccion_id}] rovatban olyan csökkentést kaphatsz, amelyet még nem
         használsz. Ellenőrizd, hogy vonatkozik-e rád.
+      floor_subtraction_unresolved: 'A(z) [%{box}] rovatban összeg szerepel, és a(z)
+        [%{floor_box}] rovat minimumot ír elő, de a hivatalos szöveg nem mondja meg,
+        hogy ez a levonás viheti-e az összeget a minimum alá, ezért ez nem ellenőrizhető.
+        Érintett rovatok: %{boxes}.'
       foreign_asset_redeclaration: 'Modelo %{modelo_code}, %{filing_year}: az egyik
         külföldi vagyonelemének értéke %{prior_value_eur} EUR összegről %{current_value_eur}
         EUR összegre nőtt. A(z) %{delta_value_eur} EUR növekedés meghaladja azt a(z)
@@ -3772,6 +3793,10 @@ application:
         %{period} időszakának számításával. A benyújtás az összehasonlítás sikeres
         befejezéséig tiltott. Próbáld újra, amikor a nyilvántartásaid elérhetők, és
         számold újra a bevallást, ha a tételek megváltoztak.
+      limited_subtractions_below_floor: Azok a levonások, amelyek csak a(z) [%{box}]
+        rovatban szereplő minimumig (%{floor_value}) alkalmazhatók, összesen %{limited_total}
+        összeget tesznek ki, és %{after_limited} összeget hagynak, ami e minimum alatt
+        van. Csak a minimumig beférő részt add meg, a többit vidd át a következő évekre.
       m193_settled_row_amount_authority_unresolved: A(z) %{filing_year}. évi Modelo
         193 %{settled_prior_accrual_rows} olyan kifizetést tartalmaz, amely korábbi
         évben keletkezett jövedelemre vonatkozik. A hivatalos szabályok nem határozzák

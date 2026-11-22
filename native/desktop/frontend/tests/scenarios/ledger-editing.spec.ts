@@ -119,6 +119,10 @@ async function focusOnGrid(target: Page) {
 }
 
 async function save(target: Page) {
+  // Saving waits until the ledger has said what a batch edit would do.
+  await expect(
+    review(target).locator(".ledger-apply-save"),
+  ).not.toHaveAttribute("aria-disabled", "true");
   await review(target).locator(".ledger-apply-save").click();
   await expect(review(target).locator(".ledger-apply-done")).toBeVisible({
     timeout: 20_000,
@@ -284,13 +288,13 @@ test("Delete clears an optional cell, and a required one says it cannot be clear
   const amount = cellOf(row, "amount");
   await expect(amount.locator("[data-refused]")).toHaveCount(1);
   await expect(amount).toHaveAttribute("aria-invalid", "true");
-  // The clear goes through a single classification, never the bulk.
+  // The clear goes through the batch edit as a null, never as a bulk blank.
   await openReview(target);
   await save(target);
   const submitted = await target.evaluate(
     () => window.__scenarioHostCalls ?? [],
   );
-  expect(submitted).toContain("ledger ledger.classify.single");
+  expect(submitted).toContain("ledger ledger.update.batch");
   expect(submitted).not.toContain("ledger ledger.classify.bulk");
 });
 
@@ -321,7 +325,8 @@ test("the category picker lists a clear choice that stages a clear, reviews it a
   const submitted = await target.evaluate(
     () => window.__scenarioHostCalls ?? [],
   );
-  expect(submitted).toContain("ledger ledger.classify.single");
+  // A cleared category is a property the batch edit writes as a null.
+  expect(submitted).toContain("ledger ledger.update.batch");
   await review(target).locator(".ledger-apply-done").click();
   await expect(cellOf(row, "category")).not.toContainText(stored);
 });
@@ -683,12 +688,9 @@ test("a change that adds many saves one at a time says what it costs first", asy
 }) => {
   await openLedger(target);
   const rows = dataRows(target);
-  await typeInto(
-    target,
-    cellOf(rows.nth(0), "counterparty"),
-    "Proveedor común",
-  );
-  await cellOf(rows.nth(0), "counterparty").click();
+  // A description is no property a batch edit writes: each saves on its own.
+  await typeInto(target, cellOf(rows.nth(0), "description"), "Proveedor común");
+  await cellOf(rows.nth(0), "description").click();
   for (let step = 0; step < 14; step += 1)
     await target.keyboard.press("Shift+ArrowDown");
   await target.keyboard.press("Control+KeyD");
@@ -848,11 +850,13 @@ test("an unknown write pauses every later write until a re-read says whether it 
   await openLedger(target);
   await showLedgerColumn(target, "group_label");
   const row = rowOf(target, "PAPELERIA TRAZO");
+  // The counterparty goes in the batch edit, saved first; the description
+  // saves on its own after it.
   await typeInto(target, cellOf(row, "counterparty"), "Trazo Papelería SL");
   await typeInto(
     target,
-    cellOf(rowOf(target, "SOFTNUBE IRELAND SUSCRIPCION"), "group_label"),
-    "Software",
+    cellOf(rowOf(target, "SOFTNUBE IRELAND SUSCRIPCION"), "description"),
+    "SOFTNUBE IRELAND SUSCRIPCION ANUAL",
   );
   await openReview(target);
   await ledgerControls.nextWrites(target, ["unknown"]);
@@ -893,8 +897,8 @@ test("a write the read after it shows saved leaves the stage, and the re-read sa
   );
   await typeInto(
     target,
-    cellOf(rowOf(target, "SOFTNUBE IRELAND SUSCRIPCION"), "group_label"),
-    "Software",
+    cellOf(rowOf(target, "SOFTNUBE IRELAND SUSCRIPCION"), "description"),
+    "SOFTNUBE IRELAND SUSCRIPCION ANUAL",
   );
   await openReview(target);
   await ledgerControls.nextWrites(target, ["unknown"]);
@@ -926,15 +930,16 @@ test("the review leads with its summary and folds the list of movements", async 
   page: target,
 }) => {
   await openLedger(target);
+  // Descriptions save one at a time, as no batch edit writes them.
   await typeInto(
     target,
-    cellOf(rowOf(target, "PAPELERIA TRAZO"), "counterparty"),
-    "Trazo SL",
+    cellOf(rowOf(target, "PAPELERIA TRAZO"), "description"),
+    "PAPELERIA TRAZO SL",
   );
   await typeInto(
     target,
-    cellOf(rowOf(target, "SOFTNUBE IRELAND SUSCRIPCION"), "counterparty"),
-    "SoftNube Ltd",
+    cellOf(rowOf(target, "SOFTNUBE IRELAND SUSCRIPCION"), "description"),
+    "SOFTNUBE IRELAND SUSCRIPCION LTD",
   );
   await openReview(target);
   const list = review(target).locator(".ledger-review-rows");
@@ -961,10 +966,11 @@ test("a part refused whole saves nothing of it and keeps it staged", async ({
   await openLedger(target);
   await cellOf(rowOf(target, "PAPELERIA TRAZO"), "description").click();
   await target.keyboard.press("Alt+KeyP");
+  // A description is no property a batch edit writes: it saves on its own.
   await typeInto(
     target,
-    cellOf(rowOf(target, "SOFTNUBE IRELAND SUSCRIPCION"), "counterparty"),
-    "SoftNube Ltd",
+    cellOf(rowOf(target, "SOFTNUBE IRELAND SUSCRIPCION"), "description"),
+    "SOFTNUBE IRELAND SUSCRIPCION LTD",
   );
   await openReview(target);
   await expect(review(target).locator(".ledger-review-summary")).toContainText(
@@ -993,8 +999,8 @@ test("a part refused whole saves nothing of it and keeps it staged", async ({
   await target.keyboard.press("Control+KeyZ");
   await expect(tray(target)).toHaveCount(0);
   await expect(
-    cellOf(rowOf(target, "SOFTNUBE IRELAND SUSCRIPCION"), "counterparty"),
-  ).toHaveText("SoftNube Ltd");
+    cellOf(rowOf(target, "SOFTNUBE IRELAND SUSCRIPCION"), "description"),
+  ).toHaveText("SOFTNUBE IRELAND SUSCRIPCION LTD");
   await target.keyboard.press("Control+KeyZ");
   await expect(toast(target)).toHaveText(
     label("desktop.ledger.edit.undo_applied"),
@@ -1032,9 +1038,9 @@ test("a movement changed elsewhere asks only where both changed the same field",
   await conflicts.locator(".ledger-conflict-theirs").click();
   await review(target).locator(".ledger-conflicts-looked").check();
   await go.click();
-  // Taking theirs dropped the staged change.
+  // Taking theirs dropped the staged change; the other saves in the batch.
   await expect(review(target).locator(".ledger-review-summary")).toContainText(
-    label("desktop.ledger.apply.one_by_one_quick", { count: 1 }),
+    label("desktop.ledger.apply.together", { count: 1 }),
   );
   await save(target);
   await review(target).locator(".ledger-apply-done").click();

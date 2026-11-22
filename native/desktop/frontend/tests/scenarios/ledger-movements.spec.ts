@@ -967,6 +967,11 @@ test("compact status cells draw a state as its glyph, named, and widen for the m
     .click();
   await target.locator(".ledger-tray .ledger-tray-review").click();
   const review = target.locator(".ledger-review");
+  // Saving waits until the ledger has said what a batch edit would do.
+  await expect(review.locator(".ledger-apply-save")).not.toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
   await review.locator(".ledger-apply-save").click();
   await expect(review.locator(".ledger-apply-done")).toBeVisible({
     timeout: 20_000,

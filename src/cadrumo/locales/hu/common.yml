@@ -251,6 +251,7 @@ aggregation:
         teljes árat fedezi.
       invoice_line_currency_unconverted: Egy számlasor külföldi pénznemben van megadva,
         és nincs feloldott euróárfolyama, ezért nem szerepeltethető ezen a nyomtatványon.
+        Add meg a számla árfolyamát az átváltáshoz.
       unsupported_period: Nem támogatott nyomtatvány-időszak a nyilvántartásaidból
         számított összesítésekhez.
   oss_ioss:
@@ -1852,6 +1853,8 @@ desktop:
           nem tudtunk megerősíteni. A változtatásaid között marad.'
         not_sent_stopped: 'Nem ment el: a munkameneted véget ért. A változtatásaid
           között marad.'
+        not_sent_unreviewed: 'Nem ment el: a könyv nem mondta meg, mit tenne. Nézd
+          át újra.'
         refused: 'Nincs mentve: {reason} · a változtatásaid között marad'
         saved_unread: Mentve, de még nem tudjuk megmutatni. Frissíts, hogy lásd.
         settled: Mentve, vagy már így volt
@@ -1871,7 +1874,10 @@ desktop:
       reading: A könyv frissítése…
       refusal:
         changed_elsewhere: máshol módosult
+        changed_since_seen: módosult, mióta megnézted
+        not_found: már nem létezik
         other: a napló nem fogadta el
+        plan_changed: megváltozott, mit tenne a könyv, mióta átnézted; nézd át újra
       reject: 'elutasítva: {reason}'
       rows: Változások tételenként
       save: '{count} mentése'
@@ -1883,6 +1889,7 @@ desktop:
       shown: '{shown} / {total}'
       step:
         add: Új tétel · {movement}
+        batch: '{part}/{parts}. rész · együtt szerkesztve: {count}'
         bulk: '{part}/{parts}. rész · együtt mentve: {count}'
       stopped: 'A munkameneted véget ért: ami nem ment el, a változtatásaid között
         marad'
@@ -2209,6 +2216,33 @@ desktop:
       year_estimated: '{year} (becsült)'
       year_estimated_note: 'Ezek az összegek becslések: erre az évre még nincsenek
         hivatalos táblázatok.'
+    batch:
+      cause:
+        invalid: a könyv nem fogadja el ezt az értéket
+        not_active: csak aktív mozgás módosítható
+        sealed: egy benyújtott bevallás hivatkozik rá
+      count:
+        applied: 'Változik: {count}'
+        conflict: 'Módosult, mióta megnézted: {count}'
+        refused: 'Elutasítva: {count}'
+        unchanged: 'Már így van: {count}'
+      preview_failed: A könyv nem mondta meg, mit tenne, ezért még semmit sem lehet
+        együtt menteni
+      preview_title: Amit a könyv tenni fog
+      previewing: A könyv megkérdezése, mit fog tenni…
+      row:
+        applied: Változni fog
+        unchanged: Már ezeket az értékeket tartalmazza
+      save_waits: A mentés megvárja, hogy a könyv megmondja, mit fog tenni
+      undo: Visszavonás
+      undo_nothing: Az itt mentettekből semmit sem lehet visszaírni
+      undo_unread: 'Nincs a frissített könyvben, ezért nem lett visszavonva: {count}'
+      unwritten: Mozgások, amelyek nem változnak
+      written:
+        applied: 'Megváltozott: {count}'
+        conflict: 'Módosult, mióta megnézted: {count}'
+        refused: 'Elutasítva: {count}'
+        unchanged: 'Már így van: {count}'
     capital:
       art108: A 108. cikk alá tartozik
       column:
@@ -3293,10 +3327,14 @@ desktop:
         counterparty_nif: A másik fél adószáma
         country_code: Ország
         currency: Pénznem
+        fx_rate: Árfolyam
         invoice_date: Számla kelte
         invoice_number: Számlaszám
+        iva_category: IVA-kategória
         iva_rate: IVA-kulcs
         notes: Megjegyzések
+        operation_type: Modelo 349 kulcs
+        recargo_amount: Egyenértékűségi pótdíj
         retencion_amount: Retención összege
         retencion_rate: Retención kulcsa
         taxable_base: Adóalap
@@ -3794,6 +3832,7 @@ desktop:
         counterparty_name: Partner neve
         counterparty_tax_id: Adószám (NIF)
         currency: Pénznem
+        fx_rate: Árfolyam
         invoice_class: Típus
         invoice_number: Számlaszám
         issued_at: Kiállítás dátuma
@@ -3999,6 +4038,7 @@ desktop:
       reagp_compensation: REAGP-kompenzáció
       recargo_equivalencia: Recargo de equivalencia
       regimen_simplificado: Régimen simplificado
+      special_regime_used_goods: Használt cikkek különleges árrésrendszere (REBU)
       unknown: Ismeretlen
     leave:
       cancel: Mégse
@@ -4145,6 +4185,35 @@ desktop:
       years_supported: Évek, amelyeket megnézhetsz
       years_with_movements_or_invoices: Évek tételekkel vagy számlákkal
     position: '{row}. sor / {count}'
+    properties:
+      changes_on: 'változik: {count}'
+      cleared: törölve
+      copied: 'Másolt tulajdonságok: {count}'
+      copy: Másolás ({count})
+      copy_description: 'Válaszd ki, mit másolsz innen: {movement}. Semmi sem változik,
+        amíg be nem illeszted.'
+      copy_first: Előbb másold egy mozgás tulajdonságait
+      copy_open: Tulajdonságok másolása
+      copy_title: Tulajdonságok másolása
+      first_refusal: 'Első, ami nem változik: {movement} · {cause}'
+      group:
+        classification: Besorolás
+        counterparty: Partner
+        group: Csoport
+        irpf: IRPF
+        iva: IVA
+        notes: Megjegyzések
+      held: 'Másolt tulajdonságok: {count}'
+      none_shown: A kijelölt mozgások közül egy sem látható
+      none_ticked: Jelölj be legalább egy tulajdonságot
+      nothing_to_paste: A beillesztés egyik mozgást sem változtatná meg
+      paste: Beillesztés ({count})
+      paste_description: A könyv megmondja, mit tenne a beillesztés az egyes mozgásokkal.
+        A beillesztés a változtatásaidhoz adja; semmi sem mentődik, amíg át nem nézed
+        és el nem mented.
+      paste_open: Tulajdonságok beillesztése ({count})
+      paste_title: 'Tulajdonságok beillesztése · mozgások: {count}'
+      unread: 'Ezen az oldalon nem beolvasott, ezért kimarad: {count}'
     prorrata:
       action:
         declare_gross: Bruttó levonható adó bejelentése
@@ -4297,6 +4366,8 @@ desktop:
       invoice_deduction_family_unresolved: Levonás
       invoice_recargo_not_declarable: Pótlék
       invoice_recargo_split_unresolved: Pótlék
+      invoice_rectificativa_modification_unmodelled: Helyesbítő
+      invoice_used_goods_margin_unmodelled: Használt cikkek
       linked_movement_contradicts_invoice: Számla
       missing_business_classification: Besorolás
       missing_category: Kategória
@@ -4326,6 +4397,10 @@ desktop:
         illeti meg
       invoice_recargo_not_declarable: A pótlék nem a törvényes kulcs az adóalapján
       invoice_recargo_split_unresolved: A pótlék nem osztható fel az áfakulcsai között
+      invoice_rectificativa_modification_unmodelled: Add meg a helyesbítést előjellel
+        a 14/15. vagy a 40/41. mezőben
+      invoice_used_goods_margin_unmodelled: Add meg az árrés adóalapját és adóját
+        a kulcsához tartozó fizetendő áfa mezőkben
       linked_movement_contradicts_invoice: Eltér a számlájától
       missing_business_classification: Hiányzik a besorolás
       missing_category: Hiányzik a kategória
@@ -4366,6 +4441,9 @@ desktop:
       received_invoice_recipient_unknown: 'Még nincs bevallva: a kibocsátó adószámából
         nem derül ki, hogy IRPF-et vagy társasági adót (Impuesto sobre Sociedades)
         fizet.'
+      received_invoice_rent_rate_unrecognised: 'Még nincs bevallva: a bérleti díj
+        levonása sem az általános bérleti levonási kulccsal, sem a Ceutára és Melillára
+        vonatkozó kulccsal nem egyezik az adott napon.'
     retry: Újra
     reveal:
       dismiss: Elrejtés

@@ -99,6 +99,9 @@ import type {
   LedgerSplitOperationResult,
   LedgerUnlinkWindowRequest,
   LedgerUnlinkResult,
+  LedgerBatchUpdatePreviewWindowRequest,
+  LedgerBatchUpdateWindowRequest,
+  LedgerBatchUpdateResult,
 } from "./ledgerMovementContract";
 import type {
   LedgerTrackProjection,
@@ -351,6 +354,8 @@ export const LEDGER_DEFINITIONS = [
   "ledger.track",
   "ledger.unlink",
   "ledger.update",
+  "ledger.update.batch",
+  "ledger.update.batch.preview",
   "ledger.view",
 ] as const;
 
@@ -699,6 +704,8 @@ export interface LedgerRequests extends LedgerClassifyJobRequests {
     "profile_id"
   >;
   "ledger.update": LedgerUpdateWindowRequest;
+  "ledger.update.batch.preview": LedgerBatchUpdatePreviewWindowRequest;
+  "ledger.update.batch": LedgerBatchUpdateWindowRequest;
   "ledger.classify.single": LedgerClassifyWindowRequest;
   "ledger.classify.bulk": LedgerBulkClassifyWindowRequest;
   "ledger.classify.review": LedgerLlmReviewWindowRequest;
@@ -889,6 +896,8 @@ export interface LedgerResults extends LedgerClassifyJobResults {
   "ledger.list": LedgerReadContracts["ledger.list"]["result"];
   "ledger.view": LedgerReadContracts["ledger.view"]["result"];
   "ledger.update": LedgerUpdateOperationResult;
+  "ledger.update.batch.preview": LedgerBatchUpdateResult;
+  "ledger.update.batch": LedgerBatchUpdateResult;
   "ledger.classify.single": LedgerClassifyOperationResult;
   "ledger.classify.bulk": LedgerBulkClassifyProjection;
   "ledger.add": LedgerAddOperationResult;

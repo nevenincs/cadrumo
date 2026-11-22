@@ -158,6 +158,41 @@ _CLASSIFICATION_CASES = (
         None,
     ),
     (
+        # LIVA art. 69.Uno.1.º locates a B2B service where the recipient is
+        # established "con independencia de dónde se encuentre establecido el
+        # prestador", and art. 84.Uno.2.º a) makes the recipient the sujeto
+        # pasivo when the supplier is not established in the TAI: a service
+        # bought from a third-country supplier is self-assessed in Spain.
+        "r26-services-b2b-third-country-inbound",
+        {
+            "issuer_residency": IvaTerritorialScope.from_registry("third_country"),
+            "customer_residency": IvaTerritorialScope.from_registry("es_mainland"),
+            "kind": TransactionKind("services_general"),
+            "direction": InvoiceKind.RECEIVED,
+        },
+        IvaCategory("domestic_reverse_charge"),
+        "R26_services_b2b_non_tai_inbound",
+        True,
+        None,
+    ),
+    (
+        # Art. 3.Dos excludes Canarias from the TAI, so a Canarian supplier is
+        # "no establecido en el territorio de aplicación del Impuesto" for art.
+        # 84.Uno.2.º a): the peninsular recipient self-assesses the service
+        # rather than treating it as outside the tax.
+        "r26-services-b2b-canarias-inbound",
+        {
+            "issuer_residency": IvaTerritorialScope.from_registry("es_canarias"),
+            "customer_residency": IvaTerritorialScope.from_registry("es_mainland"),
+            "kind": TransactionKind("services_general"),
+            "direction": InvoiceKind.RECEIVED,
+        },
+        IvaCategory("domestic_reverse_charge"),
+        "R26_services_b2b_non_tai_inbound",
+        True,
+        None,
+    ),
+    (
         "r19-oss-union-services",
         {
             "customer_residency": IvaTerritorialScope.from_registry("eu_member"),

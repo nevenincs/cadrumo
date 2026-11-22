@@ -25,6 +25,7 @@ from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthor
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
 from cadrumo.domain.calculations.registry.binding_targets import revision_bindings_by_id
 from cadrumo.domain.calculations.registry.bindings_previous_filing import PreviousFilingProvider
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from dev.acceptance.installed_cli import InstalledCli, profile_create_args
 
 from .cli_journey import (
@@ -313,7 +314,7 @@ def _record_no_existencias(cli: InstalledCli, *, directory: Path, year: int) -> 
         )
     )
     statement = directory / f"no-existencias-{year}.pdf"
-    statement.write_bytes(f"%PDF-1.4 synthetic statement: no existencias held in {year}".encode())
+    statement.write_bytes(text_pdf_bytes((f"synthetic statement: no existencias held in {year}",)))
     stored = command_result(cli.run(("app", "ledger", "inventory", "evidence-add", str(statement))))
     reference = {"reference": str(stored["reference"])}
     digest = str(stored["content_digest"])

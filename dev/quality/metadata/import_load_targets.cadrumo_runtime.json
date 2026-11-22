@@ -133,6 +133,7 @@
         "cadrumo_runtime.host.bootstrap_delete",
         "cadrumo_runtime.host.bootstrap_reset",
         "cadrumo_runtime.host.caller_owned",
+        "cadrumo_runtime.host.control_dispatch_waits",
         "cadrumo_runtime.host.credential_prune",
         "cadrumo_runtime.host.desktop_holder_identity",
         "cadrumo_runtime.host.enrollment_connections",

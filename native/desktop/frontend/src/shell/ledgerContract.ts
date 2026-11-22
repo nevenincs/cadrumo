@@ -101,6 +101,8 @@ export const READINESS_REASONS = [
   "linked_movement_contradicts_invoice",
   "invoice_recargo_split_unresolved",
   "invoice_recargo_not_declarable",
+  "invoice_rectificativa_modification_unmodelled",
+  "invoice_used_goods_margin_unmodelled",
 ] as const;
 export type LedgerPreflightReason = (typeof READINESS_REASONS)[number];
 
@@ -415,6 +417,7 @@ export const INVOICE_UPDATE_FIELDS = [
   "invoice_class",
   "rectifies_invoice_number",
   "payment_id",
+  "declared_fx_rate",
 ] as const;
 export type InvoiceUpdateField = (typeof INVOICE_UPDATE_FIELDS)[number];
 

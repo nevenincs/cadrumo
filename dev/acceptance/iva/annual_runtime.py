@@ -6,6 +6,7 @@ import secrets
 from contextlib import AbstractContextManager, ExitStack
 from pathlib import Path
 
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
 
 from .cli_journey import (
@@ -36,7 +37,7 @@ def start(
         resources.enter_context(runtime_scope)
     artifact_root.mkdir(parents=True, exist_ok=True)
     artifact = artifact_root / "synthetic-annual-foundation-purchase.pdf"
-    artifact.write_bytes(b"%PDF-1.4\n% synthetic annual IVA purchase evidence\n")
+    artifact.write_bytes(text_pdf_bytes(("synthetic annual IVA purchase evidence",)))
     cli = InstalledCli(
         executable, storage_root=storage_root, authority_root=authority_root, passphrase=secrets.token_urlsafe(32)
     )

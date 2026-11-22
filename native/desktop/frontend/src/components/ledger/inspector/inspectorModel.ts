@@ -141,6 +141,8 @@ export const SET_FOR_ALL_FIELDS = [
   "category_id",
   "iva_category",
   "irpf_category",
+  "deduction_fact_kind",
+  "counterparty",
   "group_label",
   "notes",
 ] as const;

@@ -1,0 +1,22 @@
+[fact]
+fact_id = "rirpf-art-100:retencion-arrendamiento-urbano-general"
+family = "scalar"
+
+[fact.standing_rate]
+
+[[fact.variants]]
+variant_id = "rirpf-art-100:retencion-arrendamiento-urbano-general:2018-12-23"
+date_axis = "filing_period"
+valid_from = 2018-12-23
+legal_refs = ["rd-439-2007:art-100"]
+source_refs = ["boe-rirpf-art-100-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-100-statutory-facts"
+required_text = ["será el resultado de aplicar el porcentaje del 19 por ciento sobre todos los conceptos que se satisfagan al arrendador"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.19"
+unit = "fraction"

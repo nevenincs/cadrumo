@@ -978,6 +978,10 @@ application:
           .csv, .tsv, .xlsx, .xlsm o .xls (s'ha rebut {extension}).
     creation:
       errors:
+        declared_fx_rate_not_positive: El tipus de canvi %{fx_rate} ha de ser més
+          gran que zero.
+        declared_fx_rate_on_euro_invoice: 'Una factura en euros no porta tipus de
+          canvi: treu el tipus o corregeix la moneda de la factura.'
         duplicate_invoice: 'Ja existeix una factura amb la mateixa identitat al catàleg:
           %{invoice_id}.'
         intracom_operation_type_required: 'Un lliurament intracomunitari ha de declarar
@@ -2551,6 +2555,10 @@ application:
       withholding_invoice_recipient_unknown: La factura rebuda {invoice} de {counterparty}
         declara una retenció de {amount}, però el seu NIF no indica si qui l'emet
         tributa per l'IRPF o per l'Impost sobre Societats. Comprova el NIF de la factura.
+      withholding_invoice_rent_rate_unrecognised: La factura rebuda {invoice} de {counterparty}
+        declara una retenció de {amount} sobre un lloguer que no coincideix ni amb
+        el tipus general de retenció sobre lloguers ni amb el de Ceuta i Melilla per
+        a la seva data. Comprova la base i la retenció de la factura.
     calc_diagnostic_words:
       household_leaf:
         apellidos_nombre: cognoms i nom
@@ -3207,6 +3215,14 @@ application:
         invoice_recargo_split_unresolved: 'una factura emesa porta un únic recàrrec
           d''equivalència sobre diversos tipus d''IVA que no coincideix amb la suma
           del recàrrec de cada tipus: corregeix el recàrrec de la factura'
+        invoice_rectificativa_modification_unmodelled: 'una factura rectificativa
+          no es declara en cap fila de tipus d''IVA: indica''n la base i la quota
+          amb el signe que correspongui a les caselles 14 i 15 del Model 303 si la
+          vas emetre, o a les caselles 40 i 41 si la vas rebre'
+        invoice_used_goods_margin_unmodelled: 'la base del marge d''una venda en el
+          règim especial dels béns usats (art. 137) no es calcula: indica tu mateix
+          la base del marge i la seva quota a les caselles d''IVA meritat del Model
+          303 del seu tipus'
         linked_movement_contradicts_invoice: la seva base o la seva quota no coincideixen
           amb les de la factura que paga
         missing_business_classification: falta classificar-lo com a professional,
@@ -3744,6 +3760,10 @@ application:
         EUR de rendiments del treball, per sobre del llindar de la DT 12a, així que
         la casella [%{reduccion_id}] et pot donar una reducció que encara no apliques.
         Comprova si et correspon.
+      floor_subtraction_unresolved: 'La casella [%{box}] té un import i la casella
+        [%{floor_box}] fixa un mínim, però el text oficial no diu si aquesta deducció
+        pot deixar la quota per sota del mínim, de manera que no es pot comprovar.
+        Caselles afectades: %{boxes}.'
       foreign_asset_redeclaration: 'Model %{modelo_code} %{filing_year}: el valor
         d''un dels teus béns a l''estranger ha passat de %{prior_value_eur} EUR a
         %{current_value_eur} EUR. L''augment de %{delta_value_eur} EUR supera els
@@ -3820,6 +3840,11 @@ application:
         %{period}. La presentació queda bloquejada fins que aquesta comparació es
         completi. Torna-ho a provar quan els registres estiguin disponibles i torna
         a calcular si han canviat.
+      limited_subtractions_below_floor: Les deduccions que només es poden aplicar
+        fins al mínim de la casella [%{box}] (%{floor_value}) sumen %{limited_total}
+        i deixen la quota en %{after_limited}, per sota d'aquest mínim. Consigna només
+        la part que hi cap fins al mínim i deixa la resta pendent per als exercicis
+        següents.
       m193_settled_row_amount_authority_unresolved: El model 193 de %{filing_year}
         inclou %{settled_prior_accrual_rows} pagament(s) de rendiments meritats en
         un exercici anterior. Les normes oficials no indiquen com declarar-ne la base

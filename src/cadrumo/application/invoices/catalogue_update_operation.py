@@ -57,6 +57,11 @@ class InvoiceUpdateValues(BaseModel):
     invoice_class: str | None = Field(default=None, min_length=1)
     rectifies_invoice_number: str | None = None
     payment_id: str | None = None
+    declared_fx_rate: PublicDecimal | None = None
+
+
+#: The correction fields that cross the wire as explicit decimals.
+_DECIMAL_FIELDS = ("retention_rate", "retention_amount", "declared_fx_rate")
 
 
 class InvoiceUpdatePatch(BaseModel):
@@ -78,7 +83,7 @@ class InvoiceUpdatePatch(BaseModel):
     def from_patch(cls, patch: CatalogueInvoicePatch) -> InvoiceUpdatePatch:
         """Capture the caller's intentional fields before transport expands defaults."""
         values = patch.model_dump(exclude_unset=True)
-        for name in ("retention_rate", "retention_amount"):
+        for name in _DECIMAL_FIELDS:
             value = values.get(name)
             if value is not None:
                 values[name] = PublicDecimal(decimal=str(value))
@@ -87,10 +92,8 @@ class InvoiceUpdatePatch(BaseModel):
     def to_patch(self) -> CatalogueInvoicePatch:
         """Restore canonical lifecycle omission semantics after transport."""
         values = self.values.model_dump(include=set(self.fields))
-        for name, value in (
-            ("retention_rate", self.values.retention_rate),
-            ("retention_amount", self.values.retention_amount),
-        ):
+        for name in _DECIMAL_FIELDS:
+            value = getattr(self.values, name)
             if name in self.fields and value is not None:
                 values[name] = Decimal(value.decimal)
         return CatalogueInvoicePatch.model_validate(values)
