@@ -389,6 +389,8 @@ errors:
     error_wizard_compile: A varázsló-katalógus hibás formátumú és nem fordítható le.
     error_workflow: Munkafolyamat hiba történt.
     error_workflow_component: Egy munkafolyamat-komponens váratlan kivételt dobott.
+    ledger_category_needs_business_classification: 'A kiadási kategóriához üzleti
+      besorolás kell: előbb sorold be ezt a tételt.'
     ledger_gross_above_cash_needs_withholding_category: A megadott alap és áfa többet
       ad ki, mint a tényleges pénzmozgás; ez a különbség IRPF-levonás, és nincs megadva
       IRPF-kategória.
