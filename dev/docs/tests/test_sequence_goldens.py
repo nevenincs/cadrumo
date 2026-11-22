@@ -48,7 +48,7 @@ from cadrumo.core.config import load_settings, override_settings
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.tests.env_scope import derived_storage_settings, scoped_env_var
-from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_paths
+from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, GOLDEN_MASK_PATHS, differing_paths
 from dev.paths import REPO_ROOT
 
 from ..sequences.checks import (
@@ -345,25 +345,30 @@ class TestModeloExportReleaseMaskHonesty:
         """The mask covers exactly what a release changes in compared frames, so it cannot widen unnoticed.
 
         Setup envelopes never reach a golden, so per-write identities such as a
-        stored row's revision id are outside what the mask has to cover.
+        stored row's revision id are outside what the mask has to cover. A shown
+        frame's per-invocation identity that the central policy masks (the edit
+        receipt id of the work-income statement) differs between any two runs,
+        release or not, so it is left out of what a release changed.
         """
         (first_aux, first, _), (second_aux, second, _) = export_release_double_run
         assert first_aux != second_aux
         residual: dict[int, frozenset[str]] = {}
         for index, (left, right) in enumerate(zip(first.frames, second.frames, strict=True)):
-            if (
-                left.kind is not FrameKind.SETUP
-                and left.envelope is not None
-                and right.envelope is not None
-                and (
-                    paths := differing_paths(
-                        normalise_document_paths(left.envelope, storage_root=first.storage_root, workdir=first.workdir),
-                        normalise_document_paths(
-                            right.envelope, storage_root=second.storage_root, workdir=second.workdir
-                        ),
-                    )
+            if left.kind is FrameKind.SETUP or left.envelope is None or right.envelope is None:
+                continue
+            per_invocation = frozenset(
+                path
+                for command, path in GOLDEN_MASK_PATHS
+                if command == left.envelope.get("command") and command != _EXPORT_COMMAND
+            )
+            paths = (
+                differing_paths(
+                    normalise_document_paths(left.envelope, storage_root=first.storage_root, workdir=first.workdir),
+                    normalise_document_paths(right.envelope, storage_root=second.storage_root, workdir=second.workdir),
                 )
-            ):
+                - per_invocation
+            )
+            if paths:
                 residual[index] = paths
         export = _export_frame(first)
         assert residual == {export: _RELEASE_BOUND_EXPORT_PATHS}

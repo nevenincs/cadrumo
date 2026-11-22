@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-17 09:45+0100\n"
+"POT-Creation-Date: 2026-11-22 02:08+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -314,6 +314,30 @@ msgstr ""
 
 #: ../../how-to/modelo-100.md:128
 msgid ""
+"The check applies to the calculation it checked. If you recalculate "
+"afterwards, the recalculated draft becomes the declaration's current "
+"calculation. Stating the work income again then reproduces the checked "
+"calculation, so no new draft is created: the result carries a notice that"
+" names the checked calculation by its revision ID and its state (checked "
+"and complete), and the recalculated draft stays current. The checked "
+"calculation is left exactly as it was. Export by the revision ID the "
+"notice names, as the example below does with `--revision`, so the export "
+"reads the checked calculation rather than the recalculated draft."
+msgstr ""
+"La comprobación se aplica al cálculo que comprobó. Si vuelves a calcular "
+"después, el borrador recalculado pasa a ser el cálculo actual de la "
+"declaración. Al declarar de nuevo los rendimientos del trabajo se "
+"reproduce entonces el cálculo comprobado, así que no se crea un borrador "
+"nuevo: el resultado incluye un aviso que nombra el cálculo comprobado por"
+" su identificador de revisión y su estado (comprobada y completa), y el "
+"borrador recalculado sigue siendo el actual. El cálculo comprobado queda "
+"exactamente como estaba. Exporta por el identificador de revisión que "
+"nombra el aviso, como hace el ejemplo siguiente con `--revision`, para "
+"que la exportación lea el cálculo comprobado y no el borrador "
+"recalculado."
+
+#: ../../how-to/modelo-100.md:137
+msgid ""
 "Export the checked declaration. Modelo 100 always writes an XML file, "
 "whatever name you choose. Export refuses to overwrite an existing file "
 "unless you add `--replace`, and refuses when the output folder does not "
@@ -337,7 +361,7 @@ msgstr ""
 "que aquí el registro de la presentación se muestra como ejemplo que no se"
 " ejecuta, igual que la descarga de conciliación, que lee de la AEAT:"
 
-#: ../../how-to/modelo-100.md:142
+#: ../../how-to/modelo-100.md:151
 msgid ""
 "See [Reconcile a filed modelo against its AEAT receipt](reconcile.md) for"
 " the reconciliation verdicts."
@@ -345,11 +369,11 @@ msgstr ""
 "Consulta [Conciliar un modelo presentado con tu justificante de la "
 "AEAT](reconcile.md) para conocer los veredictos de conciliación."
 
-#: ../../how-to/modelo-100.md:144
+#: ../../how-to/modelo-100.md:153
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/modelo-100.md:146
+#: ../../how-to/modelo-100.md:155
 msgid ""
 "[Deep dive: how the Renta declaration is assembled](../explanation/how-"
 "renta-is-assembled.md)"
@@ -357,19 +381,19 @@ msgstr ""
 "[Análisis a fondo: cómo se compone la declaración de la "
 "renta](../explanation/how-renta-is-assembled.md)"
 
-#: ../../how-to/modelo-100.md:147
+#: ../../how-to/modelo-100.md:156
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
 msgstr "[Preparar un pago fraccionado del IRPF con el Modelo 130](modelo-130.md)"
 
-#: ../../how-to/modelo-100.md:148
+#: ../../how-to/modelo-100.md:157
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisar y aportar las entradas de cálculo](review-calculation-values.md)"
 
-#: ../../how-to/modelo-100.md:149
+#: ../../how-to/modelo-100.md:158
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Presentar tu modelo en el portal de la AEAT](file-at-aeat.md)"
 
-#: ../../how-to/modelo-100.md:150
+#: ../../how-to/modelo-100.md:159
 msgid "[Reconcile a filed modelo against its AEAT receipt](reconcile.md)"
 msgstr ""
 "[Conciliar un modelo presentado con tu justificante de la "

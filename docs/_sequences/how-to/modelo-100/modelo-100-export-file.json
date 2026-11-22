@@ -164,8 +164,8 @@
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
-          "name": "stated_revision_id",
-          "value": "e516b2a6cd7190157efc9fed78d7f58f472ebb169f7ab120e8f4524d44f2922f"
+          "name": "checked_revision_id",
+          "value": "d77dd5369f956a0b8d0fdad11813a731f6c5c0a2f456a8946a658e3ebe6018d4"
         }
       ],
       "envelope": null,
@@ -184,7 +184,7 @@
         "modelo",
         "work",
         "verify",
-        "e516b2a6cd7190157efc9fed78d7f58f472ebb169f7ab120e8f4524d44f2922f"
+        "d77dd5369f956a0b8d0fdad11813a731f6c5c0a2f456a8946a658e3ebe6018d4"
       ],
       "captures": [],
       "envelope": null,
@@ -201,10 +201,117 @@
         "json",
         "app",
         "modelo",
+        "work",
+        "calculate",
+        "--modelo",
+        "100",
+        "--year",
+        "2025",
+        "--period",
+        "0A",
+        "--binding",
+        "renta-base-liquidable-negativa-general-anterior=0",
+        "--binding",
+        "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
+        "--binding",
+        "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
+        "--binding",
+        "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "attest-work-income",
+        "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd",
+        "--yes"
+      ],
+      "captures": [
+        {
+          "json_path": "result.calculation_revision_id",
+          "name": "stated_revision_id",
+          "value": "d77dd5369f956a0b8d0fdad11813a731f6c5c0a2f456a8946a658e3ebe6018d4"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.attest_work_income",
+        "notices": [
+          {
+            "action": null,
+            "code": "modelo.work.attest_work_income.reused_sealed_revision",
+            "context": {
+              "calculation_revision_id": "d77dd5369f956a0b8d0fdad11813a731f6c5c0a2f456a8946a658e3ebe6018d4",
+              "current_calculation_revision_id": "e7365af99ec0c8bc022b1ded852f6628e4ff262a15d3a11b103cf4410c8e9ccf",
+              "state": "verificado_completo"
+            },
+            "message": "These inputs match calculation d77dd5369f956a0b8d0fdad11813a731f6c5c0a2f456a8946a658e3ebe6018d4 (state: checked and complete). No new draft was created. Select this saved calculation by its revision ID, or change the inputs.",
+            "severity": "info"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "applied": true,
+          "bucket_id": "<bucket-id>",
+          "calculation_revision_id": "d77dd5369f956a0b8d0fdad11813a731f6c5c0a2f456a8946a658e3ebe6018d4",
+          "filing_year": 2025,
+          "findings": [],
+          "modelo": "100",
+          "receipt_id": "a129eea036da1b665f90dd90603a8f7a58ab5f417b27da463e49e12f4ddabe19",
+          "statements": [
+            {
+              "action_words": "I have no employer contributions or protected-estate contributions to state",
+              "binding_ids": [
+                "renta-trabajo-aportacion-empresa-decision-trabajador",
+                "renta-trabajo-aportacion-patrimonio-protegido",
+                "renta-trabajo-contribucion-empresarial-prevision",
+                "renta-trabajo-contribucion-empresarial-seguro-dependencia"
+              ],
+              "effect_words": "Recorded as a 0 you stated: none of these contributions.",
+              "family": "renta_trabajo_income_not_stated",
+              "statement_words": "States that you have nothing in four boxes of your work income: employer contributions to pension plans and welfare mutuals (0008), employer contributions to dependency insurance (0009), contributions to the protected estate of a person with a disability (0010) and employer contributions made at your decision (0024). Each box is recorded as a 0 you stated, apart from a figure you typed. No payer certificate states these amounts, so only you can."
+            }
+          ],
+          "work_unit_id": "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd"
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
         "export",
         "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd",
         "--revision",
-        "e516b2a6cd7190157efc9fed78d7f58f472ebb169f7ab120e8f4524d44f2922f",
+        "d77dd5369f956a0b8d0fdad11813a731f6c5c0a2f456a8946a658e3ebe6018d4",
         "--output",
         "./modelo-100.boe"
       ],
@@ -315,10 +422,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "27f732f7ef10d5212dd72bb4faab932504652ab4ef196327e0a6a4c1010842af",
+          "bucket_event_id": "051c8a023d4255ddcc49e91b3fc2873e0ffcd14659eed4e2fd1e62f16d24f484",
           "bucket_id": "<bucket-id>",
           "byte_size": 2665,
-          "calculation_revision_id": "e516b2a6cd7190157efc9fed78d7f58f472ebb169f7ab120e8f4524d44f2922f",
+          "calculation_revision_id": "d77dd5369f956a0b8d0fdad11813a731f6c5c0a2f456a8946a658e3ebe6018d4",
           "file_sha256": "447bf85cf387fdc33ebe422e457c58a8960899389b0552309ce02ce24bd0955a",
           "filing_year": 2025,
           "format": "xml-dictionary",
