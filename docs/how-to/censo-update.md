@@ -119,9 +119,16 @@ declared yourself stays yours.
 
 ### What the pull cannot fill
 
-The pull fills your fiscal address, postcode, and cadastral reference. It
-reports these as the fields `contact.fiscal_address`, `contact.postcode`, and
-`contact.fiscal_address_cadastral_reference`.
+The pull fills your fiscal address, postcode, cadastral reference, province
+code, municipality code, municipality name, AEAT delegation code, AEAT
+administration code, AEAT administration name, activity start date, and
+activity end date. It reports these as the fields `contact.fiscal_address`,
+`contact.postcode`, `contact.fiscal_address_cadastral_reference`,
+`contact.fiscal_address_province_code`,
+`contact.fiscal_address_municipality_code`,
+`contact.fiscal_address_municipality_name`, `censo.aeat_delegacion_code`,
+`censo.aeat_administracion_code`, `censo.aeat_administracion_name`,
+`censo.activity_start_date`, and `censo.activity_end_date`.
 
 It does not fill your fiscal ID. It reads your fiscal ID to confirm the record
 AEAT returned is yours, and never writes it.
