@@ -415,7 +415,7 @@ _M200_ACCOUNTING_LEDGER_DIRECTIONS = frozenset(
 
 _LEDGER_PREFLIGHT_NEED_KEY = "application.modelo.errors.ledger_preflight_need"
 #: The sentence that lists the fields a ledger hold says the record is missing.
-_LEDGER_PREFLIGHT_MISSING_FACTS_KEY = "application.modelo.errors.ledger_preflight_missing_facts"
+_LEDGER_PREFLIGHT_MISSING_FACTS_LOCALE_KEY = "application.modelo.errors.ledger_preflight_missing_facts"
 #: One key per field a ledger hold can name as missing, keyed on the field name.
 _LEDGER_PREFLIGHT_MISSING_FACT_KEY = "application.modelo.errors.ledger_preflight_missing_fact"
 
@@ -509,7 +509,7 @@ def _hold_need_words(issue: LedgerPreflightIssue, language: OutputLanguage) -> s
     facts = ", ".join(
         tr(f"{_LEDGER_PREFLIGHT_MISSING_FACT_KEY}.{fact}", locale=language.value) for fact in issue.missing_facts
     )
-    clause = tr(_LEDGER_PREFLIGHT_MISSING_FACTS_KEY, locale=language.value, facts=facts)
+    clause = tr(_LEDGER_PREFLIGHT_MISSING_FACTS_LOCALE_KEY, locale=language.value, facts=facts)
     # Joined with a semicolon, not a full stop: the need sentence is itself
     # embedded in the ledger-hold line, which supplies the terminal period, so
     # the clause continues that one sentence rather than starting a second one
