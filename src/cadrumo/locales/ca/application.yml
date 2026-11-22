@@ -2555,6 +2555,10 @@ application:
       withholding_invoice_recipient_unknown: La factura rebuda {invoice} de {counterparty}
         declara una retenció de {amount}, però el seu NIF no indica si qui l'emet
         tributa per l'IRPF o per l'Impost sobre Societats. Comprova el NIF de la factura.
+      withholding_invoice_rent_rate_unrecognised: La factura rebuda {invoice} de {counterparty}
+        declara una retenció de {amount} sobre un lloguer que no coincideix ni amb
+        el tipus general de retenció sobre lloguers ni amb el de Ceuta i Melilla per
+        a la seva data. Comprova la base i la retenció de la factura.
     calc_diagnostic_words:
       household_leaf:
         apellidos_nombre: cognoms i nom

@@ -4398,6 +4398,9 @@ desktop:
         no coincide con ningún tipo de retención de actividades.'
       received_invoice_recipient_unknown: 'Aún no se declara: el NIF de quien emite
         no muestra si tributa por IRPF o por el Impuesto sobre Sociedades.'
+      received_invoice_rent_rate_unrecognised: 'Aún no se declara: la retención del
+        alquiler no coincide ni con el tipo general de retención sobre alquileres
+        ni con el de Ceuta y Melilla para la fecha.'
     retry: Reintentar
     reveal:
       dismiss: Descartar el aviso

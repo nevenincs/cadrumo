@@ -184,3 +184,67 @@ def test_an_is_suppliers_rent_is_recognised_whole_when_first_paid() -> None:
     assert [(o.scheme, o.taxable_base, o.retencion_amount) for o in read.observations] == [
         (RetencionScheme("arrendamiento_urbano"), Decimal("1500.00"), Decimal("285.00"))
     ]
+
+
+def _read_in_year(year: int, *, retencion: str, rate: str, category: str, modelo: str) -> ReceivedInvoiceWithholding:
+    """Read one natural-person landlord's or professional's invoice of base 1000.00, paid whole in ``year``'s Q1."""
+    payment = paying_movement(
+        "P1", date(year, 2, 10), cash=Decimal("1210.00") - Decimal(retencion), irpf_category=category
+    )
+    invoice = received_invoice(
+        "R-RENT",
+        date(year, 2, 3),
+        supplier="Arrendador Ejemplo",
+        tax_id=NATURAL_PERSON_PROFESSIONAL_NIF,
+        base=Decimal("1000.00"),
+        retencion=Decimal(retencion),
+        rate=Decimal(rate),
+        linked=(payment.transaction_id,),
+        bucket_id=BUCKET,
+    )
+    return received_invoice_withholding(
+        build_invoice_catalogue((invoice,)),
+        TransactionCatalogue.from_transactions((payment,)),
+        bucket_id=BUCKET,
+        modelo=modelo,
+        period=Period.from_year_and_code(year, "1T"),
+    )
+
+
+_ENVELOPE_YEARS = tuple(filing_year_envelope().years)
+
+
+@pytest.mark.parametrize("year", _ENVELOPE_YEARS)
+@pytest.mark.parametrize(
+    ("retencion", "rate"),
+    [
+        pytest.param("190.00", "0.19", id="general-rate"),
+        pytest.param("76.00", "0.076", id="ceuta-melilla-rate"),
+    ],
+)
+def test_rent_withheld_at_an_art_100_rate_reaches_modelo_115(year: int, retencion: str, rate: str) -> None:
+    read = _read_in_year(year, retencion=retencion, rate=rate, category="arrendamiento_local", modelo="115")
+
+    assert read.findings == ()
+    assert [(o.scheme, o.taxable_base, o.retencion_amount) for o in read.observations] == [
+        (RetencionScheme("arrendamiento_urbano"), Decimal("1000.00"), Decimal(retencion))
+    ]
+
+
+@pytest.mark.parametrize("year", _ENVELOPE_YEARS)
+def test_rent_withheld_at_the_professional_rate_is_held_back_from_modelo_115(year: int) -> None:
+    read = _read_in_year(year, retencion="150.00", rate="0.15", category="arrendamiento_local", modelo="115")
+
+    assert read.observations == ()
+    assert _kinds(read) == [_KIND.RENT_RATE_UNRECOGNISED]
+    assert read.findings[0].modelo == "115"
+
+
+@pytest.mark.parametrize("year", _ENVELOPE_YEARS)
+def test_a_professional_fee_at_the_professional_rate_still_reaches_modelo_111(year: int) -> None:
+    read = _read_in_year(year, retencion="150.00", rate="0.15", category="actividad_economica", modelo="111")
+
+    assert read.findings == ()
+    assert [(o.scheme, o.taxable_base, o.retencion_amount) for o in read.observations] == [
+        (RetencionScheme("actividades_profesionales"), Decimal("1000.00"), Decimal("150.00"))
+    ]

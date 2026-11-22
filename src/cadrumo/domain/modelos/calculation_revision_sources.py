@@ -292,6 +292,8 @@ class CalculationNoteSentence(StrEnum):
     """A received invoice states a retención and its supplier is not resident in Spain."""
     WITHHOLDING_INVOICE_RATE_UNRECOGNISED = "withholding_invoice_rate_unrecognised"
     """A received invoice states a retención at a rate no activity rate matches."""
+    WITHHOLDING_INVOICE_RENT_RATE_UNRECOGNISED = "withholding_invoice_rent_rate_unrecognised"
+    """A received invoice states a retención on rent at a rate matching neither art. 100.2 rate."""
     WITHHOLDING_INVOICE_INCOMPLETE = "withholding_invoice_incomplete"
     """A received invoice states a retención and lacks the supplier's NIF or a euro value."""
     M347_PROVINCIA_UNRECORDED = "m347_provincia_unrecorded"

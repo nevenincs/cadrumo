@@ -4312,6 +4312,9 @@ desktop:
         matches no activity withholding rate.'
       received_invoice_recipient_unknown: 'Not declared yet: the issuer''s NIF does
         not show whether it pays IRPF or Impuesto sobre Sociedades.'
+      received_invoice_rent_rate_unrecognised: 'Not declared yet: the rent withholding
+        matches neither the general rent withholding rate nor the Ceuta/Melilla rate
+        for the date.'
     retry: Retry
     reveal:
       dismiss: Dismiss

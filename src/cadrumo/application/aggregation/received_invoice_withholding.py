@@ -20,8 +20,10 @@ Each fact comes from its owner, never from a guess:
 - recognition follows RIRPF art. 78 for an IRPF recipient (each payment, in
   proportion) and RIS art. 65 for urban rent paid to an IS recipient
   (:func:`.withholding_recognition.derive_withholding_recognition`);
-- the scheme is urban rent for rent, and for an activity the registry rate the
-  stated retención conforms to: a professional rate or another activity rate.
+- the scheme is urban rent for rent whose stated retención conforms to a
+  registry rent rate (RIRPF art. 100, general or Ceuta/Melilla), and for an
+  activity the registry rate it conforms to: a professional rate or another
+  activity rate.
 
 What stops an invoice is reported as a :class:`ReceivedInvoiceWithholdingFinding`
 rather than dropped, so a declaration is never completed without a retención the
@@ -53,6 +55,7 @@ from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.retencion_facts import (
     professional_activity_retencion_rates,
     statutory_activity_retencion_rates,
+    urban_rent_retencion_rates,
 )
 from .invoice_iva_source import with_movement_side_links
 from .invoice_retencion import InvoiceRetencionProjectionDefect, invoice_retencion_liability_defects
@@ -95,6 +98,9 @@ class ReceivedInvoiceWithholdingFindingKind(StrEnum):
 
     RATE_UNRECOGNISED = "received_invoice_rate_unrecognised"
     """The stated retención matches no activity rate the registry declares for the date."""
+
+    RENT_RATE_UNRECOGNISED = "received_invoice_rent_rate_unrecognised"
+    """The stated retención on a rent payment matches neither art. 100.2 rate for the date."""
 
     INVOICE_INCOMPLETE = "received_invoice_invoice_incomplete"
     """The invoice lacks a fact the declaration needs: the supplier's NIF, a euro value, or a liability role."""
@@ -434,7 +440,11 @@ def _assess_recipient(
         return held(ReceivedInvoiceWithholdingFindingKind.RECIPIENT_UNKNOWN)
     scheme = _scheme(invoice, income_kind)
     if scheme is None:
-        return held(ReceivedInvoiceWithholdingFindingKind.RATE_UNRECOGNISED)
+        return held(
+            ReceivedInvoiceWithholdingFindingKind.RENT_RATE_UNRECOGNISED
+            if income_kind is WithholdingIncomeKind.URBAN_RENT
+            else ReceivedInvoiceWithholdingFindingKind.RATE_UNRECOGNISED
+        )
     allocations = _allocations(invoice, payments, regime=regime, income_kind=income_kind)
     if allocations is None:
         return held(ReceivedInvoiceWithholdingFindingKind.INVOICE_INCOMPLETE)
@@ -491,10 +501,13 @@ def _income_kind(payments: Iterable[Transaction]) -> WithholdingIncomeKind | Non
 
 def _scheme(invoice: Invoice, income_kind: WithholdingIncomeKind) -> RetencionScheme | None:
     """Return the scheme the retención falls under, from its income kind and the rate it conforms to."""
-    if income_kind is WithholdingIncomeKind.URBAN_RENT:
-        return RetencionScheme("arrendamiento_urbano")
     base = invoice.base_total
     retencion = invoice.retention_amount or Decimal("0")
+    if income_kind is WithholdingIncomeKind.URBAN_RENT:
+        rent = urban_rent_retencion_rates(effective_date=invoice.issued_at)
+        if any(conforms_to_fixed_rate(base, retencion, rate) for rate in rent):
+            return RetencionScheme("arrendamiento_urbano")
+        return None
     professional = professional_activity_retencion_rates(effective_date=invoice.issued_at)
     if any(conforms_to_fixed_rate(base, retencion, rate) for rate in professional):
         return RetencionScheme("actividades_profesionales")

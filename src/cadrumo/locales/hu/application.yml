@@ -2522,6 +2522,11 @@ application:
         {invoice} számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz,
         de az adószámából (NIF) nem derül ki, hogy a kiállító IRPF vagy társasági
         adó (Impuesto sobre Sociedades) alá tartozik. Ellenőrizd a számla adószámát.
+      withholding_invoice_rent_rate_unrecognised: A(z) {counterparty} által kiállított
+        {invoice} számú kapott számla {amount} forrásadó-levonást (retención) tartalmaz
+        egy bérleti díjra, amely sem az általános bérleti levonási kulcsnak, sem a
+        Ceutára és Melillára vonatkozó kulcsnak nem felel meg a számla napján. Ellenőrizd
+        a számla alapját és levonását.
     calc_diagnostic_words:
       household_leaf:
         apellidos_nombre: vezetéknév és keresztnév

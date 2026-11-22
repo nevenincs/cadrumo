@@ -4392,6 +4392,9 @@ desktop:
         factura no coincideix amb cap tipus de retenció d''activitats.'
       received_invoice_recipient_unknown: 'Encara no es declara: el NIF de qui emet
         no mostra si tributa per IRPF o per l''Impost sobre Societats.'
+      received_invoice_rent_rate_unrecognised: 'Encara no es declara: la retenció
+        del lloguer no coincideix ni amb el tipus general de retenció sobre lloguers
+        ni amb el de Ceuta i Melilla per a la data.'
     retry: Torna-ho a provar
     reveal:
       dismiss: Descarta l’avís

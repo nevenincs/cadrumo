@@ -4372,6 +4372,9 @@ desktop:
       received_invoice_recipient_unknown: 'Még nincs bevallva: a kibocsátó adószámából
         nem derül ki, hogy IRPF-et vagy társasági adót (Impuesto sobre Sociedades)
         fizet.'
+      received_invoice_rent_rate_unrecognised: 'Még nincs bevallva: a bérleti díj
+        levonása sem az általános bérleti levonási kulccsal, sem a Ceutára és Melillára
+        vonatkozó kulccsal nem egyezik az adott napon.'
     retry: Újra
     reveal:
       dismiss: Elrejtés

@@ -252,6 +252,7 @@ DESKTOP_LEDGER_CATALOGUE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.retencion_held_back.received_invoice_recipient_unknown",
         "desktop.ledger.retencion_held_back.received_invoice_non_resident",
         "desktop.ledger.retencion_held_back.received_invoice_rate_unrecognised",
+        "desktop.ledger.retencion_held_back.received_invoice_rent_rate_unrecognised",
         "desktop.ledger.retencion_held_back.received_invoice_invoice_incomplete",
         "desktop.ledger.column.select",
         "desktop.ledger.column.status",

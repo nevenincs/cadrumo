@@ -550,3 +550,16 @@ published_at = 2015-10-02
 applies_from = 2016-10-02
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a43"
 review_status = "agent_reviewed"
+
+[sources."boe-rirpf-art-100-statutory-facts"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/rd-439-2007-art-100.html"
+sha256 = "6b99f65c3f711b96cca6c8e0e5f7357261ad670061c7430e8b22e58eb2d105da"
+bytes = 1108
+retrieved_at = 2026-06-28
+published_at = 2018-12-22
+applies_from = 2018-12-23
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a100"
+review_status = "agent_reviewed"

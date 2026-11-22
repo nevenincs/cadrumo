@@ -2559,6 +2559,10 @@ application:
         declara una retención de {amount}, pero su NIF no indica si quien la emite
         tributa por el IRPF o por el Impuesto sobre Sociedades. Comprueba el NIF de
         la factura.
+      withholding_invoice_rent_rate_unrecognised: La factura recibida {invoice} de
+        {counterparty} declara una retención de {amount} sobre un alquiler que no
+        coincide ni con el tipo general de retención sobre alquileres ni con el de
+        Ceuta y Melilla para su fecha. Comprueba la base y la retención de la factura.
     calc_diagnostic_words:
       household_leaf:
         apellidos_nombre: apellidos y nombre

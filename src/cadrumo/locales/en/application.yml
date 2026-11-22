@@ -2437,6 +2437,10 @@ application:
       withholding_invoice_recipient_unknown: Received invoice {invoice} from {counterparty}
         states a withholding of {amount}, but its NIF does not show whether the issuer
         pays IRPF or Impuesto sobre Sociedades. Check the invoice's NIF.
+      withholding_invoice_rent_rate_unrecognised: Received invoice {invoice} from
+        {counterparty} states a withholding of {amount} on rent that matches neither
+        the general rent withholding rate nor the Ceuta/Melilla rate for its date.
+        Check the invoice's base and withholding.
     calc_diagnostic_words:
       household_leaf:
         apellidos_nombre: surnames and name
