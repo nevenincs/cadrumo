@@ -227,6 +227,43 @@ export function movementActionOperations(ledger: FixtureLedger, tools: Tools) {
     };
   }
 
+  // The product's one-load answer of which movements a finalized declaration seals.
+  function sealedRead(request: JsonObject): JsonObject {
+    only(request, ["transaction_ids"]);
+    const ids = request.transaction_ids;
+    if (
+      !Array.isArray(ids) ||
+      ids.length < 1 ||
+      ids.length > 2000 ||
+      new Set(ids).size !== ids.length ||
+      !ids.every((id) => typeof id === "string" && id.length > 0)
+    )
+      return invalid();
+    return {
+      profile_id: profileId,
+      rows: (ids as string[]).map((id) => {
+        const movement = ledger.movements.find(
+          (found) => found.transaction.transaction_id === id,
+        );
+        if (!movement)
+          return {
+            transaction_id: id,
+            state: "not_found",
+            seal_count: 0,
+            seals: [],
+          };
+        return movement.sealed
+          ? {
+              transaction_id: id,
+              state: "sealed",
+              seal_count: 1,
+              seals: [sealingReference(movement)],
+            }
+          : { transaction_id: id, state: "open", seal_count: 0, seals: [] };
+      }) as unknown as JsonValue,
+    };
+  }
+
   function historyTyped(request: JsonObject): JsonObject {
     only(request, ["transaction_prefix", "include_split_siblings"]);
     const siblings = request.include_split_siblings ?? false;
@@ -856,6 +893,7 @@ export function movementActionOperations(ledger: FixtureLedger, tools: Tools) {
 
   const reads: Record<string, (request: JsonObject) => JsonObject> = {
     "ledger.track": track,
+    "ledger.sealed.read": sealedRead,
     "ledger.history.typed": historyTyped,
   };
   const writes: Record<string, (request: JsonObject) => JsonObject> = {

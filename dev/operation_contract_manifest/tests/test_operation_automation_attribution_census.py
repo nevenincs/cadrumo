@@ -136,6 +136,7 @@ _RECORDS_THE_SESSION_LABEL: Mapping[str, _Proof] = {
             "ledger.remove",
             "ledger.reset",
             "ledger.update",
+            "ledger.update.batch",
         )
     },
     "ledger.archive": _Proof(_ACTOR, _ROW_MUTATION, _LIFECYCLE_TEST),

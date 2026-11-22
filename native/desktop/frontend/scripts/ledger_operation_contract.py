@@ -127,6 +127,7 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.classify.review",
             "ledger.history.typed",
             "ledger.rule.trial",
+            "ledger.sealed.read",
             "ledger.split.check",
             "ledger.split.review",
             "ledger.staged.check",

@@ -14,6 +14,7 @@ import type {
 } from "./ledgerInvoiceContract";
 import type {
   LedgerClassifyOperationResult,
+  LedgerRemovalBlockerProjection,
   LedgerSplitChildRequest,
 } from "./ledgerMovementContract";
 
@@ -423,6 +424,32 @@ export type LedgerRuleTrialResult = {
     "matched" | "empty_pattern" | "invalid_pattern" | "too_long" | "overrun";
   hits: string[];
   pending: string[];
+};
+
+/**
+ * An exact profile and the movements to answer, each named once.
+ */
+export type LedgerSealedReadRequest = {
+  profile_id: string;
+  transaction_ids: string[];
+};
+
+/**
+ * Every asked movement in the order asked.
+ */
+export type LedgerSealedReadResult = {
+  profile_id: string;
+  rows: LedgerSealedRow[];
+};
+
+/**
+ * Whether a batch edit would refuse this movement as sealed, and by what.
+ */
+export type LedgerSealedRow = {
+  transaction_id: string;
+  state: "sealed" | "open" | "not_found";
+  seal_count: number;
+  seals: LedgerRemovalBlockerProjection[];
 };
 
 /**
@@ -905,6 +932,10 @@ export type LedgerMovementCheckContracts = {
     request: LedgerRuleTrialRequest;
     result: LedgerRuleTrialResult;
   };
+  "ledger.sealed.read": {
+    request: LedgerSealedReadRequest;
+    result: LedgerSealedReadResult;
+  };
   "ledger.split.check": {
     request: LedgerSplitCheckRequest;
     result: LedgerSplitCheckResult;
@@ -935,6 +966,11 @@ export type LedgerLlmReviewWindowRequest = Omit<
 
 export type LedgerRuleTrialWindowRequest = Omit<
   LedgerRuleTrialRequest,
+  "profile_id"
+>;
+
+export type LedgerSealedReadWindowRequest = Omit<
+  LedgerSealedReadRequest,
   "profile_id"
 >;
 

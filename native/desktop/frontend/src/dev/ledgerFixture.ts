@@ -198,9 +198,9 @@ declare global {
        * as a runtime that did not answer them; with `where`, only reads
        * whose request carries each of its values. */
       nextReads(definition: string, count: number, where?: JsonObject): void;
-      holdTracks(): void;
-      releaseTracks(): void;
-      pendingTracks(): number;
+      holdSealedReads(): void;
+      releaseSealedReads(): void;
+      pendingSealedReads(): number;
       /** The requests the page sent for `definition`, oldest first. */
       requests(definition: string): JsonObject[];
       /** Changes a stored movement's field, as another window saving it
@@ -290,11 +290,11 @@ export function ledgerFixture(options: Options): LedgerPort {
   const queued: ("unknown" | "lost" | "saved_unread" | "refused")[] = [];
   // How many of the next reads of a definition answer nothing.
   const failingReads = new Map<string, number>();
-  let tracksHeld: Promise<void> | null = null;
+  let sealedReadsHeld: Promise<void> | null = null;
   let previewsHeld: Promise<void> | null = null;
   let releasePreviews = () => {};
-  let releaseTracks = () => {};
-  let pendingTracks = 0;
+  let releaseSealedReads = () => {};
+  let pendingSealedReads = 0;
   // Every request the page sent, as it was sent.
   const sent: { definition: string; request: JsonObject }[] = [];
   // Reads that fail only where their request carries these values.
@@ -398,16 +398,16 @@ export function ledgerFixture(options: Options): LedgerPort {
           (failingReads.get(definition) ?? 0) + count,
         );
     },
-    holdTracks() {
-      tracksHeld ??= new Promise<void>((resolve) => {
-        releaseTracks = () => {
-          tracksHeld = null;
+    holdSealedReads() {
+      sealedReadsHeld ??= new Promise<void>((resolve) => {
+        releaseSealedReads = () => {
+          sealedReadsHeld = null;
           resolve();
         };
       });
     },
-    releaseTracks: () => releaseTracks(),
-    pendingTracks: () => pendingTracks,
+    releaseSealedReads: () => releaseSealedReads(),
+    pendingSealedReads: () => pendingSealedReads,
     requests: (definition) =>
       sent
         .filter((found) => found.definition === definition)
@@ -460,10 +460,14 @@ export function ledgerFixture(options: Options): LedgerPort {
     nextWrites: (next) => ledgers.forEach((made) => made.nextWrites(next)),
     nextReads: (definition, count, where) =>
       ledgers.forEach((made) => made.nextReads(definition, count, where)),
-    holdTracks: () => ledgers.forEach((made) => made.holdTracks()),
-    releaseTracks: () => ledgers.forEach((made) => made.releaseTracks()),
-    pendingTracks: () =>
-      [...ledgers].reduce((total, made) => total + made.pendingTracks(), 0),
+    holdSealedReads: () => ledgers.forEach((made) => made.holdSealedReads()),
+    releaseSealedReads: () =>
+      ledgers.forEach((made) => made.releaseSealedReads()),
+    pendingSealedReads: () =>
+      [...ledgers].reduce(
+        (total, made) => total + made.pendingSealedReads(),
+        0,
+      ),
     requests: (definition) =>
       [...ledgers].flatMap((made) => made.requests(definition)),
     editElsewhere: (id, field, value) =>
@@ -869,12 +873,12 @@ export function ledgerFixture(options: Options): LedgerPort {
     await answer();
     if (definition === "ledger.update.batch.preview" && previewsHeld)
       await previewsHeld;
-    if (definition === "ledger.track" && tracksHeld) {
-      pendingTracks++;
+    if (definition === "ledger.sealed.read" && sealedReadsHeld) {
+      pendingSealedReads++;
       try {
-        await tracksHeld;
+        await sealedReadsHeld;
       } finally {
-        pendingTracks--;
+        pendingSealedReads--;
       }
     }
     if (!isLedgerDefinition(definition)) return reject("not_admitted");

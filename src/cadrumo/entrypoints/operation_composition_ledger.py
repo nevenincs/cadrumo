@@ -738,6 +738,17 @@ def compose_ledger_batch_update_operation(inputs: OperationCompositionInputs) ->
     )
 
 
+def compose_ledger_sealed_read_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the one-load read of which movements a finalized declaration seals."""
+    from ..application.ledger.sealed_read_operation import (
+        build_ledger_sealed_read_definition,
+        build_ledger_sealed_read_registration,
+    )
+
+    definition = build_ledger_sealed_read_definition(inputs.ledger_actions())
+    return built((definition,), (build_ledger_sealed_read_registration(definition),))
+
+
 def compose_ledger_rule_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose ledger rule operation."""
     from ..application.ledger.rule_operation import (

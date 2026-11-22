@@ -1114,6 +1114,14 @@
         "path": []
       }
     },
+    "ledger.sealed.read": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.split.check": {
       "may_write": false,
       "review": false,
