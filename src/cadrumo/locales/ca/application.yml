@@ -3207,6 +3207,10 @@ application:
         invoice_recargo_split_unresolved: 'una factura emesa porta un únic recàrrec
           d''equivalència sobre diversos tipus d''IVA que no coincideix amb la suma
           del recàrrec de cada tipus: corregeix el recàrrec de la factura'
+        invoice_rectificativa_modification_unmodelled: 'una factura rectificativa
+          no es declara en cap fila de tipus d''IVA: indica''n la base i la quota
+          amb el signe que correspongui a les caselles 14 i 15 del Model 303 si la
+          vas emetre, o a les caselles 40 i 41 si la vas rebre'
         linked_movement_contradicts_invoice: la seva base o la seva quota no coincideixen
           amb les de la factura que paga
         missing_business_classification: falta classificar-lo com a professional,

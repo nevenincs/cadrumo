@@ -1103,7 +1103,8 @@ export type LedgerPreflightIssueReason =
   | "invoice_cash_accounting_regime_unmodelled"
   | "linked_movement_contradicts_invoice"
   | "invoice_recargo_split_unresolved"
-  | "invoice_recargo_not_declarable";
+  | "invoice_recargo_not_declarable"
+  | "invoice_rectificativa_modification_unmodelled";
 
 /**
  * Why the release was refused, what the person can do, and what blocks it.

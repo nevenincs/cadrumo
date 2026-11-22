@@ -353,6 +353,9 @@ OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE: Mapping[
         LedgerPreflightIssueReason.LINKED_MOVEMENT_CONTRADICTS_INVOICE: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
         LedgerPreflightIssueReason.INVOICE_RECARGO_SPLIT_UNRESOLVED: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
         LedgerPreflightIssueReason.INVOICE_RECARGO_NOT_DECLARABLE: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_MODIFICATION_UNMODELLED: (
+            OperatorActionAxis.SUPPLY_MANUAL_INPUT
+        ),
     },
 )
 """Total action spine for readiness ``ledger_issues`` reasons."""

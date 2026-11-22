@@ -4297,6 +4297,7 @@ desktop:
       invoice_deduction_family_unresolved: Levonás
       invoice_recargo_not_declarable: Pótlék
       invoice_recargo_split_unresolved: Pótlék
+      invoice_rectificativa_modification_unmodelled: Helyesbítő
       linked_movement_contradicts_invoice: Számla
       missing_business_classification: Besorolás
       missing_category: Kategória
@@ -4326,6 +4327,8 @@ desktop:
         illeti meg
       invoice_recargo_not_declarable: A pótlék nem a törvényes kulcs az adóalapján
       invoice_recargo_split_unresolved: A pótlék nem osztható fel az áfakulcsai között
+      invoice_rectificativa_modification_unmodelled: Add meg a helyesbítést előjellel
+        a 14/15. vagy a 40/41. mezőben
       linked_movement_contradicts_invoice: Eltér a számlájától
       missing_business_classification: Hiányzik a besorolás
       missing_category: Hiányzik a kategória

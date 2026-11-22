@@ -4237,6 +4237,7 @@ desktop:
       invoice_deduction_family_unresolved: Deduction
       invoice_recargo_not_declarable: Surcharge
       invoice_recargo_split_unresolved: Surcharge
+      invoice_rectificativa_modification_unmodelled: Rectificativa
       linked_movement_contradicts_invoice: Invoice
       missing_business_classification: Classification
       missing_category: Category
@@ -4267,6 +4268,8 @@ desktop:
       invoice_recargo_not_declarable: The surcharge is not the legal rate on its base
       invoice_recargo_split_unresolved: The surcharge does not divide between its
         VAT rates
+      invoice_rectificativa_modification_unmodelled: Enter the correction with its
+        sign in casillas 14/15 or 40/41
       linked_movement_contradicts_invoice: Differs from its invoice
       missing_business_classification: Classification missing
       missing_category: Category missing

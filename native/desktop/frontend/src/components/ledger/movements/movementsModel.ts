@@ -393,6 +393,10 @@ const REASON_FIXES: Record<LedgerPreflightReason, ReasonFix> = {
   linked_movement_contradicts_invoice: { preset: "review", column: "invoice" },
   invoice_recargo_split_unresolved: { preset: "review", column: "invoice" },
   invoice_recargo_not_declarable: { preset: "review", column: "invoice" },
+  invoice_rectificativa_modification_unmodelled: {
+    preset: "review",
+    column: "invoice",
+  },
 };
 
 /** A reason's fix by the reason a check names: a reason the window was not

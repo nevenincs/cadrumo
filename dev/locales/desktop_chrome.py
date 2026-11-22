@@ -286,6 +286,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "linked_movement_contradicts_invoice",
             "invoice_recargo_split_unresolved",
             "invoice_recargo_not_declarable",
+            "invoice_rectificativa_modification_unmodelled",
             "invoice_cash_accounting_regime_unmodelled",
         ),
         "desktop.ledger.reason_detail.": (
@@ -313,6 +314,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "linked_movement_contradicts_invoice",
             "invoice_recargo_split_unresolved",
             "invoice_recargo_not_declarable",
+            "invoice_rectificativa_modification_unmodelled",
             "invoice_cash_accounting_regime_unmodelled",
         ),
         "desktop.ledger.review.": ("pending", "reviewed", "skipped", "excluded"),

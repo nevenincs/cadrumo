@@ -3211,6 +3211,10 @@ application:
         invoice_recargo_split_unresolved: 'una factura emitida lleva un único recargo
           de equivalencia sobre varios tipos de IVA que no coincide con la suma del
           recargo de cada tipo: corrige el recargo de la factura'
+        invoice_rectificativa_modification_unmodelled: 'una factura rectificativa
+          no se declara en ninguna fila de tipo de IVA: indica su base y su cuota
+          con el signo que corresponda en las casillas 14 y 15 del Modelo 303 si la
+          emitiste, o en las casillas 40 y 41 si la recibiste'
         linked_movement_contradicts_invoice: su base o su cuota no coinciden con las
           de la factura que paga
         missing_business_classification: falta clasificarlo como profesional, personal

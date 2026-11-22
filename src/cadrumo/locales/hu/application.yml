@@ -3163,6 +3163,10 @@ application:
         invoice_recargo_split_unresolved: 'egy kiállított számla több áfakulcsra egyetlen
           kiegyenlítő pótlékot (recargo de equivalencia) tartalmaz, amely eltér az
           egyes kulcsok pótlékának összegétől: javítsd a számla pótlékát'
+        invoice_rectificativa_modification_unmodelled: 'a helyesbítő számla (factura
+          rectificativa) egyik áfakulcs-sorban sem szerepel: add meg az adóalapját
+          és az adóját a megfelelő előjellel a Modelo 303 14. és 15. mezőjében, ha
+          te állítottad ki, vagy a 40. és 41. mezőjében, ha te kaptad'
         linked_movement_contradicts_invoice: az adóalapja vagy az IVA-összege eltér
           a kifizetett számláétól
         missing_business_classification: még nincs besorolva üzleti, magán vagy vegyes

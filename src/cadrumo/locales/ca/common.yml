@@ -4317,6 +4317,7 @@ desktop:
       invoice_deduction_family_unresolved: Deducció
       invoice_recargo_not_declarable: Recàrrec
       invoice_recargo_split_unresolved: Recàrrec
+      invoice_rectificativa_modification_unmodelled: Rectificativa
       linked_movement_contradicts_invoice: Factura
       missing_business_classification: Classificació
       missing_category: Categoria
@@ -4347,6 +4348,8 @@ desktop:
         base
       invoice_recargo_split_unresolved: El recàrrec no es reparteix entre els seus
         tipus d'IVA
+      invoice_rectificativa_modification_unmodelled: Indica la rectificació amb el
+        seu signe a les caselles 14/15 o 40/41
       linked_movement_contradicts_invoice: No coincideix amb la seva factura
       missing_business_classification: Falta la classificació
       missing_category: Falta la categoria

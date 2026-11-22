@@ -149,6 +149,7 @@ class LedgerPreflightIssueReason(StrEnum):
     LINKED_MOVEMENT_CONTRADICTS_INVOICE = "linked_movement_contradicts_invoice"
     INVOICE_RECARGO_SPLIT_UNRESOLVED = "invoice_recargo_split_unresolved"
     INVOICE_RECARGO_NOT_DECLARABLE = "invoice_recargo_not_declarable"
+    INVOICE_RECTIFICATIVA_MODIFICATION_UNMODELLED = "invoice_rectificativa_modification_unmodelled"
 
 
 class LedgerPreflightIssue(BaseModel):
@@ -424,6 +425,11 @@ _INVOICE_FINDING_DETAIL: Final[Mapping[str, str]] = MappingProxyType(
         LedgerPreflightIssueReason.INVOICE_RECARGO_NOT_DECLARABLE.value: (
             "issued invoice {number} records a recargo de equivalencia that is not its base times the "
             "art. 161 rate for its IVA rate and date; correct the invoice or issue a rectificativa"
+        ),
+        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_MODIFICATION_UNMODELLED.value: (
+            "invoice {number} is a factura rectificativa, which no IVA rate row declares; enter its base and "
+            "cuota with their sign in Modelo 303 casillas 14 and 15 if you issued it, or in casillas 40 and 41 "
+            "if you received it"
         ),
     }
 )

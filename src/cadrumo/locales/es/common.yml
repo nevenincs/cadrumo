@@ -4323,6 +4323,7 @@ desktop:
       invoice_deduction_family_unresolved: Deducción
       invoice_recargo_not_declarable: Recargo
       invoice_recargo_split_unresolved: Recargo
+      invoice_rectificativa_modification_unmodelled: Rectificativa
       linked_movement_contradicts_invoice: Factura
       missing_business_classification: Clasificación
       missing_category: Categoría
@@ -4352,6 +4353,8 @@ desktop:
       invoice_recargo_not_declarable: El recargo no es el tipo legal sobre su base
       invoice_recargo_split_unresolved: El recargo no se reparte entre sus tipos de
         IVA
+      invoice_rectificativa_modification_unmodelled: Indica la rectificación con su
+        signo en las casillas 14/15 o 40/41
       linked_movement_contradicts_invoice: No coincide con su factura
       missing_business_classification: Falta la clasificación
       missing_category: Falta la categoría
