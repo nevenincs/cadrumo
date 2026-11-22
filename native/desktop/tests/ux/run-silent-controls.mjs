@@ -20,6 +20,9 @@
 //     [--config Release] [--persona <id>] [--report <file.md>] [--only <rail>[,...]]
 //     [--assistive]   (only the UI Automation activation tests: popup openers, rail pages)
 //     [--idle]        (instead: the model-list idle check, model-list-idle.test.mjs)
+//     [--bulk-edit [--extra-movements N]]  (instead: the Libro bulk-edit walk,
+//                     ledger-bulk-edit.test.mjs, on a world with N extra synthetic
+//                     movements, default 200; screenshots beside the report)
 //     [--staged-package <app dir an earlier stage of --build mirrored>
 //      --strings-build <this checkout's CMake binary dir holding its chrome strings>]
 //
@@ -57,6 +60,9 @@ const audit = fileURLToPath(
 const idleCheck = fileURLToPath(
   new URL("./model-list-idle.test.mjs", import.meta.url),
 );
+const bulkEdit = fileURLToPath(
+  new URL("./ledger-bulk-edit.test.mjs", import.meta.url),
+);
 const python = resolve(
   repository,
   process.platform === "win32"
@@ -92,6 +98,8 @@ const { values: args } = parseArgs({
     only: { type: "string", default: "" },
     assistive: { type: "boolean", default: false },
     idle: { type: "boolean", default: false },
+    "bulk-edit": { type: "boolean", default: false },
+    "extra-movements": { type: "string", default: "200" },
     "staged-package": { type: "string" },
     "strings-build": { type: "string" },
   },
@@ -236,6 +244,9 @@ try {
       horizon.stdout.trim(),
       "--storage-root",
       join(root, "world"),
+      ...(args["bulk-edit"]
+        ? ["--extra-movements", args["extra-movements"]]
+        : []),
     ],
     { cwd: repository, env: pythonEnv, encoding: "utf8", maxBuffer: 64 << 20 },
   );
@@ -254,7 +265,7 @@ try {
       "--test",
       "--test-reporter=spec",
       ...(args.assistive ? ["--test-name-pattern=assistive activation"] : []),
-      args.idle ? idleCheck : audit,
+      args["bulk-edit"] ? bulkEdit : args.idle ? idleCheck : audit,
     ],
     {
       cwd: repository,
@@ -269,6 +280,9 @@ try {
         CADRUMO_BUILD_CONFIG: args.config,
         CADRUMO_UX_RUN: join(root, "run"),
         CADRUMO_SILENT_REPORT: report,
+        ...(args["bulk-edit"]
+          ? { CADRUMO_UX_SHOTS: `${report.replace(/\.md$/i, "")}.shots` }
+          : {}),
         ...(args.only ? { CADRUMO_SILENT_ONLY: args.only } : {}),
         PYTHONDONTWRITEBYTECODE: "1",
       },
