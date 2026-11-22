@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Final, cast
 
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from dev.acceptance.installed_cli import InstalledCli, InstalledCliError, authority_generation, profile_create_args
 
 from .cli_journey import (
@@ -133,7 +134,7 @@ def run_iva_multirate_cli_journey(
     with runtime_scope if runtime_scope is not None else nullcontext():
         artifact_root.mkdir(parents=True, exist_ok=True)
         artifact = artifact_root / "synthetic-multirate-purchase.pdf"
-        artifact.write_bytes(b"%PDF-1.4\n% synthetic acceptance purchase evidence\n")
+        artifact.write_bytes(text_pdf_bytes(("synthetic acceptance purchase evidence",)))
 
         cli = InstalledCli(
             executable,

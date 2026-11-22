@@ -2016,8 +2016,15 @@ def _measure_on(
     with ExitStack() as stack:
         deployment = {_DEPLOYMENT_OFF_HOST: "true"} if arguments.deployment_permits_off_host else {}
         document["deployment_settings"] = sorted(deployment)
+        document["external_bin_dirs"] = list(arguments.external_bin_dir)
         session = stack.enter_context(
-            agent_service_session(package, root / "session", owned=True, deployment_settings=deployment)
+            agent_service_session(
+                package,
+                root / "session",
+                owned=True,
+                deployment_settings=deployment,
+                external_bin_dirs=tuple(Path(directory) for directory in arguments.external_bin_dir),
+            )
         )
         timings["session_setup_seconds"] = time.perf_counter() - phase
         document["session_timings"] = session.timings
@@ -2289,6 +2296,7 @@ class _Arguments(argparse.Namespace):
     base_url_variable: str | None
     hostile: bool
     deployment_permits_off_host: bool
+    external_bin_dir: list[str]
     apply_count: int
 
     @property
@@ -2340,6 +2348,12 @@ def parse_arguments(argv: Sequence[str] | None = None) -> _Arguments:
         "--deployment-permits-off-host",
         action="store_true",
         help=f"start the runtime with {_DEPLOYMENT_OFF_HOST}=true, the deployment's off-host opt-in",
+    )
+    parser.add_argument(
+        "--external-bin-dir",
+        action="append",
+        default=[],
+        help="a directory the deployment admits for provider executables (CADRUMO_EXTERNAL_BIN_DIRS); repeatable",
     )
     parser.add_argument("--apply-count", type=int, default=_APPLY_DEFAULT, help="job proposals to apply")
     arguments = parser.parse_args(argv, namespace=_Arguments())

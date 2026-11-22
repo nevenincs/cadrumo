@@ -124,19 +124,19 @@ async def _save_authentication_settings(pilot: Pilot[object], screen: ProfileMan
     await _until(pilot, lambda: not editor.query_one("#aeat-auth-save", Button).disabled, "load saved settings")
     editor.query_one("#aeat-auth-method", Select).value = "clave_movil"
     editor.query_one("#aeat-auth-route", Select).value = "app_request"
+    # The profile's own tax identifier is the Cl@ve identity; field 1 is the DNI validity date.
     editor.query_one("#aeat-auth-field-0", Input).value = "12345678Z"
-    editor.query_one("#aeat-auth-field-1", Input).value = "12345678Z"
     await _click(pilot, "#aeat-auth-save")
     await _until(pilot, lambda: not editor._busy, "save incomplete authentication")
     assert editor._snapshot is not None
     assert not editor._snapshot[1].ready
     assert any(item.field == "auth.fecha_validez" and not item.satisfied for item in editor._snapshot[1].requirements)
-    editor.query_one("#aeat-auth-field-2", Input).value = "not-a-date"
+    editor.query_one("#aeat-auth-field-1", Input).value = "not-a-date"
     await _click(pilot, "#aeat-auth-save")
     await _until(pilot, lambda: not editor._busy, "reject invalid validity date")
     assert str(editor.query_one("#aeat-auth-message", Static).render()).strip()
     assert not editor._snapshot[1].ready
-    editor.query_one("#aeat-auth-field-2", Input).value = "2030-01-01"
+    editor.query_one("#aeat-auth-field-1", Input).value = "2030-01-01"
     await _click(pilot, "#aeat-auth-save")
     await _until(pilot, lambda: not editor._busy, "save complete authentication")
     assert editor._snapshot is not None and editor._snapshot[1].ready, str(

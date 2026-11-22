@@ -14,6 +14,7 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
+from pydantic import SecretBytes
 
 from cadrumo.adapters.persistence.storage.custody import acceleration_keychain, acceleration_receipt
 from cadrumo.adapters.persistence.storage.custody.acceleration_keychain import (
@@ -25,7 +26,17 @@ from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
     mint_profile_session,
     revoke_profile_sign_in,
 )
-from cadrumo.adapters.persistence.storage.custody.automation_secret_store import WindowsCredentialManager
+from cadrumo.adapters.persistence.storage.custody.acceleration_session_prune import ProfileSessionPruneOutcome
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import (
+    CONTROL_NAMESPACE,
+    WRAP_NAMESPACE,
+    automation_native_account,
+)
+from cadrumo.adapters.persistence.storage.custody.automation_retirement import AutomationPruneOutcome
+from cadrumo.adapters.persistence.storage.custody.automation_secret_store import (
+    WindowsAutomationSecretStore,
+    WindowsCredentialManager,
+)
 from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, sign_in_custody
 from cadrumo.adapters.persistence.storage.errors import KeyringUnavailableError
 from cadrumo.core.profile_session import KeychainUnavailability
@@ -144,8 +155,61 @@ def test_runtime_pass_turns_an_unexpected_failure_into_a_typed_skip(
     def unforeseen(_root: Path) -> object:
         raise _UnforeseenError("detail that must not be carried")
 
+    monkeypatch.setattr(credential_prune, "profile_session_prune_has_work", lambda _root: True)
     monkeypatch.setattr(credential_prune, "prune_profile_session_entries", unforeseen)
 
     skipped = prune_owned_credentials(tmp_path)
 
     assert skipped == CredentialPruneSkipped(reason="unexpected_error", error_type="_UnforeseenError")
+
+
+@pytest.mark.os_keychain
+@pytest.mark.windows_only
+def test_runtime_pass_leaves_a_root_with_nothing_to_prune_untouched(tmp_path: Path) -> None:
+    """No recorded session and no native entry for this root: the pass takes no lock and writes nothing."""
+    require_os_credential_store()
+    root = tmp_path / "root"
+    root.mkdir()
+
+    report = prune_owned_credentials(root)
+
+    assert report == CredentialPruneReport(
+        profile_sessions=ProfileSessionPruneOutcome(removed=(), retained=(), unavailability=None),
+        automation=AutomationPruneOutcome(removed=0, retained=0, failure=None),
+    )
+    assert list(root.iterdir()) == []
+
+
+@pytest.mark.os_keychain
+@pytest.mark.windows_only
+def test_runtime_pass_prunes_a_wiped_roots_leftover_automation_entries_under_the_lock(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A root whose automation directory is gone still has its leftover native entries removed, under the lock."""
+    require_os_credential_store()
+    root = tmp_path / "root"
+    root.mkdir()
+    store = WindowsAutomationSecretStore()
+    control = automation_native_account(root, uuid4(), uuid4())
+    written = [(CONTROL_NAMESPACE, control), (WRAP_NAMESPACE, f"{control}/{uuid4()}")]
+    locked_roots: list[Path] = []
+    real_lock = credential_prune.profile_custody_root_lock
+
+    def observed_lock(lock_root: Path, *, timeout_seconds: float) -> object:
+        locked_roots.append(lock_root)
+        return real_lock(lock_root, timeout_seconds=timeout_seconds)
+
+    monkeypatch.setattr(credential_prune, "profile_custody_root_lock", observed_lock)
+    try:
+        for namespace, account in written:
+            store.replace(namespace, account, SecretBytes(b"synthetic"))
+
+        report = prune_owned_credentials(root)
+
+        assert isinstance(report, CredentialPruneReport)
+        assert report.automation == AutomationPruneOutcome(removed=2, retained=0, failure=None)
+        assert locked_roots == [root]
+        assert [store.read(namespace, account) for namespace, account in written] == [None, None]
+    finally:
+        for namespace, account in written:
+            store.delete(namespace, account)

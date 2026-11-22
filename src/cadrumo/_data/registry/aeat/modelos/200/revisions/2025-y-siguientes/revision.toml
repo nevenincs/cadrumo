@@ -22069,6 +22069,12 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 # cooperativos (L15078-15080). Every lane's selection is the 2024 one.
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "formulas"
+selector = {revision = "2024", id = "modelo-200-cuota-liquida-minima-exigida"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["Aquellos cuyo importe neto de la cifra de negocios sea al menos de 20 millones de euros durante los 12 meses anteriores a la fecha en que se inicie el período impositivo", "Aquellos que tributen en el régimen de consolidación fiscal regulado en el Capítulo VI del Título VII de la LIS, con independencia de su importe neto de la cifra de negocios", "Esta tributación no se aplicará a los siguientes contribuyentes", "que tributen al tipo del 10 por ciento, según lo dispuesto en el artículo 29.3 de la LIS", "que tributen al tipo del 0 por ciento según lo dispuesto en el artículo 29.5 de la LIS", "Sociedades Anónimas Cotizadas de Inversión en el Mercado Inmobiliario (SOCIMI)"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
 selector = {revision = "2024", id = "modelo-200-tipo-gravamen-por-forma-juridica"}
 sequence_additions = {legal_refs = ["ley-27-2014:dt-44", "ley-27-2014:art-29-2025"], source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["se hará constar el tipo de gravamen que corresponda de acuerdo con el régimen de tributación aplicable a la entidad declarante", "Tipo general 25 por 100", "Entidades de nueva creación del artículo 29.1 de la LIS que realicen actividades", "tengan la consideración de entidad patrimonial) 15 por 100", "Entidades INCN < 1 millón de euros en el período impositivo inmediato anterior", "Hasta 50.000 euros 21 por 100", "Resto Base Imponible 22 por 100", "Entidades de Reducida Dimensión (art. 101 LIS) 24 por 100", "será el que corresponda a los resultados cooperativos: 20 por ciento"]}], source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]}
 sequence_removals = {legal_refs = [3], source_citations = [0], source_refs = [0, 1]}
@@ -22316,6 +22322,11 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 family = "parameters"
 selector = {revision = "2024", id = "is.modelo-200.bin-compensacion-importe-minimo"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["se podran compensar en el periodo impositivo bases imponibles negativas hasta el importe de 1 millon de euros"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "is.modelo-200.tributacion-minima-incn-minimo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["Aquellos cuyo importe neto de la cifra de negocios sea al menos de 20 millones de euros durante los 12 meses anteriores a la fecha en que se inicie el período impositivo"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "parameters"
@@ -25907,7 +25918,7 @@ sequence_removals = {source_refs = [0], source_citations = [0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-200-profile-incn-prior-12-months"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["disposición adicional decimoquinta de la LIS", "doce meses anteriores a la fecha de inicio del período impositivo"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2025", required_text = ["disposición adicional decimoquinta de la LIS", "doce meses anteriores a la fecha de inicio del período impositivo", "determinar, si procede, la aplicación de la tributación mínima (casilla [00619])"]}], source_refs = ["aeat-modelo-200-manual-2025"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]

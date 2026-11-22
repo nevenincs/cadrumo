@@ -2384,6 +2384,11 @@ application:
         que els textos d''aquest exercici ho confirmin.'
       prior_filing_unrecorded: Per calcular la casella {box}, registra el teu Modelo
         {modelo} de {year}.
+      prize_payment_withholding_uncaptured: Un moviment del {row_date} va pagar {amount}
+        com a premi i cap retenció capturada no el declara. Captura la base del premi,
+        la seva retenció i qui el va guanyar amb `aeat app modelo aggregate --modelo
+        111 --ledger-payment-withholding`, o canvia la categoria d'IRPF del moviment
+        si no va pagar cap premi.
       profile_fact_unrecorded: 'Per calcular la casella {box}, registra al teu perfil:
         {field}.'
       register_cost_exceeds_paid: '{elements}: aquests elements indiquen un cost de
@@ -3760,6 +3765,10 @@ application:
         EUR de rendiments del treball, per sobre del llindar de la DT 12a, així que
         la casella [%{reduccion_id}] et pot donar una reducció que encara no apliques.
         Comprova si et correspon.
+      floor_subtraction_unresolved: 'La casella [%{box}] té un import i la casella
+        [%{floor_box}] fixa un mínim, però el text oficial no diu si aquesta deducció
+        pot deixar la quota per sota del mínim, de manera que no es pot comprovar.
+        Caselles afectades: %{boxes}.'
       foreign_asset_redeclaration: 'Model %{modelo_code} %{filing_year}: el valor
         d''un dels teus béns a l''estranger ha passat de %{prior_value_eur} EUR a
         %{current_value_eur} EUR. L''augment de %{delta_value_eur} EUR supera els
@@ -3836,6 +3845,11 @@ application:
         %{period}. La presentació queda bloquejada fins que aquesta comparació es
         completi. Torna-ho a provar quan els registres estiguin disponibles i torna
         a calcular si han canviat.
+      limited_subtractions_below_floor: Les deduccions que només es poden aplicar
+        fins al mínim de la casella [%{box}] (%{floor_value}) sumen %{limited_total}
+        i deixen la quota en %{after_limited}, per sota d'aquest mínim. Consigna només
+        la part que hi cap fins al mínim i deixa la resta pendent per als exercicis
+        següents.
       m193_settled_row_amount_authority_unresolved: El model 193 de %{filing_year}
         inclou %{settled_prior_accrual_rows} pagament(s) de rendiments meritats en
         un exercici anterior. Les normes oficials no indiquen com declarar-ne la base
@@ -4159,6 +4173,12 @@ application:
           en una declaració conjunta, perquè la teva declaració no separa els rendiments
           del treball i d'activitats econòmiques de cada membre, i els límits s'apliquen
           a cada membre individualment (art. 52.1 LIRPF). Mai es mostra com a zero.
+        m200_cuota_liquida_minima_unstated: S'aplica la tributació mínima (art. 30
+          bis LIS), perquè el teu import net de la xifra de negocis dels 12 mesos
+          anteriors al període arriba a 20 milions d'euros o perquè la teva entitat
+          tributa en el règim de consolidació fiscal. La quota líquida mínima no es
+          calcula, així que indica tu mateix la casella 00619 segons les instruccions
+          oficials, encara que sigui 0. Fins aleshores no es pot verificar la declaració.
         m200_extincion_entidad_unsupported: Aquesta casella necessita el límit a la
           compensació de bases imposables negatives (art. 26.1 LIS), que no es calcula
           quan la teva entitat marca la casella 00072 «Extinción de entidad», perquè

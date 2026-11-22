@@ -2348,6 +2348,11 @@ application:
         az exportálás és a rögzítés megvárja, amíg az idei szövegek ezt megerősítik.'
       prior_filing_unrecorded: A(z) {box} mező kiszámításához rögzítsd a(z) {year}.
         évi Modelo {modelo} bevallásodat.
+      prize_payment_withholding_uncaptured: A(z) {row_date} napi mozgás {amount} összeget
+        fizetett ki nyereményként, és nincs rögzített forrásadó-levonás (retención),
+        amely ezt bevallaná. Rögzítsd a nyeremény alapját, a levonását és a nyertest
+        az `aeat app modelo aggregate --modelo 111 --ledger-payment-withholding` paranccsal,
+        vagy módosítsd a mozgás IRPF-kategóriáját, ha nem nyereményt fizetett ki.
       profile_fact_unrecorded: 'A(z) {box} mező kiszámításához rögzítsd a profilodban:
         {field}.'
       register_cost_exceeds_paid: '{elements}: ezek az eszközök {cost} költséget adnak
@@ -3718,6 +3723,10 @@ application:
         (rendimientos del trabajo) tartalmaz a DT 12.ª szerinti küszöb felett, ezért
         a(z) [%{reduccion_id}] rovatban olyan csökkentést kaphatsz, amelyet még nem
         használsz. Ellenőrizd, hogy vonatkozik-e rád.
+      floor_subtraction_unresolved: 'A(z) [%{box}] rovatban összeg szerepel, és a(z)
+        [%{floor_box}] rovat minimumot ír elő, de a hivatalos szöveg nem mondja meg,
+        hogy ez a levonás viheti-e az összeget a minimum alá, ezért ez nem ellenőrizhető.
+        Érintett rovatok: %{boxes}.'
       foreign_asset_redeclaration: 'Modelo %{modelo_code}, %{filing_year}: az egyik
         külföldi vagyonelemének értéke %{prior_value_eur} EUR összegről %{current_value_eur}
         EUR összegre nőtt. A(z) %{delta_value_eur} EUR növekedés meghaladja azt a(z)
@@ -3789,6 +3798,10 @@ application:
         %{period} időszakának számításával. A benyújtás az összehasonlítás sikeres
         befejezéséig tiltott. Próbáld újra, amikor a nyilvántartásaid elérhetők, és
         számold újra a bevallást, ha a tételek megváltoztak.
+      limited_subtractions_below_floor: Azok a levonások, amelyek csak a(z) [%{box}]
+        rovatban szereplő minimumig (%{floor_value}) alkalmazhatók, összesen %{limited_total}
+        összeget tesznek ki, és %{after_limited} összeget hagynak, ami e minimum alatt
+        van. Csak a minimumig beférő részt add meg, a többit vidd át a következő évekre.
       m193_settled_row_amount_authority_unresolved: A(z) %{filing_year}. évi Modelo
         193 %{settled_prior_accrual_rows} olyan kifizetést tartalmaz, amely korábbi
         évben keletkezett jövedelemre vonatkozik. A hivatalos szabályok nem határozzák
@@ -4115,6 +4128,11 @@ application:
           nem számítható ki, mert a bevallásod nem választja szét az egyes tagok munkaviszonyból
           és gazdasági tevékenységből származó jövedelmét, a határok pedig tagonként
           külön érvényesek (LIRPF 52.1. cikk). Soha nem jelenik meg nullaként.
+        m200_cuota_liquida_minima_unstated: A minimális adózás (LIS 30 bis cikk) alkalmazandó,
+          mert a céged nettó árbevétele az időszakot megelőző 12 hónapban eléri a
+          20 millió eurót, vagy a céged csoportos adózás alatt adózik. A minimális
+          nettó adót nem számítjuk ki, ezért add meg magad a 00619 mezőt a hivatalos
+          útmutató szerint, akkor is, ha 0. Addig a bevallás nem ellenőrizhető.
         m200_extincion_entidad_unsupported: Ehhez a mezőhöz a negatív adóalap elszámolására
           vonatkozó korlát kell (LIS 26. cikk 1. pont), amelyet nem számítunk ki,
           ha a céged megjelöli a 00072 mezőt («Extinción de entidad»), mert nem tudjuk

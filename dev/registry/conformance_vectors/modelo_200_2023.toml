@@ -39,6 +39,10 @@ layout_ids = ["generated-modelo-200-2023-fichero"]
 # Casilla 00255 of the preceding Modelo 200 (LIS art. 29.1, art. 101.2-3): 28500.00,
 # below 1000000, so the 23 % rate (manual 2023 L13587-13588, L2895-2900).
 "modelo-200-incn-periodo-impositivo-anterior" = "28500.00"
+# INCN of the twelve months before the period (LIS art. 30 bis.1): below 20
+# millones de euros and no consolidacion fiscal, so the minimum does not apply.
+# The same figure, since that preceding periodo lasted twelve months.
+"modelo-200-profile-incn-prior-12-months" = "28500.00"
 "modelo-200-profile-tributacion-estado-porcentaje" = "100"
 "modelo-200-bin-pendiente-ejercicios-anteriores" = "16300.00"
 "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores" = "0"

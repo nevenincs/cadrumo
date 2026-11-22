@@ -75,13 +75,15 @@ _PORTA_FERRADA = (
 )
 _PORTA_FERRADA_AMOUNT = Decimal("1234.56")
 _COOPERATIVA_PROTEGIDA = "is-cooperativa-protegida"
-# The liquidación boxes a protected cooperative's unsupported cuota leaves unrendered.
+# The liquidación boxes a protected cooperative's unsupported cuota leaves unrendered,
+# [00562], [00582], [00592], [00599] and [00611] in page order. The editions print them on
+# different sheets, so each box is read from the page the edition declares it on.
 _UNSUPPORTED_COOPERATIVE_CUOTA = (
-    "DP200014:00562",
-    "DP200014:00582",
-    "DP200014B:00592",
-    "DP200014B:00599",
-    "DP200014B:00611",
+    "is-liquidacion-iii-cuota-integra",
+    "is-liquidacion-iii-cuota-integra-ajustada-positiva",
+    "is-cuota-liquida",
+    "is-resultado-ingresar-o-devolver",
+    "is-liquidacion-iv-cuota-diferencial",
 )
 _SELECTED = Decimal("1")
 
@@ -279,4 +281,6 @@ def test_a_stated_cooperativa_protegida_flag_is_refused_only_for_its_unsupported
     assert context is not None
     missing_items = context["missing_casillas"]
     assert isinstance(missing_items, list | tuple)
-    assert tuple(item["casilla_id"] for item in missing_items) == _UNSUPPORTED_COOPERATIVE_CUOTA
+    assert tuple(item["casilla_id"] for item in missing_items) == tuple(
+        _casilla_id(revision, continuidad_id) for continuidad_id in _UNSUPPORTED_COOPERATIVE_CUOTA
+    )

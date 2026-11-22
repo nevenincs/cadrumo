@@ -459,9 +459,11 @@ def test_modelo_200_liquidacion_014_014b_formulas_use_segment_identities() -> No
     )
 
     liquida_refs = set(expression_casilla_refs(formulas_by_target[_M200_CUOTA_LIQUIDA_CASILLA].expression))
+    # The manual's operation subtracts the deductions applied from 00582 and floors at zero; the
+    # cuota liquida minima 00619 bounds the deductions consigned, not the cuota liquida itself.
+    assert _M200_CUOTA_LIQUIDA_RESTA_AJUSTES_CASILLA not in liquida_refs
     assert {
         _M200_CUOTA_LIQUIDA_PREVIA_CASILLA,
-        _M200_CUOTA_LIQUIDA_RESTA_AJUSTES_CASILLA,
         _m200_casilla("DP200014B:00583"),
         _m200_casilla("DP200014B:00585"),
         _m200_casilla("DP200014B:00584"),

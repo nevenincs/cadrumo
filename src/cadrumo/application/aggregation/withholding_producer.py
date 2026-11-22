@@ -101,10 +101,11 @@ class WithholdingEvidenceCaptureCommand(BaseModel):
         requires_modelo_190_detail = self.recognition_evidence.income_kind in {
             WithholdingIncomeKind.WORK,
             WithholdingIncomeKind.PROFESSIONAL,
+            WithholdingIncomeKind.PRIZE,
         }
         if requires_modelo_190_detail != (self.modelo_190_detail is not None):
             raise ValueError(
-                "work and professional income require Modelo 190 annual detail and other income forbids it"
+                "work, professional and prize income require Modelo 190 annual detail and other income forbids it"
             )
         is_capital = self.recognition_evidence.income_kind is WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL
         if not is_capital and self.modelo_193_pending_payment is not None:
@@ -267,6 +268,8 @@ def modelo_for(income_kind: WithholdingIncomeKind, scheme: RetencionScheme) -> s
         allowed = (RetencionScheme("actividades_economicas"), RetencionScheme("actividades_profesionales"))
     elif income_kind is WithholdingIncomeKind.URBAN_RENT:
         allowed = (RetencionScheme("arrendamiento_urbano"),)
+    elif income_kind is WithholdingIncomeKind.PRIZE:
+        allowed = (RetencionScheme("premios"),)
     elif income_kind is WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL:
         # The selected 2025 withholding-scheme catalogue is the scope here.
         # It deliberately does not make formalisation, IS, or IRNR branches

@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.env_scope import scoped_cwd
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .ledger_ux_support import invoke, ledger_ux_bucket_session
 
@@ -39,7 +40,7 @@ def test_evidence_add_echoes_forward_slash_argv_path_verbatim(tmp_path: Path) ->
     """
     fixtures = tmp_path / "fixtures"
     fixtures.mkdir()
-    (fixtures / "factura.pdf").write_bytes(b"%PDF-1.4 argv-verbatim")
+    (fixtures / "factura.pdf").write_bytes(text_pdf_bytes(("argv-verbatim",)))
 
     argv_path = "fixtures/factura.pdf"  # forward slashes, exactly as an operator types
     with scoped_cwd(tmp_path):

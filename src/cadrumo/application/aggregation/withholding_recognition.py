@@ -54,6 +54,7 @@ class WithholdingIncomeKind(StrEnum):
     URBAN_RENT = "urban_rent"
     ORDINARY_MOVABLE_CAPITAL = "ordinary_movable_capital"
     INVESTMENT_FUND = "investment_fund"
+    PRIZE = "prize"
 
 
 class WithholdingOperationKind(StrEnum):
@@ -131,6 +132,7 @@ def derive_withholding_recognition(
         WithholdingIncomeKind.WORK,
         WithholdingIncomeKind.PROFESSIONAL,
         WithholdingIncomeKind.URBAN_RENT,
+        WithholdingIncomeKind.PRIZE,
     }:
         _require_ordinary_operation(evidence)
         _reject_event(evidence.exigibility, "conflicting_exigibility_evidence")

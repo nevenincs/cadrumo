@@ -195,6 +195,31 @@ def _unowned_by_root(account: str, *, root_digest: str, parts: int, base: Path) 
     return False
 
 
+def automation_prune_without_work(
+    *, root: Path, secrets_store: AutomationSecretListing | None = None
+) -> AutomationPruneOutcome | None:
+    """Return the settled pass outcome when no native automation entry names ``root``, else ``None``.
+
+    Read without the custody root lock, so a root with nothing to prune is
+    left untouched. ``None`` sends the caller to the locked pass, which lists
+    the entries again under the lock before deleting any; an entry published
+    after this read is published under that lock with its directory, and the
+    locked pass keeps it. A listing that cannot answer also returns ``None``,
+    so the locked pass reports its typed failure.
+    """
+    if secrets_store is None:
+        if sys.platform != "win32":
+            return AutomationPruneOutcome(removed=0, retained=0, failure=AutomationCustodyCode.UNSUPPORTED)
+        secrets_store = WindowsAutomationSecretStore()
+    root_digest = automation_root_digest(root)
+    try:
+        if any(secrets_store.list_accounts(namespace, root_digest + "/") for namespace in _ACCOUNT_PARTS):
+            return None
+    except (AutomationCustodyError, OSError):
+        return None
+    return AutomationPruneOutcome(removed=0, retained=0, failure=None)
+
+
 def prune_unowned_automation_entries(
     *, root: Path, secrets_store: AutomationSecretListing | None = None
 ) -> AutomationPruneOutcome:

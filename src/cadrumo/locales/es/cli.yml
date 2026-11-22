@@ -3720,6 +3720,8 @@ cli:
       irpf_purpose_capital_mobiliario_yield: rendimientos del capital mobiliario (intereses,
         dividendos)
       irpf_purpose_employment_income: rendimientos del trabajo (no para facturas netas)
+      irpf_purpose_prize_payment_withholding: premio de concurso o rifa que pagaste
+        con retención (premios del modelo 111)
       irpf_purpose_rent_expense_withholding: retención de alquiler pagado neto
       irpf_purpose_rental_property_income: ingresos y gastos de alquiler de un inmueble
       irpf_usage_example: 'Alquiler neto: --category-id {rent_category} --irpf-category

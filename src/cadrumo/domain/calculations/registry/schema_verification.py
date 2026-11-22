@@ -81,10 +81,12 @@ from .schema_base import (
 from .schema_scalars import DecimalValue, WorkbookCellRefStr
 
 __all__ = [
+    "FLOOR_SUBTRACTION_GROUP_ORDER",
     "KNOWN_PROFILE_FLAG_ADVISORY_FIELDS",
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
     "VERIFICATION_PREDICATE_SPECIFICATIONS",
     "DiscrepancyCause",
+    "FloorSubtractionGroup",
     "ParsedVerificationPredicate",
     "RegistryVerificationPolicy",
     "VerificationExpectationDefinition",
@@ -543,6 +545,17 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         "equals_sum",
         "implies_any_nonzero",
         "implies_nonzero",
+        # limited_subtractions_respect_floor(["floor_id", "base_id"],
+        # ["pre_floor_id", ...], ["limited_id", ...], ["unclassified_id", ...],
+        # ["exempt_id", ...]) — a floor that bounds only some of the amounts
+        # subtracted from a base: when the floor is positive, the base less the
+        # pre-floor subtractions and the limited subtractions must not fall below
+        # it unless the limited subtractions are nil, and unclassified
+        # subtractions may not be what could take it below. BLOCKING-only. Authored for the Modelo 200
+        # cuota liquida minima of LIS art. 30 bis.2. See
+        # _evaluate_limited_subtractions_respect_floor in
+        # cadrumo.application.modelo.verification_predicates.
+        "limited_subtractions_respect_floor",
         "profile_field_required",
         # profile_flag_enabled("profile_field_name") — profile-state advisory:
         # FIRES (ADVISORY shown) iff the named boolean TaxpayerProfile field is
@@ -588,6 +601,7 @@ class VerificationPredicateOperator(StrEnum):
     EQUALS_SUM = "equals_sum"
     IMPLIES_ANY_NONZERO = "implies_any_nonzero"
     IMPLIES_NONZERO = "implies_nonzero"
+    LIMITED_SUBTRACTIONS_RESPECT_FLOOR = "limited_subtractions_respect_floor"
     PROFILE_FIELD_REQUIRED = "profile_field_required"
     PROFILE_FLAG_ENABLED = "profile_flag_enabled"
     ROLL_FORWARD_BALANCES = "roll_forward_balances"
@@ -604,6 +618,25 @@ class VerificationPredicateSyntax(StrEnum):
     CASILLA_LITERAL_PROFILE_FIELD = "casilla_literal_profile_field"
     CASILLA_LITERAL_CASILLA_PAIR = "casilla_literal_casilla_pair"
     CASILLA_TRIPLE_CUTOFF = "casilla_triple_cutoff"
+    FLOOR_SUBTRACTION_GROUPS = "floor_subtraction_groups"
+
+
+class FloorSubtractionGroup(StrEnum):
+    """The five bracketed groups of a ``floor_subtraction_groups`` expression, in order."""
+
+    #: The floor casilla and the base the subtractions are taken from, in that order.
+    FLOOR_AND_BASE = "floor_and_base"
+    #: Subtractions taken from the base before the floor is compared.
+    PRE_FLOOR = "pre_floor"
+    #: Subtractions that may reduce the base only down to the floor.
+    LIMITED = "limited"
+    #: Subtractions whose relation to the floor the governing text does not settle.
+    UNCLASSIFIED = "unclassified"
+    #: Subtractions that apply whatever the floor, even below it.
+    EXEMPT = "exempt"
+
+
+FLOOR_SUBTRACTION_GROUP_ORDER: Final[tuple[FloorSubtractionGroup, ...]] = tuple(FloorSubtractionGroup)
 
 
 @dataclass(frozen=True, slots=True)
@@ -632,6 +665,18 @@ class ParsedVerificationPredicate:
     profile_field: str = ""
     applicability_filter: str = ""
     cutoff: str = ""
+    #: Casilla count of each bracketed group, in :data:`FLOOR_SUBTRACTION_GROUP_ORDER`;
+    #: empty for every syntax that is not ``floor_subtraction_groups``.
+    group_sizes: tuple[int, ...] = ()
+
+    def casilla_groups(self) -> tuple[tuple[str, ...], ...]:
+        """Split ``casilla_ids`` back into the bracketed groups it was read from."""
+        groups: list[tuple[str, ...]] = []
+        start = 0
+        for size in self.group_sizes:
+            groups.append(self.casilla_ids[start : start + size])
+            start += size
+        return tuple(groups)
 
 
 def _predicate_specification(
@@ -764,6 +809,13 @@ VERIFICATION_PREDICATE_SPECIFICATIONS: Mapping[
             minimum_casilla_ids=2,
             maximum_casilla_ids=2,
         ),
+        # A floor, a base and at least one limited subtraction; the group grammar
+        # fixes the rest of the shape.
+        VerificationPredicateOperator.LIMITED_SUBTRACTIONS_RESPECT_FLOOR: _predicate_specification(
+            VerificationPredicateOperator.LIMITED_SUBTRACTIONS_RESPECT_FLOOR,
+            VerificationPredicateSyntax.FLOOR_SUBTRACTION_GROUPS,
+            minimum_casilla_ids=3,
+        ),
         VerificationPredicateOperator.PROFILE_FIELD_REQUIRED: _predicate_specification(
             VerificationPredicateOperator.PROFILE_FIELD_REQUIRED,
             VerificationPredicateSyntax.PROFILE_FIELD_REQUIRED,
@@ -788,6 +840,8 @@ _RATIO_PATTERN = _re.compile(
 )
 _PROFILE_FIELD_REQUIRED_PATTERN = _re.compile(r'^\w+\("(?P<field>[^"]+)", "(?P<filter>[^"]+)"\)$')
 _PROFILE_FLAG_ENABLED_PATTERN = _re.compile(r'^\w+\("(?P<field>[^"]+)"\)$')
+_GROUPS_PREDICATE_PATTERN = _re.compile(r"^\w+\((?P<groups>\[[^\]]*\](?:\s*,\s*\[[^\]]*\])*)\)$")
+_GROUP_PATTERN = _re.compile(r"\[(?P<arguments>[^\]]*)\]")
 
 
 def verification_predicate_operator_name(expression: str) -> str | None:
@@ -921,6 +975,46 @@ def _parse_profile_flag_enabled_predicate(
     return ParsedVerificationPredicate(operator=operator, arguments=(field,), profile_field=field)
 
 
+def _printed_box(token: str) -> str:
+    """The printed box a casilla token names, without its page-segment qualifier."""
+    return token.rpartition(":")[2]
+
+
+def _parse_floor_subtraction_groups_predicate(
+    operator: VerificationPredicateOperator,
+    stripped: str,
+    _syntax: VerificationPredicateSyntax,
+) -> ParsedVerificationPredicate | None:
+    """Parse the five bracketed groups of a floor-and-subtractions predicate.
+
+    The shape is part of the grammar: exactly five groups, the first naming the
+    floor and the base, the limited group naming at least one subtraction, and
+    no casilla in two places. A casilla read in two groups would be counted
+    under two classifications at once, so such an expression is refused. Two
+    tokens are the same casilla when they name the same printed box, whether or
+    not one of them is qualified by its page segment.
+    """
+    match = _GROUPS_PREDICATE_PATTERN.match(stripped)
+    if match is None:
+        return None
+    groups = tuple(
+        _predicate_argument_tokens(group.group("arguments")) for group in _GROUP_PATTERN.finditer(match.group("groups"))
+    )
+    if len(groups) != len(FLOOR_SUBTRACTION_GROUP_ORDER):
+        return None
+    floor_and_base, _pre_floor, limited, _unclassified, _exempt = groups
+    casilla_ids = tuple(token for group in groups for token in group)
+    boxes = {_printed_box(token) for token in casilla_ids}
+    if len(floor_and_base) != 2 or not limited or len(boxes) != len(casilla_ids):
+        return None
+    return ParsedVerificationPredicate(
+        operator=operator,
+        arguments=casilla_ids,
+        casilla_ids=casilla_ids,
+        group_sizes=tuple(len(group) for group in groups),
+    )
+
+
 _PredicateExpressionParser = Callable[
     [VerificationPredicateOperator, str, VerificationPredicateSyntax],
     ParsedVerificationPredicate | None,
@@ -936,6 +1030,7 @@ _PREDICATE_EXPRESSION_PARSERS: Mapping[VerificationPredicateSyntax, _PredicateEx
         VerificationPredicateSyntax.CASILLA_LITERAL_PROFILE_FIELD: _parse_list_predicate,
         VerificationPredicateSyntax.CASILLA_LITERAL_CASILLA_PAIR: _parse_list_predicate,
         VerificationPredicateSyntax.CASILLA_TRIPLE_CUTOFF: _parse_list_predicate,
+        VerificationPredicateSyntax.FLOOR_SUBTRACTION_GROUPS: _parse_floor_subtraction_groups_predicate,
     },
 )
 
@@ -1070,6 +1165,25 @@ class VerificationPredicateDefinition(RegistryModel):
       non-blocking alert rather than a refusal). The first consequent
       slot onward is the constituent set; a single consequent reduces to
       ``implies_nonzero``.
+    - ``limited_subtractions_respect_floor(["floor_id", "base_id"],
+      ["pre_floor_id", ...], ["limited_id", ...], ["unclassified_id", ...],
+      ["exempt_id", ...])`` — a floor that bounds only some of the amounts
+      subtracted from a base, classified by group. A floor at or below zero
+      holds. Otherwise the base less the pre-floor subtractions and the
+      limited subtractions must reach the floor, unless the limited
+      subtractions are nil: below the floor already, nothing limited may be
+      subtracted at all. With no such breach, unclassified subtractions that
+      would take what is left below the floor are violated as unresolved,
+      because the governing text does not say which side of the floor they
+      fall on and the outcome depends on it; exempt subtractions are read by
+      nothing. The groups
+      are exactly five, the first names the floor and the base, the limited
+      group is not empty and no printed box sits in two groups, qualified by
+      its page segment or not. Missing values read
+      as zero. BLOCKING-only. Authored for the Modelo 200 cuota liquida minima
+      [00619] of LIS art. 30 bis.2, whose restantes deducciones apply only "hasta
+      el importe de dicha cuota liquida minima" while the Canarias deductions
+      apply below it.
     - ``equals_sum(["total_id", "addend_id", "addend_id", ...])`` — the
       printed-total invariant: predicate holds iff the first casilla equals
       the exact sum of every casilla after it, missing values reading as

@@ -103,3 +103,76 @@ predicate_id = "modelo-200-bin-stock-cierre-reconcilia-roll-forward"
 expression = 'roll_forward_balances(["00671", "00670", "DP200013:00547", "DP200013:00552"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-27-2014:art-26"]
+
+# Cuota liquida minima gate (LIS art. 30 bis.2). The cuota liquida [00592] subtracts
+# from the cuota integra ajustada positiva [00582] thirteen deductions "aplicadas por
+# el contribuyente en el periodo impositivo" (Manual practico de Sociedades 2022, p. 365,
+# L14633-14640), so the minimum [00619] is no floor on the box: it bounds the amounts
+# consigned. Art. 30 bis.2 (corpus/normatives/html/ley-27-2014.html L873-877; manual
+# pp. 350-351, L14116-14145) orders them: "En primer lugar, se minorara la cuota
+# integra en el importe de las bonificaciones ... y en el importe de la deduccion
+# prevista en el articulo 38 bis de esta Ley"; then the doble imposicion deductions of
+# arts. 31, 32, 100 and DT 23a; then "se aplicaran las restantes deducciones que
+# resulten procedentes, con los limites aplicables en cada caso, hasta el importe de
+# dicha cuota liquida minima", while "Las deducciones cuyo importe se determine con
+# arreglo a lo dispuesto en la Ley 20/1991 ... y en la Ley 19/1994 ... se aplicaran,
+# respetando sus propios limites, aunque la cuota liquida resultante sea inferior a la
+# mencionada cuota liquida minima". Bonificaciones and doble imposicion already sit
+# inside [00582] (p. 328, L13155), so [00582] is the base. Each box of the [00592]
+# formula, by what the same manual says it carries (aeat-dr-200-2022 DP200014 fields
+# 48-60 for the captions):
+#   pre-floor  [02315] art. 38 bis autoridades portuarias (L17706-17710), named by art.
+#              30 bis.2.a; Ejemplo 2 subtracts it before the minimum (p. 358, L14406-14411).
+#   limited    [00585] "deduccion por reinversion de beneficios extraordinarios" DT 24a.7
+#              (L14853-14858); [00584] "deducciones por inversiones en activos fijos
+#              materiales nuevos" DT 24a.1 (L14942-14946); [00588] Cap. IV Tit. VI, DT 24a.3,
+#              art. 27.3 Ley 49/2002 (L17345-17352), held to the minimum in Ejemplos 1-3
+#              (L14284, L14471, L14619); [01039] art. 36.2 producciones extranjeras
+#              (L17487-17491); [00565] "deduccion por donaciones a entidades sin fines de
+#              lucro" Ley 49/2002 (L17958-17963); [01040] DT 37a.1 and [01041] DT 37a.2
+#              reversion de medidas temporales (L18300-18304, L18354-18358). None is a
+#              bonificacion, art. 38 bis, doble imposicion or Canarias deduction, so each
+#              is one of the "restantes deducciones".
+#   exempt     [00590] "deducciones por inversiones realizadas en Canarias" (L18133-18137),
+#              the percentages and limits of "el articulo 94 de la Ley 20/1991" (L18100-18106);
+#              [02314] producciones extranjeras en Canarias, "Regulacion: Articulo 36.2 LIS y
+#              94 Ley 20/1991 y DA 14a Ley 19/1994" (L25637), its percentages "se
+#              incrementaran segun lo dispuesto en el articulo 94.1 a) de la Ley 20/1991"
+#              (L25649-25650); [00082] art. 39.2 I+D+i, which "no se ve afectada por el
+#              importe de la cuota liquida minima" (p. 359, L14440-14442).
+#   unresolved [00583] "Apoyo fiscal a la inversion y otras deducciones" (DR field 48): the
+#              manual names no deduction it carries, so no classification follows from it;
+#              [00399] "deducciones ... que con arreglo a la respectiva norma foral hayan
+#              aplicado ... exclusivamente las entidades declarantes sometidas a dicha
+#              normativa" (L18142-18148): deductions of foral law, which art. 30 bis.2 does
+#              not name. Under a positive [00619], when no limited breach is certain and
+#              the two would take what is left below [00619] (so their classification
+#              decides the outcome), the gate reports them as unresolved rather than
+#              guessing; with room for them either way it holds.
+# Holds when [00619] is zero. Otherwise [00582] - [02315] - limited must reach [00619]
+# unless the limited total is zero: where [00582] - [02315] is already below [00619]
+# (Ejemplo 2, p. 359, "no puede aplicarse sobre la cuota integra el resto de
+# deducciones"), nothing limited may be consigned. The manual's con-tributacion-minima
+# liquidaciones hold: Ejemplo 1 350.000 - 50.000 = 300.000 (p. 355), Ejemplo 2 [00588] 0
+# (p. 360), Ejemplo 3 455.000 - 30.000 = 425.000 (p. 364). [00588] 80.000 against
+# [00619] 300.000 and [00582] 350.000 does not.
+[[revisions."2022".verification_predicates]]
+id = "limited-subtractions-respect-floor:deducciones-limitadas-por-cuota-liquida-minima"
+predicate_id = "modelo-200-deducciones-limitadas-por-cuota-liquida-minima"
+expression = 'limited_subtractions_respect_floor(["DP200014:00619", "DP200014:00582"], ["DP200014:02315"], ["DP200014:00585", "DP200014:00584", "DP200014:00588", "DP200014:01039", "DP200014:00565", "DP200014:01040", "DP200014:01041"], ["DP200014:00583", "DP200014:00399"], ["DP200014:02314", "DP200014:00590", "DP200014:00082"])'
+legal_refs = ["ley-27-2014:art-30-bis", "ley-27-2014:art-39"]
+
+# The twelve-month turnover must be stated. Every declarant fills the page-1 cuadro "a
+# efectos de determinar, si procede, la aplicación de la tributación mínima (casilla
+# [00619])" (manuals/sociedades/2022 L3100-3106; 2023 L3148-3153), and art. 30 bis.1 applies
+# the minimum from a turnover of at least 20 millones de euros. The requirement formula
+# modelo-200-cuota-liquida-minima-exigida cannot see an undeclared turnover: the calculation
+# leaves its target out without a reason, and the calculation note on the unresolved binding
+# only asks for a check, because the binding fills no printed box. Without this gate an
+# undeclared turnover would let the minimum vanish silently. The profile names a legal form
+# for every Impuesto sobre Sociedades declarant.
+[[revisions."2022".verification_predicates]]
+id = "profile-field-required:incn-doce-meses-anteriores-declarado"
+predicate_id = "modelo-200-incn-doce-meses-anteriores-declarado"
+expression = 'profile_field_required("incn_prior_12_months", "legal_entity_declarant")'
+legal_refs = ["ley-27-2014:art-30-bis"]

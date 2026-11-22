@@ -9,10 +9,12 @@ from typing import Literal
 
 from cadrumo.adapters.persistence.storage.custody.acceleration_session_prune import (
     ProfileSessionPruneOutcome,
+    profile_session_prune_has_work,
     prune_profile_session_entries,
 )
 from cadrumo.adapters.persistence.storage.custody.automation_retirement import (
     AutomationPruneOutcome,
+    automation_prune_without_work,
     prune_unowned_automation_entries,
 )
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyLockContendedError
@@ -51,11 +53,22 @@ def prune_owned_credentials(root: Path) -> CredentialPruneReport | CredentialPru
     it, so every failure becomes a typed skip that carries no message. An
     unavailable keychain is a typed outcome inside the report. Only counts
     and reasons are logged, never an account or a secret.
+
+    Whether there is anything to prune is read first without the lock, so a
+    root that records no minted session and that no automation entry names
+    is left untouched: startup on an empty root creates nothing in it. When
+    there is work, the locked pass reads everything again before deleting.
     """
     try:
-        with profile_custody_root_lock(root, timeout_seconds=_ROOT_LOCK_BUDGET_SECONDS):
-            sessions = prune_profile_session_entries(root)
-            automation = prune_unowned_automation_entries(root=root)
+        sessions_pending = profile_session_prune_has_work(root)
+        settled_automation = automation_prune_without_work(root=root)
+        if not sessions_pending and settled_automation is not None:
+            sessions = ProfileSessionPruneOutcome(removed=(), retained=(), unavailability=None)
+            automation = settled_automation
+        else:
+            with profile_custody_root_lock(root, timeout_seconds=_ROOT_LOCK_BUDGET_SECONDS):
+                sessions = prune_profile_session_entries(root)
+                automation = prune_unowned_automation_entries(root=root)
     except ProfileCustodyLockContendedError:
         return _skipped(CredentialPruneSkipped(reason="root_lock_contended", error_type=None))
     except (OSError, StorageError) as error:

@@ -60,7 +60,7 @@ impl Area {
 
 /// Every definition the commands may submit, with what it may do. Sorted, so
 /// a duplicate or a missing entry is visible.
-pub(super) const ADMITTED: [(&str, Kind); 15] = [
+pub(super) const ADMITTED: &[(&str, Kind)] = &[
     (READINESS, Kind::Readiness),
     ("auth.session.acquire", Kind::Session),
     ("live.borrador.100.compare", Kind::Read),

@@ -62,7 +62,7 @@ const FIELD_SUBJECTS: [(&str, &[&str]); 1] = [("ledger.classify.review", &["tran
 /// classification job's run asks a model about each of its movements.
 const BACKGROUND: [&str; 1] = ["ledger.classify.job.run"];
 
-const ADMITTED: [(&str, Kind); 151] = [
+const ADMITTED: &[(&str, Kind)] = &[
     ("ledger.actividad-asset.acquisition-candidates", Read),
     ("ledger.actividad-asset.claim", Write),
     ("ledger.actividad-asset.correct", Write),
@@ -269,7 +269,7 @@ mod tests {
             unadmitted.is_empty(),
             "shipped but neither admitted nor refused here: {unadmitted:?}"
         );
-        for (id, kind) in ADMITTED {
+        for (id, kind) in ADMITTED.iter().copied() {
             let facts = &shipped[id];
             let expected = match (facts["review"] == true, facts["may_write"] == true) {
                 (true, true) => Review,

@@ -75,23 +75,21 @@ Registry mapping (M200 revision covering the edition):
       verification-expectations comment, which deliberately excludes 00582 as
       "situational"; asserted here as an intermediate cross-check only.)
     casilla DP200014B:00592 "Cuota liquida" = formula `modelo-200-cuota-
-      liquida`: max(00619, max(0, 00582 - sum-of-otras-deducciones)).
-      * WITHOUT tributacion minima (00619 fed 0, matching the manual's own
-        "sin tributacion minima" table): max(0, max(0, 350.000 - 80.000)) =
-        270.000 -> matches the manual's own "Cuota liquida [00592] 270.000"
-        exactly.
-      * WITH tributacion minima (00619 fed 300.000, the manual's own art. 30
-        bis.1 result): max(300.000, max(0, 350.000 - 80.000=270.000)) =
+      liquida`: max(0, 00582 - sum-of-otras-deducciones), the manual's own
+      "[00592] = [00582] - ([00583] + [00585] + [00584] + [00588] + ...)",
+      "siempre ... una cantidad positiva o cero". Its operands are the
+      deductions "aplicadas por el contribuyente en el periodo impositivo",
+      so the cuota liquida minima 00619 is not a floor on 00592: art. 30 bis
+      limits the deduction consigned in 00588 instead.
+      * WITHOUT tributacion minima (the "sin tributacion minima" table: 00588
+        80.000, 00619 0): max(0, 350.000 - 80.000) = 270.000 -> matches the
+        manual's own "Cuota liquida [00592] 270.000" exactly.
+      * WITH tributacion minima (the final table: the I+D+i deduction applied
+        only up to the minimum, "Deduccion incentivar determinadas
+        actividades [00588] -50.000 -30.0000", i.e. 50.000 applied and
+        30.000 pendiente, and 00619 300.000): max(0, 350.000 - 50.000) =
         300.000 -> matches the manual's own final "Cuota liquida [00592]
-        300.000" exactly. Note the registry formula's max(...) floor
-        reproduces the art. 30 bis effect WITHOUT needing the operator to
-        pre-limit casilla 00588 to the capped 50.000 the manual's own
-        art.30bis.2.b) allocation arithmetic derives (see the manual's own
-        "podra aplicarse 50.000 euros de deduccion de I+D+i... pues... existe
-        una diferencia de 50.000 euros"): feeding the FULL 80.000 euros of
-        generated (not manually pre-capped) deduccion still yields the
-        correct 300.000 floor, because max(00619, ...) dominates regardless
-        of how far past the floor the uncapped subtraction lands.
+        300.000" exactly.
     casilla DP200014B:00611 "Cuota diferencial - Estado" = formula `modelo-
       200-cuota-diferencial`: 00599 - (M202 pagos fraccionados relations).
       00599 = (tributacion_estado_porcentaje/100) x (00592 - 01766 - 01784) =
@@ -112,13 +110,10 @@ Registry mapping (M200 revision covering the edition):
 Anti-tautology: this test does not hand-compute 500.000, 350.000, 270.000, or
 300.000 from the registry's own cuota-chain formulas under test. Every raw
 input (base imponible via casilla 00501, DI deduction via casilla 00573,
-I+D+i deduction via casilla 00588, and the art. 30 bis cuota liquida minima
-via casilla 00619) is quoted verbatim from the manual's own printed tables
-above, and the two independent AEAT-printed scenarios (sin/con tributacion
-minima) are BOTH graded - proving the registry's max(00619, ...) floor
-mechanism is doing real work (the con-minima run changes casillas 00592/00611
-by exactly the manual's own delta), not a hand-computed absolute figure or a
-formula that ignores casilla 00619 entirely.
+I+D+i deduction applied via casilla 00588, and the art. 30 bis cuota liquida
+minima via casilla 00619) is quoted verbatim from the manual's own printed
+tables above, and the two independent AEAT-printed scenarios (sin/con
+tributacion minima) are BOTH graded.
 """
 
 from __future__ import annotations
@@ -238,6 +233,10 @@ _CASILLA_DEDUCCION_INCENTIVAR_ACTIVIDADES: CasillaId = validated_casilla_id(
     "DP200014B:00588",
     surface="_CASILLA_DEDUCCION_INCENTIVAR_ACTIVIDADES",
 )
+# The "sin tributacion minima" table consigns the whole 80.000 of I+D+i deduction generated;
+# the oracle's declared inputs are the final table's, which consigns the 50.000 applied up to
+# the cuota liquida minima (module docstring).
+_DEDUCCION_INCENTIVAR_SIN_MINIMA = Decimal("80000.00")
 _CASILLA_CUOTA_LIQUIDA_MINIMA: CasillaId = validated_casilla_id(
     "DP200014B:00619",
     surface="_CASILLA_CUOTA_LIQUIDA_MINIMA",
@@ -403,8 +402,17 @@ def _calculate_m200(
     filing_year: int,
     cuota_liquida_minima: Decimal,
     operation: PinnedAuthorityOperation,
+    deduccion_incentivar: Decimal | None = None,
 ) -> BucketAggregationCalculationResult:
-    """Run the live M200 0A calculate for the exercise with Ejemplo 1's manual casilla inputs."""
+    """Run the live M200 0A calculate for the exercise with Ejemplo 1's manual casilla inputs.
+
+    ``deduccion_incentivar`` replaces the declared casilla 00588 for the table that consigns
+    another amount; ``None`` keeps the oracle's declared figure.
+    """
+    declared = _oracle_declared_figures(_EJEMPLO1_ORACLE)
+    if deduccion_incentivar is not None:
+        assert _CASILLA_DEDUCCION_INCENTIVAR_ACTIVIDADES in declared
+        declared[_CASILLA_DEDUCCION_INCENTIVAR_ACTIVIDADES] = deduccion_incentivar
     _seed_sociedad_profile(filing_year)
     _seed_zero_m202_pagos(filing_year)
     save_preceding_m200_turnover(
@@ -445,10 +453,7 @@ def _calculate_m200(
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs={
-                **{
-                    _in_exercise(casilla_id, filing_year): value
-                    for casilla_id, value in _oracle_declared_figures(_EJEMPLO1_ORACLE).items()
-                },
+                **{_in_exercise(casilla_id, filing_year): value for casilla_id, value in declared.items()},
                 # Not declared: the cuota líquida mínima is what this scenario ASSERTS
                 # (casillas 00592 and 00611), so supplying it as a declared input would
                 # have the oracle check the figure it was handed.
@@ -472,12 +477,12 @@ def test_m200_ejemplo1_con_tributacion_minima_manual_worked_example(
     liquida minima [00619] 300.000", "Cuota liquida [00592] 300.000". The
     manual's own art. 30 bis.1 computation ("BI despues de la reserva de
     nivelacion [01330] 2.000.000 / Tipo de gravamen 15% / Cuota liquida
-    minima [00619] 300.000") is fed here as the manual casilla 00619 input,
-    exactly as the manual states it - this test does not re-derive the 15%
-    art. 30 bis.1 floor itself (that sub-computation is not modelled as a
-    registry formula; casilla 00619 is `input_kind = manual`), only the
-    downstream max(00619, ...) cuota-liquida/cuota-diferencial chain that
-    IS a registry formula under test.
+    minima [00619] 300.000") is fed here as the manual casilla 00619 input and
+    the deduction applied up to it ("[00588] -50.000 -30.0000") as casilla
+    00588, exactly as the manual prints them - this test does not re-derive
+    the art. 30 bis limit itself (casillas 00588 and 00619 are manual inputs),
+    only the downstream cuota-liquida/cuota-diferencial chain that IS a
+    registry formula under test.
     """
     result = _calculate_m200(
         secure_objects, filing_year=filing_year, cuota_liquida_minima=Decimal("300000.00"), operation=operation
@@ -502,49 +507,22 @@ def test_m200_ejemplo1_sin_tributacion_minima_manual_worked_example(
     Oracle: the SAME manual Ejemplo 1's OTHER printed table,
     "Liquidacion del IS (sin tributacion minima)": "Cuota liquida minima
     [00619] 0", "Cuota liquida [00592] 270.000", "Resultado de la liquidacion
-    [01586] 270.000". Every other raw input (00501/00573/00588) is identical
-    to the con-minima scenario; only casilla 00619 changes (300.000 -> 0).
+    [01586] 270.000", with "Deduccion incentivar determinadas actividades
+    [00588] - 80.000". The other raw inputs (00501/00573) are identical to the
+    con-minima scenario; casilla 00588 carries the 80.000 this table consigns
+    and casilla 00619 is 0.
     """
     result = _calculate_m200(
-        secure_objects, filing_year=filing_year, cuota_liquida_minima=Decimal("0"), operation=operation
+        secure_objects,
+        filing_year=filing_year,
+        cuota_liquida_minima=Decimal("0"),
+        operation=operation,
+        deduccion_incentivar=_DEDUCCION_INCENTIVAR_SIN_MINIMA,
     )
     values = result.revision.casilla_values
 
     assert values[_in_exercise(_CASILLA_CUOTA_LIQUIDA, filing_year)] == _CUOTA_LIQUIDA_SIN_MINIMA_EXPECTED
     assert values[_in_exercise(_CASILLA_CUOTA_DIFERENCIAL, filing_year)] == _CUOTA_LIQUIDA_SIN_MINIMA_EXPECTED
-
-
-@pytest.mark.parametrize("filing_year", _EJEMPLO1_EDITIONS)
-def test_casilla_00619_anti_tautology_floor_changes_cuota_liquida(
-    secure_objects: SecureObjectRepository, filing_year: int, *, operation: PinnedAuthorityOperation
-) -> None:
-    """Anti-tautology: raising casilla 00619 from 0 to 300.000 must raise 00592/00611
-    by exactly the manual's own delta (30.000 = 300.000 - 270.000).
-
-    Proves the registry's ``modelo-200-cuota-liquida`` formula genuinely
-    consumes casilla 00619 as a floor (``max(00619, ...)``) rather than
-    ignoring it or returning a constant - both endpoints are independently
-    AEAT-printed figures from the SAME worked example (never hand-computed
-    from the formula under test).
-    """
-    sin_minima = _calculate_m200(
-        secure_objects, filing_year=filing_year, cuota_liquida_minima=Decimal("0"), operation=operation
-    )
-    con_minima = _calculate_m200(
-        secure_objects, filing_year=filing_year, cuota_liquida_minima=Decimal("300000.00"), operation=operation
-    )
-
-    delta = Decimal("300000.00") - Decimal("270000.00")
-    assert (
-        con_minima.revision.casilla_values[_in_exercise(_CASILLA_CUOTA_LIQUIDA, filing_year)]
-        - sin_minima.revision.casilla_values[_in_exercise(_CASILLA_CUOTA_LIQUIDA, filing_year)]
-        == delta
-    )
-    assert (
-        con_minima.revision.casilla_values[_in_exercise(_CASILLA_CUOTA_DIFERENCIAL, filing_year)]
-        - sin_minima.revision.casilla_values[_in_exercise(_CASILLA_CUOTA_DIFERENCIAL, filing_year)]
-        == delta
-    )
 
 
 def test_m200_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction() -> None:
