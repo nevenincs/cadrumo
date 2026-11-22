@@ -13,8 +13,10 @@ SQLite, a real ``BucketSession`` and real AEAD:
   returns for every requested key.
 
 The mid-call lapse is driven from SQLAlchemy's ``after_cursor_execute`` event
-on the batch SELECT, so it lands at a real point inside the call. Time moves
-through the canonical clock seam; nothing on the read path is replaced.
+on the batch SELECT, so it lands at a real point inside the call. A session
+ends on real time: its deadlines move through ``BucketSession.retarget_lifetime``
+while the document clock stays frozen at ``_T0``, so the frozen clock is shown
+not to decide expiry. Nothing on the read path is replaced.
 """
 
 from __future__ import annotations
@@ -30,7 +32,7 @@ import pytest
 from sqlalchemy import Engine, event
 
 from ......core.classification.policies import SensitivityClass
-from ......core.time.clock import frozen_clock
+from ......core.time.clock import frozen_clock, wall_now
 from ...crypto.encrypted_columns import SecureObjectCallKeys, secure_object_key_digest
 from ...errors import SecureObjectUnreadableError, SessionExpiredError, StorageValidationError
 from ...master_key.active_session import activate_session
@@ -46,8 +48,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _NAMESPACE = "cadrumo.batch.session"
 _OTHER_NAMESPACE = "cadrumo.batch.session.other"
 _T0 = datetime(2026, 10, 1, 9, 0, 0, tzinfo=UTC)
-#: Past the ephemeral session's 60-minute idle and absolute deadlines.
-_AFTER_DEADLINE = _T0 + timedelta(minutes=61)
 _KEYS = ("row-alpha", "row-beta", "row-gamma", "row-delta")
 
 
@@ -109,10 +109,10 @@ def _seeded_session_repo(
     *,
     runtime_bound: bool = False,
 ) -> Generator[tuple[Engine, SecureObjectRepository, BucketSession, ExitStack]]:
-    """Yield a seeded repository under a fresh session opened at the frozen ``_T0``.
+    """Yield a seeded repository under a fresh wall-time session while the document clock reads ``_T0``.
 
     The returned :class:`ExitStack` lets a mid-call action enter a scope (a
-    later clock, a replacement session) that unwinds before the session does.
+    replacement session) that unwinds before the session does.
     ``runtime_bound`` builds the repository the runtime builds: bound to the
     session's bucket and refusing to run without a session.
     """
@@ -132,13 +132,24 @@ def _seeded_session_repo(
 
 
 def _fresh_session(*, bucket_id: str, dek: bytes) -> BucketSession:
+    opened_at = wall_now()
     return BucketSession.open_resumed(
         bucket_id=bucket_id,
         dek=dek,
         idle_minutes=60,
-        opened_at=_T0,
-        idle_deadline=_T0 + timedelta(minutes=60),
-        absolute_deadline=_T0 + timedelta(minutes=240),
+        opened_at=opened_at,
+        idle_deadline=opened_at + timedelta(minutes=60),
+        absolute_deadline=opened_at + timedelta(minutes=240),
+    )
+
+
+def _end_on_wall_time(session: BucketSession) -> None:
+    """End ``session``'s lifetime one second ago on real time, as a lapsed idle window would."""
+    instant = wall_now()
+    session.retarget_lifetime(
+        opened_at=instant - timedelta(minutes=2),
+        idle_minutes=1,
+        deadline=instant - timedelta(seconds=1),
     )
 
 
@@ -168,13 +179,13 @@ def test_a_session_that_expires_mid_call_refuses_the_whole_read(tmp_path: Path, 
     The refusal is the session refusal a call opening after the deadline
     meets, not a row-level unreadable error.
     """
-    with _seeded_session_repo(tmp_path, runtime_bound=runtime_bound) as (engine, repo, session, stack):
-        with _after_batch_select(engine, lambda: stack.enter_context(frozen_clock(_AFTER_DEADLINE))) as fired:
+    with _seeded_session_repo(tmp_path, runtime_bound=runtime_bound) as (engine, repo, session, _stack):
+        with _after_batch_select(engine, lambda: _end_on_wall_time(session)) as fired:
             batch = _batch(repo)
             with pytest.raises(SessionExpiredError):
                 next(batch)
         assert len(fired) == 1
-        assert session.is_expired(_AFTER_DEADLINE)
+        assert session.is_expired(wall_now())
 
 
 def test_a_session_sealed_mid_call_refuses_the_whole_read(tmp_path: Path) -> None:
@@ -230,8 +241,8 @@ def test_a_new_session_for_the_same_profile_mid_call_still_refuses(tmp_path: Pat
 
 def test_a_session_expired_before_the_call_refuses_before_any_select(tmp_path: Path) -> None:
     """The opening check still refuses a lapsed session before the database is read."""
-    with _seeded_session_repo(tmp_path) as (engine, repo, _, stack):
-        stack.enter_context(frozen_clock(_AFTER_DEADLINE))
+    with _seeded_session_repo(tmp_path) as (engine, repo, session, _stack):
+        _end_on_wall_time(session)
         with _after_batch_select(engine, lambda: None) as fired, pytest.raises(SessionExpiredError):
             next(_batch(repo))
         assert fired == []

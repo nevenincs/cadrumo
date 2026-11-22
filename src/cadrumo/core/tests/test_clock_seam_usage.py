@@ -467,6 +467,10 @@ _SESSION_MINT = (
     "Sign-in session, receipt or throttle instant: deadlines a runtime lease is judged against, so they"
     " follow real time and a frozen document clock never dates them."
 )
+_BUCKET_SESSION_EXPIRY = (
+    "Bucket-session expiry judged, rolled or minted here against wall-minted deadlines; a frozen document"
+    " clock never expires or extends it."
+)
 
 #: Every wall read in ``src/cadrumo`` and ``src/cadrumo_client``, keyed
 #: ``<package>/<path>::<scope>``. Tax work there reads the seam by default, so only
@@ -474,6 +478,23 @@ _SESSION_MINT = (
 #: composition that selects one of the two clocks for its caller.
 _WALL_SELECTS = "selects"
 _PRODUCT_WALL_CLASSIFICATION: dict[str, tuple[str, str]] = {
+    "cadrumo/adapters/persistence/storage/runtime.py::StorageRuntime._require_current_active_session": (
+        _WALL,
+        _BUCKET_SESSION_EXPIRY,
+    ),
+    "cadrumo/adapters/persistence/storage/runtime.py::inspect_storage_runtime": (_WALL, _BUCKET_SESSION_EXPIRY),
+    "cadrumo/adapters/persistence/storage/master_key/active_session.py::require_fresh_active_session": (
+        _WALL,
+        _BUCKET_SESSION_EXPIRY,
+    ),
+    "cadrumo/adapters/persistence/storage/sql/secure_objects.py::SecureObjectRepository._check_session_freshness": (
+        _WALL,
+        _BUCKET_SESSION_EXPIRY,
+    ),
+    "cadrumo/adapters/persistence/storage/profile_custody.py::_PersistenceProfileCustody._temporary_session": (
+        _WALL,
+        _BUCKET_SESSION_EXPIRY,
+    ),
     "cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py::ProfileWorkerCustody.__init__": (
         _WALL,
         "Default custody clock: a runtime-minted lease is admitted and expires on real time in the worker.",

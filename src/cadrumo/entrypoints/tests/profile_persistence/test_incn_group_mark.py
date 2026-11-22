@@ -6,7 +6,11 @@ return does not show. The registry declares the mark on the carry. Marked, the
 held return is set aside: the calculation refuses until the filer states the
 figure, the statement is admitted although the return is held, and the clean
 state blocks until it is stated. Unmarked, the held return supplies the figure
-and a statement over it is refused.
+and a statement over it is refused. Without the entity's own twelve-month
+turnover, the edit settles under the calculation's refusal worded for the
+operator: the input named by its declared label, and the profile door. Marked
+and unstated, the edit settles under the calculation's generic input refusal,
+worded again from its public coordinates, with the override door.
 
 Real behaviour throughout: an isolated encrypted profile, the bundled authority,
 the production edit executor, calculation, clean-state evaluation and reader,
@@ -15,6 +19,7 @@ for every year of the support envelope whose edition declares the mark.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
@@ -47,11 +52,14 @@ from ....application.modelo.incn_periodo_anterior import (
     INCN_PERIODO_ANTERIOR_BINDING_ID,
     IncnPeriodoAnteriorOrigin,
 )
+from ....application.modelo.profile_fact_input import PROFILE_FACT_INPUT_REQUIRED_MESSAGE_LOCALE_KEY
 from ....application.modelo.work_form_service import modelo_form_snapshot
+from ....application.operations.error_detail import build_operation_error_detail
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.binding_prior_value_rules import set_aside_binding_ids
+from ....domain.calculations.registry.modelo_localization import binding_label_text
 from ....domain.user_profile.values import UserProfileFact
 from ...adapter_composition import profile_adapter_composition
 from ..modelo_operator_work_storage import SeededOperatorWork, seeded_operator_work
@@ -69,6 +77,13 @@ _ENTITY = (
     UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
     UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
     UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
+    # The entity's own twelve months before the period, which decide LIS art. 30 bis; below its
+    # 20 million euros, so the cuota liquida minima asks nothing and only the group mark is at play.
+    UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("812345.67")),
+)
+_TWELVE_MONTH_TURNOVER_BINDING_ID = "modelo-200-profile-incn-prior-12-months"
+_INPUT_REQUIRED_MESSAGE_LOCALE_KEYS = frozenset(
+    {"application.modelo.errors.input_required", "application.modelo.errors.input_required_unprinted"}
 )
 _HELD = Decimal("812345.67")
 _GROUP = Decimal("14500000.00")
@@ -97,7 +112,9 @@ def test_some_supported_year_declares_the_mark() -> None:
 
 
 @contextmanager
-def _held_work(tmp_path: Path, year: int) -> Generator[SeededOperatorWork]:
+def _held_work(
+    tmp_path: Path, year: int, *, facts: tuple[UserProfileFact, ...] = _ENTITY
+) -> Generator[SeededOperatorWork]:
     with (
         profile_adapter_composition(),
         seeded_operator_work(
@@ -105,7 +122,7 @@ def _held_work(tmp_path: Path, year: int) -> Generator[SeededOperatorWork]:
             modelo=_MODELO,
             filing_year=year,
             period_code=_PERIOD,
-            extra_facts=_ENTITY,
+            extra_facts=facts,
             estimation_regime=None,
         ) as work,
     ):
@@ -223,6 +240,31 @@ def test_marked_without_a_statement_the_calculation_refuses(tmp_path: Path, year
 
 
 @pytest.mark.parametrize("year", _YEARS)
+def test_marked_without_a_statement_the_edit_settles_under_the_worded_input_refusal(tmp_path: Path, year: int) -> None:
+    """The carry is no profile fact: its sentence names the input and box, worded again where the edit settles."""
+    with _held_work(tmp_path, year) as work:
+        refused = work.apply(scalar=_marked(year), binding=_statements(work, turnover=None))
+
+    assert refused.refusal is not None
+    detail = build_operation_error_detail(refused.refusal)
+    assert detail is not None
+    assert detail.error_code == "REFUSED_MODELO_WORK_INPUT_REQUIRED"
+    assert detail.message_key in _INPUT_REQUIRED_MESSAGE_LOCALE_KEYS
+    assert detail.refusal_words is not None
+    assert detail.refusal_words_language is not None
+    label = binding_label_text(_MODELO, INCN_PERIODO_ANTERIOR_BINDING_ID, locale=detail.refusal_words_language.value)
+    assert label != INCN_PERIODO_ANTERIOR_BINDING_ID
+    assert label in detail.refusal_words
+    assert str(year) in detail.refusal_words
+    assert "%{" not in detail.refusal_words
+    assert detail.precondition_verdict_json is not None
+    verdict = json.loads(detail.precondition_verdict_json)
+    assert verdict["failed_condition_id"] == "modelo.work.calculate.input.supplied"
+    assert verdict["action"]["action_id"] == "operator.modelo.work.override"
+    assert [evidence["values"] for evidence in verdict["evidence"]] == [{"edit_values_admitted": True}]
+
+
+@pytest.mark.parametrize("year", _YEARS)
 def test_marked_the_statement_is_admitted_over_the_held_return_and_settles_the_clean_state(
     tmp_path: Path, year: int
 ) -> None:
@@ -246,3 +288,29 @@ def test_marked_the_statement_is_admitted_over_the_held_return_and_settles_the_c
     assert not unstated.clean
     assert read.origin is IncnPeriodoAnteriorOrigin.OPERATOR_STATEMENT
     assert read.value == _GROUP
+
+
+@pytest.mark.parametrize("year", _YEARS)
+def test_without_the_twelve_month_turnover_the_edit_settles_under_the_worded_profile_refusal(
+    tmp_path: Path, year: int
+) -> None:
+    unstated = tuple(fact for fact in _ENTITY if fact.path != "taxpayer_type.incn_prior_12_months")
+    with _held_work(tmp_path, year, facts=unstated) as work:
+        refused = work.apply(binding=_statements(work, turnover=None))
+
+    assert refused.refusal is not None
+    detail = build_operation_error_detail(refused.refusal)
+    assert detail is not None
+    assert detail.error_code == "REFUSED_MODELO_WORK_INPUT_REQUIRED"
+    assert detail.message_key == PROFILE_FACT_INPUT_REQUIRED_MESSAGE_LOCALE_KEY
+    assert detail.refusal_words is not None
+    assert detail.refusal_words_language is not None
+    label = binding_label_text(_MODELO, _TWELVE_MONTH_TURNOVER_BINDING_ID, locale=detail.refusal_words_language.value)
+    assert label != _TWELVE_MONTH_TURNOVER_BINDING_ID
+    assert label in detail.refusal_words
+    assert str(year) in detail.refusal_words
+    assert "%{" not in detail.refusal_words
+    assert detail.precondition_verdict_json is not None
+    verdict = json.loads(detail.precondition_verdict_json)
+    assert verdict["failed_condition_id"] == "profile.required_facts.declared"
+    assert verdict["action"]["action_id"] == "operator.profile.edit"

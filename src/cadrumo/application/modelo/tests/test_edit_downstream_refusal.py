@@ -1,7 +1,7 @@
 """An edit refused after its values were admitted settles under the refusal that stopped it.
 
-When the recalculation reads a Modelo 200 revision whose published authority
-cannot satisfy a filing snapshot, the registry gate refuses. The edit carries
+When the recalculation reads a revision whose published authority cannot
+satisfy a filing snapshot, the registry gate refuses. The edit carries
 that refusal's code, a key no value completes and its door with every value
 taken out, and settles as that refusal, never as "state the value again". A
 refusal whose sentence names only public registry coordinates keeps exactly
@@ -26,8 +26,11 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import (
     RegistryFailureClassification,
     RegistryFailureCondition,
+    RegistrySnapshotError,
     RegistryValidationError,
 )
+from ....domain.calculations.registry.schema_references import TemporalProjectionDirection
+from ....domain.calculations.registry.temporal import revision_temporal_resolution
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ...cli_exception_preconditions import nested_terminal_precondition_verdict
 from ...operations.error_detail import UNWORDED_REGISTERED_ERROR_LOCALE_KEY
@@ -44,16 +47,34 @@ _PROFILE_LABEL = "Synthetic profile label"
 
 
 def _filing_snapshot_refusal(operation: PinnedAuthorityOperation) -> RegistryValidationError:
-    """The registry gate's refusal of a filing snapshot of a Modelo 200 year whose authority cannot give one."""
+    """The registry gate's refusal of a filing snapshot of an authored annual edition whose authority cannot give one.
+
+    Editions rise to filing grade as their evidence lands, so the modelo and year are read from the authority. A
+    projected year is refused as projected, naming its coordinates, so only an edition's own year is taken.
+    """
     support = published_supported_filing_years()
     assert support is not None
-    for year in sorted(support.years):
-        try:
-            operation.snapshot("200", filing_year=year, period="0A", grade=RegistryAuthorityGrade.FILING)
-        except RegistryValidationError as refused:
-            if type(refused) is RegistryValidationError:
-                return refused
-    raise AssertionError("every supported Modelo 200 year reaches filing grade; no gate refusal to settle")
+    for modelo in sorted(operation.modelo_ids()):
+        for year in sorted(support.years):
+            try:
+                revision = operation.revision_for_context(modelo, filing_year=year, period="0A")
+                if (
+                    revision_temporal_resolution(
+                        revision, filing_year=year, period="0A", support=support
+                    ).projection_direction
+                    is not TemporalProjectionDirection.AUTHORED
+                ):
+                    continue
+                operation.snapshot(modelo, filing_year=year, period="0A", grade=RegistryAuthorityGrade.FILING)
+            except RegistrySnapshotError:
+                # The modelo serves no annual declaration for the year.
+                continue
+            except RegistryValidationError as refused:
+                if type(refused) is RegistryValidationError:
+                    return refused
+    raise AssertionError(
+        "every authored annual edition of the envelope reaches filing grade; no gate refusal to settle"
+    )
 
 
 @dataclass(frozen=True, slots=True)

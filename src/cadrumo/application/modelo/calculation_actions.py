@@ -133,6 +133,7 @@ from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_rev
 from .m303_regimen_simplificado_scope import m303_general_regime_claimed
 from .printed_boxes import snapshot_printed_boxes
 from .profile_export_binding import profile_text_fact_index, resolve_profile_text_casilla_inputs
+from .profile_fact_input import profile_fact_input_required
 from .profile_maternidad_meses import COTIZACIONES_ROW_FACT_LEAF, descendant_rows_lacking_cotizaciones
 from .profile_read_recording import calculation_profile_read_fingerprint
 from .profile_readiness_gate import load_modelo_work_profile
@@ -881,8 +882,10 @@ def _refused_missing_input(
     A carry the filer can state holds nothing is refused as that open statement,
     naming every carry of its family the sources left open. A carry from an
     earlier period of this ejercicio waits on that period's filed return, which
-    the refusal opens or offers to create. Any other missing input is the
-    operator's to supply, so the refusal names it and serves the door to it.
+    the refusal opens or offers to create. A profile fact the declaration does
+    not take is stated in the profile, whose door the refusal serves. Any other
+    missing input is the operator's to supply, so the refusal names it and
+    serves the door to it.
     """
     boxes = snapshot_printed_boxes(ports.operation, snapshot)
     unstated = prior_carry_absence_unstated(
@@ -905,12 +908,23 @@ def _refused_missing_input(
     unstated_row_fact = _household_row_fact_refusal(missing, work_unit=work_unit, snapshot=snapshot, ports=ports)
     if unstated_row_fact is not None:
         return unstated_row_fact
+    overridable = _override_admitted(missing, work_unit=work_unit, snapshot=snapshot, ports=ports)
+    # A profile fact the operator may not state on the declaration is stated in the profile.
+    unstated_profile_fact = (
+        None
+        if overridable
+        else profile_fact_input_required(
+            missing, work_unit=work_unit, snapshot=snapshot, schema=ports.operation.profile_schema()
+        )
+    )
+    if unstated_profile_fact is not None:
+        return unstated_profile_fact
     return input_required(
         missing,
         work_unit=work_unit,
         snapshot=snapshot,
         boxes=boxes,
-        overridable=_override_admitted(missing, work_unit=work_unit, snapshot=snapshot, ports=ports),
+        overridable=overridable,
         attestable=missing.binding_id
         in attestable_carry_binding_ids(
             snapshot,

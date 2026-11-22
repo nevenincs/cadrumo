@@ -53,10 +53,8 @@ class TestEvidenceIdContentAddressed:
         pdf_file: Path,
     ) -> None:
         svc = make_svc(isolated_settings, secure_objects)
-        # Every storage op stays under one frozen instant, exactly as replay
-        # freezes the whole run: a write under a frozen clock resets the bucket
-        # session's idle deadline to that instant, so a later real-clock read
-        # would see the session expired.
+        # Every document stamp comes from one frozen instant, exactly as replay
+        # freezes the whole run; the bucket session still expires on real time.
         with frozen_clock(_INSTANT):
             record = svc.add(
                 bucket_id=BUCKET_ID,

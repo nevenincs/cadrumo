@@ -77,6 +77,7 @@ _REPRESENTATIVE: Final[Mapping[FindingFactKind, tuple[str | int | Decimal, ...]]
     FindingFactKind.PERIODS: ("1T|2T", NO_PERIODS_FACT, "EXT-3T|0A|EVENT-3"),
     FindingFactKind.DATE: ("2025-03-01", "unknown"),
     FindingFactKind.BOX: ("op.codigo-pais", "0435", "m100.casilla-rnt"),
+    FindingFactKind.BOXES: ("0435", "0435,m100.casilla-rnt", "op.codigo-pais,0435"),
     FindingFactKind.BOX_NUMBER: ("76-77", "12"),
     FindingFactKind.MODELO: ("303", "absent"),
     FindingFactKind.YEAR: (2025,),

@@ -22,7 +22,7 @@ from ....adapters.persistence.storage.master_key.bucket_session import BucketSes
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from ....core.config import override_settings
-from ....core.time.clock import now
+from ....core.time.clock import wall_now
 from .registry_cli_support import BUCKET_ID, clear_cli_env, set_cli_env
 
 
@@ -63,7 +63,7 @@ def _isolated_secure_backend(tmp_path: Path) -> Iterator[None]:
 
 def _session() -> BucketSession:
     # Deadlines are measured against the live clock, so the session opens now.
-    opened_at = now()
+    opened_at = wall_now()
     return BucketSession.open_resumed(
         bucket_id=BUCKET_ID,
         dek=b"d" * 32,
