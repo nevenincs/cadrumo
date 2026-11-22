@@ -76,7 +76,7 @@ const SESSION: bool = false;
 /// operand, never in a plain payload.
 pub(super) const FINANCIAL: [&str; 2] = ["modelo.edit.apply", "modelo.edit.preflight"];
 
-const ADMITTED: [(&str, Kind, Subject, bool); 83] = [
+const ADMITTED: &[(&str, Kind, Subject, bool)] = &[
     ("modelo.036.query", Read, Profile, NAMED),
     ("modelo.036.read", Read, Profile, NAMED),
     ("modelo.036.record", Write, Profile, NAMED),
