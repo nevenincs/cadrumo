@@ -45,6 +45,8 @@ from .provider_catalog_support import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _COLD_STATUS_SECONDS = 60.0
+_EXCHANGE_SECONDS = 60.0
+"""How long one raw exchange waits for its answer: a store read through the runtime outlasts seconds under load."""
 
 _JSON_OBJECT: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
 
@@ -110,8 +112,8 @@ def _exchange(
     port: int, bearer: bytes, request: dict[str, JsonValue], *, secret: bytes | None = None, unauthorized: bool = False
 ) -> dict[str, JsonValue]:
     encoded = json.dumps(request, separators=(",", ":")).encode("utf-8")
-    with socket.create_connection(("127.0.0.1", port), timeout=5) as stream:
-        stream.settimeout(5)
+    with socket.create_connection(("127.0.0.1", port), timeout=_EXCHANGE_SECONDS) as stream:
+        stream.settimeout(_EXCHANGE_SECONDS)
         _frame(stream, bearer)
         if not unauthorized:
             _frame(stream, encoded)
@@ -214,7 +216,8 @@ def test_actual_service_provider_actions_require_parent_authority_and_live_encry
             revision = _entry_revision(initial)
             # The lanes read is a plain store read that runs no supplier check; an api lane is whole in it.
             lanes = _exchange(server.port, bytes(admin), _request("provider_lanes"))["result"]
-            assert isinstance(lanes, dict) and set(lanes) == {"providers"}
+            assert isinstance(lanes, dict) and set(lanes) == {"providers", "reads_pending"}
+            assert isinstance(lanes["reads_pending"], bool)
             assert _provider_entry(lanes) == initial
             for action, expected_mode in (("set", "key"), ("auth", "key"), ("remove", "disabled"), ("reset", "unset")):
                 reply = _exchange(
@@ -381,6 +384,8 @@ def test_an_unreadable_model_list_record_reports_its_guard_and_a_guarded_reset_c
             "unreadable": False,
             "models": [],
             "reading": None,
+            "reading_source": "none",
+            "tasks": [],
             "local_lanes": [KEYLESS_LANE],
             "revision": ABSENT_SECURE_OBJECT_REVISION_ID,
         }
