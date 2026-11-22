@@ -44,7 +44,9 @@ from ...adapters.outbound.llm.statement_reading import StatementReader
 from ...adapters.outbound.llm.tests.model_run_support import ON_HOST_LANE, RecordingModelRuns, serving_agent
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
 from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
+from ...adapters.persistence.profile.classification_jobs import ClassificationJobRepositoryAdapter
 from ...adapters.persistence.storage.attachment import AttachmentStore
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...application.invoices.catalogue_intake_contracts import (
     INVOICE_IMPORT_OPERATION_DEFINITION_ID,
@@ -55,6 +57,11 @@ from ...application.ledger.attachment_mutation_operation import (
     LEDGER_ATTACH_OPERATION_DEFINITION_ID,
     LedgerAttachmentOperationResult,
     LedgerAttachRequest,
+)
+from ...application.ledger.classification_job_contracts import (
+    LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID,
+    LedgerClassifyJobRunRequest,
+    LedgerClassifyJobRunResult,
 )
 from ...application.ledger.column_roles import bind_column_role_mapping_resolver
 from ...application.ledger.evidence_ingestion_contracts import (
@@ -97,10 +104,17 @@ from ...application.operator_actions.models import PreconditionVerdict
 from ...application.operator_actions.projection import PreconditionVerdictSnapshot
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationTerminalCondition
+from ...core.time.clock import now
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.models import Attachment
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.schema import InvoiceKind
+from ...domain.transactions.classification_job import (
+    ClassificationJob,
+    ClassificationJobLane,
+    ClassificationJobScope,
+    ClassificationJobScopeKind,
+)
 from ...tests.inventory import FIXTURES_DIR
 from ...tests.llm_vision_evidence_support import png_image
 from ...tests.pdf_fixtures import text_pdf_bytes
@@ -495,6 +509,33 @@ def settle_classify_review(runtime: OperationRuntime) -> SettledOperation:
     )
 
 
+def settle_classify_job_run(runtime: OperationRuntime) -> SettledOperation:
+    """Run a job stored while its model was still there; the registered enqueue would itself refuse the missing model."""
+    transaction_id = _stored_transaction_id(runtime)
+    bucket_id = str(runtime.profile_id)
+    job = ClassificationJob.enqueue(
+        bucket_id=bucket_id,
+        scope=ClassificationJobScope(kind=ClassificationJobScopeKind.SELECTION),
+        movement_ids=(transaction_id,),
+        lane=ClassificationJobLane(
+            provider_id=ON_HOST_LANE.provider_id,
+            transport=ON_HOST_LANE.transport,
+            model=ON_HOST_LANE.model,
+            reads_off_host=False,
+        ),
+        consent=None,
+        at=now(),
+    )
+    ClassificationJobRepositoryAdapter(
+        objects=secure_object_repository_for_bucket(bucket_id), bucket_id=bucket_id
+    ).create(job)
+    return runtime.settle(
+        LEDGER_CLASSIFY_JOB_RUN_DEFINITION_ID,
+        LedgerClassifyJobRunRequest(profile_id=runtime.profile_id, job_id=job.job_id),
+        LedgerClassifyJobRunResult,
+    )
+
+
 def settle_split_review(runtime: OperationRuntime) -> SettledOperation:
     """A split is proposed only from image evidence, so the movement first gets an image through the registered attach."""
     transaction_id = _stored_transaction_id(runtime)
@@ -532,6 +573,7 @@ __all__ = [
     "operation_runtime",
     "published_verdicts",
     "read_published",
+    "settle_classify_job_run",
     "settle_classify_review",
     "settle_evidence_batch",
     "settle_evidence_confirm",
