@@ -33,7 +33,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _YEAR = filing_year_envelope().horizon
 _YEAR_TEXT = str(_YEAR)
-_AS_OF = date(_YEAR, 6, 30)
+# The scoped reads ask for the first quarter, so the boundary falls inside it: a
+# date past the quarter and its filing window is one no 1T design governs.
+_AS_OF = date(_YEAR, 3, 31)
 _REPOSITORY = Path(__file__).resolve().parents[3]
 _COMMAND_LINES: Final = {
     CommandProgram.AEAT: "from cadrumo_runtime.host.frontend.cli.bootstrap import main; main()",
