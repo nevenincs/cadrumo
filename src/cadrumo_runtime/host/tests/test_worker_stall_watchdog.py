@@ -282,6 +282,25 @@ async def test_the_worker_serves_both_channels_inside_the_watchdog(
     assert served == [True]
 
 
+def _interpreter_itself() -> tuple[list[str], dict[str, str]]:
+    """Start this environment's interpreter as the child itself, not through a launcher process.
+
+    A Windows virtual environment's ``python.exe`` is a launcher that starts the base interpreter as a
+    second process. Ending the launcher ends the interpreter only through its job, so waiting for the
+    launcher returns while the interpreter may still hold its dump file open, and does not keep the
+    interpreter's process id from being reused. The base interpreter adopts the environment from the
+    variable the launcher would set.
+    """
+    environment = dict(os.environ)
+    base = getattr(sys, "_base_executable", None)
+    if sys.platform != "win32" or sys.prefix == sys.base_prefix or not isinstance(base, str) or not base:
+        return [sys.executable], environment
+    if Path(base) == Path(sys.executable) or not Path(base).is_file():
+        return [sys.executable], environment
+    environment["__PYVENV_LAUNCHER__"] = sys.executable
+    return [base], environment
+
+
 def test_a_worker_ended_while_armed_leaves_a_header_only_file_the_next_watchdog_removes(tmp_path: Path) -> None:
     code = chr(10).join(
         [
@@ -295,12 +314,19 @@ def test_a_worker_ended_while_armed_leaves_a_header_only_file_the_next_watchdog_
             "asyncio.run(main())",
         ]
     )
+    interpreter, environment = _interpreter_itself()
     child = subprocess.Popen(  # noqa: S603 - exact interpreter and a fixed in-test script
-        [sys.executable, "-c", code, str(tmp_path)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True
+        [*interpreter, "-c", code, str(tmp_path)],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        text=True,
+        env=environment,
     )
     try:
         assert child.stdout is not None
         pid = int(child.stdout.readline())
+        # Waiting for the child is then waiting for the process that holds the file to have closed it.
+        assert pid == child.pid
         leftover = _named_for(tmp_path, pid)
         assert _is_header_only(leftover)
         assert f"pid {pid}" in _header_text(leftover)
