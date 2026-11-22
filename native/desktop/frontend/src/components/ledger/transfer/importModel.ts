@@ -34,7 +34,7 @@ import type {
   LedgerEvidenceBatchProjection,
   OperationNextStepV1,
 } from "../../../shell/ledgerDocumentContract";
-import type { InvoiceImportProjection } from "../../../shell/ledgerInvoiceContract";
+import type { InvoiceImportProjection } from "../../../shell/ledgerInvoiceImportContract";
 import type {
   InvoiceKind,
   LedgerTransactionProjection,

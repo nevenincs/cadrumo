@@ -33,8 +33,10 @@ from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.iva_deduction_catalogue import is_iva_deduction_kind
+from ...domain.invoices.enums import RectificationFact
 from ...domain.invoices.models import Invoice
 from ...domain.invoices.payment_matching import suggest_payments
+from ...domain.invoices.rectification import missing_rectification_facts
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from .errors import AggregationValidationError
@@ -85,7 +87,10 @@ class InvoiceIvaFindingReason(StrEnum):
     #: A factura rectificativa, issued or received. Its lines state magnitudes
     #: with no direction, so no rate row declares it; the modification belongs
     #: with its sign in the operator-entered Modelo 303 casillas 14/15 (LIVA
-    #: art. 80) or 40/41.
+    #: art. 80) or 40/41. The finding carries the rectification facts the
+    #: record is missing for its side, so the person can supply them; it blocks
+    #: whether or not any are missing, because nothing derives the modification
+    #: from them yet.
     RECTIFICATIVA_MODIFICATION_UNMODELLED = "invoice_rectificativa_modification_unmodelled"
     #: An issued invoice under the régimen especial de los bienes usados. Its
     #: taxable base is the margin de beneficio, IVA included (LIVA art. 137),
@@ -103,6 +108,12 @@ class InvoiceIvaFinding(BaseModel):
     #: ``None`` only for a finding about the whole period, never one invoice.
     invoice_id: InvoiceId | None = None
     transaction_id: str | None = Field(default=None, min_length=1, max_length=128)
+    #: The rectification facts the invoice's side needs and the record does not
+    #: hold, in declaration order, so the finding names the fields the person
+    #: opens rather than the family. Empty on every other reason, and also
+    #: empty on a rectificativa that states them all: this slice still blocks
+    #: the family, and the sentence says so without claiming a gap there is not.
+    missing_rectification_facts: tuple[RectificationFact, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -431,7 +442,9 @@ def _screen_findings(screen: ScreenedInvoiceIva) -> list[InvoiceIvaFinding]:
     )
     findings.extend(
         InvoiceIvaFinding(
-            reason=InvoiceIvaFindingReason.RECTIFICATIVA_MODIFICATION_UNMODELLED, invoice_id=invoice.invoice_id
+            reason=InvoiceIvaFindingReason.RECTIFICATIVA_MODIFICATION_UNMODELLED,
+            invoice_id=invoice.invoice_id,
+            missing_rectification_facts=missing_rectification_facts(invoice),
         )
         for invoice in screen.rectificativa_modification_unmodelled
     )

@@ -3,61 +3,6 @@
 // `node scripts/ledger-operation-contract.mjs`; `--check` fails when it is stale.
 import type { FileToken } from "./ledger";
 
-/**
- * One bounded recovery argument with its canonical provenance.
- */
-export type ActionArgumentSnapshot = {
-  argument_name: string;
-  status: ActionArgumentStatus;
-  value: PublicScalar | null;
-  source: ActionArgumentSource | null;
-  source_key: string | null;
-  source_evidence_id: string | null;
-};
-
-/**
- * Provenance of a projected recovery-action argument value.
- */
-export type ActionArgumentSource =
-  | "operator_action.verdict_context"
-  | "operator_action.condition_evidence"
-  | "operator_action.request_context";
-
-/**
- * Whether a recovery-action argument has a concrete projected value.
- */
-export type ActionArgumentStatus = "resolved" | "missing";
-
-/**
- * Whether a projected recovery action is currently materialisable.
- */
-export type ActionConditionality =
-  "immediate" | "requires_arguments" | "not_applicable";
-
-/**
- * Authority that observed one failed-condition fact.
- */
-export type ActionEvidenceProvenance =
-  | "application_state"
-  | "domain_evaluation"
-  | "persisted_state"
-  | "registry_record"
-  | "runtime_observation";
-
-/**
- * One further recovery action of a verdict, in the order it is offered, with
- * its served words and routing.
- */
-export type AlternativeActionSnapshot = {
-  action_words?: string | null;
-  action_words_language?: OutputLanguage | null;
-  target_operation_ids?: string[];
-  action_id: string;
-  argument_bindings: ActionArgumentSnapshot[];
-  missing_argument_names: string[];
-  conditionality: ActionConditionality;
-};
-
 export type CalculationRevisionId = string;
 
 /**
@@ -93,6 +38,10 @@ export type CatalogueInvoiceSnapshot = {
   operation_date_role: string | null;
   iva_category: string | null;
   rectifies_invoice_number: string | null;
+  rectification_method: string | null;
+  rectification_cause: string | null;
+  rectification_direction: string | null;
+  document_received_on: string | null;
   fx_rate: PublicDecimal | null;
   fx_rate_date: string | null;
   fx_rate_source: string | null;
@@ -102,16 +51,6 @@ export type CatalogueInvoiceSnapshot = {
   referencia_catastral: string | null;
   settlement_amount: PublicDecimal;
   documents: InvoiceDocumentSnapshot[];
-};
-
-/**
- * One canonical condition evidence with typed immutable scalar facts.
- */
-export type ConditionEvidenceSnapshot = {
-  condition_id: string;
-  evidence_id: string;
-  provenance: ActionEvidenceProvenance;
-  values: PublicNamedScalar[];
 };
 
 export type ContentDigest = string;
@@ -141,46 +80,6 @@ export type EntryOptionFamily =
   | "rental_lease"
   | "rental_property"
   | "withholding_certificate_figure";
-
-/**
- * What one column of a source table means.
- *
- * Closed by construction: an unrecognised header resolves to `UNMAPPED` rather
- * than widening the set at read time.
- */
-export type FieldRole =
-  | "unmapped"
-  | "transaction_id"
-  | "counterparty_nif"
-  | "counterparty_name"
-  | "invoice_number"
-  | "invoice_date"
-  | "booked_date"
-  | "movement_amount"
-  | "taxable_base"
-  | "iva_rate"
-  | "iva_amount"
-  | "iva_category"
-  | "operation_type"
-  | "irpf_category"
-  | "retencion_amount"
-  | "retencion_rate"
-  | "recargo_amount"
-  | "suplido_amount"
-  | "grand_total"
-  | "currency"
-  | "fx_rate"
-  | "country_code"
-  | "notes"
-  | "classification"
-  | "category_id"
-  | "business_pct"
-  | "usage_ratio_id"
-  | "arrendamiento_ref"
-  | "inmueble_ref"
-  | "gasto_capital_inmobiliario"
-  | "posicion_ref"
-  | "concepto_capital_mobiliario";
 
 /**
  * Stable, closed names of what a figure rule found.
@@ -271,6 +170,10 @@ export type InvoiceAddRequest = {
   invoice_class?: string | null;
   series?: string | null;
   rectifies_invoice_number?: string | null;
+  rectification_method?: string | null;
+  rectification_cause?: string | null;
+  rectification_direction?: string | null;
+  document_received_on?: string | null;
   recargo_amount?: PublicDecimal | null;
   business_premises_lease?: InvoiceAddBusinessPremisesLease | null;
   lines?: InvoiceAddLine[];
@@ -291,18 +194,6 @@ export type InvoiceAddResult = {
   validation_code: "invalid_invoice" | "duplicate_invoice" | null;
   refusal_words: string | null;
   refusal_words_language: OutputLanguage | null;
-};
-
-/**
- * The role the operator assigns to one column of the book, by its zero-based
- * position.
- *
- * `UNMAPPED` states that the column is not used, which also keeps exact
- * matching and the mapping lane from reading it.
- */
-export type InvoiceBookColumnRole = {
-  column_index: number;
-  role: FieldRole;
 };
 
 /**
@@ -516,90 +407,6 @@ export type InvoiceFiguresPreviewVerdictScope =
 export type InvoiceId = string;
 
 /**
- * One role the operator may assign, the importer field it feeds, and whether
- * the book needs it.
- */
-export type InvoiceImportAssignableRole = {
-  role: FieldRole;
-  field: string;
-  required: boolean;
-};
-
-/**
- * One source column, the role it resolved to, and who settled that role.
- */
-export type InvoiceImportColumn = {
-  column_index: number;
-  header: string;
-  role: FieldRole;
-  source: "operator" | "exact" | "model" | "unmapped";
-};
-
-/**
- * The whole current import outcome and human mapping disclosures.
- *
- * `source_sha256` is the digest of the bytes the rows were parsed from, which
- * is also what each created invoice records as its source.
- *
- * A preview writes nothing: `rows`, `created`, `skipped_duplicate` and
- * `refused` stay empty, `row_count` counts the data rows read, and `columns`,
- * `missing_fields` and `assignable_roles` show how the book resolved and what
- * the operator may assign. `reader_unavailable_verdict` says why the column-
- * naming model could not be asked when it was needed. A book missing a
- * required field is a successful preview, not a refusal.
- */
-export type InvoiceImportProjection = {
-  profile_id: string;
-  source_sha256: string;
-  rows: number;
-  created: number;
-  skipped_duplicate: number;
-  refused: InvoiceImportRowFailure[];
-  created_invoice_ids: string[];
-  unmapped_column_headers: string[];
-  mapping_reasons: string[];
-  preview: boolean;
-  columns: InvoiceImportColumn[];
-  columns_truncated: boolean;
-  missing_fields: string[];
-  assignable_roles: InvoiceImportAssignableRole[];
-  row_count: number;
-  reader_unavailable_verdict: PreconditionVerdictSnapshot | null;
-};
-
-/**
- * Secure reference to the original file, checked before parsing or mapping.
- *
- * `source_sha256` is the digest a caller expects the file to have. When it is
- * given, a file whose bytes differ is refused. When it is absent, the
- * operation computes the digest of the bytes it parses and returns it.
- *
- * `column_roles` is what the operator decided about the book's columns. It
- * binds before exact header names and before the mapping lane, which is asked
- * only when the stated roles and exact names leave a required field open.
- * `preview` reads the book and reports how its columns resolve, writing
- * nothing; the digest it returns can be sent back to apply the same bytes.
- */
-export type InvoiceImportRequest = {
-  profile_id: string;
-  kind: InvoiceKind;
-  source_path: FileToken;
-  source_sha256?: string | null;
-  country?: string | null;
-  column_roles?: InvoiceBookColumnRole[] | null;
-  preview?: boolean;
-};
-
-/**
- * Every canonical row refusal, retaining its original attribution.
- */
-export type InvoiceImportRowFailure = {
-  row_number: number;
-  field: string;
-  reason: string;
-};
-
-/**
  * Whether the autónomo issued or received the invoice.
  *
  * Single canonical enum spanning both the substrate classifier
@@ -675,6 +482,9 @@ export type InvoiceRuleFindingCode =
   | "series_required_for_rectificativa"
   | "rectified_invoice_required"
   | "rectified_invoice_not_allowed"
+  | "rectification_fact_not_allowed"
+  | "document_received_on_only_on_received"
+  | "document_received_before_issued"
   | "simplificada_not_for_intra_community"
   | "counterparty_tax_id_required"
   | "counterparty_tax_id_required_by_category"
@@ -744,6 +554,10 @@ export type InvoiceUpdateValues = {
   series?: string | null;
   invoice_class?: string | null;
   rectifies_invoice_number?: string | null;
+  rectification_method?: string | null;
+  rectification_cause?: string | null;
+  rectification_direction?: string | null;
+  document_received_on?: string | null;
   payment_id?: string | null;
   declared_fx_rate?: PublicDecimal | null;
 };
@@ -1269,11 +1083,6 @@ export type LinkInconsistency = {
 export type LinkInconsistencyDirection = "invoice-only" | "transaction-only";
 
 /**
- * Closed reasons a refusal deliberately has no recovery action.
- */
-export type NoRecoveryOutcome = "terminal" | "safety" | "operator_decision";
-
-/**
  * Closed enumeration of CLI / API output language BCP-47 tags.
  *
  * The four members match the locale catalogues committed under
@@ -1293,31 +1102,6 @@ export type OutputLanguage = "es" | "en" | "ca" | "hu";
  */
 export type PaymentStatus =
   "PAID" | "PENDING" | "PARTIALLY_PAID" | "OVERDUE" | "CANCELLED";
-
-/**
- * Typed action evidence needed by the existing CLI action resolver.
- *
- * `alternative_actions` is left out of the serialized snapshot when empty, so
- * a verdict without alternatives keeps the bytes it was stored with. The
- * snapshot is the verdict as it crosses a process boundary, so it carries the
- * words and routing served for the primary action, or the sentence served for
- * a refusal with no way out, in the language of the process that projected it.
- */
-export type PreconditionVerdictSnapshot = {
-  no_recovery_words?: string | null;
-  no_recovery_words_language?: OutputLanguage | null;
-  action_words?: string | null;
-  action_words_language?: OutputLanguage | null;
-  target_operation_ids?: string[];
-  failed_condition_id: string;
-  evidence: ConditionEvidenceSnapshot[];
-  action_id: string | null;
-  argument_bindings: ActionArgumentSnapshot[];
-  missing_argument_names: string[];
-  conditionality: ActionConditionality;
-  no_recovery_outcome: NoRecoveryOutcome | null;
-  alternative_actions?: AlternativeActionSnapshot[];
-};
 
 /**
  * An explicit decimal discriminator preserves a fact's scalar type.
@@ -1405,10 +1189,6 @@ export type LedgerInvoiceContracts = {
     request: LedgerInvoiceDuplicateRequest;
     result: LedgerInvoiceDuplicateResult;
   };
-  "ledger.invoice.import": {
-    request: InvoiceImportRequest;
-    result: InvoiceImportProjection;
-  };
   "ledger.invoice.list": {
     request: InvoiceListRequest;
     result: InvoiceListProjection;
@@ -1452,11 +1232,6 @@ export type InvoiceDocumentAttachWindowRequest = Omit<
 
 export type InvoiceFiguresPreviewWindowRequest = Omit<
   InvoiceFiguresPreviewRequest,
-  "profile_id"
->;
-
-export type InvoiceImportWindowRequest = Omit<
-  InvoiceImportRequest,
   "profile_id"
 >;
 

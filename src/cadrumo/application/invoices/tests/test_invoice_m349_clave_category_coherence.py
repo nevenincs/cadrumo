@@ -69,18 +69,17 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.invoices.source_observations import intracommunity_clave
-from cadrumo.core.aggregation import IntracomOperationType
-
-from ...calculations.registry.authority import bundled_indexed_authority
-from ...calculations.registry.errors import RegistryValidationError
-from ...calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
-from ...iva.schema import InvoiceKind, IvaCategory
-from ..enums import IvaRate, PaymentStatus, resolve_iva_rate_slot
-from ..errors import InvoiceValidationError
-from ..models import INVOICE_WRITE_ADMISSION, Invoice, InvoiceLine, derive_invoice_id
-from ..rule_findings import InvoiceRuleFindingCode
+from ....core.aggregation import IntracomOperationType
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.invoices.enums import IvaRate, PaymentStatus, resolve_iva_rate_slot
+from ....domain.invoices.errors import InvoiceValidationError
+from ....domain.invoices.models import INVOICE_WRITE_ADMISSION, Invoice, InvoiceLine, derive_invoice_id
+from ....domain.invoices.rule_findings import InvoiceRuleFindingCode
+from ....domain.iva.schema import InvoiceKind, IvaCategory
+from ..source_observations import intracommunity_clave
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

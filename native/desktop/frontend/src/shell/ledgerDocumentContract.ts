@@ -6,12 +6,12 @@ import type {
   ContentDigest,
   InvoiceKind,
   OutputLanguage,
-  PreconditionVerdictSnapshot,
   PublicDecimal,
   PublicNamedScalar,
   TransactionId,
   WorkUnitId,
 } from "./ledgerInvoiceContract";
+import type { PreconditionVerdictSnapshot } from "./ledgerInvoiceImportContract";
 
 /**
  * Non-secret manifest facts exposed to an invoice-review operator.

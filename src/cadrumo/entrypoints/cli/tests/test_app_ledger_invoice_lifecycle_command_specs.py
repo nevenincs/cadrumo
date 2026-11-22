@@ -12,6 +12,7 @@ from ..app_ledger_invoice_common_command_parameters import (
     INVOICE_INTAKE_WIZARD_CORE_OPTIONS,
     INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS,
     INVOICE_LIFECYCLE_METADATA_OPTIONS,
+    INVOICE_RECTIFICATION_OPTIONS,
     OPTIONAL_IVA_CATEGORY_OPTION,
 )
 from ..app_ledger_invoice_intake_command_specs import LEDGER_INVOICE_INTAKE_COMMAND_SPECS
@@ -190,6 +191,30 @@ _EXPECTED_PARAMETERS = {
             None,
             "cli.app.ledger.invoice.rectifies_help",
         ),
+        _option(
+            "rectification_method",
+            "builtins:str",
+            None,
+            "cli.app.ledger.invoice.rectification_method_help",
+        ),
+        _option(
+            "rectification_cause",
+            "builtins:str",
+            None,
+            "cli.app.ledger.invoice.rectification_cause_help",
+        ),
+        _option(
+            "rectification_direction",
+            "builtins:str",
+            None,
+            "cli.app.ledger.invoice.rectification_direction_help",
+        ),
+        _option(
+            "document_received_on",
+            "builtins:str",
+            None,
+            "cli.app.ledger.invoice.document_received_on_help",
+        ),
         _option("recargo", "builtins:str", None, "cli.app.ledger.invoice.recargo_help"),
         _option(
             "iva_category", "cadrumo.domain.iva.schema:IvaCategory", None, "cli.app.ledger.invoice.iva_category_help"
@@ -241,6 +266,30 @@ _EXPECTED_PARAMETERS = {
             "builtins:str",
             None,
             "cli.app.ledger.invoice.rectifies_help",
+        ),
+        _option(
+            "rectification_method",
+            "builtins:str",
+            None,
+            "cli.app.ledger.invoice.rectification_method_help",
+        ),
+        _option(
+            "rectification_cause",
+            "builtins:str",
+            None,
+            "cli.app.ledger.invoice.rectification_cause_help",
+        ),
+        _option(
+            "rectification_direction",
+            "builtins:str",
+            None,
+            "cli.app.ledger.invoice.rectification_direction_help",
+        ),
+        _option(
+            "document_received_on",
+            "builtins:str",
+            None,
+            "cli.app.ledger.invoice.document_received_on_help",
         ),
         _option("fx_rate", "builtins:str", None, "cli.app.ledger.invoice.fx_rate_help"),
     ),
@@ -295,6 +344,30 @@ _EXPECTED_PARAMETERS = {
             None,
             "cli.app.ledger.invoice.rectifies_help",
         ),
+        _option(
+            "rectification_method",
+            "builtins:str",
+            None,
+            "cli.app.ledger.invoice.rectification_method_help",
+        ),
+        _option(
+            "rectification_cause",
+            "builtins:str",
+            None,
+            "cli.app.ledger.invoice.rectification_cause_help",
+        ),
+        _option(
+            "rectification_direction",
+            "builtins:str",
+            None,
+            "cli.app.ledger.invoice.rectification_direction_help",
+        ),
+        _option(
+            "document_received_on",
+            "builtins:str",
+            None,
+            "cli.app.ledger.invoice.document_received_on_help",
+        ),
         _option("recargo", "builtins:str", None, "cli.app.ledger.invoice.recargo_help"),
         _option(
             "iva_category", "cadrumo.domain.iva.schema:IvaCategory", None, "cli.app.ledger.invoice.iva_category_help"
@@ -324,6 +397,7 @@ def test_shared_immutable_parameters_preserve_distinct_command_facts() -> None:
     assert type(INVOICE_INTAKE_WIZARD_CORE_OPTIONS) is tuple
     assert type(INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS) is tuple
     assert type(INVOICE_LIFECYCLE_METADATA_OPTIONS) is tuple
+    assert type(INVOICE_RECTIFICATION_OPTIONS) is tuple
     assert remove.parameters[0] is update.parameters[0] is view.parameters[0] is REQUIRED_INVOICE_ID_ARGUMENT
     assert add.parameters[0] is wizard.parameters[0] is INVOICE_INTAKE_WIZARD_CORE_OPTIONS[0]
     assert add.parameters[4] is not INVOICE_INTAKE_WIZARD_CORE_OPTIONS[4]
@@ -339,7 +413,7 @@ def test_shared_immutable_parameters_preserve_distinct_command_facts() -> None:
         actual is expected
         for actual, expected in zip(wizard.parameters[2:9], INVOICE_INTAKE_WIZARD_CORE_OPTIONS[1:], strict=True)
     )
-    assert update.parameters[4] is wizard.parameters[17] is add.parameters[17] is OPTIONAL_IVA_CATEGORY_OPTION
+    assert update.parameters[4] is wizard.parameters[21] is add.parameters[21] is OPTIONAL_IVA_CATEGORY_OPTION
     assert all(
         actual is expected
         for actual, expected in zip(update.parameters[5:12], INVOICE_LIFECYCLE_METADATA_OPTIONS, strict=True)
@@ -356,10 +430,17 @@ def test_shared_immutable_parameters_preserve_distinct_command_facts() -> None:
         actual is expected
         for actual, expected in zip(add.parameters[14:16], INVOICE_LIFECYCLE_METADATA_OPTIONS[5:], strict=True)
     )
-    assert add.parameters[16] is wizard.parameters[16] is INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[0]
-    assert add.parameters[18:21] == BUSINESS_PREMISES_LEASE_OPTIONS
-    assert add.parameters[22] is wizard.parameters[18] is INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[1]
-    assert add.parameters[23] is update.parameters[12] is DECLARED_FX_RATE_OPTION
+    assert add.parameters[20] is wizard.parameters[20] is INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[0]
+    assert add.parameters[22:25] == BUSINESS_PREMISES_LEASE_OPTIONS
+    # The four rectification facts are shared by the three verbs that WRITE an
+    # invoice and reach no other: the preview verb takes the lifecycle tuple
+    # whole and computes figures none of these facts changes.
+    assert all(
+        add.parameters[16 + offset] is wizard.parameters[16 + offset] is update.parameters[12 + offset] is option
+        for offset, option in enumerate(INVOICE_RECTIFICATION_OPTIONS)
+    )
+    assert add.parameters[26] is wizard.parameters[22] is INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[1]
+    assert add.parameters[27] is update.parameters[16] is DECLARED_FX_RATE_OPTION
 
     update_notes = update.parameters[3]
     wizard_notes = wizard.parameters[-1]

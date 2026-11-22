@@ -161,6 +161,12 @@ class LedgerPreflightIssue(BaseModel):
     transaction_id: TransactionId | Literal["__period__"]
     reason: LedgerPreflightIssueReason
     detail: IssueDetail
+    #: Stable untranslated field names the issue says the record is missing, in
+    #: the order the owning finding reported them. Empty on every reason that
+    #: names no specific absent fact. It is what lets a served sentence list
+    #: the fields the person opens, rather than the detail prose above being
+    #: the only place they appear.
+    missing_facts: tuple[str, ...] = ()
 
 
 class LedgerPreflightReport(BaseModel):
@@ -430,7 +436,7 @@ _INVOICE_FINDING_DETAIL: Final[Mapping[str, str]] = MappingProxyType(
         LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_MODIFICATION_UNMODELLED.value: (
             "invoice {number} is a factura rectificativa, which no IVA rate row declares; enter its base and "
             "cuota with their sign in Modelo 303 casillas 14 and 15 if you issued it, or in casillas 40 and 41 "
-            "if you received it"
+            "if you received it{missing}"
         ),
         LedgerPreflightIssueReason.INVOICE_USED_GOODS_MARGIN_UNMODELLED.value: (
             "issued invoice {number} is under the régimen especial de los bienes usados, whose taxable base is "
@@ -446,6 +452,7 @@ def _invoice_issue(
     *,
     invoice: Invoice | None,
     transaction_id: str | None,
+    missing_facts: tuple[str, ...] = (),
 ) -> LedgerPreflightIssue:
     """Key an invoice-side issue on the movement the person can open, else on the period."""
     anchor = transaction_id
@@ -455,8 +462,10 @@ def _invoice_issue(
         transaction_id=anchor if anchor is not None else "__period__",
         reason=reason,
         detail=_INVOICE_FINDING_DETAIL[reason.value].format(
-            number=repr(invoice.invoice_number) if invoice is not None else ""
+            number=repr(invoice.invoice_number) if invoice is not None else "",
+            missing=("" if not missing_facts else f"; the invoice does not state {', '.join(missing_facts)}"),
         ),
+        missing_facts=missing_facts,
     )
 
 
@@ -477,6 +486,7 @@ def invoice_side_preflight_issues(
             LedgerPreflightIssueReason(finding.reason.value),
             invoice=by_id.get(finding.invoice_id) if finding.invoice_id is not None else None,
             transaction_id=finding.transaction_id,
+            missing_facts=tuple(fact.value for fact in finding.missing_rectification_facts),
         )
         for finding in findings
     ]

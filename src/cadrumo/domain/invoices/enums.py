@@ -119,6 +119,60 @@ class InvoiceOperationDateRole(StrictRegistryToken):
     __slots__ = ()
 
 
+class RectificationFact(StrEnum):
+    """One operator-supplied fact a factura rectificativa needs, named by its invoice field.
+
+    A closed Python vocabulary rather than a registry one: these are the names
+    of fields on :class:`~cadrumo.domain.invoices.models.Invoice`, so a refusal
+    or a declaration finding that carries them names the field the person
+    opens. The registry owns the VALUES each of the first three may take; this
+    owns only which facts exist to be stated. Which of them a given side needs
+    is :mod:`cadrumo.domain.invoices.rectification`.
+    """
+
+    RECTIFICATION_METHOD = "rectification_method"
+    RECTIFICATION_CAUSE = "rectification_cause"
+    RECTIFICATION_DIRECTION = "rectification_direction"
+    DOCUMENT_RECEIVED_ON = "document_received_on"
+
+
+class RectificationMethod(StrictRegistryToken):
+    """How a factura rectificativa states its figures (RD 1619/2012 art. 15.5).
+
+    The article permits two readings and only two, so this token says what the
+    document's own amounts MEAN: under the difference method they are the
+    modification itself, under the substitution method they are the figures as
+    they stand after the rectification. Nothing derives it -- the two readings
+    produce different modifications from identical amounts.
+    """
+
+    __slots__ = ()
+
+
+class RectificationDirection(StrictRegistryToken):
+    """Whether a rectification reduces or increases the original base and cuota.
+
+    Stored amounts stay non-negative magnitudes, so this is where the economic
+    sense lives, exactly as a ledger movement's direction carries it. The sign
+    is applied where the modification is projected, never in the record.
+    """
+
+    __slots__ = ()
+
+
+class RectificationCause(StrictRegistryToken):
+    """The ground on which a rectificativa modifies base and cuota.
+
+    A closed registry vocabulary of the LIVA art. 80 apartados that are
+    modification grounds, the art. 89 error fundado de derecho, and the "any
+    other modification" the Modelo 303 instructions for casillas 14 and 15
+    name. The cause, not the class or the amount, is what places the
+    modification in a period, so it is operator supplied and never inferred.
+    """
+
+    __slots__ = ()
+
+
 def require_invoice_class(value: object, *, effective_date: date | None = None) -> InvoiceClass:
     """Resolve an invoice-class token through the dated facts authority."""
     from ..calculations.registry.invoice_legal_classification import require_invoice_class
@@ -172,6 +226,27 @@ def advance_payment_received_role(*, effective_date: date | None = None) -> Invo
     from ..calculations.registry.invoice_legal_classification import advance_payment_received_role
 
     return advance_payment_received_role(effective_date=effective_date)
+
+
+def require_rectification_method(value: object, *, effective_date: date | None = None) -> RectificationMethod:
+    """Resolve an RD 1619/2012 art. 15.5 rectification method through the dated facts authority."""
+    from ..calculations.registry.invoice_legal_classification import require_rectification_method
+
+    return require_rectification_method(value, effective_date=effective_date)
+
+
+def require_rectification_direction(value: object, *, effective_date: date | None = None) -> RectificationDirection:
+    """Resolve a rectification direction through the dated facts authority."""
+    from ..calculations.registry.invoice_legal_classification import require_rectification_direction
+
+    return require_rectification_direction(value, effective_date=effective_date)
+
+
+def require_rectification_cause(value: object, *, effective_date: date | None = None) -> RectificationCause:
+    """Resolve a rectification cause through the dated facts authority."""
+    from ..calculations.registry.invoice_legal_classification import require_rectification_cause
+
+    return require_rectification_cause(value, effective_date=effective_date)
 
 
 def default_invoice_class(*, effective_date: date | None = None) -> InvoiceClass:
@@ -638,6 +713,10 @@ __all__ = [
     "IvaRate",
     "IvaRateNotFoundError",
     "PaymentStatus",
+    "RectificationCause",
+    "RectificationDirection",
+    "RectificationFact",
+    "RectificationMethod",
     "advance_payment_received_role",
     "default_invoice_class",
     "invoice_class_ordinaria",
@@ -650,6 +729,9 @@ __all__ = [
     "operation_performed_role",
     "require_invoice_class",
     "require_invoice_operation_date_role",
+    "require_rectification_cause",
+    "require_rectification_direction",
+    "require_rectification_method",
     "resolve_invoice_legal_mention",
     "resolve_iva_rate_slot",
     "resolve_iva_rate_token",

@@ -22,6 +22,7 @@ const { values } = parseArgs({
 const outputs = {
   classification: "src/shell/ledgerClassificationContract.ts",
   invoice: "src/shell/ledgerInvoiceContract.ts",
+  invoiceImport: "src/shell/ledgerInvoiceImportContract.ts",
   document: "src/shell/ledgerDocumentContract.ts",
   documentReview: "src/shell/ledgerDocumentReviewContract.ts",
   movement: "src/shell/ledgerMovementContract.ts",

@@ -56,6 +56,12 @@ class InvoiceUpdateValues(BaseModel):
     series: str | None = None
     invoice_class: str | None = Field(default=None, min_length=1)
     rectifies_invoice_number: str | None = None
+    #: The rectification facts, as the stable tokens the registry declares and
+    #: the lifecycle patch projects; a received-side reception date beside them.
+    rectification_method: str | None = Field(default=None, min_length=1)
+    rectification_cause: str | None = Field(default=None, min_length=1)
+    rectification_direction: str | None = Field(default=None, min_length=1)
+    document_received_on: date | None = None
     payment_id: str | None = None
     declared_fx_rate: PublicDecimal | None = None
 
