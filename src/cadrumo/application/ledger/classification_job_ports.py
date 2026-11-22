@@ -26,14 +26,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final, Protocol
-
-from ...core.model_roles import ModelRole
+from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunTaskKind
 
     from ...core.config import Settings
+    from ...core.model_roles import ModelRole
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.evidence_consent.grant import ConsentGrantStanding
     from ...domain.transactions.classification_job import (
@@ -48,7 +47,6 @@ if TYPE_CHECKING:
     from .protocols import TransactionCatalogueCoCommitWriterProtocol
 
 __all__ = [
-    "CLASSIFICATION_READING_ROLE",
     "ClassificationConsentGrants",
     "ClassificationJobApplyPorts",
     "ClassificationJobConsentPorts",
@@ -60,9 +58,6 @@ __all__ = [
     "ClassificationJobRunPorts",
     "ClassificationLaneResolver",
 ]
-
-CLASSIFICATION_READING_ROLE: Final = ModelRole.TEXT_EXTRACTION
-"""The role a movement classification reads with, as the classification review's text reader names it."""
 
 
 class ClassificationJobRepositoryFactory(Protocol):

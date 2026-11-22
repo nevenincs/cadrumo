@@ -697,6 +697,8 @@
         "dev.mcp_eval.action_coverage",
         "dev.mcp_eval.models",
         "dev.mcp_eval.runner",
+        "dev.measure",
+        "dev.measure.ledger_classification_speed",
         "dev.operation_contract_manifest",
         "dev.operation_contract_manifest.command_operation_derivation",
         "dev.operation_contract_manifest.generate",
