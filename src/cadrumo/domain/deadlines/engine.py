@@ -798,6 +798,11 @@ def unanswered_iva_deciding_paths(
     The window's own applicability conditions and the filing schedules that
     admit its period are what decide it. Only a read projection names
     unanswered block paths, so every other profile returns nothing.
+
+    Args:
+        profile: The :class:`TaxpayerProfile` whose unanswered IVA block paths are read.
+        revision: The selected registry revision of the window's modelo.
+        window: The deadline window whose obligation is being decided.
     """
     if not profile.iva_block_unanswered_paths:
         return ()
