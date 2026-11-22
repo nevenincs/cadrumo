@@ -3967,6 +3967,12 @@ application:
           for a joint return, because your return does not separate each member's
           work and business income, and the limits apply to each member individually
           (LIRPF art. 52.1). It is never shown as zero.
+        m200_cuota_liquida_minima_unstated: The minimum taxation of LIS art. 30 bis
+          applies, because your net turnover over the 12 months before the period
+          reaches 20 million euros or your entity is taxed under the tax consolidation
+          regime. The minimum net tax due is not calculated, so enter box 00619 yourself
+          from the official instructions, even when it is 0. Until then the return
+          cannot be verified.
         m200_extincion_entidad_unsupported: This box needs the limit on compensating
           negative taxable bases (LIS art. 26.1), which is not calculated when your
           entity marks box 00072 "Extinción de entidad", because Cadrumo cannot tell

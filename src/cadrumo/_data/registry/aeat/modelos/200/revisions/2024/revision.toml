@@ -3982,6 +3982,11 @@ sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2024".family_overrides]]
 family = "formulas"
+selector = {revision = "2023", id = "modelo-200-cuota-liquida-minima-exigida"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["Aquellos cuyo importe neto de la cifra de negocios sea al menos de 20 millones de euros durante los 12 meses anteriores a la fecha en que se inicie el período impositivo", "Aquellos que tributen en el régimen de consolidación fiscal regulado en el Capítulo VI del Título VII de la LIS, con independencia de su importe neto de la cifra de negocios", "Esta tributación no se aplicará a los siguientes contribuyentes", "que tributen al tipo del 10 por ciento, según lo dispuesto en el artículo 29.3 de la LIS", "que tributen al tipo del 0 por ciento según lo dispuesto en el artículo 29.5 de la LIS", "Sociedades Anónimas Cotizadas de Inversión en el Mercado Inmobiliario (SOCIMI)"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+[[revisions."2024".family_overrides]]
+family = "formulas"
 selector = {revision = "2023", id = "modelo-200-tipo-gravamen-por-forma-juridica"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["se hará constar el tipo de gravamen que corresponda de acuerdo con el régimen de tributación aplicable a la entidad declarante", "Tipo general 25 por 100", "Entidades de nueva creación del artículo 29.1 de la LIS que realicen actividades económicas", "Entidades INCN < 1 millón de euros en el período impositivo inmediato anterior"]}], source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
@@ -4060,6 +4065,11 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 family = "parameters"
 selector = {revision = "2023", id = "is.modelo-200.bin-compensacion-importe-minimo"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["se podran compensar en el periodo impositivo bases imponibles negativas hasta el importe de 1 millon de euros"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "is.modelo-200.tributacion-minima-incn-minimo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["Aquellos cuyo importe neto de la cifra de negocios sea al menos de 20 millones de euros durante los 12 meses anteriores a la fecha en que se inicie el período impositivo"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2024".family_overrides]]
 family = "parameters"
@@ -4146,6 +4156,15 @@ family = "bindings"
 selector = {revision = "2023", id = "modelo-200-profile-legal-entity-form"}
 sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["tipo de gravamen"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}
+# The twelve-month turnover, inherited from the 2022 edition for the tributación mínima
+# (LIS art. 30 bis) the 2023 edition reads it for, with the DA 15ª reference stated again:
+# Ley 7/2024 restores DA 15ª, whose BIN limits read the same turnover from this edition
+# (manuals/sociedades/2024 L3429-3434, L14289-14300).
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-200-profile-incn-prior-12-months"}
+sequence_additions = {legal_refs = ["ley-27-2014:da-15"], source_citations = [{source_ref = "aeat-modelo-200-manual-2024", required_text = ["disposición adicional decimoquinta de la LIS", "doce meses anteriores a la fecha de inicio del período impositivo", "determinar, si procede, la aplicación de la tributación mínima (casilla [00619])"]}], source_refs = ["aeat-modelo-200-manual-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2024".family_overrides]]
 family = "bindings"
 selector = {revision = "2023", id = "modelo-200-profile-new-entity-flag"}
@@ -4175,7 +4194,7 @@ selector = {revision = "2023", id = "aeat-dr-200-2023"}
 replacement_id = "aeat-dr-200-2024"
 sequence_additions = {source_refs = ["aeat-dr-200-2024", "aeat-modelo-200-manual-2024"], casillas = [{casilla_id = "00925", number = "00925"}, {casilla_id = "DP200001:00024", segmento = "DP200001", number = "00024"}]}
 sequence_removals = {source_refs = [0, 1], casillas = [69]}
-sequence_order = {casillas = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 82, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81]}
+sequence_order = {casillas = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 84, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83]}
 [[revisions."2024".family_positions]]
 family = "application_links"
 id = "modelo-200-deadline"

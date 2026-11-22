@@ -57,6 +57,9 @@ _CASILLA_REASON_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         RegistryUnresolvedOutcomeReason.M200_EXTINCION_ENTIDAD_UNSUPPORTED.value: (
             "application.modelo.projection_words.casilla_reason.m200_extincion_entidad_unsupported"
         ),
+        RegistryUnresolvedOutcomeReason.M200_CUOTA_LIQUIDA_MINIMA_UNSTATED.value: (
+            "application.modelo.projection_words.casilla_reason.m200_cuota_liquida_minima_unstated"
+        ),
     }
 )
 """The sentence of each reason a computed box can be left without a value."""

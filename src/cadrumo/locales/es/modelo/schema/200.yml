@@ -15956,6 +15956,9 @@ modelo:
               - Estado [00611]
           is-liquidacion-iv-cuota-liquida-minima:
             label: Liquidación IV - Otras deducciones - Cuota líquida mínima [00619]
+          is-liquidacion-iv-cuota-liquida-minima-exigida:
+            label: Liquidación IV - Otras deducciones - Cuota líquida mínima exigida
+              (art. 30 bis LIS) [interno]
           is-liquidacion-iv-importe:
             label: Liquidación IV - Otras deducciones - Deducciones por reversión
               de medidas temporales DT 37ª.1 LIS (desglose en página 19) [01040]
