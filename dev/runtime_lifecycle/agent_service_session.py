@@ -138,6 +138,26 @@ class AgentServiceSession:
             raise AcceptanceError("a shared agent service session does not change local-model settings")
         return self._service.settings(self._admin_port(), action, **fields)
 
+    def credential(
+        self, *, provider: str, expected_revision: str, base_url: str | None, secret: bytearray
+    ) -> dict[str, JsonValue]:
+        """Store one lane's direct credential as the window does, on a session its caller owns alone.
+
+        ``secret`` is wiped on every exit, a refusal of the session included.
+        """
+        try:
+            if not self._owned:
+                raise AcceptanceError("a shared agent service session does not store provider credentials")
+            return self._service.credential(
+                self._admin_port(),
+                provider=provider,
+                expected_revision=expected_revision,
+                base_url=base_url,
+                secret=secret,
+            )
+        finally:
+            secret[:] = bytes(len(secret))
+
     def _admin_port(self) -> int:
         port = self.service_ready.get("admin_port")
         if type(port) is not int or not 0 < port <= 65535:
