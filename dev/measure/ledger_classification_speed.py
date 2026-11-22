@@ -168,6 +168,7 @@ from cadrumo_agent_service.providers.application.contracts import (
     TaskModelEntry,
 )
 from cadrumo_agent_service.providers.domain.record import LocalEngine, LocalPlacement
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.model_runs import ModelRunTaskKind
 from cadrumo_client.transport.windows_process import WindowsProcessScope, unreturned_windows_process_scope
 from dev.desktop_agent_live.disposable_root import create_root, enclosing_git_project, remove_root
@@ -208,6 +209,8 @@ _SIGN_IN_ENDED: Final = frozenset(
     }
 )
 """The stored sign-in refusals that mean it ran out (or was removed when it did), not that the command was wrong."""
+_RESUME_LIMIT: Final = 20
+"""The most times one long command is resumed after its sign-in ended part way."""
 _LOG_COPY_LIMIT_BYTES: Final = 256 * 2**20
 
 _PROMPT_EVAL: Final = re.compile(r"prompt eval time =\s*([\d.]+) ms /\s*(\d+) tokens")
@@ -420,12 +423,22 @@ class SignInKeeper(Protocol):
 
 
 def sign_in_ended(envelope: Mapping[str, Any]) -> str | None:
-    """The refusal reason when a command was refused because the stored sign-in ran out, else ``None``."""
+    """The refusal reason when a command was refused because the stored sign-in ran out, else ``None``.
+
+    A command refused as it starts names the stored sign-in's refusal. An
+    operation already running when the runtime retires the session is refused
+    at its next authority check, and names only that authentication is required.
+    """
     error = envelope.get("error")
     if not isinstance(error, dict) or error.get("code") != "REFUSED_CLI_BOUNDARY":
         return None
     context = error.get("context")
-    reason = context.get("sign_in_reason") if isinstance(context, dict) else None
+    if not isinstance(context, dict):
+        return None
+    reason = context.get("sign_in_reason")
+    if reason is None and "operation_id" in context:
+        required = AccessDenialCode.AUTHENTICATION_REQUIRED.value
+        return required if context.get("reason") == required else None
     return reason if isinstance(reason, str) and reason in _SIGN_IN_ENDED else None
 
 
@@ -484,18 +497,31 @@ class KeptSignInCli:
         """Run one command under a live sign-in."""
         return self.run(self._cli, *arguments)
 
-    def run(self, call: TimedCli, *arguments: str, longest: bool = True) -> tuple[float, int, dict[str, Any]]:
+    def run(
+        self, call: TimedCli, *arguments: str, longest: bool = True, resume: bool = False
+    ) -> tuple[float, int, dict[str, Any]]:
         """Run ``call`` under the same live sign-in; ``longest=False`` keeps its time out of the renewal margin.
 
         A long job run is not a command the sign-in must outlast twice, so
-        counting it would renew before every short command after it.
+        counting it would renew before every short command after it. With
+        ``resume`` a command whose sign-in ended part way is run again after
+        each renewal, as the person signs in and resumes it, until it is no
+        longer refused for that; its time is the sum of every attempt, since a
+        refused attempt did work too.
         """
         self.keep_ahead()
         seconds, code, envelope = call(*arguments)
         ended = sign_in_ended(envelope)
-        if ended is not None:
+        if ended is not None and not resume:
             self._renew(ended, self.remaining_seconds())
             seconds, code, envelope = call(*arguments)
+        attempts = 0
+        while resume and ended is not None and attempts < _RESUME_LIMIT:
+            attempts += 1
+            self._renew(ended, self.remaining_seconds())
+            more, code, envelope = call(*arguments)
+            seconds += more
+            ended = sign_in_ended(envelope)
         if longest:
             self._longest = max(self._longest, seconds)
         return seconds, code, envelope
@@ -2114,7 +2140,8 @@ def _measure_on(
 
             def jobs(*job_arguments: str) -> tuple[float, int, dict[str, Any]]:
                 # Only the run is long; the other job exchanges count as ordinary commands.
-                return kept.run(submit, *job_arguments, longest=job_arguments[0] != "run")
+                run = job_arguments[0] == "run"
+                return kept.run(submit, *job_arguments, longest=not run, resume=run)
 
             provider, _, transport = lane.rpartition("_")
             consent = (
