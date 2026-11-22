@@ -1,11 +1,14 @@
 """Verifying an edition below filing grade adds its advisory checks beside the grade refusal, and nothing else.
 
-Every coordinate comes from the published registry: the edition's grade is read
+Every coordinate comes from the published registry: the subject is any edition of
+the support envelope the authority serves below filing grade, its grade is read
 from the authority, and the checks are the registry's own predicates.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -18,13 +21,15 @@ from ....core.i18n.render import tr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import CasillaObservation
-from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.errors import NoRevisionForPeriodError
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef, TemporalProjectionDirection
 from ....domain.calculations.registry.schema_verification import (
     VerificationFindingKind,
     VerificationPredicateDefinition,
     VerificationPredicateOperator,
     parse_verification_predicate_expression_memo,
 )
+from ....domain.calculations.registry.temporal import revision_temporal_resolution
 from ....domain.calculations.registry.tests.authored_editions import (
     filing_grade_exercises,
     filing_year_envelope,
@@ -57,10 +62,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _T0 = datetime(filing_year_envelope().horizon, 1, 15, 12, 0, 0, tzinfo=UTC)
 _BUCKET = "below-filing-grade-advisories"
 _GRADE_REFUSAL = "application.modelo.findings.registry_authority_grade_insufficient"
-_M200 = "200"
 _ANNUAL = "0A"
-_UNDER_DECLARATION = "modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo"
-_BIN_CAP = "modelo-200-compensacion-bin-no-excede-limite-art-26"
 
 
 def _casilla(token: str) -> CasillaId:
@@ -144,45 +146,133 @@ def _casillas(predicate: VerificationPredicateDefinition) -> tuple[CasillaId, ..
     )
 
 
-def _predicate(
-    operation: PinnedAuthorityOperation, work_unit: WorkUnit, predicate_id: str
-) -> VerificationPredicateDefinition:
-    revision = operation.revision(work_unit.modelo, work_unit.revision_id)
-    return next(predicate for predicate in revision.verification_predicates if predicate.predicate_id == predicate_id)
+_PAIR = 2
+"""The firing values and violation candidates each name two boxes."""
+
+_FIRING_VALUES = {
+    VerificationPredicateOperator.IMPLIES_NONZERO: (Decimal("100.00"), None),
+    VerificationPredicateOperator.EQUALS: (Decimal("100.00"), Decimal("90.00")),
+}
+"""Values that fire each two-casilla advisory operator: a nonzero antecedent left unanswered, or two unequal boxes."""
+
+_VIOLATION_CANDIDATES: tuple[tuple[Decimal, Decimal], ...] = (
+    (Decimal("1000.00"), Decimal("10.00")),
+    (Decimal("10.00"), Decimal("1000.00")),
+    (Decimal("100.00"), Decimal("0")),
+    (Decimal("0"), Decimal("100.00")),
+)
+"""Two-casilla value pairs tried, in order, until the real evaluator reports a blocking check violated."""
 
 
-def _below_filing_m200(operation: PinnedAuthorityOperation) -> tuple[WorkUnit, RegistryAuthorityGrade]:
-    """Return the newest envelope year whose Modelo 200 edition is below filing grade and declares the advisory.
+@dataclass(frozen=True, slots=True)
+class _BelowFilingSubject:
+    """An edition below filing grade with one advisory check it fires and one blocking check it violates."""
 
-    Editions rise to filing grade as their evidence lands, so the year is read from the authority, never fixed.
+    work_unit: WorkUnit
+    grade: RegistryAuthorityGrade
+    advisory: VerificationPredicateDefinition
+    firing_values: Mapping[CasillaId, Decimal]
+    blocking: VerificationPredicateDefinition
+    violating_values: Mapping[CasillaId, Decimal]
+
+
+def _firing_values(predicate: VerificationPredicateDefinition) -> dict[CasillaId, Decimal] | None:
+    """Values that fire a two-casilla advisory of an operator in :data:`_FIRING_VALUES`, else ``None``."""
+    memo = parse_verification_predicate_expression_memo(predicate.expression)
+    if predicate.finding_kind is not VerificationFindingKind.ADVISORY or memo.operator not in _FIRING_VALUES:
+        return None
+    casillas = _casillas(predicate)
+    if len(casillas) != _PAIR:
+        return None
+    (first, second), (first_value, second_value) = casillas, _FIRING_VALUES[memo.operator]
+    return {first: first_value} if second_value is None else {first: first_value, second: second_value}
+
+
+def _violating_values(predicate: VerificationPredicateDefinition) -> dict[CasillaId, Decimal] | None:
+    """Two-casilla values the real evaluator reports as violating a blocking check, else ``None``."""
+    if predicate.finding_kind is not VerificationFindingKind.BLOCKING_RULE:
+        return None
+    casillas = _casillas(predicate)
+    if len(casillas) != _PAIR:
+        return None
+    first, second = casillas
+    for first_value, second_value in _VIOLATION_CANDIDATES:
+        values = {first: first_value, second: second_value}
+        try:
+            holds = evaluate_predicate_expression(predicate.expression, values, _profile())
+        except (ValueError, LookupError):
+            continue
+        if not holds:
+            return values
+    return None
+
+
+def _subject_at(operation: PinnedAuthorityOperation, modelo: str, year: int) -> _BelowFilingSubject | None:
+    """The subject the annual edition of ``modelo`` for ``year`` offers, or ``None`` when it offers none."""
+    try:
+        grade = operation.reachable_authority_grade(modelo, filing_year=year, period=_ANNUAL)
+    except NoRevisionForPeriodError:
+        # The modelo serves no annual declaration for the year.
+        return None
+    if grade is RegistryAuthorityGrade.FILING:
+        return None
+    revision = operation.revision_for_context(modelo, filing_year=year, period=_ANNUAL)
+    resolution = revision_temporal_resolution(
+        revision, filing_year=year, period=_ANNUAL, support=operation.supported_filing_years()
+    )
+    # A projected year is refused as projected; the grade refusal under test is an edition's own declared grade.
+    if resolution.projection_direction is not TemporalProjectionDirection.AUTHORED:
+        return None
+    work_unit = _work_unit(operation, modelo, year, _ANNUAL)
+    predicates = operation.revision(work_unit.modelo, work_unit.revision_id).verification_predicates
+    advisory = next(((item, values) for item in predicates if (values := _firing_values(item)) is not None), None)
+    blocking = next(((item, values) for item in predicates if (values := _violating_values(item)) is not None), None)
+    if advisory is None or blocking is None:
+        return None
+    return _BelowFilingSubject(
+        work_unit=work_unit,
+        grade=grade,
+        advisory=advisory[0],
+        firing_values=advisory[1],
+        blocking=blocking[0],
+        violating_values=blocking[1],
+    )
+
+
+def _below_filing_subject(operation: PinnedAuthorityOperation) -> _BelowFilingSubject:
+    """Return the newest authored envelope edition of any modelo that is below filing grade and declares both checks.
+
+    Editions rise to filing grade as their evidence lands, so the modelo and year are read from the authority,
+    never fixed.
     """
     for year in sorted(filing_year_envelope().years, reverse=True):
-        grade = operation.reachable_authority_grade(_M200, filing_year=year, period=_ANNUAL)
-        if grade is RegistryAuthorityGrade.FILING:
-            continue
-        work_unit = _work_unit(operation, _M200, year, _ANNUAL)
-        revision = operation.revision(work_unit.modelo, work_unit.revision_id)
-        if any(predicate.predicate_id == _UNDER_DECLARATION for predicate in revision.verification_predicates):
-            return work_unit, grade
-    raise AssertionError("precondition: a Modelo 200 edition below filing grade declares the advisory under test")
+        for modelo in sorted(operation.modelo_ids()):
+            subject = _subject_at(operation, modelo, year)
+            if subject is not None:
+                return subject
+    raise AssertionError(
+        "precondition: an authored annual edition below filing grade inside the support envelope declares a two-box advisory "
+        "check and a two-box blocking check"
+    )
 
 
-def _under_declaration_values(predicate: VerificationPredicateDefinition) -> dict[CasillaId, Decimal]:
-    """A positive accounting result with the pre-tax result left at zero, the shape the advisory guards."""
-    antecedent, consequent = _casillas(predicate)
-    values = {antecedent: Decimal("140000.00")}
-    assert consequent not in values
-    return values
+def _advisory_finding(
+    findings: list[ModeloVerificationFinding], predicate: VerificationPredicateDefinition
+) -> ModeloVerificationFinding:
+    (advisory,) = [
+        finding for finding in findings if finding.message_facts.get("predicate_id") == predicate.predicate_id
+    ]
+    return advisory
 
 
 def test_the_under_declaration_advisory_appears_next_to_the_grade_refusal(
     *, operation: PinnedAuthorityOperation
 ) -> None:
-    work_unit, grade = _below_filing_m200(operation)
-    predicate = _predicate(operation, work_unit, _UNDER_DECLARATION)
+    subject = _below_filing_subject(operation)
+    work_unit, grade, predicate = subject.work_unit, subject.grade, subject.advisory
     assert predicate.finding_kind is VerificationFindingKind.ADVISORY
 
-    findings, scenarios = _verify(operation, work_unit, _under_declaration_values(predicate))
+    findings, scenarios = _verify(operation, work_unit, dict(subject.firing_values))
 
     refusals = [finding for finding in findings if finding.message_locale_key == _GRADE_REFUSAL]
     (refusal,) = refusals
@@ -190,7 +280,7 @@ def test_the_under_declaration_advisory_appears_next_to_the_grade_refusal(
     assert refusal.below_filing_grade is None
     assert refusal.message_facts["declared_grade"] == grade.value
     assert scenarios == {REGISTRY_SNAPSHOT_GRADE_INSUFFICIENT_SCENARIO}
-    (advisory,) = [finding for finding in findings if finding.message_facts.get("predicate_id") == _UNDER_DECLARATION]
+    advisory = _advisory_finding(findings, predicate)
     assert advisory.kind is ModeloVerificationFindingKind.ADVISORY
     assert advisory.severity is ModeloVerificationFindingSeverity.WARNING
     assert advisory.below_filing_grade is grade
@@ -202,10 +292,9 @@ def test_the_under_declaration_advisory_appears_next_to_the_grade_refusal(
 def test_the_advisory_says_its_edition_is_not_filing_grade(
     language: OutputLanguage, *, operation: PinnedAuthorityOperation
 ) -> None:
-    work_unit, _grade = _below_filing_m200(operation)
-    predicate = _predicate(operation, work_unit, _UNDER_DECLARATION)
-    findings, _scenarios = _verify(operation, work_unit, _under_declaration_values(predicate))
-    (advisory,) = [finding for finding in findings if finding.below_filing_grade is not None]
+    subject = _below_filing_subject(operation)
+    findings, _scenarios = _verify(operation, subject.work_unit, dict(subject.firing_values))
+    advisory = _advisory_finding(findings, subject.advisory)
 
     notice = tr(BELOW_FILING_GRADE_NOTICE_LOCALE_KEY, locale=language.value)
     own = tr(advisory.message_locale_key, locale=language.value)
@@ -214,11 +303,10 @@ def test_the_advisory_says_its_edition_is_not_filing_grade(
 
 
 def test_no_blocking_registry_check_is_evaluated_below_filing_grade(*, operation: PinnedAuthorityOperation) -> None:
-    work_unit, grade = _below_filing_m200(operation)
-    blocking = _predicate(operation, work_unit, _BIN_CAP)
+    subject = _below_filing_subject(operation)
+    work_unit, grade, blocking = subject.work_unit, subject.grade, subject.blocking
     assert blocking.finding_kind is VerificationFindingKind.BLOCKING_RULE
-    applied, maximum = _casillas(blocking)
-    values = {applied: Decimal("1000.00"), maximum: Decimal("10.00")}
+    values = dict(subject.violating_values)
     # The values violate the edition's blocking check through the real evaluator.
     assert not evaluate_predicate_expression(blocking.expression, values, _profile())
 
@@ -232,13 +320,6 @@ def test_no_blocking_registry_check_is_evaluated_below_filing_grade(*, operation
         for finding in findings
         if finding is not refusal
     )
-
-
-_FIRING_VALUES = {
-    VerificationPredicateOperator.IMPLIES_NONZERO: (Decimal("100.00"), None),
-    VerificationPredicateOperator.EQUALS: (Decimal("100.00"), Decimal("90.00")),
-}
-"""Values that fire each two-casilla advisory operator the filing-grade editions below declare."""
 
 
 @pytest.mark.parametrize("modelo", ["100", "390"])
@@ -272,10 +353,10 @@ def test_a_filing_grade_edition_verifies_as_before(modelo: str, *, operation: Pi
 
 
 def test_the_grade_survives_every_finding_projection(*, operation: PinnedAuthorityOperation) -> None:
-    work_unit, grade = _below_filing_m200(operation)
-    predicate = _predicate(operation, work_unit, _UNDER_DECLARATION)
-    findings, _scenarios = _verify(operation, work_unit, _under_declaration_values(predicate))
-    (advisory,) = [finding for finding in findings if finding.below_filing_grade is not None]
+    subject = _below_filing_subject(operation)
+    grade = subject.grade
+    findings, _scenarios = _verify(operation, subject.work_unit, dict(subject.firing_values))
+    advisory = _advisory_finding(findings, subject.advisory)
 
     assert ModeloFindingSnapshot.from_finding(advisory).to_finding() == advisory
     assert ModeloVerificationFindingProjection.from_finding(advisory).to_finding() == advisory
