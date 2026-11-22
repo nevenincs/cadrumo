@@ -75,8 +75,18 @@ class InstalledServiceClient:
         return self.connection.subscribe_session_events(receive)
 
     def model_run_fetch(self, run_id: UUID) -> tuple[ModelRunFetched, bytearray] | None:
-        """Fetch an announced model run under the current lease, or ``None`` when it is no longer waiting."""
+        """Fetch an announced model run under the current lease, or ``None`` when it is no longer waiting.
+
+        A refusal met as the short attended session lapses is asked again once,
+        under the session a fresh claim issues for the same approval.
+        """
         lease = self._lease()
+        fetched = self._model_run_fetch(run_id, lease)
+        if fetched is None and (renewed := self._renewed(lease)) is not None:
+            fetched = self._model_run_fetch(run_id, renewed)
+        return fetched
+
+    def _model_run_fetch(self, run_id: UUID, lease: ServiceLease) -> tuple[ModelRunFetched, bytearray] | None:
         reply, body = self.connection.model_run_fetch(
             ModelRunFetchRequest(
                 request_id=uuid4(),
@@ -92,8 +102,21 @@ class InstalledServiceClient:
         return reply, body
 
     def model_run_complete(self, run_id: UUID, outcome: ModelRunOutcome, text: bytearray) -> bool:
-        """Answer a fetched model run; false when the runtime no longer waits for it."""
+        """Answer a fetched model run; false when the runtime no longer waits for it.
+
+        An answer refused as the short attended session lapses is sent again
+        once, under the session a fresh claim issues for the same approval.
+        """
         lease = self._lease()
+        try:
+            if self._model_run_complete(run_id, outcome, bytearray(text), lease):
+                return True
+            renewed = self._renewed(lease)
+            return renewed is not None and self._model_run_complete(run_id, outcome, bytearray(text), renewed)
+        finally:
+            text[:] = bytes(len(text))
+
+    def _model_run_complete(self, run_id: UUID, outcome: ModelRunOutcome, text: bytearray, lease: ServiceLease) -> bool:
         reply = self.connection.model_run_complete(
             ModelRunCompleteRequest(
                 request_id=uuid4(),
@@ -107,6 +130,18 @@ class InstalledServiceClient:
             deadline=self._deadline(),
         )
         return isinstance(reply, ModelRunCompleted) and reply.accepted
+
+    def _renewed(self, refused: ServiceLease) -> ServiceLease | None:
+        """Claim once after a refusal; only the same approval under a new session is a reason to ask again.
+
+        A refusal grants nothing. The claim is the runtime's fresh decision: it
+        issues the attended session anew while the person's session lives, and
+        withdraws the lease when it does not.
+        """
+        claimed = self.claim()
+        if claimed is None or claimed.lease_id != refused.lease_id or claimed.session_id == refused.session_id:
+            return None
+        return claimed
 
     def _lease(self) -> ServiceLease:
         if self.lease is None:

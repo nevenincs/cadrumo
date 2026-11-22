@@ -12,12 +12,15 @@ from __future__ import annotations
 import sys
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
+from datetime import timedelta
 from pathlib import Path
 from queue import Queue
 from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.application.user_profile.access_contracts import ACCESS_LEASE_MAXIMUM, AccessSession, SessionKind
+from cadrumo.core.time.clock import wall_now
 from cadrumo_client.contracts.contracts import ByteChannel
 from cadrumo_client.contracts.model_runs import (
     MODEL_RUN_MAX_DEADLINE_SECONDS,
@@ -202,6 +205,115 @@ def test_a_second_connection_of_the_same_service_can_neither_fetch_nor_answer_th
             outcome, _ = waiting.result(timeout=_ANNOUNCEMENT_SECONDS)
 
     assert outcome.lane == _LANE
+
+
+def _lapse_service_session(runtime: ServiceRecordRuntime, service: InstalledServiceClient) -> UUID:
+    """Move the service's attended session past its lease maximum on the runtime authority's own clocks.
+
+    Its whole window is put one second in the past, as when the five-minute
+    lease runs out between two requests; the person's session is untouched.
+    The worker's copy keeps its own clock, as it does in a real lapse.
+    """
+    assert service.lease is not None
+    authority = runtime.profiles._profiles[runtime.profile_id].authority
+    session_id = service.lease.session_id
+    window = ACCESS_LEASE_MAXIMUM.total_seconds()
+    with authority.owner.admission_guard():
+        current = authority._sessions[session_id]
+        assert current.kind is SessionKind.ATTENDED
+        assert current.parent_session_id == runtime.person_session_id
+        ended = wall_now() - timedelta(seconds=1)
+        authority._sessions[session_id] = AccessSession.model_validate(
+            {
+                **{name: getattr(current, name) for name in AccessSession.model_fields},
+                "issued_at": ended - ACCESS_LEASE_MAXIMUM,
+                "issued_monotonic": time.monotonic() - window - 1,
+                "expires_at": ended,
+            }
+        )
+    return session_id
+
+
+def _assert_renewed(
+    runtime: ServiceRecordRuntime, service: InstalledServiceClient, lapsed: UUID, lease_id: UUID
+) -> None:
+    renewed = service.lease
+    assert renewed is not None and renewed.session_id != lapsed
+    assert renewed.lease_id == lease_id, "the same approval is renewed, not a new one"
+    assert renewed.parent_session_id == runtime.person_session_id
+    authority = runtime.profiles._profiles[runtime.profile_id].authority
+    assert lapsed not in authority._sessions, "the lapsed session is retired, not revived"
+
+
+def test_a_run_fetched_just_after_the_service_s_attended_session_lapses_is_served_under_its_renewal(
+    tmp_path: Path,
+) -> None:
+    body = encode_model_run_body(ModelRunBody(prompt="Factura 7", max_output_tokens=16))
+    with service_record_runtime(tmp_path, model_runs=True) as runtime:
+        service, announced = _admitted(runtime, SERVICE_ID)
+        assert service.lease is not None
+        lease_id = service.lease.lease_id
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            waiting = pool.submit(runtime.profiles._relay_model_run, runtime.profile_id, _run(body), body)
+            run_id = announced.get(timeout=_ANNOUNCEMENT_SECONDS)
+            lapsed = _lapse_service_session(runtime, service)
+
+            fetched = service.model_run_fetch(run_id)
+
+            assert fetched is not None and decode_model_run_body(fetched[1]).prompt == "Factura 7"
+            _assert_renewed(runtime, service, lapsed, lease_id)
+            assert service.model_run_complete(
+                run_id, ModelRunOutcome(served=_SERVED, text_byte_count=6), bytearray(b"BUSINE")
+            )
+            outcome, text = waiting.result(timeout=_ANNOUNCEMENT_SECONDS)
+
+        assert outcome == ModelRunOutcome(served=_SERVED, text_byte_count=6)
+        assert text == bytearray(b"BUSINE")
+
+
+def test_an_answer_sent_just_after_the_service_s_attended_session_lapses_is_accepted_under_its_renewal(
+    tmp_path: Path,
+) -> None:
+    body = encode_model_run_body(ModelRunBody(prompt="Factura 7", max_output_tokens=16))
+    with service_record_runtime(tmp_path, model_runs=True) as runtime:
+        service, announced = _admitted(runtime, SERVICE_ID)
+        assert service.lease is not None
+        lease_id = service.lease.lease_id
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            waiting = pool.submit(runtime.profiles._relay_model_run, runtime.profile_id, _run(body), body)
+            run_id = announced.get(timeout=_ANNOUNCEMENT_SECONDS)
+            assert service.model_run_fetch(run_id) is not None
+            lapsed = _lapse_service_session(runtime, service)
+            answer = bytearray(b"BUSINE")
+
+            accepted = service.model_run_complete(run_id, ModelRunOutcome(served=_SERVED, text_byte_count=6), answer)
+
+            assert accepted
+            assert answer == bytearray(6), "the service's copy of the answer is wiped once sent"
+            _assert_renewed(runtime, service, lapsed, lease_id)
+            outcome, text = waiting.result(timeout=_ANNOUNCEMENT_SECONDS)
+
+        assert outcome == ModelRunOutcome(served=_SERVED, text_byte_count=6)
+        assert text == bytearray(b"BUSINE")
+
+
+def test_a_run_fetched_after_the_person_s_session_ended_is_refused_and_not_renewed(tmp_path: Path) -> None:
+    body = encode_model_run_body(ModelRunBody(prompt="Factura 7", max_output_tokens=16))
+    with service_record_runtime(tmp_path, model_runs=True) as runtime:
+        service, announced = _admitted(runtime, SERVICE_ID)
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            waiting = pool.submit(runtime.profiles._relay_model_run, runtime.profile_id, _run(body), body)
+            run_id = announced.get(timeout=_ANNOUNCEMENT_SECONDS)
+            _lapse_service_session(runtime, service)
+            _lock_person(runtime)
+
+            assert service.model_run_fetch(run_id) is None
+            # Well inside the run's own deadline: the withdrawal answered it, nothing waited it out.
+            outcome, _ = waiting.result(timeout=5)
+
+        assert service.lease is None, "an ended person's session leaves no approval to renew"
+        assert outcome == ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
+        assert body == bytearray(len(body))
 
 
 def _lock_person(runtime: ServiceRecordRuntime) -> None:
