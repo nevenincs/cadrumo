@@ -117,6 +117,8 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.stash",
             "ledger.unlink",
             "ledger.update",
+            "ledger.update.batch",
+            "ledger.update.batch.preview",
         ),
     ),
     "movementCheck": (
@@ -420,6 +422,12 @@ FIELD_EXPORTS: dict[str, tuple[tuple[str, str, str, str], ...]] = {
         ("LedgerAddValidation", "ledger.add", "result", 'NonNullable<{model}["validation_code"]>'),
         ("LedgerClassifyField", "ledger.classify.single", "request", '{model}["patch_fields"][number]'),
         ("LedgerClassifyValidation", "ledger.classify.single", "result", '{model}["validation_kind"]'),
+        (
+            "LedgerPropertySetField",
+            "ledger.update.batch.preview",
+            "request",
+            '{model}["rows"][number]["properties"]["fields"][number]',
+        ),
     ),
     "movementCheck": (
         (

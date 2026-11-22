@@ -12,6 +12,7 @@ import {
   useStoryStage,
 } from "@/dev/LedgerStage";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
+import type { PropertySet } from "../../../shell/ledgerPlan";
 import { MatchQueue } from "../matching/MatchQueue";
 import { useSealedMovements } from "../useSealedMovements";
 import { ActionDialog, type ActionRequest } from "./ActionDialog";
@@ -63,6 +64,7 @@ function Inspector({
   );
   const [panelMode, setPanelMode] = useState(mode);
   const [width, setWidth] = useState<number | null>(null);
+  const [copied, setCopied] = useState<PropertySet | null>(null);
   const { sealed, unread } = useSealedMovements(
     port,
     STORY_READER,
@@ -109,6 +111,8 @@ function Inspector({
             context={context}
             mode={panelMode}
             onMode={setPanelMode}
+            copied={copied}
+            onCopied={setCopied}
             matchPanel={
               <MatchQueue
                 port={port}

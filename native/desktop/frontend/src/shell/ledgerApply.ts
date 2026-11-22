@@ -18,6 +18,7 @@ import {
 import type {
   LedgerUpdateOperationResult,
   LedgerAddOperationResult,
+  LedgerBatchUpdateResult,
   LedgerBulkClassifyProjection,
   LedgerClassifyField,
   LedgerClassifyWindowRequest,
@@ -54,7 +55,17 @@ export type NotSentWhy =
   | "after_part"
   /** A split saved, but its result did not name its parts, so the parts'
    * own classifications had no movement to go to. */
-  | "parts_unnamed";
+  | "parts_unnamed"
+  /** A batch part whose preview the review did not show: it is written
+   * only against the plan the person saw. */
+  | "unreviewed";
+
+/** The refusal of a batch write that found another plan than the reviewed
+ * one and wrote nothing; its detail is the plan it found. */
+export const BATCH_PLAN_CHANGED = "REFUSED_LEDGER_BATCH_PLAN_CHANGED";
+
+/** One movement's outcome in a batch edit, as its preview or write says. */
+export type BatchRowResult = LedgerBatchUpdateResult["rows"][number];
 
 /** Where one step, or one row of a bulk part, stands after the apply. */
 export type StepOutcome =
@@ -86,6 +97,9 @@ export type StepReport = {
   /** A write sent because the action this names settled: a split part's
    * classification, or the attach of a document just added. */
   follows?: string;
+  /** What a batch part's write answered, row by row: what each row held,
+   * which an undo writes back. */
+  batch?: LedgerBatchUpdateResult;
 };
 
 export type ApplyReport = {
@@ -112,6 +126,7 @@ const refused = (
 export function stepRows(step: PlanStep): string[] {
   switch (step.kind) {
     case "bulk":
+    case "batch":
       return step.rows.map((row) => row.transactionId);
     case "classify":
     case "update":
@@ -166,11 +181,74 @@ function servedMessages(detail: LedgerErrorDetail | null): string[] {
   return validation?.kind === "refused" ? validation.messages : [];
 }
 
+/** One row of a batch edit as an outcome: written, with its new id where it
+ * took one; unchanged; refused with the sentences the ledger said; or found
+ * changed or gone since the page read it, which a read and a new review
+ * resolve. A row the answer does not name is refused. */
+export function batchRowOutcome(
+  transactionId: string,
+  row: BatchRowResult | undefined,
+): StepOutcome {
+  if (!row) return refused("validation_error");
+  switch (row.outcome) {
+    case "applied": {
+      const after = row.result_transaction_id ?? null;
+      return {
+        kind: "applied",
+        newId: after && after !== transactionId ? after : null,
+      };
+    }
+    case "unchanged":
+      return { kind: "unchanged" };
+    case "refused":
+    case "conflict":
+      return refused(row.cause ?? "validation_error", [
+        ...(row.messages ?? []),
+      ]);
+  }
+}
+
+/** The rows of a batch answer by the movement each names. */
+const batchRowsById = (result: LedgerBatchUpdateResult) =>
+  new Map(result.rows.map((row) => [row.transaction_id, row]));
+
+/** A batch write the ledger refused because the plan it found was not the
+ * reviewed one: nothing was written, and each row says, under the plan it
+ * found, what a new review will show. */
+function planChanged(
+  step: Extract<PlanStep, { kind: "batch" }>,
+  detail: LedgerErrorDetail | null,
+): {
+  outcome: StepOutcome;
+  rows: RowResult[];
+  batch?: LedgerBatchUpdateResult;
+} {
+  const fresh = detail as unknown as LedgerBatchUpdateResult | null;
+  const found =
+    fresh && Array.isArray(fresh.rows) ? batchRowsById(fresh) : null;
+  const whole = refused(BATCH_PLAN_CHANGED, [], detail);
+  return {
+    outcome: whole,
+    rows: step.rows.map(({ transactionId }) => {
+      const now = found?.get(transactionId);
+      return {
+        transactionId,
+        outcome: refused(BATCH_PLAN_CHANGED, [...(now?.messages ?? [])]),
+      };
+    }),
+    ...(fresh && found ? { batch: fresh } : {}),
+  };
+}
+
 /** What a settled result says happened, row by row. */
 function settledOutcome(
   step: PlanStep,
   result: JsonObject,
-): { outcome: StepOutcome; rows: RowResult[] } {
+): {
+  outcome: StepOutcome;
+  rows: RowResult[];
+  batch?: LedgerBatchUpdateResult;
+} {
   const ids = stepRows(step);
   const each = (outcome: StepOutcome) => ({
     outcome,
@@ -179,6 +257,24 @@ function settledOutcome(
   const validation = validationOf(result);
   if (validation) return each(validation);
   switch (step.kind) {
+    case "batch": {
+      const batch = result as unknown as LedgerBatchUpdateResult;
+      if (!Array.isArray(batch.rows)) return each(refused("validation_error"));
+      const found = batchRowsById(batch);
+      const rows = step.rows.map(({ transactionId }) => ({
+        transactionId,
+        outcome: batchRowOutcome(transactionId, found.get(transactionId)),
+      }));
+      // The part as a whole: written where any row was, unchanged where all
+      // were, refused only where no row was written or found unchanged.
+      const kinds = new Set(rows.map((row) => row.outcome.kind));
+      const outcome: StepOutcome = kinds.has("applied")
+        ? { kind: "applied", newId: null }
+        : kinds.has("unchanged")
+          ? { kind: "unchanged" }
+          : refused(null);
+      return { outcome, rows, batch };
+    }
     case "bulk": {
       const batch = (result as unknown as LedgerBulkClassifyProjection).result;
       if (!batch) return each(refused("validation_error"));
@@ -261,8 +357,18 @@ function settledOutcome(
 function outcomeOf(
   step: PlanStep,
   outcome: LedgerOutcome,
-): { outcome: StepOutcome; rows: RowResult[] } {
+): {
+  outcome: StepOutcome;
+  rows: RowResult[];
+  batch?: LedgerBatchUpdateResult;
+} {
   if (outcome.kind === "settled") return settledOutcome(step, outcome.result);
+  if (
+    step.kind === "batch" &&
+    outcome.kind === "refused" &&
+    outcome.reason === BATCH_PLAN_CHANGED
+  )
+    return planChanged(step, outcome.detail);
   const found: StepOutcome =
     outcome.kind === "refused"
       ? refused(outcome.reason, servedMessages(outcome.detail), outcome.detail)
@@ -317,6 +423,11 @@ async function send(
   switch (step.kind) {
     case "bulk":
       return port.submit("ledger.classify.bulk", step.request);
+    case "batch":
+      return port.submit("ledger.update.batch", {
+        ...step.request,
+        reviewed_plan_digest: step.reviewedPlanDigest!,
+      });
     case "classify":
       return port.submit("ledger.classify.single", step.request);
     case "update":
@@ -470,6 +581,7 @@ export function reportUnitKeys(report: StepReport): string[] {
   if (report.follows) return [`action:${report.follows}`];
   switch (step.kind) {
     case "bulk":
+    case "batch":
     case "update":
       return report.rows.map((row) => `row:${row.transactionId}`);
     case "classify":
@@ -487,7 +599,11 @@ export function reportUnitKeys(report: StepReport): string[] {
 
 /** The outcome each report gave to one unit of its own. */
 function unitPartOutcome(report: StepReport, key: string): StepOutcome {
-  if (report.step.kind === "bulk" || report.step.kind === "update") {
+  if (
+    report.step.kind === "bulk" ||
+    report.step.kind === "batch" ||
+    report.step.kind === "update"
+  ) {
     const row = report.rows.find(
       (found) => `row:${found.transactionId}` === key,
     );
@@ -552,7 +668,11 @@ export async function runPlan(
   for (let at = 0; at < queue.length; at += 1) {
     const { index, step, follows, unsent } = queue[at]!;
     const rows = unsent ? [] : stepRows(step);
-    let settled: { outcome: StepOutcome; rows: RowResult[] };
+    let settled: {
+      outcome: StepOutcome;
+      rows: RowResult[];
+      batch?: LedgerBatchUpdateResult;
+    };
     const hold = (why: NotSentWhy) => {
       const outcome: StepOutcome = { kind: "not_sent", why };
       return {
@@ -566,6 +686,8 @@ export async function runPlan(
     else if (step.kind === "bulk" && partRefused) settled = hold("after_part");
     else if (rows.some((id) => failedRows.has(id)))
       settled = hold("after_refusal");
+    else if (step.kind === "batch" && step.reviewedPlanDigest === null)
+      settled = hold("unreviewed");
     else {
       try {
         const answered = await send(port, step, current);
@@ -624,6 +746,10 @@ export async function runPlan(
         paused = { index, operationId: outcome.operationId };
       if (step.kind === "update" && outcome.kind === "applied" && outcome.newId)
         ids.set(step.transactionId, outcome.newId);
+      if (step.kind === "batch")
+        for (const row of settled.rows)
+          if (row.outcome.kind === "applied" && row.outcome.newId)
+            ids.set(row.transactionId, row.outcome.newId);
     }
     for (const row of settled.rows)
       if (!DONE.has(row.outcome.kind)) failedRows.add(row.transactionId);
@@ -687,7 +813,7 @@ export function keepAfterApply(
         actions.add(follows);
       continue;
     }
-    if (step.kind === "bulk") {
+    if (step.kind === "bulk" || step.kind === "batch") {
       for (const [at, row] of step.rows.entries())
         if (DONE.has(results[at]!.outcome.kind))
           drop(row.transactionId, row.fields);
@@ -912,6 +1038,7 @@ export function resolveUnknown(
   };
   switch (step.kind) {
     case "bulk":
+    case "batch":
       for (const row of step.rows)
         found.set(
           row.transactionId,

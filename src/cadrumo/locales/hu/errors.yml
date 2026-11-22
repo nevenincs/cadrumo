@@ -1374,6 +1374,8 @@ errors:
     financial_edit_journal_purge: A korábbi pénzügyi szerkesztési napló biztonságos
       törlése nem sikerült. A művelet nem érhető el. Egyetlen szerkesztési érték sem
       lett betöltve.
+    ledger_batch_plan_changed: A tételek megváltoztak, mióta átnézted ezt a szerkesztést;
+      nézd át újra mentés előtt.
     ledger_preflight: A főkönyvi előzetes ellenőrzés elutasította a bevallás számítását,
       mert az még nem nyújtható be.
     ledger_purchase_evidence_release: 'Nem tudod levenni a dokumentumot erről a tételről:

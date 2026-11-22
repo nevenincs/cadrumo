@@ -157,6 +157,107 @@ export type LedgerAllocateRequest = {
 };
 
 /**
+ * How many rows took each outcome.
+ */
+export type LedgerBatchCounts = {
+  applied: number;
+  unchanged: number;
+  refused: number;
+  conflict: number;
+};
+
+/**
+ * What the batch edit does, or did, to one named movement.
+ *
+ * `previous` holds the values the movement had for the written properties, so
+ * an undo writes them back as a new correction. `modified_at` is the
+ * movement's stamp after the edit (or as found, when nothing was written).
+ */
+export type LedgerBatchRowResult = {
+  transaction_id: string;
+  outcome: "applied" | "unchanged" | "refused" | "conflict";
+  cause:
+    | "changed_since_seen"
+    | "not_found"
+    | "not_active"
+    | "sealed"
+    | "invalid"
+    | null;
+  messages: string[];
+  changed_fields: (
+    | "business_classification"
+    | "business_pct"
+    | "category_id"
+    | "usage_ratio_id"
+    | "iva_category"
+    | "iva_rate"
+    | "irpf_category"
+    | "deduction_fact_kind"
+    | "exemption_article"
+    | "counterparty"
+    | "notes"
+    | "group_label"
+  )[];
+  previous: LedgerPropertySet | null;
+  result_transaction_id: string | null;
+  modified_at: string | null;
+};
+
+/**
+ * Private exact-profile request for what a batch edit would do, writing
+ * nothing.
+ *
+ * `output_language` is the language the row refusals are said in.
+ */
+export type LedgerBatchUpdatePreviewRequest = {
+  profile_id: string;
+  rows: LedgerBatchUpdateRow[];
+  output_language?: OutputLanguage;
+};
+
+/**
+ * Private exact-profile request to write the reviewed batch edit.
+ *
+ * `reviewed_plan_digest` is the digest the preview of exactly these rows
+ * answered; the edit is refused, writing nothing, when the plan it finds
+ * differs. `actor` is recorded as sent for a person's session; an automation's
+ * session is recorded under its own session label.
+ */
+export type LedgerBatchUpdateRequest = {
+  profile_id: string;
+  rows: LedgerBatchUpdateRow[];
+  reviewed_plan_digest: string;
+  actor?: string | null;
+  output_language?: OutputLanguage;
+};
+
+/**
+ * The per-row plan or outcome of a batch edit.
+ *
+ * `outcome` is `previewed` for a preview, `applied` once the plan was written
+ * (even where no row changed), and `plan_changed` when the apply found a plan
+ * other than the reviewed one and wrote nothing; `rows` then holds the plan it
+ * found, to review again.
+ */
+export type LedgerBatchUpdateResult = {
+  profile_id: string;
+  outcome: "previewed" | "applied" | "plan_changed";
+  plan_digest: string;
+  rows: LedgerBatchRowResult[];
+  counts: LedgerBatchCounts;
+  bucket_event_ids: string[];
+};
+
+/**
+ * One movement, the `modified_at` the person saw on it, and what to write.
+ */
+export type LedgerBatchUpdateRow = {
+  transaction_id: string;
+  expected_modified_at: string;
+  properties: LedgerPropertySet;
+};
+
+/**
  * Complete private batch result or a guaranteed pre-write input refusal.
  */
 export type LedgerBulkClassifyProjection = {
@@ -440,6 +541,42 @@ export type LedgerOperatorIvaResult = {
   note: string;
   classification: LedgerClassifyOperationResult | null;
   validation_messages: string[];
+};
+
+/**
+ * The typed property values one movement takes, or one movement held, as text.
+ *
+ * `fields` names the properties the set carries; a selected property whose
+ * value is null clears it, and every unselected value must be null. This is
+ * also what the window copies from one movement and pastes onto others.
+ */
+export type LedgerPropertySet = {
+  fields: (
+    | "business_classification"
+    | "business_pct"
+    | "category_id"
+    | "usage_ratio_id"
+    | "iva_category"
+    | "iva_rate"
+    | "irpf_category"
+    | "deduction_fact_kind"
+    | "exemption_article"
+    | "counterparty"
+    | "notes"
+    | "group_label"
+  )[];
+  business_classification: string | null;
+  business_pct: string | null;
+  category_id: string | null;
+  usage_ratio_id: string | null;
+  iva_category: string | null;
+  iva_rate: string | null;
+  irpf_category: string | null;
+  deduction_fact_kind: string | null;
+  exemption_article: string | null;
+  counterparty: string | null;
+  notes: string | null;
+  group_label: string | null;
 };
 
 /**
@@ -735,12 +872,30 @@ export type LedgerMovementContracts = {
     request: LedgerUpdateRequest;
     result: LedgerUpdateOperationResult;
   };
+  "ledger.update.batch": {
+    request: LedgerBatchUpdateRequest;
+    result: LedgerBatchUpdateResult;
+  };
+  "ledger.update.batch.preview": {
+    request: LedgerBatchUpdatePreviewRequest;
+    result: LedgerBatchUpdateResult;
+  };
 };
 
 export type LedgerAddWindowRequest = Omit<LedgerAddRequest, "profile_id">;
 
 export type LedgerAllocateWindowRequest = Omit<
   LedgerAllocateRequest,
+  "profile_id"
+>;
+
+export type LedgerBatchUpdatePreviewWindowRequest = Omit<
+  LedgerBatchUpdatePreviewRequest,
+  "profile_id"
+>;
+
+export type LedgerBatchUpdateWindowRequest = Omit<
+  LedgerBatchUpdateRequest,
   "profile_id"
 >;
 
@@ -782,3 +937,6 @@ export type LedgerClassifyField = LedgerClassifyRequest["patch_fields"][number];
 
 export type LedgerClassifyValidation =
   LedgerClassifyOperationResult["validation_kind"];
+
+export type LedgerPropertySetField =
+  LedgerBatchUpdatePreviewRequest["rows"][number]["properties"]["fields"][number];

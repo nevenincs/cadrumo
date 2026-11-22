@@ -112,6 +112,7 @@ export function MovementInspector({
   onOpenInvoice,
   onAction,
   onSplit,
+  onCopyProperties,
   onSelectCohort,
   onWritten,
   say,
@@ -142,6 +143,9 @@ export function MovementInspector({
   onOpenInvoice: (invoiceId: string) => void;
   onAction: (request: ActionRequest) => void;
   onSplit: (row: LedgerTransactionReviewProjection) => void;
+  /** Opens the choice of this movement's properties to copy, where the page
+   * keeps a copy. */
+  onCopyProperties?: (row: LedgerTransactionReviewProjection) => void;
   onSelectCohort: (ids: string[]) => void;
   /** Reads the window again after a write a section made at once. */
   onWritten: () => void;
@@ -351,6 +355,15 @@ export function MovementInspector({
               >
                 {t("desktop.ledger.edit.revert_movement")}
               </DropdownMenuItem>
+              {onCopyProperties && (
+                <DropdownMenuItem
+                  icon="copy"
+                  className="ledger-copy-properties-open"
+                  onSelect={() => onCopyProperties(row)}
+                >
+                  {t("desktop.ledger.properties.copy_open")}…
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 icon="split"

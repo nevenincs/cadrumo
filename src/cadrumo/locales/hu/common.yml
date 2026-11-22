@@ -1852,6 +1852,8 @@ desktop:
           nem tudtunk megerősíteni. A változtatásaid között marad.'
         not_sent_stopped: 'Nem ment el: a munkameneted véget ért. A változtatásaid
           között marad.'
+        not_sent_unreviewed: 'Nem ment el: a könyv nem mondta meg, mit tenne. Nézd
+          át újra.'
         refused: 'Nincs mentve: {reason} · a változtatásaid között marad'
         saved_unread: Mentve, de még nem tudjuk megmutatni. Frissíts, hogy lásd.
         settled: Mentve, vagy már így volt
@@ -1871,7 +1873,10 @@ desktop:
       reading: A könyv frissítése…
       refusal:
         changed_elsewhere: máshol módosult
+        changed_since_seen: módosult, mióta megnézted
+        not_found: már nem létezik
         other: a napló nem fogadta el
+        plan_changed: megváltozott, mit tenne a könyv, mióta átnézted; nézd át újra
       reject: 'elutasítva: {reason}'
       rows: Változások tételenként
       save: '{count} mentése'
@@ -1883,6 +1888,7 @@ desktop:
       shown: '{shown} / {total}'
       step:
         add: Új tétel · {movement}
+        batch: '{part}/{parts}. rész · együtt szerkesztve: {count}'
         bulk: '{part}/{parts}. rész · együtt mentve: {count}'
       stopped: 'A munkameneted véget ért: ami nem ment el, a változtatásaid között
         marad'
@@ -2209,6 +2215,33 @@ desktop:
       year_estimated: '{year} (becsült)'
       year_estimated_note: 'Ezek az összegek becslések: erre az évre még nincsenek
         hivatalos táblázatok.'
+    batch:
+      cause:
+        invalid: a könyv nem fogadja el ezt az értéket
+        not_active: csak aktív mozgás módosítható
+        sealed: egy benyújtott bevallás hivatkozik rá
+      count:
+        applied: 'Változik: {count}'
+        conflict: 'Módosult, mióta megnézted: {count}'
+        refused: 'Elutasítva: {count}'
+        unchanged: 'Már így van: {count}'
+      preview_failed: A könyv nem mondta meg, mit tenne, ezért még semmit sem lehet
+        együtt menteni
+      preview_title: Amit a könyv tenni fog
+      previewing: A könyv megkérdezése, mit fog tenni…
+      row:
+        applied: Változni fog
+        unchanged: Már ezeket az értékeket tartalmazza
+      save_waits: A mentés megvárja, hogy a könyv megmondja, mit fog tenni
+      undo: Visszavonás
+      undo_nothing: Az itt mentettekből semmit sem lehet visszaírni
+      undo_unread: 'Nincs a frissített könyvben, ezért nem lett visszavonva: {count}'
+      unwritten: Mozgások, amelyek nem változnak
+      written:
+        applied: 'Megváltozott: {count}'
+        conflict: 'Módosult, mióta megnézted: {count}'
+        refused: 'Elutasítva: {count}'
+        unchanged: 'Már így van: {count}'
     capital:
       art108: A 108. cikk alá tartozik
       column:
@@ -4145,6 +4178,35 @@ desktop:
       years_supported: Évek, amelyeket megnézhetsz
       years_with_movements_or_invoices: Évek tételekkel vagy számlákkal
     position: '{row}. sor / {count}'
+    properties:
+      changes_on: 'változik: {count}'
+      cleared: törölve
+      copied: 'Másolt tulajdonságok: {count}'
+      copy: Másolás ({count})
+      copy_description: 'Válaszd ki, mit másolsz innen: {movement}. Semmi sem változik,
+        amíg be nem illeszted.'
+      copy_first: Előbb másold egy mozgás tulajdonságait
+      copy_open: Tulajdonságok másolása
+      copy_title: Tulajdonságok másolása
+      first_refusal: 'Első, ami nem változik: {movement} · {cause}'
+      group:
+        classification: Besorolás
+        counterparty: Partner
+        group: Csoport
+        irpf: IRPF
+        iva: IVA
+        notes: Megjegyzések
+      held: 'Másolt tulajdonságok: {count}'
+      none_shown: A kijelölt mozgások közül egy sem látható
+      none_ticked: Jelölj be legalább egy tulajdonságot
+      nothing_to_paste: A beillesztés egyik mozgást sem változtatná meg
+      paste: Beillesztés ({count})
+      paste_description: A könyv megmondja, mit tenne a beillesztés az egyes mozgásokkal.
+        A beillesztés a változtatásaidhoz adja; semmi sem mentődik, amíg át nem nézed
+        és el nem mented.
+      paste_open: Tulajdonságok beillesztése ({count})
+      paste_title: 'Tulajdonságok beillesztése · mozgások: {count}'
+      unread: 'Ezen az oldalon nem beolvasott, ezért kimarad: {count}'
     prorrata:
       action:
         declare_gross: Bruttó levonható adó bejelentése
