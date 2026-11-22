@@ -2,6 +2,9 @@ import "./support/servedLimits";
 import { expect, test } from "@playwright/test";
 import {
   BATCH_PLAN_CHANGED,
+  BATCH_ROW_LIMIT,
+} from "../src/shell/ledgerMovementContract";
+import {
   batchRowOutcome,
   runPlan,
   type BatchRowResult,
@@ -17,7 +20,6 @@ import {
   unwrittenRows,
 } from "../src/shell/ledgerBatch";
 import {
-  BATCH_ROW_LIMIT,
   batchRequest,
   batchRequestRow,
   batchRequests,
