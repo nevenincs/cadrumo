@@ -19,10 +19,18 @@ from ..application.operations.contract_manifest import (
 )
 
 if TYPE_CHECKING:
+    from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunTaskKind
+
+    from ..application.ledger.classification_job_ports import ClassificationJobReader, ClassificationJobReaderFactory
     from ..application.ledger.classification_job_repository import ClassificationJobRepository
     from ..application.ledger.import_operation import LedgerImportOperationPorts
     from ..application.ledger.llm_review_execution import LedgerLlmOperationPorts
+    from ..application.ledger.read_ports import LedgerReadPortsFactory
+    from ..core.config import Settings
+    from ..core.model_roles import ModelRole
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ..domain.transactions.classification_job import ClassificationJobConsent, ClassificationJobLane
+    from .ledger_classification_consent_composition import LedgerClassificationConsentGrants
 
 
 from .operation_composition_inputs import (
@@ -547,7 +555,6 @@ def compose_ledger_classification_job_operation(inputs: OperationCompositionInpu
     from ..application.ledger.classification_job_ports import ClassificationJobEnqueuePorts
     from ..domain.transactions.models import TransactionCatalogue
     from .ledger_classification_consent_composition import LedgerClassificationConsentGrants
-    from .ledger_llm_composition import resolve_reading_lane
 
     jobs, reads = _classification_job_repository, inputs.ledger_reads()
 
@@ -558,7 +565,7 @@ def compose_ledger_classification_job_operation(inputs: OperationCompositionInpu
         ClassificationJobEnqueuePorts(
             jobs=jobs,
             movements=movements,
-            resolve_lane=resolve_reading_lane,
+            resolve_lane=_resolve_reading_lane,
             consent=LedgerClassificationConsentGrants(),
         )
     )
@@ -587,15 +594,12 @@ def compose_ledger_classification_job_run_operation(inputs: OperationComposition
         build_ledger_classify_job_run_registration,
     )
     from .ledger_classification_consent_composition import LedgerClassificationConsentGrants
-    from .ledger_llm_composition import classification_job_reader_factory, resolve_reading_lane
 
     grants = LedgerClassificationConsentGrants()
-    readers = classification_job_reader_factory(
-        settings=inputs.resolved_settings, reads=inputs.ledger_reads(), grants=grants
-    )
+    readers = _classification_job_readers(settings=inputs.resolved_settings, reads=inputs.ledger_reads(), grants=grants)
     definition = build_ledger_classify_job_run_definition(
         ClassificationJobRunPorts(
-            jobs=_classification_job_repository, readers=readers, resolve_lane=resolve_reading_lane, consent=grants
+            jobs=_classification_job_repository, readers=readers, resolve_lane=_resolve_reading_lane, consent=grants
         )
     )
     return built((definition,), (build_ledger_classify_job_run_registration(definition),))
@@ -610,12 +614,11 @@ def compose_ledger_classification_job_consent_operation(inputs: OperationComposi
     )
     from ..application.ledger.classification_job_ports import ClassificationJobConsentPorts
     from .ledger_classification_consent_composition import LedgerClassificationConsentGrants
-    from .ledger_llm_composition import resolve_reading_lane
 
     del inputs
     ports = ClassificationJobConsentPorts(
         jobs=_classification_job_repository,
-        resolve_lane=resolve_reading_lane,
+        resolve_lane=_resolve_reading_lane,
         consent=LedgerClassificationConsentGrants(),
     )
     authorise = build_ledger_classify_job_authorise_definition(ports)
@@ -671,6 +674,34 @@ def _classification_job_repository(*, bucket_id: str) -> ClassificationJobReposi
     return ClassificationJobRepositoryAdapter(
         objects=secure_object_repository_for_bucket(bucket_id), bucket_id=bucket_id
     )
+
+
+async def _resolve_reading_lane(role: ModelRole, *, task_kind: ModelRunTaskKind) -> ModelRunLane:
+    """Look up a job's reading lane, loading the model-reading composition only when a job asks."""
+    from .ledger_llm_composition import resolve_reading_lane
+
+    return await resolve_reading_lane(role, task_kind=task_kind)
+
+
+def _classification_job_readers(
+    *, settings: Settings, reads: LedgerReadPortsFactory, grants: LedgerClassificationConsentGrants
+) -> ClassificationJobReaderFactory:
+    """Bind a run's reader, loading the model-reading composition only when a run composes one."""
+
+    def compose(
+        *,
+        bucket_id: str,
+        operation: PinnedAuthorityOperation,
+        lane: ClassificationJobLane,
+        consent: ClassificationJobConsent | None,
+        job_id: str,
+    ) -> ClassificationJobReader:
+        from .ledger_llm_composition import classification_job_reader_factory
+
+        readers = classification_job_reader_factory(settings=settings, reads=reads, grants=grants)
+        return readers(bucket_id=bucket_id, operation=operation, lane=lane, consent=consent, job_id=job_id)
+
+    return compose
 
 
 def compose_ledger_bulk_classify_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:

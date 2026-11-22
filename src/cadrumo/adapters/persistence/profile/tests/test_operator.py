@@ -787,14 +787,16 @@ def test_auth_test_carries_a_local_session_probe_status_does_not() -> None:
     assert probe.probe_summary != ""
 
 
-def test_configure_clave_movil_mismatch_carries_an_explanatory_detail() -> None:
-    """An ``identity_alignment: mismatch`` must explain what mismatches.
+@pytest.mark.parametrize("setting", ["00001005Q", SecretStr("00001005Q")], ids=["plain", "secret"])
+def test_configure_clave_movil_identity_is_the_profile_tax_id_whatever_the_setting_says(
+    setting: str | SecretStr,
+) -> None:
+    """The Cl@ve identity is the profile's tax id, so a differing setting cannot misalign it.
 
-    A bare ``mismatch`` token tells the operator nothing. The result
-    must carry an ``identity_alignment_detail`` that names both compared
-    values — the Cl@ve DNI/NIE and the active profile tax id — plus an exact
-    typed no-recovery outcome because the application cannot choose which
-    identity the operator should change.
+    A session is always for the taxpayer the profile describes; the setting is
+    only a fallback for a profile that states no tax id. A setting naming
+    another identity therefore neither blocks the configuration nor changes
+    which identity the sign-in is bound to.
     """
 
     register_minimal_profile(
@@ -802,21 +804,14 @@ def test_configure_clave_movil_mismatch_carries_an_explanatory_detail() -> None:
         display_name=_PROFILE_LABEL,
         overrides={"identity.tax_id": "00000000T", "auth.clave_movil_route": ClaveMovilRoute.QR.value},
     )
-    with override_settings(cadrumo_clave_movil_dni_nie="00001005Q"):
+    with override_settings(cadrumo_clave_movil_dni_nie=setting):
         result = configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
-    assert result.identity_alignment == "mismatch"
-    assert result.identity_alignment_detail != ""
-    assert result.complete is False
-    assert result.incomplete_reason == result.identity_alignment_detail
-    assert "00000000T" in result.identity_alignment_detail
-    assert "00001005Q" in result.identity_alignment_detail
-    verdict = result.precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == "auth.clave_movil.identity_aligned"
-    assert verdict.action is None
-    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
-    assert verdict.evidence[0].values["identity_alignment"] == "mismatch"
+    assert result.identity_alignment == "matches"
+    assert result.identity_alignment_detail == ""
+    assert result.complete is True
+    assert result.incomplete_reason == ""
+    assert result.precondition_verdict is None
 
 
 def test_configure_clave_movil_match_carries_no_alignment_detail() -> None:
@@ -835,27 +830,6 @@ def test_configure_clave_movil_match_carries_no_alignment_detail() -> None:
     assert result.complete is True
     assert result.incomplete_reason == ""
     assert result.precondition_verdict is None
-
-
-def test_configure_clave_movil_without_provider_identity_is_incomplete() -> None:
-    """Provider selection alone must not claim Cl@ve Móvil is operational."""
-
-    register_minimal_profile(
-        profile_id=_BUCKET_ID,
-        display_name=_PROFILE_LABEL,
-        overrides={"identity.tax_id": "12345678Z", "auth.clave_movil_route": ClaveMovilRoute.QR.value},
-    )
-
-    with override_settings(cadrumo_clave_movil_dni_nie=None):
-        result = configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-
-    assert result.identity_alignment == "clave_identity_missing"
-    assert result.complete is False
-    assert result.incomplete_reason == result.identity_alignment_detail
-    verdict = result.precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == "auth.clave_movil.identity_aligned"
-    assert verdict.evidence[0].values["identity_alignment"] == "clave_identity_missing"
 
 
 def test_operator_auth_test_reports_profile_scoped_clave_session() -> None:
@@ -902,24 +876,6 @@ def test_clave_live_auth_guard_accepts_matching_active_profile_identity() -> Non
 
     assert result.identity_alignment == "matches"
     assert result.complete is True
-
-
-def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> None:
-    """A Cl@ve session for one taxpayer must never be persisted under another profile."""
-
-    register_minimal_profile(
-        profile_id=_BUCKET_ID,
-        display_name=_PROFILE_LABEL,
-        overrides={"identity.tax_id": "00000000T", "auth.clave_movil_route": ClaveMovilRoute.QR.value},
-    )
-    with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("00001005Q")):
-        result = configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-
-    assert result.identity_alignment == "mismatch"
-    assert result.complete is False
-    assert result.incomplete_reason == result.identity_alignment_detail
-    assert result.precondition_verdict is not None
-    assert result.precondition_verdict.failed_condition_id == "auth.clave_movil.identity_aligned"
 
 
 def test_reset_provider_scope_removes_only_the_target_provider_artefacts(tmp_path: Path) -> None:

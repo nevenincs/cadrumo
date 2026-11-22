@@ -15,10 +15,10 @@ from typing import TYPE_CHECKING, Final
 
 from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
+from ...core.model_roles import ModelRole
 from ...domain.evidence_consent.grant import ConsentGrantStanding
 from ...domain.transactions.classification_job import ClassificationItemFailureCause, ClassificationJobLane
 from .classification_job_errors import ClassificationJobConsentNotNeededError, ClassificationJobLaneChangedError
-from .classification_job_ports import CLASSIFICATION_READING_ROLE
 from .off_host_consent_refusal import off_host_consent_required
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
@@ -109,7 +109,7 @@ def off_host_consent_refused(
     """The ledger's off-host consent refusal, with both remedies, stating why no grant covers the read."""
     facts: dict[str, str | bool] = {
         "model_run_refusal": ModelRunRefusalCode.CONSENT_MISSING.value,
-        "model_role": CLASSIFICATION_READING_ROLE.value,
+        "model_role": ModelRole.TEXT_EXTRACTION.value,
         "consent_token_present": consent_present,
     }
     if standing is not None:

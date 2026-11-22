@@ -54,6 +54,7 @@ from cadrumo.application.operations.refusal_evidence import OperationRefusalEvid
 from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.transactions.enums import TransactionDirection
@@ -68,8 +69,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = BUCKET_ID
 _PROFILE = UUID(_BUCKET)
-_LINKED_AT = datetime(2025, 1, 22, 9, 0, tzinfo=UTC)
-_UNLINKED_AT = datetime(2025, 1, 23, 9, 0, tzinfo=UTC)
+_LINKED_AT = datetime(filing_year_envelope().horizon, 1, 22, 9, 0, tzinfo=UTC)
+_UNLINKED_AT = datetime(filing_year_envelope().horizon, 1, 23, 9, 0, tzinfo=UTC)
 
 type _Stored = tuple[dict[str, Transaction], dict[str, Invoice], frozenset[str]]
 
@@ -126,7 +127,7 @@ def _movement(profile: _Profile, key: str) -> str:
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=_BUCKET,
-                booked_date=date(2025, 1, 21),
+                booked_date=date(filing_year_envelope().horizon, 1, 21),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description=f"synthetic supplier payment {key}",

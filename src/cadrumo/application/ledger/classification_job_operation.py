@@ -32,6 +32,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.model_runs import ModelRunTaskKind
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.model_roles import ModelRole
 from ...core.operations import (
     EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
@@ -93,7 +94,6 @@ from .classification_job_errors import (
     ClassificationJobUnknownError,
 )
 from .classification_job_ports import (
-    CLASSIFICATION_READING_ROLE,
     ClassificationJobEnqueuePorts,
     ClassificationJobRepositoryFactory,
 )
@@ -203,7 +203,7 @@ class ClassificationJobEnqueueExecutor:
             self._ports.movements, bucket_id=bucket_id, operation=context.authority_operation
         )
         movement_ids = _scope_movements(payload, catalogue)
-        lane = await self._ports.resolve_lane(CLASSIFICATION_READING_ROLE, task_kind=ModelRunTaskKind.CLASSIFICATION)
+        lane = await self._ports.resolve_lane(ModelRole.TEXT_EXTRACTION, task_kind=ModelRunTaskKind.CLASSIFICATION)
         job_lane = classification_job_lane(lane)
         standing: ClassificationJobConsent | None = None
         if payload.consent is not None:

@@ -35,8 +35,13 @@ import { reject } from "./ledgerRequestFixture";
 
 /** The jobs a scenario can start with, named in its address as
  * `jobs=progress,consent`. */
-export const JOB_SHAPES = ["progress", "consent", "resume", "settled"] as const;
-export type JobShape = (typeof JOB_SHAPES)[number];
+export const JOB_SCENARIOS = [
+  "progress",
+  "consent",
+  "resume",
+  "settled",
+] as const;
+export type JobShape = (typeof JOB_SCENARIOS)[number];
 
 declare global {
   interface Window {
@@ -259,7 +264,7 @@ export function backgroundTasksFixture(options: {
   const ids = quarterMovements();
   const jobs = new Map<string, LedgerClassifyJobProjection>();
   let offset = 0;
-  for (const shape of JOB_SHAPES) {
+  for (const shape of JOB_SCENARIOS) {
     const seed = SEEDS[shape];
     const movements = ids.slice(offset, offset + seed.items.length);
     offset += seed.items.length;

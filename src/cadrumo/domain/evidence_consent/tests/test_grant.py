@@ -8,6 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.hashing import sha256_hex
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...transactions.classification_job import ClassificationConsentScope
 from ..grant import ConsentGrantLane, ConsentGrantStanding, consent_grant_standing, standing_consent_grant
 from ..record import (
@@ -24,7 +25,7 @@ _OTHER_PROFILE = "5e7a9b1d-2f4a-4b6c-8d0e-4f6a8b0c1d2e"
 _JOB = sha256_hex(b"synthetic job")
 _SESSION = sha256_hex(b"synthetic session")
 _LANE = ConsentGrantLane(provider="example", transport="api", model="example-model-1", task_kind="classification")
-_AT = datetime(2026, 3, 1, 9, 0, tzinfo=UTC)
+_AT = datetime(filing_year_envelope().horizon, 3, 1, 9, 0, tzinfo=UTC)
 
 
 def _granted(

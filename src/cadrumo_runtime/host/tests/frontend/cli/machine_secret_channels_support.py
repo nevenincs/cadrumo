@@ -187,8 +187,15 @@ WINDOWS_HANDLE_HARNESS = (
         """
     import json
     import os
+    import site
     import sys
     from contextlib import ExitStack
+
+    # PYTHONPATH carries the environment's site-packages but not its .pth
+    # start-up hooks, among them pywin32's, which puts its DLL directory on the
+    # loader path; the environment's own interpreter would have run them.
+    for site_directory in [entry for entry in sys.path if os.path.basename(entry).lower() == "site-packages"]:
+        site.addsitedir(site_directory)
 
     from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
     from cadrumo.core import config as config_module

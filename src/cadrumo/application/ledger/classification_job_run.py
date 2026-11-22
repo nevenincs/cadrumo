@@ -57,6 +57,7 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
+from ...core.model_roles import ModelRole
 from ...core.operations import (
     EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
@@ -108,7 +109,7 @@ from .classification_job_errors import (
     ClassificationJobStateRefusedError,
     ClassificationJobUnknownError,
 )
-from .classification_job_ports import CLASSIFICATION_READING_ROLE, ClassificationJobReader, ClassificationJobRunPorts
+from .classification_job_ports import ClassificationJobReader, ClassificationJobRunPorts
 from .classification_job_repository import (
     ClassificationJobNotFoundError,
     ClassificationJobRepository,
@@ -563,9 +564,7 @@ class _JobRun:
     async def _lane_refused(self, job: ClassificationJob, *, bucket_id: str) -> _LaneRefused | None:
         """Return why no movement of ``job`` may be read now, or ``None`` when its lane and grant still hold."""
         try:
-            lane = await self._ports.resolve_lane(
-                CLASSIFICATION_READING_ROLE, task_kind=ModelRunTaskKind.CLASSIFICATION
-            )
+            lane = await self._ports.resolve_lane(ModelRole.TEXT_EXTRACTION, task_kind=ModelRunTaskKind.CLASSIFICATION)
         except LedgerOffHostConsentRequiredError as exc:
             return _LaneRefused(ClassificationItemFailureCause.CONSENT_REQUIRED, exc)
         except PurchaseInvoiceEvidenceReaderError as exc:

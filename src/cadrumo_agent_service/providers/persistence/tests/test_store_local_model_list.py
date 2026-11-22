@@ -161,7 +161,7 @@ def _engine_list_v3(*, tasks: bool = False) -> bytes:
         "engine": "llamacpp",
         "placement": "cpu_only",
         "generation": "c" * 64,
-        "updated_at": "2026-11-19T09:00:00Z",
+        "updated_at": _UPDATED_AT.strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     if tasks:
         document["tasks"] = []

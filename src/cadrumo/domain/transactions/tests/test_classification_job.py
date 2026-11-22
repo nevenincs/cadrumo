@@ -9,6 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.hashing import sha256_hex
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..classification_job import (
     CLASSIFICATION_ITEM_TRANSITIONS,
     ClassificationConsentScope,
@@ -28,7 +29,10 @@ from ..errors import ClassificationJobError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_AT = datetime(2026, 3, 2, 10, 0, tzinfo=UTC)
+_AT = datetime(filing_year_envelope().horizon, 3, 2, 10, 0, tzinfo=UTC)
+_JANUARY_1 = date(filing_year_envelope().horizon, 1, 1)
+_MARCH_1 = date(filing_year_envelope().horizon, 3, 1)
+_MARCH_31 = date(filing_year_envelope().horizon, 3, 31)
 _LATER = _AT + timedelta(minutes=1)
 _BUCKET = "7d1c3a52-0e4b-4f6a-9b21-5c8e2f1a0d47"
 _LOCAL_LANE = ClassificationJobLane(
@@ -88,17 +92,15 @@ def test_a_job_names_each_movement_once_and_a_single_scope_holds_one() -> None:
 
 def test_a_period_scope_carries_ordered_bounds_and_no_other_scope_does() -> None:
     period = ClassificationJobScope(
-        kind=ClassificationJobScopeKind.PERIOD, period_start=date(2026, 1, 1), period_end=date(2026, 3, 31)
+        kind=ClassificationJobScopeKind.PERIOD, period_start=_JANUARY_1, period_end=_MARCH_31
     )
-    assert period.period_end == date(2026, 3, 31)
+    assert period.period_end == _MARCH_31
     with pytest.raises(ValidationError, match="both bounds"):
-        ClassificationJobScope(kind=ClassificationJobScopeKind.PERIOD, period_start=date(2026, 1, 1))
+        ClassificationJobScope(kind=ClassificationJobScopeKind.PERIOD, period_start=_JANUARY_1)
     with pytest.raises(ValidationError, match="end before it starts"):
-        ClassificationJobScope(
-            kind=ClassificationJobScopeKind.PERIOD, period_start=date(2026, 3, 1), period_end=date(2026, 1, 1)
-        )
+        ClassificationJobScope(kind=ClassificationJobScopeKind.PERIOD, period_start=_MARCH_1, period_end=_JANUARY_1)
     with pytest.raises(ValidationError, match="only a period scope"):
-        ClassificationJobScope(kind=ClassificationJobScopeKind.SELECTION, period_start=date(2026, 1, 1))
+        ClassificationJobScope(kind=ClassificationJobScopeKind.SELECTION, period_start=_JANUARY_1)
 
 
 def test_an_off_host_lane_needs_a_consent_and_an_on_host_lane_takes_none() -> None:

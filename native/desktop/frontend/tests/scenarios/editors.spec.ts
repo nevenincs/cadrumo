@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { fixtureDay, fixtureYear } from "../../src/dev/fixtureDates";
 
 // Each typed editor alone on the primitives page, in a real browser. The
 // expected values are written out from the languages' own conventions.
@@ -196,9 +197,9 @@ for (const [locale, typed, shown] of [
 // field shows them in the window's language, and canonical text typed or pasted
 // is read and then restyled when the field is left.
 for (const [locale, shown] of [
-  ["en", "Jun 15, 2026"],
-  ["es", "15 jun 2026"],
-  ["hu", "2026. jún. 15."],
+  ["en", `Jun 15, ${fixtureYear}`],
+  ["es", `15 jun ${fixtureYear}`],
+  ["hu", `${fixtureYear}. jún. 15.`],
 ] as const)
   test(`a held ISO day shows in ${locale} at rest, and one typed restyles on leaving`, async ({
     page,
@@ -206,12 +207,12 @@ for (const [locale, shown] of [
     const rest = await open(page, {
       field: { kind: "date" },
       locale,
-      value: "2026-06-15",
+      value: fixtureDay(6, 15),
     });
     await expect(rest).toHaveValue(shown);
     const entry = await open(page, { field: { kind: "date" }, locale });
-    await entry.fill("2026-06-15");
-    await expect(held(page)).toHaveText("2026-06-15");
+    await entry.fill(fixtureDay(6, 15));
+    await expect(held(page)).toHaveText(fixtureDay(6, 15));
     await elsewhere(page);
     await expect(entry).toHaveValue(shown);
   });
@@ -428,10 +429,10 @@ for (const family of [
   {
     name: "a day",
     field: { kind: "date" },
-    value: "2026-06-15",
-    text: "2026-03-05",
-    held: "2026-03-05",
-    shown: "Mar 5, 2026",
+    value: fixtureDay(6, 15),
+    text: fixtureDay(3, 5),
+    held: fixtureDay(3, 5),
+    shown: `Mar 5, ${fixtureYear}`,
   },
   {
     name: "a country",

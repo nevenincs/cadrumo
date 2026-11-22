@@ -36,6 +36,7 @@ from ...application.operations.public_period import PublicPeriod
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceLine
@@ -132,7 +133,7 @@ def _seed_invoice(context: ConformanceFamilyContext) -> Invoice:
             "kind": InvoiceKind.RECEIVED,
             "bucket_id": str(context.profile_id),
             "invoice_number": "LINK-2025-001",
-            "issued_at": date(2025, 5, 1),
+            "issued_at": date(filing_year_envelope().horizon, 5, 1),
             "counterparty_name": "Conformance Supplier",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
@@ -162,7 +163,10 @@ def _seed_invoice(context: ConformanceFamilyContext) -> Invoice:
 def _prepare_link(context: ConformanceFamilyContext) -> ConformancePreparation:
     bucket_id = str(context.profile_id)
     transaction_id = seed_manual_transaction(
-        context, booked_date=date(2025, 5, 1), amount=Decimal("121.00"), description="link row"
+        context,
+        booked_date=date(filing_year_envelope().horizon, 5, 1),
+        amount=Decimal("121.00"),
+        description="link row",
     )
     invoice = _seed_invoice(context)
     ports = ledger_action_ports(context)
@@ -221,7 +225,10 @@ def _prepare_link(context: ConformanceFamilyContext) -> ConformancePreparation:
 def _prepare_unlink(context: ConformanceFamilyContext) -> ConformancePreparation:
     bucket_id = str(context.profile_id)
     transaction_id = seed_manual_transaction(
-        context, booked_date=date(2025, 5, 1), amount=Decimal("121.00"), description="unlink row"
+        context,
+        booked_date=date(filing_year_envelope().horizon, 5, 1),
+        amount=Decimal("121.00"),
+        description="unlink row",
     )
     invoice = _seed_invoice(context)
     ports = ledger_action_ports(context)

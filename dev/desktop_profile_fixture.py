@@ -61,9 +61,7 @@ def render_fixture(root: Path) -> str:
                 overview = build_profile_overview(record, schema=schema, flow=flow, label=PROFILE_LABEL)
             data = overview.model_dump(mode="json")
             data.pop("label")
-            data.update(
-                profile_id=PROFILE_ID, name=overview.heading_name, valid=True, pages=1, content_digest="a" * 64
-            )
+            data.update(profile_id=PROFILE_ID, name=overview.heading_name, valid=True, pages=1, content_digest="a" * 64)
             fixtures[language] = data
     return dump_json(fixtures)
 

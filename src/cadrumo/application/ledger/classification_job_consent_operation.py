@@ -29,6 +29,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.model_runs import ModelRunTaskKind
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.transactions.classification_job import (
@@ -62,7 +63,7 @@ from .classification_job_errors import (
     ClassificationJobStateRefusedError,
     ClassificationJobUnknownError,
 )
-from .classification_job_ports import CLASSIFICATION_READING_ROLE, ClassificationJobConsentPorts
+from .classification_job_ports import ClassificationJobConsentPorts
 from .classification_job_repository import (
     ClassificationJobNotFoundError,
     ClassificationJobRepository,
@@ -175,7 +176,7 @@ class ClassificationJobAuthoriseExecutor(_ConsentChange):
         repository, job = await self._admitted(request, context)
         if job.status not in _AUTHORISABLE:
             raise ClassificationJobStateRefusedError(action="authorise", job_status=job.status.value)
-        lane = await self._ports.resolve_lane(CLASSIFICATION_READING_ROLE, task_kind=ModelRunTaskKind.CLASSIFICATION)
+        lane = await self._ports.resolve_lane(ModelRole.TEXT_EXTRACTION, task_kind=ModelRunTaskKind.CLASSIFICATION)
         job_lane = granted_lane(payload.consent, lane)
         bucket_id = str(payload.profile_id)
 

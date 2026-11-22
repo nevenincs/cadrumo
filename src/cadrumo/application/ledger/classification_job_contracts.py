@@ -106,6 +106,8 @@ LEDGER_CLASSIFY_JOB_PAGE_MAX: Final = 50
 
 _Token = Annotated[str, Field(min_length=1, max_length=256)]
 _DecimalText = Annotated[str, Field(min_length=1, max_length=64)]
+
+
 class LedgerClassifyJobConsentGrant(BaseModel):
     """A person's consent to read a job's movements off this computer, for the lane they saw.
 

@@ -182,13 +182,18 @@ def _refusing_incoherent[RecordT](build: Callable[[], RecordT], *, door: _RowDoo
 
 
 def refuse_incoherent_rental_row[RecordT](
-    build: Callable[[], RecordT], *, section_key: str, mutation: ProfileRecordRowMutation
+    build: Callable[[], RecordT],
+    *,
+    section_key: str,
+    mutation: ProfileRecordRowMutation,
+    row_key: int | None = None,
 ) -> RecordT:
     """Run a build of a rental row's facts, serving its refusal as the row admission serves it for that door.
 
-    The facts are judged before the row is read, so the door asks for the row it addresses.
+    The facts are judged before the row is read, so the door names the row it addresses when the
+    caller already knows it, as the admission of the same row does.
     """
-    return _refusing_incoherent(build, door=_RowDoor(section_key, mutation))
+    return _refusing_incoherent(build, door=_RowDoor(section_key, mutation, row_key))
 
 
 def _tenant_capacity(authority: PinnedAuthorityOperation) -> int:

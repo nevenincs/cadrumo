@@ -26,6 +26,7 @@ from .....core.classification.policies import SensitivityClass
 from .....core.errors.hierarchy import InternalInvariantError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.classification_job import (
     ClassificationConsentScope,
     ClassificationItemFailureCause,
@@ -59,7 +60,7 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
+_AT = datetime(filing_year_envelope().horizon, 4, 2, 9, 0, tzinfo=UTC)
 _LATER = _AT + timedelta(minutes=5)
 _MODEL = "synthetic-hosted-model"
 _CONSENT_REFERENCE = "consent-synthetic-grant"
@@ -87,7 +88,9 @@ def _job(*, bucket: str = _BUCKET_ID, labels: tuple[str, ...] = ("a", "b"), off_
     return ClassificationJob.enqueue(
         bucket_id=bucket,
         scope=ClassificationJobScope(
-            kind=ClassificationJobScopeKind.PERIOD, period_start=date(2026, 1, 1), period_end=date(2026, 3, 31)
+            kind=ClassificationJobScopeKind.PERIOD,
+            period_start=date(filing_year_envelope().horizon, 1, 1),
+            period_end=date(filing_year_envelope().horizon, 3, 31),
         ),
         movement_ids=tuple(_movement(label) for label in labels),
         lane=ClassificationJobLane(

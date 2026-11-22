@@ -60,6 +60,7 @@ from cadrumo.domain.attachments.service import (
 )
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction
@@ -73,7 +74,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "43434343-4343-4343-8343-434343434343"
 _PROFILE = UUID(_BUCKET)
-_AT = datetime(2025, 1, 21, 9, 0, tzinfo=UTC)
+_AT = datetime(filing_year_envelope().horizon, 1, 21, 9, 0, tzinfo=UTC)
 _PDF = b"%PDF-1.7\n%\xe2\xe3\xcf\xd3\nsynthetic-purchase-evidence\n%%EOF\n"
 
 
@@ -150,7 +151,7 @@ def _row_with_evidence(profile: _Profile, *, evidence_id: str | None, key: str) 
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=_BUCKET,
-                booked_date=date(2025, 1, 21),
+                booked_date=date(filing_year_envelope().horizon, 1, 21),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description=f"synthetic purchase {key}",

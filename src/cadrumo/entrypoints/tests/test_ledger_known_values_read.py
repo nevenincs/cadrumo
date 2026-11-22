@@ -41,6 +41,7 @@ from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.ledger_known_values import LedgerKnownValueKind
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceLine
@@ -68,6 +69,9 @@ from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction
 from ..invoice_inspection_composition import build_invoice_inspection_read_ports
 from ..ledger_action_composition import compose_ledger_read_ports
 from .supervised_operation_rig import operation_access_context
+
+#: Five distinct supported filing years, oldest first, for the tests that order movements and invoices by year.
+_Y0, _Y1, _Y2, _Y3, _Y4 = filing_year_envelope().years[:5]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -256,13 +260,13 @@ def test_each_kind_counts_its_own_distinct_values_across_the_whole_history(
     """Spelling variants fold together, the newest spelling is shown, and split parents stay out."""
     _save_movements(
         (
-            _movement("a", booked=date(2021, 2, 1), description="Alquiler oficina", counterparty="Casero SL"),
-            _movement("b", booked=date(2028, 6, 1), description="ALQUILER  OFICINA", group_label="Oficina"),
-            _movement("c", booked=date(2024, 6, 1), description="Luz", group_label="oficina"),
-            _movement("d", booked=date(2025, 6, 1), description="LUZ", group_label=None),
+            _movement("a", booked=date(_Y0, 2, 1), description="Alquiler oficina", counterparty="Casero SL"),
+            _movement("b", booked=date(_Y4, 6, 1), description="ALQUILER  OFICINA", group_label="Oficina"),
+            _movement("c", booked=date(_Y1, 6, 1), description="Luz", group_label="oficina"),
+            _movement("d", booked=date(_Y2, 6, 1), description="LUZ", group_label=None),
             _movement(
                 "split-parent",
-                booked=date(2029, 6, 1),
+                booked=date(_Y4, 12, 1),
                 description="Texto del padre",
                 group_label="Grupo del padre",
                 lifecycle_state=TransactionLifecycleState.SPLIT,
@@ -277,12 +281,12 @@ def test_each_kind_counts_its_own_distinct_values_across_the_whole_history(
     )
 
     assert [(row.text, row.uses, row.last_used) for row in result.descriptions] == [
-        ("ALQUILER  OFICINA", 2, date(2028, 6, 1)),
-        ("LUZ", 2, date(2025, 6, 1)),
+        ("ALQUILER  OFICINA", 2, date(_Y4, 6, 1)),
+        ("LUZ", 2, date(_Y2, 6, 1)),
     ]
     assert result.descriptions[0].counterparty == "Casero SL"
     assert [(row.text, row.uses, row.last_used) for row in result.group_labels] == [
-        ("Oficina", 2, date(2028, 6, 1)),
+        ("Oficina", 2, date(_Y4, 6, 1)),
     ]
     assert result.truncated == ()
     # Only the kinds asked for are read and returned.
@@ -425,19 +429,19 @@ def test_ledger_years_are_those_of_movements_and_of_invoices_alike(
     """A year only an invoice holds is offered, a shared year once, and the years read oldest first."""
     _save_movements(
         (
-            _movement("late", booked=date(2028, 6, 1)),
-            _movement("early", booked=date(2021, 2, 1)),
-            _movement("valued-later", booked=date(2025, 12, 30), value_date=date(2026, 1, 2)),
+            _movement("late", booked=date(_Y4, 6, 1)),
+            _movement("early", booked=date(_Y0, 2, 1)),
+            _movement("valued-later", booked=date(_Y2, 12, 30), value_date=date(_Y3, 1, 2)),
         )
     )
     _save_invoices(
-        _invoice("Y-1", name="Proveedor Uno SL", tax_id="B00015016", issued=date(2024, 11, 15)),
-        _invoice("Y-2", name="Proveedor Dos SL", tax_id="B00010157", issued=date(2028, 1, 2)),
+        _invoice("Y-1", name="Proveedor Uno SL", tax_id="B00015016", issued=date(_Y1, 11, 15)),
+        _invoice("Y-2", name="Proveedor Dos SL", tax_id="B00010157", issued=date(_Y4, 1, 2)),
     )
 
     result = _read(authority_operation, LedgerKnownValueKind.LEDGER_YEAR)
 
-    assert result.ledger_years == (2021, 2024, 2026, 2028)
+    assert result.ledger_years == (_Y0, _Y1, _Y3, _Y4)
     assert result.truncated == ()
     # Only the kind asked for is read and returned.
     assert result.counterparties == ()
@@ -448,14 +452,14 @@ def test_ledger_years_are_those_of_movements_and_of_invoices_alike(
 def test_ledger_years_come_from_invoices_when_no_movement_is_held(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    _save_invoices(_invoice("Y-3", name="Proveedor Tres SL", tax_id="B00015016", issued=date(2024, 11, 15)))
+    _save_invoices(_invoice("Y-3", name="Proveedor Tres SL", tax_id="B00015016", issued=date(_Y1, 11, 15)))
 
-    assert _read(authority_operation, LedgerKnownValueKind.LEDGER_YEAR).ledger_years == (2024,)
+    assert _read(authority_operation, LedgerKnownValueKind.LEDGER_YEAR).ledger_years == (_Y1,)
 
 
 @pytest.mark.usefixtures("profile")
 def test_ledger_years_are_not_read_unless_asked_for(authority_operation: PinnedAuthorityOperation) -> None:
-    _save_invoices(_invoice("Y-4", name="Proveedor Cuatro SL", tax_id="B00015016", issued=date(2024, 11, 15)))
+    _save_invoices(_invoice("Y-4", name="Proveedor Cuatro SL", tax_id="B00015016", issued=date(_Y1, 11, 15)))
 
     assert _read(authority_operation, LedgerKnownValueKind.DESCRIPTION).ledger_years == ()
 

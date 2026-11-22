@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+from datetime import date
 from html import escape
 
 from ......core.config import Settings
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...html import parse_html
 
 PATHS = Settings.external_constants().aeat.sede_paths
+
+#: The day the synthetic activity starts: the first day of the first supported filing year.
+ACTIVITY_START = date(filing_year_envelope().floor, 1, 1)
 
 
 def table_document(heading: str, columns: tuple[str, ...], values: tuple[str, ...]) -> str:
@@ -20,7 +25,7 @@ def table_document(heading: str, columns: tuple[str, ...], values: tuple[str, ..
 ACTIVITIES_HTML = table_document(
     "Relación de Actividades",
     ("Sección", "Epígrafe", "Denominación", "Estado", "F.Inicio", "F.Baja", "Locales", "Num.Ref."),
-    ("Profesional", "999", "ACTIVIDAD SINTÉTICA", "Alta", "01/01/2024", "", "", "SYNTHETIC-1"),
+    ("Profesional", "999", "ACTIVIDAD SINTÉTICA", "Alta", ACTIVITY_START.strftime("%d/%m/%Y"), "", "", "SYNTHETIC-1"),
 )
 OBLIGATIONS_HTML = table_document(
     "Obligaciones tributarias",
