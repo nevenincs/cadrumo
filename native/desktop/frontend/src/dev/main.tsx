@@ -21,7 +21,7 @@ import { HOUSEHOLD_SCENARIOS } from "./householdFixture";
 import { BORRADOR_SCENARIOS } from "./borradorFixture";
 import { ELECTION_SCENARIOS } from "./imputationElectionFixture";
 import { LEDGER_SHAPES } from "./ledgerFixture";
-import { JOB_SHAPES } from "./backgroundTasksFixture";
+import { JOB_SCENARIOS } from "./backgroundTasksFixture";
 import { modeloShape } from "./modeloFixture";
 import { findScenario, type Scenario } from "./scenarios";
 import { SETUP_SHAPES } from "./setupFixture";
@@ -163,7 +163,7 @@ function readParams() {
     jobs: (params.get("jobs") ?? "")
       .split(",")
       .flatMap((shape) =>
-        JOB_SHAPES.filter((known) => known === shape).slice(0, 1),
+        JOB_SCENARIOS.filter((known) => known === shape).slice(0, 1),
       ),
     // What the made-up profile states for the household.
     household: HOUSEHOLD_SCENARIOS.find(
