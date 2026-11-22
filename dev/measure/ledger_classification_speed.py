@@ -187,6 +187,8 @@ _OUTPUTS: Final = "ledger-classification-speed"
 _HEALTH_SECONDS: Final = 120.0
 _ADMIN_SECONDS: Final = 120.0
 _CLI_SECONDS: Final = 600.0
+_CATALOG_ATTEMPTS: Final = 3
+_CATALOG_PAUSE_SECONDS: Final = 15.0
 """How long one ``aeat`` command may take before it is ended: a profile write admitted minutes late on a loaded
 machine is still running, and ending it mid-way leaves its effect unknown."""
 """How long one service administration exchange may take: a cold catalogue read on a loaded machine needs far more
@@ -872,6 +874,32 @@ def lane_facts(catalog: Mapping[str, Any], lane: str) -> dict[str, Any]:
         },
         "models": [entry.get("model") for entry in models if isinstance(entry, dict)],
     }
+
+
+def served_catalog(
+    read: Callable[[], dict[str, JsonValue]],
+    *,
+    refusals: list[dict[str, JsonValue]],
+    attempts: int = _CATALOG_ATTEMPTS,
+    pause_seconds: float = _CATALOG_PAUSE_SECONDS,
+    sleep: Callable[[float], None] = time.sleep,
+) -> dict[str, JsonValue]:
+    """Read the served catalogue, asking again after a refusal as the window does when it shows one.
+
+    Every refusal is kept in ``refusals``. A catalogue still refused after ``attempts`` reads ends the run with
+    the last refusal's code and log reference, never as a catalogue that lacks the lane.
+    """
+    for attempt in range(attempts):
+        catalog = read()
+        if catalog.get("kind") != "refused":
+            return catalog
+        refusals.append(catalog)
+        if attempt + 1 < attempts:
+            sleep(pause_seconds)
+    last = refusals[-1]
+    raise AcceptanceError(
+        f"the agent service refused the catalogue {attempts} times: {last.get('code')} log_ref={last.get('log_ref')}"
+    )
 
 
 def lane_model(catalog: Mapping[str, Any], wanted: str | None, lane: str | None = None) -> tuple[str, str, int | None]:
@@ -1984,7 +2012,9 @@ def _measure_on(
         if session.first_refusal_code is not None:
             raise AcceptanceError(f"agent service refused the agent: {session.first_refusal_code}")
         document["phase"] = "catalog"
-        catalog = session.catalog(within=_ADMIN_SECONDS)
+        catalog = served_catalog(
+            lambda: session.catalog(within=_ADMIN_SECONDS), refusals=document.setdefault("catalog_refusals", [])
+        )
         (outputs / "catalog.json").write_text(json.dumps(hosts_only(catalog), indent=2), encoding="utf-8")
         lane, model, context = lane_model(catalog, arguments.model, arguments.lane)
         presented: Presented | None = None

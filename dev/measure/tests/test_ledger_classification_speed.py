@@ -2221,3 +2221,25 @@ def test_a_job_document_summary_is_the_job_summary_with_the_renewals() -> None:
         "sign_in_renewals": 1,
         "complete": True,
     }
+
+
+def test_a_refused_catalogue_is_asked_again_and_a_lasting_refusal_is_named_not_read_as_a_missing_lane() -> None:
+    served = {"api_version": 1, "providers": [], "task_kinds": []}
+    answers: list[dict[str, JsonValue]] = [{"kind": "refused", "code": "service_failed", "log_ref": "r1"}, served]
+    pauses: list[float] = []
+    refusals: list[dict[str, JsonValue]] = []
+    assert (
+        harness.served_catalog(lambda: answers.pop(0), refusals=refusals, pause_seconds=2.0, sleep=pauses.append)
+        == served
+    )
+    assert refusals == [{"kind": "refused", "code": "service_failed", "log_ref": "r1"}]
+    assert pauses == [2.0]
+
+    lasting: list[dict[str, JsonValue]] = []
+    with pytest.raises(AcceptanceError, match="refused the catalogue 3 times: service_failed log_ref=r3"):
+        harness.served_catalog(
+            lambda: {"kind": "refused", "code": "service_failed", "log_ref": f"r{len(lasting) + 1}"},
+            refusals=lasting,
+            sleep=lambda _seconds: None,
+        )
+    assert [refusal["log_ref"] for refusal in lasting] == ["r1", "r2", "r3"]
