@@ -18,12 +18,19 @@ profile worker, whose text reader reaches the agent service through the
 runtime's model-run relay. Nothing is applied.
 
 Per movement it records the wall time of the command, the outcome, and what
-the llama-server router logged for the requests the movement caused: how many
-chat requests (a second one is the reader's JSON re-ask), prompt tokens,
-prompt tokens evaluated after the server's prefix cache, generated tokens and
-the server's prompt and generation times. The product log's run records give
-the number of model runs the reader completed. A fixed command without a model
-call measures the command line's own cost on the same root.
+the llama-server logged for the requests the movement caused: how many
+requests the router proxied to the model instance, how many chat requests
+completed (a second one is the reader's JSON re-ask), prompt tokens, prompt
+tokens evaluated after the server's prefix cache, generated tokens, the
+server's prompt and generation times, and their sum as the movement's model
+time; the rest of the movement's wall time is outside the model. In router
+mode the timings are logged by the model instance the router spawns, whose
+log the router forwards on its standard output, prefixed with the instance's
+port, while the router's own lines go to standard error; both are kept. A
+movement whose requests left no timing block has no model time, never a zero
+one. The product log's run records give the number of model runs the reader
+completed. A fixed command without a model call measures the command line's
+own cost on the same root.
 
 Before asking, the run stores the settings the window stores when a person
 picks the local model, through the service's parent administration, which the
@@ -45,8 +52,10 @@ interpreter's temporary directory). A ``--scratch`` inside a Git project is
 refused before anything starts. The root is removed at the end without
 following links, and only that exactly named directory. The outputs a person
 reads afterwards, the served catalogue, the settings replies, the synthetic
-statement and the router log, go below the worktree's ``.tmp/`` instead, beside
-``--out``.
+statement, the llama-server log and the copied logs, go to the worktree's
+``.tmp/<yyyy-mm-dd>-ledger-classification-speed/<stamp>-<pid>/`` instead: the
+dated purpose folder the worktree's temporary-output rule names, with one
+child per run that its start time and process make distinct.
 
 The person's sign-in runs out: the runtime ends it after its idle window
 (15 minutes by default) unless the person's own input extends it, and a
@@ -91,7 +100,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from threading import Lock, Thread
-from typing import Any, Final, Protocol
+from typing import Any, BinaryIO, Final, Protocol, TextIO
 from urllib.error import URLError
 from urllib.request import urlopen
 
@@ -144,6 +153,9 @@ _PROMPT_EVAL: Final = re.compile(r"prompt eval time =\s*([\d.]+) ms /\s*(\d+) to
 _EVAL: Final = re.compile(r"(?<!prompt )eval time =\s*([\d.]+) ms /\s*(\d+) (?:tokens|runs)")
 _PROMPT_TOKENS: Final = re.compile(r"(?:task\.n_tokens|n_prompt_tokens|prompt_tokens)\s*=\s*(\d+)")
 _CHAT_REQUEST: Final = re.compile(r"(?:POST|done request:\s*POST) /v1/chat/completions|/chat/completions .* 200")
+_PROXIED: Final = re.compile(r"proxying request to model \S+ on port \d+")
+_TERMINAL_CONTROL: Final = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
+"""The colour sequences the server writes (the router starts its instances with ``--log-colors on``)."""
 _RUN_RECORD: Final = re.compile(r"llm request completed provider=(\S+) model=(\S+)")
 
 # Synthetic counterparties and descriptions: invented business names and ordinary
@@ -294,16 +306,32 @@ class KeptSignInCli:
 
 @dataclass(slots=True)
 class ServerLog:
-    """The llama-server router's standard error, drained to a file and kept for reading."""
+    """The llama-server's output, both streams drained into one file and kept for reading, in arrival order.
+
+    The router writes its own lines on standard error and forwards each model
+    instance's log on standard output, so the instance's request timings are
+    only seen by draining both.
+    """
 
     path: Path
     lines: list[str] = field(default_factory=list)
     lock: Lock = field(default_factory=Lock)
+    sink: TextIO | None = None
 
     def append(self, line: str) -> None:
-        """Keep one line in order."""
+        """Keep one line in order, and write it to the file while the file is open."""
         with self.lock:
             self.lines.append(line)
+            if self.sink is not None:
+                self.sink.write(line + "\n")
+                self.sink.flush()
+
+    def close(self) -> None:
+        """Close the file; lines that still arrive are kept in memory only."""
+        with self.lock:
+            sink, self.sink = self.sink, None
+        if sink is not None:
+            sink.close()
 
     def since(self, offset: int) -> tuple[list[str], int]:
         """Return the lines after ``offset`` and the new offset."""
@@ -313,7 +341,7 @@ class ServerLog:
 
 @dataclass(frozen=True, slots=True)
 class ServerFacts:
-    """What the router logged for one movement's requests."""
+    """What the llama-server logged for one movement's requests."""
 
     chat_requests: int
     prompt_tokens: tuple[int, ...]
@@ -321,31 +349,48 @@ class ServerFacts:
     prompt_eval_ms: tuple[float, ...]
     generated_tokens: tuple[int, ...]
     generation_ms: tuple[float, ...]
+    proxied_requests: int = 0
 
     @classmethod
     def read(cls, lines: Sequence[str]) -> ServerFacts:
-        """Collect the timing lines of ``lines``."""
-        prompt_eval = [_PROMPT_EVAL.search(line) for line in lines]
-        generation = [_EVAL.search(line) for line in lines]
-        totals = [_PROMPT_TOKENS.search(line) for line in lines]
+        """Collect the request and timing lines of ``lines``, router and forwarded instance lines alike.
+
+        A completed chat request prints one prompt timing block, so the chat
+        requests are the access lines or, where the instance logs none at its
+        verbosity, the timing blocks, whichever counts more.
+        """
+        plain = [_TERMINAL_CONTROL.sub("", line) for line in lines]
+        prompt_eval = [match for line in plain if (match := _PROMPT_EVAL.search(line))]
+        generation = [match for line in plain if (match := _EVAL.search(line))]
+        totals = [match for line in plain if (match := _PROMPT_TOKENS.search(line))]
         return cls(
-            chat_requests=sum(1 for line in lines if _CHAT_REQUEST.search(line)),
-            prompt_tokens=tuple(int(match.group(1)) for match in totals if match),
-            prompt_eval_tokens=tuple(int(match.group(2)) for match in prompt_eval if match),
-            prompt_eval_ms=tuple(float(match.group(1)) for match in prompt_eval if match),
-            generated_tokens=tuple(int(match.group(2)) for match in generation if match),
-            generation_ms=tuple(float(match.group(1)) for match in generation if match),
+            chat_requests=max(sum(1 for line in plain if _CHAT_REQUEST.search(line)), len(prompt_eval)),
+            prompt_tokens=tuple(int(match.group(1)) for match in totals),
+            prompt_eval_tokens=tuple(int(match.group(2)) for match in prompt_eval),
+            prompt_eval_ms=tuple(float(match.group(1)) for match in prompt_eval),
+            generated_tokens=tuple(int(match.group(2)) for match in generation),
+            generation_ms=tuple(float(match.group(1)) for match in generation),
+            proxied_requests=sum(1 for line in plain if _PROXIED.search(line)),
         )
+
+    @property
+    def model_ms(self) -> float | None:
+        """The server's prompt and generation time for these requests; ``None`` when it logged no timing."""
+        if not self.prompt_eval_ms and not self.generation_ms:
+            return None
+        return round(sum(self.prompt_eval_ms) + sum(self.generation_ms), 3)
 
     def as_json(self) -> dict[str, Any]:
         """Return the facts as plain JSON values."""
         return {
+            "proxied_requests": self.proxied_requests,
             "chat_requests": self.chat_requests,
             "prompt_tokens": list(self.prompt_tokens),
             "prompt_eval_tokens": list(self.prompt_eval_tokens),
             "prompt_eval_ms": list(self.prompt_eval_ms),
             "generated_tokens": list(self.generated_tokens),
             "generation_ms": list(self.generation_ms),
+            "model_ms": self.model_ms,
         }
 
 
@@ -418,7 +463,9 @@ def llama_router(
 ) -> Generator[ServerLog]:
     """Run the package's llama-server as the manager runs it, contained in a kill-on-close job.
 
-    Its home lies in the disposable ``root``; its standard error is kept at ``log_path``.
+    Its home lies in the disposable ``root``. Its standard error, the router's
+    own lines, and its standard output, where the router forwards each model
+    instance's log with the request timings, are both kept at ``log_path``.
     """
     executable = (package / _LLAMA_FOLDER / LLAMA_EXECUTABLE).resolve(strict=True)
     home = root / "llama-server"
@@ -441,32 +488,40 @@ def llama_router(
         *("--host", host, "--port", port, "--models-preset", str(preset)),
         *("--models-max", "1", "--no-models-autoload"),
     )
-    log = ServerLog(log_path)
+    log = ServerLog(log_path, sink=log_path.open("w", encoding="utf-8", newline="\n"))
+    drains: list[Thread] = []
     try:
-        scope = WindowsProcessScope()
-    except BaseException as error:
-        retained = unreturned_windows_process_scope(error)
-        if retained is not None:
-            retained.terminate(timeout=10.0)
-        raise
-    try:
-        _, standard_error = scope.launch_with_standard_error(
-            executable=executable, arguments=arguments, directory=home, environment=environment
-        )
-
-        def drain() -> None:
-            with log.path.open("w", encoding="utf-8", newline="\n") as file:
-                for raw in iter(standard_error.readline, b""):
-                    line = raw.decode("utf-8", errors="replace").rstrip("\r\n")
-                    log.append(line)
-                    file.write(line + "\n")
-                    file.flush()
-
-        Thread(target=drain, name="llama-server-log", daemon=True).start()
-        wait_healthy(LLAMA_SERVER_ADDRESS, _HEALTH_SECONDS)
-        yield log
+        try:
+            scope = WindowsProcessScope()
+        except BaseException as error:
+            retained = unreturned_windows_process_scope(error)
+            if retained is not None:
+                retained.terminate(timeout=10.0)
+            raise
+        try:
+            _, standard_input, standard_output, standard_error = scope.launch_with_standard_pipes(
+                executable=executable, arguments=arguments, directory=home, environment=environment
+            )
+            standard_input.close()
+            for name, stream in (("llama-server-stderr", standard_error), ("llama-server-stdout", standard_output)):
+                drain = Thread(target=drain_lines, args=(stream, log), name=name, daemon=True)
+                drain.start()
+                drains.append(drain)
+            wait_healthy(LLAMA_SERVER_ADDRESS, _HEALTH_SECONDS)
+            yield log
+        finally:
+            scope.terminate(timeout=10.0)
+            for drain in drains:
+                drain.join(timeout=5.0)
     finally:
-        scope.terminate(timeout=10.0)
+        log.close()
+
+
+def drain_lines(stream: BinaryIO, log: ServerLog) -> None:
+    """Keep every line of ``stream`` in ``log`` until the stream ends, then close it."""
+    with stream:
+        for raw in iter(stream.readline, b""):
+            log.append(raw.decode("utf-8", errors="replace").rstrip("\r\n"))
 
 
 def healthy(address: str) -> bool:
@@ -679,7 +734,14 @@ def movement_record(
     product_lines: Sequence[str],
     elapsed: float,
 ) -> dict[str, Any]:
-    """One movement's measured facts: the command's outcome and what the router and product logged for it."""
+    """One movement's measured facts: the command's outcome and what the server and product logged for it.
+
+    The model time is the server's prompt and generation time for the
+    movement's requests; the rest of the command's wall time is outside the
+    model. Both are ``None`` when the server logged no timing for it.
+    """
+    facts = ServerFacts.read(server_lines)
+    model_ms = facts.model_ms
     return {
         "index": index,
         "seconds": round(seconds, 4),
@@ -687,7 +749,9 @@ def movement_record(
         "error": error_code(envelope),
         **error_detail(envelope),
         **result_fields(envelope),
-        "server": ServerFacts.read(server_lines).as_json(),
+        "server": facts.as_json(),
+        "model_ms": model_ms,
+        "outside_model_seconds": None if model_ms is None else round(seconds - model_ms / 1000, 4),
         "run_records": run_record_count(product_lines),
         "elapsed": round(elapsed, 3),
     }
@@ -871,9 +935,18 @@ def require_scratch_outside_git(parent: Path) -> None:
         )
 
 
-def output_directory(stamp: str) -> Path:
-    """The run's outputs below the worktree's ``.tmp/``, created."""
-    return prepare_temp_root(override=TEMP_ROOT / _OUTPUTS / stamp)
+def output_directory(stamp: str, *, day: date, pid: int) -> Path:
+    """The run's outputs, created: ``.tmp/<yyyy-mm-dd>-ledger-classification-speed/<stamp>-<pid>``.
+
+    The dated purpose folder is the worktree's temporary-output layout; the
+    run's own child is named by its start ``stamp`` and its process ``pid``,
+    so two runs started in the same second still write apart. A child that
+    already exists is refused rather than shared.
+    """
+    folder = TEMP_ROOT / f"{day.isoformat()}-{_OUTPUTS}" / f"{stamp}-{pid}"
+    if folder.exists():
+        raise AcceptanceError(f"the run's output folder {folder} already exists")
+    return prepare_temp_root(override=folder)
 
 
 def copy_run_logs(root: Path, destination: Path) -> list[str]:
@@ -931,7 +1004,7 @@ def measure(arguments: _Arguments, document: dict[str, Any]) -> dict[str, Any]:
     parent = Path(arguments.scratch).absolute()
     require_scratch_outside_git(parent)
     parent.mkdir(parents=True, exist_ok=True)
-    outputs = output_directory(arguments.stamp)
+    outputs = output_directory(arguments.stamp, day=date.fromisoformat(arguments.day), pid=os.getpid())
     store = Path(arguments.model_store).expanduser().resolve(strict=True)
     year = supported_filing_year()
     document.update(
@@ -1082,7 +1155,12 @@ def finish_document(document: dict[str, Any]) -> dict[str, Any]:
 
 
 def summarise(items: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
-    """Aggregate per-movement facts into the reported figures."""
+    """Aggregate per-movement facts into the reported figures.
+
+    Model and outside-model time cover only the successful movements whose
+    requests left a timing block; how many did is reported beside them, so a
+    run whose server timings were not captured shows that rather than zeros.
+    """
     succeeded = [item for item in items if item["exit"] == 0]
     warm = [item["seconds"] for item in succeeded[1:]]
     prompts = [tokens for item in items for tokens in item["server"]["prompt_tokens"]]
@@ -1090,7 +1168,10 @@ def summarise(items: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     prompt_ms = [ms for item in items for ms in item["server"]["prompt_eval_ms"]]
     generated = [tokens for item in items for tokens in item["server"]["generated_tokens"]]
     generation_ms = [ms for item in items for ms in item["server"]["generation_ms"]]
-    model_ms = [sum(item["server"]["prompt_eval_ms"]) + sum(item["server"]["generation_ms"]) for item in succeeded[1:]]
+    timed = [item for item in succeeded if item.get("model_ms") is not None]
+    timed_warm = [item for item in succeeded[1:] if item.get("model_ms") is not None]
+    model_seconds = sum(item["model_ms"] for item in timed) / 1000
+    timed_wall = sum(item["seconds"] for item in timed)
     requests = [item["server"]["chat_requests"] for item in items]
     total = sum(item["seconds"] for item in items)
     errors: dict[str, int] = {}
@@ -1106,6 +1187,7 @@ def summarise(items: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         "per_item_seconds_warm": distribution(warm),
         "movements_per_minute": round(60 * len(items) / total, 3) if total else None,
         "movements_per_minute_warm": round(60 * len(warm) / sum(warm), 3) if warm else None,
+        "proxied_requests_per_item": distribution([float(item["server"]["proxied_requests"]) for item in items]),
         "chat_requests_per_item": distribution([float(value) for value in requests]),
         "reask_items": sum(1 for value in requests if value > 1),
         "prompt_tokens": distribution([float(value) for value in prompts]),
@@ -1113,10 +1195,12 @@ def summarise(items: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         "prompt_eval_ms": distribution(prompt_ms),
         "generated_tokens": distribution([float(value) for value in generated]),
         "generation_ms": distribution(generation_ms),
-        "model_ms_per_item_warm": distribution(model_ms),
-        "outside_model_seconds_per_item_warm": distribution(
-            [item["seconds"] - model / 1000 for item, model in zip(succeeded[1:], model_ms, strict=True)]
-        ),
+        "succeeded_with_model_timings": len(timed),
+        "model_ms_per_item_warm": distribution([item["model_ms"] for item in timed_warm]),
+        "outside_model_seconds_per_item_warm": distribution([item["outside_model_seconds"] for item in timed_warm]),
+        "model_seconds_total": round(model_seconds, 3) if timed else None,
+        "outside_model_seconds_total": round(timed_wall - model_seconds, 3) if timed else None,
+        "model_share_of_wall": round(model_seconds / timed_wall, 4) if timed and timed_wall else None,
     }
 
 
@@ -1135,6 +1219,7 @@ class _Arguments(argparse.Namespace):
     budget_seconds: float
     select: bool
     stamp: str
+    day: str
 
     @property
     def placement(self) -> LocalPlacement:
@@ -1145,8 +1230,8 @@ class _Arguments(argparse.Namespace):
 def parse_arguments(argv: Sequence[str] | None = None) -> _Arguments:
     """Parse the command line."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S")
-    parser.set_defaults(stamp=stamp)
+    started = datetime.now(UTC)
+    parser.set_defaults(stamp=started.strftime("%Y%m%dT%H%M%S"), day=started.date().isoformat())
     parser.add_argument("--package", default=str(REPO_ROOT / "build" / "windows-x64" / "stage" / "Release" / "app"))
     parser.add_argument(
         "--scratch",

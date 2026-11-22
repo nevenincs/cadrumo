@@ -18,7 +18,7 @@ import tempfile
 import threading
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, override
@@ -80,6 +80,7 @@ from ..ledger_classification_speed import (
     lane_model,
     measure_ledger,
     model_weights,
+    movement_record,
     output_directory,
     parse_arguments,
     prerequisite_absence,
@@ -377,14 +378,95 @@ def test_router_lines_yield_requests_tokens_and_times_including_a_reask() -> Non
         generation_ms=(1300.00, 1250.50),
     )
     assert facts.as_json()["prompt_tokens"] == [420, 470]
+    assert facts.model_ms == pytest.approx(30.10 + 95.50 + 1300.00 + 1250.50)
     assert ServerFacts.read([]).as_json() == {
+        "proxied_requests": 0,
         "chat_requests": 0,
         "prompt_tokens": [],
         "prompt_eval_tokens": [],
         "prompt_eval_ms": [],
         "generated_tokens": [],
         "generation_ms": [],
+        "model_ms": None,
     }
+
+
+# The router's own lines of one movement in the run-5 log (bundled llama.cpp b12184 in router mode): the
+# gateway's and the worker's model reads and the chat request, each proxied to the spawned instance.
+_ROUTER_LINES = (
+    "\x1b[34m1.54.351.519\x1b[0m \x1b[32mI \x1b[0msrv  proxy_reques: proxying request to model m-56b131ebc138fe65 on"
+    " port 59591",
+    "\x1b[34m1.55.792.721\x1b[0m \x1b[32mI \x1b[0msrv  proxy_reques: proxying request to model m-56b131ebc138fe65 on"
+    " port 59591",
+    "\x1b[34m1.55.825.918\x1b[0m \x1b[32mI \x1b[0msrv  proxy_reques: proxying request to model m-56b131ebc138fe65 on"
+    " port 59591",
+)
+
+
+def test_router_lines_alone_carry_no_model_time_never_a_zero_one() -> None:
+    facts = ServerFacts.read(_ROUTER_LINES)
+    assert facts.proxied_requests == 3
+    assert facts.chat_requests == 0
+    assert facts.model_ms is None
+
+
+def test_instance_lines_the_router_forwards_with_their_port_and_colours_yield_the_timings() -> None:
+    forwarded = [
+        f"[59591] \x1b[34m0.10.{index:03d}.000\x1b[0m \x1b[32mI \x1b[0m{line}"
+        for index, line in enumerate(
+            _request_lines(7, prompt=600, evaluated=600, prompt_ms="1500.00", generated=30, generation_ms="900.50")
+        )
+    ]
+    facts = ServerFacts.read([*_ROUTER_LINES, *forwarded])
+    assert facts.proxied_requests == 3
+    assert facts.chat_requests == 1
+    assert (facts.prompt_tokens, facts.prompt_eval_tokens, facts.generated_tokens) == ((600,), (600,), (30,))
+    assert facts.model_ms == pytest.approx(2400.50)
+    # An instance that logs no access line at its verbosity still counts its completed request by its timings.
+    without_access = [line for line in forwarded if "log_server_r" not in line]
+    assert ServerFacts.read(without_access).chat_requests == 1
+
+
+_TIMED: dict[str, Any] = {
+    "prompt": 400,
+    "evaluated": 400,
+    "prompt_ms": "600.00",
+    "generated": 20,
+    "generation_ms": "400.00",
+}
+
+
+def test_a_movement_without_server_timings_has_no_model_time_and_the_summary_says_how_many_had_one() -> None:
+    timed = movement_record(0, 3.0, 0, {}, _request_lines(0, **_TIMED), [], 3.0)
+    untimed = [movement_record(index, 2.0, 0, {}, list(_ROUTER_LINES), [], 3.0 + index) for index in (1, 2)]
+    late = movement_record(3, 2.5, 0, {}, _request_lines(3, **_TIMED), [], 6.0)
+    assert timed["model_ms"] == pytest.approx(1000.0)
+    assert timed["outside_model_seconds"] == pytest.approx(2.0)
+    assert untimed[0]["model_ms"] is None and untimed[0]["outside_model_seconds"] is None
+
+    summary = summarise([timed, *untimed, late])
+    assert summary["succeeded_with_model_timings"] == 2
+    assert summary["model_ms_per_item_warm"]["n"] == 1
+    assert summary["outside_model_seconds_per_item_warm"]["max"] == pytest.approx(1.5)
+    assert summary["model_seconds_total"] == pytest.approx(2.0)
+    assert summary["outside_model_seconds_total"] == pytest.approx(3.5)
+    assert summary["model_share_of_wall"] == pytest.approx(2.0 / 5.5, abs=1e-4)
+    assert summary["proxied_requests_per_item"]["max"] == 3.0
+
+    nothing = summarise(untimed)
+    assert nothing["succeeded_with_model_timings"] == 0
+    assert nothing["model_seconds_total"] is None and nothing["model_share_of_wall"] is None
+    assert nothing["model_ms_per_item_warm"]["n"] == 0
+
+
+def test_both_llama_server_streams_drain_into_one_log_and_file_in_arrival_order(tmp_path: Path) -> None:
+    log = ServerLog(tmp_path / "llama-server.log", sink=(tmp_path / "llama-server.log").open("w", encoding="utf-8"))
+    harness.drain_lines(io.BytesIO(b"srv router line\r\n"), log)
+    harness.drain_lines(io.BytesIO(b"[59591] prompt eval time = 1.00 ms / 2 tokens\n"), log)
+    log.close()
+    log.append("after close")
+    assert log.lines == ["srv router line", "[59591] prompt eval time = 1.00 ms / 2 tokens", "after close"]
+    assert (tmp_path / "llama-server.log").read_text(encoding="utf-8").splitlines() == log.lines[:2]
 
 
 def test_run_records_count_only_completed_model_runs() -> None:
@@ -649,13 +731,17 @@ def test_recorded_engine_run_yields_per_movement_records_and_summary(
     assert items[0]["provider"] == "llamacpp"
     assert [item["run_records"] for item in items] == [1, 2, 0, 1]
     assert items[1]["server"] == {
+        "proxied_requests": 0,
         "chat_requests": 2,
         "prompt_tokens": [420, 470],
         "prompt_eval_tokens": [14, 50],
         "prompt_eval_ms": [30.10, 95.50],
         "generated_tokens": [40, 38],
         "generation_ms": [1300.00, 1250.50],
+        "model_ms": 2676.1,
     }
+    assert items[1]["model_ms"] == pytest.approx(2676.10)
+    assert items[1]["outside_model_seconds"] == pytest.approx(3.5 - 2.6761)
     assert items[0]["server"]["chat_requests"] == 1
     assert items[0]["server"]["prompt_eval_tokens"] == [412]
     assert [item["elapsed"] for item in items] == sorted(item["elapsed"] for item in items)
@@ -785,6 +871,8 @@ def test_argument_defaults_put_the_disposable_root_outside_every_git_project() -
     # The agent's own rule: no directory at or above the root may hold ``.git``.
     assert enclosing_git_project(scratch) is None
     assert datetime.strptime(arguments.stamp, "%Y%m%dT%H%M%S")
+    # The dated folder and the run's stamp name the same start.
+    assert datetime.strptime(arguments.stamp, "%Y%m%dT%H%M%S").date().isoformat() == arguments.day
     assert Path(arguments.package) == REPO_ROOT / "build" / "windows-x64" / "stage" / "Release" / "app"
     assert Path(arguments.model_store) == Path.home() / ".ollama" / "models"
     assert (arguments.count, arguments.mode, arguments.seed, arguments.budget_seconds) == (
@@ -838,14 +926,25 @@ def test_a_scratch_inside_a_git_project_exits_three_before_anything_starts(
     assert not inside.exists()
 
 
-def test_outputs_stay_below_the_worktree_tmp() -> None:
+def test_outputs_go_to_the_dated_purpose_folder_with_one_child_per_run() -> None:
     stamp = f"test-{uuid4().hex}"
-    outputs = output_directory(stamp)
+    day = date(_YEAR, 3, 4)
+    purpose = TEMP_ROOT / f"{_YEAR}-03-04-ledger-classification-speed"
+    left = purpose.exists()
+    outputs = output_directory(stamp, day=day, pid=4242)
     try:
-        assert outputs == TEMP_ROOT / "ledger-classification-speed" / stamp
+        assert outputs == purpose / f"{stamp}-4242"
         assert outputs.is_dir() and outputs.resolve().is_relative_to(REPO_ROOT.resolve() / ".tmp")
+        # Another process started in the same second writes apart; the same run's child is never shared.
+        other = output_directory(stamp, day=day, pid=4243)
+        assert other != outputs and other.is_dir()
+        other.rmdir()
+        with pytest.raises(AcceptanceError, match="already exists"):
+            output_directory(stamp, day=day, pid=4242)
     finally:
         outputs.rmdir()
+        if not left:
+            purpose.rmdir()
 
 
 def test_out_is_required_and_mode_is_closed(capsys: pytest.CaptureFixture[str]) -> None:
@@ -1338,7 +1437,7 @@ def test_a_run_failing_mid_way_writes_its_partial_json_and_keeps_its_logs(
     monkeypatch.setattr(harness, "require_scratch_outside_git", lambda parent: None)
     monkeypatch.setattr(harness, "create_root", create)
     monkeypatch.setattr(harness, "remove_root", remove)
-    monkeypatch.setattr(harness, "output_directory", lambda stamp: outputs)
+    monkeypatch.setattr(harness, "output_directory", lambda stamp, *, day, pid: outputs)
     monkeypatch.setattr(harness, "_measure_on", measure_on)
     out = tmp_path / "result.json"
 
