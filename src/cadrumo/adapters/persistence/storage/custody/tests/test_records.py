@@ -239,6 +239,7 @@ def test_refusal_taxonomy_carries_the_hard_cutover_and_supervision_outcomes() ->
         ProfileCustodyRefusal.LEGACY_CUSTODY_DETECTED,
         ProfileCustodyRefusal.DEK_ROTATION_UNSUPPORTED,
         ProfileCustodyRefusal.KDF_RESOURCE_LIMIT,
+        ProfileCustodyRefusal.KDF_SUPERVISION_BUSY,
         ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE,
         ProfileCustodyRefusal.KDF_TIMEOUT,
     }

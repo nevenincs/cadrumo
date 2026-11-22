@@ -427,19 +427,15 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
-    # `retryable=False` is a considered value, not an oversight, and it has been
-    # questioned once already. Two of the four refusals this class carries DO have
-    # transient causes -- the KDF resource limit fires on insufficient available
-    # memory, and supervision-unavailable on a worker that could not be spawned --
-    # so `True` looks defensible in isolation. It is not, because the class spans
-    # 38 raise sites whose causes are genuinely mixed: worker ATTESTATION failures,
-    # Windows job-object capability failures, and permanent host limits sit beside
-    # the transient ones, and retry is actively wrong for the first group. The
-    # asymmetry decides it: `False` on a transient failure costs one operation the
-    # operator can repeat by hand, while `True` on a permanent one hands an
-    # non-interactive caller an unbounded loop against a host that will never succeed.
-    # The operator-facing messages carry the recurrence-keyed guidance the boolean
-    # cannot ("retry when the machine is less loaded; if it persists ...").
+    # `retryable=False` is a considered value for the base refusal. The class
+    # spans many raise sites whose causes are genuinely mixed: worker
+    # ATTESTATION failures, Windows job-object capability failures and permanent
+    # host limits, for which retry is actively wrong, because `True` on a
+    # permanent failure hands a non-interactive caller an unbounded loop. The
+    # one cause that load alone produces -- a derivation child started but not
+    # attested before its budget ended -- is raised as its own subclass below,
+    # whose code is retryable and whose words say so, so the flag and the words
+    # never disagree.
     (
         "cadrumo.adapters.persistence.storage.custody.errors.ProfileCustodyRefusedError",
         ErrorCode(
@@ -447,6 +443,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_storage_profile_custody",
             retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.persistence.storage.custody.errors.ProfileCustodyBusyRefusedError",
+        ErrorCode(
+            code="REFUSED_STORAGE_PROFILE_CUSTODY_BUSY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_custody_kdf_supervision_busy",
+            retryable=True,
             runbook_id=None,
         ),
     ),

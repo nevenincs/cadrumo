@@ -116,8 +116,11 @@ const REFUSALS: Record<string, { key: string; tone: Tone; icon: IconName }> = {
   // was wrong with the password, so the person is told to try again.
   UNAVAILABLE: BUSY,
   KDF_RESOURCE_LIMIT: BUSY,
-  KDF_SUPERVISION_UNAVAILABLE: BUSY,
+  KDF_SUPERVISION_BUSY: BUSY,
   SIGN_IN_TIMED_OUT: BUSY,
+  // The derivation child cannot be started, contained or verified at all:
+  // trying again would meet the same refusal, so the person is sent to Logs.
+  KDF_SUPERVISION_UNAVAILABLE: MANAGER,
   SPAWN_FAILED: MANAGER,
   MANAGER_UNAVAILABLE: MANAGER,
   MANAGER_UNSUPPORTED: MANAGER,

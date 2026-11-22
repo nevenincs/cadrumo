@@ -2140,10 +2140,13 @@ errors:
       de derivación de clave solicitados. Vuelve a intentarlo cuando el equipo esté
       menos cargado; si persiste, este equipo no puede aportar la memoria que requiere
       la derivación de clave.
-    refused_profile_custody_kdf_supervision_unavailable: La supervisión de derivación
-      de clave no está disponible en este equipo. Vuelve a intentarlo cuando el equipo
-      esté menos cargado; si persiste, este equipo no puede iniciar el proceso de
-      trabajo supervisado que requiere la derivación de clave.
+    refused_profile_custody_kdf_supervision_busy: La derivación de clave no pudo iniciarse
+      a tiempo porque el equipo está ocupado. Tu contraseña no se ha comprobado; vuelve
+      a intentarlo en un momento.
+    refused_profile_custody_kdf_supervision_unavailable: 'La derivación de clave no
+      puede ejecutarse en este equipo: no puede iniciar, contener ni verificar el
+      proceso de trabajo supervisado que requiere la derivación de clave. Consulta
+      los registros para conocer la causa.'
     refused_profile_custody_legacy: El almacenamiento contiene custodia retirada;
       el restablecimiento destructivo y la nueva inscripción son la única vía.
     refused_profile_displaced_session_retirement: No se ha podido revocar la sesión

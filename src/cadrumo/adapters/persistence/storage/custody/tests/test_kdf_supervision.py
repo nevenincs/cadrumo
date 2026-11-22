@@ -712,10 +712,11 @@ def test_wrong_password_and_canonical_sentinel_substitution_do_not_release_a_dek
 
 
 def test_expired_deadline_refuses_and_releases_the_supervised_child_boundary(tmp_path: Path) -> None:
-    """A budget that ends before the child attests names the supervised child, not the host's memory.
+    """A budget that ends before the child attests names busy supervision, not the host's memory.
 
-    No derivation began, so the refusal is supervision's; the permit is free and
-    is acquired at once, and no interpreter attests within fifty milliseconds.
+    No derivation began, so the refusal is the retryable busy one; the permit is
+    free and is acquired at once, and no interpreter attests within fifty
+    milliseconds.
     """
     envelope, sentinel = unlock_inputs()
 
@@ -728,7 +729,7 @@ def test_expired_deadline_refuses_and_releases_the_supervised_child_boundary(tmp
             timeout_seconds=0.05,
         )
 
-    assert captured.value.refusal is ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE
+    assert captured.value.refusal is ProfileCustodyRefusal.KDF_SUPERVISION_BUSY
 
 
 _PERMIT_HELD_SECONDS = 6.0
