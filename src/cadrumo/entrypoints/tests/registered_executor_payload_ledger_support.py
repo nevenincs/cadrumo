@@ -55,6 +55,7 @@ from ...domain.renta.actividad_asset.lifecycle import AssetKind
 from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.own_accounts import OwnAccountHolding
+from ...tests.pdf_fixtures import text_pdf_bytes
 from ..adapter_composition_ports import build_bienes_inversion_repository, build_inventory_service_ports
 from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from ..ledger_action_composition import compose_ledger_action_ports
@@ -69,7 +70,7 @@ from .registered_executor_payload_context import PayloadBuilder, PayloadContext,
 from .registered_executor_scenario_constants import LEDGER_LIST_PRIVATE_FILTER_SENTINEL, OWN_ACCOUNT_SYNTHETIC_IBAN
 from .registered_executor_seeding_support import seed_conformance_invoice, seeded_ledger_track_transaction_id
 
-_EVIDENCE_PDF = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
+_EVIDENCE_PDF = text_pdf_bytes(("registered executor conformance evidence",))
 
 
 def _seed_unprocessed_outgoing(

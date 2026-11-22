@@ -47,6 +47,7 @@ from ...domain.contribuyente.inventory.closing_foundations import (
 from ...domain.contribuyente.inventory.records import PurchaseLedgerRow
 from ...domain.filing_evidence import FilingEvidenceReference
 from ...domain.transactions.models import TransactionCatalogue
+from ...tests.pdf_fixtures import text_pdf_bytes
 from ..adapter_composition_ports import build_inventory_service_ports
 from .conformance_family_contract import (
     ConformanceFamily,
@@ -88,7 +89,7 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
 
     if definition_id == "ledger.inventory.evidence.add":
         source = context.input_root / "inventory-purchase.pdf"
-        payload = b"%PDF-1.4\n% inventory purchase custody conformance\n%%EOF\n"
+        payload = text_pdf_bytes(("inventory purchase custody conformance",))
         source.write_bytes(payload)
         digest = sha256_hex(payload)
 
