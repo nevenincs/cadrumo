@@ -41,6 +41,7 @@ _TYPED = "the label the request typed"
 _WRITES: tuple[tuple[str, str], ...] = (
     ("ledger.add", _TYPED),
     ("ledger.update", _TYPED),
+    ("ledger.update.batch", _TYPED),
     ("ledger.classify.single", _TYPED),
     ("ledger.allocate", _TYPED),
     ("ledger.merge", _TYPED),

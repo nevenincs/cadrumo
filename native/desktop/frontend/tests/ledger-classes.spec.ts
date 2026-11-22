@@ -21,7 +21,7 @@ type Class = "read" | "write" | "review";
 
 function admittedByHost(): Record<string, Class> {
   const list = ledgerModule("admitted.rs").match(
-    /const ADMITTED: \[[^\]]*\] = \[([\s\S]*?)\n\];/,
+    /const ADMITTED: &?\[[^=]*\] = &?\[([\s\S]*?)\n\];/,
   );
   expect(list).not.toBeNull();
   const found: Record<string, Class> = {};

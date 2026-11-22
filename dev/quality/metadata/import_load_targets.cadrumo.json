@@ -1144,6 +1144,7 @@
         "cadrumo.application.ledger.rule_results",
         "cadrumo.application.ledger.rule_trial_operation",
         "cadrumo.application.ledger.savings_link_admission",
+        "cadrumo.application.ledger.sealed_read_operation",
         "cadrumo.application.ledger.source_jurisdiction",
         "cadrumo.application.ledger.split_check_operation",
         "cadrumo.application.ledger.split_operation",

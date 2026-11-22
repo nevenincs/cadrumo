@@ -1,13 +1,12 @@
-// Which movements a finalized declaration cites, as far as the page has
-// read. The product reports it per movement only: the participation index
-// answers one movement at a time, through `ledger.track`, and nothing reads
-// it for a period. So the page reads the movements it acts on, the selected
-// and the staged ones, a bounded number per read of the window, and the
-// review reads every staged one it is about to save that the page has not,
-// asking again what failed, and says how far it has got. A movement whose participation could not be
-// read, or was left unread past a budget, is unread: never counted as
-// sealed or as not sealed. One whose index was never built is not known to
-// be sealed; the product refuses a change to a sealed one regardless.
+// Which movements a finalized declaration seals, as far as the page has
+// read. The product answers it for many movements in one read,
+// `ledger.sealed.read`, with the same guard a batch edit refuses a sealed
+// row by. The page reads the movements it acts on, the selected and the
+// staged ones, a bounded number per read of the window, and the review
+// reads every staged one it is about to save that the page has not, asking
+// again what failed, and says how far it has got. A movement whose state
+// could not be read, or was left unread past a budget, is unread: never
+// counted as sealed or as not sealed.
 
 import {
   startTransition,
@@ -19,18 +18,19 @@ import {
 } from "react";
 import type { LedgerPort } from "../../shell/ledger";
 import { isTransactionPrefix } from "../../shell/ledgerGrammar";
+import { BATCH_ROW_LIMIT } from "../../shell/ledgerPlan";
 import { readAnswer } from "../../shell/ledgerWindow";
-import { seals } from "./inspector/inspectorWords";
 
-/** The most movements read for one read of the window, for the selection
- * and the staged movements the page acts on. */
-export const SEALED_READS = 400;
-/** Reads in flight at once. */
-const AT_ONCE = 4;
+/** The most movements the page reads for one read of the window, for the
+ * selection and the staged movements it acts on: one sealed read's worth. */
+export const SEALED_READS = BATCH_ROW_LIMIT;
+/** The most movements one sealed read names, the product's batch bound. */
+const PER_READ = BATCH_ROW_LIMIT;
 const NO_RESULTS: ReadonlyMap<string, boolean | null> = new Map();
+const EMPTY_READ: SealedRead = { sealed: new Set(), unread: new Set() };
 
 // Page reads may cover hundreds of movements. Give input and paint work
-// priority between them; explicit review reads do not use this queue.
+// priority before them; explicit review reads do not wait.
 function yieldPageRead(): Promise<void> {
   const scheduler = (
     globalThis as typeof globalThis & {
@@ -47,21 +47,31 @@ function yieldPageRead(): Promise<void> {
     : new Promise((resolve) => window.setTimeout(resolve, 0));
 }
 
-/** Whether one movement is sealed; null where it could not be read. */
+/** Whether each movement is sealed, as the product served it; null where
+ * it could not be read or names no movement. */
 export async function readSealed(
   port: LedgerPort,
-  id: string,
-): Promise<boolean | null> {
-  if (!isTransactionPrefix(id)) return null;
+  ids: readonly string[],
+): Promise<ReadonlyMap<string, boolean | null>> {
+  const out = new Map<string, boolean | null>(ids.map((id) => [id, null]));
+  // A draft's key names no stored movement and never reaches the product.
+  const stored = ids.filter(isTransactionPrefix);
+  if (stored.length === 0) return out;
   try {
     const answer = readAnswer(
-      await port.submit("ledger.track", { transaction_prefix: id }),
+      await port.submit("ledger.sealed.read", { transaction_ids: stored }),
     );
-    if (answer.kind !== "answer") return null;
-    return (answer.result.participated_in ?? []).some(seals);
+    if (answer.kind !== "answer") return out;
+    for (const row of answer.result.rows)
+      if (out.has(row.transaction_id))
+        out.set(
+          row.transaction_id,
+          row.state === "sealed" ? true : row.state === "open" ? false : null,
+        );
   } catch {
-    return null;
+    // Unread: neither sealed nor not sealed.
   }
+  return out;
 }
 
 /** Hears how many of the movements a read was asked about it has read. */
@@ -144,55 +154,56 @@ export function useSealedMovements(
       // Admission and budget are checked immediately before a host read.
       // Queues for an old selection can stop without reserving the budget
       // for reads they never started.
-      const queue = [...ids];
       const total = ids.length;
       let done = 0;
       progress?.(done, total);
-      const run = async () => {
-        for (let id = queue.shift(); id !== undefined; id = queue.shift()) {
-          if (!review) {
-            if (
-              signal?.aborted ||
-              map !== known.current ||
-              spent.current >= SEALED_READS
-            )
-              return;
-            await yieldPageRead();
-            if (signal?.aborted || map !== known.current) return;
-          }
-          // Wait for an existing read; a review retries only failed reads.
-          const existing = map.get(id);
-          if (existing) {
-            const value = await existing;
-            if (!review || value !== null) {
-              done += 1;
-              progress?.(done, total);
-              continue;
-            }
-            // Another caller may already have retried this failed read.
-            if (map.get(id) !== existing) {
-              await map.get(id);
-              done += 1;
-              progress?.(done, total);
-              continue;
-            }
-          }
-          if (!review) {
-            if (signal?.aborted || map !== known.current) return;
-            if (spent.current >= SEALED_READS) {
-              done += 1;
-              continue;
-            }
-            spent.current += 1;
-          }
-          const found = readSealed(port, id);
-          map.set(id, found);
-          await found;
-          done += 1;
-          progress?.(done, total);
+      if (!review) {
+        await yieldPageRead();
+        if (signal?.aborted || map !== known.current) return EMPTY_READ;
+      }
+      // Wait for existing reads; a review asks again only what failed.
+      const fresh: string[] = [];
+      const waiting: Promise<unknown>[] = [];
+      for (const id of new Set(ids)) {
+        const existing = map.get(id);
+        if (existing) {
+          waiting.push(
+            existing.then(async (value) => {
+              if (review && value === null && map.get(id) === existing)
+                fresh.push(id);
+              else {
+                if (review && value === null) await map.get(id);
+                done += 1;
+                progress?.(done, total);
+              }
+            }),
+          );
+          continue;
         }
-      };
-      await Promise.all(Array.from({ length: AT_ONCE }, run));
+        if (!review) {
+          // Past the page's budget a movement stays unread.
+          if (spent.current >= SEALED_READS) {
+            done += 1;
+            continue;
+          }
+          spent.current += 1;
+        }
+        fresh.push(id);
+      }
+      await Promise.all(waiting);
+      for (let at = 0; at < fresh.length; at += PER_READ) {
+        if (!review && (signal?.aborted || map !== known.current)) break;
+        const chunk = fresh.slice(at, at + PER_READ);
+        const found = readSealed(port, chunk);
+        for (const id of chunk)
+          map.set(
+            id,
+            found.then((values) => values.get(id) ?? null),
+          );
+        await found;
+        done += chunk.length;
+        progress?.(done, total);
+      }
       const out = new Set<string>();
       const missed = new Set<string>();
       let changed = false;
