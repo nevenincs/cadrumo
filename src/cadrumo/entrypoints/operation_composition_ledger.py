@@ -717,6 +717,26 @@ def compose_ledger_bulk_classify_operation(inputs: OperationCompositionInputs) -
     return built((definition,), (build_ledger_bulk_classify_registration(definition),))
 
 
+def compose_ledger_batch_update_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the ledger batch edit preview and its reviewed write."""
+    from ..application.ledger.batch_update_operation import (
+        build_ledger_batch_update_definition,
+        build_ledger_batch_update_preview_definition,
+        build_ledger_batch_update_preview_registration,
+        build_ledger_batch_update_registration,
+    )
+
+    ports = inputs.ledger_actions()
+    preview = build_ledger_batch_update_preview_definition(
+        ports, execution_caller_reader=inputs.execution_caller_reader
+    )
+    write = build_ledger_batch_update_definition(ports, execution_caller_reader=inputs.execution_caller_reader)
+    return built(
+        (preview, write),
+        (build_ledger_batch_update_preview_registration(preview), build_ledger_batch_update_registration(write)),
+    )
+
+
 def compose_ledger_rule_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose ledger rule operation."""
     from ..application.ledger.rule_operation import (
