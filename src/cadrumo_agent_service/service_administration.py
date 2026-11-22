@@ -178,7 +178,13 @@ class AgentServiceAdministration(ABC):
             tuple[AgentHostController, AgentReady, tuple[HostedCertificationStatus, ...], float] | None
         ) = None
         self._workspace: Path | None = None
-        self._catalog_read = BoundedRead(self._catalog_document, name="catalog", fresh_seconds=ADMIN_READ_FRESH_SECONDS)
+        # A window told the catalog is busy reads it again on the status this cue republishes.
+        self._catalog_read = BoundedRead(
+            self._catalog_document,
+            name="catalog",
+            fresh_seconds=ADMIN_READ_FRESH_SECONDS,
+            settled=self._publish_read_settled,
+        )
         # The status serves what its slow reads last kept and never waits for them.
         self._provider_status = ProviderStatusRead(
             providers=lambda: self._providers,
@@ -188,6 +194,7 @@ class AgentServiceAdministration(ABC):
             lease=lambda: self.client.lease,
             hosted_certifications=self._hosted_certifications,
             agent_starting=self._agent_starting,
+            settled=self._publish_read_settled,
         )
         self._ownership = ExitStack()
         # Plain reads that never wait on the agent tree, by their admin action.
@@ -202,6 +209,15 @@ class AgentServiceAdministration(ABC):
         }
         self._owned = False
         self._emit = emit
+
+    def _publish_read_settled(self) -> None:
+        """Tell the desktop that a read it was answered busy or still pending for has settled.
+
+        The desktop republishes the agent's status on it, which is the cue the
+        window's model lists and provider settings read again on.
+        """
+        if not self._closing.is_set():
+            self._emit({"event": "read_settled"})
 
     def _disclosure_bar(self) -> DisclosureRefusalCode | None:
         """Name the first bar to an off-host release as it stands now: gestor, deployment, then profile."""

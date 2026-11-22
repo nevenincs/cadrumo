@@ -684,8 +684,14 @@ export function FilingCalendarView({
       <EmptyState
         icon="alert"
         description={
-          <span key={attempt} role="alert">
-            {t("desktop.calendar.failed")}
+          <span key={attempt} className="grid gap-1">
+            <span role="alert">{t("desktop.calendar.failed")}</span>
+            {/* Why, in the words the product served for its refusal; where
+                it served none, the stable code the host reported. */}
+            <span data-calendar-failure="" className="text-muted-foreground">
+              {state.words ??
+                t("desktop.operations.error_code", { code: state.code })}
+            </span>
           </span>
         }
       >
@@ -1052,7 +1058,10 @@ export function FilingCalendarView({
             list
           )}
           {note}
-          <CalendarSuppressed entries={state.calendar.suppressed_entries} />
+          <CalendarSuppressed
+            entries={state.calendar.suppressed_entries}
+            onNavigate={onNavigate}
+          />
         </div>
         {/* Beside the months where the page is wide: the list keeps its own
             place and scrolls by itself, as tall as the page. */}

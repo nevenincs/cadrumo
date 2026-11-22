@@ -134,10 +134,13 @@ fn signal_admission(shared: &Shared) {
     shared.admitted.notify_all();
 }
 
-/// Holds the admitted endpoint and wakes administration waiting for it.
+/// Holds the admitted endpoint and wakes administration waiting for it. The
+/// window's reads answered busy because the service was not yet admitted are
+/// cued to read again by the status it holds, sent once more.
 fn admit(shared: &Shared, endpoint: super::admin::Endpoint) {
     *lock(&shared.admin) = Some(endpoint);
     shared.admitted.notify_all();
+    republish(shared);
 }
 
 fn lock<T>(mutex: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
@@ -527,6 +530,20 @@ fn publish(shared: &Shared, state: State) {
             ready();
         }
     }
+    let mut listener = lock(&shared.listener);
+    if listener
+        .as_ref()
+        .is_some_and(|held| held.channel.send(status).is_err())
+    {
+        *listener = None;
+    }
+}
+
+/// Sends the window the status it already holds, unchanged: the cue on which
+/// the views that wait on a busy or pending read ask for it again. Nothing is
+/// recorded and no ready hook runs, since nothing changed state.
+fn republish(shared: &Shared) {
+    let status = lock(&shared.status).clone();
     let mut listener = lock(&shared.listener);
     if listener
         .as_ref()
@@ -1358,6 +1375,12 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
                 },
             );
             publish(shared, State::Ready { agent_version });
+            false
+        }
+        // A read the window was told busy or pending for has settled: the
+        // status it holds is sent again as the cue to read it again.
+        Signal::Event(Event::ReadSettled) => {
+            republish(shared);
             false
         }
         // A start the service declined because other tree work, such as a

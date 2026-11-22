@@ -339,6 +339,7 @@ def projection_for_taxpayer(
     iva_regime_default: IVARegime | None = None,
     schema: ProfileSchemaDefinition | None = None,
     as_of: date | None = None,
+    withhold_unanswered_iva_block: bool = False,
 ) -> TaxpayerProfile:
     """Return the deadline-engine :class:`TaxpayerProfile` for the supplied profile facts.
 
@@ -351,6 +352,9 @@ def projection_for_taxpayer(
         as_of: Optional date the profile is projected as of, keeping only the
             facts whose effective window contains it. Only a record or a
             snapshot carries windows, so a pre-projected mapping refuses it.
+        withhold_unanswered_iva_block: For a read model only: leave a claimed
+            Modelo IVA block with unanswered required facts out of the
+            projection and name those facts, instead of refusing.
 
     The single coercion path goes through :func:`taxpayer_profile_from_mapping`
     so canonical-token semantics stay in lockstep with the wizard descriptor.
@@ -370,13 +374,17 @@ def projection_for_taxpayer(
         mapping,
         tax_id_default=tax_id_default,
         iva_regime_default=iva_regime_default or default_iva_regime(),
+        withhold_unanswered_iva_block=withhold_unanswered_iva_block,
     )
     if isinstance(facts, UserProfileRecord) and active_profile_read_recorder() is not None:
         # The projection reads every answer, so it is noted by what it produced:
         # only an edit that changes the taxpayer it projects is a change.
         note_profile_projection_read(
             taxpayer_projection_read_selector(
-                as_of=as_of, tax_id_default=tax_id_default, iva_regime_default=iva_regime_default
+                as_of=as_of,
+                tax_id_default=tax_id_default,
+                iva_regime_default=iva_regime_default,
+                withhold_unanswered_iva_block=withhold_unanswered_iva_block,
             ),
             taxpayer_projection_fingerprint(taxpayer),
         )
@@ -387,18 +395,24 @@ _TAXPAYER_PROJECTION: Final[str] = "taxpayer"
 
 
 def taxpayer_projection_read_selector(
-    *, as_of: date | None, tax_id_default: str, iva_regime_default: IVARegime | None
+    *,
+    as_of: date | None,
+    tax_id_default: str,
+    iva_regime_default: IVARegime | None,
+    withhold_unanswered_iva_block: bool = False,
 ) -> str:
     """Name one taxpayer projection by every argument its result depends on besides the record."""
-    return json.dumps(
-        {
-            "projection": _TAXPAYER_PROJECTION,
-            "as_of": None if as_of is None else as_of.isoformat(),
-            "tax_id_default": tax_id_default,
-            "iva_regime_default": None if iva_regime_default is None else str(iva_regime_default),
-        },
-        sort_keys=True,
-    )
+    named: dict[str, object] = {
+        "projection": _TAXPAYER_PROJECTION,
+        "as_of": None if as_of is None else as_of.isoformat(),
+        "tax_id_default": tax_id_default,
+        "iva_regime_default": None if iva_regime_default is None else str(iva_regime_default),
+    }
+    # Only a withholding projection names the mode, so every refusing projection
+    # keeps the selector it was recorded under before the mode existed.
+    if withhold_unanswered_iva_block:
+        named["withhold_unanswered_iva_block"] = True
+    return json.dumps(named, sort_keys=True)
 
 
 def _is_set(value: object) -> TypeGuard[AbstractSet[object]]:
@@ -460,6 +474,7 @@ def taxpayer_projection_read_fingerprint(
             iva_regime_default=None if iva_regime_default is None else IVARegime(str(iva_regime_default)),
             schema=schema,
             as_of=None if as_of is None else date.fromisoformat(str(as_of)),
+            withhold_unanswered_iva_block=named.get("withhold_unanswered_iva_block") is True,
         )
     )
 

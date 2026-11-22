@@ -8,7 +8,9 @@ and the request waits for it only up to its bound. A request that finds the
 work unfinished at the bound is told the service is busy; the work goes on,
 and the next request inside the freshness window is served its outcome at once,
 whether a result or a failure. Work that finishes within its request's bound is
-not kept: that request was answered, and the next one reads afresh.
+not kept: that request was answered, and the next one reads afresh. Work a
+request was told busy for says so when it ends, through the read's settle
+hook, so the one told busy is cued to ask again instead of asking on a timer.
 
 Work whose result was withdrawn, because what it read from changed or because
 it reads for another key, is not an answer to the request, but it keeps the
@@ -25,6 +27,10 @@ from enum import Enum
 from threading import Lock, Thread
 from time import monotonic
 from typing import Final, override
+
+from cadrumo.core.logging import get_logger
+
+_LOGGER = get_logger(__name__)
 
 BUSY: Final = {"kind": "refused", "code": "busy"}
 """The answer to a request whose work did not finish within its bound."""
@@ -72,16 +78,31 @@ class BoundedRead[T]:
     service is busy instead would have it retry a read that already failed.
     """
 
-    def __init__(self, compute: Callable[[], T], *, name: str, fresh_seconds: float) -> None:
-        """Bind the work and how long its result stays fresh."""
+    def __init__(
+        self,
+        compute: Callable[[], T],
+        *,
+        name: str,
+        fresh_seconds: float,
+        settled: Callable[[], None] | None = None,
+    ) -> None:
+        """Bind the work, how long its result stays fresh, and what is told when work a request was told busy for ends.
+
+        ``settled`` is called once for each such work when it ends, outside the
+        read's lock, whatever its outcome and even when a change withdrew it:
+        the request told busy has something to ask again for either way.
+        """
         self._compute = compute
         self._name = name
         self._fresh_seconds = fresh_seconds
+        self._settled = settled
         self._lock = Lock()
         self._kept: tuple[Hashable, Future[T], float] | None = None
         self._running: tuple[Hashable, int, Future[T]] | None = None
         self._generation = 0
         self._outlived: set[Future[T]] = set()
+        # Work a request was answered busy for; a forget does not clear it.
+        self._told_busy: set[Future[T]] = set()
 
     def answer(self, key: Hashable, *, within: float) -> T | dict[str, str]:
         """Return the work's result for ``key`` within ``within`` seconds, or :data:`BUSY`.
@@ -102,8 +123,10 @@ class BoundedRead[T]:
                 # Invalidation withdraws the result, not ownership of the work:
                 # another provider probe must not start until this one ends.
                 wait((running[2],), timeout=max(0.0, deadline - monotonic()))
-                if not running[2].done():
-                    return BUSY
+                with self._lock:
+                    if not running[2].done():
+                        self._told_busy.add(running[2])
+                        return BUSY
                 continue
             settled = self._await_running(running, deadline=deadline)
             if settled is _Settled.ANSWERED:
@@ -144,6 +167,7 @@ class BoundedRead[T]:
                 # Its outcome is kept for the request that comes back for it.
                 if running[1] == self._generation:
                     self._outlived.add(future)
+                self._told_busy.add(future)
                 return _Settled.UNFINISHED
             return _Settled.ANSWERED if running[1] == self._generation else _Settled.WITHDRAWN
 
@@ -167,22 +191,38 @@ class BoundedRead[T]:
             with self._lock:
                 future.set_exception(error)
                 # An interruption of the process is not an answer to a read.
-                self._settle(key, generation, future, keep=isinstance(error, Exception))
+                told = self._settle(key, generation, future, keep=isinstance(error, Exception))
+            if told and isinstance(error, Exception):
+                self._tell_settled()
             return
         with self._lock:
             future.set_result(value)
-            self._settle(key, generation, future, keep=True)
+            told = self._settle(key, generation, future, keep=True)
+        if told:
+            self._tell_settled()
 
-    def _settle(self, key: Hashable, generation: int, future: Future[T], *, keep: bool) -> None:
-        """Release the work's slot, and keep its outcome if a request outlived it.
+    def _tell_settled(self) -> None:
+        """Call the settle hook; its failure is logged by kind and leaves the read as it is."""
+        if self._settled is None:
+            return
+        try:
+            self._settled()
+        except Exception as error:
+            _LOGGER.warning("agent service %s settle cue failed: %s", self._name, type(error).__name__)
+
+    def _settle(self, key: Hashable, generation: int, future: Future[T], *, keep: bool) -> bool:
+        """Release the work's slot, keep its outcome if a request outlived it, and say whether one was told busy for it.
 
         The caller holds the lock and has already settled ``future``. An outcome
         is kept only for the generation it was computed in, so a :meth:`forget`
         while the work ran withholds it.
         """
+        told = future in self._told_busy
+        self._told_busy.discard(future)
         outlived = future in self._outlived
         self._outlived.discard(future)
         if self._running is not None and self._running[2] is future:
             self._running = None
             if keep and outlived and generation == self._generation:
                 self._kept = (key, future, monotonic())
+        return told

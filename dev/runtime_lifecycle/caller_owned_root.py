@@ -54,7 +54,7 @@ from dev.temporary_output import prepare_temp_root
 
 _PROFILE_NAME = "caller-owned-acceptance"
 _READY_SECONDS = 180
-_COMMAND_SECONDS = 180
+COMMAND_SECONDS = 180
 _NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
 """Every packaged program runs without a console window of its own: none appears on the person's screen."""
 _STOP_SECONDS = 120
@@ -117,19 +117,28 @@ def consumer_environment(root: Path) -> dict[str, str]:
 
 
 def run_cli(
-    programs: Programs, environment: Mapping[str, str], *arguments: str, secret: Mapping[str, str] | None = None
+    programs: Programs,
+    environment: Mapping[str, str],
+    *arguments: str,
+    secret: Mapping[str, str] | None = None,
+    timeout: float = COMMAND_SECONDS,
 ) -> tuple[int, dict[str, Any]]:
-    """Run one JSON ``aeat`` command; a secret travels only on standard input."""
-    return _run_json(programs.aeat, environment, arguments, secret)
+    """Run one JSON ``aeat`` command, ended after ``timeout`` seconds; a secret travels only on standard input."""
+    return _run_json(programs.aeat, environment, arguments, secret, timeout=timeout)
 
 
 def run_runtime_cli(programs: Programs, environment: Mapping[str, str], *arguments: str) -> tuple[int, dict[str, Any]]:
     """Run one JSON ``cadrumo-runtime`` command, such as ``config sign-in-status``, which ``aeat`` does not own."""
-    return _run_json(programs.runtime, environment, arguments, None)
+    return _run_json(programs.runtime, environment, arguments, None, timeout=COMMAND_SECONDS)
 
 
 def _run_json(
-    program: Path, environment: Mapping[str, str], arguments: tuple[str, ...], secret: Mapping[str, str] | None
+    program: Path,
+    environment: Mapping[str, str],
+    arguments: tuple[str, ...],
+    secret: Mapping[str, str] | None,
+    *,
+    timeout: float,
 ) -> tuple[int, dict[str, Any]]:
     result = subprocess.run(  # noqa: S603 -- exact packaged executable; no shell; secrets only on stdin.
         [str(program), "--format", "json", *arguments],
@@ -138,7 +147,7 @@ def _run_json(
         capture_output=True,
         encoding="utf-8",
         errors="replace",
-        timeout=_COMMAND_SECONDS,
+        timeout=timeout,
         check=False,
         creationflags=_NO_WINDOW,
     )
@@ -236,7 +245,7 @@ async def _mcp_status(programs: Programs, environment: Mapping[str, str], direct
     with open(os.devnull, "w", encoding="utf-8") as errors:
         async with (
             stdio_client(server, errlog=errors) as (read_stream, write_stream),
-            ClientSession(read_stream, write_stream, read_timeout_seconds=_COMMAND_SECONDS) as client,
+            ClientSession(read_stream, write_stream, read_timeout_seconds=COMMAND_SECONDS) as client,
         ):
             await client.initialize()
             status = await client.call_tool("status", {})
@@ -280,7 +289,7 @@ async def _private_read(client: ClientSession, profile_id: str | None) -> dict[s
 
 async def _wait_private_read(client: ClientSession, receipt: dict[str, Any], facts: dict[str, Any]) -> dict[str, Any]:
     """Poll the submitted operation within its original command budget."""
-    deadline = asyncio.get_running_loop().time() + _COMMAND_SECONDS
+    deadline = asyncio.get_running_loop().time() + COMMAND_SECONDS
     while True:
         answer = await client.call_tool("result", {"result": {"operation_id": receipt.get("operation_id")}})
         document = answer.structured_content or {}

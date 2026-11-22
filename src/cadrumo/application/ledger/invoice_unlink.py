@@ -16,6 +16,9 @@ Every reason the unlink cannot go ahead is a typed refusal naming its cause and
 the next step, decided before anything is written. A finalized calculation that
 cites the movement sealed the link (the movement's filing snapshot carries its
 ``invoice_id``), so that is refused until the calculation is reopened.
+
+Core types: :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`,
+:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
 """
 
 from __future__ import annotations

@@ -17,6 +17,7 @@ from pydantic import ValidationError
 
 from ....core.period import Period
 from ...calculations.registry.tests.authored_editions import filing_year_envelope
+from ..errors import ProfileError
 from ..festivos import DeadlineHolidayCoverage
 from ..models import (
     IVARegime,
@@ -107,17 +108,40 @@ class TestTaxpayerProfile:
                 },
             )
 
-    def test_modelo_iva_profile_requires_explicit_redeme_authority(self) -> None:
-        with pytest.raises(ValidationError, match="redeme_enrolled"):
-            ModeloIVAProfile.model_validate(
-                {
-                    "tax_territory": M303TaxTerritory.from_registry("common_regime"),
-                    "regime_composition": M303RegimeComposition.from_registry("general"),
-                    "cash_accounting_regime_enrolled": False,
-                    "voluntary_sii_enrolled": False,
-                    "hydrocarbon_deposit_advance_payment_deduction_entitled": False,
-                },
-            )
+    def test_modelo_iva_profile_keeps_an_unanswered_redeme_unanswered(self) -> None:
+        block = ModeloIVAProfile.model_validate(
+            {
+                "tax_territory": M303TaxTerritory.from_registry("common_regime"),
+                "regime_composition": M303RegimeComposition.from_registry("general"),
+                "cash_accounting_regime_enrolled": False,
+                "voluntary_sii_enrolled": False,
+                "hydrocarbon_deposit_advance_payment_deduction_entitled": False,
+            },
+        )
+
+        assert block.redeme_enrolled is None
+
+    def test_the_filing_projection_refuses_an_unanswered_redeme(self) -> None:
+        answered = {
+            "tax.id": "12345678Z",
+            "activity": "design",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.regime": "GENERAL",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+        }
+        values = {path: value for path, value in answered.items() if path != "iva.redeme_enrolled"}
+
+        assert taxpayer_profile_from_mapping(answered, tax_id_default="12345678Z").iva is not None
+        with pytest.raises(ProfileError, match=r"iva\.redeme_enrolled"):
+            taxpayer_profile_from_mapping(values, tax_id_default="12345678Z")
+        read = taxpayer_profile_from_mapping(values, tax_id_default="12345678Z", withhold_unanswered_iva_block=True)
+        assert read.iva is not None
+        assert read.iva.redeme_enrolled is None
+        assert read.iva_block_unanswered_paths == ("iva.redeme_enrolled",)
 
     def test_mapping_projection_preserves_enrollment_and_schedule_facts(self) -> None:
         profile = taxpayer_profile_from_mapping(

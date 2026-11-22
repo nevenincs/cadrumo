@@ -15,6 +15,7 @@ from cadrumo.core.hashing import reject_duplicate_json_members
 from cadrumo_agent_service.admin import (
     ADMIN_DOCUMENT_MAX_BYTES,
     ADMIN_RESPONSE_MAX_BYTES,
+    ADMIN_SECRET_MAX_BYTES,
     AdminAction,
     AdminRequest,
 )
@@ -72,6 +73,50 @@ def owned_service_settings(
     return _exchange(bearer, port, _request(action, fields), within=within)
 
 
+def owned_service_credential(
+    bearer: bytearray,
+    port: int,
+    *,
+    provider: str,
+    expected_revision: str,
+    base_url: str | None,
+    secret: bytearray,
+    within: float = ADMIN_EXCHANGE_SECONDS,
+) -> dict[str, JsonValue]:
+    """Store one lane's direct credential on a service this caller launched and alone administers.
+
+    This is the window's ``set``: the metadata names the lane, the revision the
+    caller read and, optionally, a base URL (``None`` keeps the stored or
+    catalogue one), and announces the credential's length; the service answers
+    ``secret_ready`` under the request's identity and then reads the credential
+    as one separate frame. It is the only request this channel lets carry a
+    frame. ``secret`` is wiped on every exit, and nothing derived from it
+    reaches an exception, a log or the returned answer, which is the service's
+    masked result or typed refusal. A ``busy`` answer did nothing and is asked
+    again inside ``within``.
+    """
+    try:
+        require(0 < len(secret) <= ADMIN_SECRET_MAX_BYTES, "service credential is outside the admin secret bound")
+        try:
+            request = AdminRequest.model_validate(
+                {
+                    "version": 1,
+                    "request_id": uuid4(),
+                    "action": "set",
+                    "provider": provider,
+                    "expected_revision": expected_revision,
+                    "base_url": base_url,
+                    "secret_bytes": len(secret),
+                }
+            )
+        except ValidationError:
+            # The request carries the length only, but its error is not chained, so nothing it read can follow.
+            raise AcceptanceError("service credential request failed its typed contract") from None
+        return _exchange(bearer, port, request, within=within, secret=secret)
+    finally:
+        secret[:] = bytes(len(secret))
+
+
 def _request(action: AdminAction, fields: dict[str, Any]) -> AdminRequest:
     if "secret_bytes" in fields:
         raise AcceptanceError("service admin does not carry credential frames here")
@@ -81,8 +126,11 @@ def _request(action: AdminAction, fields: dict[str, Any]) -> AdminRequest:
         raise AcceptanceError("service admin request failed its typed contract") from error
 
 
-def _exchange(bearer: bytearray, port: int, request: AdminRequest, *, within: float) -> dict[str, JsonValue]:
+def _exchange(
+    bearer: bytearray, port: int, request: AdminRequest, *, within: float, secret: bytearray | None = None
+) -> dict[str, JsonValue]:
     require(bool(bearer), "service admin authority has been closed")
+    require((secret is None) == (request.secret_bytes is None), "service admin credential frame differs from request")
     deadline = time.monotonic() + within
     while True:
         request = request.model_copy(update={"request_id": uuid4()})
@@ -93,6 +141,9 @@ def _exchange(bearer: bytearray, port: int, request: AdminRequest, *, within: fl
                 _write_frame(stream, bearer, deadline=deadline)
                 _write_frame(stream, encoded, deadline=deadline)
                 response = _read_document(stream, ADMIN_RESPONSE_MAX_BYTES, deadline=deadline)
+                if secret is not None and response == {"event": "secret_ready", "request_id": str(request.request_id)}:
+                    _write_secret_frame(stream, secret, deadline=deadline)
+                    response = _read_document(stream, ADMIN_RESPONSE_MAX_BYTES, deadline=deadline)
         except (OSError, TimeoutError, ValueError) as error:
             raise AcceptanceError("service admin exchange failed") from error
         require(response.get("version") == 1, "service admin response version differs")
@@ -118,6 +169,14 @@ def _write_frame(stream: socket.socket, payload: bytes | bytearray, *, deadline:
     require(0 < len(payload) <= 16 * 1024 * 1024, "service admin frame size refused")
     stream.settimeout(_admin_remaining(deadline))
     stream.sendall(struct.pack("!I", len(payload)) + payload)
+
+
+def _write_secret_frame(stream: socket.socket, secret: bytearray, *, deadline: float) -> None:
+    """Write the credential frame from the caller's own buffer, so no immutable copy of it is made here."""
+    require(0 < len(secret) <= ADMIN_SECRET_MAX_BYTES, "service credential is outside the admin secret bound")
+    stream.settimeout(_admin_remaining(deadline))
+    stream.sendall(struct.pack("!I", len(secret)))
+    stream.sendall(secret)
 
 
 def _read_exact(stream: socket.socket, size: int, *, deadline: float) -> bytes:

@@ -99,6 +99,8 @@ class _Client(FrontendClient):
         self.retirement_callback: Callable[[], None] | None = None
         self.notice_callback: Callable[[LifecycleNotice], None] | None = None
         self.status_calls = 0
+        self.status_read_at: list[datetime] = []
+        self.lease_from_first_read: timedelta | None = None
         self.lock_calls = 0
         self.close_calls = 0
         self.human_calls = 0
@@ -140,6 +142,10 @@ class _Client(FrontendClient):
     @override
     def status(self, *, timeout: float = 5) -> ProfileStatus:
         self.status_calls += 1
+        read_at = datetime.now(UTC)
+        self.status_read_at.append(read_at)
+        if self.lease_from_first_read is not None and self.status_calls == 1:
+            self.expires_at = read_at + self.lease_from_first_read
         return ProfileStatus(
             request_id=uuid4(),
             runtime_boot_id=uuid4(),
@@ -488,15 +494,20 @@ async def test_a_session_retired_while_a_destination_is_open_still_clears_the_sh
 
 @pytest.mark.asyncio
 async def test_the_shell_reads_status_again_only_when_the_session_lapses() -> None:
-    """Retirement is pushed, so idle time costs no status read until the lease's deadline."""
+    """Retirement is pushed, so idle time costs no status read until the lease's deadline.
+
+    The lease is granted at the first read, and each read is stamped when the
+    shell makes it, so the idle window is the whole span up to the deadline
+    however long a loaded host takes to start the shell or fire the timer.
+    """
     client = _Client()
-    client.expires_at = datetime.now(UTC) + timedelta(seconds=2)
+    client.lease_from_first_read = timedelta(seconds=2)
     app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic private profile", operation_registry=_registry)
     async with app.run_test() as pilot:
         await _shown(app, pilot)
-        reads = client.status_calls
-        await asyncio.sleep(1.0)
-        await settle(pilot, workers=False)
-        assert client.status_calls == reads, "the shell read status while nothing changed"
+        assert client.status_calls == 1
+        deadline = client.expires_at
         await settle_until(pilot, lambda: app._cleared, "the shell to clear after the lapse", workers=False)
-        assert client.status_calls == reads + 1, "the lapse is found by one read at the deadline"
+        later_reads = client.status_read_at[1:]
+        assert all(read_at >= deadline for read_at in later_reads), "the shell read status while nothing changed"
+        assert len(later_reads) == 1, "the lapse is found by one read at the deadline"

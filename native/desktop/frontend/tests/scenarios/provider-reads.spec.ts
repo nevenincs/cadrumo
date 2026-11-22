@@ -68,6 +68,7 @@ for (const transition of ["profile", "sign-out", "host"] as const)
               reader,
               true,
               0,
+              null,
             );
             react.useLayoutEffect(() => {
               view = current;

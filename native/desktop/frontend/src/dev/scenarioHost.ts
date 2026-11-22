@@ -66,6 +66,7 @@ import { agentAccessFixture } from "./agentAccessFixture";
 import { ABOUT_FIXTURE } from "./fixtures/about";
 import type { FixtureSkills } from "./fixtures/agentSkills";
 import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
+import { UNANSWERED_IVA_CALENDAR } from "./fixtures/calendarSuppressed";
 import {
   providerSettingsFixture,
   type ProviderSignInFixtureControls,
@@ -212,6 +213,8 @@ export const CALENDAR_SHAPES = {
   busy: BUSY_CALENDAR,
   evidence: EVIDENCE_CALENDAR,
   close_unknown: CLOSE_UNKNOWN_CALENDAR,
+  // The IVA block claimed with its four yes/no questions unanswered.
+  unanswered_iva: UNANSWERED_IVA_CALENDAR,
   // The filing-year envelope the read was served under, in each state.
   support_supported: SUPPORTED_CALENDAR,
   support_bounded: BOUNDED_CALENDAR,
@@ -268,6 +271,9 @@ declare global {
     __scenarioWindow?: ScenarioWindowControls;
     /** The filing calendar read is refused while this is true. */
     __scenarioCalendarRefused?: boolean;
+    /** The filing calendar read is refused with these served words while
+     * they are set, as the product's refusal of the read would be. */
+    __scenarioCalendarRefusalWords?: string;
     /** The Home read is refused while this is true. */
     __scenarioHomeRefused?: boolean;
     /** The Reference search is refused while this is true. */
@@ -655,6 +661,12 @@ export function scenarioHost(
       await wait(options.latencyMs);
       if (!readable() || window.__scenarioCalendarRefused)
         throw failure("timed_out", "cli");
+      if (window.__scenarioCalendarRefusalWords)
+        return Promise.reject({
+          code: "refused",
+          operation_id: null,
+          refusal_words: window.__scenarioCalendarRefusalWords,
+        });
       if (scenario.views === "empty") return EMPTY_CALENDAR;
       return options.calendar
         ? CALENDAR_SHAPES[options.calendar]
@@ -725,11 +737,14 @@ export function scenarioHost(
   // The engine the agent's record selects is the agent's to say, and the
   // agent is made after the settings that name its turned-off lanes.
   let agentEngine: () => string = () => options.localEngine ?? "llamacpp";
+  // The agent's host republishes its status on the service's settle cue.
+  let republish: () => void = () => {};
   const providerFixture = providerSettingsFixture({
     say,
     wait: () => wait(options.latencyMs),
     readable,
     selectedEngine: () => agentEngine(),
+    settled: () => republish(),
   });
 
   // The agent goes with the profile's views: offered, empty, refused or not
@@ -739,6 +754,7 @@ export function scenarioHost(
     agent,
     session: servedSession,
     publishStatus,
+    republishStatus,
     changeListElsewhere,
     selectedEngine,
   } = fixtureAgent({
@@ -778,6 +794,7 @@ export function scenarioHost(
     },
   });
   agentEngine = selectedEngine;
+  republish = republishStatus;
   // Every host this page made publishes, as one service would for each.
   const publishedBefore = window.__scenarioAgentPublishStatus;
   window.__scenarioAgentPublishStatus = (status) => {

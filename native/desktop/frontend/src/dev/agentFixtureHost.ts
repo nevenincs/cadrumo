@@ -229,6 +229,9 @@ export function fixtureAgent({
   session: AgentSession;
   /** Publishes the agent's status, as the service does once it is ready. */
   publishStatus: (status?: AgentServiceStatus) => void;
+  /** Sends the status the window holds again, unchanged, as the host does
+   * when the service says a read it answered busy or pending for settled. */
+  republishStatus: () => void;
   /** Changes the stored model list from elsewhere. */
   changeListElsewhere: () => void;
   /** The local engine the stored record selects now. */
@@ -1243,10 +1246,13 @@ export function fixtureAgent({
     if (ready) modelHost.state.declared = false;
     statusListener?.(status());
   };
+  // Each status the host sends is a new object, as one read off its channel is.
+  const republishStatus = () => statusListener?.({ ...status() });
   return {
     agent,
     session,
     publishStatus,
+    republishStatus,
     changeListElsewhere: modelHost.changeListElsewhere,
     selectedEngine: modelHost.selectedEngine,
   };

@@ -191,6 +191,9 @@ export type ProviderSignInFixtureControls = {
   /** The next `times` status reads answer while the service still reads the
    * sign-in routes behind them: `reads_pending`, with none offered. */
   pendSignInReads: (times?: number) => void;
+  /** The service's reads behind a pending answer end, and it cues the
+   * window, whose host sends the agent's status again. */
+  settleReads: () => void;
   /** Every settings status read answers `busy`, as the host does before it
    * has admitted the service, until `releaseSettingsBusy`. */
   holdSettingsBusy: () => void;
@@ -360,6 +363,7 @@ export function providerSettingsFixture({
   wait,
   readable,
   selectedEngine = () => DEFAULT_ENGINE,
+  settled,
 }: {
   say: (call: string) => void;
   wait: () => Promise<void>;
@@ -368,6 +372,10 @@ export function providerSettingsFixture({
   /** The local engine the agent's record selects, read at each status: only
    * its keyless lane is listed, as the service lists. */
   selectedEngine?: () => string;
+  /** Called as the service cues the window once a read it answered busy or
+   * pending for has settled: the host admitting the service, or the sign-in
+   * routes read behind a pending answer. */
+  settled?: () => void;
 }): ProviderSettingsFixture {
   // React StrictMode may construct more than one host fixture. Mutable
   // sign-in state is shared so the exposed controls reach the mounted host.
@@ -450,11 +458,15 @@ export function providerSettingsFixture({
     pendSignInReads(times = 1) {
       pendingSignInReads = times;
     },
+    settleReads() {
+      settled?.();
+    },
     holdSettingsBusy() {
       settingsBusy = true;
     },
     releaseSettingsBusy() {
       settingsBusy = false;
+      settled?.();
     },
     askForCode() {
       askForCode = true;

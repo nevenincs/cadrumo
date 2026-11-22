@@ -29,6 +29,7 @@ from cadrumo_client.contracts.sign_in import SignInStatus
 from cadrumo_runtime.application.development_root import mark_development_root
 
 from .caller_owned_root import (
+    COMMAND_SECONDS,
     AcceptanceError,
     Programs,
     caller_owned_runtime,
@@ -40,6 +41,7 @@ from .caller_owned_root import (
 )
 from .packaged_service_process import PackagedServiceProcess, package_default_engine
 from .proof_support import Profile, create_profile, identify_profile, login_profile, state_taxpayer
+from .service_admin_channel import ADMIN_EXCHANGE_SECONDS
 from .windows_holder import WindowsRuntimeSessionHolder
 
 
@@ -124,11 +126,15 @@ class AgentServiceSession:
             else ()
         )
 
-    def admin(self, action: AdminAction, **fields: Any) -> dict[str, JsonValue]:
-        """Request a typed public catalog or service status projection."""
-        return self._service.admin(self._admin_port(), action, **fields)
+    def admin(
+        self, action: AdminAction, *, within: float = ADMIN_EXCHANGE_SECONDS, **fields: Any
+    ) -> dict[str, JsonValue]:
+        """Request a typed public catalog or service status projection, answered inside ``within``."""
+        return self._service.admin(self._admin_port(), action, within=within, **fields)
 
-    def settings(self, action: AdminAction, **fields: Any) -> dict[str, JsonValue]:
+    def settings(
+        self, action: AdminAction, *, within: float = ADMIN_EXCHANGE_SECONDS, **fields: Any
+    ) -> dict[str, JsonValue]:
         """Read or store the window's local-model settings, on a session its caller owns alone.
 
         A shared session serves many tests, so none of them may change what the
@@ -136,7 +142,34 @@ class AgentServiceSession:
         """
         if not self._owned:
             raise AcceptanceError("a shared agent service session does not change local-model settings")
-        return self._service.settings(self._admin_port(), action, **fields)
+        return self._service.settings(self._admin_port(), action, within=within, **fields)
+
+    def credential(
+        self,
+        *,
+        provider: str,
+        expected_revision: str,
+        base_url: str | None,
+        secret: bytearray,
+        within: float = ADMIN_EXCHANGE_SECONDS,
+    ) -> dict[str, JsonValue]:
+        """Store one lane's direct credential as the window does, on a session its caller owns alone.
+
+        ``secret`` is wiped on every exit, a refusal of the session included.
+        """
+        try:
+            if not self._owned:
+                raise AcceptanceError("a shared agent service session does not store provider credentials")
+            return self._service.credential(
+                self._admin_port(),
+                provider=provider,
+                expected_revision=expected_revision,
+                base_url=base_url,
+                secret=secret,
+                within=within,
+            )
+        finally:
+            secret[:] = bytes(len(secret))
 
     def _admin_port(self) -> int:
         port = self.service_ready.get("admin_port")
@@ -144,13 +177,13 @@ class AgentServiceSession:
             raise AcceptanceError("service admin endpoint is invalid")
         return port
 
-    def catalog(self) -> dict[str, JsonValue]:
-        """Read the service's currently available provider catalog."""
-        return self.admin("catalog")
+    def catalog(self, *, within: float = ADMIN_EXCHANGE_SECONDS) -> dict[str, JsonValue]:
+        """Read the service's currently available provider catalog, answered inside ``within``."""
+        return self.admin("catalog", within=within)
 
-    def status(self) -> dict[str, JsonValue]:
-        """Read service status under this exact admitted session."""
-        return self.admin("status")
+    def status(self, *, within: float = ADMIN_EXCHANGE_SECONDS) -> dict[str, JsonValue]:
+        """Read service status under this exact admitted session, answered inside ``within``."""
+        return self.admin("status", within=within)
 
     def sign_in_deadline(self) -> datetime | None:
         """The earlier of the stored sign-in's idle deadline and the held person session's expiry.
@@ -232,8 +265,13 @@ class AgentServiceSession:
             "timings": {key: round(value, 3) for key, value in timings.items()},
         }
 
-    def cli_read(self, *arguments: str, reveal_identifiers: bool) -> tuple[int, dict[str, Any]]:
-        """Read under stored sign-in, or use protected profile input when persistence was unavailable."""
+    def cli_read(
+        self, *arguments: str, reveal_identifiers: bool, timeout: float = COMMAND_SECONDS
+    ) -> tuple[int, dict[str, Any]]:
+        """Read under stored sign-in, or use protected profile input when persistence was unavailable.
+
+        ``timeout`` bounds the command; the shared command bound unless the caller names another.
+        """
         environment = dict(self.environment)
         if reveal_identifiers:
             environment["CADRUMO_CLI_REVEAL_IDENTIFIERS"] = "true"
@@ -245,6 +283,7 @@ class AgentServiceSession:
             *profile_arguments,
             *arguments,
             secret=secret,
+            timeout=timeout,
         )
 
 
@@ -255,6 +294,7 @@ def agent_service_session(
     *,
     external_bin_dirs: tuple[Path, ...] = (),
     owned: bool = False,
+    deployment_settings: Mapping[str, str] | None = None,
 ) -> Generator[AgentServiceSession]:
     """Start the runtime first, then create one profile, holder and admitted service.
 
@@ -262,7 +302,8 @@ def agent_service_session(
     for the suite. A provider refusal is observable and does not prevent
     structural service tests from using catalog or status administration.
     ``owned`` marks a session one caller alone uses, which may then store the
-    window's local-model settings as the service's parent.
+    window's local-model settings as the service's parent. ``deployment_settings`` are product settings the
+    runtime is started under, as a deployment sets them in the environment it starts the runtime in.
     """
     package = package.resolve(strict=True)
     scratch.mkdir(parents=True, exist_ok=True)
@@ -270,6 +311,9 @@ def agent_service_session(
     root.mkdir(parents=True, exist_ok=True)
     environment = consumer_environment(root)
     environment["CADRUMO_LOG_STDERR_LEVEL"] = "WARNING"
+    for name, value in (deployment_settings or {}).items():
+        require(name.upper().startswith("CADRUMO_"), "a deployment setting is a product setting")
+        environment[name.upper()] = value
     if external_bin_dirs:
         normalized = tuple(str(path.resolve(strict=True)) for path in external_bin_dirs)
         environment["CADRUMO_EXTERNAL_BIN_DIRS"] = os.pathsep.join(normalized)
