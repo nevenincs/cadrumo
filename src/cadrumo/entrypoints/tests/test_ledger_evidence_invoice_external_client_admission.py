@@ -30,6 +30,7 @@ from ...application.operations.models import OperationIdentity
 from ...application.user_profile.access_contracts import SessionKind
 from ...core.operations import OperationFrontendProjection, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...tests.pdf_fixtures import text_pdf_bytes
 from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from . import registered_executor_case_support as conformance
 from .invoice_evidence_operation_test_support import prepare_invoice_evidence_conformance_case
@@ -47,7 +48,7 @@ _FRONTENDS = pytest.mark.parametrize(
     [(_EXTERNAL_CLIENT, _AUTOMATION_LABEL), (_CLI, _PERSON_LABEL), (_TUI, _PERSON_LABEL)],
     ids=["external_client", "cli", "tui"],
 )
-_MINIMAL_PDF = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
+_SYNTHETIC_INVOICE_PDF = text_pdf_bytes(("synthetic purchase invoice",))
 
 
 def _session_host(definition_id: str, frontend: OperationFrontendProjection) -> OperationExecutionCallerReader:
@@ -81,7 +82,7 @@ def test_evidence_update_records_who_acted_and_returns_the_stored_record_whole_o
         source_directory = tmp_path / "typed-by-the-person"
         source_directory.mkdir()
         source = source_directory / "synthetic-purchase-invoice.pdf"
-        source.write_bytes(_MINIMAL_PDF)
+        source.write_bytes(_SYNTHETIC_INVOICE_PDF)
         service = PurchaseInvoiceEvidenceService(ports=build_ledger_evidence_ports(bucket_id=str(profile_id)))
         added = service.add(bucket_id=str(profile_id), source_path=source).record
         request = LedgerEvidenceUpdateRequest(
