@@ -98,7 +98,8 @@ def property_text(transaction: Transaction, name: LedgerPropertySetField) -> str
 def property_set_of(transaction: Transaction, fields: tuple[LedgerPropertySetField, ...]) -> LedgerPropertySet:
     """Return the stored values of ``fields``, as one typed property set."""
     values: dict[str, object] = {"fields": fields}
-    values.update({name: property_text(transaction, name) for name in fields})
+    for name in fields:
+        values[name] = property_text(transaction, name)
     return LedgerPropertySet.model_validate(values)
 
 
@@ -194,12 +195,15 @@ def _plan_row(
         )
         return _RowPlan(unchanged, working)
     replacement, events = prepared
-    changed = tuple(name for name in fields if property_text(current, name) != property_text(replacement, name))
+    selected: tuple[LedgerPropertySetField, ...] = fields
+    changed: tuple[LedgerPropertySetField, ...] = tuple(
+        name for name in selected if property_text(current, name) != property_text(replacement, name)
+    )
     applied = LedgerBatchRowResult(
         transaction_id=transaction_id,
         outcome="applied",
         # A restated classification another party gave changes who decided it, not its value.
-        changed_fields=changed or fields,
+        changed_fields=changed or selected,
         previous=previous,
         result_transaction_id=replacement.transaction_id,
         modified_at=replacement.modified_at.isoformat(),
