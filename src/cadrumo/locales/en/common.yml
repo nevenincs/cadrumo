@@ -5549,6 +5549,8 @@ desktop:
       custody_changed: This profile's password or recovery settings changed. Sign
         in again.
       generation_changed: You were signed out elsewhere. Sign in again.
+      host_limit: This computer can't provide the memory or processors that signing
+        in needs. Open Logs for details.
       installation_cancelled: Installation was cancelled.
       installation_failed: Background services could not be installed.
       installation_refused: The installation kit could not be verified. Use a complete

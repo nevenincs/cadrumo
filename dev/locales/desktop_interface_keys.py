@@ -1427,6 +1427,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.signin.refused.custody_changed",
         "desktop.signin.refused.timeout",
         "desktop.signin.refused.generation_changed",
+        "desktop.signin.refused.host_limit",
         "desktop.signin.refused.invalid",
         "desktop.signin.refused.keyring_unavailable",
         "desktop.signin.refused.login_mismatch",

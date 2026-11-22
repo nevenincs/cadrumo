@@ -185,7 +185,7 @@ with profile_kdf_lease(deadline=time.monotonic() + 30):
             profile_kdf_lease(settings=kdf_supervision_settings(tmp_path), deadline=time.monotonic() + 0.1),
         ):
             raise AssertionError("cross-process lease unexpectedly admitted a concurrent owner")
-        assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT
+        assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_BUSY
         holder.kill()
         await asyncio.wait_for(holder.wait(), timeout=2.0)
         with profile_kdf_lease(settings=kdf_supervision_settings(tmp_path), deadline=time.monotonic() + 1.0):
@@ -833,7 +833,7 @@ def test_a_stalled_derivation_releases_its_permit_child_and_pipes_so_the_retry_p
         with prewarm.bound(), pytest.raises(ProfileCustodyRefusedError) as captured:
             unlock_profile_custody(envelope, PASSPHRASE, sentinel=sentinel, settings=settings, timeout_seconds=2.0)
 
-        assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT
+        assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_BUSY
         assert stalled_process.returncode is not None
         assert stalled._process is None and stalled._job is None
         assert stalled._request_fd is None and stalled._result_fd is None
@@ -850,7 +850,7 @@ def test_a_stalled_derivation_releases_its_permit_child_and_pipes_so_the_retry_p
             stalled_process.wait(timeout=10)
 
 
-def test_a_budget_spent_waiting_for_the_permit_is_refused_as_a_resource_limit(tmp_path: Path) -> None:
+def test_a_budget_spent_waiting_for_the_permit_is_refused_as_busy_resources(tmp_path: Path) -> None:
     """While another derivation holds the installation's permit past the whole budget, the host is busy."""
     envelope, sentinel = unlock_inputs()
     settings = kdf_supervision_settings(tmp_path)
@@ -871,7 +871,7 @@ def test_a_budget_spent_waiting_for_the_permit_is_refused_as_a_resource_limit(tm
         holding.set()
         holder.join(timeout=10)
 
-    assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT
+    assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_BUSY
 
 
 def _sysconf_stub(monkeypatch: pytest.MonkeyPatch, names: dict[str, int], values: dict[str, int]) -> None:

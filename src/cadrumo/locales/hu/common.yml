@@ -5640,6 +5640,8 @@ desktop:
       custody_changed: A profil jelszava vagy helyreállítási beállításai megváltoztak.
         Jelentkezz be újra.
       generation_changed: Máshol kijelentkeztettek. Jelentkezz be újra.
+      host_limit: Ez a számítógép nem tudja biztosítani a bejelentkezéshez szükséges
+        memóriát vagy processzorokat. A részletekért nyisd meg a naplókat.
       installation_cancelled: A telepítés megszakítva.
       installation_failed: A háttérszolgáltatások telepítése nem sikerült.
       installation_refused: A telepítőcsomag nem ellenőrizhető. Használj azonos verziójú,

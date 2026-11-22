@@ -72,14 +72,28 @@ _RECEIPT_DENIALS: Final[dict[ProfileSessionRefusalReason, AccessDenialCode]] = {
 
 
 _KDF_UNAVAILABLE: Final = frozenset(
-    {ProfileCustodyRefusal.KDF_RESOURCE_LIMIT, ProfileCustodyRefusal.KDF_SUPERVISION_BUSY}
+    {ProfileCustodyRefusal.KDF_RESOURCE_BUSY, ProfileCustodyRefusal.KDF_SUPERVISION_BUSY}
 )
-"""Derivation refusals that say nothing about the password: the permit or the child was not available in time.
+"""Derivation refusals that say nothing about the password: the permit, the child or the derivation was late.
 
-A child that could not be started, contained or verified at all is not among
-them: calling that "unavailable for now" would tell the person to try again
+A child that could not be started, contained or verified at all, and a host
+that cannot supply the processors or memory a derivation needs, are not among
+them: calling those "unavailable for now" would tell the person to try again
 against a host that will refuse the same way.
 """
+
+
+def custody_sign_in_refusal(error: ProfileCustodyRefusedError) -> Exception | None:
+    """Return what a custody refusal of a password sign-in becomes, or ``None`` when it is raised as itself.
+
+    The owner's own deadline is a timeout, a refusal load alone caused is
+    unavailable for now, and every other refusal keeps its typed reason.
+    """
+    if error.refusal is ProfileCustodyRefusal.KDF_TIMEOUT:
+        return OrchestrationTimeoutError("profile_kdf_timeout")
+    if error.refusal in _KDF_UNAVAILABLE:
+        return AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+    return None
 
 
 @dataclass(slots=True)
@@ -191,13 +205,11 @@ class ProfileWorkerHumanLogin:
                 ) from None
             except ProfileCustodyRefusedError as error:
                 self.cancel()
-                if error.refusal is ProfileCustodyRefusal.KDF_TIMEOUT:
-                    raise OrchestrationTimeoutError("profile_kdf_timeout") from None
-                if error.refusal not in _KDF_UNAVAILABLE:
+                refusal = custody_sign_in_refusal(error)
+                if refusal is None:
                     raise
-                # The installation's one KDF permit stayed taken, or no derivation child attested: this
-                # sign-in is refused as unavailable for now, and the worker keeps serving its other sessions.
-                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
+                # A load-driven refusal leaves the worker serving its other sessions.
+                raise refusal from None
             except BaseException:
                 self.cancel()
                 raise

@@ -432,10 +432,11 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     # ATTESTATION failures, Windows job-object capability failures and permanent
     # host limits, for which retry is actively wrong, because `True` on a
     # permanent failure hands a non-interactive caller an unbounded loop. The
-    # one cause that load alone produces -- a derivation child started but not
-    # attested before its budget ended -- is raised as its own subclass below,
-    # whose code is retryable and whose words say so, so the flag and the words
-    # never disagree.
+    # causes that load alone produces -- a derivation child started but not
+    # attested before its budget ended, and a derivation permit, lock or
+    # derivation not finished before its deadline -- are raised as their own
+    # subclass below, whose code is retryable and whose words say so, so the
+    # flag and the words never disagree.
     (
         "cadrumo.adapters.persistence.storage.custody.errors.ProfileCustodyRefusedError",
         ErrorCode(

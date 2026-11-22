@@ -2022,10 +2022,12 @@ errors:
       nyilvántartása nem ment át az ellenőrzésen.
     refused_profile_binding_resolution: A számításhoz szükséges profiladatot nem sikerült
       a megfelelő kötési csatornává feloldani.
-    refused_profile_custody_kdf_resource_limit: A gép nem tudja lefoglalni a kért
-      kulcslevezetési erőforrásokat. Próbáld újra, amikor a gép kevésbé terhelt; ha
-      továbbra is fennáll, ez a gép nem tudja biztosítani a kulcslevezetéshez szükséges
-      memóriát.
+    refused_profile_custody_kdf_resource_busy: A kulcslevezetés nem fejeződött be
+      időben, mert a gép terhelt. Ez semmit nem mond a jelszavadról; próbáld újra
+      egy kicsit később.
+    refused_profile_custody_kdf_resource_limit: 'A kulcslevezetés nem futtatható ezen
+      a gépen: nem tudja biztosítani vagy lekérdezni a kulcslevezetéshez szükséges
+      processzorokat és memóriát. Az okot a naplókban találod.'
     refused_profile_custody_kdf_supervision_busy: A kulcslevezetés nem tudott időben
       elindulni, mert a gép terhelt. A jelszavadat nem ellenőriztük; próbáld újra
       egy kicsit később.

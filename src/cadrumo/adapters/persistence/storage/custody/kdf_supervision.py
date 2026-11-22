@@ -47,7 +47,7 @@ from .kdf_records import (
     PROFILE_CUSTODY_KDF_MEMORY_MIB,
     PROFILE_CUSTODY_KDF_PARALLELISM,
 )
-from .kdf_refusals import busy_refusal, resource_refusal, supervision_refusal
+from .kdf_refusals import busy_refusal, resource_busy_refusal, resource_refusal, supervision_refusal
 from .kdf_worker_limits import PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES
 from .kdf_worker_supervision import SupervisedKdfWorker, kdf_worker_never_attested
 from .profile_password_codec import encode_profile_password
@@ -460,7 +460,7 @@ def _calibration_probe(
             # Only a timed derivation overruns a sample, so this point is over the band.
             return math.inf
         except ProfileCustodyRefusedError as exc:
-            if exc.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT:
+            if exc.refusal in {ProfileCustodyRefusal.KDF_RESOURCE_LIMIT, ProfileCustodyRefusal.KDF_RESOURCE_BUSY}:
                 return math.inf
             raise
 
@@ -911,8 +911,8 @@ def _require_timeout_budget(deadline: float | None, *, cancellation: ProfileProo
 
 
 def _timeout_refusal(error: TimeoutError) -> ProfileCustodyRefusedError:
-    """Name a child that never attested as busy supervision; a late permit or derivation as the busy host's limit."""
-    return busy_refusal() if kdf_worker_never_attested(error) else resource_refusal()
+    """Name a child that never attested as busy supervision; a late permit or derivation as busy resources."""
+    return busy_refusal() if kdf_worker_never_attested(error) else resource_busy_refusal()
 
 
 def _measure_profile_kdf(
@@ -1050,7 +1050,7 @@ def _acquire_kdf_thread_lease(*, deadline: float, cancellation: ProfileProofCanc
                 cancellation.raise_if_cancelled()
             remaining = deadline - time.monotonic()
             if remaining <= 0:
-                raise resource_refusal()
+                raise resource_busy_refusal()
             if KDF_THREAD_LEASE.acquire(blocking=False):
                 return
             KDF_THREAD_CAPACITY.wait(timeout=remaining)
