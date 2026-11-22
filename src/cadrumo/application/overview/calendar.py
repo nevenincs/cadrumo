@@ -106,7 +106,7 @@ _log = get_logger(__name__)
 
 #: Every unanswered profile fact the calendar names is answered in the profile editor.
 _PROFILE_EDIT_ACTION_ID = "operator.profile.edit"
-_UNDETERMINED_IVA_WINDOW_REASON_KEY = "workspace.declarations.calendar.suppressed.verdict.incomplete"
+_UNDETERMINED_IVA_WINDOW_REASON_LOCALE_KEY = "workspace.declarations.calendar.suppressed.verdict.incomplete"
 
 
 def _window_intersects_range(
@@ -867,7 +867,7 @@ def _undetermined_calendar_entry(item: UndeterminedObligation) -> SuppressedCale
         reason=" ".join(
             tr(key) for key in (_question_locale_key(path) for path in item.deciding_paths) if key is not None
         )
-        or tr(_UNDETERMINED_IVA_WINDOW_REASON_KEY),
+        or tr(_UNDETERMINED_IVA_WINDOW_REASON_LOCALE_KEY),
         actions=(declare_next_action(_PROFILE_EDIT_ACTION_ID),),
     )
 
