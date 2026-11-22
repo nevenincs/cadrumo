@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-17 09:45+0100\n"
+"POT-Creation-Date: 2026-11-22 02:08+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -312,6 +312,30 @@ msgstr ""
 
 #: ../../how-to/modelo-100.md:128
 msgid ""
+"The check applies to the calculation it checked. If you recalculate "
+"afterwards, the recalculated draft becomes the declaration's current "
+"calculation. Stating the work income again then reproduces the checked "
+"calculation, so no new draft is created: the result carries a notice that"
+" names the checked calculation by its revision ID and its state (checked "
+"and complete), and the recalculated draft stays current. The checked "
+"calculation is left exactly as it was. Export by the revision ID the "
+"notice names, as the example below does with `--revision`, so the export "
+"reads the checked calculation rather than the recalculated draft."
+msgstr ""
+"Az ellenőrzés arra a számításra vonatkozik, amelyet ellenőrzött. Ha utána"
+" újraszámolsz, az újraszámolt piszkozat lesz a bevallás aktuális "
+"számítása. Ha ezután újra megadod a munkajövedelmet, az az ellenőrzött "
+"számítást állítja elő újra, így nem készül új piszkozat: az eredmény egy "
+"értesítést tartalmaz, amely megnevezi az ellenőrzött számítást a "
+"verzióazonosítójával és az állapotával (teljesen ellenőrizve), az "
+"újraszámolt piszkozat pedig aktuális marad. Az ellenőrzött számítás "
+"pontosan úgy marad, ahogy volt. Az értesítésben megnevezett "
+"verzióazonosító alapján exportálj, ahogy az alábbi példa teszi a "
+"`--revision` kapcsolóval, hogy az exportálás az ellenőrzött számítást "
+"olvassa, ne az újraszámolt piszkozatot."
+
+#: ../../how-to/modelo-100.md:137
+msgid ""
 "Export the checked declaration. Modelo 100 always writes an XML file, "
 "whatever name you choose. Export refuses to overwrite an existing file "
 "unless you add `--replace`, and refuses when the output folder does not "
@@ -334,7 +358,7 @@ msgstr ""
 "ezért itt a benyújtás rögzítése nem futtatott példaként jelenik meg, "
 "ahogy az AEAT-tól olvasó egyeztetési lekérés is:"
 
-#: ../../how-to/modelo-100.md:142
+#: ../../how-to/modelo-100.md:151
 msgid ""
 "See [Reconcile a filed modelo against its AEAT receipt](reconcile.md) for"
 " the reconciliation verdicts."
@@ -342,11 +366,11 @@ msgstr ""
 "Az egyeztetési eredményekért lásd: [Egy benyújtott nyomtatvány "
 "egyeztetése az AEAT-igazolással](reconcile.md)."
 
-#: ../../how-to/modelo-100.md:144
+#: ../../how-to/modelo-100.md:153
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/modelo-100.md:146
+#: ../../how-to/modelo-100.md:155
 msgid ""
 "[Deep dive: how the Renta declaration is assembled](../explanation/how-"
 "renta-is-assembled.md)"
@@ -354,20 +378,20 @@ msgstr ""
 "[Elmélyülés: hogyan áll össze a Renta-bevallás](../explanation/how-renta-"
 "is-assembled.md)"
 
-#: ../../how-to/modelo-100.md:147
+#: ../../how-to/modelo-100.md:156
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
 msgstr "[Egy Modelo 130 IRPF-előleg előkészítése](modelo-130.md)"
 
-#: ../../how-to/modelo-100.md:148
+#: ../../how-to/modelo-100.md:157
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
 "[A számítási bemenetek áttekintése és megadása](review-calculation-"
 "values.md)"
 
-#: ../../how-to/modelo-100.md:149
+#: ../../how-to/modelo-100.md:158
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Nyújtsd be a nyomtatványodat az AEAT-portálon](file-at-aeat.md)"
 
-#: ../../how-to/modelo-100.md:150
+#: ../../how-to/modelo-100.md:159
 msgid "[Reconcile a filed modelo against its AEAT receipt](reconcile.md)"
 msgstr "[Egy benyújtott nyomtatvány egyeztetése az AEAT-igazolással](reconcile.md)"

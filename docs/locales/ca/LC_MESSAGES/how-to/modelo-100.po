@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-17 09:45+0100\n"
+"POT-Creation-Date: 2026-11-22 02:08+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -314,6 +314,29 @@ msgstr ""
 
 #: ../../how-to/modelo-100.md:128
 msgid ""
+"The check applies to the calculation it checked. If you recalculate "
+"afterwards, the recalculated draft becomes the declaration's current "
+"calculation. Stating the work income again then reproduces the checked "
+"calculation, so no new draft is created: the result carries a notice that"
+" names the checked calculation by its revision ID and its state (checked "
+"and complete), and the recalculated draft stays current. The checked "
+"calculation is left exactly as it was. Export by the revision ID the "
+"notice names, as the example below does with `--revision`, so the export "
+"reads the checked calculation rather than the recalculated draft."
+msgstr ""
+"La comprovació s'aplica al càlcul que va comprovar. Si tornes a calcular "
+"després, l'esborrany recalculat passa a ser el càlcul actual de la "
+"declaració. Quan tornes a declarar les rendes del treball es reprodueix "
+"el càlcul comprovat, de manera que no es crea cap esborrany nou: el "
+"resultat porta un avís que anomena el càlcul comprovat pel seu "
+"identificador de revisió i el seu estat (comprovada i completa), i "
+"l'esborrany recalculat continua sent l'actual. El càlcul comprovat queda "
+"exactament com estava. Exporta per l'identificador de revisió que anomena"
+" l'avís, com fa l'exemple següent amb `--revision`, perquè l'exportació "
+"llegeixi el càlcul comprovat i no l'esborrany recalculat."
+
+#: ../../how-to/modelo-100.md:137
+msgid ""
 "Export the checked declaration. Modelo 100 always writes an XML file, "
 "whatever name you choose. Export refuses to overwrite an existing file "
 "unless you add `--replace`, and refuses when the output folder does not "
@@ -337,7 +360,7 @@ msgstr ""
 "presentació es mostra com a exemple que no s'executa, igual que la "
 "descàrrega de conciliació, que llegeix de l'AEAT:"
 
-#: ../../how-to/modelo-100.md:142
+#: ../../how-to/modelo-100.md:151
 msgid ""
 "See [Reconcile a filed modelo against its AEAT receipt](reconcile.md) for"
 " the reconciliation verdicts."
@@ -345,11 +368,11 @@ msgstr ""
 "Consulta [Concilia un model presentat amb el teu justificant de "
 "l'AEAT](reconcile.md) per als veredictes de conciliació."
 
-#: ../../how-to/modelo-100.md:144
+#: ../../how-to/modelo-100.md:153
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/modelo-100.md:146
+#: ../../how-to/modelo-100.md:155
 msgid ""
 "[Deep dive: how the Renta declaration is assembled](../explanation/how-"
 "renta-is-assembled.md)"
@@ -357,19 +380,19 @@ msgstr ""
 "[Anàlisi a fons: com es compon la declaració de la Renta](../explanation"
 "/how-renta-is-assembled.md)"
 
-#: ../../how-to/modelo-100.md:147
+#: ../../how-to/modelo-100.md:156
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
 msgstr "[Prepara un pagament fraccionat de l'IRPF del Modelo 130](modelo-130.md)"
 
-#: ../../how-to/modelo-100.md:148
+#: ../../how-to/modelo-100.md:157
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
-#: ../../how-to/modelo-100.md:149
+#: ../../how-to/modelo-100.md:158
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Presenta el teu model al portal de l'AEAT](file-at-aeat.md)"
 
-#: ../../how-to/modelo-100.md:150
+#: ../../how-to/modelo-100.md:159
 msgid "[Reconcile a filed modelo against its AEAT receipt](reconcile.md)"
 msgstr ""
 "[Concilia un model presentat amb el teu justificant de "

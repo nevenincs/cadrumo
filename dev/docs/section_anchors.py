@@ -167,25 +167,46 @@ def _section_after(declaration: section_anchor) -> nodes.section:
 
 
 def _publish_under(document: nodes.document, section: nodes.section, anchor: str) -> None:
-    """Make *anchor* the id the section element carries."""
+    """Make *anchor* the id the section element carries, in place of the heading's own id."""
     if nodes.make_id(anchor) != anchor:
         raise SectionAnchorError(f"anchor {anchor!r} is not a docutils id; it would reach the page altered")
-    slug = section["ids"][0]
-    if slug == anchor:
-        return
     standing = document.ids.get(anchor)
     if standing is not None and standing is not section:
         raise SectionAnchorError(f"anchor {anchor!r} is already published on this page by another element")
-    section["ids"][0] = anchor
-    if document.ids.get(slug) is section:
-        del document.ids[slug]
+    own = _heading_id(document, section)
+    if section["ids"][:1] == [anchor] and own in (None, anchor):
+        return
+    section["ids"] = [anchor, *(id_ for id_ in section["ids"] if id_ not in (own, anchor))]
     document.ids[anchor] = section
+    if own is None or own == anchor:
+        return
+    if document.ids.get(own) is section:
+        del document.ids[own]
     # A name resolves to an id, and the heading's own words are one of this
     # section's names: left alone, a reference written to the heading would
     # resolve to the id the section no longer carries.
     for name, resolves_to in document.nameids.items():
-        if resolves_to == slug:
+        if resolves_to == own:
             document.nameids[name] = anchor
+
+
+def _heading_id(document: nodes.document, section: nodes.section) -> str | None:
+    """Return the id the section was given for its heading's own words, or None if every id is a label's.
+
+    The heading's id is not always the first: a heading whose words slug to
+    nothing (a compile's mark, which is digits between private-use characters)
+    gets an automatic ``idN``, and Sphinx's ``SortIds`` (261) then moves every
+    id starting with ``id`` behind the ids an explicit target propagated onto
+    the section. Taking the first id would replace the label's id with the
+    anchor and leave the automatic one on the page. So the heading's id is the
+    first id that no explicit target name of the section resolves to.
+    """
+    labels = {
+        str(label)
+        for name in section["names"]
+        if document.nametypes.get(name) and (label := document.nameids.get(name)) is not None
+    }
+    return next((str(id_) for id_ in section["ids"] if str(id_) not in labels), None)
 
 
 def register(app: Sphinx) -> None:

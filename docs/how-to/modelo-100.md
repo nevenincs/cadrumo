@@ -125,6 +125,15 @@ must be recorded as filed and have its proof, and every carried figure must stil
 point at the version of the tax rules it was filed under. A blocked report names
 the unresolved dependency. Resolve it, then run the check again. See [Check a draft declaration and act on the issues](verification-reports.md).
 
+The check applies to the calculation it checked. If you recalculate afterwards, the
+recalculated draft becomes the declaration's current calculation. Stating the work
+income again then reproduces the checked calculation, so no new draft is created: the
+result carries a notice that names the checked calculation by its revision ID and its
+state (checked and complete), and the recalculated draft stays current. The checked
+calculation is left exactly as it was. Export by the revision ID the notice names, as
+the example below does with `--revision`, so the export reads the checked calculation
+rather than the recalculated draft.
+
 Export the checked declaration. Modelo 100 always writes an XML file, whatever
 name you choose. Export refuses to overwrite an existing file unless you add
 `--replace`, and refuses when the output folder does not exist. Export is the
