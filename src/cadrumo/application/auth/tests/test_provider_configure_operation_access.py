@@ -263,14 +263,14 @@ def test_configure_result_projection_preserves_precondition_evidence_through_wir
     result = AuthConfigureResult(
         provider="clave_movil",
         complete=False,
-        profile_tax_id_present=True,
-        identity_alignment="clave_identity_missing",
+        profile_tax_id_present=False,
+        identity_alignment="profile_tax_id_missing_and_clave_identity_missing",
         precondition_verdict=incomplete_auth_configuration_verdict(
             provider="clave_movil",
             certificate_file_provided=False,
-            profile_tax_id_present=True,
+            profile_tax_id_present=False,
             provider_identity_present=False,
-            identity_alignment="clave_identity_missing",
+            identity_alignment="profile_tax_id_missing_and_clave_identity_missing",
         ),
     )
 
@@ -282,8 +282,8 @@ def test_configure_result_projection_preserves_precondition_evidence_through_wir
     assert verdict is not None
     assert verdict.failed_condition_id == "auth.clave_movil.identity_aligned"
     assert verdict.evidence[0].values == {
-        "identity_alignment": "clave_identity_missing",
-        "profile_tax_id_present": True,
+        "identity_alignment": "profile_tax_id_missing_and_clave_identity_missing",
+        "profile_tax_id_present": False,
         "provider": "clave_movil",
         "provider_identity_present": False,
     }

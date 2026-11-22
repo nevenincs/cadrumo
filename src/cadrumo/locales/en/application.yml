@@ -83,13 +83,6 @@ application:
         both_missing_detail: Neither the Cl@ve identity (CADRUMO_CLAVE_MOVIL_DNI_NIE)
           nor the active profile tax id is set. Set both to the same DNI/NIE before
           live AEAT auth.
-        clave_identity_missing_detail: The Cl@ve identity (CADRUMO_CLAVE_MOVIL_DNI_NIE)
-          is not set, so it cannot be compared with the active profile tax id. Set
-          it to the DNI/NIE of the active profile.
-        mismatch_detail: The Cl@ve identity DNI/NIE '%{clave_identity}' does not match
-          the active profile tax id '%{profile_tax_id}'. Live AEAT auth would bind
-          one taxpayer's session to another profile. Switch to the profile whose tax
-          id matches the Cl@ve DNI/NIE, or correct whichever value is wrong.
         profile_tax_id_missing_detail: The active profile has no tax id, so it cannot
           be compared with the Cl@ve identity. Set the profile tax id to the DNI/NIE
           used for Cl@ve.

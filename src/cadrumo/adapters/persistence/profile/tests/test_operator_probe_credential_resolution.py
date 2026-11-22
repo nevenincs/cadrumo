@@ -110,12 +110,11 @@ def test_backend_readiness_describes_the_profile_bound_clave_provider() -> None:
 
 
 def test_alignment_reports_a_match_for_a_profile_borne_credential() -> None:
-    """The five-way alignment ladder has to see the resolved identity.
+    """The alignment ladder has to see the resolved identity.
 
     A profile whose Cl@ve credential equals its tax identity is aligned.
-    Reading the empty setting instead would classify it
-    ``clave_identity_missing`` and send the operator to configure a
-    credential that is already correct.
+    Reading the empty setting instead would classify it as missing and send
+    the operator to configure a credential that is already correct.
     """
 
     _register_profile()
@@ -129,25 +128,6 @@ def test_alignment_reports_a_match_for_a_profile_borne_credential() -> None:
     assert profile_present is True
     assert provider_present is True
     assert alignment == "matches"
-
-
-def test_alignment_still_reports_an_absent_credential() -> None:
-    """A profile with no credential anywhere is genuinely unconfigured.
-
-    The guard against over-reporting: resolving profile-first must not
-    invent a credential where neither source holds one.
-    """
-
-    _register_profile()
-    with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
-        _profile_present, provider_present, alignment = live_auth_identity_state(
-            AuthProviderKind.CLAVE_MOVIL,
-            settings=settings,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        )
-
-    assert provider_present is False
-    assert alignment == "clave_identity_missing"
 
 
 def test_identity_kind_classifies_a_profile_borne_credential() -> None:

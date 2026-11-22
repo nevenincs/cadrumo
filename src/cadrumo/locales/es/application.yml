@@ -87,14 +87,6 @@ application:
         both_missing_detail: No están configurados ni la identidad Cl@ve (CADRUMO_CLAVE_MOVIL_DNI_NIE)
           ni el identificador fiscal del perfil activo. Configura ambos con el mismo
           DNI/NIE antes de la autenticación AEAT en directo.
-        clave_identity_missing_detail: La identidad Cl@ve (CADRUMO_CLAVE_MOVIL_DNI_NIE)
-          no está configurada, por lo que no se puede comparar con el identificador
-          fiscal del perfil activo. Configúrala con el DNI/NIE del perfil activo.
-        mismatch_detail: El DNI/NIE de la identidad Cl@ve '%{clave_identity}' no coincide
-          con el identificador fiscal del perfil activo '%{profile_tax_id}'. La autenticación
-          AEAT en directo vincularía la sesión de un contribuyente a otro perfil.
-          Cambia al perfil cuyo identificador fiscal coincida con el DNI/NIE de Cl@ve,
-          o corrige el valor que sea erróneo.
         profile_tax_id_missing_detail: El perfil activo no tiene identificador fiscal,
           por lo que no se puede comparar con la identidad Cl@ve. Configura el identificador
           fiscal del perfil con el DNI/NIE usado para Cl@ve.

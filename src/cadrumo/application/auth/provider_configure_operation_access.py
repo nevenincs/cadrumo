@@ -45,8 +45,6 @@ class AuthConfigurePublicResultV2(BaseModel):
     identity_alignment: Literal[
         "not_applicable",
         "matches",
-        "mismatch",
-        "clave_identity_missing",
         "profile_tax_id_missing",
         "profile_tax_id_missing_and_clave_identity_missing",
     ]

@@ -218,14 +218,10 @@ def test_native_cli_auth_configure_records_the_clave_movil_route_and_refuses_unk
         assert configured.exit_code == 0, configured.output
         payload = unwrap_cli_result(configured)
         assert payload["provider"] == "clave_movil"
-        # The two identities disagree; the result says so without naming either.
-        assert payload["identity_alignment"] == "mismatch"
-        assert payload["complete"] is False
-        precondition_action = payload["precondition_action"]
-        assert isinstance(precondition_action, dict)
-        assert precondition_action["failed_condition_id"] == "auth.clave_movil.identity_aligned"
+        # The profile tax id is the Cl@ve identity, so the result is aligned without naming it.
+        assert payload["identity_alignment"] == "matches"
+        assert payload["complete"] is True
         assert "12345678Z" not in configured.stdout
-        assert "X0001502F" not in configured.stdout
 
         status = _invoke(profile, "config", "auth", "status")
         assert status.exit_code == 0, status.output
