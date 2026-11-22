@@ -34,6 +34,26 @@ A 1000-movement run needs hours, so the cause (harness session lifetime or a pro
 
 The harness removed the disposable root, with its logs, and wrote no partial summary when the run failed, so a failure cannot be diagnosed afterwards.
 
+### p01-s01-baseline-run-5 | medium | Second live baseline: 93 of 100 movements proposed, warm median 13.4 s, 3.87 movements per minute
+
+Run 5 of 2026-11-22, on tui `f949cb2f49` with the bundle 21 package and cadrumo-agent `46f9b44`, model qwen3:4b-instruct served by the bundled llama.cpp router, context 8192 confirmed in the llama-server arguments, automatic placement, 100 synthetic movements attempted. 93 returned a proposal, 5 failed with `ERROR_TRANSACTION_LLM_CLASSIFIER` and 2 were refused with `REFUSED_LEDGER_EVIDENCE_READER`. First result 52.1 s. Warm: median 13.4 s, mean 15.5 s, 95th percentile 29.7 s, minimum 7.2 s, maximum 105.1 s; 3.87 movements per minute warm, 3.40 overall. Classification wall time 1993 s, session setup 73 s, CLI floor median 6.6 s with the machine under a full-gate load. The harness re-sign-in held the session for 33 min. Product log 15609 lines with no WARNING or ERROR. The run exited 1 only at teardown, refused with `runtime_timeout`. Against run 4: 16 of 24 proposed, warm median 29.1 s, 1.78 movements per minute, cut off at 13.5 min. The 1000 movement figure is not yet measured.
+
+### p01-s01-model-time-not-split | medium | Model time cannot be separated from time outside the model
+
+`chat_requests`, prompt tokens and model milliseconds were all 0 in run 5: the router proxies each request to a child llama-server whose timing lines the harness does not capture, so P05 cannot tell model time from the time spent outside it.
+
+### p01-s01-remaining-classifier-failures | high | 7 of 100 valid movements still end without a proposal
+
+5 `ERROR_TRANSACTION_LLM_CLASSIFIER` and 2 `REFUSED_LEDGER_EVIDENCE_READER` in run 5; each code needs its cause named from the run's copied logs.
+
+### p01-s01-teardown-runtime-timeout | medium | Teardown is refused after the measurement completes
+
+The run's closing step was refused with `runtime_timeout`, so a complete measurement exits 1.
+
+### p01-s01-output-placement | low | Harness outputs break the worktree temporary-output naming
+
+Outputs land in `.tmp/ledger-classification-speed/<stamp>` rather than `.tmp/<date>-<owner>-<purpose>/`.
+
 ## Recommendations
 
 - For `p01-s01-cli-boundary-after-13-minutes`: trace the refusal to its owner and fix the cause; if the bound is a deliberate session lifetime, the harness re-establishes its session as an operator would rather than lengthening the lifetime.
