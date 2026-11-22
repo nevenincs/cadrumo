@@ -3718,6 +3718,10 @@ application:
         (rendimientos del trabajo) tartalmaz a DT 12.ª szerinti küszöb felett, ezért
         a(z) [%{reduccion_id}] rovatban olyan csökkentést kaphatsz, amelyet még nem
         használsz. Ellenőrizd, hogy vonatkozik-e rád.
+      floor_subtraction_unresolved: 'A(z) [%{box}] rovatban összeg szerepel, és a(z)
+        [%{floor_box}] rovat minimumot ír elő, de a hivatalos szöveg nem mondja meg,
+        hogy ez a levonás viheti-e az összeget a minimum alá, ezért ez nem ellenőrizhető.
+        Érintett rovatok: %{boxes}.'
       foreign_asset_redeclaration: 'Modelo %{modelo_code}, %{filing_year}: az egyik
         külföldi vagyonelemének értéke %{prior_value_eur} EUR összegről %{current_value_eur}
         EUR összegre nőtt. A(z) %{delta_value_eur} EUR növekedés meghaladja azt a(z)
@@ -3789,6 +3793,10 @@ application:
         %{period} időszakának számításával. A benyújtás az összehasonlítás sikeres
         befejezéséig tiltott. Próbáld újra, amikor a nyilvántartásaid elérhetők, és
         számold újra a bevallást, ha a tételek megváltoztak.
+      limited_subtractions_below_floor: Azok a levonások, amelyek csak a(z) [%{box}]
+        rovatban szereplő minimumig (%{floor_value}) alkalmazhatók, összesen %{limited_total}
+        összeget tesznek ki, és %{after_limited} összeget hagynak, ami e minimum alatt
+        van. Csak a minimumig beférő részt add meg, a többit vidd át a következő évekre.
       m193_settled_row_amount_authority_unresolved: A(z) %{filing_year}. évi Modelo
         193 %{settled_prior_accrual_rows} olyan kifizetést tartalmaz, amely korábbi
         évben keletkezett jövedelemre vonatkozik. A hivatalos szabályok nem határozzák

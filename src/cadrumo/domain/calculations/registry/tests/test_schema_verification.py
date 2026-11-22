@@ -45,6 +45,9 @@ def test_domain_predicate_parser_recognises_every_known_predicate_operator() -> 
         "profile_field_required": ('profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'),
         "profile_flag_enabled": 'profile_flag_enabled("art109_activity_income_withholding_ge_70pct")',
         "roll_forward_balances": 'roll_forward_balances(["00671", "00670", "DP200014:00547", "DP200014:00552"])',
+        "limited_subtractions_respect_floor": (
+            'limited_subtractions_respect_floor(["00619", "00582"], ["02315"], ["00588"], ["00583"], ["00590"])'
+        ),
         "casilla_equals_implies_zero": 'casilla_equals_implies_zero(["01", "  ", "07"])',
         "casilla_equals_implies_nonzero": (
             'casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "base_imponible"])'
@@ -74,6 +77,44 @@ def test_domain_predicate_parser_recognises_every_known_predicate_operator() -> 
         parsed = parse_verification_predicate_expression(probe)
         assert parsed is not None, f"schema parser did not recognise {operator_name!r}: {probe!r}"
         assert parsed.operator.value == operator_name
+
+
+def test_floor_subtraction_groups_keep_each_casilla_in_its_group() -> None:
+    """The five groups are read back in order, empty groups included."""
+    parsed = parse_verification_predicate_expression(
+        'limited_subtractions_respect_floor(["00619", "00582"], [], ["00588", "00585"], [], ["00590"])'
+    )
+    assert parsed is not None
+    assert parsed.casilla_ids == ("00619", "00582", "00588", "00585", "00590")
+    assert parsed.casilla_groups() == (("00619", "00582"), (), ("00588", "00585"), (), ("00590",))
+
+
+@pytest.mark.parametrize(
+    "expression",
+    [
+        'limited_subtractions_respect_floor(["00619", "00582"], ["02315"], ["00588"], ["00583"])',
+        'limited_subtractions_respect_floor(["00619", "00582"], [], ["00588"], [], [], [])',
+        'limited_subtractions_respect_floor(["00619"], ["02315"], ["00588"], [], [])',
+        'limited_subtractions_respect_floor(["00619", "00582", "00552"], [], ["00588"], [], [])',
+        'limited_subtractions_respect_floor(["00619", "00582"], ["02315"], [], ["00583"], [])',
+        'limited_subtractions_respect_floor(["00619", "00582"], [], ["00588"], [], ["00588"])',
+        'limited_subtractions_respect_floor(["00619", "00582", "00588"])',
+        'limited_subtractions_respect_floor(["DP200014:00619", "DP200014:00582"], [], ["00588"], [], ["DP200014:00588"])',
+    ],
+    ids=[
+        "four-groups",
+        "six-groups",
+        "no-base",
+        "three-in-floor-group",
+        "no-limited",
+        "two-groups",
+        "flat-list",
+        "same-box-bare-and-qualified",
+    ],
+)
+def test_floor_subtraction_groups_refuse_a_shape_the_grammar_does_not_admit(expression: str) -> None:
+    """A wrong group count, floor group, empty limited group or doubly classified casilla does not parse."""
+    assert parse_verification_predicate_expression(expression) is None
 
 
 def test_repeated_parse_reuses_the_memoised_value_without_reparsing(

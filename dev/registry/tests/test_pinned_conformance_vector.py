@@ -73,23 +73,47 @@ _PINNED_M200_REVISIONS = tuple(
 #: general case: INCN at or above one million euros, so LIS art. 29.1 gives 25 % x 100000.00.
 #: The reduced case: INCN 28500.00, below one million, so the 23 % rate LIS art. 29.1 takes
 #: from Ley 31/2022 art. 39 applies to the base 25400.00 - 16300.00 = 9100.00, giving 2093.00.
+#: The worked-example case states no preceding-period INCN, because its edition precedes that
+#: rate and reads none: the Sociedades manual's "Ejemplo 1" of the cuota liquida minima prints a
+#: base imponible of 2.000.000 at the tipo general of 25 % and a cuota integra [00562] of 500.000.
 _CUOTA_INTEGRA_BY_SCENARIO = {
     (Decimal("100000"), Decimal("12000000"), Decimal("0")): Decimal("25000"),
     (Decimal("25400.00"), Decimal("28500.00"), Decimal("16300.00")): Decimal("2093.00"),
+    (Decimal("2000000.00"), None, Decimal("0")): Decimal("500000.00"),
 }
 
 
-def _pinned_scenario_cuota_integra(revision_id: str) -> Decimal:
-    """Return the hand-derived cuota integra of the scenario the Modelo 200 pin for ``revision_id`` declares."""
+_PRIOR_INCN_BINDING = "modelo-200-incn-periodo-impositivo-anterior"
+
+
+def _pinned_scenario_cuota_integra(authority: ValidatedRegistryAuthority, revision_id: str) -> Decimal:
+    """Return the hand-derived cuota integra of the scenario the Modelo 200 pin for ``revision_id`` declares.
+
+    A revision that declares the preceding-period INCN binding reads it for the rate, so its
+    pin must state it; only a revision without that binding may leave it out.
+    """
     (document,) = (
         document
         for document in map(load_pinned_conformance_document, sorted(_PINNED_DIR.glob("*.toml")))
         if document.coordinate.modelo == "200" and document.coordinate.revision == revision_id
     )
+    (revision,) = (
+        revision for revision in authority.modelo("200").revisions.values() if str(revision.id) == revision_id
+    )
     decimals = document.inputs["decimal"]
+    if any(binding.id == _PRIOR_INCN_BINDING for binding in revision.bindings):
+        assert _PRIOR_INCN_BINDING in decimals, (
+            f"the Modelo 200 pin for {revision_id} omits {_PRIOR_INCN_BINDING}, which that revision declares"
+        )
+        prior_incn: Decimal | None = Decimal(decimals[_PRIOR_INCN_BINDING])
+    else:
+        assert _PRIOR_INCN_BINDING not in decimals, (
+            f"the Modelo 200 pin for {revision_id} states {_PRIOR_INCN_BINDING}, which that revision does not declare"
+        )
+        prior_incn = None
     scenario = (
         Decimal(decimals["DP200012:00501"]),
-        Decimal(decimals["modelo-200-incn-periodo-impositivo-anterior"]),
+        prior_incn,
         Decimal(decimals["modelo-200-bin-pendiente-ejercicios-anteriores"]),
     )
     assert scenario in _CUOTA_INTEGRA_BY_SCENARIO, f"no hand-derived cuota for the pinned scenario {scenario}"
@@ -342,7 +366,7 @@ def test_the_modelo_200_pin_follows_the_declared_grade(
     vector = _pinned_vector(proof.conformance_enrollment.materializable_vectors, "200", pinned_revision)
     render = _prove_through_the_real_writer(tmp_path, proof=proof, authority=authority, vector=vector)
     values = {value.casilla_id: value.value for value in render.draft.values}
-    assert values["DP200014:00562"] == _pinned_scenario_cuota_integra(pinned_revision)
+    assert values["DP200014:00562"] == _pinned_scenario_cuota_integra(authority, pinned_revision)
     assert render.product_software_identity is not None
 
 

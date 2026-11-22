@@ -36,12 +36,13 @@ from .validate_verification_predicates import (
     casilla_list_predicate_failures,
     deduccion_requires_adquisicion_before_predicate_failures,
     finding_kind_failures,
+    limited_subtractions_respect_floor_predicate_failures,
     profile_field_required_predicate_failures,
     profile_flag_enabled_predicate_failures,
 )
 
-# Operators mixing casilla ids with literal tokens, so they cannot route through the
-# generic casilla-list validators. advisory_when_ratio_ge is the sharpest case: the
+# Operators mixing casilla ids with literal tokens or groups, so they cannot route through
+# the generic casilla-list validators. advisory_when_ratio_ge is the sharpest case: the
 # runtime builds its threshold with a bare Decimal and compares outside its own except
 # clause, so an unvalidated literal either never fires (Infinity) or raises uncaught (NaN).
 MIXED_TOKEN_PREDICATE_VALIDATORS: dict[
@@ -60,6 +61,7 @@ MIXED_TOKEN_PREDICATE_VALIDATORS: dict[
     "casilla_equals_implies_diverges": casilla_equals_implies_diverges_predicate_failures,
     "deduccion_requires_adquisicion_before": deduccion_requires_adquisicion_before_predicate_failures,
     "advisory_when_ratio_ge": advisory_when_ratio_ge_predicate_failures,
+    "limited_subtractions_respect_floor": limited_subtractions_respect_floor_predicate_failures,
 }
 
 PROFILE_PREDICATE_VALIDATORS: dict[str, Callable[[str, str, str], list[str]]] = {

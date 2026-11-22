@@ -41,6 +41,7 @@ from .verification_predicate_advisory import ADVISORY_PREDICATE_EVALUATORS
 from .verification_predicate_operands import (
     AdmittedPredicate,
     equals_sum_operands,
+    floor_subtraction_reading,
     parse_predicate_date,
     roll_forward_balance_reconciles,
 )
@@ -460,6 +461,17 @@ def _evaluate_casilla_equals_implies_zero(
     return consequent in casilla_values and casilla_values[consequent] == 0
 
 
+def _evaluate_limited_subtractions_respect_floor(
+    predicate: AdmittedPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+    _profile: TaxpayerProfile,
+    _text_values: Mapping[CasillaId, str],
+    _fact_date: _date | None,
+) -> bool:
+    reading = floor_subtraction_reading(predicate, casilla_values)
+    return not (reading.breached or reading.unresolved)
+
+
 def _evaluate_profile_field_required(
     predicate: AdmittedPredicate,
     _casilla_values: Mapping[CasillaId, Decimal],
@@ -502,6 +514,9 @@ _BLOCKING_PREDICATE_EVALUATORS: Mapping[VerificationPredicateOperator, _Blocking
         VerificationPredicateOperator.EQUALS_SUM: _evaluate_equals_sum,
         VerificationPredicateOperator.IMPLIES_NONZERO: _evaluate_implies_nonzero,
         VerificationPredicateOperator.IMPLIES_ANY_NONZERO: _evaluate_implies_any_nonzero,
+        VerificationPredicateOperator.LIMITED_SUBTRACTIONS_RESPECT_FLOOR: (
+            _evaluate_limited_subtractions_respect_floor
+        ),
         VerificationPredicateOperator.PROFILE_FIELD_REQUIRED: _evaluate_profile_field_required,
         VerificationPredicateOperator.ROLL_FORWARD_BALANCES: _evaluate_roll_forward_balances,
     }
@@ -549,6 +564,11 @@ def evaluate_predicate_expression(
     - ``implies_any_nonzero(["antecedent_id", "c1_id", ...])`` — N-consequent
       generalisation: predicate holds iff antecedent <= 0 OR at least one
       listed consequent != 0.
+    - ``limited_subtractions_respect_floor([floor, base], [pre_floor...],
+      [limited...], [unclassified...], [exempt...])`` — under a positive floor,
+      the base less the pre-floor and limited subtractions reaches the floor
+      or nothing limited is subtracted, and the unclassified subtractions do
+      not take what is left below the floor.
     - ``profile_field_required("field_name", "applicability_filter")`` —
       profile-state-aware conditional non-zero requirement; sibling of
       ``implies_nonzero``.
@@ -694,6 +714,8 @@ def _blocking_predicate_finding(
         return _application_maximum_finding(predicate, admitted, casilla_values)
     if operator is VerificationPredicateOperator.APPLICATION_ORDER_IMMATERIAL:
         return _application_order_finding(predicate, admitted, casilla_values)
+    if operator is VerificationPredicateOperator.LIMITED_SUBTRACTIONS_RESPECT_FLOOR:
+        return _floor_subtraction_finding(predicate, admitted, casilla_values)
     if operator is VerificationPredicateOperator.EQUALS_SUM:
         total_id, _total, addend_sum = equals_sum_operands(admitted, casilla_values)
         return ModeloVerificationFinding(
@@ -786,6 +808,53 @@ def _application_order_finding(
             "predicate_id": predicate.predicate_id,
             "capacity": casilla_values[capacity_id],
             "pending_total": pending,
+        },
+        legal_refs=legal_refs,
+    )
+
+
+def _floor_subtraction_finding(
+    predicate: VerificationPredicateDefinition,
+    admitted: AdmittedPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+) -> ModeloVerificationFinding:
+    """Refuse limited subtractions that go below the floor, or a subtraction no text classifies.
+
+    A breach is certain whatever the unclassified boxes turn out to be, since
+    every subtraction only lowers the result, so it is the finding reported when
+    both could apply. It sits on the floor box and names the floor, the limited
+    total and what is left after it. An unresolved finding sits on the first
+    unclassified box that carries an amount and names every such box.
+    """
+    reading = floor_subtraction_reading(admitted, casilla_values)
+    legal_refs = tuple(predicate.legal_refs)
+    if not (reading.breached or reading.unresolved):
+        raise ValueError("a floor-subtraction finding needs a breached or unresolved reading")
+    if reading.breached:
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            casilla_id=reading.floor_id,
+            message_locale_key="application.modelo.findings.limited_subtractions_below_floor",
+            message_facts={
+                "predicate_id": predicate.predicate_id,
+                "box": reading.floor_id,
+                "floor_value": reading.floor,
+                "limited_total": reading.limited_total,
+                "after_limited": reading.after_limited,
+            },
+            legal_refs=legal_refs,
+        )
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        casilla_id=reading.unresolved_ids[0],
+        message_locale_key="application.modelo.findings.floor_subtraction_unresolved",
+        message_facts={
+            "predicate_id": predicate.predicate_id,
+            "box": reading.unresolved_ids[0],
+            "boxes": ",".join(reading.unresolved_ids),
+            "floor_box": reading.floor_id,
         },
         legal_refs=legal_refs,
     )

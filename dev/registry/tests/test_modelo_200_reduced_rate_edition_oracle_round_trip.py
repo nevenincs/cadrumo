@@ -37,7 +37,15 @@ source.pdf.extracted.md`` for the edition selected; the record design is the
     L13702 "[00582] = ([00562] + [01038]) - (...)".
     L14611-14626 cuota liquida minima [00619]: art. 30 bis applies only to an
       INCN "al menos de 20 millones" or consolidacion fiscal.
-    L15177 "[00592] = [00582] - (...)"; L15179 positive or zero.
+    L15177 "[00592] = [00582] - (...)"; L15179 positive or zero. Its operands are
+      the deducciones "aplicadas por el contribuyente en el periodo impositivo"
+      (L15174-15175), so the cuota liquida minima of art. 30 bis enters through
+      the amounts consigned, not as a floor: the restantes deducciones apply
+      "hasta el importe de dicha cuota liquida minima" (L14692-14694), the
+      Canarias deductions "aunque la cuota liquida resultante sea inferior a la
+      mencionada cuota liquida minima" (L14695-14704), and the art. 39.2 I+D+i
+      deduction "no se ve afectada por el importe de la cuota liquida minima"
+      (L14984-14986).
     L19199 "[00599] = ([00625]/100]) x ([00592] - [01766] - [01784])".
     L19441 "[00611] = [00599] - ([00601] + [00603] + [00605])".
     LIS art. 40.2 (BOE-A-2014-12328, consolidated text): each instalment is
@@ -55,8 +63,8 @@ L13273-13277 prints the 70 % limit alone, so its revision removes the binding
 and the DA 15a parameters and the oracle supplies no such input. The same
 manual still asks for the twelve-month INCN on page 1 for the art. 30 bis
 minimum (L13403-13405) and the art. 11.12 limits (L9466-9469); neither is read
-through that binding, and the cuota liquida minima [00619] is supplied as 0
-because art. 30 bis reaches neither scenario.
+through that binding. The cuota liquida minima [00619] is supplied as 0 in the
+``persona`` and ``general`` scenarios, which art. 30 bis does not reach.
 
 Scenario ``persona``: the sociedad-limitada persona's return for the exercise
 (dev/fixtures/personas/sociedad-limitada). Resultado contable 25400.00, no
@@ -82,6 +90,33 @@ art. 30 bis does not.
 
     00550 = 00552 = 01330 = 100000.00; 00558 = 25;
     00562 = 00582 = 00592 = 00599 = 00611 = 100000.00 x 25 / 100 = 25000.00
+
+Scenarios ``ejemplo-*``: the same manual's "Cuota liquida minima (casilla
+00619)" supuestos practicos (pp. 364-376), each a sociedad whose INCN in the
+twelve months before the period "supero los 20 millones de euros" and that
+"tributa al tipo general de gravamen del 25 por ciento" (L14714, L14843,
+L15034); the preceding-period INCN the rate reads is supplied as 25.000.000,
+consistent with that rate. Each prints its final liquidacion box by box:
+
+    Ejemplo 1 (L14816-14834): base imponible 2.000.000; [00562] 500.000;
+      [00573] 150.000; [00582] 350.000; the I+D+i deduction limited to the
+      minimum, [00588] 50.000 with 30.000 pendiente; [00619] 300.000; [00592]
+      300.000; [01586] 300.000.
+    Ejemplo 2 (L14937-15030): base imponible 1.000.000; [00562] 250.000;
+      bonificacion Ceuta y Melilla [00567] 20.000; [00573] 10.000; [00582]
+      220.000; [00588] 0 with 250.000 pendiente; [02315] 90.000; [00082]
+      130.000; [00592] 0; [01766] 20.000; [00599] -20.000; pagos fraccionados
+      10.000; [00611] -30.000. The text states the cuota liquida minima as
+      "130.000 euros" (L14978-14979) while the table prints the box [00619] as
+      0; the scenario consigns the 130.000 the text states, so a cuota liquida
+      floored at [00619] reads 130.000 and fails, and every oracle box is the
+      same with either value.
+    Ejemplo 3 (L15139-15160): base imponible 2.000.000; [00562] 500.000;
+      [00573] 45.000; [00582] 455.000; [00588] 30.000; [00619] 300.000; [00592]
+      425.000, above the minimum.
+
+Ejemplos 1 and 3 print no retenciones or pagos and a [01586] equal to the cuota
+liquida, so [00599] and [00611] equal [00592] with the State at 100 %.
 
 None of these values was read from a run of the registry formulas.
 """
@@ -159,6 +194,18 @@ _SHARED_FACTS: Mapping[str, object] = {
     "DP200014B:00619": _ZERO,
 }
 
+# The manual's worked examples state an INCN above 20 millones and the tipo general; the
+# preceding-period INCN the rate reads is supplied consistently with both (module docstring).
+_WORKED_EXAMPLE_PRIOR_INCN = Decimal("25000000.00")
+
+_WORKED_EXAMPLE_BASE_2M: Mapping[str, Decimal] = {
+    "DP200014:00550": Decimal("2000000.00"),
+    "DP200014:00552": Decimal("2000000.00"),
+    "DP200014:01330": Decimal("2000000.00"),
+    "DP200014:00558": Decimal("25"),
+    "DP200014:00562": Decimal("500000.00"),
+}
+
 _SCENARIOS: Mapping[str, _OracleScenario] = {
     "persona": _OracleScenario(
         inputs={
@@ -200,6 +247,71 @@ _SCENARIOS: Mapping[str, _OracleScenario] = {
             "DP200014B:00592": Decimal("25000.00"),
             "DP200014B:00599": Decimal("25000.00"),
             "DP200014B:00611": Decimal("25000.00"),
+        },
+    ),
+    "ejemplo-1-con-tributacion-minima": _OracleScenario(
+        inputs={
+            **_SHARED_FACTS,
+            "DP200012:00501": Decimal("2000000.00"),
+            "DP200014:00573": Decimal("150000.00"),
+            "DP200014B:00588": Decimal("50000.00"),
+            "DP200014B:00619": Decimal("300000.00"),
+            "modelo-200-bin-pendiente-ejercicios-anteriores": _ZERO,
+            "modelo-200-incn-periodo-impositivo-anterior": _WORKED_EXAMPLE_PRIOR_INCN,
+            "modelo-200-pago-fraccionado-primero-40-2": _ZERO,
+        },
+        expected={
+            **_WORKED_EXAMPLE_BASE_2M,
+            "DP200014:00582": Decimal("350000.00"),
+            "DP200014B:00592": Decimal("300000.00"),
+            "DP200014B:00599": Decimal("300000.00"),
+            "DP200014B:00611": Decimal("300000.00"),
+        },
+    ),
+    "ejemplo-2-con-tributacion-minima": _OracleScenario(
+        inputs={
+            **_SHARED_FACTS,
+            "DP200012:00501": Decimal("1000000.00"),
+            "DP200014:00567": Decimal("20000.00"),
+            "DP200014:00573": Decimal("10000.00"),
+            "DP200014B:00588": _ZERO,
+            "DP200014B:02315": Decimal("90000.00"),
+            "DP200014B:00082": Decimal("130000.00"),
+            "DP200014B:00619": Decimal("130000.00"),
+            "DP200014B:01766": Decimal("20000.00"),
+            "modelo-200-bin-pendiente-ejercicios-anteriores": _ZERO,
+            "modelo-200-incn-periodo-impositivo-anterior": _WORKED_EXAMPLE_PRIOR_INCN,
+            "modelo-200-pago-fraccionado-primero-40-2": Decimal("10000.00"),
+        },
+        expected={
+            "DP200014:00550": Decimal("1000000.00"),
+            "DP200014:00552": Decimal("1000000.00"),
+            "DP200014:01330": Decimal("1000000.00"),
+            "DP200014:00558": Decimal("25"),
+            "DP200014:00562": Decimal("250000.00"),
+            "DP200014:00582": Decimal("220000.00"),
+            "DP200014B:00592": _ZERO,
+            "DP200014B:00599": Decimal("-20000.00"),
+            "DP200014B:00611": Decimal("-30000.00"),
+        },
+    ),
+    "ejemplo-3-con-tributacion-minima": _OracleScenario(
+        inputs={
+            **_SHARED_FACTS,
+            "DP200012:00501": Decimal("2000000.00"),
+            "DP200014:00573": Decimal("45000.00"),
+            "DP200014B:00588": Decimal("30000.00"),
+            "DP200014B:00619": Decimal("300000.00"),
+            "modelo-200-bin-pendiente-ejercicios-anteriores": _ZERO,
+            "modelo-200-incn-periodo-impositivo-anterior": _WORKED_EXAMPLE_PRIOR_INCN,
+            "modelo-200-pago-fraccionado-primero-40-2": _ZERO,
+        },
+        expected={
+            **_WORKED_EXAMPLE_BASE_2M,
+            "DP200014:00582": Decimal("455000.00"),
+            "DP200014B:00592": Decimal("425000.00"),
+            "DP200014B:00599": Decimal("425000.00"),
+            "DP200014B:00611": Decimal("425000.00"),
         },
     ),
 }

@@ -1,0 +1,108 @@
+# Pinned public conformance-vector declaration for Modelo 200 revision 2022.
+#
+# Only the generation MANIFEST digest is pinned, not the output digests it
+# already contains. The manifest enumerates every generated output with its own
+# sha256, so any change to any output changes the manifest and therefore this
+# digest: one pin carries the identical fail-closed property. The pin stays
+# committed data rather than being re-derived beside the enrollment, which is
+# what keeps the canonical_builder_conflict check from being tautological.
+# A regenerated export tree must refresh this digest under review.
+
+authority_id = "dev.registry.filing-export-conformance"
+mechanism_source_ref = "generated-provenance/200/2022"
+generation_manifest_sha256 = "5a4659a6e99eb407cb53489fbab10b8002dbeaf58633d35f441044f95b55a04d"
+filing_year = 2022
+period_code = "0A"
+
+[coordinate]
+modelo = "200"
+revision = "2022"
+layout_ids = ["generated-modelo-200-2022-fichero"]
+
+# The vector carries the Manual practico de Sociedades 2022 worked example
+# "Ejemplo 1" of "Cuota liquida minima (casilla 00619)", in its liquidacion
+# without the minimum (corpus/manuals/sociedades/2022/source.pdf.extracted.md
+# L14152-14211, printed pages 351-353): a sociedad at the tipo general of 25 %,
+# the only rate an ordinary entity has in 2022, since the INCN-keyed 23 % of
+# Ley 31/2022 art. 39 starts with periods initiated in 2023. The edition reads
+# no INCN of the preceding period, so the vector states none.
+[inputs.decimal]
+# Casilla 00501 (aeat-dr-200-2022 DP200012 field 9, position 64): the example's
+# base imponible 2.000.000, with no correcciones, as it prints [00500] and
+# [00550] alike (L14191-14192).
+"DP200012:00501" = "2000000.00"
+# Casilla 00573, deduccion para evitar la doble imposicion internacional, 150.000
+# (L14200), within the DA 15a limit of 50 % of the cuota integra, 250.000 (L14166).
+"DP200014:00573" = "150000.00"
+# Casilla 00588, deducciones para incentivar determinadas actividades, 80.000
+# (L14202), within the art. 39.1 LIS limit of 175.000 (L14185).
+"DP200014:00588" = "80000.00"
+# Casilla 00619, cuota liquida minima: 0 in the liquidacion without it (L14209).
+"DP200014:00619" = "0.00"
+# The example's INCN of the twelve months before the period "supero los 20
+# millones de euros" (L14153-14154); stated as 25000000, which bounds nothing
+# because no bases imponibles negativas are pending.
+"modelo-200-profile-incn-prior-12-months" = "25000000"
+"modelo-200-profile-tributacion-estado-porcentaje" = "100"
+"modelo-200-bin-pendiente-ejercicios-anteriores" = "0"
+"modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores" = "0"
+"modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores" = "0"
+"modelo-200-pago-fraccionado-primero-40-2" = "0"
+"modelo-200-pago-fraccionado-primero-40-3" = "0"
+"modelo-200-pago-fraccionado-segundo-40-2" = "0"
+"modelo-200-pago-fraccionado-segundo-40-3" = "0"
+"modelo-200-pago-fraccionado-tercero-40-2" = "0"
+"modelo-200-pago-fraccionado-tercero-40-3" = "0"
+
+[inputs.enum]
+"modelo-200-profile-legal-entity-form" = "sa"
+
+[boolean_inputs]
+# The example applies the tipo general, not the nueva creacion 15 %.
+"modelo-200-profile-new-entity-flag" = false
+
+# ORACLE (printed by the manual's example; never read from a run). Box positions
+# from aeat-dr-200-2022; operations from the same manual.
+#   DP200013:00550  = 00501 + 00417 - 00418 = 2000000.00           (L6918; example L14192)
+#   DP200013:00552  = 00550 - 01032 - 00547 = 2000000.00           (L12517; example L14195)
+#   DP200014:01330  = 00552 + 01033 - 01034 = 2000000.00           (L12974, L22828; example L14197)
+#   DP200014:00558  = 25                                           (L13043 "Tipo general 25 por 100"; example L14198)
+#   DP200014:00562  = 01330 x 00558 / 100 = 500000.00              (L13033, L23136; example L14199)
+#   DP200014:00582  = (00562 + 01038) - (... + 00573 + ...) = 350000.00 (L13155-13156; example L14201)
+#   DP200014:00592  = max(00619, 00582 - (... + 00588 + ...)) = 270000.00 (L14639-14641; example L14210)
+#   DP200014B:00599 = (00625/100) x (00592 - 01766 - 01784) = 270000.00 (L18509; example [01586] L14211)
+#   DP200014B:00611 = 00599 - (00601 + 00603 + 00605) = 270000.00  (L18730)
+
+# Probes: DP200001 rows 1-4 and the end-of-record row of aeat-dr-200-2022. The
+# envelope DP200000 ends at position 328, as in the 2023 and 2024 designs, so a
+# DP200001 row at design position p is emitted at offset 328 + p - 1. The 2022
+# DP200001 has 120 rows, its end marker "</T20001000>" at position 722, length 12.
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2022.dp200001.f0001"
+emitted_offset = 328
+length = 2
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2022.dp200001.f0002"
+emitted_offset = 330
+length = 3
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2022.dp200001.f0003"
+emitted_offset = 333
+length = 5
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2022.dp200001.f0004"
+emitted_offset = 338
+length = 1
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2022.dp200001.f0120"
+emitted_offset = 1049
+length = 12

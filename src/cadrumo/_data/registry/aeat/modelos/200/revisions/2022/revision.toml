@@ -7,7 +7,9 @@ dependency_classification_source_refs = ["aeat-modelo-200-manual-2022"]
 live_cross_reference_source_refs = ["aeat-modelo-200-manual-2022"]
 application_link_source_refs = ["boe-modelo-200-2022-form", "aeat-dr-200-2022"]
 filing_schedule_source_refs = ["boe-modelo-200-2022-form", "aeat-modelo-200-manual-2022"]
-authority_grade = "calculation"
+# This edition files ejercicio 2022 through the exact 2022 design its export
+# layout renders.
+authority_grade = "filing"
 # Modelo 200, declaracion del Impuesto sobre Sociedades y del IRNR (establecimientos
 # permanentes y entidades en regimen de atribucion de rentas constituidas en el
 # extranjero con presencia en territorio espanol), for periodos impositivos
@@ -27,7 +29,7 @@ authority_grade = "calculation"
 # prints with another caption, stay undeclared and are recorded as debt in
 # casillas/0001-declarations.toml.
 #
-# Grade: calculation. The Modelo 200 cuota chain (base imponible previa [00550], base
+# Grade: filing. The Modelo 200 cuota chain (base imponible previa [00550], base
 # imponible [00552], base tras reserva de nivelacion [01330], tipo [00558], cuota
 # integra [00562], cuota integra ajustada positiva [00582], cuota liquida [00592],
 # cuota del ejercicio [00599], cuota diferencial [00611]) is authored at this edition
@@ -40,10 +42,11 @@ authority_grade = "calculation"
 # diferencial, two verification predicates, dependency classifications, the rates)
 # are declared here once and inherited. The rates are those the manual's "Tipos de
 # gravamen vigentes" table prints for 2022: no rate depends on the INCN, which Ley
-# 31/2022 art. 39 introduces only for periods initiated from 2023. This edition
-# carries no export layout for the 2022 design, so it calculates but does not file:
-# filing grade needs this year's own layout proven by round trip and an independent
-# oracle for the cuota chain.
+# 31/2022 art. 39 introduces only for periods initiated from 2023. Its export layout
+# renders the 2022 design (export/, generated from aeat-dr-200-2022), and the cuota
+# chain reproduces, box by box, the liquidaciones the Manual practico de Sociedades
+# 2022 prints in its "Cuota liquida minima (casilla 00619)" supuestos practicos
+# (pages 351-364) at the tipo general.
 valid_from = 2022-01-01
 valid_to = 2022-12-31
 period_selector = { year_from = 2022, year_to = 2022, periods = ["0A"] }

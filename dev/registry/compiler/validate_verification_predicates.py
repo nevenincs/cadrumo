@@ -19,6 +19,7 @@ from cadrumo.core.decimal.grammar import try_parse_canonical_decimal
 from cadrumo.domain.calculations.registry.schema_scalars import registry_scalar_value_type
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.domain.calculations.registry.schema_verification import (
+    FLOOR_SUBTRACTION_GROUP_ORDER,
     KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     VERIFICATION_PREDICATE_SPECIFICATIONS,
     ParsedVerificationPredicate,
@@ -39,6 +40,7 @@ __all__ = [
     "casilla_list_predicate_failures",
     "deduccion_requires_adquisicion_before_predicate_failures",
     "finding_kind_failures",
+    "limited_subtractions_respect_floor_predicate_failures",
     "profile_field_required_predicate_failures",
     "profile_flag_enabled_predicate_failures",
 ]
@@ -342,6 +344,44 @@ def advisory_when_ratio_ge_predicate_failures(
             "is not an ordinary number either never fires or fails at comparison, and neither is visible to the "
             "operator it was written to warn.",
         )
+    return failures
+
+
+def limited_subtractions_respect_floor_predicate_failures(
+    prefix: str,
+    owner: str,
+    expression: str,
+    casillas: set[CasillaId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+) -> list[str]:
+    """Report failures in a floor-and-classified-subtractions predicate expression.
+
+    Every operand is an amount, so each must be a declared numeric casilla; the
+    grammar already refuses a wrong group count, a floor group that is not a
+    floor and a base, an empty limited group and a casilla in two groups.
+    """
+    operator = VerificationPredicateOperator.LIMITED_SUBTRACTIONS_RESPECT_FLOOR
+    parsed = _parsed_expression(expression, operator)
+    if parsed is None:
+        groups = ", ".join(f'["{group.value}_id", ...]' for group in FLOOR_SUBTRACTION_GROUP_ORDER)
+        return [
+            f"{_malformed_expression_failure(prefix, owner, expression, operator)}; expected "
+            f"{operator.value}({groups}) with exactly two ids in the first group, at least one limited id "
+            "and no id in two groups",
+        ]
+    failures: list[str] = []
+    for group, ids in zip(FLOOR_SUBTRACTION_GROUP_ORDER, parsed.casilla_groups(), strict=True):
+        for casilla_id in ids:
+            if casilla_id not in casillas:
+                failures.append(
+                    f"{prefix}: {owner} {operator.value} references unknown {group.value} casilla {casilla_id!r}"
+                )
+                continue
+            failures.extend(
+                _decimal_operand_failures(
+                    prefix, owner, operator, (group.value,), (casilla_id,), casillas, casilla_by_id
+                ),
+            )
     return failures
 
 
