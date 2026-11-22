@@ -56,6 +56,15 @@ def _bound_names(parent: ast.AST | None) -> set[str]:
     return set()
 
 
+def _returns_a_name_of(value: ast.expr | None, names: set[str]) -> bool:
+    """Whether a returned value is one of ``names`` or a tuple or list that carries one."""
+    if isinstance(value, ast.Name):
+        return value.id in names
+    if isinstance(value, ast.Tuple | ast.List):
+        return any(isinstance(element, ast.Name) and element.id in names for element in value.elts)
+    return False
+
+
 def _unowned_popen_handles(tree: ast.Module) -> list[tuple[int, str]]:
     """Find direct function-local launches with no visible completion owner.
 
@@ -95,8 +104,7 @@ def _unowned_popen_handles(tree: ast.Module) -> list[tuple[int, str]]:
             transferred = any(
                 isinstance(candidate, ast.Return)
                 and candidate.lineno >= node.lineno
-                and isinstance(candidate.value, ast.Name)
-                and candidate.value.id in names
+                and _returns_a_name_of(candidate.value, names)
                 for candidate in nodes
             )
             if not completed and not transferred:
@@ -165,10 +173,21 @@ def test_a_popen_context_manager_owns_reaping_after_kill() -> None:
 
 
 @pytest.mark.parametrize(
-    "body", ["return subprocess.Popen(['x'])", "child = subprocess.Popen(['x'])\n    return child"]
+    "body",
+    [
+        "return subprocess.Popen(['x'])",
+        "child = subprocess.Popen(['x'])\n    return child",
+        "child = subprocess.Popen(['x'])\n    return child, 1",
+        "child = subprocess.Popen(['x'])\n    return [child]",
+    ],
 )
 def test_returned_handles_explicitly_transfer_completion_ownership(body: str) -> None:
     assert _unowned_popen_handles(_planted(body)) == []
+
+
+def test_returning_something_that_only_mentions_the_handle_is_not_a_transfer() -> None:
+    tree = _planted("child = subprocess.Popen(['x'])\n    return child.pid, 1")
+    assert _unowned_popen_handles(tree) == [(4, "child")]
 
 
 def test_a_nested_function_cannot_claim_completion_of_an_outer_handle() -> None:
