@@ -16,7 +16,9 @@ from cadrumo.application.auth.sync_readiness import AuthSyncReadiness
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import load_settings
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.identity.documents import IdentityDocument
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tax_id_runtime import validate_runtime_identity
 from cadrumo.entrypoints.cli.config import censo_authentication
 
 from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke_joined_cli
@@ -36,6 +38,9 @@ def _invoke(profile: RegisteredCliProfile, *command: str, output_format: str | N
     assert profile.passphrase not in result.output
     return result
 
+
+_ORGANIZATION_TAX_ID = "B00015016"
+"""A synthetic checksum-valid CIF, the tax identifier of an organization."""
 
 pytestmark = [
     pytest.mark.integration,
@@ -71,20 +76,24 @@ def test_native_censo_password_setup_persists_for_next_invocation(
         "prompt_secret_no_echo",
         lambda prompt: "synthetic-native-password" if prompt == tr("cli.censo_auth.password") else "",
     )
+    facts = {
+        "identity.name": "Synthetic",
+        "identity.surnames": "Censo Password",
+        "activities.description": "synthetic test profile",
+    }
+    if provider is AuthProviderKind.CLAVE_PERMANENTE:
+        # Cl@ve signs in as the profile's own tax identifier and authenticates a
+        # natural person, so an organization's CIF can never align with it.
+        assert validate_runtime_identity(_ORGANIZATION_TAX_ID) is IdentityDocument.CIF
+        facts["identity.tax_id"] = _ORGANIZATION_TAX_ID
     with cli_world_provider().native_profile(tmp_path) as profile:
         observations: list[object] = []
         profile.observe_failures(observations.append)
-        profile.register(
-            label="native-censo-password",
-            facts={
-                "identity.name": "Synthetic",
-                "identity.surnames": "Censo Password",
-                "activities.description": "synthetic test profile",
-            },
-        )
+        profile.register(label="native-censo-password", facts=facts)
         configured = _invoke(profile, "config", "profile", "censo", "pull", "--configure-auth", output_format=None)
-        # Keep a missing certificate or a mismatched Cl@ve identity so synthetic
-        # credentials cannot reach AEAT. The real preflight names that blocker.
+        # Keep a missing certificate, or a Cl@ve identity that cannot align
+        # because the profile's tax identifier is a CIF, so synthetic credentials
+        # cannot reach AEAT. The real preflight names that blocker.
         blocker = "certificate.file" if provider is AuthProviderKind.CERTIFICATE else "auth.identity_alignment"
         assert configured.exit_code != 0, (configured.output, observations)
         assert blocker in configured.output, (configured.output, type(configured.exception).__name__, seen)
