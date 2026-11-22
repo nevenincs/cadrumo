@@ -4506,8 +4506,7 @@ application:
     error_detail:
       record_fault: Un registre que ha creat Cadrumo no ha superat la seva pròpia
         comprovació, així que no s'ha pogut fer.
-      unworded: No s'ha pogut fer. El seu motiu encara no té cap frase; el seu codi
-        és {error_code}.
+      unworded: No s'ha pogut fer. El motiu encara no té cap frase; el codi és {error_code}.
   operator_actions:
     served:
       action:
