@@ -141,6 +141,10 @@ casilla_id = "iva.autorepercutido.interior.devengado"
 number = "iva.autorepercutido.interior.devengado"
 
 [[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.interior.devengado.base"
+number = "iva.autorepercutido.interior.devengado.base"
+
+[[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "iva.autorepercutido.interior.deducible"
 number = "iva.autorepercutido.interior.deducible"
 
@@ -371,6 +375,10 @@ number = "iva.rectificacion-deducciones.inversion-sujeto-pasivo"
 [[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "11"
 number = "11"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "12"
+number = "12"
 
 [[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "13"

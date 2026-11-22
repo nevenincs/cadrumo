@@ -33,6 +33,24 @@ OPTIONAL_IVA_CATEGORY_OPTION: Final[OptionSpec] = OptionSpec(
     hidden=False,
 )
 
+DECLARED_FX_RATE_OPTION: Final[OptionSpec] = OptionSpec(
+    name="fx_rate",
+    declarations=("--fx-rate",),
+    value=ValueContract(DeferredTarget("builtins", "str")),
+    default=ParameterDefault.value(None),
+    help_key=TranslationKey("cli.app.ledger.invoice.fx_rate_help"),
+    metavar=None,
+    is_flag=False,
+    flag_value=None,
+    multiple=False,
+    count=False,
+    eager=False,
+    constraint=ParameterConstraint(),
+    show_default=True,
+    hidden=False,
+)
+"""The exchange rate the operator states for a foreign invoice (LIVA art. 79.Once)."""
+
 BUSINESS_PREMISES_LEASE_OPTIONS: Final[tuple[OptionSpec, ...]] = (
     OptionSpec(
         name="arrendamiento_local_negocio",
@@ -263,6 +281,7 @@ INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS: Final[tuple[OptionSpec, ...]] = (
 
 __all__ = [
     "BUSINESS_PREMISES_LEASE_OPTIONS",
+    "DECLARED_FX_RATE_OPTION",
     "INVOICE_INTAKE_WIZARD_CORE_OPTIONS",
     "INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS",
     "INVOICE_LIFECYCLE_METADATA_OPTIONS",

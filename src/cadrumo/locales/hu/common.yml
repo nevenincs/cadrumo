@@ -251,6 +251,7 @@ aggregation:
         teljes árat fedezi.
       invoice_line_currency_unconverted: Egy számlasor külföldi pénznemben van megadva,
         és nincs feloldott euróárfolyama, ezért nem szerepeltethető ezen a nyomtatványon.
+        Add meg a számla árfolyamát az átváltáshoz.
       unsupported_period: Nem támogatott nyomtatvány-időszak a nyilvántartásaidból
         számított összesítésekhez.
   oss_ioss:
@@ -3326,10 +3327,14 @@ desktop:
         counterparty_nif: A másik fél adószáma
         country_code: Ország
         currency: Pénznem
+        fx_rate: Árfolyam
         invoice_date: Számla kelte
         invoice_number: Számlaszám
+        iva_category: IVA-kategória
         iva_rate: IVA-kulcs
         notes: Megjegyzések
+        operation_type: Modelo 349 kulcs
+        recargo_amount: Egyenértékűségi pótdíj
         retencion_amount: Retención összege
         retencion_rate: Retención kulcsa
         taxable_base: Adóalap
@@ -3827,6 +3832,7 @@ desktop:
         counterparty_name: Partner neve
         counterparty_tax_id: Adószám (NIF)
         currency: Pénznem
+        fx_rate: Árfolyam
         invoice_class: Típus
         invoice_number: Számlaszám
         issued_at: Kiállítás dátuma
@@ -4032,6 +4038,7 @@ desktop:
       reagp_compensation: REAGP-kompenzáció
       recargo_equivalencia: Recargo de equivalencia
       regimen_simplificado: Régimen simplificado
+      special_regime_used_goods: Használt cikkek különleges árrésrendszere (REBU)
       unknown: Ismeretlen
     leave:
       cancel: Mégse
@@ -4359,6 +4366,8 @@ desktop:
       invoice_deduction_family_unresolved: Levonás
       invoice_recargo_not_declarable: Pótlék
       invoice_recargo_split_unresolved: Pótlék
+      invoice_rectificativa_modification_unmodelled: Helyesbítő
+      invoice_used_goods_margin_unmodelled: Használt cikkek
       linked_movement_contradicts_invoice: Számla
       missing_business_classification: Besorolás
       missing_category: Kategória
@@ -4388,6 +4397,10 @@ desktop:
         illeti meg
       invoice_recargo_not_declarable: A pótlék nem a törvényes kulcs az adóalapján
       invoice_recargo_split_unresolved: A pótlék nem osztható fel az áfakulcsai között
+      invoice_rectificativa_modification_unmodelled: Add meg a helyesbítést előjellel
+        a 14/15. vagy a 40/41. mezőben
+      invoice_used_goods_margin_unmodelled: Add meg az árrés adóalapját és adóját
+        a kulcsához tartozó fizetendő áfa mezőkben
       linked_movement_contradicts_invoice: Eltér a számlájától
       missing_business_classification: Hiányzik a besorolás
       missing_category: Hiányzik a kategória
@@ -4428,6 +4441,9 @@ desktop:
       received_invoice_recipient_unknown: 'Még nincs bevallva: a kibocsátó adószámából
         nem derül ki, hogy IRPF-et vagy társasági adót (Impuesto sobre Sociedades)
         fizet.'
+      received_invoice_rent_rate_unrecognised: 'Még nincs bevallva: a bérleti díj
+        levonása sem az általános bérleti levonási kulccsal, sem a Ceutára és Melillára
+        vonatkozó kulccsal nem egyezik az adott napon.'
     retry: Újra
     reveal:
       dismiss: Elrejtés

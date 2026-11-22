@@ -129,4 +129,8 @@ class FxConversionStamp(BaseModel):
     rate_date: date
     source: str = Field(min_length=1)
     observation_date: date | None = None
-    """The publication the rate came from; ``None`` only on stamps recorded before it was kept."""
+    """The publication the rate came from.
+
+    ``None`` on a rate the operator declared, which no publication was read
+    for, and on stamps recorded before it was kept.
+    """

@@ -70,7 +70,7 @@ from .common import (
     emit_envelope,
 )
 from .date_parsing import parse_iso_date
-from .decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
+from .decimal_parsing import parse_decimal_amount, parse_fraction, parse_optional_decimal_amount
 from .ledger_catalogue_invoice_results import (
     CatalogueInvoiceCreatePayload,
     CatalogueInvoiceDocumentAttachPayload,
@@ -320,6 +320,7 @@ def invoice_add(
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
     recargo: str | None = None,
+    fx_rate: str | None = None,
     iva_category: IvaCategory | None = None,
     arrendamiento_local_negocio: bool = False,
     situacion_inmueble: str | None = None,
@@ -341,6 +342,8 @@ def invoice_add(
     invoice as the lease of a local de negocio, with ``--situacion-inmueble``
     and ``--referencia-catastral`` locating the premises, which Modelo 347
     relates in its declarado and inmueble records (RD 1065/2007 art. 34.1.d).
+    ``--fx-rate`` states the exchange rate of a foreign invoice, which wins
+    over the published rate.
     """
     bucket_id = active_bucket_id_or_refuse()
     # An explicitly stated treatment WINS over the one derived from the M349
@@ -376,6 +379,7 @@ def invoice_add(
             series=series,
             rectifies_invoice_number=rectifies_invoice_number,
             recargo=recargo,
+            fx_rate=fx_rate,
             arrendamiento_local_negocio=arrendamiento_local_negocio,
             situacion_inmueble=situacion_inmueble,
             referencia_catastral=referencia_catastral,
@@ -797,6 +801,7 @@ def invoice_update(
     invoice_class: str | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
+    fx_rate: str | None = None,
 ) -> None:
     """Correct one persisted invoice without re-keying it.
 
@@ -819,6 +824,7 @@ def invoice_update(
         "invoice_class": None if invoice_class is None else require_invoice_class(invoice_class),
         "series": series,
         "rectifies_invoice_number": rectifies_invoice_number,
+        "declared_fx_rate": None if fx_rate is None else parse_fraction(fx_rate, label="fx-rate"),
     }
     patch = CatalogueInvoicePatch.model_validate(
         {key: value for key, value in patch_values.items() if value is not None}
@@ -891,6 +897,7 @@ def _invoice_add_request(
     series: str | None,
     rectifies_invoice_number: str | None,
     recargo: str | None,
+    fx_rate: str | None,
     arrendamiento_local_negocio: bool,
     situacion_inmueble: str | None,
     referencia_catastral: str | None,
@@ -932,8 +939,14 @@ def _invoice_add_request(
             referencia_catastral=referencia_catastral,
         ),
         lines=tuple(InvoiceAddLine.from_invoice_line(item) for item in structured_lines),
+        declared_fx_rate=_declared_fx_rate(fx_rate),
     )
     return request
+
+
+def _declared_fx_rate(raw: str | None) -> PublicDecimal | None:
+    """Parse a stated exchange rate in the rate grammar; the worker refuses one not above zero."""
+    return None if raw is None else PublicDecimal(decimal=str(parse_fraction(raw, label="fx-rate")))
 
 
 def _invoice_add_base_and_rate(

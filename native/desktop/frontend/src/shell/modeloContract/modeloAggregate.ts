@@ -466,6 +466,7 @@ export type ReceivedInvoiceWithholdingFindingKind =
   | "received_invoice_recipient_unknown"
   | "received_invoice_non_resident"
   | "received_invoice_rate_unrecognised"
+  | "received_invoice_rent_rate_unrecognised"
   | "received_invoice_invoice_incomplete";
 
 /**

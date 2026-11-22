@@ -2200,12 +2200,20 @@ input_kind = "computed"
 formula = "modelo-303-dr303-11-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
+# The 2022 diseno de registro prints this box as "Otras operaciones con
+# inversion del sujeto pasivo (excepto. adq. intracom) - Base imponible [12]"
+# (aeat-dr-303-2022, campo 36), the base of the same operations box [13]
+# states the cuota of, and every later design prints it the same way. The
+# base is resolved from the rows the cuota carrier reads, so the record states
+# both figures of one population rather than a cuota without its base.
 [[revisions.2022.casillas]]
 id = "12"
 number = "12"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_12"
 continuidad_id = "dr303-12"
+input_kind = "computed"
+formula = "modelo-303-dr303-12-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 # The 2022 diseno de registro prints this box as "Otras operaciones con
@@ -2324,6 +2332,24 @@ continuidad_id = "iva-base-autorepercutida-intracomunitaria-devengado"
 input_kind = "bound"
 binding = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# Base-imponible parity casilla for official box 12, mirroring the cuota
+# parity casilla iva.autorepercutido.interior.devengado (box 13). Feeds box 12
+# via a projection formula only -- never the resultado, which is
+# cuota-denominated.
+[[revisions.2022.casillas]]
+id = "iva.autorepercutido.interior.devengado.base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022, campos 36 y 37, distingue base [12] y cuota [13] de otras operaciones con inversion del sujeto pasivo. Esta fila es la entrada de agregacion que la formula proyecta en [12]; no constituye una segunda casilla impresa."
+number = "iva.autorepercutido.interior.devengado.base"
+section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
+semantic_role = "iva_base_autorepercutida_interior_devengado"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Sole base-imponible parity casilla for the domestic reverse-charge devengado box pair (12/13); no sibling rate or category split exists on this casilla."
+continuidad_id = "iva-base-autorepercutida-interior-devengado"
+input_kind = "bound"
+binding = "modelo-303-iva-autorepercutido-interior-devengado-base"
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "iva.autoconsumo.promotor.base"

@@ -984,6 +984,10 @@ application:
           .csv, .tsv, .xlsx, .xlsm o .xls (se recibió {extension}).
     creation:
       errors:
+        declared_fx_rate_not_positive: El tipo de cambio %{fx_rate} debe ser mayor
+          que cero.
+        declared_fx_rate_on_euro_invoice: 'Una factura en euros no lleva tipo de cambio:
+          quita el tipo o corrige la moneda de la factura.'
         duplicate_invoice: 'Ya existe una factura con la misma identidad en el catálogo:
           %{invoice_id}.'
         intracom_operation_type_required: 'Una entrega intracomunitaria debe declarar
@@ -2555,6 +2559,10 @@ application:
         declara una retención de {amount}, pero su NIF no indica si quien la emite
         tributa por el IRPF o por el Impuesto sobre Sociedades. Comprueba el NIF de
         la factura.
+      withholding_invoice_rent_rate_unrecognised: La factura recibida {invoice} de
+        {counterparty} declara una retención de {amount} sobre un alquiler que no
+        coincide ni con el tipo general de retención sobre alquileres ni con el de
+        Ceuta y Melilla para su fecha. Comprueba la base y la retención de la factura.
     calc_diagnostic_words:
       household_leaf:
         apellidos_nombre: apellidos y nombre
@@ -3211,6 +3219,14 @@ application:
         invoice_recargo_split_unresolved: 'una factura emitida lleva un único recargo
           de equivalencia sobre varios tipos de IVA que no coincide con la suma del
           recargo de cada tipo: corrige el recargo de la factura'
+        invoice_rectificativa_modification_unmodelled: 'una factura rectificativa
+          no se declara en ninguna fila de tipo de IVA: indica su base y su cuota
+          con el signo que corresponda en las casillas 14 y 15 del Modelo 303 si la
+          emitiste, o en las casillas 40 y 41 si la recibiste'
+        invoice_used_goods_margin_unmodelled: 'la base del margen de una venta en
+          el régimen especial de los bienes usados (art. 137) no se calcula: indica
+          tú mismo la base del margen y su cuota en las casillas de IVA devengado
+          del Modelo 303 de su tipo'
         linked_movement_contradicts_invoice: su base o su cuota no coinciden con las
           de la factura que paga
         missing_business_classification: falta clasificarlo como profesional, personal

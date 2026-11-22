@@ -161,6 +161,7 @@ export type FieldRole =
   | "iva_rate"
   | "iva_amount"
   | "iva_category"
+  | "operation_type"
   | "irpf_category"
   | "retencion_amount"
   | "retencion_rate"
@@ -168,6 +169,7 @@ export type FieldRole =
   | "suplido_amount"
   | "grand_total"
   | "currency"
+  | "fx_rate"
   | "country_code"
   | "notes"
   | "classification"
@@ -272,6 +274,7 @@ export type InvoiceAddRequest = {
   recargo_amount?: PublicDecimal | null;
   business_premises_lease?: InvoiceAddBusinessPremisesLease | null;
   lines?: InvoiceAddLine[];
+  declared_fx_rate?: PublicDecimal | null;
 };
 
 /**
@@ -741,6 +744,7 @@ export type InvoiceUpdateValues = {
   invoice_class?: string | null;
   rectifies_invoice_number?: string | null;
   payment_id?: string | null;
+  declared_fx_rate?: PublicDecimal | null;
 };
 
 export type InvoiceViewOutcome = InvoiceViewSuccess | InvoiceViewRefusal;
@@ -1103,7 +1107,9 @@ export type LedgerPreflightIssueReason =
   | "invoice_cash_accounting_regime_unmodelled"
   | "linked_movement_contradicts_invoice"
   | "invoice_recargo_split_unresolved"
-  | "invoice_recargo_not_declarable";
+  | "invoice_recargo_not_declarable"
+  | "invoice_rectificativa_modification_unmodelled"
+  | "invoice_used_goods_margin_unmodelled";
 
 /**
  * Why the release was refused, what the person can do, and what blocks it.

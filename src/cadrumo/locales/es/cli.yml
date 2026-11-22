@@ -478,7 +478,13 @@ cli:
         duplicate_kind_help: 'Sentido de la factura: `issued` o `received`.'
         euro_rate_unavailable_message: No se encontró tipo de cambio a euros para
           {currency} el {date}, así que la factura se registró sin valor en euros
-          y queda fuera de los totales en euros hasta que se añada un tipo.
+          y queda fuera de los totales en euros hasta que se añada un tipo. Indica
+          el tipo con app ledger invoice update --fx-rate.
+        fx_rate_help: 'Tipo de cambio de una factura en moneda extranjera: el valor
+          en euros de una unidad de su moneda en la fecha de la factura, por ejemplo
+          0.9250 (LIVA art. 79.Once: el tipo vigente del Banco de España o el último
+          del BCE). Sustituye al tipo publicado y se registra como declarado por ti.
+          Se rechaza en una factura en EUR.'
         group_help: Registros de facturas de negocio (emitidas o recibidas)
         import_all_refused: 'importación masiva de facturas fallida: se rechazaron
           todas las filas; no se creó ninguna factura'
@@ -491,8 +497,12 @@ cli:
           necesita la columna.
         import_file_help: Ruta a un fichero CSV o XLSX con filas de facturas (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, y opcionalmente
-          iva_rate/retencion_amount/retencion_rate/currency/country_code/notes). Un
-          retencion_rate solo se acepta junto a su retencion_amount.
+          iva_rate/iva_category/operation_type/retencion_amount/retencion_rate/recargo_amount/currency/fx_rate/country_code/notes).
+          Un retencion_rate solo se acepta junto a su retencion_amount. Un fx_rate
+          es el valor en euros de una unidad de la moneda de la fila y se rechaza
+          en una fila en EUR. Un iva_category debe ser una categoría que el registro
+          declare para la fecha de la factura; un operation_type es la clave del modelo
+          349, y una fila que solo indique la clave toma la categoría que esta declara.
         import_help: Crea facturas del catálogo en lote desde un fichero CSV o XLSX.
         import_unmapped_columns: 'columnas no importadas porque ningún campo de factura
           coincidió con ellas: {columns}'

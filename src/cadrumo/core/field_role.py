@@ -102,6 +102,9 @@ class FieldRole(StrEnum):
     IVA_CATEGORY = "iva_category"
     """The IVA treatment the row falls under."""
 
+    OPERATION_TYPE = "operation_type"
+    """The Modelo 349 clave of an intra-community operation, as the book states it."""
+
     IRPF_CATEGORY = "irpf_category"
     """The IRPF treatment the row falls under."""
 
@@ -122,6 +125,9 @@ class FieldRole(StrEnum):
 
     CURRENCY = "currency"
     """ISO-4217 currency of the row's amounts."""
+
+    FX_RATE = "fx_rate"
+    """The euro value of one unit of the row's currency, as the book states it."""
 
     COUNTRY_CODE = "country_code"
     """Counterparty country, which decides domestic versus not."""

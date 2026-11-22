@@ -446,7 +446,12 @@ cli:
         duplicate_kind_help: 'Invoice direction: issued or received.'
         euro_rate_unavailable_message: No euro exchange rate for {currency} on {date}
           was found, so this invoice was recorded without a euro value and is left
-          out of euro totals until a rate is added.
+          out of euro totals until a rate is added. State the rate with app ledger
+          invoice update --fx-rate.
+        fx_rate_help: 'Exchange rate of a foreign invoice: the euro value of one unit
+          of its currency at the invoice date, for example 0.9250 (LIVA art. 79.Once:
+          the Banco de España rate in force, or the latest ECB rate). It replaces
+          the published rate and is recorded as stated by you. Refused for a EUR invoice.'
         group_help: Business invoice records (issued or received)
         import_all_refused: 'bulk invoice import failed: every row was refused; no
           invoices were created'
@@ -457,8 +462,12 @@ cli:
           so a book mixing domestic and foreign counterparties needs the column instead.
         import_file_help: Path to a CSV or XLSX file of invoice rows (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, and optional
-          iva_rate/retencion_amount/retencion_rate/currency/country_code/notes). A
-          retencion_rate is accepted only beside its retencion_amount.
+          iva_rate/iva_category/operation_type/retencion_amount/retencion_rate/recargo_amount/currency/fx_rate/country_code/notes).
+          A retencion_rate is accepted only beside its retencion_amount. An fx_rate
+          is the euro value of one unit of the row's currency and is refused on a
+          EUR row. An iva_category must be a category the registry declares for the
+          invoice date; an operation_type is the Modelo 349 clave, and a row stating
+          only the clave takes the category it declares.
         import_help: Bulk-create catalogue invoices from a CSV or XLSX file.
         import_unmapped_columns: 'columns not imported because no invoice field matched
           them: {columns}'

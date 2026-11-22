@@ -488,7 +488,8 @@ class Invoice(BaseModel):
     fx_rate_source: str | None = Field(default=None, min_length=1)
     # The publication the rate was read from. It differs from `fx_rate_date` on
     # every weekend and holiday, when the rate in force is the last one published
-    # before the operation date. Absent on a stamp recorded before this was kept,
+    # before the operation date. Absent on a rate the operator declared, which
+    # no publication was read for, and on a stamp recorded before this was kept,
     # which is a known earlier shape rather than a defaulted value.
     fx_rate_observation_date: date | None = None
     # When this RECORD was entered and last amended, which is a different fact

@@ -346,6 +346,30 @@ def administrador_retencion_legal_refs(
     return tuple(seen)
 
 
+_ARRENDAMIENTO_URBANO_GENERAL_FACT_ID: Final[str] = "rirpf-art-100:retencion-arrendamiento-urbano-general"
+_ARRENDAMIENTO_URBANO_REDUCCION_CEUTA_MELILLA_FACT_ID: Final[str] = (
+    "rirpf-art-100:retencion-arrendamiento-urbano-reduccion-ceuta-melilla"
+)
+
+
+def urban_rent_retencion_rates(
+    *, effective_date: date, authority: GovernedFactSource | None = None
+) -> frozenset[Decimal]:
+    """Return the authority-declared rates a retención on urban rent may be practised at.
+
+    The registry declares the general rate and the fraction by which it is
+    reduced for a property in Ceuta or Melilla; the reduced rate is derived here
+    from both, so the law's arithmetic stays visible rather than a second figure
+    being authored.
+
+    Returns:
+        The general rate and the Ceuta/Melilla reduced rate for the date.
+    """
+    general = _decimal_fact(_ARRENDAMIENTO_URBANO_GENERAL_FACT_ID, effective_date, authority)
+    reduction = _decimal_fact(_ARRENDAMIENTO_URBANO_REDUCCION_CEUTA_MELILLA_FACT_ID, effective_date, authority)
+    return frozenset({general, general * (Decimal("1") - reduction)})
+
+
 def _decimal_fact(
     fact_id: str,
     effective_date: date,
@@ -376,4 +400,5 @@ __all__ = [
     "retencion_effective_date",
     "rirpf_art95_retencion_legal_refs",
     "statutory_activity_retencion_rates",
+    "urban_rent_retencion_rates",
 ]

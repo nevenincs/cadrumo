@@ -238,6 +238,7 @@ aggregation:
         covers the whole price.
       invoice_line_currency_unconverted: An invoice line is denominated in a foreign
         currency with no resolved euro rate, so it cannot be declared on this modelo.
+        State the invoice's exchange rate to convert it.
       unsupported_period: Unsupported modelo period for totals from your records.
   oss_ioss:
     errors:
@@ -3273,10 +3274,14 @@ desktop:
         counterparty_nif: Tax ID of the other party
         country_code: Country
         currency: Currency
+        fx_rate: Exchange rate
         invoice_date: Invoice date
         invoice_number: Invoice number
+        iva_category: IVA category
         iva_rate: IVA rate
         notes: Notes
+        operation_type: Modelo 349 key
+        recargo_amount: Equivalence surcharge
         retencion_amount: Withholding amount
         retencion_rate: Withholding rate
         taxable_base: Taxable base
@@ -3769,6 +3774,7 @@ desktop:
         counterparty_name: Counterparty
         counterparty_tax_id: Tax ID (NIF)
         currency: Currency
+        fx_rate: Exchange rate
         invoice_class: Class
         invoice_number: Number
         issued_at: Issue date
@@ -3975,6 +3981,7 @@ desktop:
       reagp_compensation: REAGP compensation
       recargo_equivalencia: Equivalence surcharge
       regimen_simplificado: Régimen simplificado
+      special_regime_used_goods: Used goods margin scheme (REBU)
       unknown: Unknown
     leave:
       cancel: Cancel
@@ -4299,6 +4306,8 @@ desktop:
       invoice_deduction_family_unresolved: Deduction
       invoice_recargo_not_declarable: Surcharge
       invoice_recargo_split_unresolved: Surcharge
+      invoice_rectificativa_modification_unmodelled: Rectificativa
+      invoice_used_goods_margin_unmodelled: Used goods
       linked_movement_contradicts_invoice: Invoice
       missing_business_classification: Classification
       missing_category: Category
@@ -4329,6 +4338,10 @@ desktop:
       invoice_recargo_not_declarable: The surcharge is not the legal rate on its base
       invoice_recargo_split_unresolved: The surcharge does not divide between its
         VAT rates
+      invoice_rectificativa_modification_unmodelled: Enter the correction with its
+        sign in casillas 14/15 or 40/41
+      invoice_used_goods_margin_unmodelled: Enter the margin base and its cuota in
+        the devengado casillas for its rate
       linked_movement_contradicts_invoice: Differs from its invoice
       missing_business_classification: Classification missing
       missing_category: Category missing
@@ -4368,6 +4381,9 @@ desktop:
         matches no activity withholding rate.'
       received_invoice_recipient_unknown: 'Not declared yet: the issuer''s NIF does
         not show whether it pays IRPF or Impuesto sobre Sociedades.'
+      received_invoice_rent_rate_unrecognised: 'Not declared yet: the rent withholding
+        matches neither the general rent withholding rate nor the Ceuta/Melilla rate
+        for the date.'
     retry: Retry
     reveal:
       dismiss: Dismiss

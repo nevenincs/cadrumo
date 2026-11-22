@@ -240,6 +240,9 @@ modelo:
           iva-autoconsumo-promotor-super-reducido-base:
             label: Tax base of the property developer's self-supply at the super-reduced
               rate (4%) (part of official box 01)
+          iva-base-autorepercutida-interior-devengado:
+            label: Taxable base of accrued reverse-charge VAT on domestic transactions
+              (LIVA art. 84.Uno.2; official box 12)
           iva-base-autorepercutida-intracomunitaria-devengado:
             help: Add up the self-charged taxable base accrued on intra-Community
               acquisitions.

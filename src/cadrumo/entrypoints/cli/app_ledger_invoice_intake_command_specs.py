@@ -34,6 +34,7 @@ from .app_ledger_command_spec_policies import (
 from .app_ledger_command_spec_support import option_from_application_contract
 from .app_ledger_invoice_common_command_parameters import (
     BUSINESS_PREMISES_LEASE_OPTIONS,
+    DECLARED_FX_RATE_OPTION,
     INVOICE_INTAKE_WIZARD_CORE_OPTIONS,
     INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS,
     INVOICE_LIFECYCLE_METADATA_OPTIONS,
@@ -92,6 +93,7 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 hidden=False,
             ),
             INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[1],
+            DECLARED_FX_RATE_OPTION,
         ),
         policy=POLICY_2,
         handler=LazyBinding.available(DeferredTarget(".ledger_business_invoice_commands", "invoice_add", __package__)),

@@ -391,6 +391,7 @@ def build_invoice_from_add_request(
         recargo_amount=(None if payload.recargo_amount is None else Decimal(payload.recargo_amount.decimal)),
         business_premises_lease=business_premises_lease,
         lines=lines or None,
+        declared_fx_rate=(None if payload.declared_fx_rate is None else Decimal(payload.declared_fx_rate.decimal)),
         rate_provider=rate_provider,
         operation=authority_operation,
     )
