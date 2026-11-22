@@ -367,6 +367,7 @@ def test_executor_failure_log_record_carries_the_raising_frame(
 
 _EXECUTION_LOGGER = "cadrumo.application.operations.supervisor_execution"
 _SETTLEMENT_LOGGER = "cadrumo.application.operations.settlement_snapshot"
+_TIMING_LOGGER = "cadrumo.application.operations.lifecycle_timing"
 
 
 @pytest.mark.parametrize(
@@ -412,7 +413,12 @@ def test_a_served_refusal_is_logged_by_its_settled_condition_and_effect(
     receipt = terminal.terminal_receipt
     assert receipt is not None
     assert receipt.condition is condition
-    records = [record for record in delivered_records(caplog) if f"operation={_OPERATION_ID}" in record.getMessage()]
+    named = [record for record in delivered_records(caplog) if f"operation={_OPERATION_ID}" in record.getMessage()]
+    # The payload-free phase timings name the operation too; they are observations, never a settlement site.
+    timings = [record for record in named if record.name == _TIMING_LOGGER]
+    assert timings
+    assert {record.levelno for record in timings} == {logging.INFO}
+    records = [record for record in named if record.name != _TIMING_LOGGER]
     levels = {record.name: record.levelno for record in records}
     assert levels == {_EXECUTION_LOGGER: execution_level, _SETTLEMENT_LOGGER: settlement_level}
     settled = [record for record in records if record.name == _SETTLEMENT_LOGGER]

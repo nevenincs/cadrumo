@@ -69,6 +69,9 @@ _ENTITY = (
     UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
     UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
     UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
+    # The entity's own twelve months before the period, which decide LIS art. 30 bis; below its
+    # 20 million euros, so the cuota liquida minima asks nothing and only the group mark is at play.
+    UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("812345.67")),
 )
 _HELD = Decimal("812345.67")
 _GROUP = Decimal("14500000.00")
