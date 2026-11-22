@@ -41,6 +41,7 @@ from ...domain.invoices.rectification_modification import (
     RectificationModification,
     RectificationModificationRefusal,
 )
+from ...domain.invoices.rectification_period import RectificationPeriodRefusal
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from .errors import AggregationValidationError
@@ -95,14 +96,24 @@ class InvoiceIvaFindingReason(StrEnum):
     #: facts and the refusal that names which, so the person can supply or
     #: correct them.
     RECTIFICATIVA_MODIFICATION_UNMODELLED = "invoice_rectificativa_modification_unmodelled"
-    #: A factura rectificativa whose signed modification IS derived, carried on
-    #: the finding so the person sees the figures. It still declares nothing,
-    #: because the period a modification belongs to comes from the side, the
-    #: cause and a recorded election (LIVA art. 89.Cinco, art. 114.Dos), and
-    #: that decision is not made yet. Placing it in the period being calculated
-    #: because it is the one in hand is exactly the guess the governing decision
-    #: refuses.
-    RECTIFICATIVA_PERIOD_UNDECIDED = "invoice_rectificativa_period_undecided"
+    #: A factura rectificativa whose signed modification IS derived and whose
+    #: period the record does not yet place: the election LIVA art. 89.Cinco or
+    #: art. 114.Dos leaves the taxpayer is unrecorded, or an art. 80.Tres
+    #: modification carries no attestation of the RIVA art. 24 obligations. The
+    #: finding names the invoice field the person opens, and the figures beside
+    #: it. Placing it in the period being calculated because it is the one in
+    #: hand is exactly the guess the governing decision refuses.
+    RECTIFICATIVA_PERIOD_NEEDS_FACT = "invoice_rectificativa_period_needs_fact"
+    #: A received modification whose period is this one and whose casilla 40/41
+    #: observation could not be built: the invoice it corrects resolves to no
+    #: single catalogue record, so the deduction family that routes the box is
+    #: unknown, or a row carries a base the deducible-cuota boxes cannot hold.
+    RECTIFICATIVA_DEDUCTION_ROW_UNDECLARABLE = "invoice_rectificativa_deduction_row_undeclarable"
+    #: An ISSUED modification whose period is this one. Casillas 14, 15, 25 and
+    #: 26 are operator input in every authored 303 edition, so no binding reads
+    #: an invoice-sourced modification yet and declaring nothing would file the
+    #: period short.
+    RECTIFICATIVA_ISSUED_MODIFICATION_UNBOUND = "invoice_rectificativa_issued_modification_unbound"
     #: An issued invoice under the régimen especial de los bienes usados. Its
     #: taxable base is the margin de beneficio, IVA included (LIVA art. 137),
     #: and its cuota is never stated on the invoice (art. 138), so no rate row
@@ -131,10 +142,16 @@ class InvoiceIvaFinding(BaseModel):
     #: :attr:`missing_rectification_facts` already names.
     rectification_refusal: RectificationModificationRefusal | None = None
     #: The signed per-rate modification the document makes, carried so the
-    #: person sees the figures the derivation read out of it. Set only beside
-    #: :attr:`InvoiceIvaFindingReason.RECTIFICATIVA_PERIOD_UNDECIDED`; nothing
-    #: declares it, because its period is undecided.
+    #: person sees the figures the derivation read out of it. Set on every
+    #: rectificativa finding whose modification IS derived; nothing declares it
+    #: there, because the finding is what stands in the way.
     rectification_modification: RectificationModification | None = None
+    #: The invoice field a held modification needs before any period holds it,
+    #: and the refusal a stated denial produces. Set only beside
+    #: :attr:`InvoiceIvaFindingReason.RECTIFICATIVA_PERIOD_NEEDS_FACT`, and
+    #: exactly one of the two.
+    rectification_period_need: RectificationFact | None = None
+    rectification_period_refusal: RectificationPeriodRefusal | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -443,13 +460,20 @@ class InvoiceIvaSource:
     screen: ScreenedInvoiceIva
 
 
-def _rectificativa_finding(screened: ScreenedRectificativa) -> InvoiceIvaFinding:
-    """Hold one rectificativa, saying whether its modification is derived or out of reach.
+def _rectificativa_finding(screened: ScreenedRectificativa) -> InvoiceIvaFinding | None:
+    """Hold one rectificativa, or answer ``None`` when nothing about it blocks this period.
 
-    Both outcomes block and neither declares anything. They are separate
-    reasons because the person does something different with each: a refusal
-    names a record to complete or correct, while a derived modification is
-    complete and waiting on the period its side and cause place it in.
+    Four blocking outcomes, each naming a different thing the person does: a
+    record that supports no modification at all, a modification no period holds
+    yet, a received modification this period declares whose casilla could not
+    be built, and an issued modification this period declares that no binding
+    reads.
+
+    ``None`` is the two non-blocking outcomes. A modification declared in THIS
+    period and projected into its observations needs no finding: it is
+    declared. One declared in ANOTHER period contributes nothing here, which is
+    correct rather than a defect, and is disclosed as an excluded contribution
+    through :func:`excluded_rectification_diagnostics` instead.
     """
     derived = screened.derived
     modification = derived.modification
@@ -462,11 +486,28 @@ def _rectificativa_finding(screened: ScreenedRectificativa) -> InvoiceIvaFinding
                 None if derived.refusal is RectificationModificationRefusal.FACTS_NOT_STATED else derived.refusal
             ),
         )
-    return InvoiceIvaFinding(
-        reason=InvoiceIvaFindingReason.RECTIFICATIVA_PERIOD_UNDECIDED,
-        invoice_id=screened.invoice.invoice_id,
-        rectification_modification=modification,
-    )
+    decided = screened.decided
+    if decided.need is not None or decided.refusal is not None:
+        return InvoiceIvaFinding(
+            reason=InvoiceIvaFindingReason.RECTIFICATIVA_PERIOD_NEEDS_FACT,
+            invoice_id=screened.invoice.invoice_id,
+            rectification_modification=modification,
+            rectification_period_need=decided.need,
+            rectification_period_refusal=decided.refusal,
+        )
+    if screened.issued_declaration_unbound:
+        return InvoiceIvaFinding(
+            reason=InvoiceIvaFindingReason.RECTIFICATIVA_ISSUED_MODIFICATION_UNBOUND,
+            invoice_id=screened.invoice.invoice_id,
+            rectification_modification=modification,
+        )
+    if screened.declaration_refusal is not None:
+        return InvoiceIvaFinding(
+            reason=InvoiceIvaFindingReason.RECTIFICATIVA_DEDUCTION_ROW_UNDECLARABLE,
+            invoice_id=screened.invoice.invoice_id,
+            rectification_modification=modification,
+        )
+    return None
 
 
 def _screen_findings(screen: ScreenedInvoiceIva) -> list[InvoiceIvaFinding]:
@@ -487,7 +528,9 @@ def _screen_findings(screen: ScreenedInvoiceIva) -> list[InvoiceIvaFinding]:
         InvoiceIvaFinding(reason=InvoiceIvaFindingReason.RECARGO_NOT_DECLARABLE, invoice_id=invoice.invoice_id)
         for invoice in screen.recargo_not_declarable
     )
-    findings.extend(_rectificativa_finding(screened) for screened in screen.rectificativas)
+    findings.extend(
+        finding for screened in screen.rectificativas if (finding := _rectificativa_finding(screened)) is not None
+    )
     findings.extend(
         InvoiceIvaFinding(reason=InvoiceIvaFindingReason.USED_GOODS_MARGIN_UNMODELLED, invoice_id=invoice.invoice_id)
         for invoice in screen.used_goods_margin_unmodelled

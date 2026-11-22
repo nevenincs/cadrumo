@@ -159,11 +159,13 @@ def test_a_fact_the_record_already_states_is_not_asked_for_again() -> None:
 
 
 def test_a_complete_rectificativa_still_blocks_and_shows_the_derived_figures() -> None:
-    """Slice boundary: the modification is derived, and the period it belongs to is not decided.
+    """The modification is derived, and the period rule names the one fact that places it.
 
-    This is the assertion that keeps the slice honest. A complete record moves
-    to its own reason carrying the signed figures the document's method reads,
-    with no fact named, rather than appearing to be declared.
+    This record states an art. 80.Tres cause, which LIVA art. 114.Dos.2.º
+    routes to the period the deduction was exercised in and RIVA art. 24 makes
+    conditional on obligations the application cannot observe. So the hold
+    moves to the period reason, names that attestation, and carries the signed
+    figures the document's method reads.
     """
     catalogue = resolve_invoice_legal_classification_catalogue(effective_date=_ISSUED_AT)
     invoice = _rectificativa(
@@ -176,9 +178,9 @@ def test_a_complete_rectificativa_still_blocks_and_shows_the_derived_figures() -
 
     issue = _issue(invoice)
 
-    assert issue.reason is LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_PERIOD_UNDECIDED
-    assert issue.missing_facts == ()
-    assert "does not state" not in issue.detail
+    assert issue.reason is LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_PERIOD_NEEDS_FACT
+    assert issue.missing_facts == (RectificationFact.ART_80_TRES_OBLIGATIONS_ATTESTED.value,)
+    assert "art_80_tres_obligations_attested" in issue.detail
     # A minoración of the whole invoice: the magnitudes the record holds,
     # negated once by the direction it records.
     assert issue.derived_modification_base == -_BASE

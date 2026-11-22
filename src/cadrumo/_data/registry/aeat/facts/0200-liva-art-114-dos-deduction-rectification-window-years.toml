@@ -1,0 +1,15 @@
+[fact]
+fact_id = "liva-art-114-dos-deduction-rectification-window-years"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "liva-art-114-dos-deduction-rectification-window-years:2000-01-01"
+date_axis = "filing_period"
+valid_from = 2000-01-01
+legal_refs = ["ley-37-1992:art-114"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "scalar"
+value = 4
+unit = "years"

@@ -1103,8 +1103,18 @@ application:
           del Modelo 349.
         other_invoice_rule: El libro rechazaría esta factura por otra regla. Comprueba
           sus datos con el documento.
+        rectification_art_80_tres_attestation_not_allowed: Esa declaración corresponde
+          a una rectificación por cliente en concurso.
+        rectification_elected_period_outside_window: El periodo que elegiste queda
+          fuera del plazo que la ley da a esa vía.
+        rectification_election_direction_mismatch: Esa opción es del otro sentido,
+          por lo que una rectificación así no la lleva.
+        rectification_election_side_mismatch: Esa opción es de la otra parte, por
+          lo que esta factura no la lleva.
         rectification_fact_not_allowed: Solo una factura rectificativa indica este
           dato de rectificación.
+        rectification_regularisation_period_without_election: Indica la vía que elegiste
+          antes del periodo en que regularizas.
         rectified_invoice_not_allowed: Solo una factura rectificativa indica la factura
           que rectifica.
         rectified_invoice_required: Una factura rectificativa debe indicar la factura
@@ -3214,7 +3224,14 @@ application:
         en %{cuota}
       ledger_preflight_derived_recargo: y el recargo de equivalencia en %{recargo}
       ledger_preflight_missing_fact:
+        art_80_tres_obligations_attested: si cumpliste las obligaciones por cliente
+          en concurso
         document_received_on: cuándo la recibiste
+        exercised_deduction_period: el periodo en que ejerciste la deducción
+        issuer_increase_election: qué vía elegiste para el aumento que repercutiste
+        issuer_minoracion_election: qué vía elegiste para la minoración que repercutiste
+        issuer_minoracion_regularisation_period: el periodo en que la regularizas
+        recipient_increase_period: el periodo en que deduces el aumento
         rectification_cause: por qué rectifica la operación
         rectification_direction: si minora o aumenta los importes
         rectification_method: cómo expresa sus importes
@@ -3245,12 +3262,20 @@ application:
         invoice_recargo_split_unresolved: 'una factura emitida lleva un único recargo
           de equivalencia sobre varios tipos de IVA que no coincide con la suma del
           recargo de cada tipo: corrige el recargo de la factura'
+        invoice_rectificativa_deduction_row_undeclarable: 'una factura rectificativa
+          recibida pertenece a este periodo y su rectificación de deducciones no se
+          puede situar: la factura que rectifica no es un único registro de tu catálogo,
+          o una línea lleva base sin cuota deducible'
+        invoice_rectificativa_issued_modification_unbound: una factura rectificativa
+          emitida pertenece a este periodo, y las casillas de modificación de este
+          Modelo 303 se escriben a mano, por lo que sus importes no llegan desde la
+          factura
         invoice_rectificativa_modification_unmodelled: 'el registro de una factura
           rectificativa no indica la modificación que hace: cómo expresa sus importes
           y, si los sustituye, la única factura a la que sustituye'
-        invoice_rectificativa_period_undecided: la modificación que hace una factura
-          rectificativa ya se conoce, pero el periodo al que corresponde depende de
-          su causa y de la opción que la ley te deja
+        invoice_rectificativa_period_needs_fact: se conoce la modificación que hace
+          una factura rectificativa, y el periodo al que pertenece depende de su causa
+          y de la opción que la ley te deja
         invoice_used_goods_margin_unmodelled: 'la base del margen de una venta en
           el régimen especial de los bienes usados (art. 137) no se calcula: indica
           tú mismo la base del margen y su cuota en las casillas de IVA devengado

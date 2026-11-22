@@ -1088,8 +1088,18 @@ application:
           kódja.
         other_invoice_rule: A főkönyv egy másik szabály miatt elutasítaná ezt a számlát.
           Ellenőrizd az adatait a bizonylat alapján.
+        rectification_art_80_tres_attestation_not_allowed: Ez a nyilatkozat a fizetésképtelenné
+          vált vevő miatti helyesbítéshez tartozik.
+        rectification_elected_period_outside_window: A választott időszak kívül esik
+          azon a határidőn, amelyet a törvény ehhez az úthoz ad.
+        rectification_election_direction_mismatch: Ez a választás a másik irányhoz
+          tartozik, ezért egy ilyen helyesbítés nem hordozza.
+        rectification_election_side_mismatch: Ez a választás a másik felet illeti,
+          ezért ez a számla nem hordozza.
         rectification_fact_not_allowed: Ezt a helyesbítési adatot csak helyesbítő
           számla adja meg.
+        rectification_regularisation_period_without_election: Add meg a választott
+          utat, mielőtt megadod az önellenőrzés időszakát.
         rectified_invoice_not_allowed: Helyesbített számlát csak factura rectificativa
           nevezhet meg.
         rectified_invoice_required: A factura rectificativának meg kell neveznie a
@@ -3167,7 +3177,15 @@ application:
       ledger_preflight_derived_recargo: a recargo de equivalencia összegét pedig %{recargo}
         összeggel
       ledger_preflight_missing_fact:
+        art_80_tres_obligations_attested: teljesítetted-e a fizetésképtelenné vált
+          vevőhöz tartozó kötelezettségeket
         document_received_on: mikor kaptad meg
+        exercised_deduction_period: melyik időszakban éltél a levonással
+        issuer_increase_election: melyik utat választottad az általad áthárított növelésre
+        issuer_minoracion_election: melyik utat választottad az általad áthárított
+          csökkentésre
+        issuer_minoracion_regularisation_period: melyik időszakban önellenőrzöd
+        recipient_increase_period: melyik időszakban vonod le a növelést
         rectification_cause: miért helyesbíti az ügyletet
         rectification_direction: csökkenti vagy növeli-e az összegeket
         rectification_method: hogyan adja meg az összegeit
@@ -3199,13 +3217,20 @@ application:
         invoice_recargo_split_unresolved: 'egy kiállított számla több áfakulcsra egyetlen
           kiegyenlítő pótlékot (recargo de equivalencia) tartalmaz, amely eltér az
           egyes kulcsok pótlékának összegétől: javítsd a számla pótlékát'
+        invoice_rectificativa_deduction_row_undeclarable: 'egy befogadott helyesbítő
+          számla ehhez az időszakhoz tartozik, és a levonás helyesbítése nem helyezhető
+          el: a helyesbített számla nem egyetlen nyilvántartási tétel, vagy egy sor
+          adóalapot visz levonható adó nélkül'
+        invoice_rectificativa_issued_modification_unbound: egy kiállított helyesbítő
+          számla ehhez az időszakhoz tartozik, és ennek a Modelo 303-nak a módosítási
+          rubrikáit kézzel írod be, ezért az összegei nem jutnak el oda a számláról
         invoice_rectificativa_modification_unmodelled: 'a helyesbítő számla (factura
           rectificativa) nyilvántartása nem adja meg, milyen módosítást végez: hogyan
           adja meg az összegeit, és ha azokat helyettesíti, melyik egyetlen számlát
           váltja fel'
-        invoice_rectificativa_period_undecided: a helyesbítő számla (factura rectificativa)
-          módosítása már ismert, de az, hogy melyik időszakhoz tartozik, a jogcímétől
-          és a törvény által rád hagyott választástól függ
+        invoice_rectificativa_period_needs_fact: ismert, milyen módosítást tesz egy
+          helyesbítő számla, és hogy melyik időszakhoz tartozik, az az okától és a
+          törvény által rád hagyott választástól függ
         invoice_used_goods_margin_unmodelled: 'a használt cikkek különleges rendszerében
           (régimen especial de los bienes usados) végzett értékesítés árrésalapját
           (art. 137) a program nem számítja ki: add meg magad az árrés adóalapját

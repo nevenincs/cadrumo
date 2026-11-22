@@ -1039,8 +1039,18 @@ application:
         operation_type_required: This IVA category needs a Modelo 349 operation key.
         other_invoice_rule: The ledger would refuse this invoice under another rule.
           Check its facts against the document.
+        rectification_art_80_tres_attestation_not_allowed: That attestation belongs
+          to a correction for a customer declared insolvent.
+        rectification_elected_period_outside_window: The period you chose is outside
+          the window the law allows that route.
+        rectification_election_direction_mismatch: That choice belongs to the other
+          direction, so a correction this way does not carry it.
+        rectification_election_side_mismatch: That choice belongs to the other party,
+          so this invoice does not carry it.
         rectification_fact_not_allowed: Only a factura rectificativa states this correction
           fact.
+        rectification_regularisation_period_without_election: State the route you
+          chose before the period you regularise in.
         rectified_invoice_not_allowed: Only a factura rectificativa names an invoice
           it rectifies.
         rectified_invoice_required: A factura rectificativa must name the invoice
@@ -3062,7 +3072,14 @@ application:
         cuota by %{cuota}
       ledger_preflight_derived_recargo: and the recargo de equivalencia by %{recargo}
       ledger_preflight_missing_fact:
+        art_80_tres_obligations_attested: whether you met the obligations for a customer
+          declared insolvent
         document_received_on: when you received it
+        exercised_deduction_period: the period you took the deduction in
+        issuer_increase_election: which route you chose for the increase you charged
+        issuer_minoracion_election: which route you chose for the reduction you charged
+        issuer_minoracion_regularisation_period: the period you regularise it in
+        recipient_increase_period: the period you deduct the increase in
         rectification_cause: why it corrects the operation
         rectification_direction: whether it lowers or raises the amounts
         rectification_method: how it states its figures
@@ -3093,11 +3110,18 @@ application:
         invoice_recargo_split_unresolved: 'an issued invoice carries one recargo de
           equivalencia over several VAT rates that differs from the sum of each rate''s
           recargo de equivalencia: correct the invoice''s recargo de equivalencia'
+        invoice_rectificativa_deduction_row_undeclarable: 'a received factura rectificativa
+          belongs to this period and its correction of the deductions cannot be placed:
+          the invoice it corrects is not a single record of your catalogue, or a line
+          carries a base with no deductible cuota'
+        invoice_rectificativa_issued_modification_unbound: an issued factura rectificativa
+          belongs to this period, and the modification casillas of this Modelo 303
+          are typed in by hand, so its figures do not reach them from the invoice
         invoice_rectificativa_modification_unmodelled: 'the record of a factura rectificativa
           does not state the modification it makes: how it states its figures, and,
           where it substitutes them, the single invoice it replaces'
-        invoice_rectificativa_period_undecided: the modification a factura rectificativa
-          makes is known, but the period it belongs to depends on its cause and on
+        invoice_rectificativa_period_needs_fact: the modification a factura rectificativa
+          makes is known, and the period it belongs to depends on its cause and on
           the choice the law leaves you
         invoice_used_goods_margin_unmodelled: 'the margin base of a sale under the
           régimen especial de los bienes usados (art. 137) is not computed: enter

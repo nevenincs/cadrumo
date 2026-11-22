@@ -401,7 +401,9 @@ _IVA_ONLY_PREFLIGHT_REASONS = frozenset(
         "invoice_recargo_split_unresolved",
         "invoice_recargo_not_declarable",
         "invoice_rectificativa_modification_unmodelled",
-        "invoice_rectificativa_period_undecided",
+        "invoice_rectificativa_period_needs_fact",
+        "invoice_rectificativa_deduction_row_undeclarable",
+        "invoice_rectificativa_issued_modification_unbound",
         "invoice_used_goods_margin_unmodelled",
     },
 )

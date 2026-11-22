@@ -4318,8 +4318,10 @@ desktop:
       invoice_deduction_family_unresolved: Deduction
       invoice_recargo_not_declarable: Surcharge
       invoice_recargo_split_unresolved: Surcharge
+      invoice_rectificativa_deduction_row_undeclarable: Corrected deduction
+      invoice_rectificativa_issued_modification_unbound: Issued correction
       invoice_rectificativa_modification_unmodelled: Rectificativa
-      invoice_rectificativa_period_undecided: Rectificativa period
+      invoice_rectificativa_period_needs_fact: Correction period
       invoice_used_goods_margin_unmodelled: Used goods
       linked_movement_contradicts_invoice: Invoice
       missing_business_classification: Classification
@@ -4351,9 +4353,13 @@ desktop:
       invoice_recargo_not_declarable: The surcharge is not the legal rate on its base
       invoice_recargo_split_unresolved: The surcharge does not divide between its
         VAT rates
+      invoice_rectificativa_deduction_row_undeclarable: The invoice it corrects is
+        not a single record, or a line has no deductible cuota
+      invoice_rectificativa_issued_modification_unbound: Type the modification into
+        the Modelo 303 casillas yourself
       invoice_rectificativa_modification_unmodelled: State how it expresses its figures,
         and which invoice it replaces
-      invoice_rectificativa_period_undecided: The correction is derived; its period
+      invoice_rectificativa_period_needs_fact: The correction is known; its period
         depends on the cause and on your choice
       invoice_used_goods_margin_unmodelled: Enter the margin base and its cuota in
         the devengado casillas for its rate

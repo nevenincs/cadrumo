@@ -397,7 +397,15 @@ const REASON_FIXES: Record<LedgerPreflightReason, ReasonFix> = {
     preset: "review",
     column: "invoice",
   },
-  invoice_rectificativa_period_undecided: {
+  invoice_rectificativa_period_needs_fact: {
+    preset: "review",
+    column: "invoice",
+  },
+  invoice_rectificativa_deduction_row_undeclarable: {
+    preset: "review",
+    column: "invoice",
+  },
+  invoice_rectificativa_issued_modification_unbound: {
     preset: "review",
     column: "invoice",
   },

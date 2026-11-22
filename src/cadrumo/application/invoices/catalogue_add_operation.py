@@ -15,6 +15,7 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import CoreValidationError, InternalInvariantError
 from ...core.operations import OperationEffect
+from ...core.period import Period, PeriodError
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -333,6 +334,26 @@ def invoice_add_lease(
         return None if payload.business_premises_lease is None else payload.business_premises_lease.to_domain()
 
 
+def _elected_period(value: str | None) -> Period | None:
+    """Parse one elected declaración-liquidación from the canonical display form.
+
+    The request carries a period as ``"YYYY <registry-code>"`` because a typed
+    period cannot cross the public operation schema, and
+    :meth:`~cadrumo.core.period.Period.from_string` is the one parser for that
+    form: a combined calendar string is refused there rather than guessed here.
+    """
+    if value is None:
+        return None
+    try:
+        return Period.from_string(value)
+    except PeriodError as exc:
+        raise InvoiceValidationError(
+            str(exc),
+            translated_message="application.invoices.add.errors.elected_period_not_a_period",
+            context={"period": value},
+        ) from exc
+
+
 def build_invoice_from_add_request(
     *,
     payload: InvoiceAddRequest,
@@ -392,6 +413,12 @@ def build_invoice_from_add_request(
         rectification_cause=payload.rectification_cause,
         rectification_direction=payload.rectification_direction,
         document_received_on=payload.document_received_on,
+        issuer_increase_election=payload.issuer_increase_election,
+        issuer_minoracion_election=payload.issuer_minoracion_election,
+        issuer_minoracion_regularisation_period=_elected_period(payload.issuer_minoracion_regularisation_period),
+        recipient_increase_period=_elected_period(payload.recipient_increase_period),
+        art_80_tres_obligations_attested=payload.art_80_tres_obligations_attested,
+        exercised_deduction_period=_elected_period(payload.exercised_deduction_period),
         recargo_amount=(None if payload.recargo_amount is None else Decimal(payload.recargo_amount.decimal)),
         business_premises_lease=business_premises_lease,
         lines=lines or None,

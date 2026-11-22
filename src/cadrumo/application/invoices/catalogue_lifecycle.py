@@ -38,6 +38,7 @@ from pydantic import BaseModel, ValidationError, model_validator
 
 from ...core.aggregation import IntracomOperationType
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import InvoiceClass, PaymentStatus, advance_payment_received_role
@@ -240,6 +241,18 @@ class CatalogueInvoicePatch(BaseModel):
     rectification_cause: str | None = None
     rectification_direction: str | None = None
     document_received_on: date | None = None
+    # The elections and the attestation LIVA art. 89.Cinco, art. 114.Dos and
+    # art. 80.Tres leave the taxpayer, correctable on the same terms: a choice
+    # made in error is withdrawn by setting it back to ``None``, and the two
+    # election tokens travel as text for the dating reason above. The periods
+    # are typed, because a period is a year and a registry code and never a
+    # calendar string.
+    issuer_increase_election: str | None = None
+    issuer_minoracion_election: str | None = None
+    issuer_minoracion_regularisation_period: Period | None = None
+    recipient_increase_period: Period | None = None
+    art_80_tres_obligations_attested: bool | None = None
+    exercised_deduction_period: Period | None = None
     payment_id: str | None = None
     declared_fx_rate: Decimal | None = None
 

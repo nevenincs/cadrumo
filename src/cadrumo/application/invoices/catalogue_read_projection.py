@@ -19,6 +19,7 @@ from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.codes import normalise_iso_4217_currency
+from ...core.period import Period
 from ...core.text_bounds import NonEmptyStr
 from ...domain.attachments.enums import AttachmentSource
 from ...domain.attachments.models import Attachment, normalize_media_type
@@ -37,6 +38,14 @@ def _decimal(value: Decimal) -> PublicDecimal:
 
 def _optional_decimal(value: Decimal | None) -> PublicDecimal | None:
     return _decimal(value) if value is not None else None
+
+
+def _displayed_period(value: Period | None) -> str | None:
+    """One elected period in the canonical display form a surface renders.
+
+    Core types: :class:`~cadrumo.core.period.Period`.
+    """
+    return str(value) if value is not None else None
 
 
 def _bounded_decimal(value: PublicDecimal | None, *, positive: bool = False) -> bool:
@@ -200,6 +209,16 @@ class CatalogueInvoiceSnapshot(BaseModel):
     rectification_cause: str | None
     rectification_direction: str | None
     document_received_on: date | None
+    #: The elections and the attestation the law leaves the taxpayer, served as
+    #: the stable tokens the record holds and each elected period in its
+    #: canonical ``"YYYY <code>"`` display form. A surface renders what it is
+    #: served; it holds no route list and no window of its own.
+    issuer_increase_election: str | None
+    issuer_minoracion_election: str | None
+    issuer_minoracion_regularisation_period: str | None
+    recipient_increase_period: str | None
+    art_80_tres_obligations_attested: bool | None
+    exercised_deduction_period: str | None
     fx_rate: PublicDecimal | None
     fx_rate_date: date | None
     fx_rate_source: NonEmptyStr | None
@@ -264,6 +283,18 @@ class CatalogueInvoiceSnapshot(BaseModel):
                 str(invoice.rectification_direction) if invoice.rectification_direction is not None else None
             ),
             document_received_on=invoice.document_received_on,
+            issuer_increase_election=(
+                str(invoice.issuer_increase_election) if invoice.issuer_increase_election is not None else None
+            ),
+            issuer_minoracion_election=(
+                str(invoice.issuer_minoracion_election) if invoice.issuer_minoracion_election is not None else None
+            ),
+            issuer_minoracion_regularisation_period=_displayed_period(
+                invoice.issuer_minoracion_regularisation_period,
+            ),
+            recipient_increase_period=_displayed_period(invoice.recipient_increase_period),
+            art_80_tres_obligations_attested=invoice.art_80_tres_obligations_attested,
+            exercised_deduction_period=_displayed_period(invoice.exercised_deduction_period),
             fx_rate=_optional_decimal(invoice.fx_rate),
             fx_rate_date=invoice.fx_rate_date,
             fx_rate_source=invoice.fx_rate_source,

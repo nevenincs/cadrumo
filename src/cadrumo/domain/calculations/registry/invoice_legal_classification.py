@@ -11,6 +11,8 @@ from ....core.registry_token import StrictRegistryToken
 from ...invoices.enums import (
     InvoiceClass,
     InvoiceOperationDateRole,
+    IssuerIncreaseElection,
+    IssuerMinoracionElection,
     RectificationCause,
     RectificationDirection,
     RectificationMethod,
@@ -55,6 +57,14 @@ _RECTIFICATION_CAUSE_PREFIX = "rectification_cause."
 _RECTIFICATION_CAUSE_ART_80_TRES_KEY = "rectification_cause.art_80_tres_token"
 _RECTIFICATION_CAUSE_ERROR_FUNDADO_KEY = "rectification_cause.error_fundado_de_derecho_token"
 _RECTIFICATION_CAUSE_OTRA_KEY = "rectification_cause.otra_modificacion_token"
+_ISSUER_INCREASE_ELECTION_ORDER_KEY = "issuer_increase_election.order"
+_ISSUER_INCREASE_ELECTION_PREFIX = "issuer_increase_election."
+_ISSUER_INCREASE_INCLUDE_KEY = "issuer_increase_election.incluir_en_el_periodo_token"
+_ISSUER_INCREASE_AUTOLIQUIDACION_KEY = "issuer_increase_election.autoliquidacion_rectificativa_token"
+_ISSUER_MINORACION_ELECTION_ORDER_KEY = "issuer_minoracion_election.order"
+_ISSUER_MINORACION_ELECTION_PREFIX = "issuer_minoracion_election."
+_ISSUER_MINORACION_PROCEDIMIENTO_KEY = "issuer_minoracion_election.procedimiento_120_3_lgt_token"
+_ISSUER_MINORACION_REGULARIZACION_KEY = "issuer_minoracion_election.regularizacion_en_autoliquidacion_token"
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,6 +113,24 @@ class RectificationCauseDefinition:
 
 
 @dataclass(frozen=True, slots=True)
+class IssuerIncreaseElectionDefinition:
+    """One registry-declared LIVA art. 89.Cinco route for an issued increase."""
+
+    token: IssuerIncreaseElection
+    description: str
+    legal_refs: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class IssuerMinoracionElectionDefinition:
+    """One registry-declared LIVA art. 89.Cinco route for an issued minoración."""
+
+    token: IssuerMinoracionElection
+    description: str
+    legal_refs: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class InvoiceLegalClassificationCatalogue:
     """Complete dated projection of fact 0141."""
 
@@ -124,6 +152,54 @@ class InvoiceLegalClassificationCatalogue:
     art_80_tres_cause_token: RectificationCause
     error_fundado_de_derecho_cause_token: RectificationCause
     otra_modificacion_cause_token: RectificationCause
+    issuer_increase_elections: tuple[IssuerIncreaseElectionDefinition, ...]
+    issuer_minoracion_elections: tuple[IssuerMinoracionElectionDefinition, ...]
+    incluir_en_el_periodo_token: IssuerIncreaseElection
+    issuer_autoliquidacion_rectificativa_token: IssuerIncreaseElection
+    procedimiento_120_3_lgt_token: IssuerMinoracionElection
+    regularizacion_en_autoliquidacion_token: IssuerMinoracionElection
+
+    @property
+    def art_80_cause_choices(self) -> tuple[RectificationCause, ...]:
+        """The causes that are LIVA art. 80 grounds for modifying the base.
+
+        The art. 89.Cinco increase election and the art. 114.Dos windows both
+        turn on whether the ground sits inside art. 80, and the catalogue knows
+        which causes do: every declared cause other than the error fundado de
+        derecho and the instructions' "cualquier otra modificación" is an
+        art. 80 apartado. Reading it from the vocabulary keeps the list in the
+        registry rather than in a Python set beside it.
+        """
+        excluded = (self.error_fundado_de_derecho_cause_token, self.otra_modificacion_cause_token)
+        return tuple(choice for choice in self.rectification_cause_choices if choice not in excluded)
+
+    @property
+    def issuer_increase_election_choices(self) -> tuple[IssuerIncreaseElection, ...]:
+        """Return the art. 89.Cinco increase routes in the registry-authored order."""
+        return tuple(item.token for item in self.issuer_increase_elections)
+
+    @property
+    def issuer_minoracion_election_choices(self) -> tuple[IssuerMinoracionElection, ...]:
+        """Return the art. 89.Cinco minoración routes in the registry-authored order."""
+        return tuple(item.token for item in self.issuer_minoracion_elections)
+
+    def require_issuer_increase_election(self, value: object) -> IssuerIncreaseElection:
+        """Project an increase election only when the selected fact declares it."""
+        return _require_declared(
+            value,
+            choices=self.issuer_increase_election_choices,
+            factory=IssuerIncreaseElection.from_registry,
+            subject="issuer increase election",
+        )
+
+    def require_issuer_minoracion_election(self, value: object) -> IssuerMinoracionElection:
+        """Project a minoración election only when the selected fact declares it."""
+        return _require_declared(
+            value,
+            choices=self.issuer_minoracion_election_choices,
+            factory=IssuerMinoracionElection.from_registry,
+            subject="issuer minoración election",
+        )
 
     @property
     def rectification_method_choices(self) -> tuple[RectificationMethod, ...]:
@@ -313,6 +389,49 @@ def _catalogue(entries: Mapping[str, str]) -> InvoiceLegalClassificationCatalogu
             label="rectification cause",
         )
     )
+    increase_elections = tuple(
+        IssuerIncreaseElectionDefinition(token=token, description=description, legal_refs=legal_refs)
+        for token, description, legal_refs in _vocabulary_members(
+            entries,
+            order_key=_ISSUER_INCREASE_ELECTION_ORDER_KEY,
+            prefix=_ISSUER_INCREASE_ELECTION_PREFIX,
+            factory=IssuerIncreaseElection.from_registry,
+            label="issuer increase election",
+        )
+    )
+    minoracion_elections = tuple(
+        IssuerMinoracionElectionDefinition(token=token, description=description, legal_refs=legal_refs)
+        for token, description, legal_refs in _vocabulary_members(
+            entries,
+            order_key=_ISSUER_MINORACION_ELECTION_ORDER_KEY,
+            prefix=_ISSUER_MINORACION_ELECTION_PREFIX,
+            factory=IssuerMinoracionElection.from_registry,
+            label="issuer minoración election",
+        )
+    )
+    increase_choices = tuple(item.token.value for item in increase_elections)
+    minoracion_choices = tuple(item.token.value for item in minoracion_elections)
+    incluir = _pointer(entries, _ISSUER_INCREASE_INCLUDE_KEY, increase_choices, label="issuer-increase-election")
+    issuer_autoliquidacion = _pointer(
+        entries,
+        _ISSUER_INCREASE_AUTOLIQUIDACION_KEY,
+        increase_choices,
+        label="issuer-increase-election",
+    )
+    procedimiento = _pointer(
+        entries,
+        _ISSUER_MINORACION_PROCEDIMIENTO_KEY,
+        minoracion_choices,
+        label="issuer-minoracion-election",
+    )
+    regularizacion = _pointer(
+        entries,
+        _ISSUER_MINORACION_REGULARIZACION_KEY,
+        minoracion_choices,
+        label="issuer-minoracion-election",
+    )
+    _require_distinct_pointers((incluir, issuer_autoliquidacion), label="issuer-increase-election")
+    _require_distinct_pointers((procedimiento, regularizacion), label="issuer-minoracion-election")
     method_choices = tuple(item.token.value for item in methods)
     direction_choices = tuple(item.token.value for item in directions)
     cause_choices = tuple(item.token.value for item in causes)
@@ -361,6 +480,12 @@ def _catalogue(entries: Mapping[str, str]) -> InvoiceLegalClassificationCatalogu
         art_80_tres_cause_token=RectificationCause.from_registry(art_80_tres),
         error_fundado_de_derecho_cause_token=RectificationCause.from_registry(error_fundado),
         otra_modificacion_cause_token=RectificationCause.from_registry(otra),
+        issuer_increase_elections=increase_elections,
+        issuer_minoracion_elections=minoracion_elections,
+        incluir_en_el_periodo_token=IssuerIncreaseElection.from_registry(incluir),
+        issuer_autoliquidacion_rectificativa_token=IssuerIncreaseElection.from_registry(issuer_autoliquidacion),
+        procedimiento_120_3_lgt_token=IssuerMinoracionElection.from_registry(procedimiento),
+        regularizacion_en_autoliquidacion_token=IssuerMinoracionElection.from_registry(regularizacion),
     )
 
 
@@ -651,10 +776,46 @@ def require_rectification_cause(
     ).require_rectification_cause(value)
 
 
+def require_issuer_increase_election(
+    value: object,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> IssuerIncreaseElection:
+    """Return a LIVA art. 89.Cinco increase election only when fact 0141 declares it.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
+    return resolve_invoice_legal_classification_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    ).require_issuer_increase_election(value)
+
+
+def require_issuer_minoracion_election(
+    value: object,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> IssuerMinoracionElection:
+    """Return a LIVA art. 89.Cinco minoración election only when fact 0141 declares it.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
+    return resolve_invoice_legal_classification_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    ).require_issuer_minoracion_election(value)
+
+
 __all__ = [
     "InvoiceClassDefinition",
     "InvoiceLegalClassificationCatalogue",
     "InvoiceOperationDateRoleDefinition",
+    "IssuerIncreaseElectionDefinition",
+    "IssuerMinoracionElectionDefinition",
     "RectificationCauseDefinition",
     "RectificationDirectionDefinition",
     "RectificationMethodDefinition",
@@ -665,6 +826,8 @@ __all__ = [
     "operation_performed_role",
     "require_invoice_class",
     "require_invoice_operation_date_role",
+    "require_issuer_increase_election",
+    "require_issuer_minoracion_election",
     "require_rectification_cause",
     "require_rectification_direction",
     "require_rectification_method",

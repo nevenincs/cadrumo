@@ -102,7 +102,9 @@ export const READINESS_REASONS = [
   "invoice_recargo_split_unresolved",
   "invoice_recargo_not_declarable",
   "invoice_rectificativa_modification_unmodelled",
-  "invoice_rectificativa_period_undecided",
+  "invoice_rectificativa_period_needs_fact",
+  "invoice_rectificativa_deduction_row_undeclarable",
+  "invoice_rectificativa_issued_modification_unbound",
   "invoice_used_goods_margin_unmodelled",
 ] as const;
 export type LedgerPreflightReason = (typeof READINESS_REASONS)[number];
@@ -421,6 +423,12 @@ export const INVOICE_UPDATE_FIELDS = [
   "rectification_cause",
   "rectification_direction",
   "document_received_on",
+  "issuer_increase_election",
+  "issuer_minoracion_election",
+  "issuer_minoracion_regularisation_period",
+  "recipient_increase_period",
+  "art_80_tres_obligations_attested",
+  "exercised_deduction_period",
   "payment_id",
   "declared_fx_rate",
 ] as const;
