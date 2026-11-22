@@ -19,7 +19,7 @@ from .ledger_validation_support import open_bucket_session
 
 N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
 
-MINIMAL_PDF = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
+MINIMAL_PDF = text_pdf_bytes(("Factura Proveedor SL",))
 
 FOUR_ROW_CSV = (
     N26_HEADER

@@ -48,6 +48,7 @@ from cadrumo.tests.cli_envelope import (
     unwrap_envelope_notices,
     unwrap_schema_envelope,
 )
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
@@ -121,18 +122,6 @@ def seed_zero_compensation_wallet_decision(bucket_id: str) -> None:
         )
 
 
-def _minimal_pdf(text: str) -> bytes:
-    """Return one syntactically minimal PDF carrying ``text``.
-
-    ``evidence add`` accepts only the document extensions a real purchase invoice
-    arrives in, so the fixture is a document rather than a text file. It stays
-    synthetic: the bytes name no real supplier, taxpayer or amount outside this
-    module's own constants.
-    """
-    body = f"BT /F1 12 Tf 72 720 Td ({text}) Tj ET".encode("ascii", errors="replace")
-    return b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" + body + b"\n%%EOF\n"
-
-
 def register_purchase_invoice_evidence(tmp_path: Path, *, label: str, base: Decimal, cuota: Decimal) -> str:
     """Register one purchase invoice document and return its evidence id.
 
@@ -141,7 +130,7 @@ def register_purchase_invoice_evidence(tmp_path: Path, *, label: str, base: Deci
     links one.
     """
     document = tmp_path / f"{label}.pdf"
-    document.write_bytes(_minimal_pdf(f"Factura {label} base {base} IVA {cuota}"))
+    document.write_bytes(text_pdf_bytes((f"Factura {label} base {base} IVA {cuota}",)))
     registered = _invoke(
         [
             "app",

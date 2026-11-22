@@ -9,6 +9,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
 
 from .filing_year import IvaJourneyYear
@@ -219,7 +220,7 @@ def setup_store(
     store = cast(Path, args.output_root) / name
     store.mkdir(parents=True)
     artifact = args.output_root / f"{name}-synthetic-purchase.pdf"
-    artifact.write_bytes(b"%PDF-1.4\n% synthetic acceptance purchase evidence\n")
+    artifact.write_bytes(text_pdf_bytes(("synthetic acceptance purchase evidence",)))
     passphrase = secrets.token_urlsafe(32)
     cli = _fresh_cli(args, store, passphrase)
     try:
