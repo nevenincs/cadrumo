@@ -924,6 +924,7 @@ export type LedgerPreflightIssueReason =
   | "invoice_recargo_split_unresolved"
   | "invoice_recargo_not_declarable"
   | "invoice_rectificativa_modification_unmodelled"
+  | "invoice_rectificativa_period_undecided"
   | "invoice_used_goods_margin_unmodelled";
 
 /**

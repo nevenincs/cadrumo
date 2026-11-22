@@ -120,7 +120,7 @@ def test_a_rectificativa_contributes_to_no_rate_row(year: int, kind: InvoiceKind
 
     assert screened.observations == (), f"a rectificativa reached the rate rows: {_declared_values(screened, year)!r}"
     assert screened.invoice_ids == ()
-    assert screened.rectificativa_modification_unmodelled == (invoice,)
+    assert [screened_rectificativa.invoice for screened_rectificativa in screened.rectificativas] == [invoice]
 
 
 @pytest.mark.parametrize("year", _YEARS)
@@ -131,7 +131,7 @@ def test_an_ordinaria_still_declares_its_base_and_cuota(year: int, kind: Invoice
 
     screened = _screen(invoice, year)
 
-    assert screened.rectificativa_modification_unmodelled == ()
+    assert screened.rectificativas == ()
     assert screened.invoice_ids == (invoice.invoice_id,)
     assert [(observation.base_amount, observation.iva_amount) for observation in screened.observations] == [
         (_BASE, _CUOTA)

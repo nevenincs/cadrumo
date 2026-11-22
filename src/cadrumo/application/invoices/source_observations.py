@@ -8,7 +8,7 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -44,7 +44,6 @@ from ...domain.calculations.registry.travel_agency_mediation import (
 )
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.filing.declared_party_name_filing import PartyNameRefusals
-from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import invoice_class_rectificativa, resolve_invoice_legal_mention
 from ...domain.invoices.models import Invoice
 from ...domain.iva.flow import derive_flow_for_classification, is_inversion_sujeto_pasivo_flow
@@ -546,7 +545,7 @@ def is_rectificativa(invoice: Invoice) -> bool:
     return invoice.invoice_class == invoice_class_rectificativa()
 
 
-def rectified_invoices(rectificativa: Invoice, invoices: InvoiceCatalogue) -> tuple[Invoice, ...]:
+def rectified_invoices(rectificativa: Invoice, invoices: Iterable[Invoice]) -> tuple[Invoice, ...]:
     """Return every ordinary invoice the correction could name, read by its kind, bucket, counterparty and number.
 
     A simplified invoice names no customer, so a correction naming one can still be its correction.
@@ -554,11 +553,14 @@ def rectified_invoices(rectificativa: Invoice, invoices: InvoiceCatalogue) -> tu
     separate one RD 1619/2012 art. 6.1.a gives corrections, so more than one answer stays
     unresolved and each caller refuses it.
 
-    ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
+    ``invoices`` is any reading of the profile's invoices, the
+    :class:`InvoiceCatalogue` among them: it iterates its own records, and a
+    caller holding the same invoices as a sequence asks the same question of
+    them rather than rebuilding a catalogue to ask it.
     """
     return tuple(
         invoice
-        for invoice in invoices.values()
+        for invoice in invoices
         if invoice.kind is rectificativa.kind
         and invoice.bucket_id == rectificativa.bucket_id
         and not is_rectificativa(invoice)

@@ -401,6 +401,7 @@ _IVA_ONLY_PREFLIGHT_REASONS = frozenset(
         "invoice_recargo_split_unresolved",
         "invoice_recargo_not_declarable",
         "invoice_rectificativa_modification_unmodelled",
+        "invoice_rectificativa_period_undecided",
         "invoice_used_goods_margin_unmodelled",
     },
 )
@@ -418,6 +419,10 @@ _LEDGER_PREFLIGHT_NEED_KEY = "application.modelo.errors.ledger_preflight_need"
 _LEDGER_PREFLIGHT_MISSING_FACTS_KEY = "application.modelo.errors.ledger_preflight_missing_facts"
 #: One key per field a ledger hold can name as missing, keyed on the field name.
 _LEDGER_PREFLIGHT_MISSING_FACT_KEY = "application.modelo.errors.ledger_preflight_missing_fact"
+#: The clause that states the signed modification a held rectificativa makes.
+_LEDGER_PREFLIGHT_DERIVED_MODIFICATION_KEY = "application.modelo.errors.ledger_preflight_derived_modification"
+#: The clause appended when that modification also carries a recargo de equivalencia.
+_LEDGER_PREFLIGHT_DERIVED_RECARGO_KEY = "application.modelo.errors.ledger_preflight_derived_recargo"
 
 
 def _movement_words(movement: Transaction, language: OutputLanguage) -> dict[str, str]:
@@ -500,10 +505,22 @@ def _hold_need_words(issue: LedgerPreflightIssue, language: OutputLanguage) -> s
     An issue that names absent fields -- today the facts a factura
     rectificativa states -- extends its own sentence with them, each worded
     through its own key, so the person is told which fields to open rather than
-    only that the family is blocked. An issue naming none keeps its sentence
-    exactly as it was.
+    only that the family is blocked. An issue carrying a derived modification
+    extends its sentence with the signed figures instead, because there nothing
+    is missing and the figures are what the person needs to see. An issue
+    carrying neither keeps its sentence exactly as it was.
     """
     need = tr(f"{_LEDGER_PREFLIGHT_NEED_KEY}.{issue.reason.value}", locale=language.value)
+    base = issue.derived_modification_base
+    cuota = issue.derived_modification_cuota
+    if base is not None and cuota is not None:
+        clause = _derived_modification_clause(
+            base=base,
+            cuota=cuota,
+            recargo=issue.derived_modification_recargo,
+            language=language,
+        )
+        return f"{need}; {clause}"
     if not issue.missing_facts:
         return need
     facts = ", ".join(
@@ -515,6 +532,34 @@ def _hold_need_words(issue: LedgerPreflightIssue, language: OutputLanguage) -> s
     # the clause continues that one sentence rather than starting a second one
     # mid-line.
     return f"{need}; {clause}"
+
+
+def _derived_modification_clause(
+    *,
+    base: Decimal,
+    cuota: Decimal,
+    recargo: Decimal | None,
+    language: OutputLanguage,
+) -> str:
+    """The signed base, cuota and any recargo a held rectificativa's modification carries.
+
+    Formatted here from the typed amounts on the issue, in the language the
+    hold was asked in, so no surface computes or words a tax figure.
+    """
+    clause = tr(
+        _LEDGER_PREFLIGHT_DERIVED_MODIFICATION_KEY,
+        locale=language.value,
+        base=format_casilla_value(base, data_type="money", language=language),
+        cuota=format_casilla_value(cuota, data_type="money", language=language),
+    )
+    if recargo is None:
+        return clause
+    recargo_clause = tr(
+        _LEDGER_PREFLIGHT_DERIVED_RECARGO_KEY,
+        locale=language.value,
+        recargo=format_casilla_value(recargo, data_type="money", language=language),
+    )
+    return f"{clause} {recargo_clause}"
 
 
 def ledger_preflight_hold(

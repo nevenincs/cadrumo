@@ -10,10 +10,10 @@ Two properties matter and are both proved here:
 
 - the issued side is asked for three facts and the received side for four, with
   the reception date the only difference;
-- the block holds even when every fact IS stated, because this slice records
-  the facts and derives nothing from them yet. A sentence that stopped
-  complaining once the facts were in would say the modification was declared
-  when it is not.
+- the block holds even when every fact IS stated, on its own reason and with
+  the derived figures in hand, because the period a modification belongs to is
+  still undecided. A sentence that stopped complaining once the facts were in
+  would say the modification was declared when it is not.
 
 Real-behaviour: real invoices through the real invoice-side screen and the real
 preflight projection over the published authority. No mocks, stubs, skips or
@@ -36,6 +36,7 @@ from ....domain.calculations.registry.invoice_legal_classification import (
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus, RectificationFact
 from ....domain.invoices.models import INVOICE_WRITE_ADMISSION, Invoice, InvoiceLine
+from ....domain.invoices.rectification_modification import RectificationModificationRefusal
 from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.models import TransactionCatalogue
 from ...aggregation.invoice_iva_source import period_invoice_iva_side
@@ -157,12 +158,12 @@ def test_a_fact_the_record_already_states_is_not_asked_for_again() -> None:
     )
 
 
-def test_a_complete_rectificativa_still_blocks_with_no_fact_named() -> None:
-    """Slice boundary: the facts are recorded, and nothing derives the modification yet.
+def test_a_complete_rectificativa_still_blocks_and_shows_the_derived_figures() -> None:
+    """Slice boundary: the modification is derived, and the period it belongs to is not decided.
 
-    This is the assertion that keeps the slice honest. The family stays blocked
-    on its own reason with an empty missing-fact list, rather than appearing to
-    be declared because the record is complete.
+    This is the assertion that keeps the slice honest. A complete record moves
+    to its own reason carrying the signed figures the document's method reads,
+    with no fact named, rather than appearing to be declared.
     """
     catalogue = resolve_invoice_legal_classification_catalogue(effective_date=_ISSUED_AT)
     invoice = _rectificativa(
@@ -175,6 +176,31 @@ def test_a_complete_rectificativa_still_blocks_with_no_fact_named() -> None:
 
     issue = _issue(invoice)
 
-    assert issue.reason is LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_MODIFICATION_UNMODELLED
+    assert issue.reason is LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_PERIOD_UNDECIDED
     assert issue.missing_facts == ()
     assert "does not state" not in issue.detail
+    # A minoración of the whole invoice: the magnitudes the record holds,
+    # negated once by the direction it records.
+    assert issue.derived_modification_base == -_BASE
+    assert issue.derived_modification_cuota == -_CUOTA
+    assert issue.derived_modification_recargo is None
+    assert f"-{_BASE:f}" in issue.detail
+    assert f"-{_CUOTA:f}" in issue.detail
+
+
+def test_a_substitution_with_no_original_says_so_in_its_own_sentence() -> None:
+    """The refusal reaches the diagnostic, so the hold names the problem rather than the family."""
+    catalogue = resolve_invoice_legal_classification_catalogue(effective_date=_ISSUED_AT)
+    invoice = _rectificativa(
+        kind=InvoiceKind.ISSUED,
+        rectification_method=str(catalogue.sustitucion_token),
+        rectification_cause=str(catalogue.otra_modificacion_cause_token),
+        rectification_direction=str(catalogue.minoracion_token),
+    )
+
+    issue = _issue(invoice)
+
+    assert issue.reason is LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_MODIFICATION_UNMODELLED
+    assert issue.missing_facts == ()
+    assert RectificationModificationRefusal.ORIGINAL_NOT_FOUND.value in issue.detail
+    assert issue.derived_modification_base is None
