@@ -118,3 +118,77 @@ def equals_sum_operands(
     total_id, *addend_ids = predicate.casilla_ids
     addend_sum = sum((casilla_values.get(cid, Decimal(0)) for cid in addend_ids), Decimal(0))
     return total_id, casilla_values.get(total_id, Decimal(0)), addend_sum
+
+
+@dataclass(frozen=True, slots=True)
+class FloorSubtractionReading:
+    """What a ``limited_subtractions_respect_floor`` predicate reads from the casilla values.
+
+    ``after_limited`` is the base less the pre-floor and the limited
+    subtractions; ``unresolved_ids`` are the unclassified subtractions that
+    carry an amount, in the order the predicate names them, and
+    ``unresolved_total`` is what they add up to.
+    """
+
+    floor_id: CasillaId
+    floor: Decimal
+    limited_total: Decimal
+    after_limited: Decimal
+    unresolved_ids: tuple[CasillaId, ...]
+    unresolved_total: Decimal
+
+    @property
+    def floor_applies(self) -> bool:
+        """Whether there is a positive floor to compare with."""
+        return self.floor > Decimal(0)
+
+    @property
+    def breached(self) -> bool:
+        """Whether the limited subtractions take the base below the floor."""
+        return self.floor_applies and self.limited_total > Decimal(0) and self.after_limited < self.floor
+
+    @property
+    def unresolved(self) -> bool:
+        """Whether the classification of the unclassified subtractions could change the outcome.
+
+        Read as exempt they never breach; read as pre-floor or limited they
+        breach only when they take what is left after the limited subtractions
+        below the floor. With no certain breach and room for them either way,
+        the outcome holds whatever their classification.
+        """
+        return (
+            self.floor_applies
+            and not self.breached
+            and bool(self.unresolved_ids)
+            and self.after_limited - self.unresolved_total < self.floor
+        )
+
+
+def floor_subtraction_reading(
+    predicate: AdmittedPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+) -> FloorSubtractionReading:
+    """Read the floor, the subtractions by group and their outcome; a missing casilla reads as zero.
+
+    Admission guarantees the five groups, a floor and base pair and at least
+    one limited subtraction. The exempt group is never read: those amounts
+    apply whatever the floor.
+    """
+    admitted = dict(zip(predicate.parsed.casilla_ids, predicate.casilla_ids, strict=True))
+    (floor_id, base_id), pre_floor_ids, limited_ids, unclassified_ids, _exempt_ids = (
+        tuple(admitted[token] for token in group) for group in predicate.parsed.casilla_groups()
+    )
+
+    def total(ids: tuple[CasillaId, ...]) -> Decimal:
+        return sum((casilla_values.get(cid, Decimal(0)) for cid in ids), Decimal(0))
+
+    limited_total = total(limited_ids)
+    unresolved_ids = tuple(cid for cid in unclassified_ids if casilla_values.get(cid, Decimal(0)) != Decimal(0))
+    return FloorSubtractionReading(
+        floor_id=floor_id,
+        floor=casilla_values.get(floor_id, Decimal(0)),
+        limited_total=limited_total,
+        after_limited=casilla_values.get(base_id, Decimal(0)) - total(pre_floor_ids) - limited_total,
+        unresolved_ids=unresolved_ids,
+        unresolved_total=total(unresolved_ids),
+    )

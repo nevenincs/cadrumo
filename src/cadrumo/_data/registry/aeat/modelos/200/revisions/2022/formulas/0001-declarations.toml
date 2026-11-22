@@ -23,6 +23,7 @@ source_ref = "aeat-modelo-200-manual-2022"
 required_text = [
     "correcciones al resultado de la cuenta de perdidas y ganancias",
     "base imponible antes de la compensacion",
+    "[00550] = [00501] + ([00417] - [00418])",
 ]
 
 # Base imponible [00552] = [00550] - [01032] - [00547]: aeat-dr-200-2022 DP200013
@@ -49,6 +50,7 @@ source_ref = "aeat-modelo-200-manual-2022"
 required_text = [
     "compensacion de bases imponibles negativas",
     "reserva de capitalizacion",
+    "[00552] = [00550] - [01032] - [00547]",
 ]
 
 # [01330] = [00552] + [01033] - [01034]: aeat-dr-200-2022 prints [01330] on DP200014 field 6
@@ -255,6 +257,8 @@ required_text = [
     "tipo de gravamen",
     "El contenido de la casilla [00562] «Cuota íntegra» siempre deberá ser una cantidad positiva o cero",
     "La cuota íntegra de las sociedades cooperativas es la suma algebraica de las cantidades",
+    "[00562] = [00552] x [00558]/100",
+    "[00562] = [01330] x [00558] / 100",
 ]
 
 # Cuota íntegra ajustada positiva [00582] (aeat-dr-200-2022 DP200014 field 47, offset 697).
@@ -303,38 +307,45 @@ required_text = [
     "Si al efectuar esta operación se obtiene una cantidad negativa o cero",
 ]
 
-# Cuota líquida [00592] = max([00619], max(0, [00582] - ([00583] + [00585] + [00584] + [00588]
-# + [01039] + [02314] + [02315] + [00565] + [00590] + [00399] + [00082] + [01040] + [01041])))
-# per the Manual práctico de Sociedades 2022. aeat-dr-200-2022 prints every operand, the
-# cuota líquida mínima [00619] (art. 30 bis LIS) and [00592] on DP200014 fields 47-62
+# Cuota líquida [00592] = max(0, [00582] - ([00583] + [00585] + [00584] + [00588] + [01039]
+# + [02314] + [02315] + [00565] + [00590] + [00399] + [00082] + [01040] + [01041])), the
+# operation the Manual práctico de Sociedades 2022 states for the box (p. 365), "siempre ...
+# positiva o cero". Every operand is a deducción "aplicada por el contribuyente en el período
+# impositivo", so the cuota líquida mínima of art. 30 bis LIS [00619] is not a floor on the
+# box: it bounds the amounts consigned. Art. 30 bis.2 lets the "restantes deducciones" reach
+# the minimum and no further, while the Canarias deductions apply "aunque la cuota líquida
+# resultante sea inferior a la mencionada cuota líquida mínima" (p. 351), and the art. 39.2
+# LIS I+D+i deduction [00082] "no se ve afectada por el importe de la cuota líquida mínima"
+# (p. 359). The manual's worked liquidaciones consign the limited amount in the deduction box
+# and carry the rest as pendiente: Ejemplo 1 [00588] 50.000 with 30.000 pendiente and [00592]
+# 300.000 = [00619] (p. 355); Ejemplo 2 [00588] 0 with 250.000 pendiente, [02315] 90.000 and
+# [00082] 130.000, so [00592] is 0 under a cuota líquida mínima of 130.000 (pp. 358-360).
+# aeat-dr-200-2022 prints every operand, [00619] and [00592] on DP200014 fields 47-62
 # (offsets 697-952), under "Liquidación III - Otras deducciones"; the 2023 design moves the
 # block to DP200014B.
 [[revisions."2022".formulas]]
 id = "modelo-200-cuota-liquida"
 target_casilla_id = "DP200014:00592"
 expression = { op = "max", args = [
-    { casilla_id = "DP200014:00619" },
-    { op = "max", args = [
-        { op = "subtract", args = [
-            { casilla_id = "DP200014:00582" },
-            { op = "add", args = [
-                { casilla_id = "DP200014:00583" },
-                { casilla_id = "DP200014:00585" },
-                { casilla_id = "DP200014:00584" },
-                { casilla_id = "DP200014:00588" },
-                { casilla_id = "DP200014:01039" },
-                { casilla_id = "DP200014:02314" },
-                { casilla_id = "DP200014:02315" },
-                { casilla_id = "DP200014:00565" },
-                { casilla_id = "DP200014:00590" },
-                { casilla_id = "DP200014:00399" },
-                { casilla_id = "DP200014:00082" },
-                { casilla_id = "DP200014:01040" },
-                { casilla_id = "DP200014:01041" },
-            ] },
+    { op = "subtract", args = [
+        { casilla_id = "DP200014:00582" },
+        { op = "add", args = [
+            { casilla_id = "DP200014:00583" },
+            { casilla_id = "DP200014:00585" },
+            { casilla_id = "DP200014:00584" },
+            { casilla_id = "DP200014:00588" },
+            { casilla_id = "DP200014:01039" },
+            { casilla_id = "DP200014:02314" },
+            { casilla_id = "DP200014:02315" },
+            { casilla_id = "DP200014:00565" },
+            { casilla_id = "DP200014:00590" },
+            { casilla_id = "DP200014:00399" },
+            { casilla_id = "DP200014:00082" },
+            { casilla_id = "DP200014:01040" },
+            { casilla_id = "DP200014:01041" },
         ] },
-        { literal = "0" },
     ] },
+    { literal = "0" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-30-bis", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-36", "ley-27-2014:art-39"]
@@ -346,6 +357,10 @@ required_text = [
     "La cuota líquida se obtiene aplicando sobre la cuota íntegra ajustada positiva",
     "[00592] = [00582] - ([00583] + [00585]",
     "El resultado de esta operación siempre tendrá que ser una cantidad positiva o cero",
+    "relativas a las deducciones de la cuota aplicadas por el contribuyente en el período impositivo",
+    "se aplicarán las restantes deducciones que resulten procedentes con sus límites aplicables, hasta el importe de dicha cuota líquida mínima",
+    "se aplicarán, respetando sus propios límites, aunque la cuota líquida resultante sea inferior a la mencionada cuota líquida mínima",
+    "no se ve afectada por el importe de la cuota líquida mínima",
 ]
 
 # Cuota del ejercicio [00599] = ([00625]/100) x ([00592] - [01766] - [01784]), Manual práctico de

@@ -84,6 +84,9 @@ _PROBE_EXPRESSIONS: Mapping[VerificationPredicateOperator, str] = MappingProxyTy
         VerificationPredicateOperator.EQUALS_SUM: 'equals_sum(["01", "02", "06"])',
         VerificationPredicateOperator.IMPLIES_ANY_NONZERO: 'implies_any_nonzero(["01", "02"])',
         VerificationPredicateOperator.IMPLIES_NONZERO: 'implies_nonzero(["01", "02"])',
+        VerificationPredicateOperator.LIMITED_SUBTRACTIONS_RESPECT_FLOOR: (
+            'limited_subtractions_respect_floor(["01", "02"], ["06"], ["07"], ["14"], ["15"])'
+        ),
         VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK: (
             'positive_application_le_present_stock(["01", "02"])'
         ),
@@ -197,6 +200,22 @@ def test_unparseable_syntax_under_each_known_operator_is_refused_with_locator(
     expression = f"{operator.value}(not a valid argument list)"
 
     _assert_locator(_gate_failures(expression, _served_kinds(operator)[0]), expression)
+
+
+@pytest.mark.parametrize("position", range(6))
+def test_floor_subtraction_operand_that_is_not_an_amount_is_refused(position: int) -> None:
+    ids = ["01", "02", "06", "07", "14", "15"]
+    ids[position] = _TEXT_CASILLA
+    floor, base, pre_floor, limited, unclassified, exempt = (f'"{casilla_id}"' for casilla_id in ids)
+    expression = (
+        f"limited_subtractions_respect_floor([{floor}, {base}], [{pre_floor}], [{limited}], "
+        f"[{unclassified}], [{exempt}])"
+    )
+
+    failures = _gate_failures(expression, VerificationFindingKind.BLOCKING_RULE)
+
+    _assert_locator(failures, expression)
+    assert any(f"'{_TEXT_CASILLA}'" in failure for failure in failures)
 
 
 def test_unknown_operator_is_refused_with_locator() -> None:

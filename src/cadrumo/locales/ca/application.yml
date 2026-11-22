@@ -3760,6 +3760,10 @@ application:
         EUR de rendiments del treball, per sobre del llindar de la DT 12a, així que
         la casella [%{reduccion_id}] et pot donar una reducció que encara no apliques.
         Comprova si et correspon.
+      floor_subtraction_unresolved: 'La casella [%{box}] té un import i la casella
+        [%{floor_box}] fixa un mínim, però el text oficial no diu si aquesta deducció
+        pot deixar la quota per sota del mínim, de manera que no es pot comprovar.
+        Caselles afectades: %{boxes}.'
       foreign_asset_redeclaration: 'Model %{modelo_code} %{filing_year}: el valor
         d''un dels teus béns a l''estranger ha passat de %{prior_value_eur} EUR a
         %{current_value_eur} EUR. L''augment de %{delta_value_eur} EUR supera els
@@ -3836,6 +3840,11 @@ application:
         %{period}. La presentació queda bloquejada fins que aquesta comparació es
         completi. Torna-ho a provar quan els registres estiguin disponibles i torna
         a calcular si han canviat.
+      limited_subtractions_below_floor: Les deduccions que només es poden aplicar
+        fins al mínim de la casella [%{box}] (%{floor_value}) sumen %{limited_total}
+        i deixen la quota en %{after_limited}, per sota d'aquest mínim. Consigna només
+        la part que hi cap fins al mínim i deixa la resta pendent per als exercicis
+        següents.
       m193_settled_row_amount_authority_unresolved: El model 193 de %{filing_year}
         inclou %{settled_prior_accrual_rows} pagament(s) de rendiments meritats en
         un exercici anterior. Les normes oficials no indiquen com declarar-ne la base
