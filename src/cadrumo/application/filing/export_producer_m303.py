@@ -152,7 +152,7 @@ def m303_profile_lexicals(
     if iva_profile is None:
         return M303ProfileLexicals()
     a30 = (
-        yes_no(iva_profile.hydrocarbon_deposit_advance_payment_deduction_entitled)
+        _answered_yes_no(iva_profile.hydrocarbon_deposit_advance_payment_deduction_entitled)
         if period is not None and m303_a30_entitlement_applicable(period)
         else _m303_outside_period()
         if period is not None
@@ -162,9 +162,9 @@ def m303_profile_lexicals(
         # The territory and the regime composition are read on the filing's own date; with no
         # period they stay unanswered rather than being read on another date.
         return M303ProfileLexicals(
-            redeme_enrolled=yes_no(iva_profile.redeme_enrolled),
-            cash_accounting_regime_enrolled=yes_no(iva_profile.cash_accounting_regime_enrolled),
-            voluntary_sii_enrolled=yes_no(iva_profile.voluntary_sii_enrolled),
+            redeme_enrolled=_answered_yes_no(iva_profile.redeme_enrolled),
+            cash_accounting_regime_enrolled=_answered_yes_no(iva_profile.cash_accounting_regime_enrolled),
+            voluntary_sii_enrolled=_answered_yes_no(iva_profile.voluntary_sii_enrolled),
             hydrocarbon_deposit_advance_payment_deduction_entitled=a30,
         )
     territory_date = date(period.filing_year, 1, 1)
@@ -177,15 +177,15 @@ def m303_profile_lexicals(
         effective_date=territory_date,
     )
     return M303ProfileLexicals(
-        redeme_enrolled=yes_no(iva_profile.redeme_enrolled),
+        redeme_enrolled=_answered_yes_no(iva_profile.redeme_enrolled),
         exclusively_foral=exclusively_foral,
         regime_composition_code=(
             m303_regime_composition_export_code(iva_profile.regime_composition, effective_date=territory_date)
             if iva_profile.regime_composition is not None
             else None
         ),
-        cash_accounting_regime_enrolled=yes_no(iva_profile.cash_accounting_regime_enrolled),
-        voluntary_sii_enrolled=yes_no(iva_profile.voluntary_sii_enrolled),
+        cash_accounting_regime_enrolled=_answered_yes_no(iva_profile.cash_accounting_regime_enrolled),
+        voluntary_sii_enrolled=_answered_yes_no(iva_profile.voluntary_sii_enrolled),
         hydrocarbon_deposit_advance_payment_deduction_entitled=a30,
         is_foral=is_foral,
     )
@@ -306,6 +306,11 @@ def _m303_blank_outside_final_period() -> str:
 
 def yes_no(value: bool) -> str:
     return _m303_form_codes().code("answer.yes" if value else "answer.no")
+
+
+def _answered_yes_no(value: bool | None) -> str | None:
+    """Render an answered yes/no fact; an unanswered one stays unanswered rather than becoming a no."""
+    return None if value is None else yes_no(value)
 
 
 def m303_a30_entitlement_applicable(period: Period) -> bool:

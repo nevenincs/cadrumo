@@ -381,13 +381,19 @@ class ModeloIVAProfile(BaseModel):
         redeme_enrolled: Registered in REDEME (Registro de Devolución
             Mensual del IVA) — one of the mandatory-SII triggers.
 
-    Every enrolment above except ``redeme_enrolled`` is three-state:
-    ``None`` when the taxpayer has not answered, ``False`` when they have
-    stated they are not enrolled. Each selects an obligation of its own, so
-    reading an unanswered enrolment as a no would rule a taxpayer out of
-    Modelo 322, 353, 369 or the Modelo 349 monthly cadence without their
-    ever having been asked. ``redeme_enrolled`` stays a required boolean: a
-    claimed IVA block must state it either way.
+    Every enrolment above is three-state: ``None`` when the taxpayer has not
+    answered, ``False`` when they have stated they are not enrolled. Each
+    selects an obligation of its own, so reading an unanswered enrolment as a
+    no would rule a taxpayer out of Modelo 322, 353, 369 or the Modelo 349
+    monthly cadence without their ever having been asked.
+
+    ``redeme_enrolled``, ``cash_accounting_regime_enrolled``,
+    ``voluntary_sii_enrolled`` and
+    ``hydrocarbon_deposit_advance_payment_deduction_entitled`` are required
+    of a claimed block: the projection that feeds calculation and filing
+    refuses the block while any of them is ``None``. Only a read projection
+    that names them in :attr:`TaxpayerProfile.iva_block_unanswered_paths`
+    carries one unanswered.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -400,10 +406,10 @@ class ModeloIVAProfile(BaseModel):
     group_dominant_entity_enrolled: bool | None = None
     intracommunity_operations_exceed_50000_eur: bool | None = None
     sii_enrolled: bool | None = None
-    redeme_enrolled: bool
-    cash_accounting_regime_enrolled: bool
-    voluntary_sii_enrolled: bool
-    hydrocarbon_deposit_advance_payment_deduction_entitled: bool
+    redeme_enrolled: bool | None = None
+    cash_accounting_regime_enrolled: bool | None = None
+    voluntary_sii_enrolled: bool | None = None
+    hydrocarbon_deposit_advance_payment_deduction_entitled: bool | None = None
 
     @field_validator("tax_territory", "regime_composition", mode="before")
     @classmethod
@@ -599,6 +605,13 @@ class TaxpayerProfile(BaseModel):
             quarters in which such prizes were cashed; ``None`` when
             undeclared.
         iva: IVA-specific filing facts that can change filing cadence.
+        iva_block_unanswered_paths: The required Modelo IVA block paths a
+            read projection found unanswered, in their declared order. Empty
+            for every projection that refuses an incomplete block. When the
+            unanswered paths include the territory or the composition the
+            block cannot be built and ``iva`` is ``None``; otherwise the block
+            carries each unanswered yes/no fact as ``None``. Either way every
+            obligation such a fact decides is undetermined, never read as "no".
         cross_period_group_member_rosters: Expected group-member rosters
             keyed by upstream modelo, filing year, and period. These
             rosters let cross-period aggregate modelos prove complete
@@ -657,6 +670,7 @@ class TaxpayerProfile(BaseModel):
     premio_loteria_gravamen_especial_sin_retencion: bool | None = None
     premio_loteria_gravamen_especial_trimestres: frozenset[str] | None = None
     iva: ModeloIVAProfile | None = None
+    iva_block_unanswered_paths: tuple[str, ...] = ()
     cross_period_group_member_rosters: tuple[CrossPeriodGroupMemberRoster, ...] = Field(default_factory=tuple)
     enrollment: ModeloEnrollment = Field(default_factory=ModeloEnrollment)
     activity_start_date: date | None = None
@@ -714,6 +728,18 @@ class TaxpayerProfile(BaseModel):
         from ..calculations.registry.iva_regime_vocabulary import require_iva_regime
 
         require_iva_regime(self.iva_regime)
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _check_unanswered_iva_block_paths(self) -> Self:
+        """Reject a built IVA block that answers a path the profile names as unanswered."""
+        if self.iva is None:
+            return self
+        for path in self.iva_block_unanswered_paths:
+            field = path.removeprefix("iva.")
+            if field not in ModeloIVAProfile.model_fields or getattr(self.iva, field) is not None:
+                raise DeadlineValidationError(f"the IVA block answers {path}, which the profile names as unanswered")
         return self
 
     @model_validator(mode="after")
@@ -1055,6 +1081,38 @@ class ModeloDeadline(BaseModel):
         return self
 
 
+class UndeterminedObligation(BaseModel):
+    """A filing window whose obligation turns on a Modelo IVA fact the profile has not answered.
+
+    The window is owed for some answers of ``deciding_paths`` and not for
+    others, so it is neither a deadline nor an exclusion until they are given.
+
+    Attributes:
+        modelo: The modelo the window belongs to.
+        period: The period the window covers.
+        opens_on: The first day the window accepts the filing.
+        closes_on: The close the registry publishes for the window, on the
+            national calendar; no holiday shift is resolved for a window
+            that may not be owed.
+        deciding_paths: The unanswered profile paths that decide it.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    modelo: Annotated[Modelo, BeforeValidator(_parse_modelo_identifier)]
+    period: Annotated[Period, BeforeValidator(_parse_modelo_deadline_period)]
+    opens_on: date
+    closes_on: date
+    deciding_paths: tuple[str, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _window_is_ordered(self) -> Self:
+        if self.opens_on > self.closes_on:
+            raise DeadlineValidationError("an undetermined filing window closes before it opens")
+        return self
+
+
 class Schedule(BaseModel):
     """The full filing schedule for a taxpayer profile for a given year.
 
@@ -1064,6 +1122,8 @@ class Schedule(BaseModel):
         year: The target year.
         obligations: Tuple of :class:`ModeloDeadline` ordered by
             ``(closes_on, modelo, period)``.
+        undetermined: The windows an unanswered Modelo IVA fact leaves
+            undecided, in window order; never part of ``obligations``.
         generated_at: UTC timestamp of when :meth:`DeadlineEngine.compute`
             built this schedule. The only non-deterministic field, and
             validated as UTC-aware rather than merely documented as such:
@@ -1076,4 +1136,5 @@ class Schedule(BaseModel):
     profile: TaxpayerProfile
     year: FourDigitYear
     obligations: tuple[ModeloDeadline, ...]
+    undetermined: tuple[UndeterminedObligation, ...] = ()
     generated_at: UtcInstant

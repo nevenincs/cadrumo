@@ -293,9 +293,23 @@ export const ServicesDown: Story = {
 
 export const FailedRefreshing: Story = {
   name: "Failed, reading again",
-  args: { state: { kind: "failed", code: "timed_out" }, refreshing: true },
+  args: {
+    state: { kind: "failed", code: "timed_out", words: null },
+    refreshing: true,
+  },
 };
 
 export const Failed: Story = {
-  args: { state: { kind: "failed", code: "timed_out" } },
+  args: { state: { kind: "failed", code: "timed_out", words: null } },
+};
+
+export const FailedWithWords: Story = {
+  name: "Failed, with the words the product served",
+  args: {
+    state: {
+      kind: "failed",
+      code: "refused",
+      words: "Synthetic words the product served for its refusal.",
+    },
+  },
 };

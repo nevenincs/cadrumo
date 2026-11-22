@@ -2243,3 +2243,17 @@ def test_a_refused_catalogue_is_asked_again_and_a_lasting_refusal_is_named_not_r
             sleep=lambda _seconds: None,
         )
     assert [refusal["log_ref"] for refusal in lasting] == ["r1", "r2", "r3"]
+
+
+def test_a_completed_run_whose_token_counts_the_log_redacts_is_counted_with_unknown_tokens() -> None:
+    lines = [
+        "2026-11-22T08:55:42.976Z [INFO] cadrumo.adapters.outbound.llm.client: llm request completed "
+        "provider=AGENT model=llamacpp/api/qwen3:4b-instruct input_tokens=<redacted> output_tokens=<redacted> | {}",
+        "2026-11-22T08:56:05.688Z [INFO] cadrumo.adapters.outbound.llm.client: llm request completed "
+        "provider=AGENT model=llamacpp/api/qwen3:4b-instruct input_tokens=410 output_tokens=38 | {}",
+    ]
+    facts = harness.job_log_facts(lines)
+    assert facts["model_runs"] == 2
+    assert facts["lanes"] == {"AGENT/llamacpp/api/qwen3:4b-instruct": 2}
+    assert (facts["input_tokens"]["n"], facts["output_tokens"]["n"]) == (1, 1)
+    assert facts["request_gap_seconds"]["n"] == 1
