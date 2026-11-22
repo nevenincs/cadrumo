@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
+
 from .scenario import (
     CLIENT,
     IssuedInvoice,
@@ -188,7 +190,7 @@ class InvoiceSeedStage(SeedState):
     def _evidence_pdf(self, item: ReceivedInvoice) -> Path:
         self.artifact_dir.mkdir(parents=True, exist_ok=True)
         path = self.artifact_dir / f"{item.key}.pdf"
-        path.write_bytes(f"%PDF-1.4\n% synthetic export-parity purchase evidence {item.key}\n".encode("ascii"))
+        path.write_bytes(text_pdf_bytes((f"synthetic export-parity purchase evidence {item.key}",)))
         return path
 
     def _received(self, item: ReceivedInvoice) -> None:

@@ -29,6 +29,7 @@ from cadrumo.domain.contribuyente.inventory.closing_foundations import (
 from cadrumo.domain.contribuyente.inventory.records import InventoryHistoryKind
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
 from cadrumo.tests.cli_envelope import unwrap_cli_result
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
     RuntimeFailureObservation,
@@ -394,7 +395,7 @@ def test_native_inventory_inspect_names_held_documents_and_the_list_does_not(tmp
             ("iva_recoverability_review", "private-iva-check.pdf"),
         ):
             source = tmp_path / name
-            source.write_bytes(f"%PDF-1.7 synthetic {name}".encode())
+            source.write_bytes(text_pdf_bytes((f"synthetic {name}",)))
             stored = _invoke(profile, "app", "ledger", "inventory", "evidence-add", str(source))
             assert stored.exit_code == 0, stored.output
             answer = unwrap_cli_result(stored)

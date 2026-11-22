@@ -36,6 +36,7 @@ from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import (
     joint_return_options,
 )
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_envelope
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
@@ -134,15 +135,9 @@ def _add_quarterly_sales() -> None:
         )
 
 
-def _minimal_pdf(text: str) -> bytes:
-    """Return one syntactically minimal, synthetic PDF carrying ``text``."""
-    body = f"BT /F1 12 Tf 72 720 Td ({text}) Tj ET".encode("ascii", errors="replace")
-    return b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" + body + b"\n%%EOF\n"
-
-
 def _add_investment_purchase(tmp_path: Path, *, day: str) -> str:
     document = tmp_path / "torno.pdf"
-    document.write_bytes(_minimal_pdf(f"Factura torno base {_INVESTMENT_BASE} IVA {_INVESTMENT_CUOTA}"))
+    document.write_bytes(text_pdf_bytes((f"Factura torno base {_INVESTMENT_BASE} IVA {_INVESTMENT_CUOTA}",)))
     registered = _invoke(
         [
             "app",

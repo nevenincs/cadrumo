@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from uuid import UUID
@@ -49,6 +50,25 @@ def _owned_profiles(storage_root: Path) -> tuple[UUID, ...]:
         if str(profile_id) == entry.name and not entry.is_symlink() and entry.is_dir():
             owned.append(profile_id)
     return tuple(sorted(owned, key=str))
+
+
+def profile_session_prune_has_work(storage_root: Path) -> bool:
+    """Whether any profile this root owns keeps a minted-session record, read without the custody root lock.
+
+    Only a recorded session can ever be pruned, so a root without such a
+    record is left untouched. ``True`` sends the caller to the locked pass,
+    which reads every record again under the lock; a session minted after
+    this read is recorded and retained under that lock, never pruned. A
+    record whose presence cannot be observed also answers ``True``.
+    """
+    try:
+        for profile_id in _owned_profiles(storage_root):
+            receipt_path = profile_session_path(storage_root=storage_root, profile_id=profile_id)
+            if os.path.lexists(minted_sessions_path(receipt_path)):
+                return True
+    except (OSError, ValueError, StorageError):
+        return True
+    return False
 
 
 def prune_profile_session_entries(storage_root: Path) -> ProfileSessionPruneOutcome:
@@ -101,4 +121,4 @@ def prune_profile_session_entries(storage_root: Path) -> ProfileSessionPruneOutc
     return ProfileSessionPruneOutcome(removed=tuple(removed), retained=(), unavailability=None)
 
 
-__all__ = ["ProfileSessionPruneOutcome", "prune_profile_session_entries"]
+__all__ = ["ProfileSessionPruneOutcome", "profile_session_prune_has_work", "prune_profile_session_entries"]
