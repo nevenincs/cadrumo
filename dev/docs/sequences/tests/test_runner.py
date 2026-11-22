@@ -21,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import shutil
 from collections.abc import Generator
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
@@ -56,7 +57,6 @@ from ..runner import (
     execute_page_sequences,
     execute_sequence,
 )
-from ..runtime_fixture import sandbox_instant
 from ..sandbox import SANDBOX_PROFILE_ID, SANDBOX_REPLACEMENT_PROFILE_ID, sequence_sandbox
 from ..schema import CommandProgram, FrameKind, ParsedSequence
 
@@ -196,7 +196,7 @@ def test_sandbox_password_custody_authenticates_and_decrypts_each_template_clone
 
 
 def test_sandbox_runtime_admits_fresh_password_and_releases_real_profile_view(tmp_path: Path) -> None:
-    """The installed opener reaches an encrypted worker with the fixture's clock."""
+    """The installed opener reaches an encrypted worker, which mints the login on the wall clock."""
     # An incorrect proof creates a canonical login-throttle record. Keep that
     # negative case in its own root: the positive scope has the same frozen
     # instant, and must not bypass or artificially expire that record.
@@ -221,11 +221,15 @@ def test_sandbox_runtime_admits_fresh_password_and_releases_real_profile_view(tm
         )
         proof = bytearray(load_settings().cadrumo_dev_test_database_password.get_secret_value().encode())
         try:
+            before = datetime.now(UTC)
             admitted = client.login_password(proof)
+            after = datetime.now(UTC)
             assert admitted.status.profile_id == UUID(SANDBOX_PROFILE_ID)
             assert admitted.status.credential_authenticated
             assert admitted.human_login is not None
-            assert admitted.human_login.authenticated_at == sandbox_instant()
+            # Leases and logins are minted and judged on the wall clock, so a frozen document clock
+            # cannot mint one that is already expired; the login falls between the two reads.
+            assert before <= admitted.human_login.authenticated_at <= after
             assert not admitted.human_login.session_persisted
             assert not admitted.human_login.resumed
             assert proof == bytearray(len(proof))
