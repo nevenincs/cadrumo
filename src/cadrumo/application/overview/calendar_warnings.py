@@ -37,7 +37,7 @@ from ...domain.calculations.registry.applicability_payer_facts import payer_fact
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
 from ...domain.calculations.registry.iva_regime_vocabulary import iva_regime_simplificado_token
-from ...domain.deadlines.models import IVARegime
+from ...domain.deadlines.models import IVARegime, UndeterminedObligation
 from ..operator_actions.models import DeclaredNextAction
 from .calendar_models import (
     CalendarCompleteness,
@@ -107,6 +107,28 @@ mapping must stay complete: a gating key with no entry is dropped silently by
 the projection could not scope and no statement of which answer is missing.
 ``tests/test_calendar_payer_fact_warnings.py`` derives the reachable keys from
 the registry and fails when one is unnamed.
+"""
+
+
+IVA_BLOCK_QUESTION_LOCALE_KEYS: MappingProxyType[str, str] = MappingProxyType(
+    {
+        **{
+            path: PROFILE_FIELD_WARNING_LOCALE_KEYS[path]
+            for path in ("iva.redeme_enrolled", "iva.voluntary_sii_enrolled")
+        },
+        "iva.cash_accounting_regime_enrolled": "cli.overview.warning.criterio_caja_unset",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": (
+            "cli.overview.warning.deposito_hidrocarburos_unset"
+        ),
+        "iva.m303_regime_composition": "cli.overview.warning.m303_composicion_unset",
+        "tax_residence.jurisdiction_scope": "cli.overview.warning.territorio_iva_unset",
+    },
+)
+"""The sentence naming each question a claimed Modelo IVA block owes.
+
+Several of these facts gate no registry predicate (they are boxes the Modelo
+303 itself asks), so they sit beside the gating-key warnings rather than in
+them; a calendar names them whenever the block leaves them unanswered.
 """
 
 
@@ -557,6 +579,37 @@ def calendar_modelo_202_election_warnings(affected_modelos: Iterable[str]) -> tu
     )
 
 
+def calendar_iva_block_unanswered_warnings(
+    unanswered_paths: Iterable[str],
+    undetermined: Iterable[UndeterminedObligation],
+    *,
+    already_warned: Iterable[str],
+    operation: PinnedAuthorityOperation,
+) -> tuple[CalendarWarning, ...]:
+    """Name every question a claimed Modelo IVA block still owes, once each.
+
+    A path that decides a window names the modelos it leaves undetermined; one
+    that decides none is still owed by the periodic IVA self-assessment, so it
+    names that modelo. A path another warning already names is not repeated.
+    """
+    deciding: dict[str, set[str]] = {}
+    for item in undetermined:
+        for path in item.deciding_paths:
+            deciding.setdefault(path, set()).add(str(item.modelo))
+    periodic = str(form_for_role(_PERIODIC_IVA_ROLE, authority=operation))
+    skipped = set(already_warned)
+    return tuple(
+        CalendarWarning(
+            code=path,
+            message=IVA_BLOCK_QUESTION_LOCALE_KEYS[path],
+            fix_action=declare_next_action(_PROFILE_EDIT_ACTION_ID),
+            affected_modelos=tuple(sorted(deciding.get(path) or {periodic})),
+        )
+        for path in dict.fromkeys(unanswered_paths)
+        if path not in skipped
+    )
+
+
 def calendar_deadline_windows_unavailable_warnings(filing_years: Iterable[int]) -> tuple[CalendarWarning, ...]:
     """Return one warning per covered filing year whose deadline windows could not be resolved.
 
@@ -830,6 +883,7 @@ def build_completeness_and_warnings(
 
 
 __all__ = [
+    "IVA_BLOCK_QUESTION_LOCALE_KEYS",
     "MODELO_202_ELECTION_PROFILE_KEY",
     "build_completeness_and_warnings",
     "calendar_aeat_evidence_conflict_warnings",
@@ -838,6 +892,7 @@ __all__ = [
     "calendar_censo_enrolment_state",
     "calendar_censo_reconciliation_warnings",
     "calendar_deadline_windows_unavailable_warnings",
+    "calendar_iva_block_unanswered_warnings",
     "calendar_modelo_202_election_warnings",
     "calendar_regime_incompatibility_warnings",
     "calendar_unverified_justificante_warnings",

@@ -177,7 +177,8 @@ def _taxpayer_profile_from_state(
     record = state.active_profile_record()
     if record is None:
         return projection_for_taxpayer({})
-    return projection_for_taxpayer(record, schema=operation.profile_schema())
+    # A read: an unanswered IVA question leaves the windows it decides undecided, not the projection failed.
+    return projection_for_taxpayer(record, schema=operation.profile_schema(), withhold_unanswered_iva_block=True)
 
 
 def build_pending_obligations(

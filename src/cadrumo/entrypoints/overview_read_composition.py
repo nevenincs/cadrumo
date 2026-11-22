@@ -226,7 +226,9 @@ class _OverviewReadPorts:
             if str(record.profile_id) != self.bucket_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             schema = operation.profile_decode_context().schema
-            taxpayer = projection_for_taxpayer(record, schema=schema)
+            # A read shows what the answered facts decide; an IVA block with an
+            # unanswered question is held back and named, not a failed read.
+            taxpayer = projection_for_taxpayer(record, schema=schema, withhold_unanswered_iva_block=True)
             raw_values = record_to_values(record, schema=schema)
             evidence = _filing_year_applicability_evidence(self.bucket_id, record, operation=operation)
             if request.kind is OverviewReadKind.STATUS:

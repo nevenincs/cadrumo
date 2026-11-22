@@ -57,6 +57,8 @@ export type ProfileNotice = {
 };
 /** The catalogue action that opens the password-change door. */
 export const PASSWORD_CHANGE_ACTION_ID = "operator.profile.passphrase.change";
+/** The catalogue action that edits a profile fact: its door is the profile. */
+export const PROFILE_EDIT_ACTION_ID = "operator.profile.edit";
 export type ProfileEdit =
   | { kind: "field"; path: string; value: string }
   | {
