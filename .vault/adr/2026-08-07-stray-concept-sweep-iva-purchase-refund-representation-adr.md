@@ -3,13 +3,15 @@ tags:
   - '#adr'
   - '#stray-concept-sweep'
 date: '2026-08-07'
-modified: '2026-10-03'
+modified: '2026-11-22'
 body_schema: 'body-v1'
-body_hash: 'sha256:b68a169a7a6191f4ec8c64d11b51e2f2d1c554c4ca2bfccdc74a2eeaa28d8209'
+body_hash: 'sha256:8c590e173f1140b8f5eb83257917b74120733630da0f351aab57949988a40f9e'
 related:
   - '[[2026-08-07-stray-concept-sweep-audit]]'
 ---
-# `stray-concept-sweep` adr: `representing a purchase refund on the IVA ledger axis` | (**status:** `proposed`)
+# `stray-concept-sweep` adr: `representing a purchase refund on the IVA ledger axis` | (**status:** `deprecated`)
+
+Deprecated 2026-11-22 by ALIGN: none of its options was adopted verbatim. The movement axis is settled by the rectification deduction kind settling on fact 0085's `rectification_flow` side with the projection sign (`src/cadrumo/application/aggregation/iva_transaction.py`, `src/cadrumo/domain/iva/deduction_facts.py`). The invoice axis is settled by 2026-11-22-iva-workflow-rectificativa-modification-source-adr.
 
 ## Problem Statement
 

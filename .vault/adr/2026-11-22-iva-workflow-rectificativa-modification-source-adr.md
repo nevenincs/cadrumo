@@ -5,7 +5,7 @@ tags:
 date: '2026-11-22'
 modified: '2026-11-22'
 body_schema: 'body-v2'
-body_hash: 'sha256:846503be281fa215c7018ff9cb97fa366926f601ccba43e1b51e7bcd382b7358'
+body_hash: 'sha256:544dadbe01800d85610200ddf05192b4c7d6a634422d0ae9ed2ce9e0b160d831'
 related:
   - "[[2026-11-08-iva-workflow-invoice-iva-source-adr]]"
   - "[[2026-08-06-invoice-canonical-structure-adr]]"
@@ -25,7 +25,9 @@ related:
   - '[[2026-11-08-retenciones-workflow-invoice-withholding-source-adr]]'
 ---
 
-# `iva-workflow` adr: `The rectificativa is the source of the signed Modelo 303 modification, and no method, cause, period or election is assumed` | (**status:** `proposed`)
+# `iva-workflow` adr: `The rectificativa is the source of the signed Modelo 303 modification, and no method, cause, period or election is assumed` | (**status:** `accepted`)
+
+Accepted 2026-11-22 by ALIGN under the operator's standing order to decide and record.
 
 ## Problem Statement
 
