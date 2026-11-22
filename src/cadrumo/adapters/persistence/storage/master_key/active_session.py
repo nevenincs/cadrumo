@@ -42,7 +42,7 @@ from typing import TypeGuard, override
 from .....application.auth.operator_probe_ports import ActiveProfileSessionPresencePort
 from .....core.logging import get_logger
 from .....core.process_binding import ProcessScopedBinding
-from .....core.time.clock import now
+from .....core.time.clock import wall_now
 from ..bucket.errors import BucketLockedError
 from ..errors import SecretStoreError
 from .bucket_session import BucketSession
@@ -139,7 +139,7 @@ def require_fresh_active_session() -> BucketSession:
     profile_worker_binding.require_session(session)
     if session is None:
         raise NoActiveBucketSessionError()
-    if session.is_expired(now()):
+    if session.is_expired(wall_now()):
         bucket_id = session.bucket_id
         close_active_bucket_session()
         raise BucketLockedError(bucket_id=bucket_id)

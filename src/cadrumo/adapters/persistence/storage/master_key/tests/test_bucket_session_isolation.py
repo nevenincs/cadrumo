@@ -7,7 +7,7 @@ from datetime import timedelta
 
 import pytest
 
-from ......core.time.clock import now
+from ......core.time.clock import wall_now
 from ..active_session import (
     activate_session,
     bind_active_bucket_session,
@@ -22,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 def _open_session(bucket_id: str) -> BucketSession:
-    opened_at = now()
+    opened_at = wall_now()
     return BucketSession.open_resumed(
         bucket_id=bucket_id,
         dek=b"I" * 32,

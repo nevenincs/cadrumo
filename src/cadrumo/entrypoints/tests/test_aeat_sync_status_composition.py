@@ -21,6 +21,7 @@ from ...adapters.persistence.storage.errors import (
     SecureObjectRowIdentityError,
     SessionExpiredError,
 )
+from ...adapters.persistence.storage.master_key.active_session import current_active_bucket_session
 from ...adapters.persistence.storage.secure_object_namespaces import LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE
 from ...adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
@@ -46,7 +47,7 @@ from ...core.hashing import sha256_hex
 from ...core.period import Period
 from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_path
-from ...core.time.clock import frozen_clock
+from ...core.time.clock import wall_now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.temporal import select_authored_revision_metadata
@@ -404,5 +405,9 @@ def test_a_sealed_profile_session_refuses_the_composed_status_read(
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         ports = compose_aeat_sync_status_ports(load_settings(), runtime.bucket_id, operation)
         assert ports.filed_attempt() is None
-        with frozen_clock(datetime.now(UTC) + timedelta(days=30)), pytest.raises(SessionExpiredError):
+        session = current_active_bucket_session()
+        assert session is not None
+        ended = wall_now() - timedelta(seconds=1)
+        session.retarget_lifetime(opened_at=ended - timedelta(minutes=15), idle_minutes=15, deadline=ended)
+        with pytest.raises(SessionExpiredError):
             ports.filed_attempt()
