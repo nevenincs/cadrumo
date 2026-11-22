@@ -2157,10 +2157,13 @@ errors:
       de derivació de clau sol·licitats. Torna-ho a provar quan l'equip estigui menys
       carregat; si persisteix, aquest equip no pot aportar la memòria que requereix
       la derivació de clau.
-    refused_profile_custody_kdf_supervision_unavailable: La supervisió de derivació
-      de clau no està disponible en aquest equip. Torna-ho a provar quan l'equip estigui
-      menys carregat; si persisteix, aquest equip no pot iniciar el procés de treball
-      supervisat que requereix la derivació de clau.
+    refused_profile_custody_kdf_supervision_busy: La derivació de clau no s'ha pogut
+      iniciar a temps perquè l'equip està ocupat. La teva contrasenya no s'ha comprovat;
+      torna-ho a provar d'aquí a un moment.
+    refused_profile_custody_kdf_supervision_unavailable: 'La derivació de clau no
+      es pot executar en aquest equip: no pot iniciar, contenir ni verificar el procés
+      de treball supervisat que requereix la derivació de clau. Consulta els registres
+      per conèixer-ne la causa.'
     refused_profile_custody_legacy: L'emmagatzematge conté custòdia retirada; el restabliment
       destructiu i la nova inscripció són l'única via.
     refused_profile_displaced_session_retirement: No s'ha pogut revocar la sessió

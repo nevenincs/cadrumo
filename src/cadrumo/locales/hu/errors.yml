@@ -2026,10 +2026,12 @@ errors:
       kulcslevezetési erőforrásokat. Próbáld újra, amikor a gép kevésbé terhelt; ha
       továbbra is fennáll, ez a gép nem tudja biztosítani a kulcslevezetéshez szükséges
       memóriát.
-    refused_profile_custody_kdf_supervision_unavailable: A kulcslevezetés felügyelete
-      nem érhető el ezen a gépen. Próbáld újra, amikor a gép kevésbé terhelt; ha továbbra
-      is fennáll, ez a gép nem tudja elindítani a kulcslevezetéshez szükséges felügyelt
-      munkafolyamatot.
+    refused_profile_custody_kdf_supervision_busy: A kulcslevezetés nem tudott időben
+      elindulni, mert a gép terhelt. A jelszavadat nem ellenőriztük; próbáld újra
+      egy kicsit később.
+    refused_profile_custody_kdf_supervision_unavailable: 'A kulcslevezetés nem futtatható
+      ezen a gépen: nem tudja elindítani, elkülöníteni vagy ellenőrizni a kulcslevezetéshez
+      szükséges felügyelt munkafolyamatot. Az okot a naplókban találod.'
     refused_profile_custody_legacy: A tároló visszavont letétkezelést tartalmaz; csak
       a destruktív visszaállítás és az újbóli letétkezelés lehetséges.
     refused_profile_displaced_session_retirement: A korábban kiválasztott profil tárolt

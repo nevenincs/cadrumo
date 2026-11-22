@@ -72,9 +72,14 @@ _RECEIPT_DENIALS: Final[dict[ProfileSessionRefusalReason, AccessDenialCode]] = {
 
 
 _KDF_UNAVAILABLE: Final = frozenset(
-    {ProfileCustodyRefusal.KDF_RESOURCE_LIMIT, ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE}
+    {ProfileCustodyRefusal.KDF_RESOURCE_LIMIT, ProfileCustodyRefusal.KDF_SUPERVISION_BUSY}
 )
-"""Derivation refusals that say nothing about the password: the permit or the child was not available in time."""
+"""Derivation refusals that say nothing about the password: the permit or the child was not available in time.
+
+A child that could not be started, contained or verified at all is not among
+them: calling that "unavailable for now" would tell the person to try again
+against a host that will refuse the same way.
+"""
 
 
 @dataclass(slots=True)

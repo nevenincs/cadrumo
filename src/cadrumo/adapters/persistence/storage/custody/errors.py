@@ -14,6 +14,7 @@ class ProfileCustodyRefusal(StrEnum):
     LEGACY_CUSTODY_DETECTED = "LEGACY_CUSTODY_DETECTED"
     DEK_ROTATION_UNSUPPORTED = "DEK_ROTATION_UNSUPPORTED"
     KDF_RESOURCE_LIMIT = "KDF_RESOURCE_LIMIT"
+    KDF_SUPERVISION_BUSY = "KDF_SUPERVISION_BUSY"
     KDF_SUPERVISION_UNAVAILABLE = "KDF_SUPERVISION_UNAVAILABLE"
     KDF_TIMEOUT = "KDF_TIMEOUT"
 
@@ -92,6 +93,16 @@ class ProfileCustodyRefusedError(ProfileCustodyError):
         self.recovery_guidance = recovery_guidance
 
 
+class ProfileCustodyBusyRefusedError(ProfileCustodyRefusedError):
+    """A refusal caused by load alone: repeating the identical call may succeed.
+
+    The derivation child was started but had not attested before its budget
+    ended, so no derivation began and nothing about the host or the password
+    was learned. Its own class carries the retryable error code, because the
+    base refusal also carries causes that no repetition can cure.
+    """
+
+
 class WipeTypeError(StorageError):
     """Raised when the wipe primitive receives a value it cannot overwrite.
 
@@ -104,6 +115,7 @@ class WipeTypeError(StorageError):
 
 
 __all__ = [
+    "ProfileCustodyBusyRefusedError",
     "ProfileCustodyConcurrentCapsuleChangeError",
     "ProfileCustodyError",
     "ProfileCustodyPasswordError",
