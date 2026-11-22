@@ -477,7 +477,8 @@ export type WithholdingIncomeKind =
   | "professional"
   | "urban_rent"
   | "ordinary_movable_capital"
-  | "investment_fund";
+  | "investment_fund"
+  | "prize";
 
 /**
  * Explicit write intent for a withholding window.

@@ -4035,6 +4035,7 @@ desktop:
       capital_inmobiliario: Alquiler de inmuebles
       capital_mobiliario: Rendimientos del capital mobiliario
       ganancias_patrimoniales: Ganancias y pérdidas patrimoniales
+      premios: Premio pagado (concurso, rifa)
       trabajo: Trabajo
     issue:
       next: Siguiente problema de preparación

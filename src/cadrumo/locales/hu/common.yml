@@ -4011,6 +4011,7 @@ desktop:
       capital_inmobiliario: Ingatlan bérbeadása
       capital_mobiliario: Értékpapír-hozam (kamat, osztalék)
       ganancias_patrimoniales: Vagyoni nyereség és veszteség
+      premios: Kifizetett nyeremény (verseny, tombola)
       trabajo: Munkaviszony
     issue:
       next: Következő készültségi hiba

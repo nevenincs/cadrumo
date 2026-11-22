@@ -1,0 +1,24 @@
+[fact]
+fact_id = "premios-withholding-exclusion-threshold-eur"
+family = "scalar"
+
+# RIRPF art. 75.3.f) excludes from retención the premios whose base de retención is
+# not above 300 euros. The bundled consolidated text records no amendment of letter f)
+# inside the support envelope, so one floor-reaching variant covers every supported year.
+[[fact.variants]]
+variant_id = "premios-withholding-exclusion-threshold-eur:general"
+date_axis = "filing_period"
+legal_refs = ["rd-439-2007:art-75"]
+source_refs = ["boe-rirpf-category-profile-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-category-profile-authority"
+required_text = ["así como aquellos cuya base de retención no sea superior a 300 euros"]
+
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "300"
+unit = "EUR"

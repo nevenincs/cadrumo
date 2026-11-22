@@ -3693,6 +3693,8 @@ cli:
       irpf_purpose_capital_mobiliario_yield: rendiments del capital mobiliari (interessos,
         dividends)
       irpf_purpose_employment_income: rendiments del treball (no per a factures netes)
+      irpf_purpose_prize_payment_withholding: premi de concurs o rifa que vas pagar
+        amb retenció (premis del model 111)
       irpf_purpose_rent_expense_withholding: retenció de lloguer pagat net
       irpf_purpose_rental_property_income: ingressos i despeses de lloguer d'un immoble
       irpf_usage_example: 'Lloguer net: --category-id {rent_category} --irpf-category

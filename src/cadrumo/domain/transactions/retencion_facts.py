@@ -370,6 +370,46 @@ def urban_rent_retencion_rates(
     return frozenset({general, general * (Decimal("1") - reduction)})
 
 
+class PremiosRetencionTerms(BaseModel):
+    """Frozen projection of the authority's retención terms for premios en metálico.
+
+    Attributes:
+        ``rate`` is the selected retención rate on the prize amount;
+        ``exclusion_threshold_eur`` is the base de retención at or below which a
+        prize bears no retención. Their values and legal applicability remain in
+        registry facts.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
+    exclusion_threshold_eur: Decimal = Field(ge=Decimal("0"))
+
+
+_PREMIOS_RATE_FACT_ID: Final[str] = "premios-withholding-rate"
+_PREMIOS_EXCLUSION_THRESHOLD_FACT_ID: Final[str] = "premios-withholding-exclusion-threshold-eur"
+
+
+def load_premios_retencion_terms(
+    *, effective_date: date, authority: GovernedFactSource | None = None
+) -> PremiosRetencionTerms:
+    """Return the authority-selected retención rate and exclusion threshold for premios en metálico.
+
+    Raises:
+        TransactionValidationError: If either fact is absent, carries another
+            unit, or does not resolve to a ``Decimal``.
+    """
+    return PremiosRetencionTerms(
+        rate=_decimal_fact(_PREMIOS_RATE_FACT_ID, effective_date, authority),
+        exclusion_threshold_eur=_decimal_fact(
+            _PREMIOS_EXCLUSION_THRESHOLD_FACT_ID,
+            effective_date,
+            authority,
+            expected_unit="EUR",
+        ),
+    )
+
+
 def _decimal_fact(
     fact_id: str,
     effective_date: date,
@@ -391,9 +431,11 @@ def _decimal_fact(
 
 __all__ = [
     "AdministradorRetencionRates",
+    "PremiosRetencionTerms",
     "RirpfArt95RetencionRates",
     "administrador_retencion_legal_refs",
     "load_administrador_retencion_rates",
+    "load_premios_retencion_terms",
     "load_retencion_actividades_rates",
     "maximum_supported_activity_retencion_rate",
     "professional_activity_retencion_rates",

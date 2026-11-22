@@ -155,6 +155,14 @@ def has_rent_irpf_category(
     return descriptor is not None and descriptor.purpose.endswith("_expense_withholding")
 
 
+def has_prize_irpf_category(
+    value: str | None, *, direction: TransactionDirection, authority: GovernedFactSource | None = None
+) -> bool:
+    """Resolve the registry-owned paid-prize predicate."""
+    descriptor = ledger_irpf_category(value, direction=direction, authority=authority)
+    return descriptor is not None and descriptor.purpose.endswith("_payment_withholding")
+
+
 def has_employment_irpf_category(
     value: str | None, *, direction: TransactionDirection, authority: GovernedFactSource | None = None
 ) -> bool:
