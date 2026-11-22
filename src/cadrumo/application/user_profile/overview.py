@@ -466,9 +466,7 @@ class ProfileOverview(BaseModel):
         name; a profile that states neither is headed with the name it was
         created under, and only one with no name at all is left unnamed.
         """
-        values = {
-            field.path: field.value for section in self.sections for field in section.fields if not field.masked
-        }
+        values = {field.path: field.value for section in self.sections for field in section.fields if not field.masked}
         person = " ".join(value for path in _PERSON_NAME_PATHS if (value := (values.get(path) or "").strip()))
         return person or (values.get(_LEGAL_NAME_PATH) or "").strip() or self.label.strip()
 
