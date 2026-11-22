@@ -18,7 +18,9 @@ from ...application.ledger.evidence_review_summaries import (
     DRAFT_TEXT_FIELDS_WITHHELD_FROM_AUTOMATION,
     LedgerEvidenceReviewSummaryProjection,
 )
+from ...core.document_shape import DocumentShape
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...tests.pdf_fixtures import text_pdf_bytes
 from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from .conformance_family_contract import (
     ConformanceFamily,
@@ -30,7 +32,7 @@ from .conformance_family_contract import (
 from .evidence_followup_operation_test_support import prepare_evidence_followup_conformance_case
 
 _EVIDENCE_FILE_NAME = "conformance-automation-evidence.pdf"
-_MINIMAL_PDF = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
+_MINIMAL_PDF = text_pdf_bytes(("conformance automation evidence",))
 # A shorter text, such as a currency or country code, can occur in a released
 # token by coincidence, and a printed figure equals the amount the summary
 # releases as a number. Neither would prove anything about the document's text.
@@ -53,6 +55,8 @@ def _prepare_query(context: ConformanceFamilyContext) -> ConformancePreparation:
     )
     typed_directory = str(context.input_root)
     assert typed_directory in record.source_path
+    # Add probes the bytes before it stores them; only the instant is the record's own.
+    assert record.readability is not None
 
     def verify(outcome: ConformanceOutcome) -> None:
         released = outcome.resolve_result(LedgerEvidenceQueryProjection).model_dump_json()
@@ -77,6 +81,9 @@ def _prepare_query(context: ConformanceFamilyContext) -> ConformancePreparation:
                     notes=record.notes,
                     created_at=record.created_at,
                     updated_at=record.updated_at,
+                    readability="readable",
+                    document_shape=DocumentShape.PDF_TEXT_LAYER,
+                    readability_checked_at=record.readability.checked_at,
                 ),
             ),
         ),

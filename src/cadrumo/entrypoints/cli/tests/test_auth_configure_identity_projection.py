@@ -30,8 +30,8 @@ def test_auth_configure_result_does_not_duplicate_the_envelope_profile_identity(
                 evidence_id="auth.configure.clave_movil.identity_alignment",
                 provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                 values={
-                    "identity_alignment": "clave_identity_missing",
-                    "profile_tax_id_present": True,
+                    "identity_alignment": "profile_tax_id_missing_and_clave_identity_missing",
+                    "profile_tax_id_present": False,
                     "provider": "clave_movil",
                     "provider_identity_present": False,
                 },
@@ -46,9 +46,9 @@ def test_auth_configure_result_does_not_duplicate_the_envelope_profile_identity(
         changed=True,
         certificate_file_provided=False,
         complete=False,
-        profile_tax_id_present=True,
+        profile_tax_id_present=False,
         provider_identity_present=False,
-        identity_alignment="clave_identity_missing",
+        identity_alignment="profile_tax_id_missing_and_clave_identity_missing",
     )
 
     with override_settings(cadrumo_output_language="en"):
@@ -57,7 +57,7 @@ def test_auth_configure_result_does_not_duplicate_the_envelope_profile_identity(
             precondition_action=resolve_cli_precondition_action(verdict),
         ).model_dump(mode="json")
 
-    assert payload["profile_tax_id_present"] is True
+    assert payload["profile_tax_id_present"] is False
     assert "active_profile" not in payload
     assert "profile_id" not in payload
     assert "next_action" not in payload
@@ -69,8 +69,8 @@ def test_auth_configure_result_does_not_duplicate_the_envelope_profile_identity(
                 "evidence_id": "auth.configure.clave_movil.identity_alignment",
                 "provenance": "application_state",
                 "values": {
-                    "identity_alignment": "clave_identity_missing",
-                    "profile_tax_id_present": True,
+                    "identity_alignment": "profile_tax_id_missing_and_clave_identity_missing",
+                    "profile_tax_id_present": False,
                     "provider": "clave_movil",
                     "provider_identity_present": False,
                 },

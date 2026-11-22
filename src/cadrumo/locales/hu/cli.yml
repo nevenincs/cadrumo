@@ -1255,6 +1255,10 @@ cli:
         label_tax_domain: Adózási terület
         label_title: Cím
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
+        no_edition_covers_date: A(z) %{modelo} modell egyetlen kiadása sem fedi le
+          a(z) %{year} évet és a(z) %{period} időszakot a(z) %{date} napon. Az időszak-azonosító
+          érvényes; válassz egy --as-of dátumot az időszak érvényességi és benyújtási
+          határidején belül, vagy hagyd el az --as-of kapcsolót.
         period_error: 'Hiba a nyomtatványdefiníciókban: %{message}'
         period_help: 'Időszakkód a hivatalos nyomtatvány változatának kiválasztásához:
           0A éves, 1T-4T negyedévek, 01-12 hónapok; nyilvántartási nyomtatványokhoz

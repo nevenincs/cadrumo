@@ -1270,6 +1270,10 @@ cli:
         label_tax_domain: Àmbit fiscal
         label_title: Títol
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
+        no_edition_covers_date: Cap edició del model %{modelo} cobreix l'exercici
+          %{year} i el període %{period} en la data %{date}. El token de període és
+          vàlid; tria una data --as-of dins de la vigència i del termini de presentació
+          d'aquest període, o treu --as-of.
         period_error: 'Error a les definicions dels models: %{message}'
         period_help: 'Codi de període per triar la versió del model oficial: 0A anual,
           1T-4T trimestres, 01-12 mesos; per a models censals (036) usa alta, modificacion

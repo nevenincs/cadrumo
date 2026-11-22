@@ -40,6 +40,7 @@ from ...domain.contribuyente.inventory.records import (
     derive_inventory_acquisition_totals,
 )
 from ...domain.filing_evidence import FilingEvidenceReference
+from ...tests.pdf_fixtures import text_pdf_bytes
 from ...tests.persona_types import InventoryBook, LedgerRow, Persona
 
 type SettleOperation = Callable[[str, BaseModel], BaseModel | None]
@@ -84,7 +85,7 @@ def _evidence(
 def _review(workdir: Path, name: str, text: str) -> Path:
     target = workdir / "inventory" / f"{name}.pdf"
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_bytes(f"%PDF-1.4\n% {text}\n%%EOF\n".encode())
+    target.write_bytes(text_pdf_bytes((text,)))
     return target
 
 

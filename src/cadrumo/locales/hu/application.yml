@@ -86,12 +86,6 @@ application:
         both_missing_detail: Sem a Cl@ve azonosító (CADRUMO_CLAVE_MOVIL_DNI_NIE),
           sem az aktív profil adóazonosítója nincs beállítva. Mindkettőt ugyanarra
           a DNI/NIE-re állítsd be.
-        clave_identity_missing_detail: A Cl@ve azonosító (CADRUMO_CLAVE_MOVIL_DNI_NIE)
-          nincs beállítva, ezért nem hasonlítható össze az aktív profil adóazonosítójával.
-          Állítsd be az aktív profil adóazonosítójára.
-        mismatch_detail: A Cl@ve azonosító DNI/NIE (%{clave_identity}) nem egyezik
-          az aktív profil adóazonosítójával (%{profile_tax_id}). Az élő AEAT hozzáférés
-          blokkolva.
         profile_tax_id_missing_detail: Az aktív profilnak nincs adóazonosítója, ezért
           nem hasonlítható össze a Cl@ve azonosítóval. Állítsd be a profil adóazonosítóját.
       errors:

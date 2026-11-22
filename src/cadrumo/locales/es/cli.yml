@@ -1281,6 +1281,10 @@ cli:
         label_tax_domain: Ámbito fiscal
         label_title: Título
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
+        no_edition_covers_date: Ninguna edición del modelo %{modelo} cubre el ejercicio
+          %{year} y el periodo %{period} en la fecha %{date}. El token de periodo
+          es válido; elige una fecha --as-of dentro de la vigencia y del plazo de
+          presentación de ese periodo, o quita --as-of.
         period_error: 'Error en las definiciones de los modelos: %{message}'
         period_help: 'Código de periodo para elegir la versión del modelo oficial:
           0A anual, 1T-4T trimestres, 01-12 meses; para modelos censales (036) usa

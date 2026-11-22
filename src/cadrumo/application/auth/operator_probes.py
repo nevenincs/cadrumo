@@ -51,19 +51,18 @@ if TYPE_CHECKING:
 def classify_identity_alignment(profile_tax_id: str, provider_identity: str) -> str:
     """Classify a Cl@ve Móvil identity against the active profile tax id.
 
-    The single home for the five-way alignment ladder shared by the live
-    identity-state probe and ``_auth_configure_result``. Inputs are the
-    already-normalised (stripped, upper-cased) tax id and provider identity.
+    The single home for the alignment ladder shared by the live
+    identity-state probe and ``auth_configure_result``. The profile tax id is
+    the Cl@ve identity whenever it is recorded, so a recorded tax id always
+    matches; only a settings-supplied identity can stand without it. Inputs
+    are the already-normalised (stripped, upper-cased) tax id and provider
+    identity.
     """
-    if not profile_tax_id and not provider_identity:
-        return "profile_tax_id_missing_and_clave_identity_missing"
-    if not profile_tax_id:
-        return "profile_tax_id_missing"
-    if not provider_identity:
-        return "clave_identity_missing"
-    if profile_tax_id == provider_identity:
+    if profile_tax_id:
         return "matches"
-    return "mismatch"
+    if provider_identity:
+        return "profile_tax_id_missing"
+    return "profile_tax_id_missing_and_clave_identity_missing"
 
 
 def active_profile_path_values(

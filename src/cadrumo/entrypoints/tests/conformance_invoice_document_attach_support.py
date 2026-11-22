@@ -10,6 +10,7 @@ from ...application.invoices.document_attach_operation import (
     InvoiceDocumentAttachRequest,
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...tests.pdf_fixtures import text_pdf_bytes
 from ..adapter_composition_ports import build_attachment_store
 from .conformance_family_contract import (
     ConformanceFamily,
@@ -21,7 +22,7 @@ from .conformance_family_contract import (
 from .registered_executor_seeding_support import seed_conformance_invoice
 
 _DOCUMENT_NAME = "factura.pdf"
-_DOCUMENT = b"%PDF-1.4\n% synthetic conformance factura\n%%EOF\n"
+_DOCUMENT = text_pdf_bytes(("synthetic conformance factura",))
 
 
 def _prepare_attach(context: ConformanceFamilyContext) -> ConformancePreparation:
