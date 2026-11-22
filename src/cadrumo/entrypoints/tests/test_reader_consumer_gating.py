@@ -90,14 +90,16 @@ from ...adapters.outbound.llm.models import LLMRequest
 from ...adapters.outbound.llm.providers.agent import model_run_refusal_verdict
 from ...adapters.outbound.llm.statement_reading import StatementReader
 from ...adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposal
-from ...adapters.outbound.llm.tests.model_run_support import RecordingModelRuns
+from ...adapters.outbound.llm.tests.model_run_support import ON_HOST_LANE, RecordingModelRuns
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ...application.ledger.classification_job_run import movement_revision_id
 from ...application.ledger.column_roles import ColumnRoleReaderUnavailable, column_role_mapping_resolver
 from ...application.ledger.document_transcription import DocumentTranscription
 from ...application.ledger.evidence_textlayer import text_layer_transcriber_identity
 from ...application.ledger.import_ports import LedgerImportReaderUnavailableError
 from ...application.ledger.invoice_draft_extraction_ports import InvoiceDraftReaderUnavailableError, VisionImage
+from ...application.ledger.llm_classification import suggest_llm_classification
 from ...application.ledger.llm_classification_ports import EvidenceImage
 from ...application.ledger.read_access import resolve_ledger_read_access
 from ...application.ledger.statement_reading import statement_reader_factory
@@ -120,6 +122,7 @@ from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.tabular import normalize_tabular_bytes
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.transactions.classification_job import ClassificationJobLane
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.llm import PromptSpec
 from ...domain.transactions.models import Transaction
@@ -128,8 +131,10 @@ from ...tests.llm_vision_evidence_support import png_image
 from ..adapter_composition import profile_adapter_composition
 from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from ..invoice_intake_operation_composition import build_invoice_intake_ports
+from ..ledger_action_composition import compose_ledger_read_ports
+from ..ledger_classification_consent_composition import LedgerClassificationConsentGrants
 from ..ledger_evidence_extraction_composition import invoice_draft_extraction_ports
-from ..ledger_llm_composition import compose_ledger_llm
+from ..ledger_llm_composition import classification_job_reader_factory, compose_ledger_llm
 from .dependency_operation_gating_support import (
     OperationSettler,
     RecordingRunsAuthority,
@@ -138,6 +143,7 @@ from .dependency_operation_gating_support import (
     operation_runtime,
     published_verdicts,
     read_published,
+    settle_classify_job_run,
     settle_classify_review,
     settle_evidence_batch,
     settle_evidence_confirm,
@@ -528,6 +534,33 @@ def _drive_ledger_vision_classifier(runtime: _Runtime) -> object:
     return ports.make_vision_classifier(PromptSpec()).classify(transaction, evidence_images=(image,))
 
 
+def _drive_classification_job_read(runtime: _Runtime) -> object:
+    """Read one movement as a job's run reads it: the job's composed reader, the movement's revision, the suggestion."""
+    readers = classification_job_reader_factory(
+        settings=runtime.settings, reads=compose_ledger_read_ports, grants=LedgerClassificationConsentGrants()
+    )
+    lane = ClassificationJobLane(
+        provider_id=ON_HOST_LANE.provider_id,
+        transport=ON_HOST_LANE.transport,
+        model=ON_HOST_LANE.model,
+        reads_off_host=False,
+    )
+    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+        reader = readers(
+            bucket_id=_BUCKET_ID, operation=operation, lane=lane, consent=None, job_id="job-consumer-gating"
+        )
+        transaction = _transaction()
+        return suggest_llm_classification(
+            bucket_id=_BUCKET_ID,
+            transaction_id=transaction.transaction_id,
+            operation=operation,
+            transaction_repository=reader.transactions,
+            settings=reader.settings,
+            ports=reader.llm_for(movement_revision_id(transaction)),
+            reviewed_transaction=transaction,
+        )
+
+
 def _extraction_ports():
     return invoice_draft_extraction_ports(evidence_ports=build_ledger_evidence_ports(bucket_id=_BUCKET_ID))
 
@@ -625,6 +658,11 @@ _LOCAL_AI_CONSUMERS: Mapping[str, _LocalAiConsumer] = {
             ModelRole.VISION_TRANSCRIPTION: _drive_ledger_vision_classifier,
         },
         operations=frozenset({"ledger.classify.review", "ledger.split.review"}),
+    ),
+    "cadrumo.entrypoints.ledger_llm_composition.classification_job_reader_factory": _LocalAiConsumer(
+        units=frozenset({f"{_LLM}.text_classifier.TextLLMClassifier"}),
+        drivers={ModelRole.TEXT_EXTRACTION: _drive_classification_job_read},
+        operations=frozenset({"ledger.classify.job.run"}),
     ),
     "cadrumo.entrypoints.ledger_evidence_extraction_composition.invoice_read_text": _LocalAiConsumer(
         units=frozenset({f"{_LLM}.evidence_draft_text.TextInvoiceFieldExtractor"}),
@@ -728,6 +766,7 @@ _OPERATION_ROWS: Mapping[str, tuple[_OperationDrive, ...]] = {
     "ledger.evidence.confirm": (_OperationDrive(ModelRole.VISION_TRANSCRIPTION, settle_evidence_confirm),),
     "ledger.evidence.batch": (_OperationDrive(ModelRole.TEXT_EXTRACTION, settle_evidence_batch),),
     "ledger.classify.review": (_OperationDrive(ModelRole.TEXT_EXTRACTION, settle_classify_review),),
+    "ledger.classify.job.run": (_OperationDrive(ModelRole.TEXT_EXTRACTION, settle_classify_job_run),),
     "ledger.split.review": (_OperationDrive(ModelRole.VISION_TRANSCRIPTION, settle_split_review),),
 }
 
