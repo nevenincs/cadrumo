@@ -1,6 +1,7 @@
 """Plan and write one batch edit of ledger movements.
 
-Every row is resolved against one decrypted catalogue: a movement that is gone
+Every row is resolved against one decrypted
+:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`: a movement that is gone
 or changed since the person saw it is a conflict, one that cannot take changes
 or that a finalized declaration seals is refused with its cause, and every other
 row is built through the same canonical replacement a single correction uses.
