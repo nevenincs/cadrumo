@@ -131,7 +131,7 @@ def test_timeout_settles_pending_kernel_lock_and_releases_no_late_lease(tmp_path
             kdf_file_lease.acquire_kdf_file_lease(
                 current, deadline=time.monotonic() + 0.1, settings=Settings(cadrumo_storage_root=tmp_path)
             )
-        assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT
+        assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_BUSY
         old_lock(old, acquire=False)
         # A cancelled overlapped completion or helper must never acquire later
         # and hold capacity on behalf of the superseded login.
@@ -172,7 +172,7 @@ def test_windows_capacity_granted_as_timeout_wins_is_explicitly_unlocked(
     try:
         with pytest.raises(ProfileCustodyRefusedError) as captured:
             kdf_file_lease.acquire_kdf_file_lease(current, deadline=time.monotonic() + 5)
-        assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT
+        assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_BUSY
         old_lock(old, acquire=True)
         old_lock(old, acquire=False)
     finally:

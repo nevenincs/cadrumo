@@ -5664,6 +5664,8 @@ desktop:
         ha canviat. Torna a iniciar la sessió.
       generation_changed: S'ha tancat la teva sessió en un altre lloc. Torna a iniciar
         la sessió.
+      host_limit: Aquest ordinador no pot aportar la memòria ni els processadors que
+        necessita l'inici de sessió. Obre els registres per veure'n els detalls.
       installation_cancelled: S’ha cancel·lat la instal·lació.
       installation_failed: No s’han pogut instal·lar els serveis en segon pla.
       installation_refused: No s’ha pogut verificar el paquet d’instal·lació. Fes

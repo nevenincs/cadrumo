@@ -5672,6 +5672,8 @@ desktop:
         ha cambiado. Vuelve a iniciar sesión.
       generation_changed: Se ha cerrado tu sesión en otro lugar. Vuelve a iniciar
         sesión.
+      host_limit: Este ordenador no puede aportar la memoria ni los procesadores que
+        necesita el inicio de sesión. Abre los registros para ver los detalles.
       installation_cancelled: Se ha cancelado la instalación.
       installation_failed: No se pudieron instalar los servicios en segundo plano.
       installation_refused: No se pudo verificar el paquete de instalación. Usa una

@@ -22,7 +22,7 @@ from .kdf_cancellation import kdf_cancellation_pipe
 from .kdf_codec import close_fd
 from .kdf_lease_worker import KDF_LEASE_ACQUIRED, KDF_LEASE_WAITING
 from .kdf_process import launch_lease_worker, terminate_process_tree
-from .kdf_refusals import resource_refusal, supervision_refusal
+from .kdf_refusals import resource_busy_refusal, supervision_refusal
 from .process_pidfd import open_process_pidfd
 
 if sys.platform == "win32":
@@ -156,7 +156,7 @@ if sys.platform == "win32":
             if cancellation is not None:
                 cancellation.raise_if_cancelled()
             if deadline <= time.monotonic():
-                raise resource_refusal()
+                raise resource_busy_refusal()
             acquired = bool(kernel.LockFileEx(handle, 2, 0, 1, 0, ctypes.byref(overlapped)))
             if not acquired:
                 if ctypes.get_last_error() != 997:  # ERROR_IO_PENDING
@@ -184,12 +184,12 @@ if sys.platform == "win32":
     def _require_windows_wait_success(waited: int) -> None:
         if waited != 0:
             if waited == 258:  # WAIT_TIMEOUT
-                raise resource_refusal()
+                raise resource_busy_refusal()
             raise supervision_refusal()
 
     def _check_acquired_lease(deadline: float, cancellation: ProfileProofCancellation | None) -> None:
         if time.monotonic() >= deadline:
-            raise resource_refusal()
+            raise resource_busy_refusal()
         if cancellation is not None:
             cancellation.raise_if_cancelled()
 
@@ -254,7 +254,7 @@ def wait_for_kdf_process_exit(
         handle = int(cast(Any, process)._handle)
         waited = _wait_windows_completion(kernel, handle, deadline=deadline, cancellation=cancellation)
         if waited == 258:
-            raise resource_refusal()
+            raise resource_busy_refusal()
         if waited != 0:
             raise supervision_refusal()
         return process.wait()
@@ -280,7 +280,7 @@ def _await_posix_exit_signal(
         cancellation.raise_if_cancelled()
     remaining = deadline - time.monotonic()
     if remaining <= 0:
-        raise resource_refusal()
+        raise resource_busy_refusal()
     if sys.platform == "linux":
         reaped = _await_linux_exit(process, remaining, cancellation, cancelled)
     elif sys.platform == "darwin":
@@ -318,7 +318,7 @@ def _await_linux_exit(
             if cancellation is not None:
                 cancellation.raise_if_cancelled()
             if process_fd not in ready:
-                raise resource_refusal()
+                raise resource_busy_refusal()
         finally:
             close_fd(process_fd)
         return None
@@ -350,7 +350,7 @@ def _await_darwin_exit(
                 if cancellation is not None:
                     cancellation.raise_if_cancelled()
                 if not ready:
-                    raise resource_refusal()
+                    raise resource_busy_refusal()
                 notification = ready[0]
                 if notification.flags & select.KQ_EV_ERROR:
                     if notification.data == errno.ESRCH:
@@ -395,7 +395,7 @@ def _acquire_posix_lease(
         raise supervision_refusal()
     remaining = deadline - time.monotonic()
     if remaining <= 0:
-        raise resource_refusal()
+        raise resource_busy_refusal()
     # Avoid launching an interpreter for uncontended capacity. This is one
     # immediate probe, followed by a blocking kernel waiter, never polling.
     import fcntl
@@ -459,7 +459,7 @@ def _confirm_lease_handoff(
     ):
         raise supervision_refusal()
     if time.monotonic() >= deadline:
-        raise resource_refusal()
+        raise resource_busy_refusal()
     if cancellation is not None:
         cancellation.raise_if_cancelled()
 
@@ -474,13 +474,13 @@ def _await_lease_cues(
             cancellation.raise_if_cancelled()
         remaining = deadline - time.monotonic()
         if remaining <= 0:
-            raise resource_refusal()
+            raise resource_busy_refusal()
         watched = [result_read] if cancelled is None else [result_read, cancelled]
         ready = select.select(watched, [], [], remaining)[0]
         if cancellation is not None:
             cancellation.raise_if_cancelled()
         if result_read not in ready:
-            raise resource_refusal()
+            raise resource_busy_refusal()
         if os.read(result_read, 1) != cue:
             raise supervision_refusal()
 

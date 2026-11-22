@@ -13,6 +13,14 @@ const BUSY = {
   icon: "clock",
 } as const;
 
+// The host cannot supply what key derivation needs: trying again meets the
+// same refusal, so the words say what is wrong and send the person to Logs.
+const HOST_LIMIT = {
+  key: "desktop.signin.refused.host_limit",
+  tone: "danger",
+  icon: "alert",
+} as const;
+
 const MANAGER = {
   key: "desktop.signin.refused.manager",
   tone: "danger",
@@ -111,12 +119,14 @@ const REFUSALS: Record<string, { key: string; tone: Tone; icon: IconName }> = {
     tone: "neutral",
     icon: "info",
   },
-  // The password proof could not finish in time: the key derivation's permit
-  // or child was late, or the sign-in helper itself ran out of time. Nothing
-  // was wrong with the password, so the person is told to try again.
+  // The password proof could not finish in time: the key derivation's permit,
+  // lock, child or derivation was late, or the sign-in helper itself ran out
+  // of time. Nothing was wrong with the password, so the person is told to try
+  // again.
   UNAVAILABLE: BUSY,
-  KDF_RESOURCE_LIMIT: BUSY,
+  KDF_RESOURCE_BUSY: BUSY,
   KDF_SUPERVISION_BUSY: BUSY,
+  KDF_RESOURCE_LIMIT: HOST_LIMIT,
   SIGN_IN_TIMED_OUT: BUSY,
   // The derivation child cannot be started, contained or verified at all:
   // trying again would meet the same refusal, so the person is sent to Logs.

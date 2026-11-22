@@ -2153,10 +2153,13 @@ errors:
       per béns d'inversió no ha superat la validació.
     refused_profile_binding_resolution: Una dada del perfil necessària per al càlcul
       no s'ha pogut resoldre al canal de vincle correcte.
-    refused_profile_custody_kdf_resource_limit: L'equip no pot assignar els recursos
-      de derivació de clau sol·licitats. Torna-ho a provar quan l'equip estigui menys
-      carregat; si persisteix, aquest equip no pot aportar la memòria que requereix
-      la derivació de clau.
+    refused_profile_custody_kdf_resource_busy: La derivació de clau no ha acabat a
+      temps perquè l'equip està ocupat. Això no diu res de la teva contrasenya; torna-ho
+      a provar d'aquí a un moment.
+    refused_profile_custody_kdf_resource_limit: 'La derivació de clau no es pot executar
+      en aquest equip: no pot aportar, o no pot informar de, els processadors i la
+      memòria que requereix la derivació de clau. Consulta els registres per conèixer-ne
+      la causa.'
     refused_profile_custody_kdf_supervision_busy: La derivació de clau no s'ha pogut
       iniciar a temps perquè l'equip està ocupat. La teva contrasenya no s'ha comprovat;
       torna-ho a provar d'aquí a un moment.
