@@ -30,7 +30,7 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY, OrchestrationTimeoutError
 from cadrumo_client.contracts.extension_records import ProfileWorkerExtensionRecordRequest
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
-from cadrumo_client.transport.frame_io import read_document, read_secret, write_document
+from cadrumo_client.transport.frame_io import read_document, write_document
 from cadrumo_runtime.contracts.profile_worker import (
     ProfileWorkerActivity,
     ProfileWorkerContractRequest,
@@ -65,6 +65,7 @@ from cadrumo_runtime.contracts.profile_worker import (
 
 from ..adapters.worker_transport import WorkerChannel
 from . import worker_cleanup, worker_operation_requests
+from .control_dispatch_waits import ControlDispatchWaits, awaiting, control_dispatch_waits, read_peer_secret
 from .operation_host import ProfileWorkerOperationHost
 from .profile_login import ProfileWorkerHumanLogin
 from .worker_request_activity import worker_request_served
@@ -218,7 +219,7 @@ async def _handle_lease_control(context: WorkerControl, request: ProfileWorkerLe
     if request.action == "install":
 
         def install() -> None:
-            with read_secret(context.channel, deadline=time.monotonic() + 5) as secret:
+            with read_peer_secret(context.channel, deadline=time.monotonic() + 5) as secret:
                 context.custody.install(request.lease, secret)
 
         await await_cancellation_complete(asyncio.to_thread(install), task_name="worker-lease-install")
@@ -339,13 +340,14 @@ async def _handle_human_control(context: WorkerControl, request: object) -> _Con
         # Keep secret consumption and wiping inside the retained thread.
         if request.proof_attempt_id is None:
             raise RefusalError(RefusalCode.INVALID_FRAME)
-        transfer = read_document(context.channel, ProfileWorkerProofTransfer, deadline=timeout_deadline)
+        with awaiting("peer"):
+            transfer = read_document(context.channel, ProfileWorkerProofTransfer, deadline=timeout_deadline)
         if transfer.proof_attempt_id != request.proof_attempt_id:
             raise RefusalError(RefusalCode.PEER_UNTRUSTED)
         if transfer.cancelled:
             context.human.cancel_attempt(request.proof_attempt_id)
             raise ProfileProofCancelledError("profile proof owner abandoned its secret")
-        with read_secret(context.channel, deadline=timeout_deadline) as secret:
+        with read_peer_secret(context.channel, deadline=timeout_deadline) as secret:
             context.human.require_attempt(request.proof_attempt_id).raise_if_cancelled()
             if request.action == "password":
                 with startup_phase(log, "worker_human_proof", expected_refusals=(ProfileAccessRefusedError,)):
@@ -396,8 +398,10 @@ async def handle_action_control(context: WorkerControl, request: object) -> _Con
         return "status"
     if request.action != "stop":
         return None
-    await context.upload_release.close()
-    drained = await context.operation_release.release()
+    # Draining waits on in-flight operations, not on this handler's own work.
+    with awaiting("drain"):
+        await context.upload_release.close()
+        drained = await context.operation_release.release()
     write_document(
         context.channel,
         ProfileWorkerDrained(
@@ -409,7 +413,7 @@ async def handle_action_control(context: WorkerControl, request: object) -> _Con
         deadline=time.monotonic() + 5,
     )
     # Keep the pipe open until the parent consumes the reply and contains this scope.
-    with suppress(RefusalError):
+    with suppress(RefusalError), awaiting("peer"):
         await asyncio.to_thread(context.channel.read_exact, 1, deadline=time.monotonic() + 5)
     return "stop"
 
@@ -499,10 +503,17 @@ def record_control_dispatch_elapsed(
     *,
     handler_started: float,
     outcome: str,
+    waits: ControlDispatchWaits | None = None,
     primary_error: BaseException | None = None,
 ) -> None:
-    """Log only slow dispatches and bounded request/handler labels, never frame contents."""
+    """Warn when a dispatch's own work exceeds its budget; report peer and drain waits apart.
+
+    Only bounded request/handler labels and durations are logged, never frame contents.
+    """
     elapsed = max(0.0, time.monotonic() - handler_started)
+    peer_wait = waits.seconds("peer") if waits is not None else 0.0
+    drain_wait = waits.seconds("drain") if waits is not None else 0.0
+    own_work = max(0.0, elapsed - peer_wait - drain_wait)
     budget = (
         _PASSWORD_DISPATCH_SLOW_SECONDS
         if isinstance(request, ProfileWorkerControlRequest) and request.action == "password"
@@ -510,17 +521,23 @@ def record_control_dispatch_elapsed(
     )
     if elapsed < budget:
         return
+    # A dispatch that only waited on its peer or a drain is not slow work of its own,
+    # but the wait stays visible below the warning level.
+    slow = own_work >= budget
     try:
         diagnostic_event(
             log,
-            "profile_worker_control_dispatch_slow",
+            "profile_worker_control_dispatch_slow" if slow else "profile_worker_control_dispatch_waited",
             fields={
                 **_control_dispatch_metadata(request),
                 "elapsed_seconds": round(elapsed, 3),
+                "own_work_seconds": round(own_work, 3),
+                "peer_wait_seconds": round(peer_wait, 3),
+                "drain_wait_seconds": round(drain_wait, 3),
                 "budget_seconds": budget,
                 "outcome": outcome,
             },
-            level=logging.WARNING,
+            level=logging.WARNING if slow else logging.INFO,
             primary_error=primary_error,
         )
     except BaseException:
@@ -530,18 +547,20 @@ def record_control_dispatch_elapsed(
 async def _timed_control_dispatch(context: WorkerControl, request: object) -> _ControlDisposition:
     """Record bounded dispatch timing without changing raised errors."""
     _record_control_dispatch_started(request)
-    dispatch_started = time.monotonic()
-    try:
-        disposition = await _dispatch_control_request(context, request)
-    except BaseException as error:
-        record_control_dispatch_elapsed(
-            request,
-            handler_started=dispatch_started,
-            outcome="raised",
-            primary_error=error,
-        )
-        raise
-    record_control_dispatch_elapsed(request, handler_started=dispatch_started, outcome="completed")
+    with control_dispatch_waits(time.monotonic) as waits:
+        dispatch_started = time.monotonic()
+        try:
+            disposition = await _dispatch_control_request(context, request)
+        except BaseException as error:
+            record_control_dispatch_elapsed(
+                request,
+                handler_started=dispatch_started,
+                outcome="raised",
+                waits=waits,
+                primary_error=error,
+            )
+            raise
+        record_control_dispatch_elapsed(request, handler_started=dispatch_started, outcome="completed", waits=waits)
     return disposition
 
 
