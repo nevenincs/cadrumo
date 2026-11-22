@@ -26,6 +26,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.transactions.classification_effects import takes_changes
+from ...domain.transactions.enums import BUSINESS_BEARING_STATES
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from .action_ports import LedgerActionPorts
@@ -60,6 +61,7 @@ if TYPE_CHECKING:
     from .models import LedgerRemovalBlocker
 
 _ROW_REFUSALS = (CadrumoError, ValidationError, ValueError)
+_CATEGORY_NEEDS_BUSINESS_LOCALE_KEY = "errors.error.ledger_category_needs_business_classification"
 _SEALED_CONTEXT_KEY = "calculation_revision_id"
 """The context a finalized-declaration refusal names its blocking revision under."""
 
@@ -140,6 +142,20 @@ def _error_cause(error: Exception) -> LedgerBatchRowCause:
     return "sealed" if context is not None and _SEALED_CONTEXT_KEY in context else "invalid"
 
 
+def _require_category_bearing(replacement: Transaction) -> None:
+    """Refuse a spending category on a movement that would not be business-bearing.
+
+    The staged check sends such a cell to a classification first, so a batch
+    that wrote it would preview a change the review then holds back.
+    """
+    if replacement.category_id is not None and replacement.business_classification not in BUSINESS_BEARING_STATES:
+        raise TransactionValidationError(
+            "a spending category needs a business classification; classify the movement first",
+            translated_message=_CATEGORY_NEEDS_BUSINESS_LOCALE_KEY,
+            context={"transaction_id": replacement.transaction_id, "field": "category_id"},
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class _RowPlan:
     result: LedgerBatchRowResult
@@ -183,6 +199,8 @@ def _plan_row(
             decides_classification="business_classification" in fields,
             finalized_blockers=blockers,
         )
+        if prepared is not None and "category_id" in fields:
+            _require_category_bearing(prepared[0])
     except _ROW_REFUSALS as error:
         sentence = ledger_refusal_sentence(error, fallback=type(error).__name__)
         return _RowPlan(_refusal(transaction_id, _error_cause(error), (sentence,)), working)
