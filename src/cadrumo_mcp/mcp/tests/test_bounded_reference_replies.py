@@ -71,7 +71,7 @@ _ONE_OF_EACH: tuple[dict[str, Any], ...] = (
     {"query": "casillas", "modelo": "303", "period": "3T"},
     {"query": "casilla", "modelo": "303", "period": "3T", "casilla": "01"},
     {"query": "formulas", "modelo": "303", "period": "3T"},
-    {"query": "bindings", "modelo": "303", "filing_year": filing_year_envelope().horizon},
+    {"query": "bindings", "modelo": "303", "filing_year": filing_year_envelope().horizon, "period": "3T"},
     {"query": "categories"},
     {"query": "portals"},
     {"query": "portal", "portal": next(iter(PORTAL_REGISTRY))},
@@ -211,7 +211,7 @@ def test_limit_shortens_a_page_and_the_cursors_still_cover_every_row() -> None:
         ({"query": "modelos", "domain": "iva"}, "modelos"),
         ({"query": "portals"}, "rows"),
         ({"query": "portals", "category": "filing"}, "rows"),
-        ({"query": "bindings", "modelo": "303", "filing_year": filing_year_envelope().horizon}, "rows"),
+        ({"query": "bindings", "modelo": "303", "filing_year": filing_year_envelope().horizon, "period": "3T"}, "rows"),
     ),
     ids=("modelos", "modelos-domain", "portals", "portals-category", "bindings"),
 )
