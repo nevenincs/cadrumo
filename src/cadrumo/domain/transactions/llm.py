@@ -38,8 +38,8 @@ hallucinating model cannot corrupt the catalogue.
 
 from __future__ import annotations
 
-import re
-from collections.abc import Iterable
+import json
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field, replace
 from datetime import date
 from decimal import Decimal
@@ -710,7 +710,27 @@ def _render_prompt(
 
 # ── response parsing ──────────────────────────────────────────────
 
-_JSON_OBJECT_RE = re.compile(r"\{[^{}]*\}")
+_JSON_DECODER = json.JSONDecoder()
+
+
+def _json_object_candidates(text: str) -> Iterator[str]:
+    """Yield every complete JSON object in ``text`` as its source substring, by opening brace.
+
+    The stdlib decoder knows where an object ends, so a brace inside a string
+    (a reason such as ``"cuota {marzo}"``) never cuts a candidate short, and an
+    object nested in another is still tried after its enclosing one. The
+    substring rather than the decoded object is yielded, so validation runs in
+    pydantic's JSON mode.
+    """
+    index = text.find("{")
+    while index >= 0:
+        try:
+            _, end = _JSON_DECODER.raw_decode(text, index)
+        except ValueError:
+            pass
+        else:
+            yield text[index:end]
+        index = text.find("{", index + 1)
 
 
 def _classification_failure(
@@ -827,9 +847,8 @@ def parse_response(
     failures: list[str] = []
     any_candidate_seen = False
 
-    for match in _JSON_OBJECT_RE.finditer(stdout):
+    for payload in _json_object_candidates(stdout):
         any_candidate_seen = True
-        payload = match.group(0)
         candidate = _parse_classification_candidate(
             payload,
             allowed_classifications=allowed_classifications,
@@ -924,9 +943,9 @@ def _advance_json_structure_state(char: str, depth: int) -> tuple[int, bool, boo
 def _extract_json_object(text: str) -> str | None:
     """Return the first balanced top-level JSON object substring, or ``None``.
 
-    Unlike the flat :data:`_JSON_OBJECT_RE`, this walks brace depth (ignoring
-    braces inside strings) so a nested object -- such as a split proposal whose
-    ``children`` is an array of objects -- is captured whole.
+    This walks brace depth (ignoring braces inside strings) so a nested object
+    -- such as a split proposal whose ``children`` is an array of objects -- is
+    captured whole.
     """
     start = text.find("{")
     if start < 0:

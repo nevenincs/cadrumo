@@ -232,8 +232,21 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
             if consent_verdict is not None:
                 raise off_host_consent_required(consent_verdict) from exc
             raise LLMClassifierError("ledger.evidence.reader.operation_failed") from exc
-        except (httpx.HTTPError, LLMProviderError) as exc:
-            raise LLMClassifierError("ledger.evidence.reader.operation_failed") from exc
+        except LLMProviderError as exc:
+            # A failed run names the agent's refusal code, so the movement's
+            # failure says what happened rather than only that it failed.
+            code = (exc.context or {}).get(MODEL_RUN_REFUSAL_CONTEXT_KEY)
+            raise _model_run_failure(code if isinstance(code, str) else ModelRunRefusalCode.RUN_FAILED.value) from exc
+        except httpx.TimeoutException as exc:
+            raise _model_run_failure(ModelRunRefusalCode.TIMEOUT.value) from exc
+        except httpx.HTTPError as exc:
+            raise _model_run_failure(ModelRunRefusalCode.RUN_FAILED.value) from exc
+        except LLMClassifierError as exc:
+            # A reply the classification parse did not accept is the model's
+            # invalid output; a failure that already names its cause stands.
+            if (exc.context or {}).get(MODEL_RUN_REFUSAL_CONTEXT_KEY) is not None:
+                raise
+            raise _model_run_failure(ModelRunRefusalCode.OUTPUT_INVALID.value) from exc
 
     def record_classifier_run(run: Callable[[], object], provider: str) -> object:
         started_at = now()
@@ -290,13 +303,11 @@ def _model_run_failure(code: str) -> LLMClassifierError:
 
 
 def _typed_run_failures(run: Callable[[], object]) -> Callable[[], object]:
-    """Run one classification read, naming why a model run failed so a job records its cause.
+    """Run one classification read, naming a model that does not fit so a job records its cause.
 
-    A refusal that concerns the reader or the consent keeps its verdict and is
-    refused by the ledger's reader port as it is for a review. A model that does
-    not fit in free memory is the reader being unavailable. Any other failed run
-    names the agent's refusal code; a reply the parse did not accept passes
-    through unchanged.
+    A model that does not fit in free memory is the reader being unavailable.
+    Every other failed run is named by the review's own reader, which this one
+    runs inside.
     """
 
     def guarded() -> object:
@@ -307,13 +318,6 @@ def _typed_run_failures(run: Callable[[], object]) -> Callable[[], object]:
             if verdict is None:
                 raise _model_run_failure(ModelRunRefusalCode.MODEL_DOES_NOT_FIT.value) from exc
             raise _reader_unavailable(verdict) from exc
-        except LLMProviderError as exc:
-            code = (exc.context or {}).get(MODEL_RUN_REFUSAL_CONTEXT_KEY)
-            raise _model_run_failure(code if isinstance(code, str) else ModelRunRefusalCode.RUN_FAILED.value) from exc
-        except httpx.TimeoutException as exc:
-            raise _model_run_failure(ModelRunRefusalCode.TIMEOUT.value) from exc
-        except httpx.HTTPError as exc:
-            raise _model_run_failure(ModelRunRefusalCode.RUN_FAILED.value) from exc
 
     return guarded
 
