@@ -119,13 +119,45 @@ def test_publisher_identity_is_compiled_for_every_profile_and_ignores_ambient_ov
         assert "case-folded-override" not in defined.values()
     # Each admission is planted into a profile that declares no list of that kind yet.
     for profile, admitted in (
-        ("cadrumo-agent-service", 'pass = ["CADRUMO_GOOGLE_OAUTH_CLIENT_JSON"]'),
+        ("cadrumo-mcp", 'pass = ["CADRUMO_GOOGLE_OAUTH_CLIENT_JSON"]'),
         ("cadrumo-runtime", 'slots = [{ name = "CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", required = false }]'),
     ):
         header = f"[profiles.{profile}]\n"
         planted = _SOURCE.replace(header, header + admitted + "\n", 1)
         with pytest.raises(ApplicationEnvironmentError, match="package_fixed"):
             parse(planted)
+
+
+@pytest.mark.parametrize("family,target", [("windows", "windows-x86-64"), ("posix", "linux-x86-64")])
+def test_the_deployments_evidence_posture_reaches_the_programs_that_decide_off_host_reads(
+    family: str, target: str
+) -> None:
+    posture = {"CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED": "true", "CADRUMO_EVIDENCE_GESTOR_MODE": "true"}
+    declaration = load_for_build(REPO_ROOT)
+    layout = load_layout(target)
+    package = "C:/package" if family == "windows" else "/package"
+    root = "C:/state" if family == "windows" else "/state"
+    ambient = {"SYSTEMROOT": "C:/Windows", "HOME": "/home/test", **posture}
+
+    def received(profile: str) -> dict[str, str | None]:
+        defined = reference_define(
+            declaration,
+            family,
+            profile,
+            ambient,
+            package=package,
+            root=root,
+            layout_paths=layout["paths"],
+            suffix=layout["entrypoint_suffix"],
+        )
+        return {name: defined.get(name) for name in posture}
+
+    # The runtime and the agent service start under the deployment's environment, and the runtime's
+    # profile workers (the python image) decide every off-host evidence read and grant.
+    for profile in ("cadrumo-runtime", "python", "cadrumo-agent-service"):
+        assert received(profile) == posture
+    for profile in ("aeat", "cadrumo-mcp"):
+        assert received(profile) == dict.fromkeys(posture)
 
 
 def test_build_settings_are_reserved_for_package_fixed_values() -> None:
