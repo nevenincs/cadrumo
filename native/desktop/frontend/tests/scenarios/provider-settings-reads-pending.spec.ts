@@ -4,10 +4,10 @@ import { label } from "../support/strings";
 
 // The service answers the provider status at once and reads the sign-in
 // routes behind that answer, which then offers none and says so with
-// `reads_pending`. While the settings are open the window reads the status
-// again on the busy pauses until an answer is complete, so a provider's
-// sign-in is offered without the settings being opened again; a complete
-// answer is not read again.
+// `reads_pending`. Once that read ends the service cues the window, whose
+// host publishes the status again, and the settings read the status on that
+// cue, so a provider's sign-in is offered without the settings being opened
+// again; a complete answer is not read again, by a cue or by time.
 
 const open = (target: Page) =>
   target.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=en");
@@ -53,12 +53,19 @@ test("a provider's sign-in read behind a pending status is offered without openi
   const signIn = lane.getByRole("button", {
     name: label("desktop.providers.sign_in_action"),
   });
-  // The pending answer offers no sign-in; the complete one that follows does.
-  await expect(signIn).toBeVisible({ timeout: 6_000 });
+  // The pending answer offers no sign-in, and nothing reads it again by time.
+  await expect(lane).toHaveAttribute("data-sign-in", "pending");
+  await target.waitForTimeout(1_500);
+  expect((await statusReads(target)) - before).toBe(1);
+  // The service's read behind it ends and it cues the window: the complete
+  // answer that follows offers the sign-in.
+  await target.evaluate(() => window.__scenarioProviderSignIn!.settleReads());
+  await expect(signIn).toBeVisible();
   const settled = await statusReads(target);
   expect(settled - before).toBe(2);
 
-  // Past the longest pause, a complete answer has not been read again.
-  await target.waitForTimeout(4_500);
+  // A complete answer is not read again, on a later publication or by time.
+  await target.evaluate(() => window.__scenarioAgentPublishStatus?.());
+  await target.waitForTimeout(1_500);
   expect(await statusReads(target)).toBe(settled);
 });

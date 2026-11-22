@@ -379,6 +379,23 @@ async fn sign_out_fences_an_admission_that_has_not_answered_and_discards_its_lat
     );
 }
 
+#[tokio::test(flavor = "multi_thread")]
+async fn an_admission_resends_the_held_status_before_the_agent_is_ready() {
+    let mut rig = rig_with_service_gate(false, false, false, true);
+    tokio::task::block_in_place(|| rig.gate.as_mut().unwrap().reached("admission"));
+    let sent = lock(&rig.statuses).len();
+    rig.gate.as_mut().unwrap().go();
+    until(&rig, sent, "ready").await;
+    let states: Vec<_> = lock(&rig.statuses)[sent..]
+        .iter()
+        .map(|status| status["state"].clone())
+        .collect();
+    // The window hears the starting status once more as the service is
+    // admitted, its cue to read what it was told busy for, then the ready.
+    assert_eq!(states, ["starting", "ready"], "{states:?}");
+    rig.supervisor.close().await.unwrap();
+}
+
 /// What `seen` finds once a published status or recorded diagnostic
 /// makes it true. The guard bounds only a supervisor that hangs.
 async fn until_seen<T>(rig: &Rig, what: &str, mut seen: impl FnMut() -> Option<T>) -> T {
@@ -907,6 +924,32 @@ async fn a_busy_start_leaves_the_serving_agent_ready() {
     );
     assert_eq!(rig.supervisor.status().state, before);
     assert!(rig.supervisor.gateway().is_some());
+    rig.supervisor.close().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_settled_read_resends_the_held_status_and_changes_nothing() {
+    let rig = rig(false, false);
+    rig.supervisor.status();
+    serving(&rig, 0).await;
+    let generation = rig.supervisor.gateway().unwrap().generation;
+    let gateway = rig.supervisor.gateway().unwrap();
+    let before = rig.supervisor.status().state;
+    let sent = lock(&rig.statuses).len();
+    assert!(
+        !handle(
+            &rig.supervisor.shared,
+            generation,
+            Signal::Event(Event::ReadSettled),
+        )
+        .await
+    );
+    // The window hears the status it holds once more, as its cue to read again.
+    let heard = lock(&rig.statuses).clone();
+    assert_eq!(heard.len(), sent + 1);
+    assert_eq!(heard[sent], heard[sent - 1]);
+    assert_eq!(rig.supervisor.status().state, before);
+    assert!(rig.supervisor.gateway().unwrap().same_instance(&gateway));
     rig.supervisor.close().await.unwrap();
 }
 

@@ -13,12 +13,10 @@ import type {
 } from "@/components/settings/types";
 import { failureCode } from "../errors";
 import type { CallPlan } from "./hostCall";
+import type { AgentServiceStatus } from "./agentSession";
 import { useCachedRead, type AgentRead } from "./agentViews";
-import {
-  CATALOG_BUSY_QUIET_MS,
-  STATUS_BUSY_PAUSE_MS,
-  catalogBusyPause,
-} from "./catalogReadPolicy";
+import { CATALOG_BUSY_QUIET_MS } from "./catalogReadPolicy";
+import { useWindowReturn } from "./modelListState";
 import {
   cliStateCause,
   consoleCommandTemplate,
@@ -163,22 +161,21 @@ export type ProviderSettingsView = {
  * The providers of `reader`'s profile while `open`: read each time they open
  * (`opened` counts the openings), after each change of the person's and when
  * asked to refresh. The last answer stays on screen while it is read again,
- * so the settings load only the first time. A busy answer (the service still
- * starting the agent) is read again after a pause, growing to a ceiling,
- * for as long as they are open: the settings follow their own read, not the
- * agent's other reads or the ready it publishes, which can come much later.
- * That read is the service's own store read and waits on nothing, so its busy
- * answer (the host has not yet admitted the service) is asked again after a
- * short pause while the wait is the one expected, then on the catalog's.
- * An answer the service says it is still completing (`reads_pending`: the
- * sign-in routes and the apps' states are read behind it) is read again on
- * the same pauses while they are open, until an answer says it is complete.
+ * so the settings load only the first time. A busy answer (the host has not
+ * yet admitted the service) and an answer the service says it is still
+ * completing (`reads_pending`: the sign-in routes and the apps' states are
+ * read behind it) wait on a cue, never on a timer: a status the service
+ * publishes after the read was asked (`published`, which the service also
+ * sends again once a read it answered busy or pending for has settled), the
+ * person coming back to the window, or the person's own action. A cue that
+ * comes while a read is out is taken as soon as that read ends.
  */
 export function useProviderSettings(
   host: ProviderSettings | undefined,
   reader: string | null,
   open: boolean,
   opened: number,
+  published: AgentServiceStatus | null,
 ): ProviderSettingsView {
   const owner = useMemo(() => ({ host, reader }), [host, reader]);
   const generation = useRef(0);
@@ -205,18 +202,35 @@ export function useProviderSettings(
     asking.current = open;
   }, [open]);
   const following = useRef<{ since: number } | null>(null);
+  // The status last published, the one the newest read was asked under, and
+  // whether that read is still out, so a publication causes one read, and
+  // one that came while a read was out causes it once that read ends.
+  const latest = useRef(published);
+  useLayoutEffect(() => {
+    latest.current = published;
+  }, [published]);
+  const askedUnder = useRef(published);
+  const out = useRef(false);
   const readStatus = useMemo(
     () =>
       host && reader !== null
-        ? () =>
-            host.status({
+        ? () => {
+            askedUnder.current = latest.current;
+            out.current = true;
+            const promise = host.status({
               retryable: (code) => code === "busy",
               scheduled: () => asking.current,
               expected: () =>
                 following.current === null ||
                 performance.now() - following.current.since <
                   CATALOG_BUSY_QUIET_MS,
-            })
+            });
+            const settled = () => {
+              out.current = false;
+            };
+            promise.then(settled, settled);
+            return promise;
+          }
         : null,
     [host, reader],
   );
@@ -256,33 +270,22 @@ export function useProviderSettings(
         ),
       });
   }
-  const pauses = useRef(0);
+  // Since when the settings have answered busy, so its refusals are recorded
+  // as the wait they are while it is the one expected.
   useEffect(() => {
-    if (!busy) following.current = null;
-    if (!busy && !pending) {
-      pauses.current = 0;
-      return;
-    }
-    let pause: number;
-    if (busy) {
-      following.current ??= { since: performance.now() };
-      const admitting =
-        performance.now() - following.current.since < CATALOG_BUSY_QUIET_MS;
-      pause = admitting
-        ? STATUS_BUSY_PAUSE_MS
-        : catalogBusyPause(pauses.current);
-      if (!admitting) pauses.current += 1;
-    } else {
-      // The pending reads wait on the agent's own reads of its apps.
-      pause = catalogBusyPause(pauses.current);
-      pauses.current += 1;
-    }
-    const again = window.setTimeout(
-      () => setState((held) => ({ ...held, again: held.again + 1 })),
-      pause,
-    );
-    return () => window.clearTimeout(again);
-  }, [answer, busy, pending]);
+    if (busy) following.current ??= { since: performance.now() };
+    else following.current = null;
+  }, [busy]);
+  const waits = busy || pending;
+  useEffect(() => {
+    if (waits && !out.current && askedUnder.current !== published)
+      setState((held) => ({ ...held, again: held.again + 1 }));
+  }, [answer, waits, published]);
+  useWindowReturn(
+    waits
+      ? () => setState((held) => ({ ...held, again: held.again + 1 }))
+      : null,
+  );
   const read = useMemo((): ProviderSettingsView["read"] => {
     if (answer.kind !== "ready") return answer;
     const earlier =
