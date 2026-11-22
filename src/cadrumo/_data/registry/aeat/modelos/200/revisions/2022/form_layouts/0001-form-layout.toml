@@ -7,7 +7,7 @@ revision_id = "2022"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "575b31e22642637bccbadaef00cc0e192e6928ba2dcba286895ac6fd26d74fe7"
+source_state_digest = "900a3a211d08189d942469bb6f54ad9c2fc9825f6fbc69f6dde09aa2ed65700f"
 design_sources = [
     { source_ref = "aeat-dr-200-2022", sha256 = "8c9fa09e5713dc19ed9235757c314a1afee24108bccee4e39031f0df9a75fae6" },
 ]
@@ -2935,6 +2935,7 @@ placements = [
     { casilla_id = "DP200014:01344", kind = "on_form", box_number = "01344", aliases = [{ page_id = "dp200015b", section_id = "deducciones-doble-imposicion-interna-dt-23-1-lis-10", official_ref = "DP200015B" }] },
     { casilla_id = "DP200014:02314", kind = "on_form", box_number = "02314", aliases = [{ page_id = "dp200018b", section_id = "deducciones-por-producciones-cinematograf-c74b42", official_ref = "DP200018B" }] },
     { casilla_id = "DP200014:02315", kind = "on_form", box_number = "02315", aliases = [{ page_id = "dp200018b", section_id = "deduccion-por-inversiones-y-gastos-realiz-867fe7", official_ref = "DP200018B" }] },
+    { casilla_id = "DP200014:cuota-liquida-minima-exigida", kind = "working_figure" },
     { casilla_id = "DP200014B:00083", kind = "on_form", box_number = "00083" },
     { casilla_id = "DP200014B:001043", kind = "on_form", box_number = "001043" },
     { casilla_id = "DP200014B:001044", kind = "on_form", box_number = "001044" },

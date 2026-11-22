@@ -7,7 +7,7 @@ revision_id = "2023"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "4ce04efbf9704fc8ba6d84154233be106a51d16e346a096fcd24bd47719026d1"
+source_state_digest = "9c7af87699713a586c2089ed6f25ffbdbbecfe58b18d75570d7ff31e9fdfa2c9"
 design_sources = [
     { source_ref = "aeat-dr-200-2023", sha256 = "60ee0cb4ab7aa4fa2ae3dc61cb22f6a1a0797d1626a28d7bba013b44375a19aa" },
 ]
@@ -3201,6 +3201,7 @@ placements = [
     { casilla_id = "DP200014:01887", kind = "on_form", box_number = "01887", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }] },
     { casilla_id = "DP200014:01890", kind = "on_form", box_number = "01890", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }] },
     { casilla_id = "DP200014:bin-aplicada-maxima", kind = "working_figure" },
+    { casilla_id = "DP200014:cuota-liquida-minima-exigida", kind = "working_figure" },
     { casilla_id = "DP200014B:00082", kind = "on_form", box_number = "00082", aliases = [{ page_id = "dp200019", section_id = "deducciones-i-d-i-excluidas-de-limite", official_ref = "DP200019" }] },
     { casilla_id = "DP200014B:00083", kind = "on_form", box_number = "00083" },
     { casilla_id = "DP200014B:00399", kind = "on_form", box_number = "00399" },

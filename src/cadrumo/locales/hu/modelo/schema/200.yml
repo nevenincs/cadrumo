@@ -16064,6 +16064,9 @@ modelo:
           is-liquidacion-iv-cuota-liquida-minima:
             label: Elszámolás IV - Egyéb levonások - Minimális nettó adó (LIS 30 bis
               cikk) [00619]
+          is-liquidacion-iv-cuota-liquida-minima-exigida:
+            label: Elszámolás IV - Egyéb levonások - Kötelező minimális nettó adó
+              (LIS 30 bis cikk) [interno]
           is-liquidacion-iv-importe:
             label: Elszámolás IV - Egyéb levonások - Ideiglenes intézkedések visszafordításának
               levonásai DT 37.1 LIS (részletezés a 19. oldalon) [01040]

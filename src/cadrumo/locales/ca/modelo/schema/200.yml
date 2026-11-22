@@ -15897,6 +15897,9 @@ modelo:
           is-liquidacion-iv-cuota-liquida-minima:
             label: Liquidació IV - Altres deduccions - Quota líquida mínima (art.
               30 bis LIS) [00619]
+          is-liquidacion-iv-cuota-liquida-minima-exigida:
+            label: Liquidació IV - Altres deduccions - Quota líquida mínima exigida
+              (art. 30 bis LIS) [intern]
           is-liquidacion-iv-importe:
             label: Liquidació IV - Altres deduccions - Deduccions per reversió de
               mesures temporals DT 37a.1 LIS (desglossament a la pàgina 19) [01040]
