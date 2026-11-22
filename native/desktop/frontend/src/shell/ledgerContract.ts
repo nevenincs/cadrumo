@@ -416,6 +416,7 @@ export const INVOICE_UPDATE_FIELDS = [
   "invoice_class",
   "rectifies_invoice_number",
   "payment_id",
+  "declared_fx_rate",
 ] as const;
 export type InvoiceUpdateField = (typeof INVOICE_UPDATE_FIELDS)[number];
 

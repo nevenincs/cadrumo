@@ -467,7 +467,13 @@ cli:
         duplicate_kind_help: 'A számla iránya: `issued` vagy `received`.'
         euro_rate_unavailable_message: Nem található euró árfolyam {currency} pénznemre
           {date} napra, ezért a számla euróérték nélkül került rögzítésre, és kimarad
-          az eurós összesítésekből, amíg árfolyam nem kerül hozzá.
+          az eurós összesítésekből, amíg árfolyam nem kerül hozzá. Add meg az árfolyamot
+          az app ledger invoice update --fx-rate paranccsal.
+        fx_rate_help: 'Devizás számla árfolyama: a pénzneme egy egységének euróértéke
+          a számla keltének napján, például 0.9250 (LIVA 79.Once cikk: a Banco de
+          España hatályos árfolyama vagy az EKB legutóbbi árfolyama). A közzétett
+          árfolyam helyébe lép, és általad megadottként rögzül. Euróban kiállított
+          számlánál elutasításra kerül.'
         group_help: Üzleti számlák nyilvántartása (kiállított vagy beérkezett).
         import_all_refused: 'a számlák tömeges importálása sikertelen: minden sor
           elutasításra került; nem jött létre számla'
@@ -480,9 +486,10 @@ cli:
           az oszlop kell.
         import_file_help: Elérési út egy CSV vagy XLSX fájlhoz, amely számlasorokat
           tartalmaz (counterparty_nif, counterparty_name, invoice_number, invoice_date,
-          taxable_base, valamint opcionálisan iva_rate/retencion_amount/retencion_rate/currency/country_code/notes).
+          taxable_base, valamint opcionálisan iva_rate/retencion_amount/retencion_rate/currency/fx_rate/country_code/notes).
           A retencion_rate csak a hozzá tartozó retencion_amount mellett fogadható
-          el.
+          el. Az fx_rate a sor pénzneme egy egységének euróértéke, és euróban kiállított
+          sornál elutasításra kerül.
         import_help: Katalógusszámlák tömeges létrehozása CSV vagy XLSX fájlból.
         import_unmapped_columns: 'nem importált oszlopok, mert egyetlen számlamező
           sem felelt meg nekik: {columns}'

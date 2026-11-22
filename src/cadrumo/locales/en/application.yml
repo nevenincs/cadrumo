@@ -926,6 +926,10 @@ application:
           .xlsm or .xls (got {extension}).
     creation:
       errors:
+        declared_fx_rate_not_positive: The exchange rate %{fx_rate} must be greater
+          than zero.
+        declared_fx_rate_on_euro_invoice: 'A euro invoice takes no exchange rate:
+          remove the rate, or correct the invoice currency.'
         duplicate_invoice: 'An invoice with the same identity already exists in the
           catalogue: %{invoice_id}.'
         intracom_operation_type_required: 'An intra-community supply must state its

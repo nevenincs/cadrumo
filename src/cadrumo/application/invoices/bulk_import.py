@@ -165,6 +165,9 @@ class BulkInvoiceImportRow(BaseModel):
     retencion_amount: Decimal | None = None
     retencion_rate: Decimal | None = None
     currency: IsoCurrencyCode = DEFAULT_CURRENCY
+    # The exchange rate the book states for a foreign row. It wins over the
+    # published rate, and a euro row stating one is refused.
+    fx_rate: Decimal | None = None
     # Required, and deliberately not defaulted to Spain. The counterparty's
     # country decides whether the invoice is treated as domestic or as an
     # intra-community operation, so inferring ES for a row that never stated
@@ -392,6 +395,40 @@ def _parse_bulk_row_retention_rate(
     return fraction_of_percentage(rate) if rate > 1 or marked_as_percentage else rate
 
 
+def _parse_bulk_row_fx_rate(
+    raw_row: Mapping[str, object],
+    *,
+    row_number: int,
+    decimal_separator: DecimalSeparatorValue,
+) -> Decimal | None:
+    """Return the exchange rate a row states, or ``None`` when its cell is blank.
+
+    A rate is not a euro amount: ``0.9250`` carries four decimals, so the
+    two-decimal cap that refuses the Spanish thousands shape in an amount does
+    not apply. The file's detected decimal convention still converts the text,
+    and the bare thousands shape ``1.234`` is still refused rather than guessed.
+    Whether the rate is above zero and the row is foreign is the invoice
+    builder's refusal, not the parser's.
+    """
+    raw = raw_row.get("fx_rate")
+    if not coerce_cell_text(raw):
+        return None
+    canonical = _canonicalise_amount_text(raw, decimal_separator=decimal_separator)
+    if not isinstance(canonical, str):
+        return _parse_row_decimal(canonical, row_number=row_number, field="fx_rate")
+    rate = try_parse_canonical_decimal(canonical)
+    if rate is None or not rate.is_finite():
+        raise RowParseError(
+            row_number=row_number,
+            field="fx_rate",
+            reason=(
+                f"invalid exchange rate: {coerce_cell_text(raw)!r} — write the euro value of one unit of the "
+                "row's currency with a dot as the decimal separator, so ninety-two and a half cents is '0.9250'"
+            ),
+        )
+    return rate
+
+
 def _bulk_row_country_code(raw_row: Mapping[str, object], *, declared_country: str | None, row_number: int) -> str:
     country_code = coerce_cell_text(raw_row.get("country_code")) or declared_country or ""
     if not country_code:
@@ -412,6 +449,7 @@ def _build_bulk_invoice_row(
     iva_rate: Decimal | None,
     retencion_amount: Decimal | None,
     retencion_rate: Decimal | None,
+    fx_rate: Decimal | None,
     country_code: str,
 ) -> BulkInvoiceImportRow:
     try:
@@ -425,6 +463,7 @@ def _build_bulk_invoice_row(
             retencion_amount=retencion_amount,
             retencion_rate=retencion_rate,
             currency=coerce_cell_text(raw_row.get("currency")) or DEFAULT_CURRENCY,
+            fx_rate=fx_rate,
             country_code=country_code,
             notes=coerce_cell_text(raw_row.get("notes")),
         )
@@ -472,6 +511,7 @@ def _parse_bulk_invoice_row(
         decimal_separator=decimal_separator,
         retencion_amount=retencion_amount,
     )
+    fx_rate = _parse_bulk_row_fx_rate(raw_row, row_number=row_number, decimal_separator=decimal_separator)
     country_code = _bulk_row_country_code(raw_row, declared_country=declared_country, row_number=row_number)
     return _build_bulk_invoice_row(
         raw_row,
@@ -481,6 +521,7 @@ def _parse_bulk_invoice_row(
         iva_rate=iva_rate,
         retencion_amount=retencion_amount,
         retencion_rate=retencion_rate,
+        fx_rate=fx_rate,
         country_code=country_code,
     )
 
@@ -961,6 +1002,7 @@ def import_invoices_from_rows(
                 retention_amount=parsed.retencion_amount,
                 currency=parsed.currency,
                 notes=parsed.notes,
+                declared_fx_rate=parsed.fx_rate,
                 rate_provider=ports.rate_provider,
                 operation=operation,
             )

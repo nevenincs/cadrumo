@@ -984,6 +984,10 @@ application:
           .csv, .tsv, .xlsx, .xlsm o .xls (se recibió {extension}).
     creation:
       errors:
+        declared_fx_rate_not_positive: El tipo de cambio %{fx_rate} debe ser mayor
+          que cero.
+        declared_fx_rate_on_euro_invoice: 'Una factura en euros no lleva tipo de cambio:
+          quita el tipo o corrige la moneda de la factura.'
         duplicate_invoice: 'Ya existe una factura con la misma identidad en el catálogo:
           %{invoice_id}.'
         intracom_operation_type_required: 'Una entrega intracomunitaria debe declarar

@@ -46,6 +46,7 @@ _EXPECTED_TOKENS = {
     "SUPLIDO_AMOUNT": "suplido_amount",
     "GRAND_TOTAL": "grand_total",
     "CURRENCY": "currency",
+    "FX_RATE": "fx_rate",
     "COUNTRY_CODE": "country_code",
     "NOTES": "notes",
     "CLASSIFICATION": "classification",

@@ -168,6 +168,7 @@ export type FieldRole =
   | "suplido_amount"
   | "grand_total"
   | "currency"
+  | "fx_rate"
   | "country_code"
   | "notes"
   | "classification"
@@ -272,6 +273,7 @@ export type InvoiceAddRequest = {
   recargo_amount?: PublicDecimal | null;
   business_premises_lease?: InvoiceAddBusinessPremisesLease | null;
   lines?: InvoiceAddLine[];
+  declared_fx_rate?: PublicDecimal | null;
 };
 
 /**
@@ -741,6 +743,7 @@ export type InvoiceUpdateValues = {
   invoice_class?: string | null;
   rectifies_invoice_number?: string | null;
   payment_id?: string | null;
+  declared_fx_rate?: PublicDecimal | null;
 };
 
 export type InvoiceViewOutcome = InvoiceViewSuccess | InvoiceViewRefusal;

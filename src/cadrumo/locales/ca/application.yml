@@ -978,6 +978,10 @@ application:
           .csv, .tsv, .xlsx, .xlsm o .xls (s'ha rebut {extension}).
     creation:
       errors:
+        declared_fx_rate_not_positive: El tipus de canvi %{fx_rate} ha de ser més
+          gran que zero.
+        declared_fx_rate_on_euro_invoice: 'Una factura en euros no porta tipus de
+          canvi: treu el tipus o corregeix la moneda de la factura.'
         duplicate_invoice: 'Ja existeix una factura amb la mateixa identitat al catàleg:
           %{invoice_id}.'
         intracom_operation_type_required: 'Un lliurament intracomunitari ha de declarar

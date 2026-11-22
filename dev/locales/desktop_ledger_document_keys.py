@@ -591,6 +591,7 @@ DESKTOP_LEDGER_DOCUMENT_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.invoices.field.counterparty_name",
         "desktop.ledger.invoices.field.counterparty_tax_id",
         "desktop.ledger.invoices.field.currency",
+        "desktop.ledger.invoices.field.fx_rate",
         "desktop.ledger.invoices.field.invoice_class",
         "desktop.ledger.invoices.field.invoice_number",
         "desktop.ledger.invoices.field.issued_at",

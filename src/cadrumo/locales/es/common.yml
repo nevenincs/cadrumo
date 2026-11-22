@@ -255,7 +255,7 @@ aggregation:
         como pagada si el anticipo cubre todo el precio.
       invoice_line_currency_unconverted: Una línea de factura está denominada en moneda
         extranjera sin tipo de cambio a euros resuelto, por lo que no puede declararse
-        en este modelo.
+        en este modelo. Indica el tipo de cambio de la factura para convertirla.
       unsupported_period: Periodo de modelo no soportado para los totales de tus registros.
   oss_ioss:
     errors:
@@ -3311,6 +3311,7 @@ desktop:
         counterparty_nif: NIF de la otra parte
         country_code: País
         currency: Moneda
+        fx_rate: Tipo de cambio
         invoice_date: Fecha de la factura
         invoice_number: Número de factura
         iva_rate: Tipo de IVA
@@ -3815,6 +3816,7 @@ desktop:
         counterparty_name: Contraparte
         counterparty_tax_id: NIF
         currency: Moneda
+        fx_rate: Tipo de cambio
         invoice_class: Clase
         invoice_number: Número
         issued_at: Fecha de emisión

@@ -972,6 +972,10 @@ application:
           .xlsx, .xlsm vagy .xls kiterjesztésűnek kell lennie (kapott: {extension}).'
     creation:
       errors:
+        declared_fx_rate_not_positive: A(z) %{fx_rate} árfolyamnak nullánál nagyobbnak
+          kell lennie.
+        declared_fx_rate_on_euro_invoice: 'Az euróban kiállított számlához nem tartozik
+          árfolyam: töröld az árfolyamot, vagy javítsd a számla pénznemét.'
         duplicate_invoice: 'A katalógusban már létezik azonos azonosságú számla: %{invoice_id}.'
         intracom_operation_type_required: 'A Közösségen belüli termékértékesítésnek
           meg kell adnia a Modelo 349 műveleti kulcsát: a kategória önmagában nem

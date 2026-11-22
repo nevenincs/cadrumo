@@ -29,6 +29,14 @@ from .models import (
 # without a publication); the bound adds margin so the walk cannot run unbounded.
 _MAX_DAYS_TO_NEXT_PUBLICATION = 7
 
+OPERATOR_DECLARED_RATE_SOURCE = "operator_declared"
+"""The rate source stamped on a conversion whose rate the operator stated.
+
+Distinct from every provider's ``rate_source_id``: the operator attests the
+rate in force, and the stamp must not present that statement as a reading of a
+published series.
+"""
+
 
 class ExchangeRateProvider(Protocol):
     """Protocol for fetching exchange rates."""
@@ -155,11 +163,28 @@ def published_eur_rate_on_day_or_next_publication(
     )
 
 
+def declared_fx_conversion_stamp(*, rate: Decimal, on_date: date) -> FxConversionStamp:
+    """Return the stamp for a rate the operator states was in force on ``on_date``.
+
+    The operator's statement of the rate the law names (LIVA art. 79.Once: the
+    Banco de España seller rate in force at chargeability, or the latest ECB
+    rate under Directive 2006/112 art. 91(2); Ley 46/1998 art. 36 for the
+    income-tax forms) is evidence in its own right. The stamp names
+    :data:`OPERATOR_DECLARED_RATE_SOURCE` rather than any provider, and carries
+    no observation date because no publication was read.
+
+    Raises:
+        pydantic.ValidationError: When ``rate`` is not strictly positive.
+    """
+    return FxConversionStamp(rate=rate, rate_date=on_date, source=OPERATOR_DECLARED_RATE_SOURCE)
+
+
 def resolve_fx_conversion_stamp(
     *,
     currency: str,
     on_date: date,
     rate_provider: ExchangeRateProvider,
+    declared_rate: Decimal | None = None,
 ) -> FxConversionStamp | None:
     """Return the euro-conversion stamp for a foreign-currency record, or ``None``.
 
@@ -195,6 +220,12 @@ def resolve_fx_conversion_stamp(
         rate_provider: The rate source. Required rather than defaulted: the
             default ECB provider is an outbound adapter, and this layer must not
             reach for it.
+        declared_rate: The rate the operator states was in force on
+            ``on_date``. It wins over the provider and is stamped with
+            :data:`OPERATOR_DECLARED_RATE_SOURCE` and no observation date, since
+            no publication was read. It is stamped whatever the currency: a
+            declared rate on a euro record is never dropped here, and the
+            record's own coherence check refuses it.
 
     Returns:
         The :class:`FxConversionStamp` to apply, or ``None`` when the record
@@ -202,6 +233,8 @@ def resolve_fx_conversion_stamp(
         the provider's rate authority, so the record says not only what rate was
         applied and when, but on whose published series.
     """
+    if declared_rate is not None:
+        return declared_fx_conversion_stamp(rate=declared_rate, on_date=on_date)
     if currency.strip().upper() == DEFAULT_CURRENCY:
         return None
     lookup = rate_provider.lookup_eur_rate(currency, on_date)

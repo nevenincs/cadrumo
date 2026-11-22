@@ -10,7 +10,11 @@ from ..models import (
     EurRateLookupStatus,
     MonetaryAmount,
 )
-from ..service import CurrencyNormalizationService, resolve_fx_conversion_stamp
+from ..service import (
+    OPERATOR_DECLARED_RATE_SOURCE,
+    CurrencyNormalizationService,
+    resolve_fx_conversion_stamp,
+)
 from .fx_lookup import eur_rate_lookup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -169,6 +173,49 @@ def test_an_unresolvable_rate_leaves_the_record_unstamped() -> None:
         resolve_fx_conversion_stamp(currency="XYZ", on_date=_RATE_DATE, rate_provider=_UnsupportedCurrencyProvider())
         is None
     )
+
+
+def test_a_declared_rate_wins_over_the_provider_and_names_the_operator() -> None:
+    """The operator's stated rate replaces the published one and never borrows the provider's name."""
+    declared = Decimal("0.9250")
+
+    stamp = resolve_fx_conversion_stamp(
+        currency="USD",
+        on_date=_RATE_DATE,
+        rate_provider=_provider(),
+        declared_rate=declared,
+    )
+
+    assert stamp is not None
+    assert stamp.rate == declared
+    assert stamp.rate != _USD_RATE
+    assert stamp.rate_date == _RATE_DATE
+    assert stamp.source == OPERATOR_DECLARED_RATE_SOURCE
+    assert stamp.source != _RATE_SOURCE_ID
+    assert stamp.observation_date is None, "no publication was read for a declared rate"
+
+
+def test_a_declared_rate_stamps_a_currency_the_provider_has_no_rate_for() -> None:
+    stamp = resolve_fx_conversion_stamp(
+        currency="XYZ",
+        on_date=_RATE_DATE,
+        rate_provider=_UnsupportedCurrencyProvider(),
+        declared_rate=Decimal("0.0125"),
+    )
+
+    assert stamp is not None
+    assert (stamp.rate, stamp.source) == (Decimal("0.0125"), OPERATOR_DECLARED_RATE_SOURCE)
+
+
+@pytest.mark.parametrize("declared", [Decimal("0"), Decimal("-0.9250")])
+def test_a_declared_rate_that_is_not_above_zero_is_refused(declared: Decimal) -> None:
+    with pytest.raises(ValueError, match="greater than 0"):
+        resolve_fx_conversion_stamp(
+            currency="USD",
+            on_date=_RATE_DATE,
+            rate_provider=_provider(),
+            declared_rate=declared,
+        )
 
 
 @pytest.mark.parametrize(

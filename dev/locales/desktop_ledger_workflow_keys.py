@@ -232,6 +232,7 @@ DESKTOP_LEDGER_WORKFLOW_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.import.role.retencion_amount",
         "desktop.ledger.import.role.retencion_rate",
         "desktop.ledger.import.role.currency",
+        "desktop.ledger.import.role.fx_rate",
         "desktop.ledger.import.role.country_code",
         "desktop.ledger.import.role.notes",
         "desktop.ledger.import.role_source.exact",

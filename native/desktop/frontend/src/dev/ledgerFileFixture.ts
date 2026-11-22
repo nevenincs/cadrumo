@@ -172,6 +172,7 @@ export const BOOK_ROLES = [
   { role: "retencion_amount", field: "retencion_amount", required: false },
   { role: "retencion_rate", field: "retencion_rate", required: false },
   { role: "currency", field: "currency", required: false },
+  { role: "fx_rate", field: "fx_rate", required: false },
   { role: "country_code", field: "country_code", required: false },
   { role: "notes", field: "notes", required: false },
 ] as const;

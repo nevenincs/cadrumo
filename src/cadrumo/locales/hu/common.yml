@@ -251,6 +251,7 @@ aggregation:
         teljes árat fedezi.
       invoice_line_currency_unconverted: Egy számlasor külföldi pénznemben van megadva,
         és nincs feloldott euróárfolyama, ezért nem szerepeltethető ezen a nyomtatványon.
+        Add meg a számla árfolyamát az átváltáshoz.
       unsupported_period: Nem támogatott nyomtatvány-időszak a nyilvántartásaidból
         számított összesítésekhez.
   oss_ioss:
@@ -3293,6 +3294,7 @@ desktop:
         counterparty_nif: A másik fél adószáma
         country_code: Ország
         currency: Pénznem
+        fx_rate: Árfolyam
         invoice_date: Számla kelte
         invoice_number: Számlaszám
         iva_rate: IVA-kulcs
@@ -3794,6 +3796,7 @@ desktop:
         counterparty_name: Partner neve
         counterparty_tax_id: Adószám (NIF)
         currency: Pénznem
+        fx_rate: Árfolyam
         invoice_class: Típus
         invoice_number: Számlaszám
         issued_at: Kiállítás dátuma

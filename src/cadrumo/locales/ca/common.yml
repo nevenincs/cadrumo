@@ -251,7 +251,7 @@ aggregation:
         aquesta com a pagada si la bestreta cobreix tot el preu.
       invoice_line_currency_unconverted: Una línia de factura està denominada en moneda
         estrangera sense tipus de canvi a euros resolt, per la qual cosa no es pot
-        declarar en aquest model.
+        declarar en aquest model. Indica el tipus de canvi de la factura per convertir-la.
       unsupported_period: Període de model no admès per als totals dels teus registres.
   oss_ioss:
     errors:
@@ -3308,6 +3308,7 @@ desktop:
         counterparty_nif: NIF de l'altra part
         country_code: País
         currency: Moneda
+        fx_rate: Tipus de canvi
         invoice_date: Data de la factura
         invoice_number: Número de factura
         iva_rate: Tipus d'IVA
@@ -3810,6 +3811,7 @@ desktop:
         counterparty_name: Contrapart
         counterparty_tax_id: NIF
         currency: Moneda
+        fx_rate: Tipus de canvi
         invoice_class: Classe
         invoice_number: Número
         issued_at: Data d'emissió

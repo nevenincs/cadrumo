@@ -123,6 +123,9 @@ class FieldRole(StrEnum):
     CURRENCY = "currency"
     """ISO-4217 currency of the row's amounts."""
 
+    FX_RATE = "fx_rate"
+    """The euro value of one unit of the row's currency, as the book states it."""
+
     COUNTRY_CODE = "country_code"
     """Counterparty country, which decides domestic versus not."""
 

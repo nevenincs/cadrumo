@@ -238,6 +238,7 @@ aggregation:
         covers the whole price.
       invoice_line_currency_unconverted: An invoice line is denominated in a foreign
         currency with no resolved euro rate, so it cannot be declared on this modelo.
+        State the invoice's exchange rate to convert it.
       unsupported_period: Unsupported modelo period for totals from your records.
   oss_ioss:
     errors:
@@ -3239,6 +3240,7 @@ desktop:
         counterparty_nif: Tax ID of the other party
         country_code: Country
         currency: Currency
+        fx_rate: Exchange rate
         invoice_date: Invoice date
         invoice_number: Invoice number
         iva_rate: IVA rate
@@ -3735,6 +3737,7 @@ desktop:
         counterparty_name: Counterparty
         counterparty_tax_id: Tax ID (NIF)
         currency: Currency
+        fx_rate: Exchange rate
         invoice_class: Class
         invoice_number: Number
         issued_at: Issue date
