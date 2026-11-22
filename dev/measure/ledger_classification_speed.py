@@ -140,6 +140,7 @@ from collections.abc import Callable, Collection, Generator, Mapping, MutableMap
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
+from functools import partial
 from pathlib import Path
 from threading import Lock, Thread
 from typing import Any, BinaryIO, Final, Protocol, TextIO
@@ -184,6 +185,9 @@ _DEFAULT_NAMESPACE: Final = "library"
 _ENGINE_PROVIDER: Final = LocalEngine.LLAMACPP.value
 _OUTPUTS: Final = "ledger-classification-speed"
 _HEALTH_SECONDS: Final = 120.0
+_ADMIN_SECONDS: Final = 120.0
+"""How long one service administration exchange may take: a cold catalogue read on a loaded machine needs far more
+than the channel's default."""
 _INTERRUPTED: Final = 130
 _RENEWAL_MARGIN_SECONDS: Final = 120.0
 """The least sign-in left before a command; a renewal happens below it, or below twice the longest command."""
@@ -1977,7 +1981,7 @@ def _measure_on(
         if session.first_refusal_code is not None:
             raise AcceptanceError(f"agent service refused the agent: {session.first_refusal_code}")
         document["phase"] = "catalog"
-        catalog = session.catalog()
+        catalog = session.catalog(within=_ADMIN_SECONDS)
         (outputs / "catalog.json").write_text(json.dumps(hosts_only(catalog), indent=2), encoding="utf-8")
         lane, model, context = lane_model(catalog, arguments.model, arguments.lane)
         presented: Presented | None = None
@@ -1990,9 +1994,11 @@ def _measure_on(
             presented = Presented(name=model, weights=model_weights(store, model), context=context)
             document["lane"] = {"provider": lane, "model": model, "context": context}
         if arguments.inspect:
-            (outputs / "status.json").write_text(json.dumps(hosts_only(session.status()), indent=2), encoding="utf-8")
+            (outputs / "status.json").write_text(
+                json.dumps(hosts_only(session.status(within=_ADMIN_SECONDS)), indent=2), encoding="utf-8"
+            )
             for action in ("local_models", "local_engine", "provider_lanes"):
-                reply = session.settings(action)
+                reply = session.settings(action, within=_ADMIN_SECONDS)
                 (outputs / f"{action}.json").write_text(json.dumps(hosts_only(reply), indent=2), encoding="utf-8")
             return
 
@@ -2007,13 +2013,14 @@ def _measure_on(
 
         store_credential = _credential_store(session, arguments, lane)
         reads_off_host = False
+        settings = partial(session.settings, within=_ADMIN_SECONDS)
 
         def select(*, renewal: bool) -> dict[str, dict[str, JsonValue]]:
             nonlocal reads_off_host
             if not arguments.hosted:
-                return apply_window_settings(session.settings, lane=lane, model=model, placement=arguments.placement)
+                return apply_window_settings(settings, lane=lane, model=model, placement=arguments.placement)
             replies, entry = apply_hosted_settings(
-                session.settings, store_credential, lane=lane, model=model, replace_credential=not renewal
+                settings, store_credential, lane=lane, model=model, replace_credential=not renewal
             )
             reads_off_host = entry.reads_off_host
             document["lane"]["settings"] = lane_settings_record(entry)
@@ -2112,7 +2119,11 @@ def _credential_store(session: AgentServiceSession, arguments: _Arguments, lane:
         secret = read_credential(Path(credential_file), variable)
         try:
             return session.credential(
-                provider=lane, expected_revision=expected_revision, base_url=base_url, secret=secret
+                provider=lane,
+                expected_revision=expected_revision,
+                base_url=base_url,
+                secret=secret,
+                within=_ADMIN_SECONDS,
             )
         finally:
             wipe(secret)

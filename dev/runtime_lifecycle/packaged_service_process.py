@@ -33,7 +33,12 @@ from .caller_owned_root import (
     AcceptanceError,
     require,
 )
-from .service_admin_channel import owned_service_credential, owned_service_settings, service_admin
+from .service_admin_channel import (
+    ADMIN_EXCHANGE_SECONDS,
+    owned_service_credential,
+    owned_service_settings,
+    service_admin,
+)
 
 _JSON_OBJECT: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
 _SERVICE_STOP_SECONDS = 20.0
@@ -228,20 +233,37 @@ class PackagedServiceProcess:
         require(isinstance(document, dict), "packaged service event was not an object")
         return document
 
-    def admin(self, port: int, action: AdminAction, **fields: Any) -> dict[str, JsonValue]:
-        """Use the bounded parent-administration protocol for public reads."""
-        return service_admin(self._bearer, port, action, **fields)
+    def admin(
+        self, port: int, action: AdminAction, *, within: float = ADMIN_EXCHANGE_SECONDS, **fields: Any
+    ) -> dict[str, JsonValue]:
+        """Use the bounded parent-administration protocol for public reads, each answered inside ``within``."""
+        return service_admin(self._bearer, port, action, within=within, **fields)
 
-    def settings(self, port: int, action: AdminAction, **fields: Any) -> dict[str, JsonValue]:
+    def settings(
+        self, port: int, action: AdminAction, *, within: float = ADMIN_EXCHANGE_SECONDS, **fields: Any
+    ) -> dict[str, JsonValue]:
         """Read or store the window's local-model settings as this service's parent, which minted its bearer."""
-        return owned_service_settings(self._bearer, port, action, **fields)
+        return owned_service_settings(self._bearer, port, action, within=within, **fields)
 
     def credential(
-        self, port: int, *, provider: str, expected_revision: str, base_url: str | None, secret: bytearray
+        self,
+        port: int,
+        *,
+        provider: str,
+        expected_revision: str,
+        base_url: str | None,
+        secret: bytearray,
+        within: float = ADMIN_EXCHANGE_SECONDS,
     ) -> dict[str, JsonValue]:
         """Store one lane's direct credential as this service's parent; ``secret`` is wiped on every exit."""
         return owned_service_credential(
-            self._bearer, port, provider=provider, expected_revision=expected_revision, base_url=base_url, secret=secret
+            self._bearer,
+            port,
+            provider=provider,
+            expected_revision=expected_revision,
+            base_url=base_url,
+            secret=secret,
+            within=within,
         )
 
     def close(self) -> None:

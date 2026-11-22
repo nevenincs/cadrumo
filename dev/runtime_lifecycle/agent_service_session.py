@@ -40,6 +40,7 @@ from .caller_owned_root import (
 )
 from .packaged_service_process import PackagedServiceProcess, package_default_engine
 from .proof_support import Profile, create_profile, identify_profile, login_profile, state_taxpayer
+from .service_admin_channel import ADMIN_EXCHANGE_SECONDS
 from .windows_holder import WindowsRuntimeSessionHolder
 
 
@@ -124,11 +125,15 @@ class AgentServiceSession:
             else ()
         )
 
-    def admin(self, action: AdminAction, **fields: Any) -> dict[str, JsonValue]:
-        """Request a typed public catalog or service status projection."""
-        return self._service.admin(self._admin_port(), action, **fields)
+    def admin(
+        self, action: AdminAction, *, within: float = ADMIN_EXCHANGE_SECONDS, **fields: Any
+    ) -> dict[str, JsonValue]:
+        """Request a typed public catalog or service status projection, answered inside ``within``."""
+        return self._service.admin(self._admin_port(), action, within=within, **fields)
 
-    def settings(self, action: AdminAction, **fields: Any) -> dict[str, JsonValue]:
+    def settings(
+        self, action: AdminAction, *, within: float = ADMIN_EXCHANGE_SECONDS, **fields: Any
+    ) -> dict[str, JsonValue]:
         """Read or store the window's local-model settings, on a session its caller owns alone.
 
         A shared session serves many tests, so none of them may change what the
@@ -136,10 +141,16 @@ class AgentServiceSession:
         """
         if not self._owned:
             raise AcceptanceError("a shared agent service session does not change local-model settings")
-        return self._service.settings(self._admin_port(), action, **fields)
+        return self._service.settings(self._admin_port(), action, within=within, **fields)
 
     def credential(
-        self, *, provider: str, expected_revision: str, base_url: str | None, secret: bytearray
+        self,
+        *,
+        provider: str,
+        expected_revision: str,
+        base_url: str | None,
+        secret: bytearray,
+        within: float = ADMIN_EXCHANGE_SECONDS,
     ) -> dict[str, JsonValue]:
         """Store one lane's direct credential as the window does, on a session its caller owns alone.
 
@@ -154,6 +165,7 @@ class AgentServiceSession:
                 expected_revision=expected_revision,
                 base_url=base_url,
                 secret=secret,
+                within=within,
             )
         finally:
             secret[:] = bytes(len(secret))
@@ -164,13 +176,13 @@ class AgentServiceSession:
             raise AcceptanceError("service admin endpoint is invalid")
         return port
 
-    def catalog(self) -> dict[str, JsonValue]:
-        """Read the service's currently available provider catalog."""
-        return self.admin("catalog")
+    def catalog(self, *, within: float = ADMIN_EXCHANGE_SECONDS) -> dict[str, JsonValue]:
+        """Read the service's currently available provider catalog, answered inside ``within``."""
+        return self.admin("catalog", within=within)
 
-    def status(self) -> dict[str, JsonValue]:
-        """Read service status under this exact admitted session."""
-        return self.admin("status")
+    def status(self, *, within: float = ADMIN_EXCHANGE_SECONDS) -> dict[str, JsonValue]:
+        """Read service status under this exact admitted session, answered inside ``within``."""
+        return self.admin("status", within=within)
 
     def sign_in_deadline(self) -> datetime | None:
         """The earlier of the stored sign-in's idle deadline and the held person session's expiry.
