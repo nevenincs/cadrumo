@@ -7,7 +7,8 @@ production registry composes every group; the manifest-backed registry answers
 contracts from the generated manifest and composes a group only when one of
 its operations is used.
 
-Core types: :class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+Core types: :class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`,
+:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
 """
 
 from __future__ import annotations
@@ -715,6 +716,26 @@ def compose_ledger_bulk_classify_operation(inputs: OperationCompositionInputs) -
         inputs.ledger_actions(), execution_caller_reader=inputs.execution_caller_reader
     )
     return built((definition,), (build_ledger_bulk_classify_registration(definition),))
+
+
+def compose_ledger_batch_update_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the ledger batch edit preview and its reviewed write."""
+    from ..application.ledger.batch_update_operation import (
+        build_ledger_batch_update_definition,
+        build_ledger_batch_update_preview_definition,
+        build_ledger_batch_update_preview_registration,
+        build_ledger_batch_update_registration,
+    )
+
+    ports = inputs.ledger_actions()
+    preview = build_ledger_batch_update_preview_definition(
+        ports, execution_caller_reader=inputs.execution_caller_reader
+    )
+    write = build_ledger_batch_update_definition(ports, execution_caller_reader=inputs.execution_caller_reader)
+    return built(
+        (preview, write),
+        (build_ledger_batch_update_preview_registration(preview), build_ledger_batch_update_registration(write)),
+    )
 
 
 def compose_ledger_rule_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:

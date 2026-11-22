@@ -34,7 +34,20 @@ import {
   useStagedCheck,
   type StagedCheck,
 } from "../../../shell/ledgerStagedCheck";
-import { planApply, type LedgerPlan } from "../../../shell/ledgerPlan";
+import {
+  batchRequests,
+  planApply,
+  withReviewedDigests,
+  type LedgerPlan,
+} from "../../../shell/ledgerPlan";
+import {
+  batchCounts,
+  undoCells,
+  undoable,
+  useBatchPreview,
+} from "../../../shell/ledgerBatch";
+import { BatchPreviewSection } from "./BatchPreview";
+import { batchCountsText } from "./batchWords";
 import {
   actionRows,
   storedFieldValue,
@@ -758,6 +771,21 @@ export function ReviewDialog({
         : null,
     [state, content, locale, checked],
   );
+  // What the ledger answers it would do to each movement saved together:
+  // Save waits for it, and writes against exactly the plan it showed.
+  const preview = useBatchPreview(
+    port,
+    useMemo(() => batchRequests(plan), [plan]),
+    state.phase === "ready" ? state.rows : null,
+  );
+  // An undo stages its cells first and opens the review once they are part
+  // of what is staged.
+  const [undoing, setUndoing] = useState(false);
+  useEffect(() => {
+    if (!undoing) return;
+    setUndoing(false);
+    void apply.open();
+  }, [undoing, content, apply]);
   const linkSteps = useMemo(
     () =>
       plan
@@ -928,6 +956,11 @@ export function ReviewDialog({
     const unread = links.some((link) => !link.invoice);
     const unjudged = links.some((link) => link.mismatches === null);
     const ready = !unread && linksReady(links, ticks);
+    const previewed = preview.kind === "none" || preview.kind === "answer";
+    const digests =
+      preview.kind === "answer"
+        ? preview.results.map((result) => result.plan_digest)
+        : [];
     const approvals = content.actions.filter(
       (action): action is Extract<StagedAction, { kind: "suggestion" }> =>
         action.kind === "suggestion",
@@ -973,6 +1006,7 @@ export function ReviewDialog({
           locks={state.phase === "ready" ? state.locks : null}
           locale={locale}
         />
+        <BatchPreviewSection preview={preview} rows={rows} />
         <LinkChanges
           links={links}
           unlinks={unlinks}
@@ -1034,15 +1068,19 @@ export function ReviewDialog({
         <span className="me-auto text-sm text-muted-foreground">
           {apply.paused
             ? apply.paused
-            : unread
-              ? t("desktop.ledger.apply.link.unread")
-              : unjudged
-                ? t("desktop.ledger.apply.link.unjudged")
-                : !ready
-                  ? t("desktop.ledger.apply.tick_differ")
-                  : held
-                    ? t("desktop.ledger.apply.held_note", { count: held })
-                    : ""}
+            : preview.kind === "waiting"
+              ? t("desktop.ledger.batch.save_waits")
+              : preview.kind === "failed"
+                ? t("desktop.ledger.batch.preview_failed")
+                : unread
+                  ? t("desktop.ledger.apply.link.unread")
+                  : unjudged
+                    ? t("desktop.ledger.apply.link.unjudged")
+                    : !ready
+                      ? t("desktop.ledger.apply.tick_differ")
+                      : held
+                        ? t("desktop.ledger.apply.held_note", { count: held })
+                        : ""}
         </span>
         <Button variant="ghost" onClick={close}>
           {t("desktop.ledger.apply.keep_editing")}
@@ -1052,15 +1090,28 @@ export function ReviewDialog({
           aria-disabled={
             savable <= 0 ||
             !ready ||
+            !previewed ||
             apply.paused !== null ||
             !plan.steps.length
               ? true
               : undefined
           }
           onClick={() => {
-            if (savable <= 0 || !ready || apply.paused || !plan.steps.length)
+            if (
+              savable <= 0 ||
+              !ready ||
+              !previewed ||
+              apply.paused ||
+              !plan.steps.length
+            )
               return;
-            void apply.apply(plan);
+            if (preview.kind === "answer") {
+              const counts = batchCounts(preview.results);
+              console.info(
+                `ledger batch save: parts=${digests.length} applied=${counts.applied} unchanged=${counts.unchanged} refused=${counts.refused} conflict=${counts.conflict}`,
+              );
+            }
+            void apply.apply(withReviewedDigests(plan, digests));
           }}
         >
           {held
@@ -1129,6 +1180,16 @@ export function ReviewDialog({
     );
     const unsaved = items.filter((item) => !SAVED.has(item.outcome.kind));
     const kinds = Object.keys(counts).length;
+    // What the batch parts just wrote, as the ledger counted it, and the
+    // cells that write each written row's earlier values back.
+    const written = state.report.steps.flatMap((report) =>
+      report.step.kind === "batch" && report.batch?.outcome === "applied"
+        ? [report.batch]
+        : [],
+    );
+    const undo = undoable(state.report.steps)
+      ? undoCells(state.report.steps, state.fresh)
+      : null;
     body = (
       <div className="grid gap-3">
         {kinds > 1 && (
@@ -1187,6 +1248,21 @@ export function ReviewDialog({
             <AlertTitle>{t("desktop.ledger.apply.stopped")}</AlertTitle>
           </Alert>
         )}
+        {written.length > 0 && (
+          <p role="status" className="ledger-batch-written text-sm">
+            {batchCountsText(t, batchCounts(written), "written")}
+          </p>
+        )}
+        {undo && undo.unread > 0 && (
+          <p className="ledger-batch-undo-unread text-sm text-muted-foreground">
+            {t("desktop.ledger.batch.undo_unread", { count: undo.unread })}
+          </p>
+        )}
+        {undo && undo.cells.length === 0 && (
+          <p className="ledger-batch-undo-nothing text-sm text-muted-foreground">
+            {t("desktop.ledger.batch.undo_nothing")}
+          </p>
+        )}
         <Outcomes items={items} />
       </div>
     );
@@ -1203,6 +1279,36 @@ export function ReviewDialog({
               {t("desktop.ledger.paused.reread")}
             </Button>
           )}
+        {undo && (
+          <Button
+            variant="outline"
+            className="ledger-batch-undo"
+            aria-disabled={
+              apply.paused !== null || undo.cells.length === 0 || undefined
+            }
+            aria-description={
+              apply.paused
+                ? apply.paused
+                : undo.cells.length === 0
+                  ? t("desktop.ledger.batch.undo_nothing")
+                  : undefined
+            }
+            onClick={() => {
+              if (apply.paused || undo.cells.length === 0) {
+                console.info("ledger batch undo: unavailable");
+                return;
+              }
+              console.info(
+                `ledger batch undo: ${undo.cells.length} cell(s) staged`,
+              );
+              onStage({ type: "stage", label: "bulk_set", cells: undo.cells });
+              setUndoing(true);
+            }}
+          >
+            <Icon name="restore" />
+            {t("desktop.ledger.batch.undo")}
+          </Button>
+        )}
         <Button className="ledger-apply-done" onClick={close}>
           {t("desktop.ledger.apply.close")}
         </Button>

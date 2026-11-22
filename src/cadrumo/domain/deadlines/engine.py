@@ -20,6 +20,7 @@ from collections.abc import Generator, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import date
+from itertools import product
 from threading import Lock
 from typing import TYPE_CHECKING, Final, Protocol, override, runtime_checkable
 
@@ -60,7 +61,9 @@ from .models import (
     Recovery,
     Schedule,
     TaxpayerProfile,
+    UndeterminedObligation,
 )
+from .profiles import MODELO_IVA_BLOCK_CLAIMING_PATHS
 from .recargo import build_recovery_for_overdue
 
 _logger = get_logger(__name__)
@@ -328,7 +331,7 @@ class DeadlineEngine:
         with self._operation_context() as operation:
             year_index = self._deadline_window_year(year, operation=operation)
             windows = year_index.dated
-            obligations = self._obligations_for_windows(
+            obligations, undetermined = self._obligations_for_windows(
                 profile=profile,
                 windows=windows,
                 reference_today=reference_today,
@@ -348,6 +351,7 @@ class DeadlineEngine:
             profile=profile,
             year=year,
             obligations=tuple(obligations),
+            undetermined=tuple(undetermined),
             generated_at=now(),
         )
 
@@ -358,21 +362,44 @@ class DeadlineEngine:
         windows: tuple[DeadlineWindowProjection, ...],
         reference_today: date,
         operation: PinnedAuthorityOperation,
-    ) -> list[ModeloDeadline]:
-        """Project every applicable dated window, in window order."""
+    ) -> tuple[list[ModeloDeadline], list[UndeterminedObligation]]:
+        """Project every applicable dated window, in window order, and the windows left undecided.
+
+        A window whose admission reads an unanswered Modelo IVA yes/no fact is
+        judged under every answer of those facts: owed under all of them it is
+        an obligation, owed under none it is dropped, and otherwise it is
+        undetermined. An unanswered fact is never read as "no", which a
+        ``not_equals true`` predicate on it would otherwise do.
+        """
         obligations: list[ModeloDeadline] = []
+        undetermined: list[UndeterminedObligation] = []
         for modelo, revision, window in windows:
-            obligation = self._obligation_for_window(
-                profile=profile,
-                modelo=modelo,
-                revision=revision,
-                window=window,
-                reference_today=reference_today,
-                operation=operation,
-            )
-            if obligation is not None:
-                obligations.append(obligation)
-        return obligations
+            deciding = unanswered_iva_deciding_paths(profile, revision, window)
+            outcomes = [
+                self._obligation_for_window(
+                    profile=candidate,
+                    modelo=modelo,
+                    revision=revision,
+                    window=window,
+                    reference_today=reference_today,
+                    operation=operation,
+                )
+                for candidate in _iva_answer_candidates(profile, deciding)
+            ]
+            owed = [outcome for outcome in outcomes if outcome is not None]
+            if outcomes and len(owed) == len(outcomes):
+                obligations.append(owed[0])
+            elif owed or (deciding and not outcomes):
+                undetermined.append(
+                    UndeterminedObligation(
+                        modelo=Modelo(modelo),
+                        period=window.period,
+                        opens_on=window.opens_on,
+                        closes_on=window.closes_on,
+                        deciding_paths=deciding,
+                    ),
+                )
+        return obligations, undetermined
 
     def _window_conditions_admit(
         self,
@@ -759,6 +786,58 @@ def _overdue_recovery_or_none(
             exc,
         )
         return None
+
+
+def unanswered_iva_deciding_paths(
+    profile: TaxpayerProfile,
+    revision: RevisionSelectionMetadata,
+    window: DeadlineWindowDefinition,
+) -> tuple[str, ...]:
+    """Return the unanswered Modelo IVA block paths that decide whether ``window`` is owed.
+
+    The window's own applicability conditions and the filing schedules that
+    admit its period are what decide it. Only a read projection names
+    unanswered block paths, so every other profile returns nothing.
+    """
+    if not profile.iva_block_unanswered_paths:
+        return ()
+    period = _window_registry_period(window)
+    fields = [condition.field for condition in window.applicability_conditions]
+    for schedule in revision.filing_schedules:
+        if period in schedule.periods:
+            fields.extend(condition.field for condition in schedule.profile_conditions)
+    if profile.iva is None:
+        # No block was built, so every block-owned fact the window reads is unknown.
+        from ..calculations.registry.schedules import resolve_profile_fact
+
+        return tuple(
+            field
+            for field in dict.fromkeys(fields)
+            if field in MODELO_IVA_BLOCK_CLAIMING_PATHS and resolve_profile_fact(profile, field) is None
+        )
+    return tuple(field for field in dict.fromkeys(fields) if field in profile.iva_block_unanswered_paths)
+
+
+def _iva_answer_candidates(profile: TaxpayerProfile, deciding: tuple[str, ...]) -> tuple[TaxpayerProfile, ...]:
+    """Return ``profile`` under every yes/no answer of the ``deciding`` paths.
+
+    Empty when no block was built, since a missing territory or composition has
+    no yes/no answers to try; ``profile`` itself when nothing is undecided.
+    """
+    if not deciding:
+        return (profile,)
+    if profile.iva is None:
+        return ()
+    fields = [path.removeprefix("iva.") for path in deciding]
+    return tuple(
+        profile.model_copy(
+            update={
+                "iva": profile.iva.model_copy(update=dict(zip(fields, answers, strict=True))),
+                "iva_block_unanswered_paths": (),
+            },
+        )
+        for answers in product((False, True), repeat=len(fields))
+    )
 
 
 def _window_registry_period(window: DeadlineWindowDefinition) -> str:

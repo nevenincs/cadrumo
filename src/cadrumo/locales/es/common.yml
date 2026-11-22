@@ -1882,6 +1882,8 @@ desktop:
         not_sent_paused: 'No enviado: el guardado está en pausa porque no pudimos
           confirmar uno anterior. Sigue en tus cambios.'
         not_sent_stopped: 'No enviado: tu sesión terminó. Sigue en tus cambios.'
+        not_sent_unreviewed: 'No enviado: el libro no había dicho qué haría. Revisa
+          de nuevo.'
         refused: 'No guardado: {reason} · sigue en tus cambios'
         saved_unread: Guardado, pero todavía no podemos mostrarlo. Actualiza para
           verlo.
@@ -1903,7 +1905,11 @@ desktop:
       reading: Actualizando el libro…
       refusal:
         changed_elsewhere: cambiado en otro sitio
+        changed_since_seen: cambiado desde que lo viste
+        not_found: ya no existe
         other: el libro no lo aceptó
+        plan_changed: lo que haría el libro cambió desde que lo revisaste; revísalo
+          de nuevo
       reject: 'rechazado: {reason}'
       rows: Cambios por movimiento
       save: Guardar {count}
@@ -1915,6 +1921,7 @@ desktop:
       shown: '{shown} de {total}'
       step:
         add: Movimiento nuevo · {movement}
+        batch: 'Parte {part} de {parts} · editados juntos: {count}'
         bulk: 'Parte {part} de {parts} · guardados juntos: {count}'
       stopped: 'Tu sesión terminó: lo que no se envió sigue en tus cambios'
       summary: Resumen
@@ -2234,6 +2241,33 @@ desktop:
       year_estimated: '{year} (estimado)'
       year_estimated_note: 'Estas cifras son estimaciones: todavía no hay tablas oficiales
         para este año.'
+    batch:
+      cause:
+        invalid: el libro no acepta este valor
+        not_active: solo se puede cambiar un movimiento activo
+        sealed: lo cita una declaración presentada
+      count:
+        applied: 'Por cambiar: {count}'
+        conflict: 'Cambiados desde que los viste: {count}'
+        refused: 'Rechazados: {count}'
+        unchanged: 'Ya así: {count}'
+      preview_failed: El libro no dijo qué haría, así que aún no se puede guardar
+        nada en conjunto
+      preview_title: Lo que hará el libro
+      previewing: Preguntando al libro qué hará…
+      row:
+        applied: Cambiará
+        unchanged: Ya tiene estos valores
+      save_waits: Guardar espera a que el libro diga qué hará
+      undo: Deshacer
+      undo_nothing: Nada de lo guardado aquí se puede volver a escribir
+      undo_unread: 'No está en el libro actualizado, así que no se deshace: {count}'
+      unwritten: Movimientos que no cambiarán
+      written:
+        applied: 'Cambiados: {count}'
+        conflict: 'Cambiados desde que los viste: {count}'
+        refused: 'Rechazados: {count}'
+        unchanged: 'Ya así: {count}'
     capital:
       art108: Acogido al art. 108
       column:
@@ -4176,6 +4210,33 @@ desktop:
       years_supported: Ejercicios que puedes consultar
       years_with_movements_or_invoices: Años con movimientos o facturas
     position: Fila {row} de {count}
+    properties:
+      changes_on: cambia en {count}
+      cleared: vaciado
+      copied: 'Propiedades copiadas: {count}'
+      copy: Copiar ({count})
+      copy_description: Elige qué copiar de {movement}. Nada cambia hasta que pegues.
+      copy_first: Copia primero las propiedades de un movimiento
+      copy_open: Copiar propiedades
+      copy_title: Copiar propiedades
+      first_refusal: 'Primero sin cambiar: {movement} · {cause}'
+      group:
+        classification: Clasificación
+        counterparty: Contraparte
+        group: Grupo
+        irpf: IRPF
+        iva: IVA
+        notes: Notas
+      held: 'Propiedades copiadas: {count}'
+      none_shown: No se muestra ninguno de los movimientos seleccionados
+      none_ticked: Marca al menos una propiedad
+      nothing_to_paste: Pegar no cambiaría ninguno de estos movimientos
+      paste: Pegar ({count})
+      paste_description: El libro dice qué haría pegar en cada movimiento. Pegar lo
+        añade a tus cambios; no se guarda nada hasta que revises y guardes.
+      paste_open: Pegar propiedades ({count})
+      paste_title: 'Pegar propiedades · movimientos: {count}'
+      unread: 'No leídos en esta página, así que se omiten: {count}'
     prorrata:
       action:
         declare_gross: Declarar una cuota bruta

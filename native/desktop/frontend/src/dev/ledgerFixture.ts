@@ -93,6 +93,7 @@ import {
   unrecorded,
 } from "./ledgerRequestFixture";
 import { entryOperations } from "./ledgerEntryFixture";
+import { batchOperations } from "./ledgerBatchFixture";
 import { importOperations } from "./ledgerImportFixture";
 import { fixtureInstant } from "@/dev/fixtureDates";
 
@@ -205,6 +206,13 @@ declare global {
       /** Changes a stored movement's field, as another window saving it
        * would. */
       editElsewhere(id: string, field: string, value: string | null): void;
+      /** Seals a stored movement, as a declaration filed from another
+       * window that cites it would. */
+      sealElsewhere(id: string): void;
+      /** Holds every batch edit preview until released, so another window
+       * can change the ledger while the page waits for its answer. */
+      holdPreviews(): void;
+      releasePreviews(): void;
       /** The model reviews still waiting, by definition and movement,
        * cancelling ones included until they settle. */
       waitingReviews(): { definition: string; transaction: string }[];
@@ -283,6 +291,8 @@ export function ledgerFixture(options: Options): LedgerPort {
   // How many of the next reads of a definition answer nothing.
   const failingReads = new Map<string, number>();
   let tracksHeld: Promise<void> | null = null;
+  let previewsHeld: Promise<void> | null = null;
+  let releasePreviews = () => {};
   let releaseTracks = () => {};
   let pendingTracks = 0;
   // Every request the page sent, as it was sent.
@@ -410,6 +420,19 @@ export function ledgerFixture(options: Options): LedgerPort {
       ] = field === "notes" || field === "counterparty" ? (value ?? "") : value;
       movement.transaction.modified_at = now();
     },
+    sealElsewhere(id) {
+      const movement = transactionOf(id);
+      if (movement) movement.sealed = true;
+    },
+    holdPreviews() {
+      previewsHeld ??= new Promise<void>((resolve) => {
+        releasePreviews = () => {
+          previewsHeld = null;
+          resolve();
+        };
+      });
+    },
+    releasePreviews: () => releasePreviews(),
     waitingReviews: () =>
       [...reviews.values()].map((pending) => ({
         definition: pending.definition,
@@ -445,6 +468,9 @@ export function ledgerFixture(options: Options): LedgerPort {
       [...ledgers].flatMap((made) => made.requests(definition)),
     editElsewhere: (id, field, value) =>
       ledgers.forEach((made) => made.editElsewhere(id, field, value)),
+    sealElsewhere: (id) => ledgers.forEach((made) => made.sealElsewhere(id)),
+    holdPreviews: () => ledgers.forEach((made) => made.holdPreviews()),
+    releasePreviews: () => ledgers.forEach((made) => made.releasePreviews()),
     waitingReviews: () => [...ledgers].flatMap((made) => made.waitingReviews()),
     reviewElsewhere: (id) =>
       ledgers.forEach((made) => made.reviewElsewhere(id)),
@@ -613,6 +639,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     events,
     hex64,
   });
+  const batchWork = batchOperations(ledger, { now, events, hex64 });
   const invoiceWork = invoiceOperations(ledger, {
     profileId: LEDGER_FIXTURE_PROFILE_ID,
     events,
@@ -647,6 +674,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     ...evidenceWork.reads,
     ...movementWork.reads,
     ...setupWork.reads,
+    ...batchWork.reads,
     "ledger.known-values": (request) => knownValues(ledger, request),
     "ledger.rule.trial": (request) => {
       const answer = answerRuleTrial(
@@ -756,6 +784,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     ...releaseWork.writes,
     ...movementWork.writes,
     ...setupWork.writes,
+    ...batchWork.writes,
     "ledger.remove": movementWork.remove,
   };
 
@@ -838,6 +867,8 @@ export function ledgerFixture(options: Options): LedgerPort {
   ): Promise<LedgerOutcome> {
     say(`ledger ${definition}`);
     await answer();
+    if (definition === "ledger.update.batch.preview" && previewsHeld)
+      await previewsHeld;
     if (definition === "ledger.track" && tracksHeld) {
       pendingTracks++;
       try {

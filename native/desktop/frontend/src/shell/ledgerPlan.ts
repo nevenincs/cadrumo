@@ -6,14 +6,18 @@ import type {
 // and what a row's staged state would refuse are the backend's answer to
 // `ledger.staged.check`, which every plan is made from; what is left here is the
 // order of the work, what staged actions must not meet, and cutting the bulk
-// into parts the host will carry.
+// into parts the host will carry. A movement whose staged fields are all
+// properties a batch edit writes is saved through `ledger.update.batch`, whose
+// preview answers for every row before anything is written.
 
 import type {
   LedgerUpdateWindowRequest,
   LedgerAddWindowRequest,
+  LedgerBatchUpdatePreviewWindowRequest,
   LedgerBulkClassifyWindowRequest,
   LedgerClassifyField,
   LedgerClassifyWindowRequest,
+  LedgerPropertySetField,
 } from "./ledgerMovementContract";
 import type {
   LedgerStagedBlocker,
@@ -160,6 +164,14 @@ export type BulkRow = {
   cells: Partial<Record<BulkColumn, string>>;
 };
 export type SuggestionAction = Extract<StagedAction, { kind: "suggestion" }>;
+/** One movement of a batch edit, as the request names it. */
+export type BatchRequestRow =
+  LedgerBatchUpdatePreviewWindowRequest["rows"][number];
+/** The property values one movement takes, or held, as a batch edit carries
+ * them. */
+export type PropertySet = BatchRequestRow["properties"];
+/** One movement of a batch part: the staged fields it saves. */
+export type BatchRow = { transactionId: string; fields: StageFieldName[] };
 export type PlanStep =
   | {
       kind: "bulk";
@@ -167,6 +179,16 @@ export type PlanStep =
       parts: number;
       rows: BulkRow[];
       request: LedgerBulkClassifyWindowRequest;
+    }
+  | {
+      kind: "batch";
+      part: number;
+      parts: number;
+      rows: BatchRow[];
+      request: LedgerBatchUpdatePreviewWindowRequest;
+      /** The digest the preview of exactly this request answered, which the
+       * write is sent with; null until the review has previewed it. */
+      reviewedPlanDigest: string | null;
     }
   | {
       kind: "classify";
@@ -247,6 +269,165 @@ export function payloadSize(payload: unknown): number {
 
 const wire = (field: StageFieldName, value: string) =>
   DECIMAL_FIELDS.has(field) ? (canonicalDecimal(value) ?? value) : value;
+
+// ---- Batch edits -------------------------------------------------------------
+
+// Every property a batch edit writes, in the order the person reads them. The
+// record is keyed by the contract's own field type, so a property the contract
+// adds or drops fails to compile here.
+const PROPERTY_FIELDS: Record<LedgerPropertySetField, true> = {
+  business_classification: true,
+  business_pct: true,
+  category_id: true,
+  usage_ratio_id: true,
+  iva_category: true,
+  iva_rate: true,
+  irpf_category: true,
+  deduction_fact_kind: true,
+  exemption_article: true,
+  counterparty: true,
+  notes: true,
+  group_label: true,
+};
+export const PROPERTY_SET_FIELDS = Object.keys(
+  PROPERTY_FIELDS,
+) as LedgerPropertySetField[];
+
+/** Whether a field is a property a batch edit writes that the page also
+ * stages. */
+export const isPropertyField = (
+  field: string,
+): field is LedgerPropertySetField & StageFieldName =>
+  field in PROPERTY_FIELDS &&
+  (STAGE_FIELDS as readonly string[]).includes(field);
+
+/** The most movements one batch edit names, as its contract bounds them. */
+export const BATCH_ROW_LIMIT = 2000;
+
+/** A batch edit's digest as long as the write sends it, for measuring a part
+ * before its preview has answered. */
+const DIGEST_ROOM = "0".repeat(64);
+
+/** A property's value as a batch edit carries it: decimals in their
+ * canonical spelling, an empty text as nothing. */
+export function propertyValue(
+  field: LedgerPropertySetField,
+  value: string | null | undefined,
+): string | null {
+  if (value === null || value === undefined || value === "") return null;
+  return isPropertyField(field) ? wire(field, value) : value;
+}
+
+/** One movement's row of a batch edit: its id, the `modified_at` the page
+ * read and the value of each property named, a value to set or null to
+ * clear it. */
+export function batchRequestRow(
+  transactionId: string,
+  expectedModifiedAt: string,
+  values: Partial<Record<LedgerPropertySetField, string | null>>,
+): BatchRequestRow {
+  return {
+    transaction_id: transactionId,
+    expected_modified_at: expectedModifiedAt,
+    properties: propertySet(values),
+  };
+}
+
+/** A property set naming the properties `values` holds, each in the spelling
+ * a batch edit carries; a property it does not name is null, as the contract
+ * requires. */
+export function propertySet(
+  values: Partial<Record<LedgerPropertySetField, string | null>>,
+): PropertySet {
+  const fields = PROPERTY_SET_FIELDS.filter((field) => field in values);
+  const properties = Object.fromEntries(
+    PROPERTY_SET_FIELDS.map((field) => [
+      field,
+      fields.includes(field) ? propertyValue(field, values[field]) : null,
+    ]),
+  ) as Omit<PropertySet, "fields">;
+  return { fields, ...properties };
+}
+
+export function batchRequest(
+  rows: readonly BatchRequestRow[],
+  outputLanguage?: OutputLanguage,
+): LedgerBatchUpdatePreviewWindowRequest {
+  return {
+    rows: [...rows],
+    ...(outputLanguage ? { output_language: outputLanguage } : {}),
+  };
+}
+
+/** Cuts batch rows into parts that each fit the payload bound, with the
+ * digest the write adds, and the contract's row bound, in order. A row that
+ * does not fit even alone is returned apart. */
+export function splitBatch<Row extends { request: BatchRequestRow }>(
+  rows: readonly Row[],
+  limit = RELAY_PAYLOAD_LIMIT,
+  outputLanguage?: OutputLanguage,
+): { parts: Row[][]; tooLarge: Row[] } {
+  const parts: Row[][] = [];
+  const tooLarge: Row[] = [];
+  const fits = (from: number, to: number) =>
+    to - from <= BATCH_ROW_LIMIT &&
+    payloadSize({
+      ...batchRequest(
+        rows.slice(from, to).map((row) => row.request),
+        outputLanguage,
+      ),
+      reviewed_plan_digest: DIGEST_ROOM,
+    }) <= limit;
+  // A part only grows by adding rows, so the longest run that fits is found
+  // by halving rather than by measuring every prefix.
+  let start = 0;
+  while (start < rows.length) {
+    if (!fits(start, start + 1)) {
+      tooLarge.push(...rows.slice(start, start + 1));
+      start += 1;
+      continue;
+    }
+    let fitting = start + 1;
+    let over = rows.length + 1;
+    if (fits(start, rows.length)) fitting = rows.length;
+    while (over - fitting > 1 && fitting < rows.length) {
+      const middle = Math.floor((fitting + over) / 2);
+      if (fits(start, middle)) fitting = middle;
+      else over = middle;
+    }
+    parts.push(rows.slice(start, fitting));
+    start = fitting;
+  }
+  return { parts, tooLarge };
+}
+
+/** The batch row of one movement's staged work, or null where something is
+ * staged on it that a batch edit does not carry: that work goes the other
+ * ways, whole. */
+function batchRow(
+  entry: PlanEntry,
+  row: LedgerTransactionReviewProjection,
+  content: StagedContent,
+  m210: boolean,
+): { row: BatchRow; request: BatchRequestRow } | null {
+  if (!entry.fields.length || m210) return null;
+  if (!entry.fields.every((field) => isPropertyField(field))) return null;
+  const changes = content.rows[entry.transactionId] ?? {};
+  const values: Partial<Record<LedgerPropertySetField, string | null>> = {};
+  for (const field of entry.fields) {
+    const change = changes[field]!;
+    values[field as LedgerPropertySetField] =
+      change.kind === "set" ? change.value : null;
+  }
+  return {
+    row: { transactionId: entry.transactionId, fields: entry.fields },
+    request: batchRequestRow(
+      entry.transactionId,
+      row.transaction.modified_at,
+      values,
+    ),
+  };
+}
 
 // ---- Bulk CSV ----------------------------------------------------------------
 
@@ -843,8 +1024,34 @@ export function planApply(
       content.rows[entry.transactionId],
     );
 
-  const candidates = entries
+  const m210Of = (id: string) =>
+    (actionsByRow.get(id) ?? []).some((action) => action.kind === "m210");
+  // A movement whose staged work a batch edit carries whole goes there, and
+  // no other way.
+  const batchCandidates = entries
     .filter((entry) => !entry.blockers.length)
+    .map((entry) =>
+      batchRow(
+        entry,
+        context.rows.get(entry.transactionId)!,
+        content,
+        m210Of(entry.transactionId),
+      ),
+    )
+    .filter((found) => found !== null);
+  const batched = new Set(
+    batchCandidates.map((found) => found.row.transactionId),
+  );
+  const batchSplit = splitBatch(batchCandidates, limit, context.outputLanguage);
+  for (const found of batchSplit.tooLarge)
+    entries
+      .find((entry) => entry.transactionId === found.row.transactionId)!
+      .blockers.push({ kind: "too_large" });
+
+  const candidates = entries
+    .filter(
+      (entry) => !entry.blockers.length && !batched.has(entry.transactionId),
+    )
     .map((entry) =>
       bulkRow(entry, factsOf(entry), content, takesShare(entry.transactionId)),
     )
@@ -855,7 +1062,9 @@ export function planApply(
       .find((entry) => entry.transactionId === row.transactionId)!
       .blockers.push({ kind: "too_large" });
 
-  const ready = entries.filter((entry) => !entry.blockers.length);
+  const ready = entries.filter(
+    (entry) => !entry.blockers.length && !batched.has(entry.transactionId),
+  );
   const classifies: Extract<PlanStep, { kind: "classify" }>[] = [];
   const updates: Extract<PlanStep, { kind: "update" }>[] = [];
   for (const entry of ready) {
@@ -931,7 +1140,24 @@ export function planApply(
     rows,
     request: bulkRequest(rows, context.outputLanguage),
   }));
+  const batchParts = batchSplit.parts
+    .map((part) =>
+      part.filter((found) => !blockedRows.has(found.row.transactionId)),
+    )
+    .filter((part) => part.length > 0);
+  const batchSteps: PlanStep[] = batchParts.map((part, at) => ({
+    kind: "batch",
+    part: at + 1,
+    parts: batchParts.length,
+    rows: part.map((found) => found.row),
+    request: batchRequest(
+      part.map((found) => found.request),
+      context.outputLanguage,
+    ),
+    reviewedPlanDigest: null,
+  }));
   const steps = [
+    ...batchSteps,
     ...bulkSteps,
     ...classifies.filter(keepStep),
     ...updates.filter(keepStep),
@@ -977,10 +1203,12 @@ function summarize(
     count("answer");
   return {
     together: steps.reduce(
-      (total, step) => total + (step.kind === "bulk" ? step.rows.length : 0),
+      (total, step) =>
+        total +
+        (step.kind === "bulk" || step.kind === "batch" ? step.rows.length : 0),
       0,
     ),
-    parts: count("bulk"),
+    parts: count("bulk") + count("batch"),
     singleClassifications: count("classify"),
     corrections: count("update"),
     newMovements: count("add"),
@@ -991,3 +1219,31 @@ function summarize(
     blockers,
   };
 }
+
+/** The plan with each batch part bound to the digest its preview answered,
+ * in the order of the plan's batch parts. A part without one stays unbound
+ * and is never written. */
+export function withReviewedDigests(
+  plan: LedgerPlan,
+  digests: readonly (string | null)[],
+): LedgerPlan {
+  let at = 0;
+  return {
+    ...plan,
+    steps: plan.steps.map((step) =>
+      step.kind === "batch"
+        ? { ...step, reviewedPlanDigest: digests[at++] ?? null }
+        : step,
+    ),
+  };
+}
+
+/** The batch parts' preview requests, in the plan's order. */
+export const batchRequests = (
+  plan: LedgerPlan | null,
+): LedgerBatchUpdatePreviewWindowRequest[] =>
+  plan
+    ? plan.steps.flatMap((step) =>
+        step.kind === "batch" ? [step.request] : [],
+      )
+    : [];

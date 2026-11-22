@@ -1,6 +1,6 @@
-"""The country a VAT number's prefix names is the issuing State, and nothing else.
+"""The country a NIF-IVA's prefix names is the issuing State, and nothing else.
 
-Directive 2006/112/EC art. 215 gives an individual VAT identification number a
+Directive 2006/112/EC art. 215 gives an individual identification number for IVA a
 prefix in ISO 3166 alpha-2 form that identifies the Member State that issued it,
 with Greece using ``EL``. The derivation is a suggestion about where the issuing
 State is; it must never answer for a number that does not carry a real prefix,
@@ -13,7 +13,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
-from ..identification import vat_number_issuing_country
+from ..identification import nif_iva_issuing_country
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -39,7 +39,7 @@ _SPANISH_BARE = "B00015016"
 )
 def test_a_prefixed_number_names_the_state_that_issued_it(printed: str, country: str) -> None:
     with bundled_indexed_authority().operation() as operation:
-        assert vat_number_issuing_country(printed, operation=operation) == country
+        assert nif_iva_issuing_country(printed, operation=operation) == country
 
 
 @pytest.mark.parametrize(
@@ -56,7 +56,7 @@ def test_a_prefixed_number_names_the_state_that_issued_it(printed: str, country:
         # The prefix names a State, but the body does not have that State's structure.
         "DE12",
         "ESB99999999",
-        # Northern Ireland's XI is a VAT prefix, not an ISO 3166 country.
+        # Northern Ireland's XI is an IVA prefix, not an ISO 3166 country.
         "XI123456789",
         # A prefix that names no Member State.
         "US123456789",
@@ -76,4 +76,4 @@ def test_a_prefixed_number_names_the_state_that_issued_it(printed: str, country:
 )
 def test_anything_but_a_real_prefixed_number_names_no_country(printed: str | None) -> None:
     with bundled_indexed_authority().operation() as operation:
-        assert vat_number_issuing_country(printed, operation=operation) is None
+        assert nif_iva_issuing_country(printed, operation=operation) is None

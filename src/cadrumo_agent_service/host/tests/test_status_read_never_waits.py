@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import logging
 import time
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from threading import Event, Thread
 from types import SimpleNamespace
@@ -90,7 +90,9 @@ def agent(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[type[_Age
     _Agent.capabilities_release.set()
 
 
-def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AgentService:
+def _service(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, emit: Callable[[dict[str, Any]], None] = lambda _event: None
+) -> AgentService:
     lease = SimpleNamespace(lease_id=uuid4(), profile_id=uuid4())
     service = AgentService(
         local_engine_default=LocalEngine.LLAMACPP,
@@ -99,7 +101,7 @@ def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AgentService:
         ),
         storage_root=tmp_path,
         gateway_bearer=bytearray(b"synthetic-gateway-bearer"),
-        emit=lambda _event: None,
+        emit=emit,
     )
     monkeypatch.setattr(
         service._credentials, "current_generations", lambda **_k: SimpleNamespace(sign_in=1, provider_settings=1)
@@ -154,6 +156,26 @@ def test_status_answers_at_once_with_a_cli_lane_unread_while_its_program_outlive
 
     assert _lane(landed)["cli_state_cause"] is None
     assert agent.status_reads == 1, "status reads made while one login read ran started no other"
+
+
+def test_a_background_read_behind_a_pending_status_cues_the_desktop_when_it_ends(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, agent: type[_Agent]
+) -> None:
+    agent.capabilities_release.set()
+    events: list[dict[str, Any]] = []
+    service = _service(tmp_path, monkeypatch, events.append)
+
+    assert _prompt_status(service)["reads_pending"]
+    assert agent.status_reached.wait(_SETTLE_SECONDS)
+    # Nothing is cued while the read behind the pending answer still runs.
+    assert events == []
+    agent.status_release.set()
+    deadline = time.monotonic() + _SETTLE_SECONDS
+    while not events and time.monotonic() < deadline:
+        time.sleep(0.02)
+    assert events and all(event == {"event": "read_settled"} for event in events)
+    # The status the cue sends the desktop back for is complete.
+    assert not _prompt_status(service)["reads_pending"]
 
 
 def test_console_login_invalidates_a_fresh_signed_out_read(

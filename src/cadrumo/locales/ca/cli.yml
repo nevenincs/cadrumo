@@ -4603,9 +4603,14 @@ cli:
       bienes_extranjero_unset: Al teu perfil encara no consta si els teus béns i drets
         situats a l’estranger superen el llindar de declaració.
       censo_enrolment_unverified: No s'ha verificat l'alta al cens
+      criterio_caja_unset: Al teu perfil encara no consta si t’has acollit al règim
+        especial del criteri de caixa de l’IVA.
       deadline_windows_unavailable: El registre no té terminis per a una part d'aquest
         interval, així que no se sap res de les obligacions que hi cauen. Revisa l'estat
         del resum; una llista buida aquí no vol dir que no venci res.
+      deposito_hidrocarburos_unset: Al teu perfil encara no consta si tens dret a
+        deduir el pagament a compte de l’IVA per la sortida d’hidrocarburs d’un dipòsit
+        fiscal.
       estimacion_objetiva_unset: Al teu perfil encara no consta quin règim d’estimació
         de l’IRPF s’aplica a la teva activitat.
       explain_deadline_windows_unavailable: El registre no té terminis per al model
@@ -4628,6 +4633,8 @@ cli:
         la teva activitat.
       justificante_unverified: No s'ha verificat el justificant de l'AEAT d'una declaració
         presentada
+      m303_composicion_unset: Al teu perfil encara no consta si al Model 303 tributes
+        només en el règim general, només en el simplificat o en tots dos.
       m303_simplificado_forfait_unavailable: El Model 303 és aplicable, però encara
         no està disponible el càlcul per mòduls de la quota del règim simplificat
         de l’IVA; revisa les caselles del règim simplificat abans de presentar.
@@ -4667,6 +4674,8 @@ cli:
       terceros_threshold_unset: Al teu perfil encara no consta si les operacions amb
         algun client o proveïdor superen el llindar anual de declaració del Model
         347.
+      territorio_iva_unset: Al teu perfil encara no consta en quin territori tributes
+        per l’IVA (comú o foral).
       tipo_entidad_unset: Al teu perfil encara no consta quin tipus de contribuent
         ets.
     year_help: Any de declaració per a --period (p. ex. 2024).

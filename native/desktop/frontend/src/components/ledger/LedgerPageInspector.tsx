@@ -1,3 +1,5 @@
+import { useState } from "react";
+import type { PropertySet } from "../../shell/ledgerPlan";
 import { shownRows } from "../../shell/ledgerWindow";
 import type { LedgerPageProps } from "./LedgerPage";
 import { LedgerInspector } from "./inspector/LedgerInspector";
@@ -34,6 +36,9 @@ export function LedgerPageInspector({
     inspectorShown,
     reread,
   } = model;
+  // Properties copied from one movement, kept for the page's life so they
+  // can be pasted after the inspector has closed and another selection made.
+  const [copied, setCopied] = useState<PropertySet | null>(null);
   return (
     <>
       {inspectorShown && periodWindow && (
@@ -88,6 +93,8 @@ export function LedgerPageInspector({
           onMakeRule={openRuleFromSelection}
           onWritten={reread}
           copy={copy}
+          copied={copied}
+          onCopied={setCopied}
         />
       )}
     </>

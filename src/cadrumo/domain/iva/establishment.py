@@ -340,7 +340,7 @@ def is_iso_3166_user_assigned_alpha2(code: str) -> bool:
 
     Such a pair denotes no country by construction. It matters here because a
     jurisdiction code the tax vocabularies carry for their own purposes, such as
-    Northern Ireland's ``XI`` VAT prefix, sits inside a reserved range and must
+    Northern Ireland's ``XI`` IVA prefix, sits inside a reserved range and must
     never be served where an ISO country is expected.
     """
     return code.strip().upper() in _USER_ASSIGNED_ALPHA2

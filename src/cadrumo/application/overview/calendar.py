@@ -54,6 +54,7 @@ from ...domain.deadlines.models import (
     ObligationStatus,
     Schedule,
     TaxpayerProfile,
+    UndeterminedObligation,
 )
 from ...domain.deadlines.plazo import resolve_filing_window
 from ...domain.deadlines.recargo import build_recovery_for_overdue
@@ -78,12 +79,15 @@ from .calendar_models import (
     user_state_for,
 )
 from .calendar_warnings import (
+    IVA_BLOCK_QUESTION_LOCALE_KEYS,
+    PROFILE_FIELD_WARNING_LOCALE_KEYS,
     build_completeness_and_warnings,
     calendar_aeat_evidence_conflict_warnings,
     calendar_applicability_disagreement_warnings,
     calendar_censo_enrolment_state,
     calendar_censo_reconciliation_warnings,
     calendar_deadline_windows_unavailable_warnings,
+    calendar_iva_block_unanswered_warnings,
     calendar_modelo_202_election_warnings,
     calendar_regime_incompatibility_warnings,
     calendar_unverified_justificante_warnings,
@@ -99,6 +103,10 @@ if TYPE_CHECKING:
 
 
 _log = get_logger(__name__)
+
+#: Every unanswered profile fact the calendar names is answered in the profile editor.
+_PROFILE_EDIT_ACTION_ID = "operator.profile.edit"
+_UNDETERMINED_IVA_WINDOW_REASON_KEY = "workspace.declarations.calendar.suppressed.verdict.incomplete"
 
 
 def _window_intersects_range(
@@ -842,6 +850,49 @@ def _entries_and_suppressed_from_schedules(
     )
 
 
+def _question_locale_key(path: str) -> str | None:
+    """Return the sentence key naming the unanswered question at ``path``, if any names it."""
+    return IVA_BLOCK_QUESTION_LOCALE_KEYS.get(path) or PROFILE_FIELD_WARNING_LOCALE_KEYS.get(path)
+
+
+def _undetermined_calendar_entry(item: UndeterminedObligation) -> SuppressedCalendarEntry:
+    """Hold a window an unanswered Modelo IVA fact leaves undecided off the schedule, with the door to the question."""
+    return SuppressedCalendarEntry(
+        modelo=item.modelo,
+        period=item.period,
+        opens_on=item.opens_on,
+        closes_on=item.closes_on,
+        adjusted_closes_on=item.closes_on,
+        verdict=ApplicabilityVerdict.INCOMPLETE,
+        reason=" ".join(
+            tr(_question_locale_key(path)) for path in item.deciding_paths if _question_locale_key(path) is not None
+        )
+        or tr(_UNDETERMINED_IVA_WINDOW_REASON_KEY),
+        actions=(declare_next_action(_PROFILE_EDIT_ACTION_ID),),
+    )
+
+
+def _undetermined_in_range(
+    schedules: list[Schedule],
+    calendar_range: OverviewCalendarRange,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[UndeterminedObligation, ...]:
+    """Return the undecided windows of ``schedules`` that reach into ``calendar_range``."""
+    return tuple(
+        item
+        for schedule in schedules
+        for item in schedule.undetermined
+        if _window_intersects_range(
+            item.opens_on,
+            item.closes_on,
+            modelo=str(item.modelo),
+            calendar_range=calendar_range,
+            operation=operation,
+        )
+    )
+
+
 def _undeclared_taxpayer_model_reason(profile: TaxpayerProfile) -> str:
     """Name the profile fact whose absence leaves the taxpayer model undeclared."""
     if profile.entity_type is None:
@@ -989,6 +1040,16 @@ def build_overview_calendar(
         operation=operation,
     )
     completeness, warnings = build_completeness_and_warnings(raw_values, entries_tuple, operation=operation)
+    undetermined = _undetermined_in_range(schedules, calendar_range, operation=operation)
+    if show_suppressed:
+        suppressed.extend(_undetermined_calendar_entry(item) for item in undetermined)
+        suppressed.sort(key=lambda s: (s.modelo, s.period.filing_year, s.period.registry_token))
+    iva_block_warnings = calendar_iva_block_unanswered_warnings(
+        profile.iva_block_unanswered_paths,
+        undetermined,
+        already_warned=(warning.code for warning in warnings),
+        operation=operation,
+    )
     censo_warnings = calendar_censo_reconciliation_warnings(
         entries=entries_tuple,
         live_censo_verified_profile_keys=live_censo_verified_profile_keys,
@@ -1010,6 +1071,7 @@ def build_overview_calendar(
         coverage_surface_modelos | {entry.modelo for entry in entries_tuple},
         today=today,
         operation=operation,
+        undetermined_modelos={str(item.modelo) for schedule in schedules for item in schedule.undetermined},
     )
     return OverviewCalendar(
         range=calendar_range,
@@ -1018,6 +1080,7 @@ def build_overview_calendar(
         generated_at=now(),
         warnings=(
             warnings
+            + iva_block_warnings
             + censo_warnings
             + justificante_warnings
             + evidence_conflict_warnings

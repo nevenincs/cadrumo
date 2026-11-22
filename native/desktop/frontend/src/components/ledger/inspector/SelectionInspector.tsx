@@ -23,7 +23,11 @@ import {
   type OpenRuleFromSelection,
 } from "../../../shell/ledgerCommands";
 import { parseFractionPercent, percentOf } from "../../../shell/ledgerGrammar";
-import { planApply, SINGLE_WRITE_SECONDS } from "../../../shell/ledgerPlan";
+import {
+  planApply,
+  SINGLE_WRITE_SECONDS,
+  type PropertySet,
+} from "../../../shell/ledgerPlan";
 import {
   isDecidedClassification,
   takesChanges,
@@ -77,6 +81,7 @@ import { NoticeLine } from "../../shell/BackgroundTasks";
 import { useLedgerRead } from "./useInspectorReads";
 import {
   useFieldSuggestions,
+  useServedChoices,
   useVocabulary,
 } from "../suggestions/SuggestionsProvider";
 import { useWritePause, WriteHold } from "../WritePause";
@@ -144,6 +149,8 @@ export function SelectionInspector({
   onExport,
   copy,
   say,
+  copied = null,
+  onPasteProperties,
 }: {
   port: LedgerPort;
   ids: readonly string[];
@@ -167,6 +174,10 @@ export function SelectionInspector({
   onExport?: () => void;
   copy: (text: string) => Promise<void>;
   say: (text: string) => void;
+  /** The properties last copied from a movement, which can be pasted onto
+   * these. */
+  copied?: PropertySet | null;
+  onPasteProperties?: () => void;
 }) {
   const t = useStrings();
   const vocabulary = useVocabulary();
@@ -204,6 +215,8 @@ export function SelectionInspector({
   const [group, setGroup] = useState("");
   const groups = useFieldSuggestions("group");
   const [notes, setNotes] = useState("");
+  const [counterparty, setCounterparty] = useState("");
+  const deductionKinds = useServedChoices("deduction_fact_kind");
   const [held, setHeld] = useState<Held | null>(null);
   const tasks = useBackgroundTasks();
   // What the last ask for a job over this selection came to.
@@ -541,6 +554,46 @@ export function SelectionInspector({
           <h3 id={`${shareId}-set`} className="text-sm font-semibold">
             {t("desktop.ledger.inspector.selection.set_title")}
           </h3>
+          {onPasteProperties && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="ledger-paste-properties-open"
+                aria-disabled={copied === null || blocked || undefined}
+                aria-description={
+                  copied === null
+                    ? t("desktop.ledger.properties.copy_first")
+                    : blocked
+                      ? t("desktop.ledger.properties.none_shown")
+                      : undefined
+                }
+                onClick={() => {
+                  if (copied === null) {
+                    say(t("desktop.ledger.properties.copy_first"));
+                    return;
+                  }
+                  if (blocked) {
+                    say(t("desktop.ledger.properties.none_shown"));
+                    return;
+                  }
+                  onPasteProperties();
+                }}
+              >
+                <Icon name="paste" />
+                {t("desktop.ledger.properties.paste_open", {
+                  count: ids.length,
+                })}
+              </Button>
+              {copied !== null && (
+                <span className="text-sm text-muted-foreground">
+                  {t("desktop.ledger.properties.held", {
+                    count: copied.fields.length,
+                  })}
+                </span>
+              )}
+            </div>
+          )}
           {held && (
             <Alert tone="warning" role="alert" icon={<Icon name="clock" />}>
               <span className="grid gap-1.5 text-foreground">
@@ -634,10 +687,16 @@ export function SelectionInspector({
                 fieldName(t, "irpf_category"),
                 irpfCategoryOptions(t, vocabulary),
               )}
+              {choice(
+                "deduction_fact_kind",
+                fieldName(t, "deduction_fact_kind"),
+                [...(deductionKinds ?? [])],
+              )}
             </>
           )}
           {(
             [
+              ["counterparty", counterparty, setCounterparty, textLimit],
               ["group_label", group, setGroup, groupLimit],
               ["notes", notes, setNotes, textLimit],
             ] as const

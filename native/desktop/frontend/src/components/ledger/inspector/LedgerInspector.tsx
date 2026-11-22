@@ -7,10 +7,15 @@ import { isTransactionPrefix } from "../../../shell/ledgerGrammar";
 import type { OpenRuleFromSelection } from "../../../shell/ledgerCommands";
 import { useOwnAccounts } from "../../../shell/ledgerMovementReads";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
+import type { PropertySet } from "../../../shell/ledgerPlan";
 import { useStrings } from "../../../shell/strings";
 import { ActionDialog, type ActionRequest } from "./ActionDialog";
 import type { SectionInspectorContext } from "./inspectorContext";
 import { MovementInspector, type InspectorFocus } from "./MovementInspector";
+import {
+  CopyPropertiesDialog,
+  PastePropertiesDialog,
+} from "./PropertiesDialogs";
 import { RightPanel, type RightPanelMode } from "./RightPanel";
 import { SelectionInspector } from "./SelectionInspector";
 import { SplitDialog } from "./SplitDialog";
@@ -49,6 +54,8 @@ export function LedgerInspector({
   onMakeRule,
   onWritten,
   copy,
+  copied,
+  onCopied,
 }: {
   port: LedgerPort;
   /** Whose ledger it is. */
@@ -79,6 +86,9 @@ export function LedgerInspector({
   /** Reads the window again after a write the inspector made at once. */
   onWritten: () => void;
   copy: (text: string) => Promise<void>;
+  /** The properties last copied from a movement, kept by the page. */
+  copied: PropertySet | null;
+  onCopied: (set: PropertySet) => void;
 }) {
   const t = useStrings();
   const byId = useMemo(
@@ -101,6 +111,9 @@ export function LedgerInspector({
   const [action, setAction] = useState<ActionRequest | null>(null);
   const [splitting, setSplitting] =
     useState<LedgerTransactionReviewProjection | null>(null);
+  const [copying, setCopying] =
+    useState<LedgerTransactionReviewProjection | null>(null);
+  const [pasting, setPasting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   useEffect(() => {
     if (!toast) return;
@@ -160,6 +173,7 @@ export function LedgerInspector({
         onOpenInvoice={onOpenInvoice}
         onAction={setAction}
         onSplit={setSplitting}
+        onCopyProperties={setCopying}
         onSelectCohort={(cohort) => onSelection(new Set(cohort))}
         onWritten={onWritten}
         say={setToast}
@@ -188,6 +202,8 @@ export function LedgerInspector({
         onExport={onExport}
         copy={copy}
         say={setToast}
+        copied={copied}
+        onPasteProperties={() => setPasting(true)}
       />
     );
   else
@@ -242,6 +258,34 @@ export function LedgerInspector({
           locale={locale}
           onStage={onStage}
           onClose={() => setSplitting(null)}
+          say={setToast}
+        />
+      )}
+      {copying && (
+        <CopyPropertiesDialog
+          row={copying}
+          locale={locale}
+          onCopy={(set) => {
+            onCopied(set);
+            setCopying(null);
+            setToast(
+              t("desktop.ledger.properties.copied", {
+                count: set.fields.length,
+              }),
+            );
+          }}
+          onClose={() => setCopying(null)}
+        />
+      )}
+      {pasting && copied && ids.length > 1 && (
+        <PastePropertiesDialog
+          port={port}
+          set={copied}
+          ids={ids}
+          rows={byId}
+          locale={locale}
+          onStage={onStage}
+          onClose={() => setPasting(false)}
           say={setToast}
         />
       )}

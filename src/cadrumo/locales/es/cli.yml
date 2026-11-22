@@ -4638,10 +4638,15 @@ cli:
       bienes_extranjero_unset: En tu perfil aún no consta si tus bienes y derechos
         situados en el extranjero superan el umbral de declaración.
       censo_enrolment_unverified: No se ha verificado el alta en el censo
+      criterio_caja_unset: En tu perfil aún no consta si estás acogido al régimen
+        especial del criterio de caja del IVA.
       deadline_windows_unavailable: El registro no tiene plazos para una parte de
         este intervalo, así que no se sabe nada de las obligaciones que caen en ella.
         Revisa el estado del resumen; una lista vacía aquí no significa que no venza
         nada.
+      deposito_hidrocarburos_unset: En tu perfil aún no consta si tienes derecho a
+        deducir el pago a cuenta del IVA por la salida de hidrocarburos de un depósito
+        fiscal.
       estimacion_objetiva_unset: En tu perfil aún no consta qué régimen de estimación
         del IRPF se aplica a tu actividad.
       explain_deadline_windows_unavailable: El registro no tiene plazos para el modelo
@@ -4664,6 +4669,8 @@ cli:
         tu actividad.
       justificante_unverified: No se ha verificado el justificante de la AEAT de una
         declaración presentada
+      m303_composicion_unset: En tu perfil aún no consta si en el Modelo 303 tributas
+        solo en el régimen general, solo en el simplificado o en ambos.
       m303_simplificado_forfait_unavailable: El Modelo 303 aplica, pero aún no está
         disponible el cálculo por módulos de la cuota del régimen simplificado del
         IVA; revisa las casillas del régimen simplificado antes de presentar.
@@ -4702,6 +4709,8 @@ cli:
       terceros_threshold_unset: En tu perfil aún no consta si las operaciones con
         algún cliente o proveedor superan el umbral anual de declaración del Modelo
         347.
+      territorio_iva_unset: En tu perfil aún no consta en qué territorio tributas
+        por el IVA (común o foral).
       tipo_entidad_unset: En tu perfil aún no consta qué tipo de contribuyente eres.
     year_help: Año de declaración para --period (p. ej. 2024).
   review:

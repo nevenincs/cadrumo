@@ -379,7 +379,7 @@ def _m347_files_on_an_annual_basis(taxpayer: TaxpayerProfile) -> bool:
     declaración anual, sobre una base de cómputo anual."
     """
     propiedad_horizontal = resolve_third_party_declaration_role_catalogue().require("propiedad_horizontal_entity")
-    criterio_de_caja = taxpayer.iva is not None and taxpayer.iva.cash_accounting_regime_enrolled
+    criterio_de_caja = taxpayer.iva is not None and taxpayer.iva.cash_accounting_regime_enrolled is True
     return criterio_de_caja or propiedad_horizontal in taxpayer.declaration_roles
 
 

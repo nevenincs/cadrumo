@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 import time
 from threading import Event
 
@@ -251,3 +252,81 @@ def test_a_request_whose_bound_ends_before_invalidated_work_is_busy_and_starts_n
         assert work.runs == 1
     finally:
         work.release.set()
+
+
+class _Cues:
+    """Count the settle cues, and say when one arrives."""
+
+    def __init__(self) -> None:
+        self.count = 0
+        self.arrived = Event()
+
+    def __call__(self) -> None:
+        self.count += 1
+        self.arrived.set()
+
+
+def _work_ended(name: str) -> None:
+    """Wait until the read's work thread, cue included, has ended."""
+    for thread in threading.enumerate():
+        if thread.name == f"agent-service-{name}":
+            thread.join(5)
+            assert not thread.is_alive()
+
+
+def test_work_a_request_was_told_busy_for_cues_once_when_it_ends() -> None:
+    work = _Work()
+    cues = _Cues()
+    read = BoundedRead(work, name="cue-busy", fresh_seconds=30, settled=cues)
+
+    assert read.answer("lease-1", within=0.05) == BUSY
+    # A second request told busy for the same work does not add a cue.
+    assert read.answer("lease-1", within=0.05) == BUSY
+    assert cues.count == 0
+    work.release.set()
+    assert cues.arrived.wait(5)
+    _work_ended("cue-busy")
+    assert cues.count == 1
+    # The request the cue sends back is served the outcome, and cues nothing more.
+    assert read.answer("lease-1", within=0) == "result-1"
+    assert cues.count == 1
+
+
+def test_work_that_answers_its_own_request_cues_nothing() -> None:
+    work = _Work()
+    work.release.set()
+    cues = _Cues()
+    read = BoundedRead(work, name="cue-none", fresh_seconds=30, settled=cues)
+
+    assert read.answer("lease-1", within=5) == "result-1"
+    _work_ended("cue-none")
+    assert cues.count == 0
+
+
+def test_a_failure_a_request_was_told_busy_for_cues_once() -> None:
+    work = _Work()
+    work.fail = True
+    cues = _Cues()
+    read = BoundedRead(work, name="cue-failure", fresh_seconds=30, settled=cues)
+
+    assert read.answer("lease-1", within=0.05) == BUSY
+    work.release.set()
+    assert cues.arrived.wait(5)
+    _work_ended("cue-failure")
+    assert cues.count == 1
+    with pytest.raises(LookupError):
+        read.answer("lease-1", within=0)
+
+
+def test_work_withdrawn_after_a_busy_answer_still_cues_once() -> None:
+    work = _Work()
+    cues = _Cues()
+    read = BoundedRead(work, name="cue-withdrawn", fresh_seconds=30, settled=cues)
+
+    assert read.answer("lease-1", within=0.05) == BUSY
+    # What it read from changed: its result is withheld, but the one told busy is still cued.
+    read.forget()
+    work.release.set()
+    assert cues.arrived.wait(5)
+    _work_ended("cue-withdrawn")
+    assert cues.count == 1

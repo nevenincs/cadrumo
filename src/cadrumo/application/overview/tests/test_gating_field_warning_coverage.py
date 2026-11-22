@@ -30,7 +30,9 @@ from ....core.i18n.render import tr
 from ....domain.calculations.registry.applicability import iter_modelo_applicability_rules
 from ....domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.deadlines.profiles import MODELO_IVA_BLOCK_REQUIRED_PATHS
 from ..calendar_warnings import (
+    IVA_BLOCK_QUESTION_LOCALE_KEYS,
     PROFILE_FIELD_WARNING_LOCALE_KEYS,
     derive_gating_fields,
 )
@@ -97,8 +99,15 @@ def test_every_unset_warning_sentence_resolves_in_every_supported_locale(
     """A named gap the operator cannot read in their own language is still an unnamed gap."""
     missing: list[str] = []
     with override_settings(cadrumo_output_language=locale):
-        for key in sorted(set(PROFILE_FIELD_WARNING_LOCALE_KEYS.values())):
+        for key in sorted(
+            set(PROFILE_FIELD_WARNING_LOCALE_KEYS.values()) | set(IVA_BLOCK_QUESTION_LOCALE_KEYS.values())
+        ):
             rendered = tr(key)
             if not rendered.strip() or rendered == key:
                 missing.append(key)
     assert not missing, f"unset warnings without a {locale} translation: {missing}"
+
+
+def test_every_question_a_claimed_iva_block_owes_has_a_sentence() -> None:
+    """A required IVA block question the calendar cannot name would leave its undecided rows unexplained."""
+    assert set(MODELO_IVA_BLOCK_REQUIRED_PATHS) <= set(IVA_BLOCK_QUESTION_LOCALE_KEYS)

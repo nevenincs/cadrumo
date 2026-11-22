@@ -5,6 +5,7 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import { facts, labelled, listed } from "@/shell/compose";
 import {
+  BATCH_PLAN_CHANGED,
   outcomeUnits,
   reportUnitKeys,
   type OutcomeUnit,
@@ -66,6 +67,12 @@ function stepTitle(
         part: step.part,
         parts: step.parts,
       });
+    case "batch":
+      return t("desktop.ledger.apply.step.batch", {
+        count: step.rows.length,
+        part: step.part,
+        parts: step.parts,
+      });
     case "classify":
     case "update":
       return labelled(
@@ -101,6 +108,17 @@ function refusalWords(
 ): string {
   if (outcome.reason === "precondition_failed")
     return t("desktop.ledger.apply.refusal.changed_elsewhere");
+  // A batch row the ledger found changed or gone since the page read it says
+  // no sentence of its own: its cause is one of these two.
+  if (outcome.reason === "changed_since_seen")
+    return t("desktop.ledger.apply.refusal.changed_since_seen");
+  if (outcome.reason === "not_found")
+    return t("desktop.ledger.apply.refusal.not_found");
+  if (outcome.reason === BATCH_PLAN_CHANGED)
+    return facts(t, [
+      t("desktop.ledger.apply.refusal.plan_changed"),
+      outcome.messages[0] ?? "",
+    ]);
   // A refused link removal serves its cause and next step as tokens.
   const unlink = unlinkRefusalOf(outcome.detail);
   if (unlink) return unlinkRefusalText(t, unlink);
@@ -109,7 +127,11 @@ function refusalWords(
 
 /** A refusal that a read of the ledger and a new review can resolve. */
 export const changedElsewhere = (outcome: StepOutcome) =>
-  outcome.kind === "refused" && outcome.reason === "precondition_failed";
+  outcome.kind === "refused" &&
+  (outcome.reason === "precondition_failed" ||
+    outcome.reason === "changed_since_seen" ||
+    outcome.reason === "not_found" ||
+    outcome.reason === BATCH_PLAN_CHANGED);
 
 function outcomeText(
   t: Translate,
@@ -187,17 +209,25 @@ export function outcomeItems(
     if (kind === "row") {
       const steps = unit.reports.map((report) => report.step);
       const written = steps.filter(
-        (step) => step.kind === "classify" || step.kind === "update",
+        (step) =>
+          step.kind === "classify" ||
+          step.kind === "update" ||
+          step.kind === "batch",
       );
-      const fields = written.flatMap((step) => step.fields);
+      const fields = written.flatMap((step) =>
+        step.kind === "batch"
+          ? (step.rows.find((row) => row.transactionId === id)?.fields ?? [])
+          : step.fields,
+      );
       const first = steps.find(
         (step) =>
           step.kind === "bulk" ||
+          step.kind === "batch" ||
           step.kind === "classify" ||
           step.kind === "update",
       );
       const own =
-        first?.kind === "bulk"
+        first?.kind === "bulk" || first?.kind === "batch"
           ? first.rows.find((row) => row.transactionId === id)?.fields
           : first?.fields;
       return {
@@ -254,7 +284,7 @@ export function outcomeItems(
   };
   for (const report of reports) {
     const step = report.step;
-    if (step.kind === "bulk") {
+    if (step.kind === "bulk" || step.kind === "batch") {
       const whole =
         report.rows.length > 0 &&
         report.rows.every((row) => row.outcome === report.outcome) &&

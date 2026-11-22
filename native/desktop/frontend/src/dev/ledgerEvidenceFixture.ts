@@ -884,7 +884,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
             disagree: false,
           }
         : null,
-      counterparty_vat_prefix_country: null,
+      counterparty_nif_iva_prefix_country: null,
       off_host_read_offered: offHostOpen,
     };
   }

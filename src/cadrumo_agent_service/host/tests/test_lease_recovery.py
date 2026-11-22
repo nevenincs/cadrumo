@@ -3,18 +3,20 @@
 from __future__ import annotations
 
 import json
+import logging
 import socket
 from datetime import timedelta
 from pathlib import Path
 from threading import Event
 from types import SimpleNamespace
 from typing import cast
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from pydantic import JsonValue
 
 from cadrumo.core.time.clock import now
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_refusals import (
     AccessDenialCode,
     ProfileAccessStatus,
@@ -220,6 +222,9 @@ def test_the_main_loop_waits_out_a_suspension_and_reads_its_lease_again_at_the_n
     assert runtime.claims == 0
 
 
+_ADMIN_LOGGER = "cadrumo_agent_service.admin"
+
+
 def _ask(server: AdminServer, bearer: bytearray) -> dict[str, JsonValue]:
     request = {"version": 1, "request_id": str(uuid4()), "action": "status"}
     with socket.create_connection(("127.0.0.1", server.port), timeout=5) as stream:
@@ -251,11 +256,29 @@ class _Target:
     ],
 )
 def test_a_request_refused_while_the_lease_waits_is_busy_and_other_failures_stay_failures(
-    failure: Exception, code: str
+    failure: Exception, code: str, caplog: pytest.LogCaptureFixture
 ) -> None:
     bearer = bytearray(b"a" * 64)
     server = AdminServer(_Target(failure), bearer=bearer)
     try:
-        assert _ask(server, bearer) == {"kind": "refused", "code": code}
+        with caplog.at_level(logging.ERROR, logger=_ADMIN_LOGGER):
+            answer = _ask(server, bearer)
     finally:
         server.close()
+    failures = [record for record in delivered_records(caplog) if record.name == _ADMIN_LOGGER]
+    if code == "busy":
+        # Nothing was done and the runtime brings the lease back by itself: no failure is recorded.
+        assert answer == {"kind": "refused", "code": "busy"}
+        assert failures == []
+        return
+    log_ref = answer.get("log_ref")
+    assert answer == {"kind": "refused", "code": "service_failed", "log_ref": log_ref}
+    assert isinstance(log_ref, str)
+    assert str(UUID(log_ref)) == log_ref
+    # The refusal's reference names the one log line that records which request failed and why.
+    assert [record.getMessage() for record in failures] == [
+        f"service admin request failed action=status error={type(failure).__name__} log_ref={log_ref}"
+    ]
+    # The cause travels as the scrubbed traceback the logger renders, ending at the failure that was raised.
+    assert failures[0].exc_text is not None
+    assert type(failure).__name__ in failures[0].exc_text.splitlines()[-1]

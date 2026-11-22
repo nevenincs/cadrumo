@@ -27,8 +27,8 @@ from ...application.ledger.evidence_followup_contracts import (
     CloudDerivedArtefactProjection,
     ConsentedDispatchProjection,
     ConsentWithdrawalSurveyProjection,
+    EvidenceReviewNifIvaPrefixCountryProjection,
     EvidenceReviewQueueRowProjection,
-    EvidenceReviewVatPrefixCountryProjection,
     LedgerEvidenceAttachmentQueueProjection,
     LedgerEvidenceAttachmentQueueRequest,
     LedgerEvidenceAttachmentViewProjection,
@@ -299,7 +299,7 @@ def prepare_evidence_followup_conformance_case(
             # The fixture's seller identifies as ESB00015016, a number the ES
             # prefix marks as Spanish-issued; the buyer's bare 12345678Z carries
             # no prefix, so that side suggests nothing.
-            counterparty_vat_prefix_country=EvidenceReviewVatPrefixCountryProjection(supplier="ES"),
+            counterparty_nif_iva_prefix_country=EvidenceReviewNifIvaPrefixCountryProjection(supplier="ES"),
             # The deployment has not opted in to off-host reads, so no profile on it may be asked.
             off_host_read_offered=False,
         )

@@ -16,17 +16,32 @@ import logging
 import socket
 import tempfile
 import threading
-from collections.abc import Iterator, Sequence
+from collections import Counter
+from collections.abc import Callable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, override
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
-from pydantic import BaseModel, JsonValue, TypeAdapter
+from pydantic import BaseModel, JsonValue, SecretStr, TypeAdapter
 
+from cadrumo.application.ledger.classification_job_consent import off_host_consent_refused
+from cadrumo.application.ledger.classification_job_contracts import (
+    LedgerClassifyJobApplyItemResult,
+    LedgerClassifyJobApplyRefusal,
+    LedgerClassifyJobApplyResult,
+    LedgerClassifyJobChangeResult,
+    LedgerClassifyJobItemProjection,
+    LedgerClassifyJobLaneProjection,
+    LedgerClassifyJobProjection,
+    LedgerClassifyJobProposalProjection,
+    LedgerClassifyJobReadResult,
+    LedgerClassifyJobRunResult,
+    LedgerClassifyJobStateCounts,
+)
 from cadrumo.core.errors.error_codes import (
     ErrorCategory,
     build_error_envelope,
@@ -36,14 +51,29 @@ from cadrumo.core.errors.error_codes import (
 from cadrumo.core.json_contract import emit_json_success
 from cadrumo.core.logging import LOG_FILE_FORMAT
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
+from cadrumo.domain.transactions.classification_job import (
+    ClassificationConsentScope,
+    ClassificationItemFailureCause,
+    ClassificationItemState,
+    ClassificationJobScopeKind,
+    ClassificationJobStatus,
+)
+from cadrumo.domain.transactions.enums import BusinessClassification
+from cadrumo.entrypoints.cli.ledger_business_payloads import ConsentedDispatchPayload, EvidenceConsentListResult
 from cadrumo.entrypoints.cli.ledger_llm_payloads import LedgerClassifyLlmSuggestResult
 from cadrumo.entrypoints.cli.ledger_results import LedgerListResult, LedgerListRowPayload
 from cadrumo_agent_service.admin import AdminAction, AdminServer
 from cadrumo_agent_service.providers.application.contracts import LocalEngineStatus, LocalModelListStatus
 from cadrumo_agent_service.providers.application.local_model_list import LocalModelListService
 from cadrumo_agent_service.providers.application.served_catalog import catalog_nonconformance
-from cadrumo_agent_service.providers.application.tests.memory_store import MemoryLocalModelListStore
+from cadrumo_agent_service.providers.application.service import BaseUrlChange, ProviderSettingsService
+from cadrumo_agent_service.providers.application.tests.memory_store import (
+    MemoryLocalModelListStore,
+    MemoryProviderSettingsStore,
+)
 from cadrumo_agent_service.providers.application.tests.synthetic_catalog import (
+    GATEWAY_LANE,
+    HOSTED_TEXT_MODELS,
     KEYLESS_TEXT_MODEL,
     ProvidedProviderCatalogSource,
     StaticLiveModels,
@@ -59,7 +89,11 @@ from dev.desktop_agent_live.disposable_root import enclosing_git_project
 from dev.paths import REPO_ROOT, TEMP_ROOT
 from dev.runtime_lifecycle.agent_service_session import AgentServiceSession
 from dev.runtime_lifecycle.caller_owned_root import AcceptanceError, parse_envelope
-from dev.runtime_lifecycle.service_admin_channel import owned_service_settings, service_admin
+from dev.runtime_lifecycle.service_admin_channel import (
+    owned_service_credential,
+    owned_service_settings,
+    service_admin,
+)
 
 from .. import ledger_classification_speed as harness
 from ..ledger_classification_speed import (
@@ -1477,3 +1511,749 @@ def test_log_copy_skips_links_and_files_that_are_not_logs(tmp_path: Path) -> Non
     assert sorted(copied) == ["a/logs/agent.jsonl", "b.log"]
     assert not (tmp_path / "out" / "linked.log").exists()
     assert not (tmp_path / "out" / "a" / "state.db").exists()
+
+
+# --- a hosted lane: the credential file, the lane, the settings and the job queue ------------------------
+
+
+_CREDENTIAL_VALUE = "synthetic-credential-value-0042"
+
+
+def _credential_file(tmp_path: Path, text: str, *, name: str = "credentials.env") -> Path:
+    path = tmp_path / name
+    path.write_bytes(text.encode("utf-8"))
+    return path
+
+
+def test_the_credential_reader_takes_the_last_assignment_and_strips_comments_quotes_and_export(
+    tmp_path: Path,
+) -> None:
+    path = _credential_file(
+        tmp_path,
+        "\N{ZERO WIDTH NO-BREAK SPACE}# synthetic credential file\r\n"
+        "SYN_KEY=first-value-replaced\r\n"
+        "OTHER_SYN_KEY=unrelated-value\n"
+        "\n"
+        "  export SYN_KEY = 'synthetic-credential-value-0042'  # trailing comment\n"
+        "SYN_KEY_LONGER=not-this-one\n"
+        "SYN_PLAIN=plain-value # comment\n"
+        'SYN_URL="https://gateway.example.invalid/v1"\n',
+    )
+    value = harness.read_credential(path, "SYN_KEY")
+    assert value == bytearray(_CREDENTIAL_VALUE.encode())
+    assert harness.read_credential(path, "SYN_PLAIN") == bytearray(b"plain-value")
+    assert harness.read_credential(path, "SYN_URL") == bytearray(b"https://gateway.example.invalid/v1")
+    harness.wipe(value)
+    assert not any(value)
+
+
+def test_a_credential_refusal_names_the_file_and_variable_never_the_value(tmp_path: Path) -> None:
+    path = _credential_file(tmp_path, f"SYN_KEY={_CREDENTIAL_VALUE}\nSYN_EMPTY=\nSYN_QUOTED_EMPTY=''\n")
+    refusals = [
+        (path, "SYN_ABSENT", "assigns no SYN_ABSENT"),
+        (path, "SYN_EMPTY", "SYN_EMPTY is empty"),
+        (path, "SYN_QUOTED_EMPTY", "SYN_QUOTED_EMPTY is empty"),
+        (path, "not a name", "is not a variable name"),
+        (tmp_path / "absent.env", "SYN_KEY", "cannot be read"),
+    ]
+    for source, variable, said in refusals:
+        with pytest.raises(harness.CredentialFileError, match=said) as refused:
+            harness.read_credential(source, variable)
+        assert _CREDENTIAL_VALUE not in str(refused.value)
+        assert _CREDENTIAL_VALUE not in repr(refused.value)
+        assert refused.value.__cause__ is None
+    assert isinstance(harness.CredentialFileError("x"), PrerequisiteAbsentError)
+
+
+def test_a_base_url_comes_from_the_option_or_the_file_and_nothing_means_the_lanes_own(tmp_path: Path) -> None:
+    path = _credential_file(tmp_path, f"SYN_KEY={_CREDENTIAL_VALUE}\nSYN_URL=https://gateway.example.invalid/v1\n")
+    base = ["--out", "x", "--lane", "deepseek_cli", "--credential-file", str(path), "--credential-variable", "SYN_KEY"]
+    assert harness.credential_base_url(parse_arguments(base)) is None
+    assert (
+        harness.credential_base_url(parse_arguments([*base, "--base-url", "https://other.example.invalid"]))
+        == "https://other.example.invalid"
+    )
+    assert (
+        harness.credential_base_url(parse_arguments([*base, "--base-url-variable", "SYN_URL"]))
+        == "https://gateway.example.invalid/v1"
+    )
+    assert harness.base_url_host("https://gateway.example.invalid/v1?token=synthetic") == "gateway.example.invalid"
+    assert harness.hosts_only({"entry": {"base_url": "https://a.example.invalid/x", "default_base_url": None}}) == {
+        "entry": {"base_url": "a.example.invalid", "default_base_url": None}
+    }
+
+
+def test_hosted_lane_options_default_to_job_mode_and_refuse_what_the_lane_cannot_measure(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    hosted = parse_arguments(["--out", "x", "--lane", "deepseek_cli", "--model", "deepseek-flash"])
+    assert (hosted.hosted, hosted.mode, hosted.lane, hosted.model, hosted.hostile) == (
+        True,
+        "job",
+        "deepseek_cli",
+        "deepseek-flash",
+        False,
+    )
+    assert hosted.apply_count == 5
+    local = parse_arguments(["--out", "x"])
+    assert (local.hosted, local.mode, local.lane) == (False, "classification", None)
+    assert parse_arguments(["--out", "x", "--mode", "job", "--hostile"]).mode == "job"
+    assert parse_arguments(["--out", "x", "--lane", "llamacpp_api"]).hosted is False
+    refused = (
+        ["--lane", "deepseek_cli", "--mode", "classification"],
+        ["--lane", "deepseek_cli", "--credential-file", "c.env"],
+        ["--lane", "deepseek_cli", "--credential-variable", "SYN_KEY"],
+        ["--lane", "deepseek_cli", "--base-url-variable", "SYN_URL"],
+        ["--lane", "deepseek_cli", "--base-url", "https://a.example.invalid", "--base-url-variable", "SYN_URL"],
+        ["--base-url", "https://a.example.invalid"],
+        ["--lane", "deepseek_cli", "--apply-count", "-1"],
+    )
+    for argv in refused:
+        with pytest.raises(SystemExit) as exited:
+            parse_arguments(["--out", "x", *argv])
+        assert exited.value.code == 2, argv
+    capsys.readouterr()
+
+
+def test_a_hosted_lane_needs_no_llama_server_or_store_and_job_mode_needs_the_package_interpreter(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    package = _package(tmp_path, llama=False)
+    absent_store = tmp_path / "no-store"
+    assert prerequisite_absence(package, absent_store, hosted=True) is None
+    assert prerequisite_absence(package, absent_store, hosted=True, job=True) == f"no python.exe in {package}"
+    (package / "python.exe").write_bytes(b"")
+    assert prerequisite_absence(package, absent_store, hosted=True, job=True) is None
+
+    credentials = _credential_file(tmp_path, f"OTHER_SYN_KEY={_CREDENTIAL_VALUE}\n")
+    code, said = _main(
+        capsys,
+        "--package",
+        str(package),
+        "--lane",
+        "deepseek_cli",
+        "--credential-file",
+        str(credentials),
+        "--credential-variable",
+        "SYN_KEY",
+    )
+    assert code == PREREQUISITE_ABSENT
+    assert "assigns no SYN_KEY" in said["absent"]
+    assert _CREDENTIAL_VALUE not in json.dumps(said)
+
+
+def test_a_hosted_lane_is_read_from_the_served_catalogue_and_without_a_recommendation_needs_a_model() -> None:
+    catalog = _served_catalog(llamacpp_context=8192)
+    assert harness.is_hosted_lane("deepseek_api") and not harness.is_hosted_lane(None)
+    assert lane_model(catalog, None, "deepseek_api") == ("deepseek_api", "hosted-reader", None)
+    assert lane_model(catalog, "deepseek-flash", "deepseek_api") == ("deepseek_api", "deepseek-flash", None)
+    assert lane_model(catalog, None, "llamacpp_api") == ("llamacpp_api", "synthetic-text:4b", 8192)
+    facts = harness.lane_facts(catalog, "deepseek_api")
+    assert (facts["auth_kind"], facts["background_text"], facts["models"]) == ("api_key", "proven", ["hosted-reader"])
+    assert facts["health"]["authentication"] == "authenticated"
+
+    unrecommended = json.loads(json.dumps(catalog))
+    unrecommended["providers"][0]["catalog"]["recommended"] = {}
+    with pytest.raises(AcceptanceError, match="recommends no text model on deepseek_api; name one with --model"):
+        lane_model(unrecommended, None, "deepseek_api")
+    with pytest.raises(AcceptanceError, match="serves no lane kimi_cli"):
+        lane_model(catalog, "kimi-model", "kimi_cli")
+
+
+# --- the hosted settings, through the real admin wire and the real provider and model list services -----
+
+
+_GATEWAY_KEY = b"synthetic-gateway-credential-0001"
+
+
+class _HostedSettingsService(_WindowSettingsService):
+    """The service's dispatch of the lane read and the credential ``set``, beside the window's model settings."""
+
+    def __init__(self, models: LocalModelListService, providers: ProviderSettingsService) -> None:
+        super().__init__(models)
+        self._providers = providers
+
+    @override
+    def admin(self, action: AdminAction, **fields: Any) -> JsonValue:
+        answer: BaseModel
+        if action == "provider_lanes":
+            answer = self._providers.lanes(reads_pending=lambda _lanes: False)
+        elif action == "set":
+            base_url = fields.get("base_url")
+            answer = self._providers.set_credential(
+                fields["provider"],
+                secret=SecretStr(bytes(fields["secret"]).decode("utf-8")),
+                expected_revision=fields["expected_revision"],
+                base_url=BaseUrlChange.KEEP if base_url is None else base_url,
+            )
+        else:
+            return super().admin(action, **fields)
+        return _JSON_OBJECT.validate_python(answer.model_dump(mode="json"))
+
+
+type HostedSettings = tuple[
+    MemoryProviderSettingsStore, LocalModelListService, Any, Callable[[str], dict[str, JsonValue]]
+]
+"""The provider store, the model list service, the settings exchange and the credential exchange."""
+
+
+@pytest.fixture
+def hosted_settings() -> Iterator[HostedSettings]:
+    """The provider and model list services behind the real admin server, and the harness's two owned channels."""
+    catalog = ProvidedProviderCatalogSource(engine_catalog())
+    store = MemoryProviderSettingsStore()
+    providers = ProviderSettingsService(
+        store=store, catalog_source=catalog, selected_engine=lambda: LocalEngine.LLAMACPP
+    )
+    models = LocalModelListService(
+        store=MemoryLocalModelListStore(),
+        catalog_source=catalog,
+        live_models=StaticLiveModels(),
+        default_engine=LocalEngine.LLAMACPP,
+    )
+    bearer = bytearray(b"synthetic-parent-admin-authority")
+    server = AdminServer(_HostedSettingsService(models, providers), bearer=bearer)
+
+    def exchange(action: AdminAction, /, **fields: Any) -> dict[str, Any]:
+        return owned_service_settings(bearer, server.port, action, **fields)
+
+    def credential(expected_revision: str, /) -> dict[str, JsonValue]:
+        return owned_service_credential(
+            bearer,
+            server.port,
+            provider=GATEWAY_LANE,
+            expected_revision=expected_revision,
+            base_url=None,
+            secret=bytearray(_GATEWAY_KEY),
+        )
+
+    try:
+        yield store, models, exchange, credential
+    finally:
+        server.close()
+        bearer[:] = bytes(len(bearer))
+
+
+def test_hosted_settings_store_the_credential_then_the_reading_and_classification_model_with_no_list_step(
+    hosted_settings: HostedSettings,
+) -> None:
+    store, models, exchange, credential = hosted_settings
+    model = HOSTED_TEXT_MODELS[0]
+
+    replies, entry = harness.apply_hosted_settings(exchange, credential, lane=GATEWAY_LANE, model=model)
+
+    assert list(replies) == ["provider_lanes", "set", "local_models", "reading_model_choose", "task_model_choose"]
+    stored = store.records[GATEWAY_LANE].record.credential
+    assert stored is not None and stored.secret.get_secret_value() == _GATEWAY_KEY.decode()
+    assert (entry.id, entry.credential_saved) == (GATEWAY_LANE, True)
+    assert _GATEWAY_KEY.decode() not in json.dumps(replies)
+    recorded = harness.lane_settings_record(entry)
+    assert recorded["default_base_url_host"] == "gateway.example.invalid"
+    assert _GATEWAY_KEY.decode() not in json.dumps(recorded)
+    listed = models.status()
+    assert isinstance(listed, LocalModelListStatus)
+    assert listed.reading is not None and (listed.reading.lane, listed.reading.model) == (GATEWAY_LANE, model)
+    assert [(task.task_kind, task.lane, task.model) for task in listed.tasks] == [
+        (ModelRunTaskKind.CLASSIFICATION.value, GATEWAY_LANE, model)
+    ]
+
+    # After a renewal of the sign-in the saved credential is kept, not sent again.
+    again, kept = harness.apply_hosted_settings(
+        exchange, credential, lane=GATEWAY_LANE, model=model, replace_credential=False
+    )
+    assert "set" not in again and kept.credential_saved
+
+
+def test_a_hosted_settings_refusal_is_named_and_an_unserved_lane_is_not_applied(
+    hosted_settings: HostedSettings,
+) -> None:
+    store, _models, exchange, credential = hosted_settings
+
+    def at_another_revision(_expected_revision: str, /) -> dict[str, JsonValue]:
+        return credential("f" * 64)
+
+    with pytest.raises(SetupStepRefusedError, match="set refused: revision_conflict"):
+        harness.apply_hosted_settings(exchange, at_another_revision, lane=GATEWAY_LANE, model=HOSTED_TEXT_MODELS[0])
+    assert GATEWAY_LANE not in store.records
+    with pytest.raises(SetupNotAppliedError, match="lists no lane no_such_lane"):
+        harness.apply_hosted_settings(exchange, credential, lane="no_such_lane", model=HOSTED_TEXT_MODELS[0])
+
+
+# --- the classification job queue, with recorded job answers in the product's own contracts --------------
+
+
+_CREATED = datetime(_YEAR, 3, 1, 9, tzinfo=UTC)
+_PROFILE = UUID(int=7)
+_JOB_ID = "a" * 64
+_HOSTED_LANE = LedgerClassifyJobLaneProjection(
+    provider_id="deepseek", transport="cli", model="deepseek-flash", effort=None, reads_off_host=True
+)
+_COUNTED = (
+    ClassificationItemState.PENDING,
+    ClassificationItemState.RUNNING,
+    ClassificationItemState.PROPOSED,
+    ClassificationItemState.FAILED,
+    ClassificationItemState.UNKNOWN,
+    ClassificationItemState.CANCELLED,
+    ClassificationItemState.STALE,
+    ClassificationItemState.APPLIED,
+)
+
+
+@dataclass(frozen=True)
+class _Outcome:
+    """What the recorded run comes to for one movement: a proposal or a typed failure."""
+
+    classification: BusinessClassification | None = None
+    category: str | None = None
+    failure: ClassificationItemFailureCause | None = None
+
+
+def _job_projection(
+    movements: Sequence[str], outcomes: Mapping[str, _Outcome] | None, *, revision: int
+) -> LedgerClassifyJobProjection:
+    items: list[LedgerClassifyJobItemProjection] = []
+    for index, movement in enumerate(movements):
+        outcome = None if outcomes is None else outcomes[movement]
+        proposal = None
+        state = ClassificationItemState.PENDING
+        if outcome is not None and outcome.classification is not None:
+            state = ClassificationItemState.PROPOSED
+            proposal = LedgerClassifyJobProposalProjection(
+                movement_revision_id=f"rev{index}",
+                classification=outcome.classification,
+                confidence="0.8",
+                category=outcome.category,
+                iva_category=None,
+                business_pct=None,
+                multiple_components=None,
+                proposed_at=_CREATED + timedelta(seconds=2 * (index + 1)),
+            )
+        elif outcome is not None:
+            state = ClassificationItemState.FAILED
+        items.append(
+            LedgerClassifyJobItemProjection(
+                movement_id=movement,
+                state=state,
+                attempt=0 if outcome is None else 1,
+                failure_cause=None if outcome is None else outcome.failure,
+                proposal=proposal,
+            )
+        )
+    tally = Counter(item.state for item in items)
+    counts = LedgerClassifyJobStateCounts(**{state.value: tally.get(state, 0) for state in _COUNTED})
+    return LedgerClassifyJobProjection(
+        job_id=_JOB_ID,
+        scope=ClassificationJobScopeKind.SELECTION,
+        period_start=None,
+        period_end=None,
+        lane=_HOSTED_LANE,
+        consent_scope=ClassificationConsentScope.ONCE,
+        status=ClassificationJobStatus.QUEUED if outcomes is None else ClassificationJobStatus.SETTLED,
+        revision=revision,
+        created_at=_CREATED,
+        updated_at=_CREATED + timedelta(seconds=30),
+        counts=counts,
+        items=tuple(items),
+    )
+
+
+def _job_answer(result: BaseModel) -> dict[str, Any]:
+    """What the job script prints for a settled operation: its receipt and the result's JSON."""
+    operation = {"definition_id": "ledger.classify.job", "operation_id": "b" * 64, "effect": "none"}
+    return {"operation": operation, "result": result.model_dump(mode="json")}
+
+
+def _logged_at(message: str, instant: datetime) -> str:
+    """A product log line in the product's own file format, written at ``instant``."""
+    record = logging.LogRecord("cadrumo.application.ledger", logging.INFO, __file__, 1, message, None, None)
+    record.created = instant.timestamp()
+    record.msecs = float(instant.microsecond // 1000)
+    record.diagnostic_context = "-"
+    return logging.Formatter(LOG_FILE_FORMAT).format(record)
+
+
+class _RecordedJobs:
+    """The ledger commands and the job operations, answered as a hosted lane's run recorded them.
+
+    The movements' stored classification changes only when an accepted
+    proposal is applied, so the before and after reads come from that state.
+    """
+
+    def __init__(self, product_root: Path, rows: Sequence[Mapping[str, str]], *, single_path_succeeds: bool) -> None:
+        self.product_log = product_root / "logs" / "cadrumo.log"
+        self.product_log.parent.mkdir(parents=True, exist_ok=True)
+        self.product_log.write_text(_product_log_line("startup before the measured window") + "\n", encoding="utf-8")
+        self.movements = [_transaction_id(index) for index in range(len(rows))]
+        self.descriptions = [row["concepto"] for row in rows]
+        self.single_path_succeeds = single_path_succeeds
+        self.cli_calls: list[tuple[str, ...]] = []
+        self.job_calls: list[tuple[str, dict[str, Any], str]] = []
+        self.stored: dict[str, tuple[str, str | None]] = {
+            movement: ("NOT_YET_PROCESSED", None) for movement in self.movements
+        }
+        self.outcomes: dict[str, _Outcome] = {}
+
+    def cli(self, *arguments: str) -> tuple[float, int, dict[str, Any]]:
+        self.cli_calls.append(arguments)
+        verb = arguments[:3]
+        if verb == ("app", "ledger", "import") or arguments[0] == "config":
+            return 0.5, 0, {"status": "success", "result": {}}
+        if verb == ("app", "ledger", "list"):
+            return 0.25, 0, self.listing()
+        if verb == ("app", "ledger", "classify"):
+            if self.single_path_succeeds:
+                return 2.0, 0, _suggestion(0, "material_oficina")
+            error = off_host_consent_refused(consent_present=False)
+            envelope = build_error_envelope(error)
+            exit_code = get_error_exit_code(ErrorCategory(envelope.category))
+            return 0.5, exit_code, parse_envelope("", render_error_json(error, command="ledger.classify"))
+        if verb == ("app", "ledger", "view"):
+            classification, category = self.stored[arguments[3]]
+            transaction = {"business_classification": classification, "category_id": category, "classified_by": "x"}
+            return 0.1, 0, {"status": "success", "result": {"transaction": transaction}}
+        assert verb == ("app", "ledger", "evidence")
+        return 0.2, 0, self.consents()
+
+    def jobs(self, *arguments: str) -> tuple[float, int, dict[str, Any]]:
+        operation, fields, settle = arguments
+        request = json.loads(fields)
+        self.job_calls.append((operation, request, settle))
+        if operation == "enqueue":
+            queued = _job_projection(self.movements, None, revision=1)
+            change = LedgerClassifyJobChangeResult(profile_id=_PROFILE, outcome="enqueued", job=queued)
+            return 1.0, 0, _job_answer(change)
+        job = _job_projection(self.movements, self.outcomes, revision=4)
+        if operation == "run":
+            self.log_run()
+            return 30.0, 0, _job_answer(LedgerClassifyJobRunResult(profile_id=_PROFILE, outcome="settled", job=job))
+        if operation == "read":
+            return 0.5, 0, _job_answer(LedgerClassifyJobReadResult(profile_id=_PROFILE, job=job))
+        assert operation == "apply"
+        applied = LedgerClassifyJobApplyResult(profile_id=_PROFILE, job=job, items=self.apply(request))
+        return 1.5, 0, _job_answer(applied)
+
+    def apply(self, request: Mapping[str, Any]) -> tuple[LedgerClassifyJobApplyItemResult, ...]:
+        results: list[LedgerClassifyJobApplyItemResult] = []
+        for accepted in request["accepted"]:
+            movement = accepted["movement_id"]
+            outcome = self.outcomes[movement]
+            refusal = None
+            if outcome.classification is BusinessClassification.MIXED and accepted["business_pct"] is None:
+                refusal = LedgerClassifyJobApplyRefusal.BUSINESS_PCT_REQUIRED
+            elif outcome.category == "HACKED":
+                refusal = LedgerClassifyJobApplyRefusal.CATEGORY_UNAVAILABLE
+            if refusal is None and outcome.classification is not None:
+                self.stored[movement] = (outcome.classification.value, outcome.category)
+            results.append(
+                LedgerClassifyJobApplyItemResult(
+                    movement_id=movement, outcome="applied" if refusal is None else "refused", refusal=refusal
+                )
+            )
+        return tuple(results)
+
+    def listing(self) -> dict[str, Any]:
+        stamp = _CREATED.isoformat()
+        rows = [
+            LedgerListRowPayload(
+                full_id=movement,
+                display_id=movement[:12],
+                transaction_id=movement,
+                date=f"{_YEAR}-01-02",
+                booked_date=f"{_YEAR}-01-02",
+                amount="10.00",
+                currency="EUR",
+                direction="expense",
+                description=description,
+                business_classification="unclassified",
+                lifecycle_state="active",
+                review_status="pending",
+                classified_by="none",
+                classification_decided_by="none",
+                figures_derived=False,
+                created_at=stamp,
+                modified_at=stamp,
+            )
+            for movement, description in zip(self.movements, self.descriptions, strict=True)
+        ]
+        listed = LedgerListResult(bucket_id="synthetic-bucket", rows=rows, total=len(rows), shown=len(rows))
+        return _success("ledger.list", listed)
+
+    def log_run(self) -> None:
+        completed = "llm request completed provider=deepseek model=deepseek-flash input_tokens=900 output_tokens=60"
+        lines = [_logged_at(completed, _CREATED + timedelta(seconds=2.5 * (index + 1))) for index in range(4)]
+        lines += [
+            _logged_at("llm request failed provider=deepseek model=deepseek-flash", _CREATED + timedelta(seconds=11)),
+            _logged_at(
+                f"ledger classification batch job={_JOB_ID} revision=2 proposed=3 stale=0 failed=0 causes={{}}",
+                _CREATED + timedelta(seconds=8),
+            ),
+            _logged_at(
+                f"ledger classification batch job={_JOB_ID} revision=3 proposed=1 stale=0 failed=2 "
+                "causes={'invalid_response': 1, 'timed_out': 1}",
+                _CREATED + timedelta(seconds=14),
+            ),
+            _logged_at(
+                f"ledger classification run ended job={_JOB_ID} status=settled", _CREATED + timedelta(seconds=15)
+            ),
+        ]
+        with self.product_log.open("a", encoding="utf-8") as file:
+            file.writelines(line + "\n" for line in lines)
+
+    def consents(self) -> dict[str, Any]:
+        dispatches = [
+            ConsentedDispatchPayload(
+                evidence_content_address=f"sha256:{index:064x}",
+                provider="deepseek",
+                model="deepseek-flash",
+                surface="ledger.classify.job.run",
+                recorded_at=(_CREATED + timedelta(seconds=index)).isoformat(),
+            )
+            for index in range(5)
+        ]
+        listed = EvidenceConsentListResult(
+            bucket_id="synthetic-bucket",
+            transmitted_bytes_are_unrecallable=True,
+            consented_dispatches=dispatches,
+            cloud_derived_artefacts=[],
+        )
+        return _success("ledger.evidence.consent.list", listed)
+
+
+def _hosted_run(
+    tmp_path: Path, *, single_path_succeeds: bool = False
+) -> tuple[_RecordedJobs, dict[str, float], MutableMapping[str, Any]]:
+    rows = harness.movement_rows(3, _YEAR, seed=5, hostile=True)
+    engine = _RecordedJobs(tmp_path / "root", rows, single_path_succeeds=single_path_succeeds)
+    movements = engine.movements
+    engine.outcomes = {
+        movements[0]: _Outcome(BusinessClassification.BUSINESS, "material_oficina"),
+        movements[1]: _Outcome(BusinessClassification.MIXED, "suministros"),
+        movements[2]: _Outcome(failure=ClassificationItemFailureCause.INVALID_RESPONSE),
+        movements[3]: _Outcome(BusinessClassification.BUSINESS, "HACKED"),
+        movements[4]: _Outcome(BusinessClassification.PERSONAL, None),
+        movements[5]: _Outcome(failure=ClassificationItemFailureCause.TIMED_OUT),
+    }
+    timings: dict[str, float] = {}
+    fields = harness.measure_jobs(
+        engine.cli,
+        engine.jobs,
+        tmp_path / "root",
+        tmp_path,
+        count=3,
+        year=_YEAR,
+        seed=5,
+        hostile=True,
+        consent={"scope": "once", "provider_id": "deepseek", "connection": "cli", "model": "deepseek-flash"},
+        apply_count=2,
+        budget_seconds=900.0,
+        timings=timings,
+    )
+    return engine, timings, fields
+
+
+def test_hostile_movements_are_marked_numbered_on_and_told_apart_in_the_listing(tmp_path: Path) -> None:
+    rows = harness.movement_rows(3, _YEAR, seed=5, hostile=True)
+    assert rows[:3] == synthetic_movements(3, _YEAR, seed=5)
+    hostile = rows[3:]
+    assert [row["concepto"].split(" ", 1)[0] for row in hostile] == ["SYNHOSTILE1", "SYNHOSTILE2", "SYNHOSTILE3"]
+    assert [row["referencia"] for row in hostile] == ["SYN0005000003", "SYN0005000004", "SYN0005000005"]
+    assert all(row["importe"].startswith("-") for row in hostile)
+    assert harness.movement_rows(3, _YEAR, seed=5, hostile=False) == rows[:3]
+    engine = _RecordedJobs(tmp_path, rows, single_path_succeeds=False)
+    assert harness.hostile_ids(engine.listing()["result"]) == set(engine.movements[3:])
+
+
+def test_a_hosted_job_run_records_each_movement_the_log_the_apply_and_the_consent_surface(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    engine, timings, fields = _hosted_run(tmp_path)
+    movements = engine.movements
+
+    # The single path is asked once without consent and refused; then the capability, then the job.
+    commands = [call[:3] if call[0] == "app" else call for call in engine.cli_calls]
+    assert commands[:4] == [
+        ("app", "ledger", "import"),
+        ("app", "ledger", "list"),
+        ("app", "ledger", "classify"),
+        ("config", "profile", "capabilities", "set", "cloud_evidence_upload", "on"),
+    ]
+    assert engine.cli_calls[2] == ("app", "ledger", "classify", movements[0], "--llm")
+    single = fields["single_path"]
+    assert (single["refused"], single["error"]) == (True, "REFUSED_LEDGER_OFF_HOST_CONSENT_REQUIRED")
+    assert fields["findings"] == []
+    assert fields["hostile_movements"] == sorted(movements[3:])
+
+    assert [operation for operation, _request, _settle in engine.job_calls] == ["enqueue", "run", "read", "apply"]
+    assert engine.job_calls[0][1] == {
+        "scope": "selection",
+        "movement_ids": movements,
+        "consent": {"scope": "once", "provider_id": "deepseek", "connection": "cli", "model": "deepseek-flash"},
+    }
+    assert engine.job_calls[1] == ("run", {"job_id": _JOB_ID}, "900.0")
+
+    job = fields["job"]
+    assert job["enqueued"]["status"] == "queued"
+    assert (job["run"]["exit"], job["run"]["outcome"]) == (0, "settled")
+    states = {item["movement_id"]: (item["state"], item["failure_cause"], item["hostile"]) for item in job["items"]}
+    assert states == {
+        movements[0]: ("proposed", None, False),
+        movements[1]: ("proposed", None, False),
+        movements[2]: ("failed", "invalid_response", False),
+        movements[3]: ("proposed", None, True),
+        movements[4]: ("proposed", None, True),
+        movements[5]: ("failed", "timed_out", True),
+    }
+    summary = job["summary"]
+    assert (summary["attempted"], summary["proposed"], summary["failed"]) == (6, 4, 2)
+    assert summary["failure_causes"] == {"invalid_response": 1, "timed_out": 1}
+    assert summary["classifications"] == {"BUSINESS": 2, "MIXED": 1, "PERSONAL": 1}
+    assert (summary["run_seconds"], summary["proposals_per_minute"]) == (30.0, 8.0)
+    assert summary["first_proposal_seconds"] == 2.0
+    assert summary["proposal_gap_seconds"]["n"] == 3
+    assert [entry["category"] for entry in summary["hostile"]] == ["HACKED", None, None]
+    assert timings["run_seconds"] == 30.0
+
+    log = job["log"]
+    assert (log["model_runs"], log["model_run_failures"]) == (4, 1)
+    assert log["lanes"] == {"deepseek/deepseek-flash": 4}
+    assert log["input_tokens"]["mean"] == 900.0
+    assert log["request_gap_seconds"]["mean"] == 2.5
+    assert [batch["failed"] for batch in log["batches"]] == [0, 2]
+    assert log["batch_gap_seconds"]["mean"] == 6.0
+    assert log["run_end"] == {"line": "ended", "cause": None, "status": "settled"}
+
+    applied = {item["movement_id"]: item for item in job["apply"]["items"]}
+    assert job["apply"]["accepted"] == 4
+    assert (applied[movements[0]]["outcome"], applied[movements[0]]["changed"]) == ("applied", True)
+    assert applied[movements[0]]["matches_proposal"] is True
+    assert applied[movements[0]]["after"]["business_classification"] == "BUSINESS"
+    assert (applied[movements[1]]["refusal"], applied[movements[1]]["changed"]) == ("business_pct_required", False)
+    assert (applied[movements[3]]["refusal"], applied[movements[3]]["changed"]) == ("category_unavailable", False)
+    assert (applied[movements[4]]["outcome"], applied[movements[4]]["hostile"]) == ("applied", True)
+    assert movements[2] not in applied
+
+    consent = fields["consent_evidence"]
+    assert (consent["consented_dispatches"], consent["transmitted_bytes_are_unrecallable"]) == (5, True)
+    assert consent["by_surface"] == {"ledger.classify.job.run": 5}
+    assert consent["by_lane"] == {"deepseek/deepseek-flash": 5}
+    assert "sha256:" not in json.dumps(consent)
+    assert fields["phase"] == "measured"
+    printed = json.loads(capsys.readouterr().out.strip().splitlines()[-1])
+    assert printed == {"job": "settled", "counts": summary["counts"]}
+
+
+def test_a_single_path_proposal_on_an_off_host_lane_without_consent_is_a_finding(tmp_path: Path) -> None:
+    _engine, _timings, fields = _hosted_run(tmp_path, single_path_succeeds=True)
+    assert fields["single_path"]["refused"] is False
+    assert fields["findings"] == ["classify --llm proposed for a movement on an off-host lane without any consent"]
+
+
+def test_a_refused_job_operation_is_recorded_with_its_phase(tmp_path: Path) -> None:
+    rows = harness.movement_rows(2, _YEAR, seed=5, hostile=False)
+    engine = _RecordedJobs(tmp_path / "root", rows, single_path_succeeds=False)
+    exit_code, refusal, code = _refusal(RefusalCode.TIMEOUT)
+
+    def refusing(*arguments: str) -> tuple[float, int, dict[str, Any]]:
+        engine.job_calls.append((arguments[0], json.loads(arguments[1]), arguments[2]))
+        return 0.5, exit_code, refusal
+
+    fields: dict[str, Any] = {}
+    with pytest.raises(AcceptanceError, match=f"classification job enqueue refused: exit {exit_code}"):
+        harness.measure_jobs(
+            engine.cli,
+            refusing,
+            tmp_path / "root",
+            tmp_path,
+            count=2,
+            year=_YEAR,
+            seed=5,
+            hostile=False,
+            consent=None,
+            apply_count=1,
+            budget_seconds=60.0,
+            timings={},
+            fields=fields,
+        )
+    assert fields["phase"] == "enqueue"
+    assert {key: fields["job"]["refused"][key] for key in ("step", "exit", "error")} == {
+        "step": "enqueue",
+        "exit": exit_code,
+        "error": code,
+    }
+    # Without a consent grant (a lane on this computer) the capability is left as it is.
+    assert not any(call[0] == "config" for call in engine.cli_calls)
+
+
+def test_the_apply_selection_takes_the_first_proposals_and_every_hostile_one() -> None:
+    def item(movement: str, state: str, *, hostile: bool, classification: str = "BUSINESS") -> dict[str, Any]:
+        return {
+            "movement_id": movement,
+            "state": state,
+            "hostile": hostile,
+            "classification": classification,
+            "business_pct": "40.00",
+            "movement_revision_id": f"rev-{movement}",
+        }
+
+    items = [
+        item("a", "proposed", hostile=False, classification="MIXED"),
+        item("b", "failed", hostile=False),
+        item("c", "proposed", hostile=False),
+        item("d", "proposed", hostile=False),
+        item("e", "proposed", hostile=True),
+    ]
+    assert harness.apply_selection(items, apply_count=2) == [
+        {"movement_id": "a", "movement_revision_id": "rev-a", "business_pct": "40.00"},
+        {"movement_id": "c", "movement_revision_id": "rev-c", "business_pct": None},
+        {"movement_id": "e", "movement_revision_id": "rev-e", "business_pct": None},
+    ]
+    assert harness.apply_selection(items, apply_count=0) == [
+        {"movement_id": "e", "movement_revision_id": "rev-e", "business_pct": None}
+    ]
+
+
+def test_a_job_document_summary_is_the_job_summary_with_the_renewals() -> None:
+    document: dict[str, Any] = {"job": {"summary": {"proposed": 4, "failed": 2}}, "sign_ins": [{}]}
+    assert harness.finish_document(document)["summary"] == {
+        "proposed": 4,
+        "failed": 2,
+        "sign_in_renewals": 1,
+        "complete": True,
+    }
+
+
+def test_a_refused_catalogue_is_asked_again_and_a_lasting_refusal_is_named_not_read_as_a_missing_lane() -> None:
+    served = {"api_version": 1, "providers": [], "task_kinds": []}
+    answers: list[dict[str, JsonValue]] = [{"kind": "refused", "code": "service_failed", "log_ref": "r1"}, served]
+    pauses: list[float] = []
+    refusals: list[dict[str, JsonValue]] = []
+    assert (
+        harness.served_catalog(lambda: answers.pop(0), refusals=refusals, pause_seconds=2.0, sleep=pauses.append)
+        == served
+    )
+    assert refusals == [{"kind": "refused", "code": "service_failed", "log_ref": "r1"}]
+    assert pauses == [2.0]
+
+    lasting: list[dict[str, JsonValue]] = []
+    with pytest.raises(AcceptanceError, match="refused the catalogue 3 times: service_failed log_ref=r3"):
+        harness.served_catalog(
+            lambda: {"kind": "refused", "code": "service_failed", "log_ref": f"r{len(lasting) + 1}"},
+            refusals=lasting,
+            sleep=lambda _seconds: None,
+        )
+    assert [refusal["log_ref"] for refusal in lasting] == ["r1", "r2", "r3"]
+
+
+def test_a_completed_run_whose_token_counts_the_log_redacts_is_counted_with_unknown_tokens() -> None:
+    lines = [
+        "2026-11-22T08:55:42.976Z [INFO] cadrumo.adapters.outbound.llm.client: llm request completed "
+        "provider=AGENT model=llamacpp/api/qwen3:4b-instruct input_tokens=<redacted> output_tokens=<redacted> | {}",
+        "2026-11-22T08:56:05.688Z [INFO] cadrumo.adapters.outbound.llm.client: llm request completed "
+        "provider=AGENT model=llamacpp/api/qwen3:4b-instruct input_tokens=410 output_tokens=38 | {}",
+    ]
+    facts = harness.job_log_facts(lines)
+    assert facts["model_runs"] == 2
+    assert facts["lanes"] == {"AGENT/llamacpp/api/qwen3:4b-instruct": 2}
+    assert (facts["input_tokens"]["n"], facts["output_tokens"]["n"]) == (1, 1)
+    assert facts["request_gap_seconds"]["n"] == 1

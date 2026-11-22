@@ -77,8 +77,9 @@ class ChildEnvironmentProfile(StrEnum):
     """Which of this command line's settings a child it starts takes from its parent.
 
     An ``OPERATOR`` child (a profile worker) takes the parent's proxy settings,
-    so the browser and network requests it starts follow the operator's route. A
-    ``STRICT`` child takes none of them. Both take the parent's registry
+    so the browser and network requests it starts follow the operator's route,
+    and the deployment's evidence posture, so its off-host reads meet the bars
+    the deployment set. A ``STRICT`` child takes none of them. Both take the parent's registry
     authority root, so parent and child read one authority generation, and both
     are pinned to the storage root the launcher resolved.
     """
@@ -473,7 +474,7 @@ def authority_root_setting_names() -> frozenset[str]:
 
 
 def relayed_setting_names() -> frozenset[str]:
-    """Return the settings an ``OPERATOR`` child takes from its parent: storage root, authority root and proxy.
+    """Return the settings an ``OPERATOR`` child takes from its parent: storage, authority, proxy, evidence posture.
 
     The proxy settings reach the child so the browser and network requests it starts follow the
     operator's network route; the child withholds them from its own children
@@ -483,7 +484,8 @@ def relayed_setting_names() -> frozenset[str]:
     from .config import Settings
 
     proxy = Settings.proxy_env_var_names(secret_fields=False)
-    return Settings.storage_env_var_names() | authority_root_setting_names() | proxy
+    posture = Settings.evidence_posture_env_var_names()
+    return Settings.storage_env_var_names() | authority_root_setting_names() | proxy | posture
 
 
 @contextmanager
