@@ -20,6 +20,7 @@ from cadrumo.application import reference_catalogue as catalogue
 from cadrumo.application.reference_catalogue import read_pinned_reference
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.domain.calculations.registry.errors import RegistryError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.portals.registry import PORTAL_REGISTRY
 
 from ..authority_query import authority_query
@@ -70,7 +71,7 @@ _ONE_OF_EACH: tuple[dict[str, Any], ...] = (
     {"query": "casillas", "modelo": "303", "period": "3T"},
     {"query": "casilla", "modelo": "303", "period": "3T", "casilla": "01"},
     {"query": "formulas", "modelo": "303", "period": "3T"},
-    {"query": "bindings", "modelo": "303", "filing_year": 2025},
+    {"query": "bindings", "modelo": "303", "filing_year": filing_year_envelope().horizon},
     {"query": "categories"},
     {"query": "portals"},
     {"query": "portal", "portal": next(iter(PORTAL_REGISTRY))},
@@ -97,7 +98,7 @@ def test_no_modelo_answers_a_scoped_query_past_the_bound() -> None:
         for query in ("support", "describe", "casillas", "formulas", "bindings"):
             arguments: dict[str, Any] = {"query": query, "modelo": code}
             if query == "bindings":
-                arguments["filing_year"] = 2025
+                arguments["filing_year"] = filing_year_envelope().horizon
             try:
                 reply = authority_query(arguments)
             except RegistryError:
@@ -210,7 +211,7 @@ def test_limit_shortens_a_page_and_the_cursors_still_cover_every_row() -> None:
         ({"query": "modelos", "domain": "iva"}, "modelos"),
         ({"query": "portals"}, "rows"),
         ({"query": "portals", "category": "filing"}, "rows"),
-        ({"query": "bindings", "modelo": "303", "filing_year": 2025}, "rows"),
+        ({"query": "bindings", "modelo": "303", "filing_year": filing_year_envelope().horizon}, "rows"),
     ),
     ids=("modelos", "modelos-domain", "portals", "portals-category", "bindings"),
 )

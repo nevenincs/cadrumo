@@ -53,6 +53,7 @@ from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderE
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.transactions.classification_job import (
     ClassificationConsentScope,
     ClassificationItemFailureCause,
@@ -91,7 +92,10 @@ def _stored_job(context: ConformanceFamilyContext, *, failed: bool) -> Classific
     """Store a queued job over two seeded movements, finished with the second one failed when ``failed``."""
     movements = tuple(
         seed_manual_transaction(
-            context, booked_date=date(2025, 4, day), amount=Decimal("12.50"), description="classification job row"
+            context,
+            booked_date=date(filing_year_envelope().horizon, 4, day),
+            amount=Decimal("12.50"),
+            description="classification job row",
         )
         for day in (7, 8)
     )
@@ -130,7 +134,10 @@ def _stored_job(context: ConformanceFamilyContext, *, failed: bool) -> Classific
 
 def _prepare_enqueue(context: ConformanceFamilyContext) -> ConformancePreparation:
     movement = seed_manual_transaction(
-        context, booked_date=date(2025, 4, 2), amount=Decimal("9.90"), description="classification job enqueue row"
+        context,
+        booked_date=date(filing_year_envelope().horizon, 4, 2),
+        amount=Decimal("9.90"),
+        description="classification job enqueue row",
     )
     ledger_unchanged = ledger_unchanged_verifier(context)
 
@@ -278,7 +285,10 @@ def _prepare_revoke_consent(context: ConformanceFamilyContext) -> ConformancePre
 def _prepare_apply(context: ConformanceFamilyContext) -> ConformancePreparation:
     """Store a settled job whose single movement holds a personal proposal bound to its current revision."""
     movement = seed_manual_transaction(
-        context, booked_date=date(2025, 4, 9), amount=Decimal("7.30"), description="classification job apply row"
+        context,
+        booked_date=date(filing_year_envelope().horizon, 4, 9),
+        amount=Decimal("7.30"),
+        description="classification job apply row",
     )
     transaction = ledger_action_ports(context).transaction_repository.load().transactions[movement]
     jobs = _jobs(context)

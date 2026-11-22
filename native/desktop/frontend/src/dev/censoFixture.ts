@@ -1,6 +1,7 @@
 import type { CensoPort, CensoSnapshot } from "../shell/profileCenso";
 import type { ProfileFixture } from "./userProfileFixture";
 import profileFixtures from "@fixtures/desktop-profile/userProfile.json" with { type: "json" };
+import { fixtureDay } from "./fixtureDates";
 
 /** What the generated profile states at `path`: the review's current side is
  * the profile the scenario host serves, never a value of its own. */
@@ -171,7 +172,7 @@ export function censoFixture(
           ["censo.aeat_delegacion_code", "29"],
           ["censo.aeat_administracion_code", "601"],
           ["censo.aeat_administracion_name", "OFICINA EJEMPLO"],
-          ["censo.activity_start_date", "2024-01-01"],
+          ["censo.activity_start_date", fixtureDay(1, 1, -2)],
           // No activity has ceased, so the read states no end date.
           ["censo.activity_end_date", null],
         ] as const

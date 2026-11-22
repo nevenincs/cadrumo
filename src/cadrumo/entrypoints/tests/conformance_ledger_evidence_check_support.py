@@ -28,6 +28,7 @@ from ...application.ledger.purchase_evidence_release_operation import (
 from ...core.document_shape import DocumentShape
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.buckets.event import BucketEvent, BucketEventType
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...tests.pdf_fixtures import multi_page_text_pdf_bytes
 from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from .conformance_family_contract import (
@@ -141,7 +142,10 @@ def _prepare_probe(context: ConformanceFamilyContext) -> ConformancePreparation:
 def _prepare_release(context: ConformanceFamilyContext) -> ConformancePreparation:
     bucket_id = str(context.profile_id)
     transaction_id = seed_manual_transaction(
-        context, booked_date=date(2025, 5, 1), amount=Decimal("121.00"), description="evidence release row"
+        context,
+        booked_date=date(filing_year_envelope().horizon, 5, 1),
+        amount=Decimal("121.00"),
+        description="evidence release row",
     )
     record = _stored_pdf_evidence(context, "conformance-release-evidence.pdf")
     ports = ledger_action_ports(context)

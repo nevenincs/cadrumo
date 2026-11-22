@@ -56,6 +56,7 @@ from ....core.errors.error_codes import get_registered_error_code, resolve_error
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.tests.rental_link_rows import rental_row
 from .. import ledger_evidence_commands as commands
 from .. import operation_ledger_evidence_mutation as verify_bridge
@@ -69,8 +70,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = EVIDENCE_MUTATION_PROFILE
 _EVIDENCE_ID = "evidence-target"
-_EXPECTED_MODIFIED_AT = "2026-05-08T10:15:00+00:00"
-_CHECKED_AT = datetime(2026, 5, 9, 8, 0, tzinfo=UTC)
+_EXPECTED_MODIFIED_AT = datetime(filing_year_envelope().horizon, 5, 8, 10, 15, tzinfo=UTC).isoformat()
+_CHECKED_AT = datetime(filing_year_envelope().horizon, 5, 9, 8, 0, tzinfo=UTC)
 _CTX = cast(typer.Context, cast(object, None))
 
 

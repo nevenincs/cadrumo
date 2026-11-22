@@ -1,6 +1,7 @@
 import { servedLimits } from "./support/servedLimits";
 import { holdLedgerLimits } from "../src/shell/ledgerLimits";
 import { expect, test } from "@playwright/test";
+import { fixtureDay } from "../src/dev/fixtureDates";
 import type {
   ConfirmationBlockerProjectionV1,
   InvoiceDraftProjectionV1,
@@ -413,7 +414,7 @@ test("a changed reading names the fields that changed, in the page's own vocabul
   const fresh: InvoiceDraftProjectionV1 = {
     ...draft,
     taxable_base: { decimal: "31.00" },
-    invoice_date: "2026-10-16",
+    invoice_date: fixtureDay(10, 16),
     raw_text_length: 7,
   };
   expect(sameReading(draft, fresh)).toBe(false);

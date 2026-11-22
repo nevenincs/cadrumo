@@ -56,13 +56,14 @@ from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "47474747-4747-4747-8747-474747474747"
 _PROFILE = UUID(_BUCKET)
-_AT = datetime(2026, 3, 2, 9, 30, tzinfo=UTC)
+_AT = datetime(filing_year_envelope().horizon, 3, 2, 9, 30, tzinfo=UTC)
 # A PDF header over bytes no reader recognises: the add path refuses these, so
 # only a record written before that refusal existed can hold them.
 _UNREADABLE = b"%PDF-1.7\nsynthetic bytes that are not a document body"

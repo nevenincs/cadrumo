@@ -1,6 +1,7 @@
 import type { StageFieldName } from "../src/shell/ledgerMovementCheckContract";
 import "./support/servedLimits";
 import { expect, test } from "@playwright/test";
+import { fixtureInstant } from "../src/dev/fixtureDates";
 import { RELAY_PAYLOAD_LIMIT } from "../src/shell/relayBounds";
 import { classifyCells, ratioCoverage } from "../src/shell/ledgerCommands";
 import {
@@ -1205,7 +1206,7 @@ test("an invoice unlink is sent first with the movement and the invoice as seen,
     kind: "unlink",
     transactionId: row,
     invoiceId: "inv-1",
-    expectedModifiedAt: "2026-05-02T10:00:00+00:00",
+    expectedModifiedAt: fixtureInstant(5, 2, "10:00:00+00:00"),
     expectedLinkedTransactionIds: [row, D],
   });
   const plan = planRecorded(
@@ -1233,7 +1234,7 @@ test("an invoice unlink is sent first with the movement and the invoice as seen,
   expect(sent.request).toEqual({
     transaction_id: A,
     invoice_id: "inv-1",
-    expected_modified_at: "2026-05-02T10:00:00+00:00",
+    expected_modified_at: fixtureInstant(5, 2, "10:00:00+00:00"),
     expected_invoice_linked_transaction_ids: [A, D],
   });
   expect(plan.summary.actions).toEqual({ unlink: 1, archive: 1 });

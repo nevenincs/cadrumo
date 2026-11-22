@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _WORKTREE = Path(__file__).resolve().parents[3]
 _PACKAGE = "dev/dependency_observation"
-_SCRATCH = _WORKTREE / ".tmp" / "2026-11-19-docsverify" / "tests-scratch"
+_SCRATCH = _WORKTREE / ".tmp" / "docsverify" / "tests-scratch"
 _FOREIGN = "source read outside the checkout"
 #: A drive-rooted directory no real file lives in, outside every allowlisted tree.
 _NOWHERE = Path(os.path.abspath(os.sep + "docs-observer-nowhere"))

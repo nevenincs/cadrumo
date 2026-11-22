@@ -39,6 +39,7 @@ from .....application.tests.operation_host_fakes import (
 from .....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .....core.optional_extras import OFX_EXTRA
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.currency.service import CurrencyNormalizationService
 from .....domain.transactions.models import TransactionCatalogue
 from .....domain.transactions.own_accounts import (
@@ -159,7 +160,7 @@ def _import(
         revision=1,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=recorded.effects[-1],
-        settled_at=datetime(2026, 11, 19, 12, 0, tzinfo=UTC),
+        settled_at=datetime(filing_year_envelope().horizon, 11, 19, 12, 0, tzinfo=UTC),
         result_ref="secure-result-reference",
     )
     if effects is not None:

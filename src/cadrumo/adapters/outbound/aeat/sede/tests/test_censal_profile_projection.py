@@ -8,11 +8,12 @@ import pytest
 
 from ......application.user_profile.censal_observation import CensalObservation
 from ......application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, censal_facts_from_read
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.aeat_literal_fixtures import aeat_url
 from ......tests.inventory import FIXTURES_DIR
 from ..censal_datos import parse_censal_datos
 from ..censal_tables import parse_censal_table
-from .censal_consultation_fixtures import ACTIVITIES_HTML
+from .censal_consultation_fixtures import ACTIVITIES_HTML, ACTIVITY_START
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -44,6 +45,11 @@ def _activities(*rows: tuple[str, str]) -> str:
     return f"<h1>Relación de Actividades</h1><table><thead><tr>{headers}</tr></thead><tbody>{body}</tbody></table>"
 
 
+def _text(day: date) -> str:
+    """A day as the census consultation prints it."""
+    return day.strftime("%d/%m/%Y")
+
+
 def _projected(observation: CensalObservation) -> dict[str, object]:
     """Projected values as the review shows them: dates typed, the rest as text."""
     return {
@@ -67,7 +73,7 @@ def test_every_census_fact_the_consulta_renders_becomes_a_reviewable_profile_val
         "censo.aeat_delegacion_code": "28",
         "censo.aeat_administracion_code": "600",
         "censo.aeat_administracion_name": "OFICINA EJEMPLO",
-        "censo.activity_start_date": date(2024, 1, 1),
+        "censo.activity_start_date": ACTIVITY_START,
     }
     assert tuple(projected) == tuple(path for path in CENSAL_ADOPTABLE_PATHS if path in projected)
     assert {fact.source for fact in censal_facts_from_read(_consulta(ACTIVITIES_HTML))} == {"aeat_censo_read"}
@@ -82,17 +88,24 @@ def test_without_an_activities_consultation_the_activity_dates_stay_unknown() ->
 
 
 def test_activity_end_is_stated_only_when_every_activity_has_ceased() -> None:
-    open_one = _projected(_consulta(_activities(("01/03/2020", "31/12/2022"), ("15/06/2021", ""))))
-    all_ceased = _projected(_consulta(_activities(("01/03/2020", "31/12/2022"), ("15/06/2021", "30/09/2023"))))
+    envelope = filing_year_envelope()
+    first_start, first_end = date(envelope.floor, 3, 1), date(envelope.floor, 12, 31)
+    second_start, last_end = date(envelope.floor, 6, 15), date(envelope.horizon, 9, 30)
+    open_one = _projected(_consulta(_activities((_text(first_start), _text(first_end)), (_text(second_start), ""))))
+    all_ceased = _projected(
+        _consulta(_activities((_text(first_start), _text(first_end)), (_text(second_start), _text(last_end))))
+    )
 
-    assert open_one["censo.activity_start_date"] == date(2020, 3, 1)
+    assert open_one["censo.activity_start_date"] == first_start
     assert "censo.activity_end_date" not in open_one
-    assert all_ceased["censo.activity_start_date"] == date(2020, 3, 1)
-    assert all_ceased["censo.activity_end_date"] == date(2023, 9, 30)
+    assert all_ceased["censo.activity_start_date"] == first_start
+    assert all_ceased["censo.activity_end_date"] == last_end
 
 
 def test_an_unreadable_activity_start_leaves_the_dates_unknown_rather_than_later() -> None:
-    projected = _projected(_consulta(_activities(("01/03/2020", ""), ("sin fecha", ""))))
+    projected = _projected(
+        _consulta(_activities((_text(date(filing_year_envelope().floor, 3, 1)), ""), ("sin fecha", "")))
+    )
 
     assert "censo.activity_start_date" not in projected
     assert "censo.activity_end_date" not in projected

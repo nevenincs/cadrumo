@@ -26,6 +26,7 @@ from ....core.i18n.render import tr
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -41,7 +42,7 @@ from .test_classification_rule_plan import BUCKET, ClassificationScenario
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
+_NOW = datetime(filing_year_envelope().horizon, 5, 4, 9, 30, tzinfo=UTC)
 _PROFILE = UUID(BUCKET)
 
 
@@ -49,8 +50,8 @@ def _office_rent() -> Transaction:
     """A stored business expense of 800.00 split into 661.16 base and 138.84 IVA at 21 %."""
     raw = RawTransaction(
         provider_transaction_id="amount-correction-row",
-        booked_date=date(2026, 5, 2),
-        value_date=date(2026, 5, 2),
+        booked_date=date(filing_year_envelope().horizon, 5, 2),
+        value_date=date(filing_year_envelope().horizon, 5, 2),
         amount=Decimal("800.00"),
         currency="EUR",
         counterparty="Landlord SL",

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { fixtureDay, fixtureInstant } from "../src/dev/fixtureDates";
 import type { LedgerEvidenceRecordProjection } from "../src/shell/ledgerDocumentContract";
 import type { EvidenceReviewQueueRowProjection } from "../src/shell/ledgerDocumentReviewContract";
 import { documentOverview } from "../src/components/ledger/overview/documentOverviewModel";
@@ -25,13 +26,13 @@ const record: LedgerEvidenceRecordProjection = {
   media_kind: "pdf",
   supplier: "Papelería Trazo SL",
   invoice_number: "PT-0412",
-  invoice_date: "2026-10-15",
+  invoice_date: fixtureDay(10, 15),
   taxable_base: "30.00",
   iva_rate: "21",
   iva_amount: "6.30",
   notes: "",
-  created_at: "2026-10-15T09:00:00Z",
-  updated_at: "2026-10-15T09:00:00Z",
+  created_at: fixtureInstant(10, 15, "09:00:00Z"),
+  updated_at: fixtureInstant(10, 15, "09:00:00Z"),
   readability: "unchecked",
   document_shape: null,
   unreadable_cause: null,
@@ -41,7 +42,7 @@ const record: LedgerEvidenceRecordProjection = {
 const row: EvidenceReviewQueueRowProjection = {
   evidence_reference: "e1",
   extractor: "text_layer",
-  drafted_at: "2026-10-15T10:00:00Z",
+  drafted_at: fixtureInstant(10, 15, "10:00:00Z"),
   blocking_count: 0,
   reasons: [],
   reason_words: [],

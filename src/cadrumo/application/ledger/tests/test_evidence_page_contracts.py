@@ -8,6 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....application.operations.public_scalar import PublicDecimal
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..evidence_page_contracts import (
     EVIDENCE_STRUCTURED_FACT_KEYS,
     EVIDENCE_STRUCTURED_LINE_KEYS,
@@ -19,6 +20,7 @@ from ..evidence_page_contracts import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _FACT = "application.ledger.evidence.structured.fact."
+_DAY = date(filing_year_envelope().horizon, 11, 15)
 _LINE = "application.ledger.evidence.structured.line."
 _TWENTY_ONE = PublicDecimal(decimal="21")
 
@@ -31,10 +33,10 @@ def test_every_declared_kind_names_a_served_key() -> None:
 
 def test_a_date_is_carried_as_a_calendar_date() -> None:
     fact = EvidenceStructuredFactV1(
-        label_key=_FACT + "invoice_date", value_kind=EvidenceStructuredValueKind.DATE, iso_date=date(2024, 11, 15)
+        label_key=_FACT + "invoice_date", value_kind=EvidenceStructuredValueKind.DATE, iso_date=_DAY
     )
 
-    assert fact.model_dump(mode="json")["iso_date"] == "2024-11-15"
+    assert fact.model_dump(mode="json")["iso_date"] == _DAY.isoformat()
 
 
 def test_a_rate_is_a_percentage_figure_and_a_quantity_a_plain_one() -> None:
@@ -60,7 +62,7 @@ def test_a_rate_is_a_percentage_figure_and_a_quantity_a_plain_one() -> None:
         },
         # a kind whose member is not the one carried
         {"label_key": _FACT + "grand_total", "value_kind": EvidenceStructuredValueKind.AMOUNT, "text": "121,00"},
-        {"label_key": _FACT + "invoice_date", "value_kind": EvidenceStructuredValueKind.DATE, "text": "2024-11-15"},
+        {"label_key": _FACT + "invoice_date", "value_kind": EvidenceStructuredValueKind.DATE, "text": _DAY.isoformat()},
         # a kind the served key does not declare
         {
             "label_key": _FACT + "grand_total",

@@ -53,7 +53,7 @@ def root(tmp_path: Path) -> Path:
 @pytest.fixture
 def outside() -> Iterator[Path]:
     """A real directory outside the temporary directory, so off the observer's allowlist."""
-    directory = _WORKTREE / ".tmp" / "2026-11-19-docsverify" / "tests-scratch" / f"outside-{uuid.uuid4().hex}"
+    directory = _WORKTREE / ".tmp" / "docsverify" / "tests-scratch" / f"outside-{uuid.uuid4().hex}"
     directory.mkdir(parents=True)
     try:
         yield directory.resolve()
