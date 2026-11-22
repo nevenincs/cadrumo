@@ -307,6 +307,11 @@ def _ledger_update(ctx: PayloadContext) -> PayloadResult:
     )
 
 
+def _days_ago(days: int) -> date:
+    """A booking day stamped from the current instant, so no seed names a filing year."""
+    return now().date() - timedelta(days=days)
+
+
 def _ledger_batch_rows(
     ctx: PayloadContext, ports: LedgerActionPorts, *, description: str
 ) -> tuple[LedgerBatchUpdateRow, ...]:
@@ -317,10 +322,10 @@ def _ledger_batch_rows(
     )
     seeded = (
         _seed_unprocessed_outgoing(
-            ctx, ports, booked_date=date(2025, 1, 19), amount="31.00", description=f"{description} one"
+            ctx, ports, booked_date=_days_ago(2), amount="31.00", description=f"{description} one"
         ),
         _seed_unprocessed_outgoing(
-            ctx, ports, booked_date=date(2025, 1, 20), amount="32.00", description=f"{description} two"
+            ctx, ports, booked_date=_days_ago(1), amount="32.00", description=f"{description} two"
         ),
     )
     catalogue = ports.transaction_repository.load()
@@ -342,7 +347,7 @@ def _ledger_sealed_read(ctx: PayloadContext) -> PayloadResult:
     """Name one stored unsealed row and an id no movement has."""
     ports = compose_ledger_action_ports(bucket_id=str(ctx.profile_id), operation=ctx.operation)
     created = _seed_unprocessed_outgoing(
-        ctx, ports, booked_date=date(2025, 1, 21), amount="33.00", description="conformance sealed read seed"
+        ctx, ports, booked_date=_days_ago(1), amount="33.00", description="conformance sealed read seed"
     )
     return ctx.request(
         ctx.profile_subject,
