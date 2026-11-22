@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Final
 
@@ -45,15 +46,43 @@ _DOOR_EVIDENCE_ID: Final[str] = "modelo.work.edit.downstream_refusal"
 
 type _DerivedWords = Callable[[Mapping[str, str], OutputLanguage], str]
 
-#: Words a sentence may name that are worded from public coordinates alone: each name, the coordinates it reads,
-#: and how it is worded. Only the coordinates are kept; the words are worded again in the language served.
-_DERIVED_WORDS: Final[Mapping[str, tuple[tuple[str, ...], _DerivedWords]]] = MappingProxyType(
+
+@dataclass(frozen=True, slots=True)
+class _Derivation:
+    """How one name a sentence may use is worded again from public coordinates alone.
+
+    ``coordinates`` are the public coordinates the words read. ``read_from``
+    names, for a coordinate the refusal does not hold under its own key, the
+    key of the refusal's context that holds it; the value found there travels
+    only under the coordinate's key and only if the coordinate's grammar
+    admits it.
+    """
+
+    coordinates: tuple[str, ...]
+    words: _DerivedWords
+    read_from: Mapping[str, str] = field(default_factory=lambda: MappingProxyType({}))
+
+
+def _binding_label(coordinates: Mapping[str, str], language: OutputLanguage) -> str:
+    return binding_label_text(coordinates["modelo"], coordinates["binding_id"], locale=language.value)
+
+
+#: Words a sentence may name that are worded from public coordinates alone, by name. Only the coordinates are
+#: kept; the words are worded again in the language served. The calculation's input-required sentences hold the
+#: binding under ``binding`` and the box it feeds under ``boxes``: the binding travels as its id and is worded as its
+#: declared label, and the box travels as its casilla coordinate.
+_DERIVED_WORDS: Final[Mapping[str, _Derivation]] = MappingProxyType(
     {
-        "binding_label": (
-            ("binding_id", "modelo"),
-            lambda coordinates, language: binding_label_text(
-                coordinates["modelo"], coordinates["binding_id"], locale=language.value
-            ),
+        "binding_label": _Derivation(coordinates=("binding_id", "modelo"), words=_binding_label),
+        "binding": _Derivation(
+            coordinates=("binding_id", "modelo"),
+            words=_binding_label,
+            read_from=MappingProxyType({"binding_id": "binding"}),
+        ),
+        "boxes": _Derivation(
+            coordinates=("casilla_ids",),
+            words=lambda coordinates, _language: coordinates["casilla_ids"],
+            read_from=MappingProxyType({"casilla_ids": "boxes"}),
         ),
     }
 )
@@ -72,10 +101,24 @@ def _placeholders_in_every_language(key: str) -> frozenset[str] | None:
     return frozenset(names)
 
 
-def _public_context(error: CadrumoError) -> dict[str, str]:
-    """The error's context entries that are public registry coordinates, as the error envelope renders them."""
+def _public_context(error: CadrumoError, derived: frozenset[str]) -> dict[str, str]:
+    """The error's context entries that are public registry coordinates, as the error envelope renders them.
+
+    A coordinate the ``derived`` words read from another key of the context is
+    taken from there when its grammar admits the value found.
+    """
     rendered = public_error_context(error) or {}
-    return {key: value for key, value in rendered.items() if modelo_edit_downstream_context_is_public(key, value)}
+    public = {key: value for key, value in rendered.items() if modelo_edit_downstream_context_is_public(key, value)}
+    for name in sorted(derived):
+        for coordinate, source in _DERIVED_WORDS[name].read_from.items():
+            value = rendered.get(source)
+            if (
+                coordinate not in public
+                and value is not None
+                and modelo_edit_downstream_context_is_public(coordinate, value)
+            ):
+                public[coordinate] = value
+    return public
 
 
 def _worded(
@@ -96,9 +139,9 @@ def _worded(
     names = _placeholders_in_every_language(key)
     if names is None:
         return None, ()
-    derived = names & _DERIVED_WORDS.keys()
-    carried = (names - derived) | {coordinate for name in derived for coordinate in _DERIVED_WORDS[name][0]}
-    public = _public_context(error) if carried else {}
+    derived = frozenset(names & _DERIVED_WORDS.keys())
+    carried = (names - derived) | {coordinate for name in derived for coordinate in _DERIVED_WORDS[name].coordinates}
+    public = _public_context(error, derived) if carried else {}
     if not carried <= public.keys():
         return None, ()
     return key, tuple(ModeloEditDownstreamContextEntryV1(key=name, value=public[name]) for name in sorted(carried))
@@ -177,9 +220,9 @@ def downstream_refusal_error(refusal: ModeloEditDownstreamRefusalV1) -> Recorded
     names = _placeholders_in_every_language(refusal.message_key) or frozenset()
     language = served_words_language()
     derived = {
-        name: words(coordinates, language)
-        for name, (sources, words) in _DERIVED_WORDS.items()
-        if name in names and all(source in coordinates for source in sources)
+        name: derivation.words(coordinates, language)
+        for name, derivation in _DERIVED_WORDS.items()
+        if name in names and all(source in coordinates for source in derivation.coordinates)
     }
     return RecordedRegisteredError(
         refusal.error_code,

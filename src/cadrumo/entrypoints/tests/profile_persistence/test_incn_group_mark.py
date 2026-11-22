@@ -8,7 +8,9 @@ figure, the statement is admitted although the return is held, and the clean
 state blocks until it is stated. Unmarked, the held return supplies the figure
 and a statement over it is refused. Without the entity's own twelve-month
 turnover, the edit settles under the calculation's refusal worded for the
-operator: the input named by its declared label, and the profile door.
+operator: the input named by its declared label, and the profile door. Marked
+and unstated, the edit settles under the calculation's generic input refusal,
+worded again from its public coordinates, with the override door.
 
 Real behaviour throughout: an isolated encrypted profile, the bundled authority,
 the production edit executor, calculation, clean-state evaluation and reader,
@@ -80,6 +82,9 @@ _ENTITY = (
     UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("812345.67")),
 )
 _TWELVE_MONTH_TURNOVER_BINDING_ID = "modelo-200-profile-incn-prior-12-months"
+_INPUT_REQUIRED_MESSAGE_LOCALE_KEYS = frozenset(
+    {"application.modelo.errors.input_required", "application.modelo.errors.input_required_unprinted"}
+)
 _HELD = Decimal("812345.67")
 _GROUP = Decimal("14500000.00")
 
@@ -232,6 +237,31 @@ def test_marked_without_a_statement_the_calculation_refuses(tmp_path: Path, year
     assert refused.refusal is not None
     assert refused.calculation_revision_id is None
     assert head is None
+
+
+@pytest.mark.parametrize("year", _YEARS)
+def test_marked_without_a_statement_the_edit_settles_under_the_worded_input_refusal(tmp_path: Path, year: int) -> None:
+    """The carry is no profile fact: its sentence names the input and box, worded again where the edit settles."""
+    with _held_work(tmp_path, year) as work:
+        refused = work.apply(scalar=_marked(year), binding=_statements(work, turnover=None))
+
+    assert refused.refusal is not None
+    detail = build_operation_error_detail(refused.refusal)
+    assert detail is not None
+    assert detail.error_code == "REFUSED_MODELO_WORK_INPUT_REQUIRED"
+    assert detail.message_key in _INPUT_REQUIRED_MESSAGE_LOCALE_KEYS
+    assert detail.refusal_words is not None
+    assert detail.refusal_words_language is not None
+    label = binding_label_text(_MODELO, INCN_PERIODO_ANTERIOR_BINDING_ID, locale=detail.refusal_words_language.value)
+    assert label != INCN_PERIODO_ANTERIOR_BINDING_ID
+    assert label in detail.refusal_words
+    assert str(year) in detail.refusal_words
+    assert "%{" not in detail.refusal_words
+    assert detail.precondition_verdict_json is not None
+    verdict = json.loads(detail.precondition_verdict_json)
+    assert verdict["failed_condition_id"] == "modelo.work.calculate.input.supplied"
+    assert verdict["action"]["action_id"] == "operator.modelo.work.override"
+    assert [evidence["values"] for evidence in verdict["evidence"]] == [{"edit_values_admitted": True}]
 
 
 @pytest.mark.parametrize("year", _YEARS)
