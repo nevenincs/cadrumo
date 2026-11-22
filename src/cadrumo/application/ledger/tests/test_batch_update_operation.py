@@ -110,7 +110,7 @@ def _receipt(
             operation_id="a" * 64, definition_id=definition_id, subject_ref=profile_operation_subject(str(PROFILE_ID))
         ),
         revision=1,
-        settled_at=datetime(2026, 5, 1, tzinfo=UTC),
+        settled_at=datetime.now(UTC),
         condition=condition,
         effect=effect,
         result_ref=None if refused else "d" * 64,
@@ -139,7 +139,9 @@ def test_requests_are_strict_and_name_each_movement_once(
         LedgerPropertySet(fields=("notes",), category_id="unselected")
     with pytest.raises(ValidationError):
         LedgerBatchUpdateRow(
-            transaction_id="x", expected_modified_at="2026-05-01T00:00:00", properties=rows[0].properties
+            transaction_id="x",
+            expected_modified_at=transactions[0].modified_at.replace(tzinfo=None).isoformat(),
+            properties=rows[0].properties,
         )
 
 

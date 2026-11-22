@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -28,8 +28,6 @@ from .ledger_action_persistence_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_NOW = datetime(2026, 5, 6, 9, 0, tzinfo=UTC)
 
 
 @contextmanager
@@ -74,8 +72,11 @@ def _row(
 
 
 def _plan(
-    secure_objects: SecureObjectRepository, rows: tuple[LedgerBatchUpdateRow, ...], *, at: datetime = _NOW
+    secure_objects: SecureObjectRepository, rows: tuple[LedgerBatchUpdateRow, ...], *, later: timedelta = timedelta()
 ) -> BatchUpdatePlan:
+    # Each plan is stamped a little after the newest stored row, so its correction events are distinct.
+    newest = max(row.modified_at for row in repositories(secure_objects)[0].load().transactions.values())
+    at = newest + timedelta(minutes=1) + later
     with _ports(secure_objects) as ports:
         return plan_batch_update(
             bucket_id=BUCKET_ID, rows=rows, actor="operator", source_command="ledger batch edit", ports=ports, now=at
@@ -128,7 +129,7 @@ def test_a_row_changed_since_it_was_seen_or_gone_is_a_conflict_and_the_others_ap
     first, second, third = _rows(secure_objects, 3)
     properties = _business(_category(operation))
     missing = LedgerBatchUpdateRow(
-        transaction_id="0" * 64, expected_modified_at=_NOW.isoformat(), properties=properties
+        transaction_id="0" * 64, expected_modified_at=first.modified_at.isoformat(), properties=properties
     )
     request = (
         _row(first, properties),
@@ -198,7 +199,7 @@ def test_undo_writes_the_previous_values_back_as_a_new_correction(
     _write(secure_objects, _plan(secure_objects, tuple(_row(row, _business(first_category)) for row in rows)))
     stored = repositories(secure_objects)[0].load().transactions
     edit = LedgerPropertySet(fields=("category_id",), category_id=second_category)
-    applied = _plan(secure_objects, tuple(_row(row, edit) for row in stored.values()), at=_NOW + timedelta(hours=1))
+    applied = _plan(secure_objects, tuple(_row(row, edit) for row in stored.values()), later=timedelta(hours=1))
     _write(secure_objects, applied)
     history = len(_event_types(secure_objects))
 
@@ -211,7 +212,7 @@ def test_undo_writes_the_previous_values_back_as_a_new_correction(
         )
         for result in applied.rows
     )
-    undone = _plan(secure_objects, undo, at=_NOW + timedelta(hours=2))
+    undone = _plan(secure_objects, undo, later=timedelta(hours=2))
     assert [row.outcome for row in undone.rows] == ["applied", "applied"]
     _write(secure_objects, undone)
     restored = repositories(secure_objects)[0].load().transactions
