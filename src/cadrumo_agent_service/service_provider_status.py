@@ -6,7 +6,8 @@ no reading has reached yet is ``unknown``, and no method is offered before the
 agent has named its methods. Reading them runs the agent, which can take longer
 than an administration exchange, so the read is asked for in the background and
 a later status serves it; ``reads_pending`` tells the window whether such a
-later status is still worth asking for. Store reads and login observations carry their own
+later status is still worth asking for, and each background read that ends is
+told through ``settled``, the cue on which the window asks for it. Store reads and login observations carry their own
 profile authority; the lifecycle lock only serializes changes to the process
 tree, not these reads.
 """
@@ -47,8 +48,9 @@ class ProviderStatusRead:
         lease: Callable[[], object | None],
         hosted_certifications: Callable[[], list[dict[str, str]]],
         agent_starting: Callable[[], bool],
+        settled: Callable[[], None] | None = None,
     ) -> None:
-        """Bind the reads the status combines, looked up on each read, and the state it is refused under."""
+        """Bind the reads the status combines, looked up on each read, its refusal state and end-of-read cue."""
         self._providers = providers
         self._catalog = catalog
         self._login_status = login_status
@@ -56,10 +58,11 @@ class ProviderStatusRead:
         self._lease = lease
         self._hosted_certifications = hosted_certifications
         self._agent_starting = agent_starting
+        self._settled = settled
         self._login_reading_wanted = False
         # A method read that failed settles the methods as unavailable until one succeeds.
         self._methods_failed = False
-        self._refresh = BackgroundRefresh(self._read_kept, due=self._due, name="provider-status")
+        self._refresh = BackgroundRefresh(self._read_and_tell, due=self._due, name="provider-status")
 
     def answer(self) -> dict[str, Any]:
         """Serve the settings with the kept login readings and sign-in methods, asking for fresher ones."""
@@ -121,6 +124,14 @@ class ProviderStatusRead:
         if self._catalog().kept_gui_sign_in_methods() is None:
             return True
         return self._login_reading_wanted and self._login_status().due()
+
+    def _read_and_tell(self) -> None:
+        """Read what the status serves as last kept, then cue the window, whether or not the read succeeded."""
+        try:
+            self._read_kept()
+        finally:
+            if self._settled is not None and not self._closing.is_set():
+                self._settled()
 
     def _read_kept(self) -> None:
         """Read what the status serves as last kept, off the request path, each within its own bound."""

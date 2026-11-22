@@ -725,11 +725,14 @@ export function scenarioHost(
   // The engine the agent's record selects is the agent's to say, and the
   // agent is made after the settings that name its turned-off lanes.
   let agentEngine: () => string = () => options.localEngine ?? "llamacpp";
+  // The agent's host republishes its status on the service's settle cue.
+  let republish: () => void = () => {};
   const providerFixture = providerSettingsFixture({
     say,
     wait: () => wait(options.latencyMs),
     readable,
     selectedEngine: () => agentEngine(),
+    settled: () => republish(),
   });
 
   // The agent goes with the profile's views: offered, empty, refused or not
@@ -739,6 +742,7 @@ export function scenarioHost(
     agent,
     session: servedSession,
     publishStatus,
+    republishStatus,
     changeListElsewhere,
     selectedEngine,
   } = fixtureAgent({
@@ -778,6 +782,7 @@ export function scenarioHost(
     },
   });
   agentEngine = selectedEngine;
+  republish = republishStatus;
   // Every host this page made publishes, as one service would for each.
   const publishedBefore = window.__scenarioAgentPublishStatus;
   window.__scenarioAgentPublishStatus = (status) => {
