@@ -68,21 +68,24 @@ def _binding_label(coordinates: Mapping[str, str], language: OutputLanguage) -> 
 
 
 #: Words a sentence may name that are worded from public coordinates alone, by name. Only the coordinates are
-#: kept; the words are worded again in the language served. The calculation's input-required sentences hold the
-#: binding under ``binding`` and the box it feeds under ``boxes``: the binding travels as its id and is worded as its
-#: declared label, and the box travels as its casilla coordinate.
+#: kept; the words are worded again in the language served. The calculation's input-required sentences name the
+#: binding by its declared label under ``binding`` and hold the binding itself under ``binding_id``, so the label is
+#: worded again from it. They hold the box the binding feeds under ``boxes`` and, for a stored earlier return that
+#: does not show the boxes a carry reads, those boxes under ``source_boxes``: each travels as its own casilla
+#: coordinate, so the box fed and the boxes read never share one.
 _DERIVED_WORDS: Final[Mapping[str, _Derivation]] = MappingProxyType(
     {
         "binding_label": _Derivation(coordinates=("binding_id", "modelo"), words=_binding_label),
-        "binding": _Derivation(
-            coordinates=("binding_id", "modelo"),
-            words=_binding_label,
-            read_from=MappingProxyType({"binding_id": "binding"}),
-        ),
+        "binding": _Derivation(coordinates=("binding_id", "modelo"), words=_binding_label),
         "boxes": _Derivation(
             coordinates=("casilla_ids",),
             words=lambda coordinates, _language: coordinates["casilla_ids"],
             read_from=MappingProxyType({"casilla_ids": "boxes"}),
+        ),
+        "source_boxes": _Derivation(
+            coordinates=("source_casilla_ids",),
+            words=lambda coordinates, _language: coordinates["source_casilla_ids"],
+            read_from=MappingProxyType({"source_casilla_ids": "source_boxes"}),
         ),
     }
 )
