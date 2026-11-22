@@ -202,6 +202,7 @@ const ADMITTED: &[(&str, Kind)] = &[
     ("ledger.rule.list", Read),
     ("ledger.rule.remove", Write),
     ("ledger.rule.trial", Read),
+    ("ledger.sealed.read", Read),
     ("ledger.split.check", Read),
     ("ledger.split.manual", Write),
     ("ledger.split.review", Review),

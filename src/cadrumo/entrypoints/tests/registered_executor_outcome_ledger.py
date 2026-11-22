@@ -91,6 +91,7 @@ from ...application.ledger.remove_operation import LedgerRemoveOperationResult, 
 from ...application.ledger.reset_operation import LedgerResetOperationResult, LedgerResetRequest
 from ...application.ledger.review_operation import LedgerReviewProjection
 from ...application.ledger.rule_trial_operation import LedgerRuleTrialRequest, LedgerRuleTrialResult
+from ...application.ledger.sealed_read_operation import LedgerSealedReadRequest, LedgerSealedReadResult
 from ...application.ledger.split_check_operation import LedgerSplitCheckRequest, LedgerSplitCheckResult
 from ...application.ledger.split_operation import LedgerSplitOperationResult, LedgerSplitRequest
 from ...application.ledger.staged_check_contracts import LedgerStagedCheckRequest, LedgerStagedCheckResult
@@ -330,6 +331,16 @@ def assert_ledger_update_outcome(ctx: ExecutorOutcome) -> None:
     )
     assert persisted_update is not None
     assert persisted_update.raw.description == "updated through registered operation"
+
+
+def assert_ledger_sealed_read_outcome(ctx: ExecutorOutcome) -> None:
+    """Check the sealed read answers the stored row as open and the unknown id as not found."""
+    assert isinstance(ctx.payload, LedgerSealedReadRequest)
+    answered = ctx.resolve(LedgerSealedReadResult)
+    assert isinstance(answered, LedgerSealedReadResult)
+    assert answered.profile_id == ctx.profile_id
+    assert [row.transaction_id for row in answered.rows] == list(ctx.payload.transaction_ids)
+    assert [(row.state, row.seal_count) for row in answered.rows] == [("open", 0), ("not_found", 0)]
 
 
 def assert_ledger_batch_update_preview_outcome(ctx: ExecutorOutcome) -> None:
@@ -926,6 +937,7 @@ LEDGER_OUTCOME_ASSERTIONS: dict[str, Callable[[ExecutorOutcome], None]] = {
     "ledger.history": assert_ledger_history_outcome,
     "ledger.view": assert_ledger_view_outcome,
     "ledger.track": assert_ledger_track_outcome,
+    "ledger.sealed.read": assert_ledger_sealed_read_outcome,
     "ledger.participation": assert_ledger_participation_outcome,
     "ledger.participation.rebuild": assert_ledger_participation_rebuild_outcome,
     "ledger.review": assert_ledger_review_outcome,

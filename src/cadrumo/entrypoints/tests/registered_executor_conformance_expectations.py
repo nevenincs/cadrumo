@@ -773,6 +773,9 @@ EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = expectations_own
             "ledger.track", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.track",)
         ),
         RegisteredExecutorConformanceCase(
+            "ledger.sealed.read", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.sealed.read",)
+        ),
+        RegisteredExecutorConformanceCase(
             "ledger.list", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.list",)
         ),
         RegisteredExecutorConformanceCase(

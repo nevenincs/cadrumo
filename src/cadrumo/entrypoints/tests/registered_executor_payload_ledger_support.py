@@ -338,6 +338,18 @@ def _ledger_batch_rows(
     return tuple(rows)
 
 
+def _ledger_sealed_read(ctx: PayloadContext) -> PayloadResult:
+    """Name one stored unsealed row and an id no movement has."""
+    ports = compose_ledger_action_ports(bucket_id=str(ctx.profile_id), operation=ctx.operation)
+    created = _seed_unprocessed_outgoing(
+        ctx, ports, booked_date=date(2025, 1, 21), amount="33.00", description="conformance sealed read seed"
+    )
+    return ctx.request(
+        ctx.profile_subject,
+        {"profile_id": ctx.profile_id, "transaction_ids": (created.ref.transaction_id, "f" * 64)},
+    )
+
+
 def _ledger_batch_update_preview(ctx: PayloadContext) -> PayloadResult:
     ports = compose_ledger_action_ports(bucket_id=str(ctx.profile_id), operation=ctx.operation)
     rows = _ledger_batch_rows(ctx, ports, description="conformance batch preview seed")
@@ -848,6 +860,7 @@ LEDGER_BUILDERS: dict[str, PayloadBuilder] = {
     "ledger.split.manual": _ledger_split_manual,
     "ledger.merge": _ledger_merge,
     "ledger.update": _ledger_update,
+    "ledger.sealed.read": _ledger_sealed_read,
     LEDGER_BATCH_UPDATE_PREVIEW_OPERATION_DEFINITION_ID: _ledger_batch_update_preview,
     LEDGER_BATCH_UPDATE_OPERATION_DEFINITION_ID: _ledger_batch_update,
     "ledger.reset": _ledger_reset,

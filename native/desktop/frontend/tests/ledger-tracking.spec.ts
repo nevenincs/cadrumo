@@ -6,28 +6,42 @@ import { useLedgerRead } from "../src/components/ledger/inspector/useInspectorRe
 import { isTransactionPrefix } from "../src/shell/ledgerGrammar";
 import { fakePort, hexId } from "./support/ledger";
 
-test("stored-movement reads reject virtual keys before IPC and preserve canonical prefixes", async () => {
-  const { port, calls } = fakePort(() => ({ settle: { participated_in: [] } }));
-  for (const id of [
+test("stored-movement reads reject virtual keys before IPC and ask the rest in one read", async () => {
+  const { port, calls } = fakePort((call) => ({
+    settle: {
+      profile_id: "p",
+      rows: (
+        (call.kind === "submit" &&
+          (call.payload as { transaction_ids: string[] }).transaction_ids) ||
+        []
+      ).map((id) => ({
+        transaction_id: id,
+        state: "open",
+        seal_count: 0,
+        seals: [],
+      })),
+    },
+  }));
+  const virtual = [
     "draft-123456abcdef",
     "",
     "A0",
     " f0",
     "f0\n",
     "f".repeat(65),
-  ]) {
-    expect(isTransactionPrefix(id)).toBe(false);
-    expect(await readSealed(port, id)).toBeNull();
-  }
+  ];
+  for (const id of virtual) expect(isTransactionPrefix(id)).toBe(false);
+  expect([...(await readSealed(port, virtual)).values()]).toEqual(
+    virtual.map(() => null),
+  );
   expect(calls).toEqual([]);
-  for (const id of ["a", "0f", hexId("created")]) {
-    expect(isTransactionPrefix(id)).toBe(true);
-    expect(await readSealed(port, id)).toBe(false);
-  }
+  const stored = ["a", "0f", hexId("created")];
+  for (const id of stored) expect(isTransactionPrefix(id)).toBe(true);
+  const answered = await readSealed(port, [...stored, "draft-1"]);
+  expect(stored.map((id) => answered.get(id))).toEqual([false, false, false]);
+  expect(answered.get("draft-1")).toBeNull();
   expect(calls.map((call) => call.kind === "submit" && call.payload)).toEqual([
-    { transaction_prefix: "a" },
-    { transaction_prefix: "0f" },
-    { transaction_prefix: hexId("created") },
+    { transaction_ids: stored },
   ]);
 });
 

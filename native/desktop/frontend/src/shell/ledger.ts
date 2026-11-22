@@ -115,6 +115,8 @@ import type {
   LedgerStagedCheckWindowRequest,
   LedgerStagedCheckResult,
   LedgerTrackWindowRequest,
+  LedgerSealedReadWindowRequest,
+  LedgerSealedReadResult,
 } from "./ledgerMovementCheckContract";
 import type {
   InventoryInspectWindowRequest,
@@ -345,6 +347,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.rule.list",
   "ledger.rule.remove",
   "ledger.rule.trial",
+  "ledger.sealed.read",
   "ledger.split.check",
   "ledger.split.manual",
   "ledger.split.review",
@@ -763,6 +766,7 @@ export interface LedgerRequests extends LedgerClassifyJobRequests {
   "ledger.check": LedgerCheckWindowRequest;
   "ledger.split.review": LedgerLlmReviewWindowRequest;
   "ledger.track": LedgerTrackWindowRequest;
+  "ledger.sealed.read": LedgerSealedReadWindowRequest;
   "ledger.history.typed": LedgerHistoryWindowRequest;
   "ledger.remove": LedgerRemoveWindowRequest;
   "ledger.archive": LedgerLifecycleMutationWindowRequest;
@@ -941,6 +945,7 @@ export interface LedgerResults extends LedgerClassifyJobResults {
   "ledger.purchase_evidence.release": LedgerPurchaseEvidenceReleaseResult;
   "ledger.check": LedgerCheckProjection;
   "ledger.track": LedgerTrackProjection;
+  "ledger.sealed.read": LedgerSealedReadResult;
   "ledger.history.typed": LedgerHistoryTypedProjection;
   "ledger.remove": LedgerRemoveOperationResult;
   "ledger.archive": LedgerLifecycleOperationResult;
