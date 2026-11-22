@@ -164,6 +164,41 @@ function pagePress(selector, key, modifiers) {
   return true;
 }
 
+/**
+ * Scroll the movements grid's scroll container to `top` (null keeps it) and,
+ * when `key` names a drawn row, bring that row into view. Answers where the
+ * container is and how far it scrolls.
+ */
+function pageScroll(top, key) {
+  const shown = (el) => !!el && el.getClientRects().length > 0;
+  const page = [...document.querySelectorAll("section.ledger-page")].find(
+    shown,
+  );
+  const grid = page?.querySelector('[role="grid"]');
+  let box = grid;
+  while (box && box !== document.body) {
+    const style = getComputedStyle(box);
+    if (
+      /(auto|scroll)/.test(style.overflowY) &&
+      box.scrollHeight > box.clientHeight + 2
+    )
+      break;
+    box = box.parentElement;
+  }
+  if (!box || box === document.body) return null;
+  if (top !== null) box.scrollTop = top;
+  const row = key
+    ? page.querySelector(`[data-kind="data"][data-key="${CSS.escape(key)}"]`)
+    : null;
+  if (row) row.scrollIntoView({ block: "center" });
+  return {
+    top: box.scrollTop,
+    max: box.scrollHeight - box.clientHeight,
+    step: Math.max(1, Math.floor(box.clientHeight * 0.75)),
+    found: !!row,
+  };
+}
+
 function pageShown(selector) {
   return [...document.querySelectorAll(selector)].some(
     (el) => el.getClientRects().length > 0,
@@ -197,15 +232,60 @@ function pageUnwritten(scope) {
 // ---------------------------------------------------------------------------
 
 const ledger = () => exec(pageLedger, SYNTHETIC);
-const press = (selector, key = null, modifiers = []) =>
-  exec(pagePress, selector, key, modifiers);
+
+/** Every movement in the grid, read by scrolling its drawn window through. */
+async function allRows() {
+  const seen = new Map();
+  let at = await exec(pageScroll, 0, null);
+  for (;;) {
+    await sleep(250);
+    for (const row of (await ledger()).rows)
+      if (!seen.has(row.key)) seen.set(row.key, row);
+    if (!at || at.top >= at.max) break;
+    at = await exec(pageScroll, Math.min(at.max, at.top + at.step), null);
+  }
+  await exec(pageScroll, 0, null);
+  await sleep(250);
+  return [...seen.values()];
+}
+
+/** Scroll the grid until the row `key` is drawn, and centre it. */
+async function reveal(key) {
+  let at = await exec(pageScroll, null, key);
+  if (at?.found) return sleep(150);
+  at = await exec(pageScroll, 0, null);
+  for (;;) {
+    // The grid draws the rows of a new position after the scroll settles.
+    await sleep(200);
+    at = await exec(pageScroll, null, key);
+    if (!at || at.found || at.top >= at.max) break;
+    await exec(pageScroll, Math.min(at.max, at.top + at.step), null);
+  }
+  assert(at?.found, `row ${key} is not in the grid`);
+  return sleep(150);
+}
+
+async function press(selector, key = null, modifiers = []) {
+  if (key) await reveal(key);
+  return exec(pagePress, selector, key, modifiers);
+}
 
 async function pressOrFail(selector, what, key = null, modifiers = []) {
   assert(await press(selector, key, modifiers), `${what} is not shown`);
 }
 
+let missed = 0;
+
 async function shownWithin(selector, what, timeout = ANSWER_MS) {
-  return waitFor(() => exec(pageShown, selector), { timeout, what });
+  const shown = await waitFor(() => exec(pageShown, selector), {
+    timeout,
+    what,
+    soft: true,
+  });
+  if (shown) return shown;
+  missed += 1;
+  const path = await shot(`missed-${missed}`);
+  assert.fail(`${what} did not show within ${timeout} ms (screenshot ${path})`);
 }
 
 async function typeKeys(text) {
@@ -233,10 +313,31 @@ async function resetGrid() {
   }
   const reached = await openRailPage("ledger", PAGE);
   assert(reached.reached, reached.reason ?? "the ledger did not open");
-  await waitFor(async () => (await ledger()).rows.length > 0, {
+  // The Libro opens on the current quarter; the world's movements span the
+  // horizon year, so every walk works on all periods.
+  await pressOrFail("button.ledger-period", "the period choice");
+  await shownWithin(
+    ".ledger-period-menu .ledger-period-all",
+    "All periods",
+    10_000,
+  );
+  await pressOrFail(".ledger-period-menu .ledger-period-all", "All periods");
+  await waitFor(async () => !(await exec(pageShown, ".ledger-period-menu")), {
+    timeout: 10_000,
+    what: "the period menu to close",
+  });
+  const filled = await waitFor(async () => (await ledger()).rows.length > 0, {
     timeout: ANSWER_MS,
     what: "movements in the grid",
+    soft: true,
   });
+  if (!filled) {
+    const path = await shot("no-movements");
+    const page = await exec(pageText, PAGE);
+    assert.fail(
+      `no movements in the grid (screenshot ${path}): ${(page ?? "no ledger page").slice(0, 600)}`,
+    );
+  }
   if ((await ledger()).rows.some((row) => row.selected)) await escape();
 }
 
@@ -436,7 +537,7 @@ const savedSmall = { keys: [], before: [] };
 
 test("LBE-02 one category for ten movements is previewed per row, saved as one batch and reported per row", async () => {
   await resetGrid();
-  const rows = (await ledger()).rows.filter(
+  const rows = (await allRows()).filter(
     (row) => !row.synthetic && row.category !== label(CATEGORY),
   );
   assert(rows.length >= SMALL, `only ${rows.length} persona movements shown`);
@@ -479,7 +580,7 @@ test("LBE-03 the saved batch is undone by a new batch that writes each earlier v
   const counts = await exec(pageText, ".ledger-review .ledger-batch-counts");
   const saved = await saveAndWait();
   await done();
-  const after = (await ledger()).rows.filter((row) =>
+  const after = (await allRows()).filter((row) =>
     savedSmall.keys.includes(row.key),
   );
   const restored = savedSmall.keys.every(
@@ -514,7 +615,7 @@ test("LBE-04 one contact for every synthetic movement is previewed and saved as 
     { timeout: 20_000, what: "only synthetic movements shown" },
   );
   const box = await win.browser.$(
-    `${PAGE} [role="grid"] [role="checkbox"][aria-label="${label("desktop.ledger.select.shown")}"]`,
+    `${PAGE} input[type="checkbox"][aria-label="${label("desktop.ledger.select.shown")}"]`,
   );
   await box.click();
   await waitFor(
@@ -559,7 +660,7 @@ test("LBE-04 one contact for every synthetic movement is previewed and saved as 
 
 test("LBE-05 properties copied from one movement are pasted onto a selection, and a refused row shows its cause", async () => {
   await resetGrid();
-  const rows = (await ledger()).rows;
+  const rows = await allRows();
   const source = rows.find(
     (row) => !row.synthetic && row.category && row.category !== label(CATEGORY),
   );
@@ -652,16 +753,19 @@ test("LBE-05 properties copied from one movement are pasted onto a selection, an
       what: "the paste dialog to close",
     },
   );
-  const staged = await exec(
-    (keys) =>
-      keys.map(
+  const staged = [];
+  for (const key of targets) {
+    await reveal(key);
+    staged.push(
+      await exec(
         (key) =>
           !!document.querySelector(
             `section.ledger-page [data-kind="data"][data-key="${CSS.escape(key)}"] [data-column=category] [data-staged]`,
           ),
+        key,
       ),
-    targets,
-  );
+    );
+  }
   const stagedShot = await shot("lbe-05-pasted");
   record({
     case: "LBE-05",
