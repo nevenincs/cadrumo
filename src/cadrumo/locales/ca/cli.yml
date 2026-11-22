@@ -478,10 +478,11 @@ cli:
           euros i queda fora dels totals en euros fins que s'hi afegeixi un tipus.
           Indica el tipus amb app ledger invoice update --fx-rate.
         fx_rate_help: 'Tipus de canvi d''una factura en moneda estrangera: el valor
-          en euros d''una unitat de la seva moneda en la data de la factura, per exemple
-          0.9250 (LIVA art. 79.Once: el tipus vigent del Banc d''Espanya o l''últim
-          del BCE). Substitueix el tipus publicat i es registra com a declarat per
-          tu. Es rebutja en una factura en EUR.'
+          en euros d''una unitat de la seva moneda en el moment de la meritació, que
+          és la data d''operació si la indiques i, si no, la data de la factura, per
+          exemple 0.9250 (LIVA art. 79.Once: el tipus del Banc d''Espanya vigent en
+          el moment de la meritació o l''últim del BCE). Substitueix el tipus publicat
+          i es registra com a declarat per tu. Es rebutja en una factura en EUR.'
         group_help: Registres de factures de negoci (emeses o rebudes)
         import_all_refused: 'importació massiva de factures fallida: totes les files
           van ser rebutjades; no es va crear cap factura'

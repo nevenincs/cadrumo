@@ -166,10 +166,13 @@ def published_eur_rate_on_day_or_next_publication(
 def declared_fx_conversion_stamp(*, rate: Decimal, on_date: date) -> FxConversionStamp:
     """Return the stamp for a rate the operator states was in force on ``on_date``.
 
-    The operator's statement of the rate the law names (LIVA art. 79.Once: the
-    Banco de España seller rate in force at chargeability, or the latest ECB
-    rate under Directive 2006/112 art. 91(2); Ley 46/1998 art. 36 for the
-    income-tax forms) is evidence in its own right. The stamp names
+    ``on_date`` is the LIVA art. 75 devengo date the statement answers for, the
+    same date a published rate is read at. The operator's statement of the rate
+    the law names (LIVA art. 79.Once: the Banco de España seller rate "vigente
+    en el momento del devengo", or the latest ECB rate under Directive 2006/112
+    art. 91(2); Ley 46/1998 art. 36 for the income-tax forms) is evidence in its
+    own right, so the rate itself is taken as declared; only the date it is
+    recorded against comes from the record's devengo. The stamp names
     :data:`OPERATOR_DECLARED_RATE_SOURCE` rather than any provider, and carries
     no observation date because no publication was read.
 
@@ -194,15 +197,21 @@ def resolve_fx_conversion_stamp(
     :class:`ExchangeRateProvider`; this centralises the decision made around it,
     which had been hand-declared at two application call sites.
 
-    Conversion happens at the record's own operation date — the issue or invoice
-    date — because that is the date Spanish law binds the rate to: for IVA, the
-    seller exchange rate fixed by the Banco de España in force at the moment of
-    chargeability (LIVA art. 79.Once), where Directive 2006/112 art. 91(2) requires
-    Member States to accept the latest ECB rate at chargeability; for the
-    income-tax and other filing forms, the official rate published by the ECB
-    directly or through the Banco de España (Ley 46/1998 art. 36). Converting once
-    at ingest also keeps a stored euro figure stable rather than drifting with
-    every later read.
+    Conversion happens at the devengo date the caller resolves, because that is
+    the date Spanish law binds the rate to. LIVA art. 79.Once: "En las
+    operaciones cuya contraprestación se hubiese fijado en moneda o divisa
+    distintas de las españolas, se aplicará el tipo de cambio vendedor, fijado
+    por el Banco de España, que esté vigente en el momento del devengo", where
+    Directive 2006/112 art. 91(2) requires Member States to accept the latest
+    ECB rate at chargeability; for the income-tax and other filing forms, the
+    official rate published by the ECB directly or through the Banco de España
+    (Ley 46/1998 art. 36). The devengo itself is LIVA art. 75, which an invoice
+    records in its ``operation_date`` whenever that differs from expedition (RD
+    1619/2012 art. 6.1.i) and which the issue date only stands in for where no
+    operation date is recorded; this function takes the resolved date rather
+    than choosing between those fields, so there is no second devengo owner.
+    Converting once at ingest also keeps a stored euro figure stable rather than
+    drifting with every later read.
 
     A euro record is left unstamped: there is nothing to convert, and a
     ``1``-valued stamp would assert a conversion that never happened. A foreign
@@ -216,7 +225,7 @@ def resolve_fx_conversion_stamp(
     Args:
         currency: The record's currency. Compared case-insensitively against
             the euro token, so a caller that has not yet normalised it is safe.
-        on_date: The operation date to take the rate at.
+        on_date: The LIVA art. 75 devengo date to take the rate at.
         rate_provider: The rate source. Required rather than defaulted: the
             default ECB provider is an outbound adapter, and this layer must not
             reach for it.
