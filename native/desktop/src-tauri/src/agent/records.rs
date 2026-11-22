@@ -272,7 +272,7 @@ mod tests {
     const SCHEMA_FILE: &str = include_str!("snapshot.schema.json");
 
     /// Where a refreshed schema is written, when set to an absolute path.
-    const WRITE_TO: &str = "CADRUMO_AGENT_SNAPSHOT_SCHEMA_OUT";
+    const WRITE_TO: &str = "CADRUMO_DESKTOP_AGENT_SNAPSHOT_SCHEMA_OUT";
 
     fn schema() -> String {
         let mut generator = SchemaSettings::draft2020_12()

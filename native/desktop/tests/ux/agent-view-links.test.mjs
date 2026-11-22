@@ -15,13 +15,13 @@
 // Environment: as ./window-ux-audit.test.mjs (CADRUMO_PERSONA_WORLD,
 // CADRUMO_PERSONA_HOST, CADRUMO_CMAKE_BINARY_DIR, CADRUMO_BUILD_CONFIG,
 // CADRUMO_UX_RUN, CADRUMO_UX_STAGED_SHA256), plus
-//   CADRUMO_AGENT_LINKS_PERSON  1: when no provider lane of the run's profile
+//   CADRUMO_DESKTOP_AGENT_LINKS_PERSON  1: when no provider lane of the run's profile
 //                    reads ready, a person signs one in (in the window's agent
 //                    settings, or from the console) while the run waits;
 //                    otherwise such a run fails as unmeasured, never faked
-//   CADRUMO_AGENT_LINKS_PERSON_MS  (optional) how long the person has;
+//   CADRUMO_DESKTOP_AGENT_LINKS_PERSON_MS  (optional) how long the person has;
 //                    default 600000
-//   CADRUMO_AGENT_LINKS_REPLY_MS  (optional) how long the agent has to settle
+//   CADRUMO_DESKTOP_AGENT_LINKS_REPLY_MS  (optional) how long the agent has to settle
 //                    its reply; default 300000
 //
 // CADRUMO_UX_RUN must lie outside every Git project: the agent service refuses
@@ -60,9 +60,9 @@ import {
 import { callsSince, pageTimeInvokes } from "./ux-calls.mjs";
 import { dismissSetup } from "./ux-nav.mjs";
 
-const PERSON = process.env.CADRUMO_AGENT_LINKS_PERSON === "1";
-const PERSON_MS = Number(process.env.CADRUMO_AGENT_LINKS_PERSON_MS ?? 600_000);
-const REPLY_MS = Number(process.env.CADRUMO_AGENT_LINKS_REPLY_MS ?? 300_000);
+const PERSON = process.env.CADRUMO_DESKTOP_AGENT_LINKS_PERSON === "1";
+const PERSON_MS = Number(process.env.CADRUMO_DESKTOP_AGENT_LINKS_PERSON_MS ?? 600_000);
+const REPLY_MS = Number(process.env.CADRUMO_DESKTOP_AGENT_LINKS_REPLY_MS ?? 300_000);
 const STAGED_SHA256 = (process.env.CADRUMO_UX_STAGED_SHA256 ?? "")
   .trim()
   .toLowerCase();
@@ -579,7 +579,7 @@ const readyLane = (lanes) =>
   ) ?? null;
 
 /** A provider lane of the run's profile that reads ready, waiting for a
- * person to sign one in when CADRUMO_AGENT_LINKS_PERSON is 1. */
+ * person to sign one in when CADRUMO_DESKTOP_AGENT_LINKS_PERSON is 1. */
 async function findReadyLane(line) {
   if (!(await openProviderSettings()))
     return { reason: "the agent column did not draw its provider settings" };
@@ -602,7 +602,7 @@ async function findReadyLane(line) {
   if (!PERSON)
     return {
       reason:
-        "no provider lane of the run's profile reads ready, and CADRUMO_AGENT_LINKS_PERSON is not 1",
+        "no provider lane of the run's profile reads ready, and CADRUMO_DESKTOP_AGENT_LINKS_PERSON is not 1",
     };
   const host = JSON.parse(process.env.CADRUMO_PERSONA_HOST);
   console.info(
