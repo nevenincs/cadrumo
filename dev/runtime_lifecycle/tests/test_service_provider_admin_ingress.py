@@ -18,6 +18,7 @@ from pydantic import JsonValue, TypeAdapter
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo_agent_service.adapters.agent_programs import PACKAGE_AGENT_VARIABLE
 from cadrumo_agent_service.admin import AdminAction, AdminServer
+from cadrumo_agent_service.local_ai_relay import LocalAiFacts
 from cadrumo_agent_service.providers.application.tests.synthetic_catalog import (
     KEY_LANE,
     KEYLESS_LANE,
@@ -75,6 +76,7 @@ class _AdminRecorder:
         placement: LocalPlacement | None = None,
         task_kind: str | None = None,
         effort: str | None = None,
+        local_ai: LocalAiFacts | None = None,
     ) -> dict[str, JsonValue]:
         values: dict[str, str | bytearray | None] = {
             "provider": provider,
