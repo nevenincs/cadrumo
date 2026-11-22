@@ -14,7 +14,32 @@ import threading
 from collections.abc import Generator
 from contextlib import contextmanager
 from functools import partial
+from importlib import import_module
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from playwright.sync_api import Page
+
+
+_EMPTY_SCRIPT = "/* MathJax is not loaded by the docs browser gates. */"
+
+
+def serve_built_page_assets_locally(page: Page) -> None:
+    """Answer the built pages' one off-host asset, the MathJax CDN script, with an empty script.
+
+    A built docs page loads MathJax from Sphinx's default CDN address. No gate
+    renders math, and a test must not leave this machine, so the request is
+    fulfilled in the browser before it is sent. Any other off-host request still
+    reaches the browser's network stack, where the test network guard refuses it.
+    """
+    # Sphinx's extension modules expect its application package to be loaded first.
+    import_module("sphinx.application")
+    mathjax_url: str = import_module("sphinx.ext.mathjax").MATHJAX_URL
+    page.route(
+        mathjax_url,
+        lambda route: route.fulfill(status=200, content_type="application/javascript", body=_EMPTY_SCRIPT),
+    )
 
 
 class _ConcurrentHTTPServer(socketserver.ThreadingTCPServer):

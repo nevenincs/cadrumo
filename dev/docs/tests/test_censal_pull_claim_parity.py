@@ -39,6 +39,14 @@ _PROSE_FOR_PATH: dict[str, str] = {
     "contact.fiscal_address": "fiscal address",
     "contact.postcode": "postcode",
     "contact.fiscal_address_cadastral_reference": "cadastral reference",
+    "contact.fiscal_address_province_code": "province code",
+    "contact.fiscal_address_municipality_code": "municipality code",
+    "contact.fiscal_address_municipality_name": "municipality name",
+    "censo.aeat_delegacion_code": "AEAT delegation code",
+    "censo.aeat_administracion_code": "AEAT administration code",
+    "censo.aeat_administracion_name": "AEAT administration name",
+    "censo.activity_start_date": "activity start date",
+    "censo.activity_end_date": "activity end date",
 }
 
 #: The sentence that enumerates what a pull writes.
@@ -56,7 +64,7 @@ def _claimed_fields() -> list[str]:
     text = _GUIDE.read_text(encoding="utf-8")
     match = _CLAIM.search(text)
     assert match, f"{_GUIDE.name} no longer states what the pull fills; the claim gate cannot bind"
-    raw = match.group("fields").replace(" and ", ", ")
+    raw = " ".join(match.group("fields").split()).replace(" and ", ", ")
     return [part.strip().removeprefix("your ").strip() for part in raw.split(",") if part.strip()]
 
 

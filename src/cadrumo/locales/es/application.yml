@@ -2390,6 +2390,11 @@ application:
         esperan a que los textos de este ejercicio lo confirmen.'
       prior_filing_unrecorded: Para calcular la casilla {box}, registra tu Modelo
         {modelo} de {year}.
+      prize_payment_withholding_uncaptured: Un movimiento del {row_date} pagó {amount}
+        como premio y ninguna retención capturada lo declara. Captura la base del
+        premio, su retención y quien lo ganó con `aeat app modelo aggregate --modelo
+        111 --ledger-payment-withholding`, o cambia la categoría de IRPF del movimiento
+        si no pagó ningún premio.
       profile_fact_unrecorded: 'Para calcular la casilla {box}, registra en tu perfil:
         {field}.'
       register_cost_exceeds_paid: '{elements}: estos elementos indican un coste de
@@ -4177,6 +4182,12 @@ application:
           del trabajo y de actividades económicas de cada miembro, y los límites se
           aplican a cada miembro individualmente (art. 52.1 LIRPF). Nunca se muestra
           como cero.
+        m200_cuota_liquida_minima_unstated: Se aplica la tributación mínima (art.
+          30 bis LIS), porque tu importe neto de la cifra de negocios de los 12 meses
+          anteriores al período llega a 20 millones de euros o porque tu entidad tributa
+          en el régimen de consolidación fiscal. La cuota líquida mínima no se calcula,
+          así que indica tú mismo la casilla 00619 según las instrucciones oficiales,
+          aunque sea 0. Hasta entonces no se puede verificar la declaración.
         m200_extincion_entidad_unsupported: Esta casilla necesita el límite a la compensación
           de bases imponibles negativas (art. 26.1 LIS), que no se calcula cuando
           tu entidad marca la casilla 00072 «Extinción de entidad», porque no distinguimos

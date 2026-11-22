@@ -175,6 +175,8 @@ def _irpf_purpose_label(purpose: str) -> str:
         return tr("cli.ledger.categories.irpf_purpose_capital_mobiliario_yield")
     if purpose == "capital_gain":
         return tr("cli.ledger.categories.irpf_purpose_capital_gain")
+    if purpose == "prize_payment_withholding":
+        return tr("cli.ledger.categories.irpf_purpose_prize_payment_withholding")
     return purpose
 
 

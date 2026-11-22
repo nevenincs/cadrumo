@@ -1711,6 +1711,48 @@ family = "verification_predicates"
 selector = {revision = "2022", id = "limited-subtractions-respect-floor:deducciones-limitadas-por-cuota-liquida-minima"}
 fields = { expression = 'limited_subtractions_respect_floor(["DP200014B:00619", "DP200014:00582"], ["DP200014B:02315"], ["DP200014B:00585", "DP200014B:00584", "DP200014B:00588", "DP200014B:01039", "DP200014B:00565", "DP200014B:01040", "DP200014B:01041"], ["DP200014B:00583", "DP200014B:00399"], ["DP200014B:02314", "DP200014B:00590", "DP200014B:00082"])' }
 
+# Cuota liquida minima requirement (LIS art. 30 bis.1), authored at the 2022 edition. Only
+# the box the operator states moves: aeat-dr-200-2023 prints [00619] on DP200014B. The
+# manual of this edition states the same ámbito and exclusions (manuals/sociedades/2023
+# L14619-14640), and the threshold holds unchanged.
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-200-cuota-liquida-minima-exigida"}
+fields = { expression = { args = [
+    { op = "greater_than", args = [
+        { op = "add", args = [
+            { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sin_fines_lucrativos" }] },
+            { casilla_id = "DP200001:00012" },
+            { casilla_id = "DP200001:00048" },
+        ] },
+        { literal = "0" },
+    ] },
+    { literal = "0" },
+    { op = "if_then_else", args = [
+        { op = "greater_than", args = [
+            { op = "add", args = [{ casilla_id = "DP200001:00009" }, { casilla_id = "DP200001:00010" }] },
+            { literal = "0" },
+        ] },
+        { op = "unresolved_outcome", args = [{ text_literal = "m200-cuota-liquida-minima-unstated" }, { casilla_id = "DP200014B:00619" }] },
+        { op = "if_then_else", args = [
+            { op = "greater_equal", args = [
+                { binding = "modelo-200-profile-incn-prior-12-months" },
+                { parameter = "is.modelo-200.tributacion-minima-incn-minimo" },
+            ] },
+            { op = "unresolved_outcome", args = [{ text_literal = "m200-cuota-liquida-minima-unstated" }, { casilla_id = "DP200014B:00619" }] },
+            { literal = "0" },
+        ] },
+    ] },
+] } }
+sequence_additions = {source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["Aquellos cuyo importe neto de la cifra de negocios sea al menos de 20 millones de euros durante los 12 meses anteriores a la fecha en que se inicie el período impositivo", "Aquellos que tributen en el régimen de consolidación fiscal regulado en el Capítulo VI del Título VII de la LIS, con independencia de su importe neto de la cifra de negocios", "Esta tributación no se aplicará a los siguientes contribuyentes", "que tributen al tipo del 10 por ciento, según lo dispuesto en el artículo 29.3 de la LIS", "que tributen al tipo del 0 por ciento según lo dispuesto en el artículo 29.5 de la LIS", "Sociedades Anónimas Cotizadas de Inversión en el Mercado Inmobiliario (SOCIMI)"]}]}
+sequence_removals = {source_refs = [0, 1], source_citations = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "parameters"
+selector = {revision = "2022", id = "is.modelo-200.tributacion-minima-incn-minimo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["Aquellos cuyo importe neto de la cifra de negocios sea al menos de 20 millones de euros durante los 12 meses anteriores a la fecha en que se inicie el período impositivo"]}], source_refs = ["aeat-modelo-200-manual-2023"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
 # Calculation verification for Modelo 200 (Impuesto sobre Sociedades,
 # Ley 27/2014). Enrolls the always-present liquidation-chain finals as the
 # reconciliation contract: cuota integra (DP200014:00562, art. 29/30), cuota
@@ -1788,11 +1830,16 @@ sequence_removals = {source_refs = [0], source_citations = [0]}
 
 # The 2023 edition applies no DA 15ª limit on the compensation of bases
 # imponibles negativas (the Tribunal Constitucional annulled DA 15ª, Manual
-# práctico de Sociedades 2023 L579), so nothing in it reads the twelve-month
-# turnover; the 2024 edition declares it again for the restored DA 15ª.
-[[revisions."2023".family_removals]]
+# práctico de Sociedades 2023 L579), but it still reads the twelve-month turnover:
+# the page-1 cuadro exists "a efectos de determinar, si procede, la aplicación de
+# la tributación mínima (casilla [00619])" (manuals/sociedades/2023 L3148-3153),
+# and art. 30 bis holds unchanged. Only the DA 15ª reference goes; the 2024
+# edition states it again for the restored DA 15ª.
+[[revisions."2023".family_overrides]]
 family = "bindings"
 selector = {revision = "2022", id = "modelo-200-profile-incn-prior-12-months"}
+sequence_additions = {source_refs = ["aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["doce meses anteriores a la fecha de inicio del período impositivo", "determinar, si procede, la aplicación de la tributación mínima (casilla [00619])"]}]}
+sequence_removals = {legal_refs = [0], source_refs = [0], source_citations = [0]}
 
 [[revisions."2023".family_overrides]]
 family = "bindings"

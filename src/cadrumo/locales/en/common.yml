@@ -3954,6 +3954,7 @@ desktop:
       capital_inmobiliario: Rental of property
       capital_mobiliario: Movable capital income
       ganancias_patrimoniales: Capital gains and losses
+      premios: Prize paid (contest, raffle)
       trabajo: Employment
     issue:
       next: Next readiness issue

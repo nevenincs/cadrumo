@@ -548,4 +548,5 @@ export type RegistryUnresolvedOutcomeReason =
   | "autonomic-deduction-unsummed-box"
   | "joint-return-member-income-unavailable"
   | "m200-tax-regime-unsupported"
-  | "m200-extincion-entidad-unsupported";
+  | "m200-extincion-entidad-unsupported"
+  | "m200-cuota-liquida-minima-unstated";

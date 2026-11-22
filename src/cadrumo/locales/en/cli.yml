@@ -3446,6 +3446,8 @@ cli:
       irpf_purpose_capital_gain: capital gain or loss (not computed yet)
       irpf_purpose_capital_mobiliario_yield: movable capital yield (interest, dividends)
       irpf_purpose_employment_income: employment income (not for net-paid invoices)
+      irpf_purpose_prize_payment_withholding: contest or raffle prize you paid with
+        retención (Modelo 111 premios)
       irpf_purpose_rent_expense_withholding: net-paid rent expense withholding
       irpf_purpose_rental_property_income: rental income and expenses of a property
       irpf_usage_example: 'Net-paid rent example: --category-id {rent_category} --irpf-category

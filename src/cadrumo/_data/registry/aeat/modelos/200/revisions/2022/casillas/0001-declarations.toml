@@ -49281,3 +49281,22 @@ number = "pos-227"
 segmento = "DP200024"
 section = ["agrup_interes_economico_y_utes", "modelo_de_informacion"]
 semantic_role = "is_base_de_deducciones_b_base_deducciones_por_inversiones"
+
+# Computation-only row: no AEAT design prints it. It holds whether the cuota líquida mínima
+# of LIS art. 30 bis [00619] applies to the declaration: 0 when it does not, and no value,
+# with the box the operator states, when it does (formula modelo-200-cuota-liquida-minima-
+# exigida). Kept on DP200014 in every edition; the 2023 design moves [00619] to DP200014B
+# and only the operator box the formula names follows it.
+[[revisions."2022".casillas]]
+id = "DP200014:cuota-liquida-minima-exigida"
+continuidad_id = "is-liquidacion-iv-cuota-liquida-minima-exigida"
+number = "DP200014:cuota-liquida-minima-exigida"
+segmento = "DP200014"
+section = ["liquidacion_iii", "otras_deducciones"]
+semantic_role = "is_liquidacion_iv_cuota_liquida_minima_exigida"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Whether art. 30 bis LIS requires the cuota líquida mínima [00619] is the single internal requirement over that box; no sibling casilla shares this role within the modelo revision."
+input_kind = "computed"
+formula = "modelo-200-cuota-liquida-minima-exigida"
+internal_only = true
+legal_refs = ["ley-27-2014:art-30-bis"]

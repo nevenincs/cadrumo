@@ -51,20 +51,18 @@ source.pdf.extracted.md`` for the edition selected; the record design is the
     LIS art. 40.2 (BOE-A-2014-12328, consolidated text): each instalment is
       18 % of the cuota of the last period whose plazo had ended.
 
-The edition reads no twelve-month INCN. Earlier and later editions declare the
-binding modelo-200-profile-incn-prior-12-months (profile fact
-incn_prior_12_months, legal ref LIS DA 15a) only for the DA 15a limits on the
-compensation of bases imponibles negativas: 50 % from 20 millones and 25 % from
-60 millones of INCN in the twelve months before the period (the preceding
-manual's DA 15a passage; the following manual's restored DA 15a). This
-edition's manual records at L576-L586 that the Tribunal Constitucional, in the
-judgment it dates there, annulled DA 15a and DT 16a.3 LIS, and at
-L13273-13277 prints the 70 % limit alone, so its revision removes the binding
-and the DA 15a parameters and the oracle supplies no such input. The same
-manual still asks for the twelve-month INCN on page 1 for the art. 30 bis
-minimum (L13403-13405) and the art. 11.12 limits (L9466-9469); neither is read
-through that binding. The cuota liquida minima [00619] is supplied as 0 in the
-``persona`` and ``general`` scenarios, which art. 30 bis does not reach.
+The edition reads the twelve-month INCN (binding
+modelo-200-profile-incn-prior-12-months, profile fact incn_prior_12_months) for
+the art. 30 bis minimum alone. This edition's manual records at L576-L586 that
+the Tribunal Constitucional, in the judgment it dates there, annulled DA 15a and
+DT 16a.3 LIS, and at L13273-13277 prints the 70 % limit alone, so its revision
+drops the DA 15a reference and parameters; the same manual still asks for the
+twelve-month INCN on page 1 "a efectos de determinar, si procede, la aplicacion
+de la tributacion minima (casilla [00619])". Each scenario states that INCN: the
+``persona`` and ``general`` figures equal their preceding-period INCN, below 20
+millones, so art. 30 bis does not reach them and [00619] is supplied as 0; the
+``ejemplo-*`` sociedades exceeded 20 millones, so the minimum applies and each
+consigns its [00619].
 
 Scenario ``persona``: the sociedad-limitada persona's return for the exercise
 (dev/fixtures/personas/sociedad-limitada). Resultado contable 25400.00, no
@@ -214,6 +212,7 @@ _SCENARIOS: Mapping[str, _OracleScenario] = {
             "DP200014:00547": Decimal("16300.00"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("16300.00"),
             "modelo-200-incn-periodo-impositivo-anterior": Decimal("28500.00"),
+            "modelo-200-profile-incn-prior-12-months": Decimal("28500.00"),
             "modelo-200-pago-fraccionado-primero-40-2": Decimal("54.00"),
         },
         expected={
@@ -235,6 +234,7 @@ _SCENARIOS: Mapping[str, _OracleScenario] = {
             "DP200012:00501": Decimal("100000.00"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": _ZERO,
             "modelo-200-incn-periodo-impositivo-anterior": Decimal("12000000"),
+            "modelo-200-profile-incn-prior-12-months": Decimal("12000000"),
             "modelo-200-pago-fraccionado-primero-40-2": _ZERO,
         },
         expected={
@@ -258,6 +258,7 @@ _SCENARIOS: Mapping[str, _OracleScenario] = {
             "DP200014B:00619": Decimal("300000.00"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": _ZERO,
             "modelo-200-incn-periodo-impositivo-anterior": _WORKED_EXAMPLE_PRIOR_INCN,
+            "modelo-200-profile-incn-prior-12-months": _WORKED_EXAMPLE_PRIOR_INCN,
             "modelo-200-pago-fraccionado-primero-40-2": _ZERO,
         },
         expected={
@@ -281,6 +282,7 @@ _SCENARIOS: Mapping[str, _OracleScenario] = {
             "DP200014B:01766": Decimal("20000.00"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": _ZERO,
             "modelo-200-incn-periodo-impositivo-anterior": _WORKED_EXAMPLE_PRIOR_INCN,
+            "modelo-200-profile-incn-prior-12-months": _WORKED_EXAMPLE_PRIOR_INCN,
             "modelo-200-pago-fraccionado-primero-40-2": Decimal("10000.00"),
         },
         expected={
@@ -304,6 +306,7 @@ _SCENARIOS: Mapping[str, _OracleScenario] = {
             "DP200014B:00619": Decimal("300000.00"),
             "modelo-200-bin-pendiente-ejercicios-anteriores": _ZERO,
             "modelo-200-incn-periodo-impositivo-anterior": _WORKED_EXAMPLE_PRIOR_INCN,
+            "modelo-200-profile-incn-prior-12-months": _WORKED_EXAMPLE_PRIOR_INCN,
             "modelo-200-pago-fraccionado-primero-40-2": _ZERO,
         },
         expected={

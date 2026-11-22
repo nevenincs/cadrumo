@@ -551,3 +551,75 @@ required_text = [
     "bases imponibles negativas",
     "se podran compensar en el periodo impositivo bases imponibles negativas hasta el importe de 1 millon de euros",
 ]
+
+# Whether the cuota líquida mínima of LIS art. 30 bis [00619] must be stated. Art. 30 bis.1
+# covers the contribuyentes "cuyo importe neto de la cifra de negocios sea al menos de 20
+# millones de euros durante los 12 meses anteriores a la fecha en que se inicie el período
+# impositivo" and those "que tributen en el régimen de consolidación fiscal ... con
+# independencia de su importe neto de la cifra de negocios"; it does not apply to the
+# entidades of Ley 49/2002 taxed at 10 per cent under art. 29.3, the entities taxed at 1 per
+# cent under art. 29.4, the fondos de pensiones taxed at 0 per cent under art. 29.5, or the
+# SOCIMI (manuals/sociedades/2022 L14066-14083). When it applies the minimum is an amount
+# the filer works out (the lower of the 30 bis.1 and 30 bis.2.a amounts, L14213-14218),
+# which may legitimately be zero, so the target is left without a value and names [00619]
+# for the operator to state: verification blocks until the box is stated, and a stated 0
+# counts as stated. When it does not apply the target is 0 and nothing is asked, as the
+# manual's own liquidaciones "sin tributación mínima" consign "Cuota líquida mínima [00619]
+# 0" (L14209, L14380).
+#
+# The exclusions read as the rate lane reads them: the 29.3 lane is the
+# sin_fines_lucrativos legal form, whose tipo is the non-profit special rate; SOCIMI is
+# DP200001:00012 and fondo de pensiones DP200001:00048. The art. 29.4 keys (00003 SICAV or
+# FI financiero, 00004 SII or FII) are not read: their 1 per cent rate depends on
+# conditions the key alone does not prove, and the tipo member refuses those lanes before
+# the cuota líquida exists. Consolidation is read from the caracteres DP200001:00009
+# (entidad dominante) and 00010 (entidad dependiente), which the manual has "las entidades
+# que tributen en el régimen de consolidación fiscal" mark (L2661-2667, L2680-2681). Left
+# open and not decided here: whether a group member's individual Modelo 200 consigns the
+# minimum the group computes (Ley 22/2021 defines a cuota líquida del grupo fiscal, art.
+# 71.1, and the corpus holds no Modelo 220 instructions); whose INCN an establecimiento
+# permanente (DA 10ª TRLIRNR) reads; and the SOCIMI entrada and salida keys 00057 and
+# 00064, which are not read as SOCIMI here.
+[[revisions."2022".formulas]]
+id = "modelo-200-cuota-liquida-minima-exigida"
+target_casilla_id = "DP200014:cuota-liquida-minima-exigida"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [
+        { op = "add", args = [
+            { op = "text_equal", args = [{ binding = "modelo-200-profile-legal-entity-form" }, { text_literal = "sin_fines_lucrativos" }] },
+            { casilla_id = "DP200001:00012" },
+            { casilla_id = "DP200001:00048" },
+        ] },
+        { literal = "0" },
+    ] },
+    { literal = "0" },
+    { op = "if_then_else", args = [
+        { op = "greater_than", args = [
+            { op = "add", args = [{ casilla_id = "DP200001:00009" }, { casilla_id = "DP200001:00010" }] },
+            { literal = "0" },
+        ] },
+        { op = "unresolved_outcome", args = [{ text_literal = "m200-cuota-liquida-minima-unstated" }, { casilla_id = "DP200014:00619" }] },
+        { op = "if_then_else", args = [
+            { op = "greater_equal", args = [
+                { binding = "modelo-200-profile-incn-prior-12-months" },
+                { parameter = "is.modelo-200.tributacion-minima-incn-minimo" },
+            ] },
+            { op = "unresolved_outcome", args = [{ text_literal = "m200-cuota-liquida-minima-unstated" }, { casilla_id = "DP200014:00619" }] },
+            { literal = "0" },
+        ] },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-30-bis"]
+source_refs = ["aeat-dr-200-2022", "aeat-modelo-200-manual-2022"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = [
+    "Aquellos cuyo importe neto de la cifra de negocios sea al menos de 20 millones de euros durante los 12 meses anteriores a la fecha en que se inicie el período impositivo",
+    "Aquellos que tributen en el régimen de consolidación fiscal regulado en el Capítulo VI del Título VII de la LIS, con independencia de su importe neto de la cifra de negocios",
+    "Esta tributación no se aplicará a los siguientes contribuyentes",
+    "que tributen al tipo del 10 por ciento, según lo dispuesto en el artículo 29.3 de la LIS",
+    "que tributen al tipo del 0 por ciento según lo dispuesto en el artículo 29.5 de la LIS",
+    "Sociedades Anónimas Cotizadas de Inversión en el Mercado Inmobiliario (SOCIMI)",
+]

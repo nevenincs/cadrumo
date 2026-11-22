@@ -9,7 +9,9 @@ the declaration.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
@@ -26,8 +28,6 @@ from ...domain.modelos.verification_report import (
 from .preconditions import build_modelo_precondition_failure
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
-
     from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
     from ...domain.modelos.calculation_revision import CalculationRevision
     from .preconditions import ModeloPreconditionFailure
@@ -44,7 +44,17 @@ STATED_BOX_ACTION_ID = "operator.modelo.work.set_value"
 _EXTINCION_ENTIDAD_MESSAGE_KEY: Final = (
     "application.modelo.projection_words.casilla_reason.m200_extincion_entidad_unsupported"
 )
+_CUOTA_LIQUIDA_MINIMA_MESSAGE_KEY: Final = (
+    "application.modelo.projection_words.casilla_reason.m200_cuota_liquida_minima_unstated"
+)
 _OTHER_REASON_MESSAGE_KEY: Final = "application.modelo.projection_words.casilla_reason.other"
+_REASON_MESSAGE_KEYS: Final[Mapping[RegistryUnresolvedOutcomeReason, str]] = MappingProxyType(
+    {
+        RegistryUnresolvedOutcomeReason.M200_EXTINCION_ENTIDAD_UNSUPPORTED: _EXTINCION_ENTIDAD_MESSAGE_KEY,
+        RegistryUnresolvedOutcomeReason.M200_CUOTA_LIQUIDA_MINIMA_UNSTATED: _CUOTA_LIQUIDA_MINIMA_MESSAGE_KEY,
+    }
+)
+"""The sentence of each reason that names a box for the operator to state; any other reason reads generically."""
 
 
 def _operator_box(outcome: RegistryCalculationUnresolvedOutcome) -> CasillaId | None:
@@ -101,11 +111,7 @@ def append_operator_stated_outcome_findings(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
             casilla_id=box,
-            message_locale_key=(
-                _EXTINCION_ENTIDAD_MESSAGE_KEY
-                if outcome.reason is RegistryUnresolvedOutcomeReason.M200_EXTINCION_ENTIDAD_UNSUPPORTED
-                else _OTHER_REASON_MESSAGE_KEY
-            ),
+            message_locale_key=_REASON_MESSAGE_KEYS.get(outcome.reason, _OTHER_REASON_MESSAGE_KEY),
             message_facts={"reason": outcome.reason.value, "casilla_id": box, "open_casilla_id": outcome.casilla_id},
             legal_refs=outcome.legal_refs,
             source_refs=outcome.source_refs,
