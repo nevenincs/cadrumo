@@ -3205,6 +3205,9 @@ application:
         No s''ha desat res.'
       ledger_preflight_blocked_period: 'No es pot calcular %{period}: %{need}. No
         s''ha desat res.'
+      ledger_preflight_derived_modification: modifica la base en %{base} i la quota
+        en %{cuota}
+      ledger_preflight_derived_recargo: i el recàrrec d'equivalència en %{recargo}
       ledger_preflight_missing_fact:
         document_received_on: quan la vas rebre
         rectification_cause: per què rectifica l'operació
@@ -3237,10 +3240,12 @@ application:
         invoice_recargo_split_unresolved: 'una factura emesa porta un únic recàrrec
           d''equivalència sobre diversos tipus d''IVA que no coincideix amb la suma
           del recàrrec de cada tipus: corregeix el recàrrec de la factura'
-        invoice_rectificativa_modification_unmodelled: 'una factura rectificativa
-          no es declara en cap fila de tipus d''IVA: indica''n la base i la quota
-          amb el signe que correspongui a les caselles 14 i 15 del Model 303 si la
-          vas emetre, o a les caselles 40 i 41 si la vas rebre'
+        invoice_rectificativa_modification_unmodelled: 'el registre d''una factura
+          rectificativa no indica la modificació que fa: com expressa els seus imports
+          i, si els substitueix, la factura única a la qual substitueix'
+        invoice_rectificativa_period_undecided: la modificació que fa una factura
+          rectificativa ja es coneix, però el període al qual correspon depèn de la
+          seva causa i de l'opció que la llei et deixa
         invoice_used_goods_margin_unmodelled: 'la base del marge d''una venda en el
           règim especial dels béns usats (art. 137) no es calcula: indica tu mateix
           la base del marge i la seva quota a les caselles d''IVA meritat del Model

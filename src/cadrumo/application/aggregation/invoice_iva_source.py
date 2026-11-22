@@ -37,6 +37,10 @@ from ...domain.invoices.enums import RectificationFact
 from ...domain.invoices.models import Invoice
 from ...domain.invoices.payment_matching import suggest_payments
 from ...domain.invoices.rectification import missing_rectification_facts
+from ...domain.invoices.rectification_modification import (
+    RectificationModification,
+    RectificationModificationRefusal,
+)
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from .errors import AggregationValidationError
@@ -49,7 +53,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
     from ...domain.user_profile.values import UserProfileRecord
-    from .modelo_bindings_invoice_iva import ScreenedInvoiceIva
+    from .modelo_bindings_invoice_iva import ScreenedInvoiceIva, ScreenedRectificativa
 
 
 class TransactionCatalogueByIdReader(Protocol):
@@ -84,14 +88,21 @@ class InvoiceIvaFindingReason(StrEnum):
     #: than a cent from base times the LIVA art. 161 rate for that date, is the
     #: labores del tabaco rate no casilla is bound for, or has no published rate.
     RECARGO_NOT_DECLARABLE = "invoice_recargo_not_declarable"
-    #: A factura rectificativa, issued or received. Its lines state magnitudes
-    #: with no direction, so no rate row declares it; the modification belongs
-    #: with its sign in the operator-entered Modelo 303 casillas 14/15 (LIVA
-    #: art. 80) or 40/41. The finding carries the rectification facts the
-    #: record is missing for its side, so the person can supply them; it blocks
-    #: whether or not any are missing, because nothing derives the modification
-    #: from them yet.
+    #: A factura rectificativa whose record does not support a modification at
+    #: all: it states none of the facts its side needs, or it substitutes
+    #: figures whose original is absent, ambiguous, in another currency, or
+    #: runs against the recorded direction. The finding carries the missing
+    #: facts and the refusal that names which, so the person can supply or
+    #: correct them.
     RECTIFICATIVA_MODIFICATION_UNMODELLED = "invoice_rectificativa_modification_unmodelled"
+    #: A factura rectificativa whose signed modification IS derived, carried on
+    #: the finding so the person sees the figures. It still declares nothing,
+    #: because the period a modification belongs to comes from the side, the
+    #: cause and a recorded election (LIVA art. 89.Cinco, art. 114.Dos), and
+    #: that decision is not made yet. Placing it in the period being calculated
+    #: because it is the one in hand is exactly the guess the governing decision
+    #: refuses.
+    RECTIFICATIVA_PERIOD_UNDECIDED = "invoice_rectificativa_period_undecided"
     #: An issued invoice under the régimen especial de los bienes usados. Its
     #: taxable base is the margin de beneficio, IVA included (LIVA art. 137),
     #: and its cuota is never stated on the invoice (art. 138), so no rate row
@@ -111,9 +122,19 @@ class InvoiceIvaFinding(BaseModel):
     #: The rectification facts the invoice's side needs and the record does not
     #: hold, in declaration order, so the finding names the fields the person
     #: opens rather than the family. Empty on every other reason, and also
-    #: empty on a rectificativa that states them all: this slice still blocks
-    #: the family, and the sentence says so without claiming a gap there is not.
+    #: empty on a rectificativa that states them all: a complete record can
+    #: still be held, for a reason that is not a missing fact.
     missing_rectification_facts: tuple[RectificationFact, ...] = ()
+    #: Why a rectificativa's modification could not be derived at all. Set only
+    #: beside :attr:`InvoiceIvaFindingReason.RECTIFICATIVA_MODIFICATION_UNMODELLED`,
+    #: and ``None`` there when the facts are simply absent, which
+    #: :attr:`missing_rectification_facts` already names.
+    rectification_refusal: RectificationModificationRefusal | None = None
+    #: The signed per-rate modification the document makes, carried so the
+    #: person sees the figures the derivation read out of it. Set only beside
+    #: :attr:`InvoiceIvaFindingReason.RECTIFICATIVA_PERIOD_UNDECIDED`; nothing
+    #: declares it, because its period is undecided.
+    rectification_modification: RectificationModification | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -422,6 +443,32 @@ class InvoiceIvaSource:
     screen: ScreenedInvoiceIva
 
 
+def _rectificativa_finding(screened: ScreenedRectificativa) -> InvoiceIvaFinding:
+    """Hold one rectificativa, saying whether its modification is derived or out of reach.
+
+    Both outcomes block and neither declares anything. They are separate
+    reasons because the person does something different with each: a refusal
+    names a record to complete or correct, while a derived modification is
+    complete and waiting on the period its side and cause place it in.
+    """
+    derived = screened.derived
+    modification = derived.modification
+    if modification is None:
+        return InvoiceIvaFinding(
+            reason=InvoiceIvaFindingReason.RECTIFICATIVA_MODIFICATION_UNMODELLED,
+            invoice_id=screened.invoice.invoice_id,
+            missing_rectification_facts=missing_rectification_facts(screened.invoice),
+            rectification_refusal=(
+                None if derived.refusal is RectificationModificationRefusal.FACTS_NOT_STATED else derived.refusal
+            ),
+        )
+    return InvoiceIvaFinding(
+        reason=InvoiceIvaFindingReason.RECTIFICATIVA_PERIOD_UNDECIDED,
+        invoice_id=screened.invoice.invoice_id,
+        rectification_modification=modification,
+    )
+
+
 def _screen_findings(screen: ScreenedInvoiceIva) -> list[InvoiceIvaFinding]:
     """Return the findings the invoice screen itself raises, in their reported order."""
     findings = [
@@ -440,14 +487,7 @@ def _screen_findings(screen: ScreenedInvoiceIva) -> list[InvoiceIvaFinding]:
         InvoiceIvaFinding(reason=InvoiceIvaFindingReason.RECARGO_NOT_DECLARABLE, invoice_id=invoice.invoice_id)
         for invoice in screen.recargo_not_declarable
     )
-    findings.extend(
-        InvoiceIvaFinding(
-            reason=InvoiceIvaFindingReason.RECTIFICATIVA_MODIFICATION_UNMODELLED,
-            invoice_id=invoice.invoice_id,
-            missing_rectification_facts=missing_rectification_facts(invoice),
-        )
-        for invoice in screen.rectificativa_modification_unmodelled
-    )
+    findings.extend(_rectificativa_finding(screened) for screened in screen.rectificativas)
     findings.extend(
         InvoiceIvaFinding(reason=InvoiceIvaFindingReason.USED_GOODS_MARGIN_UNMODELLED, invoice_id=invoice.invoice_id)
         for invoice in screen.used_goods_margin_unmodelled

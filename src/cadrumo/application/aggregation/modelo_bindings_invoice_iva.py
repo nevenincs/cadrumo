@@ -25,6 +25,10 @@ from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObserva
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.invoices.enums import IvaRate, iva_rate_percentage
 from ...domain.invoices.models import Invoice, InvoiceLine
+from ...domain.invoices.rectification_modification import (
+    DerivedRectificationModification,
+    derive_rectification_modification,
+)
 from ...domain.iva.components import registry_category_projection
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ...domain.iva.flow import (
@@ -38,7 +42,7 @@ from ...domain.iva.recargo_equivalencia import recargo_rate_record_for_applied_r
 from ...domain.iva.schema import InvoiceKind, IvaCategory, IvaLedgerObservationRole
 from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.models import Transaction
-from ..invoices.source_observations import is_rectificativa
+from ..invoices.source_observations import is_rectificativa, rectified_invoices
 from .errors import AggregationValidationError
 from .invoice_devengo import (
     invoice_devengo_in_period,
@@ -696,6 +700,21 @@ def recargo_rate_mismatch_diagnostics(
 
 
 @dataclass(frozen=True, slots=True)
+class ScreenedRectificativa:
+    """One factura rectificativa the period holds, with the modification its record supports.
+
+    ``derived`` carries either the signed per-rate modification RD 1619/2012
+    art. 15.5 reads out of the document, or the refusal that stands in its way.
+    Either way the invoice is declared on no rate row: a derived modification
+    still needs the period LIVA art. 89.Cinco and art. 114.Dos place it in,
+    which this screen does not decide.
+    """
+
+    invoice: Invoice
+    derived: DerivedRectificationModification
+
+
+@dataclass(frozen=True, slots=True)
 class ScreenedInvoiceIva:
     """What the invoice IVA screen found, named rather than positional.
 
@@ -732,11 +751,13 @@ class ScreenedInvoiceIva:
             is more than a cent from base times the art. 161 rate, is the
             tobacco rate, or has no published rate on the date. The period is
             blocked until the invoice is corrected.
-        rectificativa_modification_unmodelled: facturas rectificativas, issued
-            or received. Their lines state magnitudes with no direction, and
-            the modification they make belongs in the operator-entered
-            casillas 14/15 or 40/41 rather than on a rate row, so they are
-            declared on none and the period is blocked until it is stated.
+        rectificativas: facturas rectificativas the period holds, issued or
+            received, each with the signed modification its record supports or
+            the refusal that stands in its way. Their lines state magnitudes,
+            so no rate row declares them: the modification belongs in
+            casillas 14/15 or 40/41 with its sign, and the period stays blocked
+            either way, because the period the modification belongs to is not
+            decided here.
         used_goods_margin_unmodelled: issued invoices under the régimen
             especial de los bienes usados. LIVA art. 137 taxes the margin de
             beneficio, IVA included, not the invoiced price, and art. 138
@@ -754,7 +775,7 @@ class ScreenedInvoiceIva:
     recargo_rate_divergences: tuple[_RecargoRateDivergence, ...] = ()
     recargo_split_unresolved: tuple[Invoice, ...] = ()
     recargo_not_declarable: tuple[Invoice, ...] = ()
-    rectificativa_modification_unmodelled: tuple[Invoice, ...] = ()
+    rectificativas: tuple[ScreenedRectificativa, ...] = ()
     used_goods_margin_unmodelled: tuple[Invoice, ...] = ()
 
 
@@ -769,7 +790,9 @@ class _ScreenedInvoiceIvaResult:
     recargo_not_declarable: bool
     deduction_authority_missing: bool
     category_counterparty_mismatch: bool
-    rectificativa_modification_unmodelled: bool = False
+    #: The modification a rectificativa makes, or the refusal that stands in
+    #: its way; ``None`` for every other invoice class.
+    rectificativa: DerivedRectificationModification | None = None
     used_goods_margin_unmodelled: bool = False
 
 
@@ -804,10 +827,18 @@ def screened_invoice_iva_observations(
     art. 99 for deduction), so every invoice accruing in ``period`` contributes,
     linked to a payment or not. ``linked_movements`` holds the movements the
     invoices name, read only for the deduction classification one may record.
+
+    ``invoices`` is the bucket's invoices and not only the period's, because
+    the period selection happens here. A substitution rectificativa reads the
+    invoice it replaces out of that same reading: RD 1619/2012 art. 15.5 states
+    the post-rectification figures, and the original it replaces ordinarily
+    accrued in an earlier period.
     """
     _resolve_invoice_iva_registry_declarations(effective_date=period.end_date, operation=operation)
+    catalogue = tuple(invoices)
     return _collect_screened_invoice_results(
-        (invoice for invoice in invoices if invoice_iva_in_period(invoice, bucket_id=bucket_id, period=period)),
+        (invoice for invoice in catalogue if invoice_iva_in_period(invoice, bucket_id=bucket_id, period=period)),
+        catalogue=catalogue,
         linked_movements=linked_movements,
         operation=operation,
     )
@@ -821,12 +852,12 @@ class _FlaggedInvoices:
     recargo_rate_divergences: list[_RecargoRateDivergence] = field(default_factory=list)
     recargo_split_unresolved: list[Invoice] = field(default_factory=list)
     recargo_not_declarable: list[Invoice] = field(default_factory=list)
-    rectificativa_modification_unmodelled: list[Invoice] = field(default_factory=list)
+    rectificativas: list[ScreenedRectificativa] = field(default_factory=list)
     used_goods_margin_unmodelled: list[Invoice] = field(default_factory=list)
 
     def record(self, invoice: Invoice, screened: _ScreenedInvoiceIvaResult) -> None:
-        if screened.rectificativa_modification_unmodelled:
-            self.rectificativa_modification_unmodelled.append(invoice)
+        if screened.rectificativa is not None:
+            self.rectificativas.append(ScreenedRectificativa(invoice=invoice, derived=screened.rectificativa))
         if screened.used_goods_margin_unmodelled:
             self.used_goods_margin_unmodelled.append(invoice)
         if screened.reverse_charge_underivable:
@@ -842,6 +873,7 @@ class _FlaggedInvoices:
 def _collect_screened_invoice_results(
     invoices: Iterable[Invoice],
     *,
+    catalogue: Sequence[Invoice] = (),
     linked_movements: Mapping[str, Transaction],
     operation: PinnedAuthorityOperation,
 ) -> ScreenedInvoiceIva:
@@ -860,7 +892,12 @@ def _collect_screened_invoice_results(
         # Every list below names the classified invoice, so a finding states
         # the category the projection actually read.
         invoice = invoice_with_paying_movement_category(stored, paying)
-        screened = screened_invoice_iva_result(invoice, linked_movements=paying, operation=operation)
+        screened = screened_invoice_iva_result(
+            invoice,
+            linked_movements=paying,
+            catalogue=catalogue,
+            operation=operation,
+        )
         flagged.record(invoice, screened)
         if screened.deduction_authority_missing:
             deduction_authority_missing.append(invoice)
@@ -881,7 +918,7 @@ def _collect_screened_invoice_results(
         recargo_rate_divergences=tuple(flagged.recargo_rate_divergences),
         recargo_split_unresolved=tuple(flagged.recargo_split_unresolved),
         recargo_not_declarable=tuple(flagged.recargo_not_declarable),
-        rectificativa_modification_unmodelled=tuple(flagged.rectificativa_modification_unmodelled),
+        rectificativas=tuple(flagged.rectificativas),
         used_goods_margin_unmodelled=tuple(flagged.used_goods_margin_unmodelled),
     )
 
@@ -920,14 +957,22 @@ def screened_invoice_iva_result(
     invoice: Invoice,
     *,
     linked_movements: Sequence[Transaction],
+    catalogue: Sequence[Invoice] = (),
     operation: PinnedAuthorityOperation,
 ) -> _ScreenedInvoiceIvaResult:
-    """Resolve one already-period-selected invoice into its IVA observations and findings."""
+    """Resolve one already-period-selected invoice into its IVA observations and findings.
+
+    ``catalogue`` is the bucket's invoices, read only to resolve the original a
+    substitution rectificativa replaces.
+    """
     if is_rectificativa(invoice):
         # A rectificativa's lines are magnitudes with no direction, so a rate
         # row would add an abono to the tax it reduces. The Modelo 303 states
         # the modification with its sign in casillas 14/15 (LIVA art. 80) or
-        # 40/41, which the operator enters; the screen declares it on none.
+        # 40/41, and the derivation below is what reads that signed figure out
+        # of the document. It still reaches no rate row, and the period it
+        # belongs to -- LIVA art. 89.Cinco and art. 114.Dos -- is not decided
+        # here, so the period stays blocked with the figures visible.
         return _ScreenedInvoiceIvaResult(
             observations=(),
             reverse_charge_underivable=False,
@@ -936,7 +981,11 @@ def screened_invoice_iva_result(
             recargo_not_declarable=False,
             deduction_authority_missing=False,
             category_counterparty_mismatch=False,
-            rectificativa_modification_unmodelled=True,
+            rectificativa=derive_rectification_modification(
+                invoice,
+                originals=rectified_invoices(invoice, catalogue),
+                authority=operation,
+            ),
         )
     # The date the observation carries must be the date it was SELECTED on,
     # or the record would state one quarter while being declared in another.

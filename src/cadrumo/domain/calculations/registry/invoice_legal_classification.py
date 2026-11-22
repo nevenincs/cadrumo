@@ -29,6 +29,7 @@ _ENTRY_SUBJECT: Final = "invoice legal-classification catalogue"
 
 if TYPE_CHECKING:
     from .authority import ValidatedRegistryAuthority
+    from .governed_fact_scope import GovernedFactSource
 
 
 _FACT_ID = "invoice-legal-classification-catalogue"
@@ -470,12 +471,17 @@ def _operation_date_role_semantic_tokens(
 def resolve_invoice_legal_classification_catalogue(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> InvoiceLegalClassificationCatalogue:
     """Resolve the dated invoice class and operation-date vocabulary.
 
+    ``authority`` is any governed-fact source, which is what the fact read
+    below requires: a caller inside a pinned operation hands that operation in,
+    so the vocabulary comes from the generation the operation leased rather
+    than from whatever authority is in scope.
+
     Core types:
-    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    :class:`~cadrumo.domain.calculations.registry.governed_fact_scope.GovernedFactSource`.
     """
     return _catalogue(_ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority))
 

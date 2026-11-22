@@ -3162,6 +3162,10 @@ application:
         mentődött.'
       ledger_preflight_blocked_period: 'A(z) %{period} nem számítható ki: %{need}.
         Semmi sem mentődött.'
+      ledger_preflight_derived_modification: az adóalapot %{base}, az adót %{cuota}
+        összeggel módosítja
+      ledger_preflight_derived_recargo: a recargo de equivalencia összegét pedig %{recargo}
+        összeggel
       ledger_preflight_missing_fact:
         document_received_on: mikor kaptad meg
         rectification_cause: miért helyesbíti az ügyletet
@@ -3196,9 +3200,12 @@ application:
           kiegyenlítő pótlékot (recargo de equivalencia) tartalmaz, amely eltér az
           egyes kulcsok pótlékának összegétől: javítsd a számla pótlékát'
         invoice_rectificativa_modification_unmodelled: 'a helyesbítő számla (factura
-          rectificativa) egyik áfakulcs-sorban sem szerepel: add meg az adóalapját
-          és az adóját a megfelelő előjellel a Modelo 303 14. és 15. mezőjében, ha
-          te állítottad ki, vagy a 40. és 41. mezőjében, ha te kaptad'
+          rectificativa) nyilvántartása nem adja meg, milyen módosítást végez: hogyan
+          adja meg az összegeit, és ha azokat helyettesíti, melyik egyetlen számlát
+          váltja fel'
+        invoice_rectificativa_period_undecided: a helyesbítő számla (factura rectificativa)
+          módosítása már ismert, de az, hogy melyik időszakhoz tartozik, a jogcímétől
+          és a törvény által rád hagyott választástól függ
         invoice_used_goods_margin_unmodelled: 'a használt cikkek különleges rendszerében
           (régimen especial de los bienes usados) végzett értékesítés árrésalapját
           (art. 137) a program nem számítja ki: add meg magad az árrés adóalapját
