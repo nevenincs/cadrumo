@@ -76,7 +76,7 @@ _PINNED_M200_REVISIONS = tuple(
 #: The worked-example case states no preceding-period INCN, because its edition precedes that
 #: rate and reads none: the Sociedades manual's "Ejemplo 1" of the cuota liquida minima prints a
 #: base imponible of 2.000.000 at the tipo general of 25 % and a cuota integra [00562] of 500.000.
-_CUOTA_INTEGRA_BY_SCENARIO = {
+_CUOTA_INTEGRA_BY_SCENARIO: dict[tuple[Decimal, Decimal | None, Decimal], Decimal] = {
     (Decimal("100000"), Decimal("12000000"), Decimal("0")): Decimal("25000"),
     (Decimal("25400.00"), Decimal("28500.00"), Decimal("16300.00")): Decimal("2093.00"),
     (Decimal("2000000.00"), None, Decimal("0")): Decimal("500000.00"),
