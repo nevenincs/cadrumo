@@ -29,6 +29,7 @@ from cadrumo_client.contracts.sign_in import SignInStatus
 from cadrumo_runtime.application.development_root import mark_development_root
 
 from .caller_owned_root import (
+    COMMAND_SECONDS,
     AcceptanceError,
     Programs,
     caller_owned_runtime,
@@ -264,8 +265,13 @@ class AgentServiceSession:
             "timings": {key: round(value, 3) for key, value in timings.items()},
         }
 
-    def cli_read(self, *arguments: str, reveal_identifiers: bool) -> tuple[int, dict[str, Any]]:
-        """Read under stored sign-in, or use protected profile input when persistence was unavailable."""
+    def cli_read(
+        self, *arguments: str, reveal_identifiers: bool, timeout: float = COMMAND_SECONDS
+    ) -> tuple[int, dict[str, Any]]:
+        """Read under stored sign-in, or use protected profile input when persistence was unavailable.
+
+        ``timeout`` bounds the command; the shared command bound unless the caller names another.
+        """
         environment = dict(self.environment)
         if reveal_identifiers:
             environment["CADRUMO_CLI_REVEAL_IDENTIFIERS"] = "true"
@@ -277,6 +283,7 @@ class AgentServiceSession:
             *profile_arguments,
             *arguments,
             secret=secret,
+            timeout=timeout,
         )
 
 

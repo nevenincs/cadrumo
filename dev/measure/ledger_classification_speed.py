@@ -186,6 +186,9 @@ _ENGINE_PROVIDER: Final = LocalEngine.LLAMACPP.value
 _OUTPUTS: Final = "ledger-classification-speed"
 _HEALTH_SECONDS: Final = 120.0
 _ADMIN_SECONDS: Final = 120.0
+_CLI_SECONDS: Final = 600.0
+"""How long one ``aeat`` command may take before it is ended: a profile write admitted minutes late on a loaded
+machine is still running, and ending it mid-way leaves its effect unknown."""
 """How long one service administration exchange may take: a cold catalogue read on a loaded machine needs far more
 than the channel's default."""
 _INTERRUPTED: Final = 130
@@ -968,7 +971,7 @@ def session_cli(session: AgentServiceSession) -> TimedCli:
 
     def timed(*arguments: str) -> tuple[float, int, dict[str, Any]]:
         started = time.perf_counter()
-        code, envelope = session.cli_read(*arguments, reveal_identifiers=True)
+        code, envelope = session.cli_read(*arguments, reveal_identifiers=True, timeout=_CLI_SECONDS)
         return time.perf_counter() - started, code, envelope
 
     return timed
