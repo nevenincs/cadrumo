@@ -68,6 +68,10 @@ def _employment_category() -> str:
     return _category_id_for_purpose("employment_income")
 
 
+def _prize_category() -> str:
+    return _category_id_for_purpose("prize_payment_withholding")
+
+
 def _raw(*, amount: Decimal) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id="row-irpf-catalogue",
@@ -241,6 +245,7 @@ def test_catalogue_membership_is_closed_and_direction_aware() -> None:
         RENTAL_LINK_IRPF_CATEGORY,
         "capital_mobiliario",
         "ganancias_patrimoniales",
+        _prize_category(),
     }
 
     assert ledger_irpf_category("bogus_withholding") is None
@@ -251,3 +256,8 @@ def test_catalogue_membership_is_closed_and_direction_aware() -> None:
     assert trabajo is not None
     assert trabajo.directions == (TransactionDirection.INCOMING,)
     assert ledger_irpf_category(_employment_category(), direction=TransactionDirection.OUTGOING) is None
+
+    prize = ledger_irpf_category(_prize_category())
+    assert prize is not None
+    assert prize.directions == (TransactionDirection.OUTGOING,)
+    assert ledger_irpf_category(_prize_category(), direction=TransactionDirection.INCOMING) is None

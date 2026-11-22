@@ -1,0 +1,32 @@
+[fact]
+fact_id = "premios-withholding-rate"
+family = "scalar"
+
+[fact.standing_rate]
+
+# RIRPF art. 99.1 sets the retención on premios en metálico at 19 per cent of their
+# amount, and LIRPF art. 101.7 states the same 19 per cent for the premios of juegos,
+# concursos, rifas o combinaciones aleatorias. The bundled consolidated texts record
+# no amendment of either apartado inside the support envelope, so one floor-reaching
+# variant covers every supported year.
+[[fact.variants]]
+variant_id = "premios-withholding-rate:general"
+date_axis = "filing_period"
+legal_refs = ["rd-439-2007:art-99", "ley-35-2006:art-101"]
+source_refs = ["boe-rirpf-category-profile-authority", "boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-category-profile-authority"
+required_text = ["La retención a practicar sobre los premios en metálico será del 19 por ciento de su importe"]
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["combinaciones aleatorias, estén o no vinculadas a la oferta, promoción o venta de determinados bienes, productos o servicios, será del 19 por ciento"]
+
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.19"
+unit = "fraction"

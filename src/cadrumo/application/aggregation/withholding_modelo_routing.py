@@ -20,7 +20,7 @@ from .withholding_recognition import WithholdingIncomeKind
 _ROUTING_FACT: Final = "withholding-modelo-routing"
 
 LEDGER_PAID_INCOME_KINDS: Final[frozenset[WithholdingIncomeKind]] = frozenset(
-    {WithholdingIncomeKind.WORK, WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL},
+    {WithholdingIncomeKind.WORK, WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL, WithholdingIncomeKind.PRIZE},
 )
 """The income kinds the paying ledger transaction proves."""
 

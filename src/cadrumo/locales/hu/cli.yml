@@ -3660,6 +3660,8 @@ cli:
         osztalék)
       irpf_purpose_employment_income: munkaviszonyból származó jövedelem (nem nettó
         számlákhoz)
+      irpf_purpose_prize_payment_withholding: általad kifizetett nyereményjáték- vagy
+        tombolanyeremény visszatartással (a 111-es nyomtatvány nyereményei)
       irpf_purpose_rent_expense_withholding: nettó bérleti díj visszatartása
       irpf_purpose_rental_property_income: ingatlan bérbeadásából származó bevétel
         és kiadás

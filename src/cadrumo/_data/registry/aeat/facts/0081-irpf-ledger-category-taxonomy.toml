@@ -5,19 +5,19 @@ family = "mapping"
 [[fact.variants]]
 variant_id = "irpf-ledger-category-taxonomy:2025"
 date_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-101", "rd-439-2007:art-95"]
+legal_refs = ["ley-35-2006:art-101", "rd-439-2007:art-95", "rd-439-2007:art-75", "rd-439-2007:art-99"]
 source_refs = ["boe-rirpf-category-profile-authority"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
 [[fact.variants.source_citations]]
 source_ref = "boe-rirpf-category-profile-authority"
-required_text = ["rendimientos"]
+required_text = ["rendimientos", "Los premios que se entreguen como consecuencia de la participación en juegos, concursos, rifas o combinaciones aleatorias"]
 
 [fact.variants.payload]
 kind = "mapping"
 entries = [
-  { key = "catalogue.ids", value = "actividad_economica,arrendamiento_local,arrendamiento_vivienda_afecto,capital_inmobiliario,capital_mobiliario,ganancias_patrimoniales,trabajo" },
+  { key = "catalogue.ids", value = "actividad_economica,arrendamiento_local,arrendamiento_vivienda_afecto,capital_inmobiliario,capital_mobiliario,ganancias_patrimoniales,premios,trabajo" },
   { key = "category.actividad_economica.purpose", value = "activity_income_withholding" },
   { key = "category.actividad_economica.directions", value = "incoming,outgoing" },
   { key = "category.actividad_economica.net_paid_invoice", value = "true" },
@@ -42,6 +42,10 @@ entries = [
   { key = "category.ganancias_patrimoniales.directions", value = "incoming,outgoing" },
   { key = "category.ganancias_patrimoniales.net_paid_invoice", value = "false" },
   { key = "category.ganancias_patrimoniales.related_category_ids", value = "" },
+  { key = "category.premios.purpose", value = "prize_payment_withholding" },
+  { key = "category.premios.directions", value = "outgoing" },
+  { key = "category.premios.net_paid_invoice", value = "false" },
+  { key = "category.premios.related_category_ids", value = "" },
   { key = "category.trabajo.purpose", value = "employment_income" },
   { key = "category.trabajo.directions", value = "incoming" },
   { key = "category.trabajo.net_paid_invoice", value = "false" },
