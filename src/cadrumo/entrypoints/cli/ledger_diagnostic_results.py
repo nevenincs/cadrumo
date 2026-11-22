@@ -32,6 +32,14 @@ class LedgerPreflightIssuePayload(OutputSchema):
     transaction_id: TransactionId
     reason: str
     detail: IssueDetail
+    #: Stable field names the issue says the record lacks; empty for reasons
+    #: that name none.
+    missing_facts: list[str] = []
+    #: A factura rectificativa's signed modification as canonical decimal
+    #: strings, ``None`` on every other reason.
+    derived_modification_base: str | None = None
+    derived_modification_cuota: str | None = None
+    derived_modification_recargo: str | None = None
 
 
 class LedgerLinkInconsistencyPayload(OutputSchema):

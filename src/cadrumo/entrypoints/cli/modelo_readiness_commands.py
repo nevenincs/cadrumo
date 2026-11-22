@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import typer
 
 from ...application.modelo.export_contracts import modelo_export_readiness_refusal
@@ -148,6 +150,10 @@ def modelo_readiness_commands_readiness_result(
                 transaction_id=issue.transaction_id,
                 reason=issue.reason.value,
                 detail=issue.detail,
+                missing_facts=list(issue.missing_facts),
+                derived_modification_base=_decimal_text(issue.derived_modification_base),
+                derived_modification_cuota=_decimal_text(issue.derived_modification_cuota),
+                derived_modification_recargo=_decimal_text(issue.derived_modification_recargo),
             )
             for issue in report.ledger_issues
         ],
@@ -302,6 +308,11 @@ def _readiness_notices(
 
 def _ledger_ready_but_bindings_missing(report: ProjectionModeloReadiness) -> bool:
     return report.ledger_ready is True and not report.binding_ready and bool(report.missing_bindings)
+
+
+def _decimal_text(value: Decimal | None) -> str | None:
+    """Render an amount as the JSON projection renders it, ``None`` kept."""
+    return None if value is None else str(value)
 
 
 __all__ = ["modelo_readiness"]

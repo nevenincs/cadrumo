@@ -608,3 +608,31 @@ def test_ledger_add_result_accepts_a_valid_mutation_quintet_round_trip() -> None
 
     assert result.transaction.transaction_id == "a" * 64
     assert LedgerAddResult.model_validate_json(result.model_dump_json()) == result
+
+
+def test_preflight_issue_payload_declares_every_application_issue_field() -> None:
+    """The strict CLI payload forbids extras, so it must mirror every issue field the report dumps."""
+    from ....application.ledger.preflight import LedgerPreflightIssue
+    from ..modelo_query_results import LedgerIssuePayload
+
+    assert set(LedgerPreflightIssuePayload.model_fields) == set(LedgerPreflightIssue.model_fields)
+    assert set(LedgerIssuePayload.model_fields) == set(LedgerPreflightIssue.model_fields)
+
+
+def test_a_rectificativa_preflight_issue_reaches_the_cli_payload() -> None:
+    """A held rectificativa's missing facts and signed figures survive the JSON projection."""
+    from ....application.ledger.preflight import LedgerPreflightIssue, LedgerPreflightIssueReason
+
+    issue = LedgerPreflightIssue(
+        transaction_id="a" * 64,
+        reason=LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_PERIOD_NEEDS_FACT,
+        detail="the rectificativa needs its period election",
+        missing_facts=("issuer_minoracion_election",),
+        derived_modification_base=Decimal("-100.00"),
+        derived_modification_cuota=Decimal("-21.00"),
+    )
+    payload = LedgerPreflightIssuePayload.model_validate(issue.model_dump(mode="json"))
+    assert payload.missing_facts == ["issuer_minoracion_election"]
+    assert payload.derived_modification_base == "-100.00"
+    assert payload.derived_modification_cuota == "-21.00"
+    assert payload.derived_modification_recargo is None
