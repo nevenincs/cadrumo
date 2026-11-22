@@ -7,7 +7,7 @@ revision_id = "2024"
 seed_source = "export_record_design"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "03713f48b68799d85a07cca66d9181fc73a3c5e38b96676a677bad55f2c525ad"
+source_state_digest = "b3bfe7b7098347a7079c672f67ba846613c0e1033edae93207f3bf54b2501bd9"
 design_sources = [
     { source_ref = "aeat-dr-200-2024", sha256 = "2d98f21f5ad41477d2c43491150c11f48bfa6370ce0c05b2434ec0e2956e80c8" },
 ]
@@ -3334,6 +3334,7 @@ placements = [
     { casilla_id = "DP200014:01890", kind = "on_form", box_number = "01890", aliases = [{ page_id = "dp200015", section_id = "regimen-especial-de-buques-y-empresas-nav-4788c4", official_ref = "DP200015" }] },
     { casilla_id = "DP200014:SAL_RESERVA_DOTACION", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "DP200014:bin-aplicada-maxima", kind = "working_figure" },
+    { casilla_id = "DP200014:cuota-liquida-minima-exigida", kind = "working_figure" },
     { casilla_id = "DP200014B:00031", kind = "on_form", box_number = "00031" },
     { casilla_id = "DP200014B:00032", kind = "on_form", box_number = "00032" },
     { casilla_id = "DP200014B:00082", kind = "on_form", box_number = "00082", aliases = [{ page_id = "dp200019", section_id = "deducciones-i-d-i-excluidas-de-limite", official_ref = "DP200019" }] },

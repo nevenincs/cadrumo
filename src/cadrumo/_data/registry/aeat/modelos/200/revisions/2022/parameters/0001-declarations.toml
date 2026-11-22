@@ -268,3 +268,26 @@ required_text = ["el limite del 70 por ciento se sustituira por los siguientes"]
 value = "25"
 date_axis = "filing_period"
 valid_from = 2022-01-01
+
+# LIS art. 30 bis.1: the tributación mínima applies to the contribuyentes "cuyo importe neto
+# de la cifra de negocios sea al menos de 20 millones de euros durante los 12 meses anteriores
+# a la fecha en que se inicie el período impositivo" (Manual práctico de Sociedades 2022,
+# "Cuota líquida mínima (casilla 00619)", manuals/sociedades/2022 L14067-14070), for periods
+# from 1 January 2022. "Al menos" makes the threshold inclusive. It is this provision's own
+# threshold, not the DA 15ª.1 one (bin-limite-da15-tramo-medio-incn-minimo): the 2023 edition
+# carries no DA 15ª limit while art. 30 bis holds unchanged (manuals/sociedades/2023
+# L14615-14640).
+[[revisions."2022".parameters]]
+id = "is.modelo-200.tributacion-minima-incn-minimo"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-27-2014:art-30-bis"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2022"
+required_text = ["Aquellos cuyo importe neto de la cifra de negocios sea al menos de 20 millones de euros durante los 12 meses anteriores a la fecha en que se inicie el período impositivo"]
+
+[[revisions."2022".parameters.values]]
+value = "20000000"
+date_axis = "filing_period"
+valid_from = 2022-01-01

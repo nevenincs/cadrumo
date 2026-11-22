@@ -54,6 +54,7 @@ from .modelo_200_casilla_ids import (
     M200_RESERVA_CAPITALIZACION_CASILLA,
     M200_RESULTADO_CONTABLE_CASILLA,
 )
+from .modelo_200_turnover import turnover_binding_values
 from .published_authority import published_legal_reference, published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -66,8 +67,6 @@ _PERIOD_END_BEFORE_DT44 = date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 1, 1) - timede
 _PERIOD_END_FIRST_DT44 = date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 12, 31)
 _FORM_BINDING = "modelo-200-profile-legal-entity-form"
 _NEW_ENTITY_BINDING = "modelo-200-profile-new-entity-flag"
-# The rate reads the turnover of the immediately preceding tax period (LIS art. 29.1, art. 101.1).
-_INCN_BINDING = "modelo-200-incn-periodo-impositivo-anterior"
 _ESTADO_PCT_BINDING = "modelo-200-profile-tributacion-estado-porcentaje"
 _TIPO_GRAVAMEN_CASILLA: CasillaId = validated_casilla_id("DP200014:00558", surface="_TIPO_GRAVAMEN_CASILLA")
 # Caracteres de la declaración (page 1): cooperativa protegida, and entidad acogida a la Ley 49/2002.
@@ -93,8 +92,9 @@ def _result_for(
     marked: tuple[CasillaId, ...] = (),
 ) -> RegistryCalculationResult:
     """Run the exercise the period closes with the revision that governs that exercise."""
+    snapshot = _snapshot(filing_period.year)
     return calculate_registry_snapshot(
-        _snapshot(filing_period.year),
+        snapshot,
         inputs={
             # 00552 is computed: 00550 - 01032 - 00547; 00550 is
             # computed: 00501 + DP200013:00417 - DP200013:00418. Supply the
@@ -115,7 +115,7 @@ def _result_for(
         enum_binding_values={_FORM_BINDING: form},
         binding_values={
             _NEW_ENTITY_BINDING: new_entity,
-            _INCN_BINDING: incn,
+            **turnover_binding_values(snapshot, incn),
             _ESTADO_PCT_BINDING: Decimal("100"),
             # BIN-pendiente fresh-filer baseline: previous_filing binding
             # for casilla 00670 resolves to zero with no prior filing.
@@ -512,8 +512,9 @@ def test_modelo_202_modality_is_incomplete_for_non_legal_entity() -> None:
 
 def _calculate_with_estado_percentage(estado_percentage: Decimal | None):
     """Run the SL cuota chain from an 80.000 base; ``None`` leaves the estado percentage binding unsupplied."""
+    snapshot = _snapshot(_PERIOD_END_BEFORE_DT44.year)
     return calculate_registry_snapshot(
-        _snapshot(_PERIOD_END_BEFORE_DT44.year),
+        snapshot,
         inputs={
             M200_RESULTADO_CONTABLE_CASILLA: Decimal("80000"),
             M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0"),
@@ -528,7 +529,7 @@ def _calculate_with_estado_percentage(estado_percentage: Decimal | None):
         enum_binding_values={_FORM_BINDING: "sl"},
         binding_values={
             _NEW_ENTITY_BINDING: Decimal("0"),
-            _INCN_BINDING: Decimal("10000000"),
+            **turnover_binding_values(snapshot, Decimal("10000000")),
             **({} if estado_percentage is None else {_ESTADO_PCT_BINDING: estado_percentage}),
             # BIN-pendiente fresh-filer baseline.
             "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),

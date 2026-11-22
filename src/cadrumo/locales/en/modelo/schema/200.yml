@@ -16022,6 +16022,9 @@ modelo:
           is-liquidacion-iv-cuota-liquida-minima:
             label: Settlement IV - Other deductions - Minimum net tax due (art. 30
               bis LIS) [00619]
+          is-liquidacion-iv-cuota-liquida-minima-exigida:
+            label: Settlement IV - Other deductions - Minimum net tax due required
+              (art. 30 bis LIS) [internal]
           is-liquidacion-iv-importe:
             label: Settlement IV - Other deductions - Deductions for reversal of temporary
               measures DT 37th.1 LIS (breakdown on page 19) [01040]

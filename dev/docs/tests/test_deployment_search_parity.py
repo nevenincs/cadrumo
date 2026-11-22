@@ -78,7 +78,7 @@ from ..build import docs_build_language, pagefind_index_mode, resolve_record_inj
 from ..pagefind_index import DECIDED_INJECTED_RECORD_KINDS, SHARED_INDEX_LANGUAGE, build_shared_search_index
 from ..pagefind_inject import InjectionStats
 from .built_site import built_documentation_site
-from .http_serve_support import serve_directory
+from .http_serve_support import serve_built_page_assets_locally, serve_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -154,6 +154,7 @@ def _index_reach(site: Path, *, page: str, language: str | None = None) -> _Inde
         with sync_playwright() as pw:
             browser = pw.chromium.launch()
             browser_page = browser.new_page()
+            serve_built_page_assets_locally(browser_page)
             browser_page.goto(f"http://127.0.0.1:{port}/{page}", wait_until="networkidle")
             counted = browser_page.evaluate(
                 """async (language) => {
@@ -563,6 +564,7 @@ def _search_urls(site: Path, queries: tuple[str, ...], language: str, *, page: s
         with sync_playwright() as pw:
             browser = pw.chromium.launch()
             browser_page = browser.new_page()
+            serve_built_page_assets_locally(browser_page)
             browser_page.goto(f"http://127.0.0.1:{port}/{page}", wait_until="networkidle")
             found = browser_page.evaluate(
                 """async ({ queries, language }) => {

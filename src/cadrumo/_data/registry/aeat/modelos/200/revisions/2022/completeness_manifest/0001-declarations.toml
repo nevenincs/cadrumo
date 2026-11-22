@@ -427,3 +427,13 @@ number = "00080"
 casilla_id = "DP200001:00083"
 segmento = "DP200001"
 number = "00083"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00009"
+segmento = "DP200001"
+number = "00009"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "DP200001:00010"
+segmento = "DP200001"
+number = "00010"

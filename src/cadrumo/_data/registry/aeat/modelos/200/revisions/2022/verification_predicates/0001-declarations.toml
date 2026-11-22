@@ -161,3 +161,18 @@ id = "limited-subtractions-respect-floor:deducciones-limitadas-por-cuota-liquida
 predicate_id = "modelo-200-deducciones-limitadas-por-cuota-liquida-minima"
 expression = 'limited_subtractions_respect_floor(["DP200014:00619", "DP200014:00582"], ["DP200014:02315"], ["DP200014:00585", "DP200014:00584", "DP200014:00588", "DP200014:01039", "DP200014:00565", "DP200014:01040", "DP200014:01041"], ["DP200014:00583", "DP200014:00399"], ["DP200014:02314", "DP200014:00590", "DP200014:00082"])'
 legal_refs = ["ley-27-2014:art-30-bis", "ley-27-2014:art-39"]
+
+# The twelve-month turnover must be stated. Every declarant fills the page-1 cuadro "a
+# efectos de determinar, si procede, la aplicación de la tributación mínima (casilla
+# [00619])" (manuals/sociedades/2022 L3100-3106; 2023 L3148-3153), and art. 30 bis.1 applies
+# the minimum from a turnover of at least 20 millones de euros. The requirement formula
+# modelo-200-cuota-liquida-minima-exigida cannot see an undeclared turnover: the calculation
+# leaves its target out without a reason, and the calculation note on the unresolved binding
+# only asks for a check, because the binding fills no printed box. Without this gate an
+# undeclared turnover would let the minimum vanish silently. The profile names a legal form
+# for every Impuesto sobre Sociedades declarant.
+[[revisions."2022".verification_predicates]]
+id = "profile-field-required:incn-doce-meses-anteriores-declarado"
+predicate_id = "modelo-200-incn-doce-meses-anteriores-declarado"
+expression = 'profile_field_required("incn_prior_12_months", "legal_entity_declarant")'
+legal_refs = ["ley-27-2014:art-30-bis"]

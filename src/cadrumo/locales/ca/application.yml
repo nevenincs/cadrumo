@@ -4173,6 +4173,12 @@ application:
           en una declaració conjunta, perquè la teva declaració no separa els rendiments
           del treball i d'activitats econòmiques de cada membre, i els límits s'apliquen
           a cada membre individualment (art. 52.1 LIRPF). Mai es mostra com a zero.
+        m200_cuota_liquida_minima_unstated: S'aplica la tributació mínima (art. 30
+          bis LIS), perquè el teu import net de la xifra de negocis dels 12 mesos
+          anteriors al període arriba a 20 milions d'euros o perquè la teva entitat
+          tributa en el règim de consolidació fiscal. La quota líquida mínima no es
+          calcula, així que indica tu mateix la casella 00619 segons les instruccions
+          oficials, encara que sigui 0. Fins aleshores no es pot verificar la declaració.
         m200_extincion_entidad_unsupported: Aquesta casella necessita el límit a la
           compensació de bases imposables negatives (art. 26.1 LIS), que no es calcula
           quan la teva entitat marca la casella 00072 «Extinción de entidad», perquè

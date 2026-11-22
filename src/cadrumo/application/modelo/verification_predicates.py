@@ -238,6 +238,7 @@ def _unique_predicate_casilla_id(
 
 _NON_RESIDENT_IRNR_NON_EEA_FILTER = "non_resident_irnr_non_eea"
 _IRNR_TAX_REGIME = "irnr"
+_LEGAL_ENTITY_DECLARANT_FILTER = "legal_entity_declarant"
 
 
 def evaluate_applicability_filter(
@@ -258,6 +259,9 @@ def evaluate_applicability_filter(
     """
     if not filter_name:
         return True
+    if filter_name == _LEGAL_ENTITY_DECLARANT_FILTER:
+        # An Impuesto sobre Sociedades declarant: the profile states the entity's legal form.
+        return profile.legal_entity_form is not None
     if filter_name == _NON_RESIDENT_IRNR_NON_EEA_FILTER:
         # TRLIRNR art. 10: a non-resident taxed under IRNR must appoint a fiscal
         # representative unless it resides in the EU/EEA.

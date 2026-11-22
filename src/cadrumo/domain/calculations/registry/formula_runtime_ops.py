@@ -79,6 +79,7 @@ class RegistryUnresolvedOutcomeReason(StrEnum):
     JOINT_RETURN_MEMBER_INCOME_UNAVAILABLE = "joint-return-member-income-unavailable"
     M200_TAX_REGIME_UNSUPPORTED = "m200-tax-regime-unsupported"
     M200_EXTINCION_ENTIDAD_UNSUPPORTED = "m200-extincion-entidad-unsupported"
+    M200_CUOTA_LIQUIDA_MINIMA_UNSTATED = "m200-cuota-liquida-minima-unstated"
 
 
 OPERATOR_BOX_CONTEXT_KEY: Final = "operator_box"

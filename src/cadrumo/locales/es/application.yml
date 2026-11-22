@@ -4182,6 +4182,12 @@ application:
           del trabajo y de actividades económicas de cada miembro, y los límites se
           aplican a cada miembro individualmente (art. 52.1 LIRPF). Nunca se muestra
           como cero.
+        m200_cuota_liquida_minima_unstated: Se aplica la tributación mínima (art.
+          30 bis LIS), porque tu importe neto de la cifra de negocios de los 12 meses
+          anteriores al período llega a 20 millones de euros o porque tu entidad tributa
+          en el régimen de consolidación fiscal. La cuota líquida mínima no se calcula,
+          así que indica tú mismo la casilla 00619 según las instrucciones oficiales,
+          aunque sea 0. Hasta entonces no se puede verificar la declaración.
         m200_extincion_entidad_unsupported: Esta casilla necesita el límite a la compensación
           de bases imponibles negativas (art. 26.1 LIS), que no se calcula cuando
           tu entidad marca la casilla 00072 «Extinción de entidad», porque no distinguimos

@@ -201,8 +201,11 @@ if TYPE_CHECKING:
 # Loaded as a plugin, not inlined here: this module's own `pytest_configure` is
 # `trylast`, and the JUnit option has to be set before the junitxml plugin reads
 # it. Unset `CADRUMO_CI_REPORTS_DIR` - every local run - and it does nothing,
-# which is what keeps this repository's zero-artifact posture intact.
+# which is what keeps this repository's zero-artifact posture intact. The
+# network guard arms before collection so every test, and every profile worker
+# a test starts, meets its refusing loopback proxy.
 pytest_plugins = (
+    "cadrumo.tests.network_guard",
     "dev.ci_reports",
     "dev.packaging.tests.installed_process_fixture",
     "cadrumo.tests.pytest_plugin",

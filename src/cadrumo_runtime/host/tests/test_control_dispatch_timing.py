@@ -91,7 +91,7 @@ class _Human:
     def _prove(self, secret: bytearray) -> tuple[UUID, ProfileLoginOutcome]:
         self.secrets.append(bytes(secret))
         self._clock.now += self._own_work
-        instant = datetime(2026, 10, 1, tzinfo=UTC)
+        instant = datetime.now(UTC)
         return uuid4(), ProfileLoginOutcome(
             bucket_id=str(uuid4()),
             label="Synthetic human profile",
