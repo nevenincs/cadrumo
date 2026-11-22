@@ -589,11 +589,11 @@ export function changedReadingFields(
   );
 }
 
-/** The country the counterparty's VAT-number prefix names, as the backend
+/** The country the counterparty's NIF-IVA prefix names, as the backend
  * suggests it for a `kind` of invoice: the supplier's of one received, the
  * customer's of one issued. It names the State that issued the number, not
  * where the party is established, so the page offers it as a suggestion. */
-export function vatPrefixCountryOf(
+export function nifIvaPrefixCountryOf(
   suggestion: { supplier: string | null; customer: string | null } | null,
   kind: InvoiceKind | null,
 ): string | null {

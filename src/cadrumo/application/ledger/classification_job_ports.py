@@ -20,6 +20,8 @@ Each read mints its own consent bound to the revision of the movement it sends.
 
 An apply writes each accepted proposal through the ledger's own action ports,
 the ones the reviewed classification writes through.
+
+Core types: :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
 """
 
 from __future__ import annotations

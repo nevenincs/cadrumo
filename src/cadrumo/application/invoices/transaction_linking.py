@@ -94,6 +94,12 @@ def unlink_invoice_transaction_catalogues(
     that does not cite the other is left as it is, so a one-sided link is
     removed too. The caller persists both catalogues in one unit of work.
 
+    Args:
+        invoices: The :class:`InvoiceCatalogue` holding the invoice side of the link.
+        transactions: The :class:`TransactionCatalogue` holding the movement side.
+        invoice_id: The invoice to unlink.
+        transaction_id: The movement to unlink.
+
     Returns the updated ``(invoices, transactions)`` catalogues.
     """
     canonical_transaction_id = _canonical_transaction_id(transactions, transaction_id)

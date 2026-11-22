@@ -1,10 +1,12 @@
 """Upgrade notices are coalesced and written before a bounded idle stop."""
 
 import time
+from collections.abc import Callable
+from concurrent.futures import Future
 from pathlib import Path
-from threading import Event
+from threading import Event, Thread
 from types import SimpleNamespace
-from typing import Literal, cast
+from typing import Literal, cast, override
 from uuid import uuid4
 
 import pytest
@@ -15,12 +17,58 @@ from cadrumo_client.contracts.login import LoginEvidence
 from cadrumo_client.contracts.session_events import LifecycleNotice
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frame_io import decode_document, document_frame
+from cadrumo_client.transport.native_wake import NativeWake
 
+from .. import notice_observation
 from ..profile_connections import RuntimeProfileConnections
 from ..session_events import RuntimeSessionEvents
 from ..shutdown import RuntimeStop
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_SETTLED = 30.0
+"""A ceiling for an awaited event that a passing run never reaches; no assertion depends on its size."""
+
+
+class _WriterWake(NativeWake):
+    """The native wake a connection's frame writer waits on, observable from a test thread."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.raised = Event()
+
+    @override
+    def set(self) -> None:
+        super().set()
+        self.raised.set()
+
+
+def _write_one_notice(profiles: RuntimeProfileConnections, context: ConnectionContext, wake: _WriterWake) -> None:
+    """Act as the connection's sole writer: wait for a queued event, take it and record its flush."""
+    while True:
+        assert wake.raised.wait(_SETTLED)
+        # Cleared before the take, so an event queued after it raises the wake again.
+        wake.raised.clear()
+        wake.clear()
+        events = profiles.take_events(context)
+        if events:
+            (notice,) = events
+            assert isinstance(notice, LifecycleNotice)
+            profiles.event_flushed(context, notice)
+            return
+
+
+def _in_thread(call: Callable[[], bool]) -> Future[bool]:
+    result: Future[bool] = Future()
+
+    def run() -> None:
+        try:
+            result.set_result(call())
+        except BaseException as error:
+            result.set_exception(error)
+
+    Thread(target=run, name="test-idle-stop", daemon=True).start()
+    return result
 
 
 def _context(*, capable: bool = True) -> ConnectionContext:
@@ -94,24 +142,33 @@ def test_idle_stop_waits_only_for_attended_opted_in_connections(tmp_path: Path, 
         ),
     )
     profiles._capture = lambda _: login
-    profiles.connect_events(context, cast(ByteChannel, SimpleNamespace(peer=context.peer)))
+    wake = _WriterWake()
+    profiles.connect_events(context, cast(ByteChannel, SimpleNamespace(peer=context.peer)), queued=wake)
     assert not profiles._connections  # No profile login or session is required for presentation.
-    attended = opted_in and unlocked
-    began = time.monotonic()
-    assert profiles.stop_if_idle(ExitReason.SUPERVISOR_STOP, timeout=0.02) is (not attended)
-    assert time.monotonic() - began < 0.5
-    if attended:
-        assert not stop.is_set()
-        assert profiles._admitting()
-        (notice,) = profiles.take_events(context)
-        profiles.event_flushed(context, notice)
-        assert profiles.stop_if_idle(ExitReason.SUPERVISOR_STOP, timeout=0.2)
+    if not (opted_in and unlocked):
+        # Nothing waits for a flush: a stop that waited would refuse at the deadline instead.
+        assert profiles.stop_if_idle(ExitReason.SUPERVISOR_STOP, timeout=_SETTLED)
         assert stop.is_set()
-    else:
         assert profiles.take_events(context) == ()
+        return
+    # An unflushed notice refuses at the bound, whether or not the observation finished in it: returning
+    # while nothing has written the notice is the proof that the wait is bounded.
+    assert not profiles.stop_if_idle(ExitReason.SUPERVISOR_STOP, timeout=0.02)
+    assert not stop.is_set()
+    assert profiles._admitting()
+    # An attempt refuses while an earlier one's observation still runs; the next one starts after it.
+    earlier = profiles._notice_observation
+    assert earlier is not None
+    earlier.result(timeout=_SETTLED)
+    stopping = _in_thread(lambda: profiles.stop_if_idle(ExitReason.SUPERVISOR_STOP, timeout=_SETTLED))
+    _write_one_notice(profiles, context, wake)
+    assert stopping.result(timeout=_SETTLED)
+    assert stop.is_set()
 
 
-def test_slow_native_observation_is_bounded_retained_and_cannot_publish_late(tmp_path: Path) -> None:
+def test_slow_native_observation_is_bounded_retained_and_cannot_publish_late(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     stop = RuntimeStop()
     context = _context()
     profiles = RuntimeProfileConnections(
@@ -125,17 +182,23 @@ def test_slow_native_observation_is_bounded_retained_and_cannot_publish_late(tmp
         if blocking:
             calls.append(1)
             entered.set()
-            assert release.wait(2)
+            assert release.wait(_SETTLED)
         return SimpleNamespace(active=True, unlocked=True, os_owner_id=context.peer.os_owner_id)
 
+    def observation_clock() -> float:
+        # The first attempt's thread may start after its short deadline under load and then skip the query;
+        # until the query has begun, the observation reads a clock that has not reached any deadline.
+        return time.monotonic() if entered.is_set() else float("-inf")
+
+    monkeypatch.setattr(notice_observation, "time", SimpleNamespace(monotonic=observation_clock))
     profiles._capture = lambda _: cast(LoginEvidence, SimpleNamespace(observe=observe))
-    profiles.connect_events(context, cast(ByteChannel, SimpleNamespace(peer=context.peer)))
+    wake = _WriterWake()
+    profiles.connect_events(context, cast(ByteChannel, SimpleNamespace(peer=context.peer)), queued=wake)
     blocking = True
     try:
-        began = time.monotonic()
+        # Returning at all while the observation cannot finish is the proof that the attempt is bounded.
         assert not profiles.stop_if_idle(ExitReason.SUPERVISOR_STOP, timeout=0.01)
-        assert time.monotonic() - began < 0.15
-        assert entered.wait(0.2)
+        assert entered.wait(_SETTLED)
         retained = profiles._notice_observation
         assert retained is not None and not retained.done()
         # Retry storms cannot accumulate OS queries or reuse a timed-out task.
@@ -147,12 +210,12 @@ def test_slow_native_observation_is_bounded_retained_and_cannot_publish_late(tmp
         assert profiles.take_events(context) == ()
     finally:
         release.set()
-    assert retained.result(timeout=1) is None
+    # The late result belongs to an expired attempt: it is None and queues nothing.
+    assert retained.result(timeout=_SETTLED) is None
     assert profiles.take_events(context) == () and not stop.is_set()
     # A later attempt requires a fresh native observation and a real frame flush.
-    assert not profiles.stop_if_idle(ExitReason.SUPERVISOR_STOP, timeout=0.02)
+    stopping = _in_thread(lambda: profiles.stop_if_idle(ExitReason.SUPERVISOR_STOP, timeout=_SETTLED))
+    _write_one_notice(profiles, context, wake)
     assert len(calls) == 2
-    (notice,) = profiles.take_events(context)
-    profiles.event_flushed(context, notice)
-    assert profiles.stop_if_idle(ExitReason.SUPERVISOR_STOP, timeout=0.2)
-    assert len(calls) == 3 and stop.is_set()
+    assert stopping.result(timeout=_SETTLED)
+    assert stop.is_set()

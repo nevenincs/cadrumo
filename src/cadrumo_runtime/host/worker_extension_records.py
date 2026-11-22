@@ -27,10 +27,11 @@ from cadrumo_client.contracts.extension_records import (
     ExtensionRecordRequest,
     ProfileWorkerExtensionRecordRequest,
 )
-from cadrumo_client.transport.frame_io import read_secret, write_document, write_secret
+from cadrumo_client.transport.frame_io import write_document, write_secret
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerExtensionRecordReply
 
 from ..adapters.worker_transport import WorkerChannel
+from .control_dispatch_waits import read_peer_secret
 
 
 def read_extension_record(
@@ -68,7 +69,7 @@ def write_extension_record(
     revision: str | None,
 ) -> tuple[Literal["refused", "written"], str | None, ExtensionRecordRefusal | None]:
     """Read one bounded secret and commit it only under current custody."""
-    with read_secret(channel, deadline=time.monotonic() + 5) as incoming:
+    with read_peer_secret(channel, deadline=time.monotonic() + 5) as incoming:
         if len(incoming) != request.byte_count or len(incoming) > policy.maximum_bytes:
             return "refused", revision, ExtensionRecordRefusal.INVALID
         custody.require(request.session_id)
