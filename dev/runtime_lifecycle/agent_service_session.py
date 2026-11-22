@@ -10,6 +10,8 @@ import sys
 import time
 from collections.abc import Generator, Mapping
 from contextlib import ExitStack, contextmanager
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
 from uuid import UUID
@@ -21,7 +23,9 @@ from cadrumo_agent_service.admin import (
 )
 from cadrumo_agent_service.host.controller import HOSTING_CONTRACT
 from cadrumo_agent_service.installed_client import SERVICE_ID
+from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.contracts.service_access import ServiceConnected
+from cadrumo_client.contracts.sign_in import SignInStatus
 from cadrumo_runtime.application.development_root import mark_development_root
 
 from .caller_owned_root import (
@@ -32,10 +36,33 @@ from .caller_owned_root import (
     error_code,
     require,
     run_cli,
+    run_runtime_cli,
 )
 from .packaged_service_process import PackagedServiceProcess, package_default_engine
 from .proof_support import Profile, create_profile, identify_profile, login_profile, state_taxpayer
 from .windows_holder import WindowsRuntimeSessionHolder
+
+
+@dataclass(slots=True)
+class _Generation:
+    """The held person session and the agent service admitted under it, closed together."""
+
+    stack: ExitStack = field(default_factory=ExitStack)
+
+    def close(self) -> None:
+        """Close the service, then the held session, as the first setup's cleanup always did."""
+        self.stack.close()
+
+
+@dataclass(frozen=True, slots=True)
+class _Admitted:
+    """One held person session and the service admitted under it, with the evidence of each step."""
+
+    holder: WindowsRuntimeSessionHolder
+    service: PackagedServiceProcess
+    service_ready: dict[str, Any]
+    admission: dict[str, Any]
+    agent_event: dict[str, Any]
 
 
 class AgentServiceSession:
@@ -59,6 +86,7 @@ class AgentServiceSession:
         setup_counts: Mapping[str, int],
         timings: Mapping[str, float],
         owned: bool = False,
+        generation: _Generation | None = None,
     ) -> None:
         """Retain the exact runtime, person, service and setup evidence."""
         self.programs = programs
@@ -77,6 +105,8 @@ class AgentServiceSession:
         self.setup_counts = dict(setup_counts)
         self.timings = dict(timings)
         self._owned = owned
+        self._generation = generation
+        self.sign_ins = 1
 
     @property
     def first_refusal_code(self) -> str | None:
@@ -122,6 +152,86 @@ class AgentServiceSession:
         """Read service status under this exact admitted session."""
         return self.admin("status")
 
+    def sign_in_deadline(self) -> datetime | None:
+        """The earlier of the stored sign-in's idle deadline and the held person session's expiry.
+
+        Both are read, never extended: the runtime extends them only on the
+        person's own input, which a script never is. A held session that has
+        already retired answers with its retirement, read here as a deadline
+        already past.
+        """
+        deadlines: list[datetime] = []
+        if self.login_session_persisted:
+            code, envelope = run_runtime_cli(self.programs, self.environment, "config", "sign-in-status")
+            result = envelope.get("result")
+            if code == 0 and isinstance(result, dict) and isinstance(result.get("status"), dict):
+                status = SignInStatus.model_validate_json(json.dumps(result["status"]))
+                if status.idle_deadline is not None:
+                    deadlines.append(status.idle_deadline)
+        try:
+            reply = self._holder.command("status")
+        except (AcceptanceError, OSError):
+            return datetime.now(UTC)
+        held = ProfileStatus.model_validate_json(json.dumps(reply)).status.session_expires_at
+        if held is not None:
+            deadlines.append(held)
+        return min(deadlines) if deadlines else None
+
+    def sign_in_again(self) -> dict[str, Any]:
+        """Sign the person in again, as at the window once their sign-in runs out, and admit a new service.
+
+        The runtime ends a person's sign-in after its idle window unless the
+        person's own input extends it, and the agent service's lease ends with
+        the held session it descends from. A measurement that outlasts the
+        window does what the person does: the old service and held session are
+        closed, the profile is signed in again with its password, a new held
+        session starts and a new service is admitted under it. Closing a held
+        session or service that already ended is reported, not raised; every
+        later step must succeed.
+        """
+        if self._generation is None:
+            raise AcceptanceError("this agent service session cannot sign in again")
+        started = time.monotonic()
+        previous: list[str] = []
+        try:
+            self._generation.close()
+        except Exception as error:  # an already retired session or service is expected here
+            previous.append(type(error).__name__)
+        if self.login_session_persisted:
+            require(
+                login_profile(self.programs, self.environment, self.profile),
+                "the renewed sign-in was not stored as the first one was",
+            )
+        self.setup_counts["profile_login"] += 1
+        timings: dict[str, float] = {}
+        generation = _Generation()
+        try:
+            admitted = _admit_service(
+                generation.stack,
+                programs=self.programs,
+                package=self.package,
+                root=self.root,
+                environment=self.environment,
+                profile=self.profile,
+                counts=self.setup_counts,
+                timings=timings,
+            )
+        except BaseException:
+            generation.close()
+            raise
+        self._generation.stack = generation.stack
+        self._holder, self._service = admitted.holder, admitted.service
+        self.service_ready, self.admission = admitted.service_ready, admitted.admission
+        self.holder_identity = dict(admitted.holder.identity)
+        self.agent_event = admitted.agent_event
+        self.sign_ins += 1
+        return {
+            "seconds": round(time.monotonic() - started, 3),
+            "previous_close_failures": previous,
+            "agent_event": admitted.agent_event.get("event"),
+            "timings": {key: round(value, 3) for key, value in timings.items()},
+        }
+
     def cli_read(self, *arguments: str, reveal_identifiers: bool) -> tuple[int, dict[str, Any]]:
         """Read under stored sign-in, or use protected profile input when persistence was unavailable."""
         environment = dict(self.environment)
@@ -165,8 +275,6 @@ def agent_service_session(
         environment["CADRUMO_EXTERNAL_BIN_DIRS"] = os.pathsep.join(normalized)
     mark_development_root(root)
     programs = Programs.of(package)
-    service_name = "cadrumo-agent-service.exe" if sys.platform == "win32" else "cadrumo-agent-service"
-    service_image = (package / "bin" / service_name).resolve(strict=True)
     counts = {
         "runtime_start": 0,
         "profile_create": 0,
@@ -201,51 +309,19 @@ def agent_service_session(
         timings["profile_setup_and_login"] = time.monotonic() - phase
         if profile.profile_id is None:
             raise AcceptanceError("created profile has no verified identity")
-        profile_id = profile.profile_id
 
-        phase = time.monotonic()
-        holder = WindowsRuntimeSessionHolder(
-            programs.runtime,
-            profile_id=profile_id,
+        generation = _Generation()
+        cleanup.callback(generation.close)
+        admitted = _admit_service(
+            generation.stack,
+            programs=programs,
+            package=package,
+            root=root,
             environment=environment,
-            password=bytearray(profile.password, "utf-8"),
-            frontend="cli",
+            profile=profile,
+            counts=counts,
+            timings=timings,
         )
-        cleanup.callback(close_holder, holder)
-        counts["holder_start"] += 1
-        timings["holder_start"] = time.monotonic() - phase
-
-        bearer = bytearray(secrets.token_urlsafe(48), "ascii")
-        gateway_bearer = bytearray(secrets.token_urlsafe(48), "ascii")
-        phase = time.monotonic()
-        service = PackagedServiceProcess(
-            service_image,
-            profile_id=profile_id,
-            environment=environment,
-            directory=root,
-            bearer=bearer,
-            gateway_bearer=gateway_bearer,
-            local_engine_default=package_default_engine(package),
-        )
-        cleanup.callback(service.close)
-        counts["service_start"] += 1
-        service_ready = service.event()
-        validate_service_ready(service_ready, holder, profile)
-        timings["service_ready"] = time.monotonic() - phase
-
-        phase = time.monotonic()
-        admission = holder.command(
-            "service_admission",
-            recipient_connection_id=service_ready["connection_id"],
-            service_id=SERVICE_ID,
-        )
-        validate_service_lease(admission, holder, service_ready, profile)
-        counts["service_admission"] += 1
-        agent_event = service.event()
-        validate_agent_event(agent_event)
-        if agent_event["event"] == "refused":
-            service.settle_refusal_diagnostics()
-        timings["service_admission_and_agent_event"] = time.monotonic() - phase
         timings["setup_total"] = time.monotonic() - started
 
         yield AgentServiceSession(
@@ -256,15 +332,84 @@ def agent_service_session(
             profile=profile,
             login_session_persisted=login_session_persisted,
             runtime_ready=runtime_ready,
-            holder=holder,
-            service=service,
-            service_ready=service_ready,
-            admission=admission,
-            agent_event=agent_event,
+            holder=admitted.holder,
+            service=admitted.service,
+            service_ready=admitted.service_ready,
+            admission=admitted.admission,
+            agent_event=admitted.agent_event,
             setup_counts=counts,
             timings=timings,
             owned=owned,
+            generation=generation,
         )
+
+
+def _admit_service(
+    stack: ExitStack,
+    *,
+    programs: Programs,
+    package: Path,
+    root: Path,
+    environment: Mapping[str, str],
+    profile: Profile,
+    counts: dict[str, int],
+    timings: dict[str, float],
+) -> _Admitted:
+    """Hold the person's session with their password, start the packaged service and admit it under that session.
+
+    Each process is registered on ``stack`` as it starts, so closing the stack
+    closes the service before the held session.
+    """
+    if profile.profile_id is None:
+        raise AcceptanceError("created profile has no verified identity")
+    service_name = "cadrumo-agent-service.exe" if sys.platform == "win32" else "cadrumo-agent-service"
+    service_image = (package / "bin" / service_name).resolve(strict=True)
+    phase = time.monotonic()
+    holder = WindowsRuntimeSessionHolder(
+        programs.runtime,
+        profile_id=profile.profile_id,
+        environment=environment,
+        password=bytearray(profile.password, "utf-8"),
+        frontend="cli",
+    )
+    stack.callback(close_holder, holder)
+    counts["holder_start"] += 1
+    timings["holder_start"] = time.monotonic() - phase
+
+    bearer = bytearray(secrets.token_urlsafe(48), "ascii")
+    gateway_bearer = bytearray(secrets.token_urlsafe(48), "ascii")
+    phase = time.monotonic()
+    service = PackagedServiceProcess(
+        service_image,
+        profile_id=profile.profile_id,
+        environment=environment,
+        directory=root,
+        bearer=bearer,
+        gateway_bearer=gateway_bearer,
+        local_engine_default=package_default_engine(package),
+    )
+    stack.callback(service.close)
+    counts["service_start"] += 1
+    service_ready = service.event()
+    validate_service_ready(service_ready, holder, profile)
+    timings["service_ready"] = time.monotonic() - phase
+
+    phase = time.monotonic()
+    admission = holder.command(
+        "service_admission",
+        recipient_connection_id=service_ready["connection_id"],
+        service_id=SERVICE_ID,
+    )
+    validate_service_lease(admission, holder, service_ready, profile)
+    counts["service_admission"] += 1
+    agent_event = service.event()
+    validate_agent_event(agent_event)
+    if agent_event["event"] == "refused":
+        service.settle_refusal_diagnostics()
+    timings["service_admission_and_agent_event"] = time.monotonic() - phase
+    return _Admitted(
+        holder=holder, service=service, service_ready=service_ready, admission=admission, agent_event=agent_event
+    )
 
 
 def close_holder(holder: WindowsRuntimeSessionHolder) -> None:

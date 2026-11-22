@@ -8,6 +8,7 @@ envelope parser, so nothing here starts llama-server, the runtime or a model.
 
 from __future__ import annotations
 
+import contextlib
 import csv
 import io
 import json
@@ -17,7 +18,7 @@ import tempfile
 import threading
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, override
@@ -34,6 +35,7 @@ from cadrumo.core.errors.error_codes import (
 )
 from cadrumo.core.json_contract import emit_json_success
 from cadrumo.core.logging import LOG_FILE_FORMAT
+from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.entrypoints.cli.ledger_llm_payloads import LedgerClassifyLlmSuggestResult
 from cadrumo.entrypoints.cli.ledger_results import LedgerListResult, LedgerListRowPayload
 from cadrumo_agent_service.admin import AdminAction, AdminServer
@@ -49,6 +51,8 @@ from cadrumo_agent_service.providers.application.tests.synthetic_catalog import 
     engine_catalog,
 )
 from cadrumo_agent_service.providers.domain.record import ListedModel, LocalEngine, LocalPlacement
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.sign_in_refusal_projection import session_refusal_context, session_refusal_translation_key
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.model_runs import ModelRunTaskKind
 from dev.desktop_agent_live.disposable_root import enclosing_git_project
@@ -60,6 +64,7 @@ from dev.runtime_lifecycle.service_admin_channel import owned_service_settings, 
 from .. import ledger_classification_speed as harness
 from ..ledger_classification_speed import (
     PREREQUISITE_ABSENT,
+    KeptSignInCli,
     PrerequisiteAbsentError,
     Presented,
     ScratchInGitProjectError,
@@ -69,6 +74,7 @@ from ..ledger_classification_speed import (
     SetupStepRefusedError,
     apply_window_settings,
     classify_flags,
+    copy_run_logs,
     default_scratch_parent,
     distribution,
     lane_model,
@@ -82,6 +88,7 @@ from ..ledger_classification_speed import (
     require_scratch_outside_git,
     router_id,
     run_record_count,
+    sign_in_ended,
     summarise,
     synthetic_movements,
     transaction_ids,
@@ -742,7 +749,13 @@ def test_a_refused_import_or_a_short_listing_is_a_setup_failure(tmp_path: Path, 
     refused = _RecordedEngine(server_log, tmp_path / "root", asks, [])
     refusal_exit, refusal_envelope, refusal_code = _refusal(RefusalCode.UNAVAILABLE)
     refused.import_answer = (refusal_exit, refusal_envelope)
-    arguments = {"count": 4, "year": _YEAR, "seed": 1, "mode": "classification", "budget_seconds": 600.0}
+    arguments: dict[str, Any] = {
+        "count": 4,
+        "year": _YEAR,
+        "seed": 1,
+        "mode": "classification",
+        "budget_seconds": 600.0,
+    }
     with pytest.raises(AcceptanceError, match=refusal_code):
         measure_ledger(refused, server_log, tmp_path / "root", tmp_path, timings={}, **arguments)
     short = _RecordedEngine(server_log, tmp_path / "root", asks, [])
@@ -883,7 +896,7 @@ def test_a_model_the_store_does_not_hold_exits_three(
     (store / "manifests").mkdir(parents=True)
     package = _package(tmp_path, llama=True)
 
-    def measure_up_to_the_model(arguments: Any) -> dict[str, Any]:
+    def measure_up_to_the_model(arguments: Any, document: dict[str, Any]) -> dict[str, Any]:
         # The catalogue named a model; the real store lookup is what refuses.
         model_weights(Path(arguments.model_store), "synthetic-text:4b")
         raise AssertionError("an absent model must stop the run")
@@ -1133,3 +1146,235 @@ def test_the_owned_channel_carries_only_settings_and_the_shared_one_stays_read_o
     shared._owned = False
     with pytest.raises(AcceptanceError, match="shared agent service session does not change"):
         shared.settings("local_engine")
+
+
+# --- the person's sign-in kept across the run ---------------------------------------------------------
+
+
+def _sign_in_refusal(reason: ProfileSessionRefusalReason) -> dict[str, Any]:
+    """The envelope a command answers with when the stored sign-in it resumes was refused for ``reason``."""
+    error = CliRefusedBoundaryError(
+        translated_message=session_refusal_translation_key(reason, None),
+        context=session_refusal_context(reason, None),
+    )
+    return parse_envelope("", render_error_json(error, command="ledger.classify"))
+
+
+class _Keeper:
+    """A sign-in that ends at a set instant and is renewed for a fixed window, counting renewals."""
+
+    def __init__(self, clock: list[datetime], *, window: timedelta) -> None:
+        self.clock = clock
+        self.window = window
+        self.ends = clock[0] + window
+        self.renewed = 0
+
+    def deadline(self) -> datetime | None:
+        return self.ends
+
+    def renew(self) -> dict[str, Any]:
+        self.renewed += 1
+        self.ends = self.clock[0] + self.window
+        return {"agent_event": "agent_ready"}
+
+
+class _LapsingCli:
+    """Answers each command after advancing the clock; refuses as the runtime does once the sign-in has ended."""
+
+    def __init__(self, clock: list[datetime], keeper: _Keeper, *, seconds: float) -> None:
+        self.clock = clock
+        self.keeper = keeper
+        self.seconds = seconds
+        self.calls = 0
+        self.refused = 0
+
+    def __call__(self, *arguments: str) -> tuple[float, int, dict[str, Any]]:
+        self.calls += 1
+        if self.clock[0] >= self.keeper.ends:
+            self.refused += 1
+            return 0.1, 4, _sign_in_refusal(ProfileSessionRefusalReason.EXPIRED_IDLE)
+        self.clock[0] += timedelta(seconds=self.seconds)
+        return self.seconds, 0, {"status": "success", "result": {}}
+
+
+def test_a_sign_in_ended_refusal_is_told_from_any_other_refusal() -> None:
+    for reason in (
+        ProfileSessionRefusalReason.EXPIRED_IDLE,
+        ProfileSessionRefusalReason.EXPIRED_ABSOLUTE,
+        ProfileSessionRefusalReason.ABSENT,
+    ):
+        assert sign_in_ended(_sign_in_refusal(reason)) == reason.value
+    assert sign_in_ended(_sign_in_refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE)) is None
+    assert sign_in_ended(_refusal(RefusalCode.TIMEOUT)[1]) is None
+    assert sign_in_ended({"status": "success", "result": {}}) is None
+
+
+def test_the_sign_in_is_renewed_before_it_can_end_during_a_command() -> None:
+    clock = [datetime(_YEAR, 3, 1, 9, tzinfo=UTC)]
+    keeper = _Keeper(clock, window=timedelta(minutes=15))
+    engine = _LapsingCli(clock, keeper, seconds=30.0)
+    kept = KeptSignInCli(engine, keeper, clock=lambda: clock[0], margin_seconds=120.0)
+
+    answers = [kept("app", "ledger", "classify", _transaction_id(index), "--llm") for index in range(60)]
+
+    assert all(code == 0 for _seconds, code, _envelope in answers)
+    assert engine.refused == 0
+    assert engine.calls == 60
+    # 30 minutes of commands in a 15-minute sign-in: renewed ahead of its end, never after it.
+    assert keeper.renewed == len(kept.renewals) >= 2
+    assert {renewal["cause"] for renewal in kept.renewals} == {"ahead_of_end"}
+    assert all(renewal["remaining_seconds"] < 120.0 for renewal in kept.renewals)
+    assert all(renewal["agent_event"] == "agent_ready" for renewal in kept.renewals)
+
+
+def test_a_command_refused_because_the_sign_in_ended_runs_again_once_after_signing_in_again() -> None:
+    clock = [datetime(_YEAR, 3, 1, 9, tzinfo=UTC)]
+    keeper = _Keeper(clock, window=timedelta(minutes=15))
+    engine = _LapsingCli(clock, keeper, seconds=30.0)
+    kept = KeptSignInCli(engine, keeper, clock=lambda: clock[0], margin_seconds=120.0)
+    # The runtime ended the sign-in earlier than the deadline last read said.
+    keeper.ends = clock[0]
+
+    seconds, code, _envelope = kept("app", "ledger", "classify", _transaction_id(0), "--llm")
+
+    assert (seconds, code) == (30.0, 0)
+    assert (engine.calls, engine.refused, keeper.renewed) == (2, 1, 1)
+    assert [renewal["cause"] for renewal in kept.renewals] == [ProfileSessionRefusalReason.EXPIRED_IDLE.value]
+
+
+def test_a_sign_in_without_a_deadline_is_never_renewed_ahead() -> None:
+    clock = [datetime(_YEAR, 3, 1, 9, tzinfo=UTC)]
+
+    class _Silent(_Keeper):
+        @override
+        def deadline(self) -> datetime | None:
+            return None
+
+    keeper = _Silent(clock, window=timedelta(days=1))
+    kept = KeptSignInCli(_LapsingCli(clock, keeper, seconds=30.0), keeper, clock=lambda: clock[0])
+    kept.keep_ahead()
+    kept("app", "ledger", "list")
+    assert kept.renewals == []
+
+
+# --- a run that fails part way still writes what it measured and keeps its logs ---------------------
+
+
+class _FailingEngine(_RecordedEngine):
+    """The recorded engine, failing on the classify ask ``fail_at`` with ``failure``."""
+
+    def __init__(self, *args: Any, fail_at: int, failure: BaseException) -> None:
+        super().__init__(*args)
+        self.fail_at = fail_at
+        self.failure = failure
+        self.asked = 0
+
+    @override
+    def __call__(self, *arguments: str) -> tuple[float, int, dict[str, Any]]:
+        if arguments[2] == "classify":
+            if self.asked == self.fail_at:
+                raise self.failure
+            self.asked += 1
+        return super().__call__(*arguments)
+
+
+@pytest.mark.parametrize(
+    ("failure", "exit_code"),
+    [(AcceptanceError("the agent service exited"), 1), (KeyboardInterrupt(), 130)],
+    ids=["failure", "interruption"],
+)
+def test_a_run_failing_mid_way_writes_its_partial_json_and_keeps_its_logs(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    failure: BaseException,
+    exit_code: int,
+) -> None:
+    store = tmp_path / "models"
+    (store / "manifests").mkdir(parents=True)
+    package = _package(tmp_path, llama=True)
+    scratch = tmp_path / "scratch"
+    outputs = tmp_path / "outputs"
+    outputs.mkdir()
+    root = scratch / "disposable"
+    removed: list[Path] = []
+
+    def create(parent: Path) -> Path:
+        root.mkdir(parents=True)
+        return root
+
+    def remove(target: Path, parent: Path) -> list[str]:
+        # The logs must be out before the root goes.
+        assert (outputs / "logs" / "session" / "storage" / "logs" / "cadrumo.log").is_file()
+        removed.append(target)
+        return []
+
+    def measure_on(arguments: Any, document: dict[str, Any], package: Path, root: Path, outputs: Path, *_: Any) -> None:
+        storage = root / "session" / "storage"
+        (root / "session" / "runtime-stderr.log").parent.mkdir(parents=True)
+        (root / "session" / "runtime-stderr.log").write_text("runtime stderr\n", encoding="utf-8")
+        log = ServerLog(outputs / "llama-server.log")
+        log.append("main: server is listening on http://127.0.0.1:0 - starting the main loop")
+        asks, _code = _recorded_asks()
+        engine = _FailingEngine(log, storage, asks, _repeats(), fail_at=2, failure=failure)
+        timings: dict[str, float] = {}
+        document["timings"] = timings
+        document["sign_ins"] = []
+        measure_ledger(
+            engine,
+            log,
+            storage,
+            outputs,
+            count=4,
+            year=_YEAR,
+            seed=3,
+            mode="classification",
+            budget_seconds=600.0,
+            timings=timings,
+            fields=document,
+        )
+
+    # pytest's temporary folder lies inside this worktree; the refusal itself is tested above.
+    monkeypatch.setattr(harness, "require_scratch_outside_git", lambda parent: None)
+    monkeypatch.setattr(harness, "create_root", create)
+    monkeypatch.setattr(harness, "remove_root", remove)
+    monkeypatch.setattr(harness, "output_directory", lambda stamp: outputs)
+    monkeypatch.setattr(harness, "_measure_on", measure_on)
+    out = tmp_path / "result.json"
+
+    code = harness.main(
+        ["--package", str(package), "--model-store", str(store), "--scratch", str(scratch), "--out", str(out)]
+    )
+    said = capsys.readouterr().err
+
+    assert code == exit_code, said
+    assert removed == [root]
+    document = json.loads(out.read_text(encoding="utf-8"))
+    assert [item["index"] for item in document["items"]] == [0, 1]
+    assert document["phase"] == "classify"
+    assert document["failure"]["phase"] == "classify"
+    assert document["failure"]["type"] == type(failure).__name__
+    assert document["summary"]["complete"] is False
+    assert document["summary"]["sign_in_renewals"] == 0
+    assert sorted(document["copied_logs"]) == ["session/runtime-stderr.log", "session/storage/logs/cadrumo.log"]
+    copied = outputs / "logs" / "session" / "storage" / "logs" / "cadrumo.log"
+    assert "startup before the measured window" in copied.read_text(encoding="utf-8")
+    assert (outputs / "logs" / "session" / "runtime-stderr.log").read_text(encoding="utf-8") == "runtime stderr\n"
+
+
+def test_log_copy_skips_links_and_files_that_are_not_logs(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    (root / "a" / "logs").mkdir(parents=True)
+    (root / "a" / "logs" / "agent.jsonl").write_text("{}\n", encoding="utf-8")
+    (root / "a" / "state.db").write_bytes(b"not a log")
+    (root / "b.log").write_text("b\n", encoding="utf-8")
+    outside = tmp_path / "outside.log"
+    outside.write_text("outside\n", encoding="utf-8")
+    with contextlib.suppress(OSError):  # a link needs a privilege Windows may withhold
+        (root / "linked.log").symlink_to(outside)
+
+    copied = copy_run_logs(root, tmp_path / "out")
+
+    assert sorted(copied) == ["a/logs/agent.jsonl", "b.log"]
+    assert not (tmp_path / "out" / "linked.log").exists()
+    assert not (tmp_path / "out" / "a" / "state.db").exists()

@@ -48,10 +48,26 @@ reads afterwards, the served catalogue, the settings replies, the synthetic
 statement and the router log, go below the worktree's ``.tmp/`` instead, beside
 ``--out``.
 
+The person's sign-in runs out: the runtime ends it after its idle window
+(15 minutes by default) unless the person's own input extends it, and a
+script's commands never do, so the stored sign-in the commands resume, the held
+person session and the agent service's lease, which descends from it, all end
+then. A run that outlasts the window does what the person does when the window
+says their sign-in is about to end: before a command that could outlast the
+sign-in, and again after a command refused because it had ended, it signs in
+again, starts a new held session, admits a new agent service under it and
+stores the window's settings again. Each renewal is recorded under
+``sign_ins``; its time is not any movement's.
+
 Exit 0 means every phase ran and the JSON was written; per-movement refusals
-are counted in it, not raised. Exit 1 names a setup failure. Exit 3 means a
-prerequisite is absent: the package, its llama-server, the model store or the
-model in it, or a ``--scratch`` inside a Git project.
+are counted in it, not raised. Exit 1 names a failure and exit 130 an
+interruption; either way the JSON written so far is still written to
+``--out``: the movements measured until then, the phase that failed and the
+failure, and the summary of those movements. The logs the run left in the
+disposable root (the product's, the runtime's, the agent's) are copied below
+the outputs before the root is removed, on success and failure alike. Exit 3
+means a prerequisite is absent: the package, its llama-server, the model store
+or the model in it, or a ``--scratch`` inside a Git project.
 """
 
 from __future__ import annotations
@@ -64,11 +80,12 @@ import os
 import platform
 import random
 import re
+import shutil
 import statistics
 import sys
 import tempfile
 import time
-from collections.abc import Generator, Mapping, Sequence
+from collections.abc import Callable, Generator, Mapping, MutableMapping, Sequence
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
@@ -82,6 +99,7 @@ import psutil
 from pydantic import BaseModel, JsonValue, ValidationError
 
 from cadrumo.core.config_runtime_fields import LLAMA_SERVER_ADDRESS
+from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo_agent_service.admin import AdminAction
 from cadrumo_agent_service.providers.application.contracts import (
     LocalEngineStatus,
@@ -109,6 +127,18 @@ _DEFAULT_NAMESPACE: Final = "library"
 _ENGINE_PROVIDER: Final = LocalEngine.LLAMACPP.value
 _OUTPUTS: Final = "ledger-classification-speed"
 _HEALTH_SECONDS: Final = 120.0
+_INTERRUPTED: Final = 130
+_RENEWAL_MARGIN_SECONDS: Final = 120.0
+"""The least sign-in left before a command; a renewal happens below it, or below twice the longest command."""
+_SIGN_IN_ENDED: Final = frozenset(
+    {
+        ProfileSessionRefusalReason.EXPIRED_IDLE.value,
+        ProfileSessionRefusalReason.EXPIRED_ABSOLUTE.value,
+        ProfileSessionRefusalReason.ABSENT.value,
+    }
+)
+"""The stored sign-in refusals that mean it ran out (or was removed when it did), not that the command was wrong."""
+_LOG_COPY_LIMIT_BYTES: Final = 256 * 2**20
 
 _PROMPT_EVAL: Final = re.compile(r"prompt eval time =\s*([\d.]+) ms /\s*(\d+) tokens")
 _EVAL: Final = re.compile(r"(?<!prompt )eval time =\s*([\d.]+) ms /\s*(\d+) (?:tokens|runs)")
@@ -175,6 +205,91 @@ class TimedCli(Protocol):
     def __call__(self, *arguments: str) -> tuple[float, int, dict[str, Any]]:
         """Run ``aeat --format json ARGUMENTS`` and time it."""
         ...
+
+
+class SignInKeeper(Protocol):
+    """The person's sign-in on the measured root: when it ends, and signing in again."""
+
+    def deadline(self) -> datetime | None:
+        """When the sign-in ends unless renewed, read without extending it; ``None`` when nothing says."""
+        ...
+
+    def renew(self) -> Mapping[str, Any]:
+        """Sign in again and stand the service up under it; return what the renewal did."""
+        ...
+
+
+def sign_in_ended(envelope: Mapping[str, Any]) -> str | None:
+    """The refusal reason when a command was refused because the stored sign-in ran out, else ``None``."""
+    error = envelope.get("error")
+    if not isinstance(error, dict) or error.get("code") != "REFUSED_CLI_BOUNDARY":
+        return None
+    context = error.get("context")
+    reason = context.get("sign_in_reason") if isinstance(context, dict) else None
+    return reason if isinstance(reason, str) and reason in _SIGN_IN_ENDED else None
+
+
+class KeptSignInCli:
+    """Run JSON commands while keeping the person's sign-in, as the person does when it is about to end.
+
+    Before a command, a sign-in with less left than the margin, or than twice
+    the longest command so far, is renewed first. A command refused because
+    the sign-in had ended anyway is run once more after a renewal; that refused
+    attempt is not timed. Every renewal is kept in ``renewals``.
+    """
+
+    def __init__(
+        self,
+        cli: TimedCli,
+        keeper: SignInKeeper,
+        *,
+        clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+        margin_seconds: float = _RENEWAL_MARGIN_SECONDS,
+    ) -> None:
+        """Wrap ``cli`` with ``keeper``; the deadline is read once now and after each renewal."""
+        self._cli = cli
+        self._keeper = keeper
+        self._clock = clock
+        self._margin = margin_seconds
+        self._longest = 0.0
+        self._started = time.perf_counter()
+        self.renewals: list[dict[str, Any]] = []
+        self._deadline = keeper.deadline()
+
+    def remaining_seconds(self) -> float | None:
+        """Seconds of sign-in left by the last deadline read, ``None`` when nothing says."""
+        return None if self._deadline is None else (self._deadline - self._clock()).total_seconds()
+
+    def keep_ahead(self) -> None:
+        """Renew now when the sign-in may end before the next command does."""
+        remaining = self.remaining_seconds()
+        if remaining is not None and remaining < max(self._margin, 2 * self._longest):
+            self._renew("ahead_of_end", remaining)
+
+    def _renew(self, cause: str, remaining: float | None) -> None:
+        started = time.perf_counter()
+        record = dict(self._keeper.renew())
+        self._deadline = self._keeper.deadline()
+        self.renewals.append(
+            {
+                "cause": cause,
+                "remaining_seconds": None if remaining is None else round(remaining, 1),
+                "elapsed": round(started - self._started, 3),
+                "seconds": round(time.perf_counter() - started, 3),
+                **record,
+            }
+        )
+
+    def __call__(self, *arguments: str) -> tuple[float, int, dict[str, Any]]:
+        """Run one command under a live sign-in."""
+        self.keep_ahead()
+        seconds, code, envelope = self._cli(*arguments)
+        ended = sign_in_ended(envelope)
+        if ended is not None:
+            self._renew(ended, self.remaining_seconds())
+            seconds, code, envelope = self._cli(*arguments)
+        self._longest = max(self._longest, seconds)
+        return seconds, code, envelope
 
 
 @dataclass(slots=True)
@@ -513,6 +628,35 @@ def error_code(envelope: Mapping[str, Any]) -> str | None:
     return None
 
 
+def _first_value(value: object, key: str) -> object:
+    """The first value stored under ``key`` anywhere in ``value``, depth first."""
+    if isinstance(value, dict):
+        if key in value:
+            return value[key]
+        children: Sequence[object] = list(value.values())
+    elif isinstance(value, list):
+        children = value
+    else:
+        return None
+    for child in children:
+        found = _first_value(child, key)
+        if found is not None:
+            return found
+    return None
+
+
+def error_detail(envelope: Mapping[str, Any]) -> dict[str, Any]:
+    """What a refusal says happened: its context and the agent's model-run refusal code, wherever it states it."""
+    error = envelope.get("error")
+    if not isinstance(error, dict):
+        return {}
+    refusal = _first_value(error, "model_run_refusal")
+    return {
+        "error_context": error.get("context"),
+        "model_run_refusal": refusal if isinstance(refusal, str) else None,
+    }
+
+
 def result_fields(envelope: Mapping[str, Any]) -> dict[str, Any]:
     """The suggestion fields a classification envelope's result carries."""
     result = envelope.get("result")
@@ -541,6 +685,7 @@ def movement_record(
         "seconds": round(seconds, 4),
         "exit": code,
         "error": error_code(envelope),
+        **error_detail(envelope),
         **result_fields(envelope),
         "server": ServerFacts.read(server_lines).as_json(),
         "run_records": run_record_count(product_lines),
@@ -560,12 +705,16 @@ def measure_ledger(
     mode: str,
     budget_seconds: float,
     timings: dict[str, float],
-) -> dict[str, Any]:
+    fields: MutableMapping[str, Any] | None = None,
+) -> MutableMapping[str, Any]:
     """Import the synthetic movements, then classify each one, reading the router's and product's logs per movement.
 
-    Returns the document's ledger fields; phase timings are added to ``timings``.
+    Returns the document's ledger fields, written into ``fields`` as they are
+    measured, so a failure part way leaves the movements measured so far and
+    the ``phase`` it failed in; phase timings are added to ``timings``.
     """
-    fields: dict[str, Any] = {}
+    fields = {} if fields is None else fields
+    fields["phase"] = "import"
     rows = synthetic_movements(count, year, seed=seed)
     statement = outputs / "synthetic-statement.csv"
     write_statement(statement, rows)
@@ -573,6 +722,7 @@ def measure_ledger(
     timings["import_seconds"] = seconds
     if code != 0:
         raise AcceptanceError(f"ledger import refused: exit {code}, code {error_code(envelope)}")
+    fields["phase"] = "list"
     seconds, code, envelope = cli("app", "ledger", "list")
     timings["list_seconds"] = seconds
     identifiers = transaction_ids(envelope.get("result"))
@@ -580,6 +730,7 @@ def measure_ledger(
         raise AcceptanceError(f"ledger lists {len(identifiers)} movements, expected {count}")
     identifiers = identifiers[:count]
 
+    fields["phase"] = "baseline"
     baseline = []
     for identifier in identifiers[: min(5, len(identifiers))]:
         seconds, _, _ = cli("app", "ledger", "history", identifier)
@@ -589,6 +740,8 @@ def measure_ledger(
     classify = ("app", "ledger", "classify")
     flags = classify_flags(mode)
     items: list[dict[str, Any]] = []
+    fields["items"] = items
+    fields["phase"] = "classify"
     server_offset = log.since(0)[1]
     product_offset = product_log_lines(product_root, 0)[1]
     run_started = time.perf_counter()
@@ -608,13 +761,14 @@ def measure_ledger(
         print(json.dumps({"item": index, "seconds": item["seconds"], "exit": code, "error": item["error"]}), flush=True)
     timings["classify_wall_seconds"] = time.perf_counter() - run_started
 
-    repeat = []
+    fields["phase"] = "repeat"
+    repeat: list[dict[str, Any]] = []
+    fields["repeat_same_movement"] = repeat
     for identifier in identifiers[: min(3, len(identifiers))]:
         seconds, code, _ = cli(*classify, identifier, *flags)
         server_lines, server_offset = log.since(server_offset)
         repeat.append({"seconds": round(seconds, 4), "exit": code, "server": ServerFacts.read(server_lines).as_json()})
-    fields["repeat_same_movement"] = repeat
-    fields["items"] = items
+    fields["phase"] = "measured"
     return fields
 
 
@@ -722,8 +876,57 @@ def output_directory(stamp: str) -> Path:
     return prepare_temp_root(override=TEMP_ROOT / _OUTPUTS / stamp)
 
 
-def measure(arguments: _Arguments) -> dict[str, Any]:
-    """Run the whole measurement and return its JSON document."""
+def copy_run_logs(root: Path, destination: Path) -> list[str]:
+    """Copy every log the run left in ``root`` below ``destination``, at its path relative to ``root``.
+
+    A log is a file in a ``logs`` folder or named ``*.log``. Links are never
+    followed or copied. Returns the copied relative paths; a file that cannot
+    be read, or would pass the copy limit, is named with why instead, so a
+    failed copy never hides the failure that brought the run here.
+    """
+    copied: list[str] = []
+    budget = _LOG_COPY_LIMIT_BYTES
+    for folder, directories, files in os.walk(root, followlinks=False):
+        here = Path(folder)
+        directories[:] = [name for name in directories if not (here / name).is_symlink()]
+        for name in sorted(files):
+            source = here / name
+            relative = source.relative_to(root)
+            if source.is_symlink() or not ("logs" in relative.parts[:-1] or name.endswith(".log")):
+                continue
+            try:
+                size = source.stat().st_size
+                if size > budget:
+                    copied.append(f"{relative.as_posix()} (not copied: over the copy limit)")
+                    continue
+                target = destination / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, target)
+                budget -= size
+                copied.append(relative.as_posix())
+            except OSError as error:
+                copied.append(f"{relative.as_posix()} (not copied: {type(error).__name__})")
+    return copied
+
+
+def failure_record(error: BaseException, phase: object) -> dict[str, Any]:
+    """The failure as the JSON names it: the phase, and each error of its chain by type and message."""
+    chain: list[dict[str, str]] = []
+    current: BaseException | None = error
+    while current is not None and len(chain) < 8:
+        chain.append({"type": type(current).__name__, "message": str(current)[:500]})
+        current = current.__cause__ or current.__context__
+    return {"phase": phase, "type": type(error).__name__, "message": str(error)[:500], "chain": chain}
+
+
+def measure(arguments: _Arguments, document: dict[str, Any]) -> dict[str, Any]:
+    """Run the whole measurement, filling ``document`` as it goes, and return it.
+
+    On any failure, an interruption included, the document keeps what was
+    measured, names the phase and the failure, and the run's logs are copied
+    out of the disposable root before it is removed; then the failure is raised.
+    """
+    document["phase"] = "prerequisites"
     package = Path(arguments.package).resolve(strict=True)
     parent = Path(arguments.scratch).absolute()
     require_scratch_outside_git(parent)
@@ -731,25 +934,31 @@ def measure(arguments: _Arguments) -> dict[str, Any]:
     outputs = output_directory(arguments.stamp)
     store = Path(arguments.model_store).expanduser().resolve(strict=True)
     year = supported_filing_year()
-    document: dict[str, Any] = {
-        "started_at": datetime.now(UTC).isoformat(),
-        "package": str(package),
-        "outputs": str(outputs),
-        "machine": _machine(),
-        "count": arguments.count,
-        "mode": arguments.mode,
-        "placement": arguments.placement.value,
-        "booking_year": year,
-    }
+    document.update(
+        {
+            "started_at": datetime.now(UTC).isoformat(),
+            "package": str(package),
+            "outputs": str(outputs),
+            "machine": _machine(),
+            "count": arguments.count,
+            "mode": arguments.mode,
+            "placement": arguments.placement.value,
+            "booking_year": year,
+        }
+    )
     root = create_root(parent)
     try:
         _measure_on(arguments, document, package, root, outputs, store, year)
+    except BaseException as error:
+        document["failure"] = failure_record(error, document.get("phase"))
+        raise
     finally:
+        document["copied_logs"] = copy_run_logs(root, outputs / "logs")
         left = remove_root(root, parent)
         document["disposable_root_left"] = left
         if left:
             print(json.dumps({"disposable_root_left": left}), file=sys.stderr, flush=True)
-    document["finished_at"] = datetime.now(UTC).isoformat()
+        document["finished_at"] = datetime.now(UTC).isoformat()
     return document
 
 
@@ -764,7 +973,9 @@ def _measure_on(
 ) -> None:
     """Stand up the session on ``root``, apply the settings and measure, filling ``document``."""
     timings: dict[str, float] = {}
+    document["timings"] = timings
     phase = time.perf_counter()
+    document["phase"] = "session_setup"
     with ExitStack() as stack:
         session = stack.enter_context(agent_service_session(package, root / "session", owned=True))
         timings["session_setup_seconds"] = time.perf_counter() - phase
@@ -774,6 +985,7 @@ def _measure_on(
         }
         if session.first_refusal_code is not None:
             raise AcceptanceError(f"agent service refused the agent: {session.first_refusal_code}")
+        document["phase"] = "catalog"
         catalog = session.catalog()
         (outputs / "catalog.json").write_text(json.dumps(catalog, indent=2), encoding="utf-8")
         lane, model, context = lane_model(catalog, arguments.model)
@@ -788,12 +1000,14 @@ def _measure_on(
             return
 
         phase = time.perf_counter()
+        document["phase"] = "llama_server"
         log = stack.enter_context(
             llama_router(package, root, outputs / "llama-server.log", presented, cpu_only=arguments.cpu_only)
         )
         timings["llama_server_health_seconds"] = time.perf_counter() - phase
         if arguments.select:
             phase = time.perf_counter()
+            document["phase"] = "settings"
             try:
                 replies = apply_window_settings(session.settings, lane=lane, model=model, placement=arguments.placement)
             finally:
@@ -805,22 +1019,66 @@ def _measure_on(
                 "tasks": replies["task_model_choose"].get("tasks"),
             }
 
-        document.update(
-            measure_ledger(
-                session_cli(session),
-                log,
-                session.root,
-                outputs,
-                count=arguments.count,
-                year=year,
-                seed=arguments.seed,
-                mode=arguments.mode,
-                budget_seconds=arguments.budget_seconds,
-                timings=timings,
-            )
+        def renew() -> dict[str, Any]:
+            record = session.sign_in_again()
+            if session.first_refusal_code is not None:
+                raise AcceptanceError(
+                    f"agent service refused the agent after signing in again: {session.first_refusal_code}"
+                )
+            if arguments.select:
+                apply_window_settings(session.settings, lane=lane, model=model, placement=arguments.placement)
+            return record
+
+        document["phase"] = "sign_in"
+        kept = KeptSignInCli(session_cli(session), _SessionSignIn(session, renew))
+        document["sign_ins"] = kept.renewals
+        measure_ledger(
+            kept,
+            log,
+            session.root,
+            outputs,
+            count=arguments.count,
+            year=year,
+            seed=arguments.seed,
+            mode=arguments.mode,
+            budget_seconds=arguments.budget_seconds,
+            timings=timings,
+            fields=document,
         )
+        # The session is retired by its own cleanup: the sign-in must still be live for its sign-out.
+        document["phase"] = "teardown"
+        kept.keep_ahead()
+
+
+@dataclass(frozen=True, slots=True)
+class _SessionSignIn:
+    """The measured session's sign-in: its deadline as the runtime states it, and the person's renewal."""
+
+    session: AgentServiceSession
+    renewal: Callable[[], dict[str, Any]]
+
+    def deadline(self) -> datetime | None:
+        """The earlier of the stored sign-in's and the held session's end."""
+        return self.session.sign_in_deadline()
+
+    def renew(self) -> Mapping[str, Any]:
+        """Sign in again, admit a new service and store the window's settings again."""
+        return self.renewal()
+
+
+def finish_document(document: dict[str, Any]) -> dict[str, Any]:
+    """Round the timings and summarise the movements measured, however far the run got."""
+    timings = document.get("timings")
+    if isinstance(timings, dict):
         document["timings"] = {key: round(value, 3) for key, value in timings.items()}
-        document["summary"] = summarise(document["items"])
+    items = document.get("items")
+    if isinstance(items, list):
+        document["summary"] = {
+            **summarise(items),
+            "sign_in_renewals": len(document.get("sign_ins") or ()),
+            "complete": "failure" not in document,
+        }
+    return document
 
 
 def summarise(items: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
@@ -933,19 +1191,35 @@ def main(argv: Sequence[str] | None = None) -> int:
     except ScratchInGitProjectError as error:
         print(json.dumps({"absent": str(error), "error": type(error).__name__}), file=sys.stderr)
         return PREREQUISITE_ABSENT
+    document: dict[str, Any] = {}
     try:
-        document = measure(arguments)
+        measure(arguments, document)
     except PrerequisiteAbsentError as error:
+        # Nothing was measured, so there is no document to write.
         print(json.dumps({"absent": str(error)}), file=sys.stderr)
         return PREREQUISITE_ABSENT
-    except (AcceptanceError, OSError, KeyError, ValueError) as error:
-        print(json.dumps({"failed": f"{type(error).__name__}: {error}"}), file=sys.stderr)
+    except KeyboardInterrupt as error:
+        document.setdefault("failure", failure_record(error, document.get("phase")))
+        print(json.dumps({"interrupted": document.get("phase"), "out": arguments.out}), file=sys.stderr)
+        _write_document(arguments.out, document)
+        return _INTERRUPTED
+    except Exception as error:  # every failure still writes what was measured
+        document.setdefault("failure", failure_record(error, document.get("phase")))
+        print(json.dumps({"failed": f"{type(error).__name__}: {error}", "out": arguments.out}), file=sys.stderr)
+        _write_document(arguments.out, document)
         return 1
-    out = Path(arguments.out)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(document, indent=2), encoding="utf-8")
-    print(json.dumps({"out": str(out), "summary": document.get("summary"), "lane": document.get("lane")}))
+    _write_document(arguments.out, document)
+    print(json.dumps({"out": arguments.out, "summary": document.get("summary"), "lane": document.get("lane")}))
     return 0
+
+
+def _write_document(out: str, document: dict[str, Any]) -> None:
+    """Write the JSON document, finished as far as the run got, when the run started measuring."""
+    if not document:
+        return
+    path = Path(out)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(finish_document(document), indent=2, default=str), encoding="utf-8")
 
 
 if __name__ == "__main__":

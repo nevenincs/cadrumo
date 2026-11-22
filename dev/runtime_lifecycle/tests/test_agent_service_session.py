@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager
+from datetime import UTC, datetime, timedelta
 from io import BytesIO
 from pathlib import Path
 from queue import Queue
@@ -19,6 +20,9 @@ import dev.runtime_lifecycle.service_admin_channel as process_module
 from cadrumo_agent_service.admin import AdminAction, AdminServer
 from cadrumo_agent_service.host.bounded_read import BoundedRead
 from cadrumo_agent_service.providers.application.tests.served_catalog_documents import served_catalog
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
+from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.contracts.service_access import ServiceConnected, ServiceLease
 from dev.runtime_lifecycle.caller_owned_root import Programs
 from dev.runtime_lifecycle.packaged_service_process import PackagedServiceProcess
@@ -557,3 +561,135 @@ def test_cli_read_uses_exactly_one_authority_for_person_owned_read(
     assert ("--profile-secrets-stdin" in arguments) is (not persisted)
     assert secret == ({"profile_passphrase": "test-profile-password"} if not persisted else None)
     assert environment["CADRUMO_CLI_REVEAL_IDENTIFIERS"] == "true"
+
+
+# --- signing in again once the person's sign-in runs out ----------------------------------------------
+
+
+def _held_status(expires_at: datetime) -> dict[str, Any]:
+    """The held session's status reply, built through the runtime's own contracts."""
+    status = ProfileStatus(
+        request_id=uuid4(),
+        runtime_boot_id=_BOOT_ID,
+        connection_id=_HOLDER_CONNECTION_ID,
+        status=ProfileAccessStatus(
+            connected=True,
+            credential_authenticated=True,
+            profile_id=_PROFILE_ID,
+            session_id=_SESSION_ID,
+            session_expires_at=expires_at,
+            grant_state=AuthorityState.ACTIVE,
+            grant_expires_at=expires_at,
+            grant_valid=True,
+            profile_bound=True,
+            storage=Availability.AVAILABLE,
+            automation_custody=Availability.AVAILABLE,
+            published_authority=Availability.AVAILABLE,
+            provider=Availability.NOT_REQUIRED,
+            effective_scope=EffectiveScopeSummary.summarize(
+                AccessScope(
+                    operations=frozenset(),
+                    actions=frozenset(),
+                    disclosures=frozenset(),
+                    periods=None,
+                    allow_period_independent=True,
+                    allow_delegation=False,
+                )
+            ),
+            denial=None,
+        ),
+    )
+    return status.model_dump(mode="json")
+
+
+def test_signing_in_again_replaces_the_held_session_and_service_and_keeps_the_cleanup_order(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    steps = _install_lifecycle(monkeypatch, tmp_path, login_persisted=True)
+    original_close = _Holder.close
+    closes: list[_Holder] = []
+
+    def retired_close(holder: _Holder) -> None:
+        # The first held session has already ended, as it has once the idle window passed.
+        original_close(holder)
+        closes.append(holder)
+        if len(closes) == 1:
+            raise session_module.AcceptanceError("the original human holder retired or refused the command")
+
+    monkeypatch.setattr(_Holder, "close", retired_close)
+    monkeypatch.setattr(
+        session_module,
+        "run_cli",
+        lambda _programs, _environment, *arguments, secret=None: (
+            steps.append("profile.logout") or (0, {"status": "success"})
+        ),
+    )
+
+    with session_module.agent_service_session(tmp_path / "package", tmp_path / "owned-run") as shared:
+        first_holder, first_service = shared._holder, shared._service
+        renewal = shared.sign_in_again()
+        renewed_at = len(steps)
+        assert shared._holder is not first_holder and shared._service is not first_service
+        assert shared.sign_ins == 2
+        assert renewal["previous_close_failures"] == ["AcceptanceError"]
+        assert renewal["agent_event"] == "refused"
+        assert shared.setup_counts["profile_login"] == 2
+        assert shared.setup_counts["holder_start"] == shared.setup_counts["service_start"] == 2
+        assert shared.setup_counts["service_admission"] == 2
+
+    renewal_steps = steps[steps.index("holder.service_admission") + 1 : renewed_at]
+    assert renewal_steps.index("service.close") < renewal_steps.index("holder.close")
+    assert renewal_steps.index("holder.close") < renewal_steps.index("profile.login")
+    assert renewal_steps.index("profile.login") < renewal_steps.index("holder.start")
+    assert renewal_steps.index("holder.start") < renewal_steps.index("holder.service_admission")
+    teardown = steps[renewed_at:]
+    # Only the renewed generation is closed at the end, then the stored sign-in, then the runtime.
+    # The held session's close command, then its process.
+    assert teardown == [
+        "service.close",
+        "holder.close",
+        "holder.close",
+        "profile.logout",
+        "runtime.stop",
+        "runtime.exit",
+    ]
+
+
+def test_the_sign_in_deadline_is_the_earlier_end_and_a_retired_holder_has_none_left(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_lifecycle(monkeypatch, tmp_path, login_persisted=True)
+    stored_end = datetime.now(UTC) + timedelta(minutes=4)
+    held_end = datetime.now(UTC) + timedelta(minutes=9)
+    reads: list[tuple[str, ...]] = []
+
+    def sign_in_status(_programs: Programs, _environment: Mapping[str, str], *arguments: str) -> tuple[int, Any]:
+        reads.append(arguments)
+        status = {
+            "presence": "present",
+            "idle_deadline": stored_end.isoformat(),
+            "absolute_deadline": (stored_end + timedelta(hours=3)).isoformat(),
+        }
+        return 0, {"status": "success", "result": {"profile_id": str(_PROFILE_ID), "status": status}}
+
+    monkeypatch.setattr(session_module, "run_runtime_cli", sign_in_status)
+    monkeypatch.setattr(session_module, "run_cli", lambda *_args, **_kwargs: (0, {"status": "success"}))
+    original_command = _Holder.command
+    retired = [False]
+
+    def command(holder: _Holder, action: str, **fields: Any) -> dict[str, Any]:
+        if action != "status":
+            return original_command(holder, action, **fields)
+        if retired[0]:
+            raise session_module.AcceptanceError("the original human holder retired or refused the command")
+        return _held_status(held_end)
+
+    monkeypatch.setattr(_Holder, "command", command)
+
+    with session_module.agent_service_session(tmp_path / "package", tmp_path / "owned-run") as shared:
+        assert shared.sign_in_deadline() == stored_end
+        assert reads == [("config", "sign-in-status")]
+        retired[0] = True
+        before = datetime.now(UTC)
+        ended = shared.sign_in_deadline()
+        assert ended is not None and before <= ended <= datetime.now(UTC)
