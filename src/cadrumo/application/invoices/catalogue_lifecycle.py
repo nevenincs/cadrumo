@@ -222,6 +222,24 @@ class CatalogueInvoicePatch(BaseModel):
     series: str | None = None
     invoice_class: InvoiceClass | None = None
     rectifies_invoice_number: str | None = None
+    # The four facts a factura rectificativa states. They are correctable like
+    # every other non-identity fact: the person records the document when it
+    # reaches them and completes it as they read it, which is the whole reason
+    # the record admits a rectificativa that states none of them. Setting one
+    # explicitly to ``None`` clears it, as it does for every other optional
+    # fact on this patch, so a cause entered in error can be withdrawn rather
+    # than only replaced.
+    # Carried as the stable registry tokens in text, not as projected tokens
+    # like ``invoice_class`` above. The corrected record is rebuilt through
+    # :class:`Invoice`, whose own deserialisation boundary projects each of
+    # these three through fact 0141 on the invoice's ``issued_at`` -- the date
+    # that actually governs them. Projecting here instead would have to guess
+    # an effective date and an authority the patch does not carry, and would
+    # date a historical invoice's vocabulary to today.
+    rectification_method: str | None = None
+    rectification_cause: str | None = None
+    rectification_direction: str | None = None
+    document_received_on: date | None = None
     payment_id: str | None = None
     declared_fx_rate: Decimal | None = None
 

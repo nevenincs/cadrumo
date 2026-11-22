@@ -321,6 +321,10 @@ def _apply_operator_asserted_invoice_facts(
     *,
     series: str | None,
     rectifies_invoice_number: str | None,
+    rectification_method: str | None,
+    rectification_cause: str | None,
+    rectification_direction: str | None,
+    document_received_on: date | None,
     recargo_amount: Decimal | None,
     suplido_amount: Decimal | None,
     iva_category: IvaCategory | None,
@@ -335,6 +339,19 @@ def _apply_operator_asserted_invoice_facts(
         invoice_payload["series"] = series
     if rectifies_invoice_number is not None:
         invoice_payload["rectifies_invoice_number"] = rectifies_invoice_number
+    # The rectification facts travel as the tokens the operator stated; the
+    # record's own deserialisation boundary projects each through fact 0141 and
+    # refuses one the registry does not declare for this date, so no second
+    # vocabulary check lives here. Each is applied only when stated: a
+    # rectificativa missing one is admitted and blocked at declaration.
+    if rectification_method is not None:
+        invoice_payload["rectification_method"] = rectification_method
+    if rectification_cause is not None:
+        invoice_payload["rectification_cause"] = rectification_cause
+    if rectification_direction is not None:
+        invoice_payload["rectification_direction"] = rectification_direction
+    if document_received_on is not None:
+        invoice_payload["document_received_on"] = document_received_on.isoformat()
     if recargo_amount is not None:
         invoice_payload["recargo_amount"] = format(recargo_amount, "f")
     if suplido_amount is not None:
@@ -456,6 +473,10 @@ def build_catalogue_invoice(
     invoice_class: InvoiceClass | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
+    rectification_method: str | None = None,
+    rectification_cause: str | None = None,
+    rectification_direction: str | None = None,
+    document_received_on: date | None = None,
     recargo_amount: Decimal | None = None,
     suplido_amount: Decimal | None = None,
     business_premises_lease: BusinessPremisesLease | None = None,
@@ -494,6 +515,18 @@ def build_catalogue_invoice(
     ``_validate_retencion_consistency`` accepts an amount alone, requires an
     amount whenever a rate is supplied, and refuses either that does not
     match the invoice's ``base_total``.
+
+    ``rectification_method``, ``rectification_cause``,
+    ``rectification_direction`` and ``document_received_on`` carry the facts a
+    factura rectificativa states and no other invoice does. Each is the
+    operator's own statement: the method decides whether the stated figures ARE
+    the modification or the post-rectification figures (RD 1619/2012
+    art. 15.5), the cause places it in a period (LIVA art. 89.Cinco and
+    art. 114.Dos), the direction carries its sense while the totals stay
+    magnitudes, and the reception date is the recipient's. None is derived from
+    the class, the dates or an amount, and a rectificativa stating none of them
+    is written as it stands -- the Modelo 303 declaration refuses, naming the
+    gaps.
 
     ``invoice_class``, ``series``, ``rectifies_invoice_number`` and
     ``recargo_amount`` reach axes the aggregate has always modelled and no
@@ -544,6 +577,10 @@ def build_catalogue_invoice(
                 invoice_class=invoice_class,
                 series=series,
                 rectifies_invoice_number=rectifies_invoice_number,
+                rectification_method=rectification_method,
+                rectification_cause=rectification_cause,
+                rectification_direction=rectification_direction,
+                document_received_on=document_received_on,
                 recargo_amount=recargo_amount,
                 suplido_amount=suplido_amount,
                 business_premises_lease=business_premises_lease,
@@ -574,6 +611,10 @@ def build_catalogue_invoice(
         invoice_class=invoice_class,
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
+        rectification_method=rectification_method,
+        rectification_cause=rectification_cause,
+        rectification_direction=rectification_direction,
+        document_received_on=document_received_on,
         recargo_amount=recargo_amount,
         suplido_amount=suplido_amount,
         business_premises_lease=business_premises_lease,
@@ -606,6 +647,10 @@ def _build_pinned_catalogue_invoice(
     invoice_class: InvoiceClass | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
+    rectification_method: str | None = None,
+    rectification_cause: str | None = None,
+    rectification_direction: str | None = None,
+    document_received_on: date | None = None,
     recargo_amount: Decimal | None = None,
     suplido_amount: Decimal | None = None,
     business_premises_lease: BusinessPremisesLease | None = None,
@@ -678,6 +723,10 @@ def _build_pinned_catalogue_invoice(
             invoice_payload,
             series=series,
             rectifies_invoice_number=rectifies_invoice_number,
+            rectification_method=rectification_method,
+            rectification_cause=rectification_cause,
+            rectification_direction=rectification_direction,
+            document_received_on=document_received_on,
             recargo_amount=recargo_amount,
             suplido_amount=suplido_amount,
             iva_category=iva_category,

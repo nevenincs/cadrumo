@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from typing import TYPE_CHECKING, Final
 
-from ...invoices.enums import InvoiceClass, InvoiceOperationDateRole
+from ....core.registry_token import StrictRegistryToken
+from ...invoices.enums import (
+    InvoiceClass,
+    InvoiceOperationDateRole,
+    RectificationCause,
+    RectificationDirection,
+    RectificationMethod,
+)
 from .errors import RegistryValidationError
 from .facts.resolution import required_mapping_entry, unique_mapping_tokens
 from .facts.string_mapping import (
@@ -34,6 +41,19 @@ _OPERATION_DATE_ROLE_ORDER_KEY = "invoice_operation_date_role.order"
 _OPERATION_DATE_ROLE_PREFIX = "invoice_operation_date_role."
 _OPERATION_DATE_ROLE_PERFORMED_KEY = "invoice_operation_date_role.operation_performed_token"
 _OPERATION_DATE_ROLE_ADVANCE_KEY = "invoice_operation_date_role.advance_payment_received_token"
+_RECTIFICATION_METHOD_ORDER_KEY = "rectification_method.order"
+_RECTIFICATION_METHOD_PREFIX = "rectification_method."
+_RECTIFICATION_METHOD_DIFERENCIA_KEY = "rectification_method.diferencia_token"
+_RECTIFICATION_METHOD_SUSTITUCION_KEY = "rectification_method.sustitucion_token"
+_RECTIFICATION_DIRECTION_ORDER_KEY = "rectification_direction.order"
+_RECTIFICATION_DIRECTION_PREFIX = "rectification_direction."
+_RECTIFICATION_DIRECTION_MINORACION_KEY = "rectification_direction.minoracion_token"
+_RECTIFICATION_DIRECTION_AUMENTO_KEY = "rectification_direction.aumento_token"
+_RECTIFICATION_CAUSE_ORDER_KEY = "rectification_cause.order"
+_RECTIFICATION_CAUSE_PREFIX = "rectification_cause."
+_RECTIFICATION_CAUSE_ART_80_TRES_KEY = "rectification_cause.art_80_tres_token"
+_RECTIFICATION_CAUSE_ERROR_FUNDADO_KEY = "rectification_cause.error_fundado_de_derecho_token"
+_RECTIFICATION_CAUSE_OTRA_KEY = "rectification_cause.otra_modificacion_token"
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,6 +75,33 @@ class InvoiceOperationDateRoleDefinition:
 
 
 @dataclass(frozen=True, slots=True)
+class RectificationMethodDefinition:
+    """One registry-declared RD 1619/2012 art. 15.5 way of stating a rectification."""
+
+    token: RectificationMethod
+    description: str
+    legal_refs: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class RectificationDirectionDefinition:
+    """One registry-declared economic sense a rectification carries."""
+
+    token: RectificationDirection
+    description: str
+    legal_refs: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class RectificationCauseDefinition:
+    """One registry-declared ground on which a rectificativa modifies base and cuota."""
+
+    token: RectificationCause
+    description: str
+    legal_refs: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class InvoiceLegalClassificationCatalogue:
     """Complete dated projection of fact 0141."""
 
@@ -66,6 +113,58 @@ class InvoiceLegalClassificationCatalogue:
     rectificativa_token: InvoiceClass
     operation_performed_token: InvoiceOperationDateRole
     advance_payment_received_token: InvoiceOperationDateRole
+    rectification_methods: tuple[RectificationMethodDefinition, ...]
+    rectification_directions: tuple[RectificationDirectionDefinition, ...]
+    rectification_causes: tuple[RectificationCauseDefinition, ...]
+    diferencia_token: RectificationMethod
+    sustitucion_token: RectificationMethod
+    minoracion_token: RectificationDirection
+    aumento_token: RectificationDirection
+    art_80_tres_cause_token: RectificationCause
+    error_fundado_de_derecho_cause_token: RectificationCause
+    otra_modificacion_cause_token: RectificationCause
+
+    @property
+    def rectification_method_choices(self) -> tuple[RectificationMethod, ...]:
+        """Return rectification methods in the registry-authored order."""
+        return tuple(item.token for item in self.rectification_methods)
+
+    @property
+    def rectification_direction_choices(self) -> tuple[RectificationDirection, ...]:
+        """Return rectification directions in the registry-authored order."""
+        return tuple(item.token for item in self.rectification_directions)
+
+    @property
+    def rectification_cause_choices(self) -> tuple[RectificationCause, ...]:
+        """Return rectification causes in the registry-authored order."""
+        return tuple(item.token for item in self.rectification_causes)
+
+    def require_rectification_method(self, value: object) -> RectificationMethod:
+        """Project a rectification method only when the selected fact declares it."""
+        return _require_declared(
+            value,
+            choices=self.rectification_method_choices,
+            factory=RectificationMethod.from_registry,
+            subject="rectification method",
+        )
+
+    def require_rectification_direction(self, value: object) -> RectificationDirection:
+        """Project a rectification direction only when the selected fact declares it."""
+        return _require_declared(
+            value,
+            choices=self.rectification_direction_choices,
+            factory=RectificationDirection.from_registry,
+            subject="rectification direction",
+        )
+
+    def require_rectification_cause(self, value: object) -> RectificationCause:
+        """Project a rectification cause only when the selected fact declares it."""
+        return _require_declared(
+            value,
+            choices=self.rectification_cause_choices,
+            factory=RectificationCause.from_registry,
+            subject="rectification cause",
+        )
 
     @property
     def invoice_class_choices(self) -> tuple[InvoiceClass, ...]:
@@ -125,6 +224,39 @@ class InvoiceLegalClassificationCatalogue:
         return token
 
 
+def _require_declared[TokenT: StrictRegistryToken](
+    value: object,
+    *,
+    choices: tuple[TokenT, ...],
+    factory: Callable[[str], TokenT],
+    subject: str,
+) -> TokenT:
+    """Project one token of a rectification vocabulary, refusing anything fact 0141 omits.
+
+    Shared by the three rectification families because the refusal they owe a
+    caller is the same: the accepted tokens are whatever the selected variant
+    declares, so every refusal names them rather than a hard-coded list.
+    """
+    accepted = ", ".join(str(choice) for choice in choices)
+    if isinstance(value, str):
+        raw = value.strip()
+        if not raw:
+            raise RegistryValidationError(f"{subject} must be a non-empty string token; accepted values: {accepted}")
+        try:
+            token = factory(raw)
+        except (TypeError, ValueError) as exc:
+            raise RegistryValidationError(
+                f"{subject} must be a registry token; accepted values: {accepted}",
+            ) from exc
+    else:
+        raise RegistryValidationError(f"{subject} must be a string token; accepted values: {accepted}")
+    if token not in choices:
+        raise RegistryValidationError(
+            f"{subject} {str(token)!r} is not declared by fact {_FACT_ID!r}; accepted values: {accepted}",
+        )
+    return token
+
+
 _ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
@@ -150,6 +282,65 @@ def _catalogue(entries: Mapping[str, str]) -> InvoiceLegalClassificationCatalogu
     ordinaria, simplificada, rectificativa = _invoice_class_semantic_tokens(entries, invoice_classes)
     operation_performed, advance_payment_received = _operation_date_role_semantic_tokens(entries, operation_date_roles)
 
+    methods = tuple(
+        RectificationMethodDefinition(token=token, description=description, legal_refs=legal_refs)
+        for token, description, legal_refs in _vocabulary_members(
+            entries,
+            order_key=_RECTIFICATION_METHOD_ORDER_KEY,
+            prefix=_RECTIFICATION_METHOD_PREFIX,
+            factory=RectificationMethod.from_registry,
+            label="rectification method",
+        )
+    )
+    directions = tuple(
+        RectificationDirectionDefinition(token=token, description=description, legal_refs=legal_refs)
+        for token, description, legal_refs in _vocabulary_members(
+            entries,
+            order_key=_RECTIFICATION_DIRECTION_ORDER_KEY,
+            prefix=_RECTIFICATION_DIRECTION_PREFIX,
+            factory=RectificationDirection.from_registry,
+            label="rectification direction",
+        )
+    )
+    causes = tuple(
+        RectificationCauseDefinition(token=token, description=description, legal_refs=legal_refs)
+        for token, description, legal_refs in _vocabulary_members(
+            entries,
+            order_key=_RECTIFICATION_CAUSE_ORDER_KEY,
+            prefix=_RECTIFICATION_CAUSE_PREFIX,
+            factory=RectificationCause.from_registry,
+            label="rectification cause",
+        )
+    )
+    method_choices = tuple(item.token.value for item in methods)
+    direction_choices = tuple(item.token.value for item in directions)
+    cause_choices = tuple(item.token.value for item in causes)
+    diferencia = _pointer(entries, _RECTIFICATION_METHOD_DIFERENCIA_KEY, method_choices, label="rectification-method")
+    sustitucion = _pointer(entries, _RECTIFICATION_METHOD_SUSTITUCION_KEY, method_choices, label="rectification-method")
+    minoracion = _pointer(
+        entries,
+        _RECTIFICATION_DIRECTION_MINORACION_KEY,
+        direction_choices,
+        label="rectification-direction",
+    )
+    aumento = _pointer(
+        entries,
+        _RECTIFICATION_DIRECTION_AUMENTO_KEY,
+        direction_choices,
+        label="rectification-direction",
+    )
+    art_80_tres = _pointer(entries, _RECTIFICATION_CAUSE_ART_80_TRES_KEY, cause_choices, label="rectification-cause")
+    error_fundado = _pointer(
+        entries,
+        _RECTIFICATION_CAUSE_ERROR_FUNDADO_KEY,
+        cause_choices,
+        label="rectification-cause",
+    )
+    otra = _pointer(entries, _RECTIFICATION_CAUSE_OTRA_KEY, cause_choices, label="rectification-cause")
+    _require_distinct_pointers((diferencia, sustitucion), label="rectification-method")
+    _require_distinct_pointers((minoracion, aumento), label="rectification-direction")
+    _require_distinct_pointers((art_80_tres, error_fundado, otra), label="rectification-cause")
+
     return InvoiceLegalClassificationCatalogue(
         declarations=entries,
         invoice_classes=tuple(invoice_classes),
@@ -159,7 +350,53 @@ def _catalogue(entries: Mapping[str, str]) -> InvoiceLegalClassificationCatalogu
         rectificativa_token=InvoiceClass.from_registry(rectificativa),
         operation_performed_token=InvoiceOperationDateRole.from_registry(operation_performed),
         advance_payment_received_token=InvoiceOperationDateRole.from_registry(advance_payment_received),
+        rectification_methods=methods,
+        rectification_directions=directions,
+        rectification_causes=causes,
+        diferencia_token=RectificationMethod.from_registry(diferencia),
+        sustitucion_token=RectificationMethod.from_registry(sustitucion),
+        minoracion_token=RectificationDirection.from_registry(minoracion),
+        aumento_token=RectificationDirection.from_registry(aumento),
+        art_80_tres_cause_token=RectificationCause.from_registry(art_80_tres),
+        error_fundado_de_derecho_cause_token=RectificationCause.from_registry(error_fundado),
+        otra_modificacion_cause_token=RectificationCause.from_registry(otra),
     )
+
+
+def _require_distinct_pointers(pointers: tuple[str, ...], *, label: str) -> None:
+    if len(set(pointers)) != len(pointers):
+        raise RegistryValidationError(f"invoice legal-classification {label} pointers must be distinct")
+
+
+def _vocabulary_members[TokenT: StrictRegistryToken](
+    entries: Mapping[str, str],
+    *,
+    order_key: str,
+    prefix: str,
+    factory: Callable[[str], TokenT],
+    label: str,
+) -> tuple[tuple[TokenT, str, tuple[str, ...]], ...]:
+    """Read one ordered token family of fact 0141 into its token, words and provenance.
+
+    Each member restates its own token under ``.value`` as the invoice-class
+    family does, so a reordered or mistyped ``order`` entry is caught here
+    rather than producing a definition whose token and body disagree.
+    """
+    members: list[tuple[TokenT, str, tuple[str, ...]]] = []
+    for raw_token in unique_mapping_tokens(entries, order_key, subject=_ENTRY_SUBJECT):
+        member_prefix = f"{prefix}{raw_token}."
+        if required_mapping_entry(entries, f"{member_prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
+            raise RegistryValidationError(f"{label} {raw_token!r} declares a mismatched value")
+        members.append(
+            (
+                factory(raw_token),
+                required_mapping_entry(entries, f"{member_prefix}description", subject=_ENTRY_SUBJECT),
+                unique_mapping_legal_refs(entries, f"{member_prefix}legal_refs", subject=_ENTRY_SUBJECT),
+            ),
+        )
+    if len({token for token, _, _ in members}) != len(members):
+        raise RegistryValidationError(f"invoice legal-classification catalogue contains duplicate {label}s")
+    return tuple(members)
 
 
 def _invoice_class_definitions(entries: Mapping[str, str]) -> list[InvoiceClassDefinition]:
@@ -357,10 +594,64 @@ def advance_payment_received_role(
     ).advance_payment_received_token
 
 
+def require_rectification_method(
+    value: object,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> RectificationMethod:
+    """Return an RD 1619/2012 art. 15.5 method token only when fact 0141 declares it.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
+    return resolve_invoice_legal_classification_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    ).require_rectification_method(value)
+
+
+def require_rectification_direction(
+    value: object,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> RectificationDirection:
+    """Return a rectification direction token only when fact 0141 declares it.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
+    return resolve_invoice_legal_classification_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    ).require_rectification_direction(value)
+
+
+def require_rectification_cause(
+    value: object,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> RectificationCause:
+    """Return a rectification cause token only when fact 0141 declares it.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
+    return resolve_invoice_legal_classification_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    ).require_rectification_cause(value)
+
+
 __all__ = [
     "InvoiceClassDefinition",
     "InvoiceLegalClassificationCatalogue",
     "InvoiceOperationDateRoleDefinition",
+    "RectificationCauseDefinition",
+    "RectificationDirectionDefinition",
+    "RectificationMethodDefinition",
     "advance_payment_received_role",
     "invoice_class_ordinaria",
     "invoice_class_rectificativa",
@@ -368,5 +659,8 @@ __all__ = [
     "operation_performed_role",
     "require_invoice_class",
     "require_invoice_operation_date_role",
+    "require_rectification_cause",
+    "require_rectification_direction",
+    "require_rectification_method",
     "resolve_invoice_legal_classification_catalogue",
 ]

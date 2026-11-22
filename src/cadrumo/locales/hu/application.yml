@@ -1060,6 +1060,10 @@ application:
         counterparty_tax_id_required_by_category: Ebben az IVA-kategóriában a factura
           simplificadához kell a partner adószáma.
         currency_invalid: Ez nem háromjegyű ISO 4217 pénznemkód.
+        document_received_before_issued: Helyesbítő számlát nem lehet a kiállítása
+          előtt megkapni.
+        document_received_on_only_on_received: Az átvétel dátuma azt rögzíti, mikor
+          kaptad meg a helyesbítést, ezért kiállított számlán nem szerepel.
         intra_community_spanish_identification: Mentes Közösségen belüli értékesítés
           nem nevezhet meg spanyol IVA-számmal vásárló partnert.
         invoice_class_undeclared: A nyilvántartás nem ismer ilyen számlaosztályt.
@@ -1084,6 +1088,8 @@ application:
           kódja.
         other_invoice_rule: A főkönyv egy másik szabály miatt elutasítaná ezt a számlát.
           Ellenőrizd az adatait a bizonylat alapján.
+        rectification_fact_not_allowed: Ezt a helyesbítési adatot csak helyesbítő
+          számla adja meg.
         rectified_invoice_not_allowed: Helyesbített számlát csak factura rectificativa
           nevezhet meg.
         rectified_invoice_required: A factura rectificativának meg kell neveznie a
@@ -3156,6 +3162,12 @@ application:
         mentődött.'
       ledger_preflight_blocked_period: 'A(z) %{period} nem számítható ki: %{need}.
         Semmi sem mentődött.'
+      ledger_preflight_missing_fact:
+        document_received_on: mikor kaptad meg
+        rectification_cause: miért helyesbíti az ügyletet
+        rectification_direction: csökkenti vagy növeli-e az összegeket
+        rectification_method: hogyan adja meg az összegeit
+      ledger_preflight_missing_facts: 'még nem adja meg: %{facts}'
       ledger_preflight_need:
         anomaly_non_declarable_iva_category: az IVA-kategóriája egyik nyomtatványon
           sem vallható be

@@ -9,7 +9,11 @@
 // synthetic.
 
 import type { JsonObject, JsonValue } from "../shell/ledger";
-import type { LedgerPropertySetField } from "../shell/ledgerMovementContract";
+import {
+  BATCH_PLAN_CHANGED,
+  BATCH_ROW_LIMIT,
+  type LedgerPropertySetField,
+} from "../shell/ledgerMovementContract";
 import { PROPERTY_SET_FIELDS } from "../shell/ledgerPlan";
 import {
   type FixtureLedger,
@@ -22,8 +26,6 @@ import {
 } from "./ledgerMovementActionFixture";
 import { FRACTION, SEALED_MESSAGE } from "./ledgerRequestFixture";
 
-/** The most rows one batch names, as the contract bounds it. */
-const MOST_ROWS = 2000;
 /** The properties a batch edit may set but never clear. */
 const REQUIRED: readonly LedgerPropertySetField[] = [
   "business_classification",
@@ -41,7 +43,7 @@ type Row = {
 /** The rows of a batch request, or a refusal of its shape. */
 function rowsOf(request: JsonObject): Row[] {
   const rows = request.rows;
-  if (!Array.isArray(rows) || rows.length < 1 || rows.length > MOST_ROWS)
+  if (!Array.isArray(rows) || rows.length < 1 || rows.length > BATCH_ROW_LIMIT)
     throw new MovementActionInvalid();
   const seen = new Set<string>();
   return rows.map((raw) => {
@@ -249,7 +251,7 @@ export function batchOperations(
     const planned = plan(rows);
     if (digestOf(planned) !== reviewed)
       throw new MovementActionStopped(
-        "REFUSED_LEDGER_BATCH_PLAN_CHANGED",
+        BATCH_PLAN_CHANGED,
         result("plan_changed", planned),
       );
     const written = planned.map((row, at) => {

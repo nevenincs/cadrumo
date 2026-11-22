@@ -127,6 +127,10 @@ def submit_invoice_wizard(
     invoice_class: str | None,
     series: str | None,
     rectifies_invoice_number: str | None,
+    rectification_method: str | None,
+    rectification_cause: str | None,
+    rectification_direction: str | None,
+    document_received_on: str | None,
     recargo_amount: str | None,
 ) -> InvoiceWizardProjection:
     """Validate and create one manually entered invoice in its bound worker."""
@@ -151,6 +155,10 @@ def submit_invoice_wizard(
         invoice_class=invoice_class,
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
+        rectification_method=rectification_method,
+        rectification_cause=rectification_cause,
+        rectification_direction=rectification_direction,
+        document_received_on=document_received_on,
         recargo_amount=recargo_amount,
     )
     completed = _submit(

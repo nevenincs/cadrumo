@@ -24,6 +24,7 @@ import type {
   LedgerClassifyWindowRequest,
   LedgerClassifyOperationResult,
 } from "./ledgerMovementContract";
+import { BATCH_PLAN_CHANGED } from "./ledgerMovementContract";
 import type { LedgerLlmReviewWindowRequest } from "./ledgerMovementCheckContract";
 import type { LedgerPlan, PlanStep } from "./ledgerPlan";
 import {
@@ -59,10 +60,6 @@ export type NotSentWhy =
   /** A batch part whose preview the review did not show: it is written
    * only against the plan the person saw. */
   | "unreviewed";
-
-/** The refusal of a batch write that found another plan than the reviewed
- * one and wrote nothing; its detail is the plan it found. */
-export const BATCH_PLAN_CHANGED = "REFUSED_LEDGER_BATCH_PLAN_CHANGED";
 
 /** One movement's outcome in a batch edit, as its preview or write says. */
 export type BatchRowResult = LedgerBatchUpdateResult["rows"][number];

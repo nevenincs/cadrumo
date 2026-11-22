@@ -54,9 +54,18 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode, normalise_iso_4217_currency
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
+from ...domain.calculations.registry.invoice_legal_classification import (
+    InvoiceLegalClassificationCatalogue,
+    resolve_invoice_legal_classification_catalogue,
+)
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
-from ...domain.invoices.enums import InvoiceClass, resolve_iva_rate_slot
+from ...domain.invoices.enums import (
+    InvoiceClass,
+    RectificationCause,
+    RectificationDirection,
+    RectificationMethod,
+    resolve_iva_rate_slot,
+)
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice
 from ...domain.invoices.validators import validate_country_code, validate_iva_number
@@ -128,6 +137,10 @@ class _ValidatedWizardFields:
     invoice_class: InvoiceClass | None
     series: str | None
     rectifies_invoice_number: str | None
+    rectification_method: RectificationMethod | None
+    rectification_cause: RectificationCause | None
+    rectification_direction: RectificationDirection | None
+    document_received_on: date | None
     recargo_amount: Decimal | None
 
 
@@ -344,6 +357,55 @@ def _validate_declared_invoice_class(raw: str | None, *, on_date: date | None) -
     return value
 
 
+def _validate_declared_rectification_fact[TokenT](
+    raw: str | None,
+    *,
+    field: str,
+    choices: Callable[[InvoiceLegalClassificationCatalogue], tuple[TokenT, ...]],
+    on_date: date | None,
+) -> TokenT | None:
+    """Admit one rectification token the served vocabulary declares for ``on_date``.
+
+    Driven by fact 0141's own ordered choices, through the same catalogue the
+    class validator above reads, so the wizard holds no cause, method or
+    direction list of its own and a registry edition that adds one needs no
+    change here.
+    """
+    if raw is None:
+        return None
+    catalogue = resolve_invoice_legal_classification_catalogue(effective_date=on_date)
+    value = next((token for token in choices(catalogue) if str(token) == raw.strip()), None)
+    if value is None:
+        accepted = ", ".join(str(token) for token in choices(catalogue))
+        raise WizardFieldError(field=field, reason=f"must be one of: {accepted}")
+    return value
+
+
+def _validate_document_received_on(raw: str | None) -> date | None:
+    """Validate the recipient's reception date, reported under its own field name.
+
+    Separate from the invoice and operation dates for the reason
+    :func:`_validate_operation_date` states: three dates on one document, and a
+    refusal naming the wrong one sends the person to correct a value that was
+    already right.
+    """
+    if raw is None:
+        return None
+    try:
+        value = parse_iso8601_date(raw)
+    except ValueError as exc:
+        raise WizardFieldError(
+            field="document_received_on",
+            reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
+        ) from exc
+    if value is None:
+        raise WizardFieldError(
+            field="document_received_on",
+            reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
+        )
+    return value
+
+
 def _validate_recargo_amount(raw: str | None) -> Decimal | None:
     try:
         return _validate_retention_amount(raw)
@@ -423,6 +485,10 @@ def _validate_wizard_fields(
     invoice_class: str | None,
     series: str | None,
     rectifies_invoice_number: str | None,
+    rectification_method: str | None,
+    rectification_cause: str | None,
+    rectification_direction: str | None,
+    document_received_on: str | None,
     recargo_amount: str | None,
 ) -> tuple[_ValidatedWizardFields, list[InvoiceWizardFieldError]]:
     field_errors: list[InvoiceWizardFieldError] = []
@@ -500,6 +566,40 @@ def _validate_wizard_fields(
         lambda: _validate_declared_text(rectifies_invoice_number, field="rectifies_invoice_number"),
         fallback=None,
     )
+    rectification_on_date = resolved_operation_date or resolved_date
+    resolved_method = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_declared_rectification_fact(
+            rectification_method,
+            field="rectification_method",
+            choices=lambda catalogue: catalogue.rectification_method_choices,
+            on_date=rectification_on_date,
+        ),
+        fallback=None,
+    )
+    resolved_cause = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_declared_rectification_fact(
+            rectification_cause,
+            field="rectification_cause",
+            choices=lambda catalogue: catalogue.rectification_cause_choices,
+            on_date=rectification_on_date,
+        ),
+        fallback=None,
+    )
+    resolved_direction = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_declared_rectification_fact(
+            rectification_direction,
+            field="rectification_direction",
+            choices=lambda catalogue: catalogue.rectification_direction_choices,
+            on_date=rectification_on_date,
+        ),
+        fallback=None,
+    )
+    resolved_received_on = _collect_wizard_field(
+        field_errors, lambda: _validate_document_received_on(document_received_on), fallback=None
+    )
     resolved_recargo = _collect_wizard_field(
         field_errors, lambda: _validate_recargo_amount(recargo_amount), fallback=None
     )
@@ -519,6 +619,10 @@ def _validate_wizard_fields(
             invoice_class=resolved_class,
             series=resolved_series,
             rectifies_invoice_number=resolved_rectifies,
+            rectification_method=resolved_method,
+            rectification_cause=resolved_cause,
+            rectification_direction=resolved_direction,
+            document_received_on=resolved_received_on,
             recargo_amount=resolved_recargo,
         ),
         field_errors,
@@ -587,6 +691,12 @@ def _build_wizard_invoice(
             invoice_class=fields.invoice_class,
             series=fields.series,
             rectifies_invoice_number=fields.rectifies_invoice_number,
+            rectification_method=None if fields.rectification_method is None else str(fields.rectification_method),
+            rectification_cause=None if fields.rectification_cause is None else str(fields.rectification_cause),
+            rectification_direction=(
+                None if fields.rectification_direction is None else str(fields.rectification_direction)
+            ),
+            document_received_on=fields.document_received_on,
             recargo_amount=fields.recargo_amount,
             operation=operation,
         )
@@ -651,6 +761,10 @@ def create_invoice_via_wizard(
     invoice_class: str | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
+    rectification_method: str | None = None,
+    rectification_cause: str | None = None,
+    rectification_direction: str | None = None,
+    document_received_on: str | None = None,
     recargo_amount: str | None = None,
     operation: PinnedAuthorityOperation | None = None,
     actor: str = "cli",
@@ -692,6 +806,15 @@ def create_invoice_via_wizard(
         invoice_class: Optional declared registry invoice-class token.
         series: Optional declared invoice series; a supplied blank is refused.
         rectifies_invoice_number: Optional declared original invoice reference.
+        rectification_method: Optional RD 1619/2012 art. 15.5 method token the
+            served vocabulary declares, saying whether the stated figures are
+            the modification or the figures after it.
+        rectification_cause: Optional ground token the served vocabulary
+            declares, which is what places the modification in a period.
+        rectification_direction: Optional token saying whether the
+            rectification reduces or increases the original base and cuota.
+        document_received_on: Optional raw ISO-8601 date the recipient received
+            the rectificativa; refused on an issued invoice.
         recargo_amount: Optional canonical euro amount added to grand total.
         operation: Exact retained authority pin, or the ordinary bundled default.
         ports: Required catalogue-creation capabilities for the active bucket.
@@ -722,6 +845,10 @@ def create_invoice_via_wizard(
         invoice_class=invoice_class,
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
+        rectification_method=rectification_method,
+        rectification_cause=rectification_cause,
+        rectification_direction=rectification_direction,
+        document_received_on=document_received_on,
         recargo_amount=recargo_amount,
     )
     _raise_wizard_field_errors(field_errors)

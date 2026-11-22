@@ -32,6 +32,10 @@ const FIELD_LABELS: Record<InvoiceUpdateField, string> = {
   series: "series",
   invoice_class: "invoice_class",
   rectifies_invoice_number: "rectifies_invoice_number",
+  rectification_method: "rectification_method",
+  rectification_cause: "rectification_cause",
+  rectification_direction: "rectification_direction",
+  document_received_on: "document_received_on",
   payment_id: "payment_id",
   declared_fx_rate: "fx_rate",
 };
@@ -113,8 +117,12 @@ export function Confirmation({
       case "payment_id":
         return draft.paymentId;
       case "declared_fx_rate":
-        // The window's correction draft has no exchange-rate field yet, so
-        // it never lists this change; the CLI and the operation carry it.
+      case "rectification_method":
+      case "rectification_cause":
+      case "rectification_direction":
+      case "document_received_on":
+        // The window's correction draft has no field for these yet, so it
+        // never lists their change; the CLI and the operation carry them.
         return "";
     }
   };

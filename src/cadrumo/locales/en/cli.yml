@@ -439,6 +439,9 @@ cli:
         attach_document_source_help: Path of the document file.
         country_code_help: 'Counterparty ISO 3166-1 alpha-2 country code. Required:
           it routes both information returns, so it is never assumed.'
+        document_received_on_help: Date you received the factura rectificativa (ISO
+          YYYY-MM-DD). It applies to a received invoice only, and cannot be earlier
+          than the issue date.
         duplicate_help: Answer which stored invoice a document may already be, without
           writing anything.
         duplicate_invalid: The invoice kind and the document's facts must have the
@@ -464,12 +467,14 @@ cli:
           so a book mixing domestic and foreign counterparties needs the column instead.
         import_file_help: Path to a CSV or XLSX file of invoice rows (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, and optional
-          iva_rate/iva_category/operation_type/retencion_amount/retencion_rate/recargo_amount/currency/fx_rate/country_code/notes).
+          iva_rate/iva_category/operation_type/invoice_class/series/rectifies_invoice_number/rectification_method/rectification_cause/rectification_direction/document_received_on/retencion_amount/retencion_rate/recargo_amount/currency/fx_rate/country_code/notes).
           A retencion_rate is accepted only beside its retencion_amount. An fx_rate
           is the euro value of one unit of the row's currency and is refused on a
           EUR row. An iva_category must be a category the registry declares for the
           invoice date; an operation_type is the Modelo 349 clave, and a row stating
-          only the clave takes the category it declares.
+          only the clave takes the category it declares. The rectification columns
+          apply to a rectificativa row only, which also needs its own series and the
+          number it corrects.
         import_help: Bulk-create catalogue invoices from a CSV or XLSX file.
         import_unmapped_columns: 'columns not imported because no invoice field matched
           them: {columns}'
@@ -520,6 +525,15 @@ cli:
           with it the verdict covers only the facts stated.
         recargo_help: Equivalence surcharge charged on top of the tax quota (LIVA
           art. 161). It is included in the invoice total, unlike withholding.
+        rectification_cause_help: Why the rectificativa modifies the base and the
+          cuota, as one of the grounds the registry declares for the invoice date
+          (the LIVA art. 80 apartados, error_fundado_de_derecho, or otra_modificacion).
+        rectification_direction_help: Whether the correction lowers (minoracion) or
+          raises (aumento) the original base and cuota. The totals stay positive;
+          this carries the sense.
+        rectification_method_help: 'How the factura rectificativa states its figures
+          (RD 1619/2012 art. 15.5): diferencia if they are the correction itself,
+          sustitucion if they are the figures as they stand after it.'
         rectifies_help: Number of the invoice this rectificativa corrects.
         referencia_catastral_help: Cadastral reference for the premises. It is relevant
           to situation codes 1 and 2; do not enter it for codes 3 or 4.

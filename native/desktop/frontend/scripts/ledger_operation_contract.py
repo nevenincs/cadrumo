@@ -28,6 +28,10 @@ from dev.fixture_projections.operation_contract_module import (
 from dev.fixture_projections.typescript_wire_types import literal, ts_name
 from dev.quality.typescript_module_size import MAX_PHYSICAL_LINES
 
+from cadrumo.application.ledger.batch_update_contracts import (
+    LEDGER_BATCH_UPDATE_MAX_ROWS,
+    LEDGER_BATCH_UPDATE_PLAN_CHANGED_REFUSAL_CODE,
+)
 from cadrumo.core.models import OPERATION_FILLED_BY_SCHEMA_KEY
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
@@ -63,7 +67,6 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.invoice.add",
             "ledger.invoice.attach_document",
             "ledger.invoice.duplicate",
-            "ledger.invoice.import",
             "ledger.invoice.list",
             "ledger.invoice.match",
             "ledger.invoice.preview",
@@ -73,6 +76,10 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "ledger.link",
             "ledger.purchase_evidence.release",
         ),
+    ),
+    "invoiceImport": (
+        "LedgerInvoiceImportContracts",
+        ("ledger.invoice.import",),
     ),
     "document": (
         "LedgerDocumentContracts",
@@ -262,14 +269,31 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
 #: they are written; a family's types are in the first of these that reaches them.
 EARLIER: dict[str, tuple[str, ...]] = {
     "classificationJob": ("classification",),
-    "document": ("invoice",),
-    "documentReview": ("invoice", "document"),
-    "movement": ("classification", "invoice", "document", "documentReview"),
-    "movementCheck": ("classification", "invoice", "document", "documentReview", "movement"),
-    "inventory": ("classification", "invoice", "document", "documentReview", "movement", "movementCheck"),
+    "invoiceImport": ("invoice",),
+    "document": ("invoice", "invoiceImport"),
+    "documentReview": ("invoice", "invoiceImport", "document"),
+    "movement": ("classification", "invoice", "invoiceImport", "document", "documentReview"),
+    "movementCheck": (
+        "classification",
+        "invoice",
+        "invoiceImport",
+        "document",
+        "documentReview",
+        "movement",
+    ),
+    "inventory": (
+        "classification",
+        "invoice",
+        "invoiceImport",
+        "document",
+        "documentReview",
+        "movement",
+        "movementCheck",
+    ),
     "activityAsset": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -279,6 +303,7 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "activityAssetRead": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -289,6 +314,7 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "entry": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -300,6 +326,7 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "read": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -312,6 +339,7 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "prorrata": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -325,6 +353,7 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "withholding": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -339,6 +368,7 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "capitalGoods": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -354,6 +384,7 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "ownAccount": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -370,6 +401,7 @@ EARLIER: dict[str, tuple[str, ...]] = {
     "transfer": (
         "classification",
         "invoice",
+        "invoiceImport",
         "document",
         "documentReview",
         "movement",
@@ -392,6 +424,8 @@ _FILE_TOKEN = WindowType("FileToken", "./ledger")
 FIELD_TYPES: dict[str, dict[tuple[str, str], WindowType]] = {
     "invoice": {
         ("InvoiceDocumentAttachRequest", "source_path"): _FILE_TOKEN,
+    },
+    "invoiceImport": {
         ("InvoiceImportRequest", "source_path"): _FILE_TOKEN,
     },
     "document": {
@@ -460,6 +494,15 @@ FIELD_EXPORTS: dict[str, tuple[tuple[str, str, str, str], ...]] = {
 }
 
 
+#: Values a family's contract declares outside its models, as ``name: value`` the window reads in place of a copy.
+CONSTANTS: dict[str, tuple[tuple[str, int | str], ...]] = {
+    "movement": (
+        ("BATCH_ROW_LIMIT", LEDGER_BATCH_UPDATE_MAX_ROWS),
+        ("BATCH_PLAN_CHANGED", LEDGER_BATCH_UPDATE_PLAN_CHANGED_REFUSAL_CODE),
+    ),
+}
+
+
 def render(family: str) -> str:
     """The generated module of one family, before the frontend's formatter writes it."""
     contracts_name, definitions = FAMILIES[family]
@@ -489,6 +532,7 @@ def render(family: str) -> str:
     for name, definition, role, expression in FIELD_EXPORTS.get(family, ()):
         model = models[definition, role]
         blocks.append(f"export type {name} = {expression.format(model=ts_name(model.__name__))};")
+    blocks.extend(f"export const {name} = {json.dumps(value)};" for name, value in CONSTANTS.get(family, ()))
     return source + "\n" + "\n\n".join(blocks) + "\n"
 
 

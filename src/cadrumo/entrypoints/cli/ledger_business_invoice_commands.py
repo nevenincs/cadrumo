@@ -319,6 +319,10 @@ def invoice_add(
     counterparty_nif: str | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
+    rectification_method: str | None = None,
+    rectification_cause: str | None = None,
+    rectification_direction: str | None = None,
+    document_received_on: str | None = None,
     recargo: str | None = None,
     fx_rate: str | None = None,
     iva_category: IvaCategory | None = None,
@@ -378,6 +382,10 @@ def invoice_add(
             counterparty_nif=counterparty_nif,
             series=series,
             rectifies_invoice_number=rectifies_invoice_number,
+            rectification_method=rectification_method,
+            rectification_cause=rectification_cause,
+            rectification_direction=rectification_direction,
+            document_received_on=document_received_on,
             recargo=recargo,
             fx_rate=fx_rate,
             arrendamiento_local_negocio=arrendamiento_local_negocio,
@@ -438,6 +446,10 @@ def invoice_wizard(
     invoice_class: str | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
+    rectification_method: str | None = None,
+    rectification_cause: str | None = None,
+    rectification_direction: str | None = None,
+    document_received_on: str | None = None,
     recargo: str | None = None,
     iva_category: IvaCategory | None = None,
     notes: str = "",
@@ -477,6 +489,10 @@ def invoice_wizard(
         invoice_class=invoice_class,
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
+        rectification_method=rectification_method,
+        rectification_cause=rectification_cause,
+        rectification_direction=rectification_direction,
+        document_received_on=document_received_on,
         recargo_amount=recargo,
     )
     invoice = snapshot_invoice_payload(wizard_result.invoice)
@@ -801,6 +817,10 @@ def invoice_update(
     invoice_class: str | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
+    rectification_method: str | None = None,
+    rectification_cause: str | None = None,
+    rectification_direction: str | None = None,
+    document_received_on: str | None = None,
     fx_rate: str | None = None,
 ) -> None:
     """Correct one persisted invoice without re-keying it.
@@ -824,6 +844,14 @@ def invoice_update(
         "invoice_class": None if invoice_class is None else require_invoice_class(invoice_class),
         "series": series,
         "rectifies_invoice_number": rectifies_invoice_number,
+        # Passed as the stated token; the corrected record projects each
+        # through fact 0141 on its own issue date, as the lifecycle patch says.
+        "rectification_method": rectification_method,
+        "rectification_cause": rectification_cause,
+        "rectification_direction": rectification_direction,
+        "document_received_on": (
+            None if document_received_on is None else parse_iso_date(document_received_on, label="document-received-on")
+        ),
         "declared_fx_rate": None if fx_rate is None else parse_fraction(fx_rate, label="fx-rate"),
     }
     patch = CatalogueInvoicePatch.model_validate(
@@ -896,6 +924,10 @@ def _invoice_add_request(
     counterparty_nif: str | None,
     series: str | None,
     rectifies_invoice_number: str | None,
+    rectification_method: str | None,
+    rectification_cause: str | None,
+    rectification_direction: str | None,
+    document_received_on: str | None,
     recargo: str | None,
     fx_rate: str | None,
     arrendamiento_local_negocio: bool,
@@ -932,6 +964,12 @@ def _invoice_add_request(
         invoice_class=str(default_invoice_class() if invoice_class is None else require_invoice_class(invoice_class)),
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
+        rectification_method=rectification_method,
+        rectification_cause=rectification_cause,
+        rectification_direction=rectification_direction,
+        document_received_on=(
+            None if document_received_on is None else parse_iso_date(document_received_on, label="document-received-on")
+        ),
         recargo_amount=public_amount(recargo, label="recargo"),
         business_premises_lease=InvoiceAddBusinessPremisesLease.from_inputs(
             lease_selected=arrendamiento_local_negocio,

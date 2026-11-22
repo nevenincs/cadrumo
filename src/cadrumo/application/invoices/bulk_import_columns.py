@@ -63,6 +63,16 @@ BULK_IMPORT_FIELD_BY_ROLE: dict[FieldRole, str] = {
     FieldRole.IVA_RATE: "iva_rate",
     FieldRole.IVA_CATEGORY: "iva_category",
     FieldRole.OPERATION_TYPE: "operation_type",
+    # The class axis and the rectification facts travel together on purpose. The
+    # facts are refused on anything but a rectificativa, so a book that could
+    # state them without stating the class could state nothing that imports.
+    FieldRole.INVOICE_CLASS: "invoice_class",
+    FieldRole.SERIES: "series",
+    FieldRole.RECTIFIES_INVOICE_NUMBER: "rectifies_invoice_number",
+    FieldRole.RECTIFICATION_METHOD: "rectification_method",
+    FieldRole.RECTIFICATION_CAUSE: "rectification_cause",
+    FieldRole.RECTIFICATION_DIRECTION: "rectification_direction",
+    FieldRole.DOCUMENT_RECEIVED_ON: "document_received_on",
     FieldRole.RETENCION_AMOUNT: "retencion_amount",
     FieldRole.RETENCION_RATE: "retencion_rate",
     FieldRole.RECARGO_AMOUNT: "recargo_amount",
