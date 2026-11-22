@@ -20,6 +20,11 @@ from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, 
 from ..calculations.m115_no_relevant_payments import is_m115_no_relevant_payment_period
 from ..invoices.source_resolver_ports import CounterpartyFilingNameReader, InvoiceSourcePersistenceError
 from .errors import RetencionesWindowEmptyError
+from .ledger_payment_withholding import (
+    UncapturedPrizePayment,
+    captured_ledger_transaction_ids,
+    uncaptured_prize_payments,
+)
 from .modelo_bindings_support import (
     STORAGE_DEGRADATION_ERRORS,
     empty_source_resolution,
@@ -90,6 +95,14 @@ class RetencionesAggregationSourceResolver:
     quarterly URBAN_RENTAL count/base; annual summary modelos consume the same
     family store for their distinct-NIF count. Modelo 190's percepciones count is
     handled by :class:`~.withholding_source.WithholdingSourceResolver`.
+
+    Beside the store it reads the two records a person keeps that a window's
+    captured evidence may not declare yet: the received invoices stating a
+    retención (:func:`~.received_invoice_withholding.received_invoice_withholding`)
+    and the paid prizes awaiting capture
+    (:func:`~.ledger_payment_withholding.uncaptured_prize_payments`). Both
+    reach the declaration through the same blocking diagnostics, so a record
+    the window is missing is never read as a proven zero.
     """
 
     resolver_id: ClassVar[str] = "retenciones_aggregation"
@@ -241,13 +254,35 @@ class RetencionesAggregationSourceResolver:
             captured_invoice_ids=captured_invoice_ids(stored),
         )
 
+    def uncaptured_prize_withholding(
+        self,
+        *,
+        modelo: str,
+        period: Period,
+        stored: tuple[RetencionObservation, ...],
+    ) -> tuple[UncapturedPrizePayment, ...]:
+        """Read the window's paid prizes that bear retención and no ``stored`` allocation declares.
+
+        A resolver composed without the ledger catalogue reads no movement, so
+        it reports nothing rather than reporting an absence it cannot see.
+        """
+        if self._invoice_catalogue is None:
+            return ()
+        return uncaptured_prize_payments(
+            self._invoice_catalogue.transaction_reader.load(),
+            modelo=modelo,
+            period=period,
+            captured_transaction_ids=captured_ledger_transaction_ids(stored),
+        )
+
     def empty_window_refusal(self, context: CalculationSourceContext) -> RetencionesWindowEmptyError | None:
         """Return the refusal :meth:`resolve` raises for ``context``'s window, without resolving it.
 
         The window is refused when it holds no stored or invoice-stated
-        retención, no finding about one, and is not an attested Modelo 115
-        period without relevant payments. A store that cannot be read is not
-        judged here: :meth:`resolve` reports it as degraded.
+        retención, no finding about one, no paid prize awaiting capture, and is
+        not an attested Modelo 115 period without relevant payments. A store
+        that cannot be read is not judged here: :meth:`resolve` reports it as
+        degraded.
         """
         try:
             stored = self.load_calculation_observations(
@@ -262,7 +297,8 @@ class RetencionesAggregationSourceResolver:
         invoices = self.invoice_stated_withholding(
             bucket_id=context.bucket_id, modelo=context.modelo, period=context.period, stored=stored
         )
-        if invoices.observations or invoices.findings or self._m115_attested(context):
+        prizes = self.uncaptured_prize_withholding(modelo=context.modelo, period=context.period, stored=stored)
+        if invoices.observations or invoices.findings or prizes or self._m115_attested(context):
             return None
         return _empty_window_refusal(context)
 
@@ -294,8 +330,12 @@ class RetencionesAggregationSourceResolver:
         invoices = self.invoice_stated_withholding(
             bucket_id=context.bucket_id, modelo=context.modelo, period=context.period, stored=observations
         )
+        prizes = self.uncaptured_prize_withholding(modelo=context.modelo, period=context.period, stored=observations)
         observations = (*observations, *invoices.observations)
-        findings = tuple(_finding_diagnostic(self.resolver_id, finding) for finding in invoices.findings)
+        findings = (
+            *(_finding_diagnostic(self.resolver_id, finding) for finding in invoices.findings),
+            *(_uncaptured_prize_diagnostic(self.resolver_id, payment) for payment in prizes),
+        )
         if not observations and findings:
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,
@@ -477,6 +517,31 @@ def _finding_diagnostic(resolver_id: str, finding: ReceivedInvoiceWithholdingFin
             invoice=finding.invoice_number,
             counterparty=finding.counterparty_name,
             amount=finding.retencion,
+        ),
+    )
+
+
+def _uncaptured_prize_diagnostic(resolver_id: str, payment: UncapturedPrizePayment) -> CalculationSourceDiagnostic:
+    """Hold back the declaration on a paid prize no captured allocation declares.
+
+    The movement records that the prize was handed over, so completing the
+    declaration without its retención would under-declare; the note names the
+    payment's date and amount so the person can capture its terms.
+    """
+    return CalculationSourceDiagnostic(
+        reason="source_domain_not_ready",
+        source_kind="retenciones_aggregation",
+        resolver_id=resolver_id,
+        source_ref=f"ledger_transaction:{payment.transaction_id}",
+        message=(
+            f"ledger movement {payment.transaction_id} pays a prize that reaches no declaration: "
+            f"{CalculationNoteSentence.PRIZE_PAYMENT_WITHHOLDING_UNCAPTURED.value}"
+        ),
+        fact=CalculationNoteFact.of(
+            CalculationNoteSentence.PRIZE_PAYMENT_WITHHOLDING_UNCAPTURED,
+            rows=(payment.transaction_id,),
+            row_date=payment.paid_on.isoformat(),
+            amount=payment.net_paid,
         ),
     )
 

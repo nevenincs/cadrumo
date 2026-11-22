@@ -2384,6 +2384,11 @@ application:
         que els textos d''aquest exercici ho confirmin.'
       prior_filing_unrecorded: Per calcular la casella {box}, registra el teu Modelo
         {modelo} de {year}.
+      prize_payment_withholding_uncaptured: Un moviment del {row_date} va pagar {amount}
+        com a premi i cap retenció capturada no el declara. Captura la base del premi,
+        la seva retenció i qui el va guanyar amb `aeat app modelo aggregate --modelo
+        111 --ledger-payment-withholding`, o canvia la categoria d'IRPF del moviment
+        si no va pagar cap premi.
       profile_fact_unrecorded: 'Per calcular la casella {box}, registra al teu perfil:
         {field}.'
       register_cost_exceeds_paid: '{elements}: aquests elements indiquen un cost de

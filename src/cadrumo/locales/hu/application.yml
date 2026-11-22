@@ -2348,6 +2348,11 @@ application:
         az exportálás és a rögzítés megvárja, amíg az idei szövegek ezt megerősítik.'
       prior_filing_unrecorded: A(z) {box} mező kiszámításához rögzítsd a(z) {year}.
         évi Modelo {modelo} bevallásodat.
+      prize_payment_withholding_uncaptured: A(z) {row_date} napi mozgás {amount} összeget
+        fizetett ki nyereményként, és nincs rögzített forrásadó-levonás (retención),
+        amely ezt bevallaná. Rögzítsd a nyeremény alapját, a levonását és a nyertest
+        az `aeat app modelo aggregate --modelo 111 --ledger-payment-withholding` paranccsal,
+        vagy módosítsd a mozgás IRPF-kategóriáját, ha nem nyereményt fizetett ki.
       profile_fact_unrecorded: 'A(z) {box} mező kiszámításához rögzítsd a profilodban:
         {field}.'
       register_cost_exceeds_paid: '{elements}: ezek az eszközök {cost} költséget adnak

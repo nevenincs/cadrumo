@@ -46,6 +46,17 @@ registry rate on that base (RIRPF art. 99.1). A prize at or below the threshold
 bears no retención, and a retención at another rate is not one this module can
 place, so both refuse rather than reach Modelo 111.
 
+The declaration reads the other way round too. A movement the person classified
+as a paid prize is the record that a prize was handed over, so a window whose
+captured evidence holds nothing for it is missing a retención rather than
+proving the quarter paid no prize:
+:func:`uncaptured_prize_payments` reports each such movement for the window it
+belongs to. It reports only a payment whose paid magnitude proves the prize's
+base exceeded the registry exclusion threshold, because a prize at or below
+that threshold bears no retención (RIRPF art. 75.3.f) and reaches no Modelo 111
+casilla; the paid magnitude bounds the base from below, since the net is never
+more than the base less the retención.
+
 Capturing capital evidence stores it in the Modelo 123 window only. It does
 not make that window calculable: the Modelo 123 "Número de rentas" count has
 no official definition, and the calculation path refuses a window that holds
@@ -62,6 +73,8 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Self
@@ -82,7 +95,7 @@ from ...domain.transactions.irpf_categories import has_prize_irpf_category
 from ...domain.transactions.retencion_facts import load_premios_retencion_terms
 from ..operator_actions.preconditions import no_action_precondition_verdict
 from .retencion_rate_advisory import conforms_to_fixed_rate
-from .retenciones import Modelo193PendingPaymentEvidence
+from .retenciones import Modelo193PendingPaymentEvidence, RetencionObservation
 from .withholding_filing_cadence import WithholdingFilerCadence, quarterly_withholding_capture_period
 from .withholding_modelo_routing import LEDGER_PAID_INCOME_KINDS, modelo_for_income_kind
 from .withholding_observation_service import (
@@ -104,6 +117,7 @@ from .withholding_recognition import (
 )
 
 if TYPE_CHECKING:
+    from ...core.period import Period
     from ...domain.transactions.models import Transaction, TransactionCatalogue
     from ..operator_actions.models import PreconditionVerdict
 
@@ -488,10 +502,93 @@ def _perceptor(request: LedgerPaymentWithholdingEvidenceRequest) -> tuple[str, s
     return request.perceptor_nif, request.perceptor_name
 
 
+@dataclass(frozen=True, slots=True)
+class UncapturedPrizePayment:
+    """One paid prize the ledger records and no captured allocation declares.
+
+    ``paid_on`` is the movement's booked date, which is the date the capture
+    path takes as the payment and recognition date, and ``net_paid`` the
+    magnitude the ledger proves was handed over.
+    """
+
+    transaction_id: str
+    paid_on: date
+    net_paid: Decimal
+
+
+def captured_ledger_transaction_ids(observations: Iterable[RetencionObservation]) -> frozenset[str]:
+    """Return the ledger movements the per-perceptor store already holds an allocation of."""
+    return frozenset(
+        observation.source_object_id
+        for observation in observations
+        if observation.source_kind is BindingSourceKind.LEDGER_TRANSACTION
+    )
+
+
+def uncaptured_prize_payments(
+    transactions: TransactionCatalogue,
+    *,
+    modelo: str,
+    period: Period,
+    captured_transaction_ids: frozenset[str] = frozenset(),
+) -> tuple[UncapturedPrizePayment, ...]:
+    """Return ``period``'s paid prizes that bear retención and no stored allocation declares.
+
+    Nothing is returned for a modelo other than the one a prize settles through,
+    for a movement the ledger does not classify as a paid prize, or for a
+    payment too small to prove the prize's base exceeded the registry exclusion
+    threshold. Order is by movement identity, so two equal windows report the
+    same findings in the same order.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`,
+    :class:`~cadrumo.core.period.Period`.
+    """
+    if modelo != modelo_for_income_kind(WithholdingIncomeKind.PRIZE):
+        return ()
+    return tuple(
+        sorted(
+            (
+                UncapturedPrizePayment(
+                    transaction_id=transaction.transaction_id,
+                    paid_on=transaction.raw.booked_date,
+                    net_paid=transaction.raw.amount,
+                )
+                for transaction in transactions
+                if transaction.transaction_id not in captured_transaction_ids
+                and _is_withheld_prize_payment(transaction, period=period)
+            ),
+            key=lambda payment: payment.transaction_id,
+        )
+    )
+
+
+def _is_withheld_prize_payment(transaction: Transaction, *, period: Period) -> bool:
+    """Whether one movement is a prize paid in ``period`` whose base bears retención."""
+    paid_on = transaction.raw.booked_date
+    if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        return False
+    if transaction.direction is not TransactionDirection.OUTGOING:
+        return False
+    if not (period.start_date <= paid_on <= period.end_date):
+        return False
+    if transaction.raw.currency != DEFAULT_CURRENCY:
+        return False
+    if not has_prize_irpf_category(transaction.irpf_category, direction=transaction.direction):
+        return False
+    terms = load_premios_retencion_terms(effective_date=paid_on)
+    # The net is at most the base less the retención, so this bounds the base from below.
+    least_base = transaction.raw.amount / (Decimal("1") - terms.rate)
+    return least_base > terms.exclusion_threshold_eur
+
+
 __all__ = [
     "LedgerPaymentWithholdingCapture",
     "LedgerPaymentWithholdingEvidenceError",
     "LedgerPaymentWithholdingEvidenceRequest",
+    "UncapturedPrizePayment",
     "build_ledger_payment_withholding_capture",
+    "captured_ledger_transaction_ids",
     "resolve_ledger_payment_transaction",
+    "uncaptured_prize_payments",
 ]
