@@ -160,7 +160,10 @@ class ProfileConnectionModelRunsMixin:
 
         The lease the run was announced under fences the disclosure: it must still
         be the service's exact lease after the profile and peer are rechecked, and
-        its withdrawal waits until the bounded header and body writes end.
+        its withdrawal waits until the bounded header and body writes end. When
+        the recheck finds only the service's attended session lapsed, nothing is
+        disclosed and the run keeps waiting: the person's approval stands, and
+        the service fetches again under the session its claim issues anew.
         """
         with self._guard:
             pending = self._model_runs.get(request.run_id)
@@ -176,8 +179,21 @@ class ProfileConnectionModelRunsMixin:
                 return _refuse(self, context, channel, request.request_id)
             pending.fetched = True
         if not service_still_admitted(self, context, channel, request):
-            pending.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE))
-            return _refuse(self, context, channel, request.request_id)
+            with self._guard:
+                lapsed = session_lapsed_under_standing_lease(self, context, service, lease, request.run_id, pending)
+                if lapsed:
+                    # Only the service's short attended session ended; the person's approval stands. The run
+                    # waits for the fetch the service makes again once a claim has issued that session anew.
+                    pending.fetched = False
+            if not lapsed:
+                pending.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE))
+            return _refuse(
+                self,
+                context,
+                channel,
+                request.request_id,
+                code=AccessDenialCode.SESSION_INACTIVE if lapsed else AccessDenialCode.OPERATION_DENIED,
+            )
         with self._guard:
             if service.lease is not lease:
                 pending.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE))
@@ -273,6 +289,31 @@ class ProfileConnectionModelRunsMixin:
 def fetch_pending_matches(pending: PendingModelRun, context: ConnectionContext, lease: ServiceLease) -> bool:
     """Allow only the announced service to fetch a request once."""
     return pending.connection_id == context.connection_id and pending.lease_id == lease.lease_id and not pending.fetched
+
+
+def session_lapsed_under_standing_lease(
+    connections: RuntimeProfileConnections,
+    context: ConnectionContext,
+    service: ServiceConnection,
+    lease: ServiceLease,
+    run_id: UUID,
+    pending: PendingModelRun,
+) -> bool:
+    """Whether a failed recheck found only the service's own session ended, under the same unwithdrawn lease.
+
+    The caller holds the guard. The status read clears the connection's session
+    when that session has ended; an ended person's session withdraws the lease,
+    and a failed peer recheck leaves the session in place, so neither counts.
+    """
+    connection = connections._connections.get(context.connection_id)
+    return (
+        connections._services.get(context.connection_id) is service
+        and service.lease is lease
+        and connection is not None
+        and connection.session_id is None
+        and connections._model_runs.get(run_id) is pending
+        and not pending.answered.is_set()
+    )
 
 
 def completion_pending_matches(
@@ -387,7 +428,12 @@ def _answers_its_phase(command: WorkerModelRun, outcome: ModelRunOutcome) -> boo
 
 
 def _refuse(
-    connections: RuntimeProfileConnections, context: ConnectionContext, channel: ByteChannel, request_id: UUID
+    connections: RuntimeProfileConnections,
+    context: ConnectionContext,
+    channel: ByteChannel,
+    request_id: UUID,
+    *,
+    code: AccessDenialCode = AccessDenialCode.OPERATION_DENIED,
 ) -> None:
     write_document(
         channel,
@@ -395,7 +441,7 @@ def _refuse(
             request_id=request_id,
             runtime_boot_id=connections.boot,
             connection_id=context.connection_id,
-            code=AccessDenialCode.OPERATION_DENIED,
+            code=code,
         ),
         deadline=time.monotonic() + _REPLY_WRITE_SECONDS,
     )
