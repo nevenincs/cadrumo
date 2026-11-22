@@ -28,6 +28,13 @@ from ...application.invoices.figures_preview_contracts import InvoiceFiguresPrev
 from ...application.ledger.action_ports import LedgerActionPorts
 from ...application.ledger.actions_import import LedgerProviderID
 from ...application.ledger.actions_split_merge import split_transaction
+from ...application.ledger.batch_update import plan_batch_update
+from ...application.ledger.batch_update_contracts import (
+    LEDGER_BATCH_UPDATE_OPERATION_DEFINITION_ID,
+    LEDGER_BATCH_UPDATE_PREVIEW_OPERATION_DEFINITION_ID,
+    LedgerBatchUpdateRow,
+    LedgerPropertySet,
+)
 from ...application.ledger.classify_requests import LedgerClassifyPatch
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
 from ...application.ledger.evidence_mutation_operation import LedgerEvidenceUpdatePatch
@@ -46,6 +53,7 @@ from ...core.ledger_known_values import LedgerKnownValueKind
 from ...core.ledger_sort import LedgerSortField
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.categories.spending_category_catalogue import spending_category_tokens
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceLine
@@ -296,6 +304,61 @@ def _ledger_update(ctx: PayloadContext) -> PayloadResult:
             "patch": LedgerUpdatePatch(description="updated through registered operation"),
             "patch_fields": ("description",),
         },
+    )
+
+
+def _ledger_batch_rows(
+    ctx: PayloadContext, ports: LedgerActionPorts, *, description: str
+) -> tuple[LedgerBatchUpdateRow, ...]:
+    """Seed two unclassified rows and name both, as seen, for one business category."""
+    category = spending_category_tokens(authority=ctx.operation)[0].value
+    properties = LedgerPropertySet(
+        fields=("business_classification", "category_id"), business_classification="BUSINESS", category_id=category
+    )
+    seeded = (
+        _seed_unprocessed_outgoing(
+            ctx, ports, booked_date=date(2025, 1, 19), amount="31.00", description=f"{description} one"
+        ),
+        _seed_unprocessed_outgoing(
+            ctx, ports, booked_date=date(2025, 1, 20), amount="32.00", description=f"{description} two"
+        ),
+    )
+    catalogue = ports.transaction_repository.load()
+    rows: list[LedgerBatchUpdateRow] = []
+    for created in seeded:
+        current = catalogue.get(created.ref.transaction_id)
+        assert current is not None
+        rows.append(
+            LedgerBatchUpdateRow(
+                transaction_id=current.transaction_id,
+                expected_modified_at=current.modified_at.isoformat(),
+                properties=properties,
+            )
+        )
+    return tuple(rows)
+
+
+def _ledger_batch_update_preview(ctx: PayloadContext) -> PayloadResult:
+    ports = compose_ledger_action_ports(bucket_id=str(ctx.profile_id), operation=ctx.operation)
+    rows = _ledger_batch_rows(ctx, ports, description="conformance batch preview seed")
+    return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id, "rows": rows})
+
+
+def _ledger_batch_update(ctx: PayloadContext) -> PayloadResult:
+    """Name the digest of the plan the rows answer now, as a person who reviewed the preview would."""
+    ports = compose_ledger_action_ports(bucket_id=str(ctx.profile_id), operation=ctx.operation)
+    rows = _ledger_batch_rows(ctx, ports, description="conformance batch edit seed")
+    reviewed = plan_batch_update(
+        bucket_id=str(ctx.profile_id),
+        rows=rows,
+        actor=str(ctx.profile_id),
+        source_command="conformance batch review",
+        ports=ports,
+        now=now(),
+    )
+    return ctx.request(
+        ctx.profile_subject,
+        {"profile_id": ctx.profile_id, "rows": rows, "reviewed_plan_digest": reviewed.digest},
     )
 
 
@@ -785,6 +848,8 @@ LEDGER_BUILDERS: dict[str, PayloadBuilder] = {
     "ledger.split.manual": _ledger_split_manual,
     "ledger.merge": _ledger_merge,
     "ledger.update": _ledger_update,
+    LEDGER_BATCH_UPDATE_PREVIEW_OPERATION_DEFINITION_ID: _ledger_batch_update_preview,
+    LEDGER_BATCH_UPDATE_OPERATION_DEFINITION_ID: _ledger_batch_update,
     "ledger.reset": _ledger_reset,
     "ledger.import": _ledger_import,
     "ledger.add": _ledger_add,
