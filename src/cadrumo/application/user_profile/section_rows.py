@@ -149,6 +149,7 @@ def _stated_values(
     parts: Mapping[str, Sequence[ProfileRowPartInput]] | None,
     *,
     mutation: ProfileRecordRowMutation,
+    row_key: str | None = None,
 ) -> dict[str, str]:
     """Return the text of every stated field, a packed field's parts rendered by the canonical serialiser.
 
@@ -164,10 +165,11 @@ def _stated_values(
             "a packed field is stated as text or as parts, not both",
             context={"section": section_key, "fields": ", ".join(both)},
         )
+    addressed = int(row_key) if row_key is not None and row_key.isdecimal() else None
     for field_key, items in parts.items():
         render = partial(packed_text_of_parts, section_key, field_key, items)
         stated[field_key] = (
-            refuse_incoherent_rental_row(render, section_key=section_key, mutation=mutation)
+            refuse_incoherent_rental_row(render, section_key=section_key, mutation=mutation, row_key=addressed)
             if is_rental_section(section_key)
             else render()
         )
@@ -376,7 +378,7 @@ def update_profile_repeatable_section_row(
     instead of its text.
     """
     section = _repeatable_section(schema, section_key)
-    values = _stated_values(section_key, values, parts, mutation=ProfileRecordRowMutation.EDIT)
+    values = _stated_values(section_key, values, parts, mutation=ProfileRecordRowMutation.EDIT, row_key=row_key)
     clears = validate_profile_repeatable_row_fields(section, values=values, clear_fields=clear_fields)
     if not values and not clears:
         raise ProfileSchemaValidationError("repeatable-row update requires a value or explicit clear")
