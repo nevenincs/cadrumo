@@ -44,7 +44,7 @@ from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
-from ..calculations.registry.iva_category_catalogue import require_iva_category
+from ..calculations.registry.iva_category_catalogue import require_iva_category, resolve_iva_category_catalogue
 from ..calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
 from ..calculations.registry.schema_base import DateAxis
 from ..identifiers import canonical_decimal_string
@@ -1055,6 +1055,82 @@ class Invoice(BaseModel):
                 )
             )
         return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_m349_clave_agrees_with_the_iva_category(self, info: ValidationInfo) -> Self:
+        """Refuse a Modelo 349 clave de operación that contradicts the IVA category.
+
+        The two fields are independent inputs that decide the same operation's
+        fate in two different declarations, and
+        :func:`~cadrumo.application.invoices.source_observations.intracommunity_clave`
+        returns a stated clave verbatim, checking only that the letter is
+        reachable from the invoice's direction. So an invoice could carry
+        ``domestic_general`` -- settling cuota repercutida in Modelo 303 -- and
+        clave ``S``, which reports the same base to VIES as a prestación
+        intracomunitaria de servicios. RIVA art. 79 admits only the
+        intra-community operations to the declaración recapitulativa, so that
+        pair files one operation twice and incompatibly; one of the two
+        declarations is necessarily false.
+
+        The pairing is not restated here. The diseño de registro defines each
+        letter as a named operation (position 133, "CLAVE DE OPERACIÓN"), and
+        the registry carries that reading as fact 0084's
+        ``category_for_operation_type`` entries -- the same fact the derivation
+        in the other direction reads, so the two cannot disagree.
+
+        A clave the fact declares NO category for is not refused, which bounds
+        this rule to the five the fact maps. For ``R``, ``D`` and ``C`` that
+        silence is meaningful rather than missing: they report movements under
+        acuerdos de ventas de bienes en consigna -- a transferencia, a
+        devolución, and a sustitución del destinatario. LIVA art. 9 bis.Dos
+        places the entrega and its exemption at the later moment the acquirer
+        takes the power of disposal, so the movement these letters report is
+        not an entrega and has no IVA treatment to agree with.
+
+        For ``M`` and ``H`` the silence is a real gap rather than a boundary.
+        The diseño defines both as "Entregas intracomunitarias de bienes
+        posteriores a una importación exenta" (LIVA art. 27.12º, ``H`` by a
+        representante fiscal under art. 86.Tres), so each contradicts a
+        domestic category exactly as ``E`` does -- but declaring a category for
+        them changes what the clave-only derivation stores on a record, which is
+        a registry decision rather than one this validator may take. The
+        boundary is pinned by a test rather than left to be rediscovered.
+
+        An ABSENT category is likewise not refused. It is an unrecorded fact
+        rather than a contradiction, and the clave already supplies the
+        treatment through that same mapping.
+
+        Scoped to write admission (:data:`INVOICE_WRITE_ADMISSION`), which
+        covers both the creation and the edit path, for the reason the pagos
+        anticipados rule states: the two fields were independent before this
+        rule, so a contradicting pair may already be stored, and
+        :class:`~cadrumo.domain.invoices.catalogue.StoredInvoiceCatalogue`
+        validates each record as it is READ. Refusing on hydration would strand
+        exactly the records that need correcting -- the operator could not open
+        one to fix it. So such a record still hydrates, and
+        :func:`~cadrumo.application.invoices.source_observations.intracommunity_clave`
+        refuses to DECLARE it, which keeps the incoherent filing from being
+        produced without making the record unreachable.
+        """
+        operation_type = self.operation_type
+        if operation_type is None or self.iva_category is None or not _admits_written_record(info):
+            return self
+        catalogue = resolve_iva_category_catalogue(effective_date=self.operation_date or self.issued_at)
+        declared = catalogue.category_for_operation_type(operation_type.value)
+        if declared is None or declared == self.iva_category:
+            return self
+        raise invoice_rule_refusal(
+            InvoiceRuleFinding(
+                InvoiceRuleFindingCode.M349_CLAVE_CATEGORY_MISMATCH,
+                f"modelo 349 clave de operación {operation_type.value!r} declares the operation as "
+                f"{declared.value!r}, which contradicts the stated iva_category "
+                f"{self.iva_category.value!r}; one operation cannot be declared domestically in "
+                f"Modelo 303 and intra-community in Modelo 349 (RIVA art. 79)",
+                ("operation_type", "iva_category"),
+                {"operation_type": operation_type.value, "clave_category": declared.value},
+            )
+        )
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
