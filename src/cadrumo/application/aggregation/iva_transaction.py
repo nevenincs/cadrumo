@@ -38,6 +38,8 @@ from ...domain.iva.components import (
 )
 from ...domain.iva.deduction_facts import (
     admits_iva_deduction_classification,
+    is_rectification_deduction_kind,
+    rectification_settlement_flow,
 )
 from ...domain.iva.flow import (
     IvaFlowDirection,
@@ -56,6 +58,7 @@ from ...domain.iva.schema import (
 )
 from ...domain.transactions.cash_accounting_validation import validate_cash_accounting_axis
 from ...domain.transactions.dates import transaction_operation_date
+from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
 from .currency_predicates import is_non_eur_without_conversion
@@ -602,12 +605,37 @@ def _resolved_iva_transaction_amounts(
     # declare the deductible bases "sin prorratear" (IVA Deducible), and for
     # bienes de inversion state that the base goes unreduced even where the
     # deduction percentage for partial affectation (LIVA art. 95.Tres) applies.
+    sign = _rectification_substrate_sign(transaction, operation_date=operation_date)
     return _IvaTransactionAmounts(
         rate_kind=rate_kind,
-        base_amount=taxable_base,
-        iva_amount=iva_amount * proportionality,
-        recargo_amount=(transaction.recargo_amount or Decimal("0")) * proportionality,
+        base_amount=taxable_base * sign,
+        iva_amount=iva_amount * proportionality * sign,
+        recargo_amount=(transaction.recargo_amount or Decimal("0")) * proportionality * sign,
     )
+
+
+def _rectification_substrate_sign(transaction: Transaction, *, operation_date: date) -> Decimal:
+    """Return the sign a declared rectificacion de deducciones gives this row's substrate.
+
+    A rectification row settles on the input side whatever way the money moved
+    (:func:`rectification_settlement_flow`), so its cash direction is what says
+    which way the earlier deduction goes. Money reaching the taxpayer -- the
+    supplier's refund of a cuota already deducted -- is the reduction LIVA
+    art. 114.Uno makes obligatory, and the Modelo 303 instructions for casillas
+    40 and 41 state how it is declared: "Si el resultado de la rectificacion
+    implica una minoracion de las deducciones, se consignara con signo
+    negativo." Money leaving it is art. 114.Dos.1.o's increment and stays
+    positive.
+
+    The ledger keeps every stored substrate a magnitude and the economic
+    direction in ``direction``, so the sign is applied here, on the projection,
+    which is also the only place the registry admits it: an observation may
+    carry signed negative IVA evidence for a rectification and for nothing else.
+    """
+    kind = transaction.deduction_fact_kind
+    if kind is None or not is_rectification_deduction_kind(kind, effective_date=operation_date):
+        return Decimal("1")
+    return Decimal("-1") if transaction.direction is TransactionDirection.INCOMING else Decimal("1")
 
 
 def _operation_date_source(transaction: Transaction) -> IvaLedgerRowDateSource:
@@ -779,6 +807,30 @@ def _effective_iva_category_for(
     return IvaCategory(definition.category)
 
 
+def _declared_rectification_flow(
+    transaction: Transaction,
+    *,
+    category: IvaCategory,
+    effective_date: date,
+) -> IvaFlowDirection | None:
+    """Return the side fact 0085 settles this row's declared rectification on, else ``None``.
+
+    LIVA art. 114 rectifies deductions already taken, so a row declaring that
+    kind settles on the side the registry names for its category rather than on
+    the side its cash direction would imply: a supplier's refund of a cuota
+    already deducted is still an input-side fact.
+
+    ``None`` on every row that declares no rectification, and on one whose
+    category the registry declares no rectification flow for -- the caller then
+    keeps the ordinary derivation and the admissibility gate reports the pairing
+    with the row named, rather than raising through the run.
+    """
+    kind = transaction.deduction_fact_kind
+    if kind is None or not is_rectification_deduction_kind(kind, effective_date=effective_date):
+        return None
+    return rectification_settlement_flow(category=category, effective_date=effective_date)
+
+
 def _resolve_iva_transaction_classification(
     transaction: Transaction,
     *,
@@ -797,11 +849,33 @@ def _resolve_iva_transaction_classification(
     )
     if unaccepted_value is not None:
         return _IvaTransactionOutcome(gate_issue=unaccepted_value)
+    operation_date = transaction_operation_date(transaction)
+    rectification_flow = _declared_rectification_flow(
+        transaction,
+        category=effective_category,
+        effective_date=operation_date,
+    )
+    flow_direction = rectification_flow or derive_flow_for_classification(
+        category=effective_category,
+        invoice_direction=invoice_kind,
+        effective_date=operation_date,
+    )
+    # The category gate asks which SIDE the row settles on. A declared
+    # rectification settles on the registry's side, so judging it by the cash
+    # direction read a supplier's refund as an output operation and refused the
+    # reverse-charge rectification for carrying a tipo on a category whose
+    # repercutida cuota is zero by law. Every other row keeps the side its
+    # direction gives it, so no ordinary refusal moves.
+    settlement_kind = (
+        InvoiceKind.RECEIVED
+        if rectification_flow is not None and is_deducible_flow(rectification_flow, effective_date=operation_date)
+        else invoice_kind
+    )
     declared_issue = _declared_transaction_category_issue(
         transaction,
         transaction_id=transaction_id,
         effective_category=effective_category,
-        invoice_kind=invoice_kind,
+        invoice_kind=settlement_kind,
         operation=operation,
     )
     if declared_issue is not None:
@@ -816,11 +890,6 @@ def _resolve_iva_transaction_classification(
     )
     if cash_accounting_issue is not None:
         return _IvaTransactionOutcome(gate_issue=cash_accounting_issue)
-    flow_direction = derive_flow_for_classification(
-        category=effective_category,
-        invoice_direction=invoice_kind,
-        effective_date=transaction_operation_date(transaction),
-    )
     # Input IVA is deductible only on an exact fact kind with immutable
     # provenance; refusing here reports the row instead of failing the run.
     missing_deduction_issue = _missing_deduction_classification_issue(
