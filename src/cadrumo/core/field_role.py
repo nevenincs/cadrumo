@@ -102,6 +102,9 @@ class FieldRole(StrEnum):
     IVA_CATEGORY = "iva_category"
     """The IVA treatment the row falls under."""
 
+    OPERATION_TYPE = "operation_type"
+    """The Modelo 349 clave of an intra-community operation, as the book states it."""
+
     IRPF_CATEGORY = "irpf_category"
     """The IRPF treatment the row falls under."""
 

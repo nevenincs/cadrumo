@@ -39,6 +39,7 @@ _EXPECTED_TOKENS = {
     "IVA_RATE": "iva_rate",
     "IVA_AMOUNT": "iva_amount",
     "IVA_CATEGORY": "iva_category",
+    "OPERATION_TYPE": "operation_type",
     "IRPF_CATEGORY": "irpf_category",
     "RETENCION_AMOUNT": "retencion_amount",
     "RETENCION_RATE": "retencion_rate",

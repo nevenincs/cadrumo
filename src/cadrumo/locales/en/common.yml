@@ -3243,8 +3243,11 @@ desktop:
         fx_rate: Exchange rate
         invoice_date: Invoice date
         invoice_number: Invoice number
+        iva_category: IVA category
         iva_rate: IVA rate
         notes: Notes
+        operation_type: Modelo 349 key
+        recargo_amount: Equivalence surcharge
         retencion_amount: Withholding amount
         retencion_rate: Withholding rate
         taxable_base: Taxable base

@@ -497,10 +497,12 @@ cli:
           necesita la columna.
         import_file_help: Ruta a un fichero CSV o XLSX con filas de facturas (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, y opcionalmente
-          iva_rate/retencion_amount/retencion_rate/currency/fx_rate/country_code/notes).
+          iva_rate/iva_category/operation_type/retencion_amount/retencion_rate/recargo_amount/currency/fx_rate/country_code/notes).
           Un retencion_rate solo se acepta junto a su retencion_amount. Un fx_rate
           es el valor en euros de una unidad de la moneda de la fila y se rechaza
-          en una fila en EUR.
+          en una fila en EUR. Un iva_category debe ser una categoría que el registro
+          declare para la fecha de la factura; un operation_type es la clave del modelo
+          349, y una fila que solo indique la clave toma la categoría que esta declara.
         import_help: Crea facturas del catálogo en lote desde un fichero CSV o XLSX.
         import_unmapped_columns: 'columnas no importadas porque ningún campo de factura
           coincidió con ellas: {columns}'

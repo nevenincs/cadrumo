@@ -161,6 +161,7 @@ export type FieldRole =
   | "iva_rate"
   | "iva_amount"
   | "iva_category"
+  | "operation_type"
   | "irpf_category"
   | "retencion_amount"
   | "retencion_rate"

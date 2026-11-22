@@ -3297,8 +3297,11 @@ desktop:
         fx_rate: Árfolyam
         invoice_date: Számla kelte
         invoice_number: Számlaszám
+        iva_category: IVA-kategória
         iva_rate: IVA-kulcs
         notes: Megjegyzések
+        operation_type: Modelo 349 kulcs
+        recargo_amount: Egyenértékűségi pótdíj
         retencion_amount: Retención összege
         retencion_rate: Retención kulcsa
         taxable_base: Adóalap

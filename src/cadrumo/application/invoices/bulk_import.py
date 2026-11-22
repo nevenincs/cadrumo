@@ -43,6 +43,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, NonNegativeInt, ValidationError
 
+from ...core.aggregation import IntracomOperationType
 from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal.coercion import coerce_decimal, normalize_decimal_separators
 from ...core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue, try_parse_canonical_decimal
@@ -59,9 +60,10 @@ from ...core.tabular import TabularSourceError, coerce_cell_text, normalize_tabu
 from ...core.time.clock import now
 from ...core.workbook import FORMULA_CELL_REFUSAL, WorkbookCell, first_formula_cell_column
 from ...core.xls_workbook import read_xls_workbook
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.iva.schema import InvoiceKind
+from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ...domain.transactions.raw_transaction import RawProvenance, SourceFormat
 from ..ledger.import_ports import LedgerImportReaderUnavailableError
 from ..reader_refusal_wording import column_reader_refusal_reason
@@ -70,8 +72,10 @@ from .bulk_import_columns import (
     ColumnRoleMapper,
     resolve_bulk_import_columns,
 )
+from .catalogue_add_operation import declared_invoice_category
 from .catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from .catalogue_creation_ports import CatalogueCreationPorts
+from .source_observations import iva_category_for_operation_type
 
 __all__ = [
     "BULK_INVOICE_IMPORT_EXTENSIONS",
@@ -178,6 +182,14 @@ class BulkInvoiceImportRow(BaseModel):
     # silent.
     country_code: CountryCodeAlpha2
     notes: str = ""
+    # The IVA treatment and Modelo 349 clave the book states, read as the add
+    # verb reads them. Without them an intra-community supply or an export
+    # falls back to the domestic treatment its rate implies.
+    iva_category: IvaCategory | None = None
+    operation_type: IntracomOperationType | None = None
+    # The recargo de equivalencia the invoice charged (LIVA art. 161). It rides
+    # inside the total, so the invoice checks it against the cuota.
+    recargo_amount: Decimal | None = None
 
 
 class BulkInvoiceImportRowFailure(BaseModel):
@@ -429,6 +441,58 @@ def _parse_bulk_row_fx_rate(
     return rate
 
 
+def _parse_bulk_row_operation_type(raw_row: Mapping[str, object], *, row_number: int) -> IntracomOperationType | None:
+    """Return the Modelo 349 clave a row states, read as the invoice reads it, or ``None`` when blank."""
+    text = coerce_cell_text(raw_row.get("operation_type")).strip()
+    if not text:
+        return None
+    try:
+        return IntracomOperationType(text.upper())
+    except ValueError as exc:
+        accepted = ", ".join(member.value for member in IntracomOperationType)
+        raise RowParseError(
+            row_number=row_number,
+            field="operation_type",
+            reason=f"unknown Modelo 349 operation type {text!r}; accepted: {accepted}",
+        ) from exc
+
+
+def _parse_bulk_row_iva_treatment(
+    raw_row: Mapping[str, object],
+    *,
+    row_number: int,
+    invoice_date: date,
+    operation: PinnedAuthorityOperation,
+) -> tuple[IvaCategory | None, IntracomOperationType | None]:
+    """Return the IVA category and Modelo 349 clave a row states.
+
+    The category is admitted exactly as the add verb admits it: a token the
+    registry declares for the invoice date, or the row is refused. A row that
+    states only the clave takes the category that clave declares, as the add
+    verb and the wizard do; a stated category always wins over that fallback.
+    Whether an entrega intracomunitaria states its clave is the invoice
+    builder's refusal, not the parser's.
+    """
+    operation_type = _parse_bulk_row_operation_type(raw_row, row_number=row_number)
+    category_text = coerce_cell_text(raw_row.get("iva_category")).strip()
+    with validating_governed_facts(operation):
+        try:
+            category = declared_invoice_category(
+                category_text or None,
+                effective_date=invoice_date,
+                authority_operation=operation,
+            )
+        except InvoiceValidationError as exc:
+            raise RowParseError(
+                row_number=row_number,
+                field="iva_category",
+                reason=f"IVA category {category_text!r} is not declared by the registry for {invoice_date.isoformat()}",
+            ) from exc
+        if category is None and operation_type is not None:
+            category = iva_category_for_operation_type(operation_type, effective_date=invoice_date)
+    return category, operation_type
+
+
 def _bulk_row_country_code(raw_row: Mapping[str, object], *, declared_country: str | None, row_number: int) -> str:
     country_code = coerce_cell_text(raw_row.get("country_code")) or declared_country or ""
     if not country_code:
@@ -451,6 +515,9 @@ def _build_bulk_invoice_row(
     retencion_rate: Decimal | None,
     fx_rate: Decimal | None,
     country_code: str,
+    iva_category: IvaCategory | None,
+    operation_type: IntracomOperationType | None,
+    recargo_amount: Decimal | None,
 ) -> BulkInvoiceImportRow:
     try:
         return BulkInvoiceImportRow(
@@ -466,6 +533,9 @@ def _build_bulk_invoice_row(
             fx_rate=fx_rate,
             country_code=country_code,
             notes=coerce_cell_text(raw_row.get("notes")),
+            iva_category=iva_category,
+            operation_type=operation_type,
+            recargo_amount=recargo_amount,
         )
     except ValidationError as exc:
         first = exc.errors()[0] if exc.errors() else {"loc": ("row",), "msg": "invalid row"}
@@ -477,6 +547,7 @@ def _parse_bulk_invoice_row(
     raw_row: Mapping[str, object],
     *,
     row_number: int,
+    operation: PinnedAuthorityOperation,
     decimal_separator: DecimalSeparatorValue = DecimalSeparator.PERIOD,
     declared_country: str | None = None,
 ) -> BulkInvoiceImportRow:
@@ -512,7 +583,19 @@ def _parse_bulk_invoice_row(
         retencion_amount=retencion_amount,
     )
     fx_rate = _parse_bulk_row_fx_rate(raw_row, row_number=row_number, decimal_separator=decimal_separator)
+    recargo_amount = _parse_optional_row_decimal(
+        raw_row,
+        field="recargo_amount",
+        row_number=row_number,
+        decimal_separator=decimal_separator,
+    )
     country_code = _bulk_row_country_code(raw_row, declared_country=declared_country, row_number=row_number)
+    iva_category, operation_type = _parse_bulk_row_iva_treatment(
+        raw_row,
+        row_number=row_number,
+        invoice_date=invoice_date,
+        operation=operation,
+    )
     return _build_bulk_invoice_row(
         raw_row,
         row_number=row_number,
@@ -523,6 +606,9 @@ def _parse_bulk_invoice_row(
         retencion_rate=retencion_rate,
         fx_rate=fx_rate,
         country_code=country_code,
+        iva_category=iva_category,
+        operation_type=operation_type,
+        recargo_amount=recargo_amount,
     )
 
 
@@ -964,7 +1050,20 @@ def import_invoices_from_rows(
     a source that carries the column ignores it row by row: an operator whose
     book cannot express the fact declares it once and consciously, rather than
     having Spain inferred for a foreign counterparty.
+
+    Without ``operation`` the bundled published authority is leased once for
+    the whole import, so every row is read and built under one generation.
     """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return import_invoices_from_rows(
+                source,
+                bucket_id=bucket_id,
+                kind=kind,
+                declared_country=declared_country,
+                ports=ports,
+                operation=indexed_operation,
+            )
     _assert_country_is_answerable(source.resolution, declared_country=declared_country)
     catalogue = ports.invoice_repository.load()
     existing_ids = set(catalogue.invoices)
@@ -980,6 +1079,7 @@ def import_invoices_from_rows(
             parsed = _parse_bulk_invoice_row(
                 source_row.values,
                 row_number=row_number,
+                operation=operation,
                 decimal_separator=source.decimal_separator,
                 declared_country=declared_country,
             )
@@ -1002,6 +1102,9 @@ def import_invoices_from_rows(
                 retention_amount=parsed.retencion_amount,
                 currency=parsed.currency,
                 notes=parsed.notes,
+                iva_category=parsed.iva_category,
+                operation_type=parsed.operation_type,
+                recargo_amount=parsed.recargo_amount,
                 declared_fx_rate=parsed.fx_rate,
                 rate_provider=ports.rate_provider,
                 operation=operation,

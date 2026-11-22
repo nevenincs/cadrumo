@@ -3314,8 +3314,11 @@ desktop:
         fx_rate: Tipo de cambio
         invoice_date: Fecha de la factura
         invoice_number: Número de factura
+        iva_category: Categoría de IVA
         iva_rate: Tipo de IVA
         notes: Notas
+        operation_type: Clave del modelo 349
+        recargo_amount: Recargo de equivalencia
         retencion_amount: Importe de la retención
         retencion_rate: Tipo de retención
         taxable_base: Base imponible
