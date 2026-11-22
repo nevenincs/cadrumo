@@ -117,8 +117,12 @@ export function Confirmation({
       case "payment_id":
         return draft.paymentId;
       case "declared_fx_rate":
-        // The window's correction draft has no exchange-rate field yet, so
-        // it never lists this change; the CLI and the operation carry it.
+      case "rectification_method":
+      case "rectification_cause":
+      case "rectification_direction":
+      case "document_received_on":
+        // The window's correction draft has no field for these yet, so it
+        // never lists their change; the CLI and the operation carry them.
         return "";
     }
   };
