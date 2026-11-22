@@ -3582,6 +3582,10 @@ application:
         employment income (rendimientos del trabajo), above the DT 12ª threshold,
         so box [%{reduccion_id}] may give you a reduction you are not using yet. Check
         whether it applies to you.
+      floor_subtraction_unresolved: 'Box [%{box}] holds an amount and box [%{floor_box}]
+        sets a minimum, but the official text does not say whether that deduction
+        may take the amount below the minimum, so this cannot be checked. Boxes concerned:
+        %{boxes}.'
       foreign_asset_redeclaration: 'Modelo %{modelo_code} %{filing_year}: the value
         of one of your foreign assets rose from %{prior_value_eur} EUR to %{current_value_eur}
         EUR. The increase of %{delta_value_eur} EUR is over the %{redeclaration_increase_threshold_eur}
@@ -3649,6 +3653,10 @@ application:
         records with the calculation of Modelo %{modelo} %{filing_year}, period %{period}.
         Filing is blocked until this comparison succeeds. Try again when your records
         are available, and calculate again if they changed.
+      limited_subtractions_below_floor: The deductions that may only be applied down
+        to the minimum in box [%{box}] (%{floor_value}) add up to %{limited_total}
+        and leave %{after_limited}, below that minimum. Enter only the part that fits
+        down to the minimum and carry the rest forward to later years.
       m193_settled_row_amount_authority_unresolved: Modelo 193 for %{filing_year}
         includes %{settled_prior_accrual_rows} payment(s) of income earned in an earlier
         year. The official rules do not say how to report their base and withholding,

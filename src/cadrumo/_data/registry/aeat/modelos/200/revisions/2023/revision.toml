@@ -1554,20 +1554,23 @@ fields = { expression = { args = [
 sequence_additions = {source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["Cuota íntegra ajustada positiva se obtiene", "[00582] = ([00562] + [01038]) -", "Si al efectuar esta operación se obtiene una cantidad negativa o cero"]}]}
 sequence_removals = {source_refs = [0, 1], source_citations = [0]}
 
+# The 2023 design moves the cuota líquida block from DP200014 to DP200014B (aeat-dr-200-2023;
+# the 2023 manual consigns [00592] and its deductions on "la página 14 bis del modelo 200",
+# manuals/sociedades/2023 L15172-15174), so the target and every deduction operand carry this
+# edition's page. The operation is the 2022 one, which the 2023 manual prints unchanged
+# (L15177-15179), with the same art. 30 bis treatment: no floor at the cuota líquida mínima
+# [00619], whose limit applies to the deduction amounts consigned (L14692-14704, L14984-14986).
 [[revisions."2023".family_overrides]]
 family = "formulas"
 selector = {revision = "2022", id = "modelo-200-cuota-liquida"}
 fields = { target_casilla_id = "DP200014B:00592", expression = { args = [
-    { casilla_id = "DP200014B:00619" },
-    { op = "max", args = [
-        { op = "subtract", args = [
-            { casilla_id = "DP200014:00582" },
-            { op = "add", args = [{ casilla_id = "DP200014B:00583" }, { casilla_id = "DP200014B:00585" }, { casilla_id = "DP200014B:00584" }, { casilla_id = "DP200014B:00588" }, { casilla_id = "DP200014B:01039" }, { casilla_id = "DP200014B:02314" }, { casilla_id = "DP200014B:02315" }, { casilla_id = "DP200014B:00565" }, { casilla_id = "DP200014B:00590" }, { casilla_id = "DP200014B:00399" }, { casilla_id = "DP200014B:00082" }, { casilla_id = "DP200014B:01040" }, { casilla_id = "DP200014B:01041" }] },
-        ] },
-        { literal = "0" },
+    { op = "subtract", args = [
+        { casilla_id = "DP200014:00582" },
+        { op = "add", args = [{ casilla_id = "DP200014B:00583" }, { casilla_id = "DP200014B:00585" }, { casilla_id = "DP200014B:00584" }, { casilla_id = "DP200014B:00588" }, { casilla_id = "DP200014B:01039" }, { casilla_id = "DP200014B:02314" }, { casilla_id = "DP200014B:02315" }, { casilla_id = "DP200014B:00565" }, { casilla_id = "DP200014B:00590" }, { casilla_id = "DP200014B:00399" }, { casilla_id = "DP200014B:00082" }, { casilla_id = "DP200014B:01040" }, { casilla_id = "DP200014B:01041" }] },
     ] },
+    { literal = "0" },
 ] } }
-sequence_additions = {source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["La cuota líquida se obtiene aplicando sobre la cuota íntegra ajustada positiva", "[00592] = [00582] - ([00583] + [00585]", "El resultado de esta operación siempre tendrá que ser una cantidad positiva o cero", "Cuota líquida mínima (casilla 00619)", "no podrá ser inferior al resultado de aplicar el 15 por ciento a la base imponible"]}]}
+sequence_additions = {source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"], source_citations = [{source_ref = "aeat-modelo-200-manual-2023", required_text = ["La cuota líquida se obtiene aplicando sobre la cuota íntegra ajustada positiva", "[00592] = [00582] - ([00583] + [00585]", "El resultado de esta operación siempre tendrá que ser una cantidad positiva o cero", "relativas a las deducciones de la cuota aplicadas por el contribuyente en el período impositivo", "se aplicarán las restantes deducciones que resulten procedentes con sus límites aplicables, hasta el importe de dicha cuota líquida mínima", "se aplicarán, respetando sus propios límites, aunque la cuota líquida resultante sea inferior a la mencionada cuota líquida mínima", "no se ve afectada por el importe de la cuota líquida mínima"]}]}
 sequence_removals = {source_refs = [0, 1], source_citations = [0]}
 
 [[revisions."2023".family_overrides]]
@@ -1698,6 +1701,15 @@ fields = { expression = "positive_application_le_present_stock([\"DP200014:00547
 family = "verification_predicates"
 selector = {revision = "2022", id = "roll-forward-balances:bin-stock-cierre-reconcilia-roll-forward"}
 fields = { expression = "roll_forward_balances([\"00671\", \"00670\", \"DP200014:00547\", \"DP200014:00552\"])" }
+
+# Cuota liquida minima gate (LIS art. 30 bis.2), classified at the 2022 edition. Only
+# the record changes here: aeat-dr-200-2023 prints [00619] and the thirteen deductions
+# of the cuota liquida [00592] on DP200014B, with [00582] still on DP200014, and the
+# cuota liquida formula of this edition subtracts the same thirteen boxes.
+[[revisions."2023".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2022", id = "limited-subtractions-respect-floor:deducciones-limitadas-por-cuota-liquida-minima"}
+fields = { expression = 'limited_subtractions_respect_floor(["DP200014B:00619", "DP200014:00582"], ["DP200014B:02315"], ["DP200014B:00585", "DP200014B:00584", "DP200014B:00588", "DP200014B:01039", "DP200014B:00565", "DP200014B:01040", "DP200014B:01041"], ["DP200014B:00583", "DP200014B:00399"], ["DP200014B:02314", "DP200014B:00590", "DP200014B:00082"])' }
 
 # Calculation verification for Modelo 200 (Impuesto sobre Sociedades,
 # Ley 27/2014). Enrolls the always-present liquidation-chain finals as the
