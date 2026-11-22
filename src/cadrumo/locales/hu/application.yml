@@ -3100,6 +3100,9 @@ application:
       input_required: 'A(z) %{modelo} %{period} %{filing_year} nyomtatvány még nem
         számolható ki: hiányzik a(z) %{binding} adat (%{boxes}. mező). Add meg, majd
         számolj újra. Semmi nem lett mentve.'
+      input_required_profile_fact: 'A(z) %{modelo} %{period} %{filing_year} nyomtatvány
+        még nem számolható ki, mert a profilod nem tartalmazza ezt az adatot: %{binding_label}.
+        Add meg a profilodban, majd számolj újra. Semmi nem lett mentve.'
       input_required_unprinted: 'A(z) %{modelo} %{period} %{filing_year} nyomtatvány
         még nem számolható ki: hiányzik a(z) %{binding} adat. Add meg, majd számolj
         újra. Semmi nem lett mentve.'

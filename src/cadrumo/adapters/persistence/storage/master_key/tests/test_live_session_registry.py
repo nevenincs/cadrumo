@@ -20,7 +20,7 @@ from datetime import timedelta
 
 import pytest
 
-from ......core.time.clock import now
+from ......core.time.clock import wall_now
 from ..active_session import (
     activate_session,
     close_active_bucket_session,
@@ -35,7 +35,7 @@ _DEK = b"D" * 32
 
 def _open_session(bucket_id: str) -> BucketSession:
     """Open a real session holding real key buffers."""
-    _opened_at = now()
+    _opened_at = wall_now()
     return BucketSession.open_resumed(
         bucket_id=bucket_id,
         dek=_DEK,

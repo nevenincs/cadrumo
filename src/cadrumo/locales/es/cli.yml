@@ -481,10 +481,11 @@ cli:
           y queda fuera de los totales en euros hasta que se añada un tipo. Indica
           el tipo con app ledger invoice update --fx-rate.
         fx_rate_help: 'Tipo de cambio de una factura en moneda extranjera: el valor
-          en euros de una unidad de su moneda en la fecha de la factura, por ejemplo
-          0.9250 (LIVA art. 79.Once: el tipo vigente del Banco de España o el último
-          del BCE). Sustituye al tipo publicado y se registra como declarado por ti.
-          Se rechaza en una factura en EUR.'
+          en euros de una unidad de su moneda en el momento del devengo, que es la
+          fecha de operación si la indicas y, si no, la fecha de la factura, por ejemplo
+          0.9250 (LIVA art. 79.Once: el tipo del Banco de España vigente en el momento
+          del devengo o el último del BCE). Sustituye al tipo publicado y se registra
+          como declarado por ti. Se rechaza en una factura en EUR.'
         group_help: Registros de facturas de negocio (emitidas o recibidas)
         import_all_refused: 'importación masiva de facturas fallida: se rechazaron
           todas las filas; no se creó ninguna factura'

@@ -15,7 +15,11 @@ from ....domain.bienes_inversion.register import (
     validate_investment_asset_reciprocity,
 )
 from ....domain.calculations.registry.iva_deduction_catalogue import is_iva_deduction_kind
-from ....domain.iva.deduction_facts import validate_iva_deduction_fact
+from ....domain.iva.deduction_facts import (
+    is_rectification_deduction_kind,
+    rectification_settlement_flow,
+    validate_iva_deduction_fact,
+)
 from ....domain.iva.flow import derive_flow_for_classification
 from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.dates import transaction_operation_date
@@ -79,7 +83,18 @@ def validate_migrated_deduction_fact(transaction: Transaction) -> None:
         InvoiceKind.RECEIVED if transaction.direction is TransactionDirection.OUTGOING else InvoiceKind.ISSUED
     )
     operation_date = transaction_operation_date(transaction)
-    flow_direction = derive_flow_for_classification(
+    # A rectificacion de deducciones settles on the side fact 0085 names for its
+    # category, not on the side the cash direction implies: LIVA art. 114
+    # rectifies deductions already taken, and the refund that reduces one
+    # (art. 114.Uno) reaches the taxpayer's account. Deriving the side from the
+    # direction refused that stored row here while the live aggregation admits
+    # it, so the two read the registry through the one helper.
+    rectification_flow = (
+        rectification_settlement_flow(category=fact.category, effective_date=operation_date)
+        if is_rectification_deduction_kind(fact.kind, effective_date=operation_date)
+        else None
+    )
+    flow_direction = rectification_flow or derive_flow_for_classification(
         category=fact.category,
         invoice_direction=invoice_kind,
         effective_date=operation_date,

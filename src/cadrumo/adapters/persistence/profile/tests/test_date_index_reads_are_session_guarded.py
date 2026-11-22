@@ -36,7 +36,7 @@ from uuid import uuid4
 
 import pytest
 
-from .....core.time.clock import now
+from .....core.time.clock import wall_now
 from ...storage.errors import StorageValidationError
 from ...storage.master_key.active_session import activate_session
 from ...storage.master_key.bucket_session import BucketSession
@@ -55,7 +55,7 @@ _BUCKET_ID = "44444444-4444-4444-8444-444444444444"
 
 def _foreign_session() -> BucketSession:
     """Open a real session serving a DIFFERENT bucket."""
-    _opened_at = now()
+    _opened_at = wall_now()
     return BucketSession.open_resumed(
         bucket_id=str(uuid4()),
         dek=b"d" * 32,

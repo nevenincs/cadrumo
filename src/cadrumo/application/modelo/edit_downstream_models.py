@@ -55,6 +55,7 @@ MODELO_EDIT_DOWNSTREAM_PUBLIC_CONTEXT: Final[Mapping[str, str]] = MappingProxyTy
         "modelo": _MODELO_VALUE,
         "parameter_id": _one(_REGISTRY_ID_GRAMMAR),
         "period": _PERIOD_VALUE,
+        "source_casilla_ids": _listed(_CASILLA_GRAMMAR),
         "source_filing_year": _YEAR_VALUE,
         "source_modelo": _MODELO_VALUE,
         "source_period": _PERIOD_VALUE,

@@ -73,6 +73,7 @@ def _invoice(
     provider: CatalogueInvoiceRateProviderPort,
     declared_fx_rate: Decimal | None = None,
     number: str = "US-0031",
+    operation_date: date | None = None,
 ) -> Invoice:
     return build_catalogue_invoice(
         bucket_id=_BUCKET_ID,
@@ -82,6 +83,7 @@ def _invoice(
         counterparty_country="DE",
         invoice_number=number,
         issued_at=_issue_date(),
+        operation_date=operation_date,
         taxable_base=_BASE,
         iva_rate=None,
         currency=currency,
@@ -183,6 +185,54 @@ def test_a_correction_declaring_the_rate_repairs_an_unconverted_invoice_for_the_
     assert corrected.fx_rate_date == stored.issued_at
     assert line_eur_amounts_or_refuse(corrected, 0, corrected.lines[0]) == (_EURO_BASE, Decimal("0.00"))
     assert ports.invoice_repository.load().get(stored.invoice_id) == corrected
+
+
+def test_a_correction_stating_the_devengo_and_the_rate_together_stamps_the_corrected_devengo() -> None:
+    """One statement, one date: the rate is attested for the devengo the same patch records.
+
+    LIVA art. 79.Once dates the rate at the devengo, so stamping the operator's
+    attestation against the operation date being replaced would record it
+    against a devengo the operator just corrected.
+    """
+    ports = in_memory_catalogue_creation_ports()
+    first_devengo = date(filing_year_envelope().horizon, 2, 20)
+    corrected_devengo = date(filing_year_envelope().horizon, 1, 9)
+    stored = create_catalogue_invoice(
+        invoice=_invoice(currency="USD", provider=ports.rate_provider, operation_date=first_devengo), ports=ports
+    ).invoice
+    assert stored.fx_rate_date is None, "no rate was published, so the record starts unstamped"
+
+    corrected = update_catalogue_invoice(
+        bucket_id=_BUCKET_ID,
+        invoice_id=stored.invoice_id,
+        patch=CatalogueInvoicePatch(operation_date=corrected_devengo, declared_fx_rate=_DECLARED_RATE),
+        ports=_lifecycle_ports(ports),
+    ).invoice
+
+    assert corrected.operation_date == corrected_devengo
+    assert corrected.fx_rate_date == corrected_devengo
+    assert corrected.fx_rate_date not in (first_devengo, stored.issued_at)
+    assert (corrected.fx_rate, corrected.fx_rate_source) == (_DECLARED_RATE, OPERATOR_DECLARED_RATE_SOURCE)
+    assert corrected.base_total_eur == _EURO_BASE, "the declared amount is the operator's and must not move"
+
+
+def test_a_correction_declaring_only_the_rate_keeps_the_stored_devengo_date() -> None:
+    """The control for the pairing above: an unstated operation date is the stored one."""
+    ports = in_memory_catalogue_creation_ports()
+    devengo = date(filing_year_envelope().horizon, 2, 20)
+    stored = create_catalogue_invoice(
+        invoice=_invoice(currency="USD", provider=ports.rate_provider, operation_date=devengo), ports=ports
+    ).invoice
+
+    corrected = update_catalogue_invoice(
+        bucket_id=_BUCKET_ID,
+        invoice_id=stored.invoice_id,
+        patch=CatalogueInvoicePatch(declared_fx_rate=_DECLARED_RATE),
+        ports=_lifecycle_ports(ports),
+    ).invoice
+
+    assert corrected.fx_rate_date == devengo
+    assert corrected.fx_rate_date != stored.issued_at
 
 
 def test_a_correction_declaring_a_rate_on_a_euro_invoice_is_refused_and_writes_nothing() -> None:

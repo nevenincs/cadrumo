@@ -6,7 +6,7 @@ import secrets
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from .....core.time.clock import now
+from .....core.time.clock import wall_now
 from ..crypto.aes_gcm import KEY_SIZE
 from ..errors import SecretStoreError
 from ..master_key.active_session import activate_session
@@ -43,7 +43,7 @@ class EphemeralBucketSession:
         if self.session is not None:
             raise RuntimeError(f"{type(self).__name__} is single-entry")
 
-        opened_at = now()
+        opened_at = wall_now()
         window = timedelta(minutes=_IDLE_MINUTES)
         session = BucketSession.open_resumed(
             bucket_id="ephemeral",
