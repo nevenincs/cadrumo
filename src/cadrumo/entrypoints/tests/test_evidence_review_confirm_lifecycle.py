@@ -3,7 +3,7 @@
 Runs the production registry and supervisor over bundled structured invoices
 that a real encrypted profile holds as stored extraction drafts. What a person's
 review of a draft carries (the direction they imported it under, the country its
-VAT numbers name), what stops every confirm before it starts (the profile's own
+NIF-IVA prefixes name), what stops every confirm before it starts (the profile's own
 fiscal-address postcode), and when a draft leaves the queue (once its confirm
 succeeded) are read the way a frontend in another process reads them.
 """
@@ -319,19 +319,19 @@ def test_a_draft_nobody_gave_a_direction_serves_none(
     assert _review(runtime, stored).direction is None
 
 
-# -- the country a VAT number's prefix names ----------------------------------
+# -- the country a NIF-IVA's prefix names ----------------------------------
 
 
-def test_the_review_serves_the_country_each_vat_prefix_names_apart_from_the_draft(
+def test_the_review_serves_the_country_each_nif_iva_prefix_names_apart_from_the_draft(
     runtime: OperationRuntime, operation: PinnedAuthorityOperation
 ) -> None:
     stored = _store_draft(runtime, operation, _UBL_SWEDISH_SUPPLIER)
 
     review = _review(runtime, stored)
 
-    assert review.counterparty_vat_prefix_country is not None
-    assert review.counterparty_vat_prefix_country.supplier == "SE"
-    assert review.counterparty_vat_prefix_country.customer == "ES"
+    assert review.counterparty_nif_iva_prefix_country is not None
+    assert review.counterparty_nif_iva_prefix_country.supplier == "SE"
+    assert review.counterparty_nif_iva_prefix_country.customer == "ES"
     # The document states no address country, and the prefix is not taken as one on the draft.
     assert review.draft.supplier_tax_id == "SE556677889901"
     assert review.draft.supplier_country_code is None
@@ -343,7 +343,7 @@ def test_a_domestic_number_without_a_prefix_serves_no_suggestion(
 ) -> None:
     stored = _store_draft(runtime, operation, _FACTURAE)
 
-    assert _review(runtime, stored).counterparty_vat_prefix_country is None
+    assert _review(runtime, stored).counterparty_nif_iva_prefix_country is None
 
 
 # -- a stored review and a fresh read of the same bytes agree -----------------

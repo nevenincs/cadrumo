@@ -169,6 +169,10 @@ def filer_postcode_declared(profile_record: UserProfileRecord | None) -> bool:
     for a surface that says before any confirm that none can succeed until the
     profile carries it. Whether a stated postcode is readable depends on the
     operation date's vocabulary and stays with the confirm.
+
+    Args:
+        profile_record: The :class:`UserProfileRecord` read for the profile, or
+            ``None`` when none is stored.
     """
     return _declared_postcode(profile_record) is not None
 

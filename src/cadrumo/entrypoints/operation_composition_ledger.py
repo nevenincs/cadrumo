@@ -7,7 +7,8 @@ production registry composes every group; the manifest-backed registry answers
 contracts from the generated manifest and composes a group only when one of
 its operations is used.
 
-Core types: :class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+Core types: :class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`,
+:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
 """
 
 from __future__ import annotations

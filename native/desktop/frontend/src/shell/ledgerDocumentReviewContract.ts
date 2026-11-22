@@ -313,6 +313,21 @@ export type EvidenceReviewDirectionProjection = {
 };
 
 /**
+ * The Member State whose NIF-IVA prefix each party's identification number
+ * carries.
+ *
+ * A suggestion for the person to accept as the counterparty's country, derived
+ * from the number's prefix alone (Directive 2006/112/EC art. 215). It says
+ * which State issued the identification, not where the party is established,
+ * and it is never written to the draft. A side is `None` when its number
+ * carries no recognised prefix, including a bare Spanish identifier.
+ */
+export type EvidenceReviewNifIvaPrefixCountryProjection = {
+  supplier: string | null;
+  customer: string | null;
+};
+
+/**
  * One pending draft with its complete blocker/advisory summary.
  */
 export type EvidenceReviewQueueRowProjection = {
@@ -325,21 +340,6 @@ export type EvidenceReviewQueueRowProjection = {
   reason_words_language: OutputLanguage | null;
   advisory_count: number;
   advisories: ReviewAdvisoryKind[];
-};
-
-/**
- * The Member State whose VAT prefix each party's identification number
- * carries.
- *
- * A suggestion for the person to accept as the counterparty's country, derived
- * from the number's prefix alone (Directive 2006/112/EC art. 215). It says
- * which State issued the identification, not where the party is established,
- * and it is never written to the draft. A side is `None` when its number
- * carries no recognised prefix, including a bare Spanish identifier.
- */
-export type EvidenceReviewVatPrefixCountryProjection = {
-  supplier: string | null;
-  customer: string | null;
 };
 
 /**
@@ -665,8 +665,9 @@ export type LedgerEvidenceReviewListRequest = {
  * carries it.
  *
  * `direction` carries the operator's import direction beside the reading's
- * suggestion, and `counterparty_vat_prefix_country` the country each party's
- * VAT-number prefix names; both are suggestions to review, never draft facts.
+ * suggestion, and `counterparty_nif_iva_prefix_country` the country each
+ * party's NIF-IVA prefix names; both are suggestions to review, never draft
+ * facts.
  *
  * `off_host_read_offered` says whether the person may be asked to send this
  * profile's documents off this computer to be read: the deployment permits it,
@@ -685,7 +686,7 @@ export type LedgerEvidenceReviewViewProjection = {
   party_attribution_advisory: PartyAttributionAdvisoryProjection | null;
   country_vocabulary_advisory: CountryVocabularyAdvisoryProjection | null;
   direction: EvidenceReviewDirectionProjection | null;
-  counterparty_vat_prefix_country: EvidenceReviewVatPrefixCountryProjection | null;
+  counterparty_nif_iva_prefix_country: EvidenceReviewNifIvaPrefixCountryProjection | null;
   off_host_read_offered: boolean;
 };
 
